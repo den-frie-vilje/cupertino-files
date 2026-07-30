@@ -94,3 +94,130 @@ file was **not** added to the corpus no matter how good it is.
 | 2 | `migh6544/COMP-3421` | `Assessments/6/Michael_Ghattas_Assignment_6.pages` | _none_ | 12.1.1 | modern | M12.1-7034.0.86-2 | 181,948 | 586 | — |
 | 2 | `xifanyan/iwork-redline-detector` | `testdata/pages/normal.pages` | _none_ | 26.0.0 | current | M15.1.1-7044.0.273-2 | 95,068 | 571 | — |
 | 2 | `xifanyan/iwork-redline-detector` | `testdata/pages/normal.track.accepted.pages` | _none_ | 26.0.0 | current | M15.1.1-7044.0.273-2 | 94,160 | 573 | — |
+
+## 3. What was added, and why
+
+Six files were copied into `fixtures/` (full provenance, md5 and probe output in
+`fixtures/ATTRIBUTION.md`). They were chosen for **complementary** coverage rather than raw
+score, and every one comes from a repository with an explicit permissive licence.
+
+Note on baseline: when this survey started, no fixture in `fixtures/` had image
+filters/masks, header/footer text, footnotes, comments, hyperlinks, multiple sections, charts
+or change tracking. A parallel effort on formal/open-web corpora landed fixtures for several
+of those while this survey was running, so the value of the six files below is that they are
+**real-world, human-authored documents** with independent provenance and a different
+format-version spread — not that they are the only carriers of each feature.
+
+| fixture | licence | what it contributes |
+|---|---|---|
+| `desmarais-notes-comments-tables.pages` | MIT | **comments (6)** on a genuine review document, 4 readable v5 table cells, 3 TOC objects |
+| `desmarais-notes-sections-hyperlinks.pages` | MIT | **8 document sections**, hyperlinks, smart fields |
+| `patrickomatic-pages26-sections-masks.pages` | MIT | **fileFormatVersion 26.1.0** (era `current`), 6 sections, image masks, 25 smart fields |
+| `patrickomatic-termpaper-footers-masks.pages` | MIT | **non-empty footers (real running-footer text)** on a 26.1.0 document |
+| `compphysics-poster-images-masks.pages` | CC0-1.0 | **29 images / 9 image masks**, 48 floating text boxes, `iwork16` era |
+| `jmschultz-resume-hyperlinks-bookmarks.pages` | MIT | **7 hyperlinks**, a bookmark, fills the 12.x format gap |
+
+Format-version spread added: `2.2.4`, `4.1.7` (×2), `12.0.8`, `26.1.0` (×2). The pre-existing
+corpus covered only `1.5.0`, `2.0.24`, `3.2.13`, `14.4.1`.
+
+Runner-up not taken: `patrickomatic/iwork examples/pages/modern_novel.pages` (MIT, score 6) is
+a near-duplicate of `eternal_sunshine.pages` — same template family, same feature profile —
+so only one of the pair was taken.
+
+## 4. Priority features: found vs not found
+
+| # | Wanted feature | Result |
+|---|---|---|
+| 1 | **Image filters / adjustments** | ⚠️ Found exactly **once** in the whole survey: `pSuchi/Dissertation Synopsis.pages` (`imagesWithFilters=1`). That repo has **no licence**, so it could not be taken. |
+| 1 | **Image masks** | ✅ Added — `compphysics-poster` (9 masks), both `patrickomatic` files (2 each). |
+| 2 | **Headers/footers with real text** | ✅ Footers added (`patrickomatic-termpaper`, 2 non-empty footers). ⚠️ **Non-empty *headers* were found only once** (`apgrieser/resume`, `nonEmptyHeaders=1`) and that repo is unlicensed. |
+| 3 | **Footnotes / endnotes** | ❌ **Not found at all.** `footnotes=0` on all 45 documents probed, including four theses, three dissertations/synopses and an academic term paper. |
+| 4 | **Comments** | ✅ Added — `desmarais-notes-comments-tables` (6 comments). Also present in the unlicensed `xifanyan/iwork-redline-detector` corpus (1 comment per file). |
+| 5 | **Hyperlinks** | ✅ Added — `jmschultz-resume` (7), `desmarais-notes-sections-hyperlinks` (5). |
+| 6 | **Multiple sections** | ✅ Added — 8 sections (`desmarais-notes-sections-hyperlinks`) and 6 sections (`patrickomatic-pages26`). |
+| 7 | **Charts** | ⚠️ Found exactly **once**: `TheFebrin/UNIVERSITY .../Task1/Report.pages` (`charts=2`, plus 91 images, 9 readable v5 tables, 2 non-empty footers — score 6). Repo has **no licence**; also 3.4 MB. This is the single biggest gap left. |
+| 8 | **Change tracking** | ⚠️ Found only in `xifanyan/iwork-redline-detector` (`storagesWithChangeTracking=1` in `comments.track.pages` and `tracking.insert.deletion.pages`, format 26.0.0). Repo has **no licence**. |
+| 9 | Tables with v5 cell storage | ✅ Added — `desmarais-notes-comments-tables` (4 readable cells). |
+| 9 | Lists | ✅ Everywhere (`listStyledParagraphs` > 0 on every file). |
+| 9 | Text boxes | ✅ Added — `compphysics-poster` (48), `patrickomatic-pages26` (4), `jmschultz-resume` (2). |
+| 9 | TOC | ✅ Added — `desmarais-notes-comments-tables` has 3 TOC objects (all pre-existing fixtures had exactly 1). |
+
+Two capabilities showed up that were not on the list and are worth noting: **page-layout
+documents** (`isPageLayout=true`) appeared in `claycle/fl-publisher-pages-templates`
+(unlicensed), `cds-hooks/docs` (Apache-2.0 but 8.4 MB, over the size cap) and
+`tinnguyen1372/FYP` (GPL-3.0, but format 1.5.0 which the corpus already covers). **No
+page-layout fixture was added**; a licensed, small one would be a good future addition.
+
+## 5. Licensing caveats — the binding constraint
+
+This was by far the hardest part of the task, and it is the reason the corpus did not get the
+top-scoring documents.
+
+- Of the **54 repositories** found to contain `.pages` files, only **13 had any licence file**
+  (≈ 24 %). The rest are personal coursework, résumé and thesis repositories with no licence,
+  i.e. all rights reserved.
+- Those 13 licensed repositories hold **21 `.pages` paths between them, and every one was
+  downloaded and probed** — so the licensed side of this survey is exhaustive, not sampled.
+  Six of the 21 were unusable: 5 stubs in `Yiping-Yin/Wiki` (574–901 bytes, fail IWA parsing)
+  and 1 mkdocs YAML file (`asterisk/documentation`, mirrored by `ipoddubny/documentation`).
+  Two more are duplicate forks (`rizzolol/docs` of `cds-hooks/docs`; `orca-zhang/iwork` of
+  `orcastor/iwork-converter`).
+- The three highest-scoring documents in the entire survey are all unlicensed:
+  - `chongpig/CS2100 lab8/...` — score 8 (masks, footer text, 159 text boxes, format 14.4.1)
+  - `claycle/fl-publisher-pages-templates` — score 7 (page layout, 3 sections, 98 text boxes)
+  - `TheFebrin/UNIVERSITY .../Task1/Report.pages` — score 6 and **the only file with charts**
+- The **only** source of change-tracking and multi-comment Pages files anywhere in the survey,
+  `xifanyan/iwork-redline-detector`, has no licence (confirmed: no `LICENSE` file, and its
+  README states none). If change tracking becomes a blocking requirement, the realistic
+  options are (a) ask that project to add a licence, or (b) author the fixture locally in
+  Pages rather than redistributing theirs.
+- Licences were verified by **fetching and reading the licence file**, not by trusting GitHub
+  metadata. Two licensed candidates were still rejected on other grounds:
+  - `cds-hooks/docs docs/cheat-sheet/CDS Hooks Cheat Sheet.pages` — Apache-2.0, page-layout
+    document, but **8,396,126 bytes**, over the 5 MB cap.
+  - `desmarais-patrick/notes src/review-assets.pages` — MIT, 22 images / 3 masks, but
+    **8,307,450 bytes**, over the cap.
+  - `Katsevich-Lab/sceptre2-manuscript revision/response_to_reviewers.pages` — GPL-licensed and
+    a genuine response-to-reviewers document, but score 2: the reviewer exchange is plain body
+    text, with no comments, footnotes or tracked changes.
+- `patrickomatic/iwork`'s example documents are derived from stock Pages templates. The repo is
+  MIT and we redistribute only the author's own saved documents, but this is noted in
+  `ATTRIBUTION.md` for transparency.
+
+## 6. False positives and dead ends (recorded so nobody repeats them)
+
+**Files that look like Pages documents but are not:**
+- **mkdocs `awesome-pages` config files** are literally named `.pages` (YAML). They dominate
+  every path-based search: `renovatebot/renovate`, `rook/rook`, `kubevirt/user-guide`,
+  `autowarefoundation/*`, `polkadot-developers/polkadot-docs`, … Filter with
+  `grep -v '/\.pages$'`. `asterisk/documentation overrides/.copy-in/ari.pages` is one of these
+  (46 bytes of ASCII) despite the non-dot name.
+- **.NET `*.Pages/` directories** (`CityofSantaMonica/OrchardCore`) match `\.pages/` patterns.
+- **Byte-stubs in file-type detectors**: `sindresorhus/file-type fixture/fixture.pages` is a
+  105-byte zip with no `Index/`; `Yiping-Yin/Wiki macos-app/Loom/Tests/fixtures/slide-deck/*.pages`
+  are 574–901 byte hand-made stubs that fail IWA parsing (`unsupported chunk type 0x62`,
+  `truncated chunk payload`).
+- **iWork '09 XML**: `xifanyan/iwork-redline-detector testdata/pages09/*`,
+  `openpreserve/format-corpus .../09-4.1-923/lorem-ipsum.pages`.
+
+**Search channels that do not work for this problem:**
+- GitHub code search (`path:*.pages`) — requires login; the sandbox GitHub API is repo-scoped.
+- Sourcegraph — does **not** index binary file paths (verified: `libetonyek`'s known
+  `pages5-file.pages` is invisible to `type:path file:\.pages$`), so it only ever returns
+  mkdocs `.pages`.
+- Bing / DuckDuckGo / Mojeek — `.pages` is drowned by "GitHub Pages"; exact-phrase queries such
+  as `".pages at master"` return zero results.
+- Wayback CDX API — blocked by egress policy.
+- BigQuery `github_repos.files` — no usable credentials in the sandbox.
+- searchcode.com — repurposed as a per-repository MCP service; no global index any more.
+
+## 7. Repositories worth revisiting
+
+- `xifanyan/iwork-redline-detector` — 20 Pages files purpose-built for **change tracking and
+  comments** across '09 / 2013 / modern formats. Needs a licence.
+- `patrickomatic/iwork` — MIT, actively developed, also ships
+  `examples/numbers/table_and_charts.numbers` (**charts**, for whenever Numbers charts matter)
+  and four `.key` files.
+- `CompPhysics/ThesisProjects` — CC0-1.0 and huge; currently one `.pages` and one `.key`, but
+  new theses land there regularly.
+- `cds-hooks/docs` — Apache-2.0 page-layout document; usable if the 5 MB cap is ever relaxed.

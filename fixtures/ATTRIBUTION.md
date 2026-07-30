@@ -581,7 +581,8 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 - 132,018 bytes, md5 `418d037294781dc3c076a26220ebf5fc`
 - fileFormatVersion **4.1.7**, app build **M8.1-6369-2** (Pages 8.1, "iwork19" era), flat `Index/*.iwa`
 - Content: a personal technical review write-up with reviewer annotations left in the document.
-- **First fixture in the corpus with real comments**, and the first with more than one TOC object.
+- Value: **real reviewer comments (6)** on a genuine, human-written document, plus readable v5
+  table cells and **3 TOC objects** (every fixture predating this survey had exactly 1).
 - feature-probe:
   ```
   pages | era=iwork19 | format=4.1.7 | build=M8.1-6369-2 | flat | 669 objects | score=4
@@ -595,7 +596,8 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 - fileFormatVersion **4.1.7**, app build **M8.1-6369-2**, flat `Index/*.iwa`
 - Content: long-form structured notes (156 paragraphs, ~14.6k chars) split across **8 document
   sections** with external hyperlinks and smart fields.
-- **Highest section count in the corpus** (every pre-existing fixture had exactly 1).
+- Value: **highest section count of any fixture in the set (8)**; every fixture predating this
+  survey had exactly 1 section.
 - feature-probe:
   ```
   pages | era=iwork19 | format=4.1.7 | build=M8.1-6369-2 | flat | 629 objects | score=4
@@ -609,8 +611,9 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 - fileFormatVersion **26.1.0**, app build **M15.2.1-7048.0.3-2** (Pages 15.2.1, "current" era), flat `Index/*.iwa`
 - Content: a long-form narrative document (6 sections, ~9k chars) built from one of the shipped
   Pages book/novel templates, with masked images, 25 smart fields and floating text boxes.
-- **Newest file-format version in the corpus by a wide margin** (previous max was 14.4.1); the
-  only fixture exercising the `26.x` format alongside multi-section layout.
+- Value: a **real-world `26.x` document** (era `current`) that combines multi-section layout,
+  image masks and a large smart-field population — the only real-world, human-authored file in
+  the set on the newest format generation.
 - feature-probe:
   ```
   pages | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 721 objects | score=6
@@ -624,7 +627,8 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 - fileFormatVersion **26.1.0**, app build **M15.2.1-7048.0.3-2**, flat `Index/*.iwa`
 - Content: an academic term-paper document with **two non-empty page footers** (running
   footer text on the section templates) and masked images.
-- **First fixture with real header/footer text** on a `26.x` document.
+- Value: **running-footer text on a `26.x` document** — section-template footers as Pages 15.2.1
+  writes them, which no other real-world file in this survey provided.
 - feature-probe:
   ```
   pages | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 492 objects | score=5
@@ -639,7 +643,8 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 - Content: a physics conference poster ("Pairing Model QPE") from a University of Oslo
   computational-physics PhD project — 29 images of which **9 carry image masks**, laid out in
   48 floating text boxes.
-- **Densest image/mask fixture in the corpus** and the only real-world poster-style layout.
+- Value: **densest image/mask document in this survey** (29 images, 9 masked) and the only
+  real-world poster-style layout; also the only CC0-licensed file in the set.
 - feature-probe:
   ```
   pages | era=iwork16 | format=2.2.4 | build=M6.2-4582-1 | flat | 489 objects | score=5
@@ -649,9 +654,8 @@ Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), c
 ### Licence notes for this section
 - Four of the six files are MIT, one is CC0-1.0. All licences are repository-level `LICENSE`
   files that were fetched and read, not inferred from GitHub metadata.
-- `desmarais-patrick/notes` is a personal repository whose owner chose MIT explicitly.
-  MIT explicitly; the documents contain the authors' own names (Patrick Desmarais, Justin
-  Murphy). They are retained here as unmodified, attributed test fixtures.
+- `desmarais-patrick/notes` is a personal repository whose owner chose MIT explicitly; the
+  documents are project write-ups containing no contact details (verified by scan).
 - `patrickomatic/iwork` is an MIT-licensed Rust crate whose `examples/pages/*` documents are
   derived from stock Pages templates; only the crate author's own rendering is redistributed.
 - Substantially better-scoring real-world documents exist on GitHub but were **rejected for
@@ -802,9 +806,10 @@ note below, which is the reason both were taken.
   re-saved by Pages 14.1 and its BuildVersionHistory simply *appends* that build. So the pair
   isolates exactly what a 4.2.3 → 14.1.1 upgrade changes in a document that is otherwise the
   same: same 63 text storages, same single BNC-v5 table, same 3 non-empty footers, same 3 inline
-  attachments, +41 archives and +2 named paragraph styles. `4.2.3` also fills a real gap —
-  before this the corpus jumped from Pages `3.2.13` straight to `10.0.10`, so no 4.x/8.x-era
-  Pages writer was represented at all.
+  attachments, +41 archives and +2 named paragraph styles. `4.2.3` is also the only
+  Pages 8.2 / `4.2.x` writer in the set — the neighbouring
+  `desmarais-notes-*.pages` pair is `4.1.7` / Pages 8.1, so the two together bracket the
+  8.1 → 8.2 point release within the same format era.
 
 ### Notes on this section
 
@@ -821,3 +826,107 @@ note below, which is the reason both were taken.
   incompatible — are listed in `research/openweb-survey.md`. The most notable exclusion is
   Harvard Dataverse `doi:10.7910/DVN/YFY5HI`, whose three `.pages` files are
   **CC BY-NC-ND 4.0** (the NC clause is incompatible with this repository).
+
+## Non-git / archive fixtures
+
+Files in this section were obtained **outside any git host** — from package registries
+(npm, PyPI, RubyGems, crates.io, Go module proxy, CPAN, Packagist, NuGet, Maven Central),
+web archives (archive.org), and bug-tracker / test-corpus sources. Survey method,
+every file probed (including the ones deliberately **not** taken), and the dead-end source
+categories are written up in `research/archive-survey.md`.
+
+Verification applied to every candidate: first two bytes are `PK`, then
+`node scripts/feature-probe.ts <file>`. `fileFormatVersion` comes from
+`Metadata/Properties.plist` and the build string from the **last** element of
+`Metadata/BuildVersionHistory.plist`, both read as binary plists.
+
+### pypi-numbers-parser-v14.1.1-empty-template.numbers
+
+- Source: **PyPI sdist**, not the git repo —
+  `https://files.pythonhosted.org/packages/04/95/0c2086cabd2b65efaafa2ad0a8fd87434ea7463eebac228c974cf22e08cd/numbers_parser-4.18.5.tar.gz`
+  (`numbers_parser` 4.18.5, uploaded 2026-05-18). Obtained with
+  `curl https://pypi.org/pypi/numbers-parser/json` → sdist URL → `curl` → `tar -xzf`;
+  member `numbers_parser-4.18.5/src/numbers_parser/data/empty.numbers`. Nothing was installed.
+- License: **MIT** — `numbers_parser-4.18.5/LICENSE.rst` is inside the same tarball
+  ("Copyright 2021 Jon Connell … Permission is hereby granted, free of charge …").
+  This is a stronger grant than a bare `license:` field: the licence text ships with the file.
+- 90,601 bytes, md5 `35f7c069ab7cec68d426ca2857fe6ff5`
+- `fileFormatVersion` **14.1.1**; BuildVersionHistory last entry **`M14.1-7040.0.73-4`**
+  (Numbers 14.1, macOS).
+- feature-probe: `numbers | era=modern | format=14.1.1 | build=M14.1-7040.0.73-4 | flat |
+  643 objects | score=2` —
+  `textStorages=7 nonEmptyStorages=1 tables=1 tableCellStorage=v5 readableTableCells=1
+  inlineAttachments=1 listStyledParagraphs=7`
+- Why it is here: it is the **seed template `numbers-parser` itself writes from** when creating
+  a new document, i.e. the canonical minimal modern Numbers package — one empty table, BNC v5
+  storage, no media. It also fills a real version gap: the other Numbers fixtures are
+  `2.0.24`, `14.4.1`, `26.0.0` and `26.1.0`, with nothing at `14.1.x`.
+
+### npm-keynote-extractor-v2.0.24-macos-images-masks.key
+
+- Source: **npm tarball**, not the git repo —
+  `https://registry.npmjs.org/keynote-extractor/-/keynote-extractor-2.1.0.tgz`;
+  member `package/test/test-data/presentation.key`. Obtained by resolving `dist.tarball`
+  from `https://registry.npmjs.org/keynote-extractor` and `tar -xzf`. Nothing was installed.
+- License: **ISC**, declared as `"license": "ISC"` in the published `package/package.json`.
+  Caveat, recorded for honesty: the tarball ships **no `LICENSE` file**, so the grant rests on
+  the manifest field alone — the same strength of evidence as the `iwork-mcp-*` files above,
+  and weaker than `numbers-parser`'s bundled `LICENSE.rst`.
+- 398,401 bytes, md5 `f84f5f8218c2943bf6d4c3f3b6e905be`
+- `fileFormatVersion` **2.0.24**; BuildVersionHistory last entry **`M6.6.2-2571-1`**
+  (Keynote 6.6.2, macOS, 2016).
+- feature-probe: `keynote | era=iwork16 | format=2.0.24 | build=M6.6.2-2571-1 | flat |
+  498 objects | score=3` —
+  `textStorages=62 nonEmptyStorages=34 images=7 imagesWithMask=7 tableCellStorage=none
+  inlineAttachments=3 listStyledParagraphs=62`
+- Why it is here: it is **not** newer than anything in the set — it is a *writer-platform
+  control*. `tika-testKeynote2013.key` has the identical `fileFormatVersion` 2.0.24 but was
+  written by **iOS** Keynote (`T2.6.1 (2180)`); this one was written by **macOS** Keynote
+  (`M6.6.2-2571-1`). The pair isolates what varies with the writing platform at a fixed
+  format version, which is exactly the confound `research/version-survey.md` otherwise has to
+  guess at. It is also the only file the package-registry channel yielded that is both
+  licensed and under 5 MB.
+
+### Notes on this section
+
+- Naming follows `<source>-v<fileFormatVersion>-<features>.<ext>`, with the source being the
+  **registry**, not a repo, because that is where the bytes came from.
+- No existing fixture was modified or removed by this pass.
+- Everything else this pass probed was rejected for licence (bug-tracker attachments carry no
+  redistribution grant), size (the CC0 archive.org Keynotes are 75–116 MB), or age. The full
+  list with versions and builds is in `research/archive-survey.md` — including the one genuinely
+  novel specimen found, a **Pages 14.4 collaboration-mode package** whose
+  `Index/OperationStorage.iwa` is **LZFSE-framed (`bvxn` … `bvx$`), not Snappy**, and which the
+  current loader therefore rejects outright.
+
+
+## Fixture privacy policy
+
+A permissive licence makes a document *redistributable*; it does not make it *appropriate*
+as a test fixture. Documents are additionally screened for personal data, and one that
+carries it is not included even when the licence would allow it.
+
+**Removed under this policy**
+
+- A CV/résumé from an MIT-licensed personal repository (Pages 12.0.8, 7 hyperlinks — it was
+  the highest hyperlink count found). It contained a private individual's personal email
+  address, phone number and employment history. The repository owner published a repository;
+  they did not publish their contact details for redistribution into unrelated projects.
+  Hyperlink coverage is retained through other fixtures.
+
+**Screened and retained**
+
+- `rougier-v13.1-image-filters-masks.pages` contains two *institutional* academic addresses
+  (`@u-bordeaux.fr`, `@ensc.fr`) printed on a published scholarly poster — professional
+  contact information published for that purpose, not private data. Retained deliberately,
+  recorded here so the decision is explicit rather than an oversight.
+- `patrickomatic-*.pages` contain only Apple's stock template placeholder text
+  ("Author Name", "To get started, just tap or click this placeholder text").
+- `compphysics-poster-images-masks.pages` is CC0 published academic work with normal
+  scholarly authorship.
+
+**Re-run the screen** after adding fixtures:
+
+```sh
+node scripts/scan-fixture-privacy.ts
+```
