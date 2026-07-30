@@ -22,6 +22,7 @@ import { decodeIwaData, encodeIwaData } from "../base/snappy.ts";
 // TSP.ArchiveInfo field numbers.
 const ARCHIVE_IDENTIFIER = 1;
 const ARCHIVE_MESSAGE_INFOS = 2;
+const ARCHIVE_SHOULD_MERGE = 3;
 
 // TSP.MessageInfo field numbers.
 const MSG_TYPE = 1;
@@ -69,6 +70,45 @@ export class IwaObject {
       this.parsed = RawMessage.parse(this.payloads[0] ?? new Uint8Array(0));
     }
     return this.parsed;
+  }
+
+  /**
+   * Number of payloads in this archive. Almost always 1; archives with more
+   * are either multi-message (each payload a full message, with its own
+   * MessageInfo.type) or merge/patch archives (see {@link isPatchArchive}).
+   */
+  get payloadCount(): number {
+    return this.payloads.length;
+  }
+
+  /**
+   * True for merge/patch archives: `ArchiveInfo.should_merge` is set, or a
+   * MessageInfo carries `type == 0`, meaning its payload is a diff against
+   * the message named by `base_message_index`.
+   *
+   * Multiple MessageInfos alone do NOT make a patch archive — modern Pages
+   * routinely writes archives holding several complete messages of the same
+   * type (observed on TST.TableStyleNetworkArchive in 14.5 documents).
+   */
+  get isPatchArchive(): boolean {
+    if (this.archiveInfo.getBool(ARCHIVE_SHOULD_MERGE) === true) return true;
+    return this.messageInfos.some((info) => (info.getUint(MSG_TYPE) ?? 0) === 0);
+  }
+
+  /** Message types of every payload, in order. */
+  get payloadTypes(): number[] {
+    return this.messageInfos.map((info) => info.getUint(MSG_TYPE) ?? 0);
+  }
+
+  /**
+   * Parse a secondary payload (index ≥ 1). These are preserved verbatim on
+   * save unless replaced; only the primary payload is edit-tracked.
+   */
+  payloadMessage(index: number): RawMessage | undefined {
+    const bytes = this.payloads[index];
+    if (bytes === undefined) return undefined;
+    if (index === 0) return this.message;
+    return RawMessage.parse(bytes);
   }
 
   get isDirty(): boolean {

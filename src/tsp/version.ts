@@ -126,8 +126,17 @@ export interface StructuralProbe {
   unknownTypeIds: number[];
   /** Count of objects carrying those unknown types. */
   unknownTypeObjectCount: number;
-  /** Archives using the merge/patch encoding (multi-MessageInfo). */
+  /**
+   * Archives using the merge/patch encoding (should_merge, or a type-0 diff
+   * payload). Their payloads are preserved but not interpreted.
+   */
   patchArchiveCount: number;
+  /**
+   * Archives holding several complete messages (each with its own type).
+   * Normal in modern documents — all payloads are preserved; only the first
+   * is exposed through the typed model.
+   */
+  multiPayloadArchiveCount: number;
   /** Stylesheets carrying `styles_for_*` per-version snapshots. */
   hasVersionedStyleSnapshots: boolean;
   /** Collaboration session/command-history objects are present. */
@@ -164,9 +173,6 @@ export interface CompatibilityReport {
   warnings: string[];
 }
 
-/** TSP.ArchiveInfo.message_infos / should_merge. */
-const ARCHIVE_MESSAGE_INFOS = 2;
-const ARCHIVE_SHOULD_MERGE = 3;
 /** TSS.StylesheetArchive styles_for_* snapshot range. */
 const STYLESHEET_VERSIONED_FIRST = 7;
 const STYLESHEET_VERSIONED_LAST = 22;
@@ -183,6 +189,7 @@ const ROW_CELL_STORAGE_PRE_BNC = 3;
 export function probeStructure(store: ObjectStore): StructuralProbe {
   const unknown = new Map<number, number>();
   let patchArchiveCount = 0;
+  let multiPayloadArchiveCount = 0;
   let hasVersionedStyleSnapshots = false;
   let hasCollaborationState = false;
   let unparseableObjectCount = 0;
@@ -193,12 +200,8 @@ export function probeStructure(store: ObjectStore): StructuralProbe {
     if (typeName(obj.type, store.app) === undefined) {
       unknown.set(obj.type, (unknown.get(obj.type) ?? 0) + 1);
     }
-    if (
-      obj.archiveInfo.getBool(ARCHIVE_SHOULD_MERGE) === true ||
-      obj.archiveInfo.getMessages(ARCHIVE_MESSAGE_INFOS).length > 1
-    ) {
-      patchArchiveCount++;
-    }
+    if (obj.isPatchArchive) patchArchiveCount++;
+    else if (obj.payloadCount > 1) multiPayloadArchiveCount++;
     if (COLLABORATION_TYPES.has(obj.type)) hasCollaborationState = true;
 
     let message;
@@ -236,6 +239,7 @@ export function probeStructure(store: ObjectStore): StructuralProbe {
     unknownTypeIds: [...unknown.keys()].sort((a, b) => a - b),
     unknownTypeObjectCount: [...unknown.values()].reduce((a, b) => a + b, 0),
     patchArchiveCount,
+    multiPayloadArchiveCount,
     hasVersionedStyleSnapshots,
     hasCollaborationState,
     cellStorage,
@@ -278,9 +282,15 @@ export function buildCompatibilityReport(inputs: CompatibilityInputs): Compatibi
   if (probe.patchArchiveCount > 0) {
     warnings.push(
       `${probe.patchArchiveCount} archive(s) use the merge/patch encoding; they are preserved ` +
-        `as-is and their payloads are not interpreted.`,
+        `as-is and their diff payloads are not interpreted.`,
     );
     unsupportedFeatures.push("merge/patch archives (should_merge)");
+  }
+  if (probe.multiPayloadArchiveCount > 0) {
+    warnings.push(
+      `${probe.multiPayloadArchiveCount} archive(s) carry more than one message payload; all ` +
+        `payloads are preserved, but only the first is exposed through the typed model.`,
+    );
   }
   if (probe.cellStorage === "preBNC" || probe.cellStorage === "mixed") {
     unsupportedFeatures.push(

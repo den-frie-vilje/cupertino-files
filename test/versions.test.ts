@@ -160,12 +160,16 @@ describe("compatibility across every fixture era", () => {
   });
 
   it("surfaces unsupported features rather than failing the load", () => {
-    // 2018-era Keynote uses merge/patch archives; they must be reported,
-    // preserved, and must not prevent loading or saving.
+    // Archives carrying several complete messages are normal in modern
+    // documents and must NOT be mistaken for merge/patch archives (which
+    // require should_merge or a type-0 diff payload). They are reported as
+    // a warning, preserved, and never block loading or saving.
     const doc = IWorkDocument.open(fixture("tika-testKeynote2018.key"));
     const report = doc.compatibility();
-    expect(report.probe.patchArchiveCount).toBeGreaterThan(0);
-    expect(report.warnings.join(" ")).toContain("merge/patch");
+    expect(report.probe.multiPayloadArchiveCount).toBeGreaterThan(0);
+    expect(report.probe.patchArchiveCount).toBe(0);
+    expect(report.warnings.join(" ")).toContain("more than one message payload");
+    expect(report.unsupportedFeatures.length).toBe(0);
     expect(report.canRoundTrip).toBe(true);
 
     // Pre-BNC cell storage is an unsupported *feature*, not a load failure.
@@ -213,5 +217,50 @@ describe("registry extensibility (teaching the library new types)", () => {
   it("rejects invalid type IDs", () => {
     expect(() => registerTypes({ "not-a-number": "X.Y" })).toThrow();
     expect(() => registerTypes({ 0: "X.Y" })).toThrow();
+  });
+});
+
+describe("multi-payload archives (modern documents)", () => {
+  it("distinguishes multi-message archives from merge/patch archives", () => {
+    // Pages 14.5 writes TST.TableStyleNetworkArchive as an archive holding
+    // two complete messages of the same type — no should_merge, no type-0
+    // diff. Both payloads must survive a round-trip untouched.
+    const original = fixture("iwork-mcp-v14.5-sample.pages");
+    const doc = PagesDocument.load(original);
+    const multi = [...doc.store.allObjects()].filter(({ obj }) => obj.payloadCount > 1);
+    expect(multi.length).toBeGreaterThan(0);
+
+    for (const { obj } of multi) {
+      expect(obj.isPatchArchive).toBe(false);
+      // Every payload declares a real (non-zero) type.
+      expect(obj.payloadTypes.every((t) => t !== 0)).toBe(true);
+      expect(obj.payloadMessage(1) !== undefined).toBe(true);
+    }
+
+    const before = multi.map(({ obj }) => ({
+      id: obj.identifier,
+      payloads: obj.payloads.map((p) => p.slice()),
+    }));
+    doc.appendParagraph("Edited elsewhere in the document.");
+    const reloaded = PagesDocument.load(doc.save());
+    for (const b of before) {
+      const after = reloaded.store.object(b.id)!;
+      expect(after.payloadCount).toBe(b.payloads.length);
+      for (let i = 0; i < b.payloads.length; i++) {
+        expect(bytesEqual(after.payloads[i]!, b.payloads[i]!)).toBe(true);
+      }
+    }
+  });
+
+  it("classifies the modern-era fixture and its versioned style snapshots", () => {
+    const doc = PagesDocument.load(fixture("iwork-mcp-v14.5-sample.pages"));
+    const report = doc.compatibility();
+    expect(report.era).toBe("modern");
+    expect(report.formatVersion!.toString()).toBe("14.4.1");
+    expect(report.appBuilds.join(" ")).toContain("M14.5");
+    // styles_for_* snapshots appear in modern files but not in the older ones.
+    expect(report.probe.hasVersionedStyleSnapshots).toBe(true);
+    const older = PagesDocument.load(fixture("libetonyek-pages5-file.pages"));
+    expect(older.compatibility().probe.hasVersionedStyleSnapshots).toBe(false);
   });
 });

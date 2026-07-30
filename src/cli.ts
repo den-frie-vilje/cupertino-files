@@ -121,6 +121,7 @@ function main(): void {
       console.log(`versioned style snapshots: ${r.probe.hasVersionedStyleSnapshots}`);
       console.log(`collaboration state present: ${r.probe.hasCollaborationState}`);
       console.log(`patch archives: ${r.probe.patchArchiveCount}`);
+      console.log(`multi-payload archives: ${r.probe.multiPayloadArchiveCount}`);
       if (r.probe.unknownTypeIds.length) {
         console.log(`unknown type IDs: ${r.probe.unknownTypeIds.join(", ")} (${r.probe.unknownTypeObjectCount} objects)`);
       }
