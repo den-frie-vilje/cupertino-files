@@ -121,6 +121,20 @@ export type {
 } from "./tst/tables.ts";
 export { CellRecord, CellType, CellFlag, encodeDecimal128 } from "./tst/cellrecord.ts";
 export {
+  renderFormula,
+  registerFormulaFunctions,
+  clearRegisteredFormulaFunctions,
+  functionName,
+  isKnownFunction,
+  columnName,
+  cellAddress,
+  AstNodeType,
+  AstNodeFields,
+  FormulaFields,
+  CROSS_TABLE_PREFIX,
+} from "./tst/formulas.ts";
+export type { RenderedFormula, FormulaOrigin } from "./tst/formulas.ts";
+export {
   TableStyleHandle,
   readCellFormatting,
   applyCellFormatting,

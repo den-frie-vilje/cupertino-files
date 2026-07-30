@@ -24,6 +24,7 @@ import {
 import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
+import { renderFormula, type RenderedFormula } from "./formulas.ts";
 
 export const TST_TYPE = {
   TABLE_INFO: 6000,
@@ -375,6 +376,66 @@ export class TableModel {
         columnCount: size >>> 16,
         rowCount: size & 0xffff,
       });
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- formulas
+
+  /**
+   * The formula in a cell, as text, or undefined when it holds a literal.
+   *
+   * Rendered from the cell's position because references are stored as
+   * *offsets* from the cell using them — one formula entry is shared by
+   * every cell in a filled-down column, and each renders differently.
+   *
+   * Function names come from a registry the format does not contain (see
+   * `formulas.ts`); an unrecognised one renders as `FUNCTION_<id>` rather
+   * than a guess. Use {@link cellFormulaDetail} to see what was unnamed.
+   */
+  cellFormula(row: number, column: number): string | undefined {
+    return this.cellFormulaDetail(row, column)?.text || undefined;
+  }
+
+  /** {@link cellFormula} plus the ids and node types it could not name. */
+  cellFormulaDetail(row: number, column: number): RenderedFormula | undefined {
+    const id = this.formulaId(row, column);
+    if (id === undefined) return undefined;
+    const formula = this.formulaTable().get(id);
+    if (!formula) return undefined;
+    return renderFormula(formula, { row, column });
+  }
+
+  /** `formula_id` of a cell, if its record carries one. */
+  formulaId(row: number, column: number): number | undefined {
+    const located = this.locateRow(row);
+    if (!located) return undefined;
+    const raw = readRowLayout(located.rowInfo, this.columnCount).records[column];
+    return raw ? CellRecord.decode(raw).id(CellFlag.FORMULA_ID) : undefined;
+  }
+
+  /** Every formula cell in the table, with its rendered text. */
+  formulas(): { row: number; column: number; formula: string }[] {
+    const out: { row: number; column: number; formula: string }[] = [];
+    if (this.storageGeneration !== "v5") return out;
+    const table = this.formulaTable();
+    if (table.size === 0) return out;
+    for (const cell of this.cells()) {
+      if (cell.value.type === "empty" || !cell.value.isFormula) continue;
+      const formula = this.cellFormula(cell.row, cell.column);
+      if (formula) out.push({ row: cell.row, column: cell.column, formula });
+    }
+    return out;
+  }
+
+  /** key → TSCE.FormulaArchive from the data store's formula table. */
+  private formulaTable(): Map<number, RawMessage> {
+    const out = new Map<number, RawMessage>();
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = entry.getUint(ListEntry.KEY);
+      const formula = entry.getMessage(ListEntry.FORMULA);
+      if (key !== undefined && formula) out.set(key, formula);
     }
     return out;
   }
