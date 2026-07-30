@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   buildZip,
@@ -298,5 +298,54 @@ describe("round-trip fidelity", () => {
     const slides = keynote.slideCount();
     const saved = KeynoteDocument.load(keynote.save());
     expect(saved.slideCount()).toBe(slides);
+  });
+});
+
+describe("readers are pure", () => {
+  it("every read path across the whole corpus leaves the document intact", () => {
+    // The project's core guarantee, checked against the *readers* rather
+    // than the writers: a reader that quietly marks its object dirty
+    // rewrites part of the file on save, and the damage shows up in a
+    // document nobody meant to edit. Exercising all of them on all 37
+    // fixtures is the cheapest way to keep that honest as readers are added.
+    const names = readdirSync(FIXTURES).filter((name) => /\.(pages|numbers|key)$/.test(name));
+    let checked = 0;
+    for (const name of names) {
+      let document: IWorkDocument;
+      try {
+        document = IWorkDocument.open(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue; // iWork '09 and friends are rejected on purpose
+      }
+      for (const table of document.tables()) {
+        table.conditionalStyleSets();
+        table.filterSets();
+        table.categories();
+        table.uidMap();
+        table.merges();
+        if (table.storageGeneration === "v5") table.cells();
+      }
+      for (const storage of document.textStorages()) {
+        storage.comments();
+        storage.footnotes();
+        storage.pageNumberFields();
+        storage.dateFields();
+        storage.bookmarks();
+        storage.smartFields();
+        storage.attachments();
+      }
+      for (const image of document.images()) image.crop();
+      for (const chart of document.charts()) chart.series();
+
+      const reopened = IWorkDocument.open(document.save());
+      expect(`${name}: ${[...reopened.store.allObjects()].length}`).toBe(
+        `${name}: ${[...document.store.allObjects()].length}`,
+      );
+      expect(`${name}: text stable`).toBe(
+        reopened.allText() === document.allText() ? `${name}: text stable` : `${name}: text changed`,
+      );
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(30);
   });
 });
