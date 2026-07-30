@@ -454,6 +454,24 @@ name disagree is self-contradictory.
 the number depends on layout, and a stale digit in place of a live field is
 worse than a blank the app fills in.
 
+## Date fields and bookmarks
+
+```ts
+storage.insertDateField(0, "November 2, 2024", { date: new Date("2024-11-02"), format: "MMMM d, y" });
+storage.dateFields();          // [{ start, end, fieldId, date, format }]
+
+const id = body.addBookmark(10, 20, "Introduction");  // a link destination
+body.addBookmark(10, 20);                             // unnamed, marks a range
+body.removeBookmark(id);
+```
+
+A date field is **not** like a page number: it spans real characters, and
+the app rewrites them when the field updates. So you supply the text to
+show — formatting a date the way a locale and pattern would is Foundation's
+job, and approximating it here would put subtly wrong text in the document.
+The field is marked as needing an update, so the app replaces it with its
+own rendering when it next opens the file.
+
 ## Cropping images
 
 Cropping in iWork does not touch the media: the image keeps its full extent

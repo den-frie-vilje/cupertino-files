@@ -255,3 +255,74 @@ describe("page number fields", () => {
     expect(info.formatName).toBe(reference.formatName);
   });
 });
+
+describe("date fields and bookmarks", () => {
+  it("reads an existing date field over the text it spans", () => {
+    const document = PagesDocument.load(bytes("libetonyek-pages5-extra-dir.pages"));
+    const storage = document.textStorages().find((s) => s.dateFields().length > 0)!;
+    const field = storage.dateFields()[0]!;
+    // Unlike a page number, the rendered text is really in the storage.
+    expect(storage.text.slice(field.start, field.end).length).toBeGreaterThan(0);
+    expect(field.date instanceof Date).toBe(true);
+    expect(field.date!.getUTCFullYear()).toBeGreaterThan(2000);
+    expect(typeof field.format).toBe("string");
+  });
+
+  it("inserts a date field spanning the text it was given", () => {
+    const document = PagesDocument.load(bytes(WITH_PAGE_NUMBER));
+    const storage = document.textStorages().find((s) => s.text === "Expressions")!;
+    const when = new Date("2024-11-02T00:00:00Z");
+    storage.insertDateField(0, "November 2, 2024", { date: when, format: "MMMM d, y" });
+
+    expect(storage.text.startsWith("November 2, 2024")).toBe(true);
+
+    const reloaded = PagesDocument.load(document.save());
+    const again = reloaded.textStorages().find((s) => s.id === storage.id)!;
+    const field = again.dateFields()[0]!;
+    expect(field.start).toBe(0);
+    expect(field.end).toBe("November 2, 2024".length);
+    expect(field.date!.getTime()).toBe(when.getTime());
+    expect(field.format).toBe("MMMM d, y");
+  });
+
+  it("refuses a date field with nothing to span", () => {
+    const storage = PagesDocument.load(bytes(WITH_PAGE_NUMBER)).textStorages()[0]!;
+    expect(() => storage.insertDateField(0, "")).toThrow();
+    expect(() => storage.insertDateField(1e9, "text")).toThrow();
+  });
+
+  it("adds and removes a named bookmark", () => {
+    const document = PagesDocument.load(bytes(WITH_PAGE_NUMBER));
+    const body = document.bodyOrUndefined!;
+    const id = body.addBookmark(10, 20, "Introduction");
+
+    const reloaded = PagesDocument.load(document.save());
+    const bookmark = reloaded.bodyOrUndefined!.bookmarks().find((b) => b.fieldId === id)!;
+    expect(bookmark.name).toBe("Introduction");
+    expect(bookmark.start).toBe(10);
+    expect(bookmark.end).toBe(20);
+
+    const body2 = reloaded.bodyOrUndefined!;
+    const text = body2.text;
+    expect(body2.removeBookmark(id)).toBe(true);
+    expect(body2.bookmarks().some((b) => b.fieldId === id)).toBe(false);
+    expect(body2.text).toBe(text);
+    expect(body2.removeBookmark(id)).toBe(false);
+  });
+
+  it("adds an unnamed ranged bookmark, as the apps do for range links", () => {
+    const document = PagesDocument.load(bytes(WITH_PAGE_NUMBER));
+    const body = document.bodyOrUndefined!;
+    const id = body.addBookmark(10, 20);
+    const object = document.store.object(id)!;
+    expect(object.message.getString(2)).toBe(undefined);
+    expect(object.message.getUint(3)).toBe(1); // ranged
+    expect(object.message.getUint(4)).toBe(0); // not hidden
+  });
+
+  it("rejects an empty bookmark range", () => {
+    const body = PagesDocument.load(bytes(WITH_PAGE_NUMBER)).bodyOrUndefined!;
+    expect(() => body.addBookmark(10, 10)).toThrow();
+    expect(() => body.addBookmark(20, 10)).toThrow();
+  });
+});

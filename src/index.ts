@@ -36,11 +36,21 @@ export {
   NumberAttachment,
   TextualAttachment,
   PAGE_NUMBER_FORMATS,
+  buildDateField,
+  buildBookmark,
+  readDateField,
+  SMART_FIELD_TYPE,
+  SmartField,
+  DateTimeField,
+  DateTimeStyle,
+  DateTimeUpdatePlan,
+  BookmarkFieldArchive,
 } from "./tswp/fields.ts";
 export type {
   NumberAttachmentInfo,
   NumberAttachmentOptions,
   PageNumberFormatName,
+  DateFieldOptions,
 } from "./tswp/fields.ts";
 export {
   buildComment,

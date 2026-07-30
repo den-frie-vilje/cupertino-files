@@ -58,6 +58,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 23 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 12 | iwork16→current |
+| Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 4 | iwork16→modern |
 | Bookmarks | all | 🔍 read only | 3 | iwork16→modern |
 | Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 2 | iwork16→iwork19 |
 | Footnote creation and removal<br><sub>the reference is a U+000E in its own table; the note is a separate storage of footnote kind</sub> | Pages | ✅ read + write | 1 | iwork19→iwork19 |
@@ -79,7 +80,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Image masks | all | 🔍 read only | 14 | iwork16→current |
 | Media variant resolution (unmaterialized originals) | all | 🔍 read only | 9 | iwork16→current |
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; not verified in the app</sub> | Pages | ⚠️ experimental | n/a | — |
-| Floating (non-inline) image placement | Pages | ○ roadmap | n/a | — |
+| Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
 
 ### Pages
 
@@ -143,7 +144,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-25 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+26 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -157,6 +158,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
 - 🟠 medium — Drawables & media → **Image cropping (set, move, remove a mask)**
+- 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**

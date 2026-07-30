@@ -43,6 +43,7 @@
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
+import { randomUuid } from "../base/uuid.ts";
 
 /** TSWP archive types for attachments this module builds. */
 export const ATTACHMENT_TYPE = {
@@ -148,6 +149,157 @@ function resolveFormat(options: NumberAttachmentOptions): { code: number; name: 
     );
   }
   return known;
+}
+
+/** TSWP archive types for the span-based smart fields built here. */
+export const SMART_FIELD_TYPE = {
+  DATE_TIME: 2034,
+  BOOKMARK: 2035,
+} as const;
+
+/** TSWP.SmartFieldArchive — the base every span field embeds at field 1. */
+export const SmartField = { TEXT_ATTRIBUTE_UUID: 1 } as const;
+
+/** TSWP.DateTimeSmartFieldArchive. */
+export const DateTimeField = {
+  SUPER: 1,
+  FORMAT: 2,
+  LOCALE_IDENTIFIER: 3,
+  DATE_STYLE: 4,
+  TIME_STYLE: 5,
+  UPDATE_PLAN: 6,
+  NEEDS_UPDATE: 7,
+  DATE: 8,
+} as const;
+
+/** TSWP.DateTimeSmartFieldArchive.DateTimeFormatterStyle. */
+export const DateTimeStyle = {
+  NONE: 0,
+  SHORT: 1,
+  MEDIUM: 2,
+  LONG: 3,
+  FULL: 4,
+} as const;
+
+/** TSWP.DateTimeSmartFieldArchive.DateTimeUpdatePlan. */
+export const DateTimeUpdatePlan = {
+  /** Frozen: the text stays as written. */
+  NEVER: 0,
+  /** Refreshed whenever the app opens or prints the document. */
+  AUTO: 1,
+  /** Refreshed once, then frozen. */
+  ONCE: 2,
+} as const;
+
+/** TSWP.BookmarkFieldArchive. */
+export const BookmarkFieldArchive = {
+  SUPER: 1,
+  NAME: 2,
+  RANGED: 3,
+  HIDDEN: 4,
+} as const;
+
+/** TSP.Date: seconds = 1, from 2001-01-01. */
+const DATE_SECONDS = 1;
+const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
+
+export interface DateFieldOptions {
+  /** The moment the field represents. Defaults to now. */
+  date?: Date;
+  /** Apple's date pattern, e.g. `"MMMM d, y"`. */
+  format?: string;
+  /** BCP-47 identifier the app formats with, e.g. `"en"`. */
+  locale?: string;
+  /** One of {@link DateTimeStyle}; `LONG` by default. */
+  dateStyle?: number;
+  /** One of {@link DateTimeStyle}; `NONE` by default — a date, not a time. */
+  timeStyle?: number;
+  /** One of {@link DateTimeUpdatePlan}; `AUTO` by default. */
+  updatePlan?: number;
+}
+
+/**
+ * Build a `TSWP.DateTimeSmartFieldArchive`.
+ *
+ * A date field spans **real characters**, unlike a page number: the text is
+ * in the storage and the app rewrites it when the field updates. So the
+ * caller supplies the text to show, and `needs_update` is set so the app
+ * replaces it with its own rendering at the first opportunity — rendering
+ * a date the way a given locale and pattern would is Foundation's job, and
+ * approximating it here would put subtly wrong text in the document.
+ */
+export function buildDateField(
+  store: ObjectStore,
+  component: Component,
+  options: DateFieldOptions = {},
+): IwaObject {
+  const message = RawMessage.create();
+  const smartField = RawMessage.create();
+  smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
+  message.setMessage(DateTimeField.SUPER, smartField);
+
+  message.setString(DateTimeField.FORMAT, options.format ?? "MMMM d, y");
+  message.setString(DateTimeField.LOCALE_IDENTIFIER, options.locale ?? "en");
+  message.setVarint(DateTimeField.DATE_STYLE, options.dateStyle ?? DateTimeStyle.LONG);
+  message.setVarint(DateTimeField.TIME_STYLE, options.timeStyle ?? DateTimeStyle.NONE);
+  message.setVarint(DateTimeField.UPDATE_PLAN, options.updatePlan ?? DateTimeUpdatePlan.AUTO);
+  message.setBool(DateTimeField.NEEDS_UPDATE, true);
+
+  const date = RawMessage.create();
+  date.setDouble(DATE_SECONDS, ((options.date ?? new Date()).getTime() - APPLE_EPOCH_MS) / 1000);
+  message.setMessage(DateTimeField.DATE, date);
+
+  const object = store.createObject(SMART_FIELD_TYPE.DATE_TIME, component);
+  object.setMessageBytes(message.toBytes());
+  return object;
+}
+
+/**
+ * Build a `TSWP.BookmarkFieldArchive`.
+ *
+ * Named bookmarks are link destinations. Anonymous ones — `ranged`, with no
+ * name — are what the apps create when a link points at a stretch of text
+ * rather than a named place, and both shapes occur in the corpus.
+ */
+export function buildBookmark(
+  store: ObjectStore,
+  component: Component,
+  name?: string,
+): IwaObject {
+  const message = RawMessage.create();
+  const smartField = RawMessage.create();
+  smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
+  message.setMessage(BookmarkFieldArchive.SUPER, smartField);
+  if (name !== undefined) message.setString(BookmarkFieldArchive.NAME, name);
+  // A named bookmark is a destination; an unnamed one marks a range. Every
+  // corpus bookmark sets both flags explicitly.
+  message.setVarint(BookmarkFieldArchive.RANGED, name === undefined ? 1 : 0);
+  message.setVarint(BookmarkFieldArchive.HIDDEN, 0);
+
+  const object = store.createObject(SMART_FIELD_TYPE.BOOKMARK, component);
+  object.setMessageBytes(message.toBytes());
+  return object;
+}
+
+/** Read a date field's settings. */
+export function readDateField(object: IwaObject): {
+  date: Date | undefined;
+  format: string | undefined;
+  locale: string | undefined;
+  dateStyle: number | undefined;
+  timeStyle: number | undefined;
+  updatePlan: number | undefined;
+} | undefined {
+  if (object.type !== SMART_FIELD_TYPE.DATE_TIME) return undefined;
+  const seconds = object.message.getMessage(DateTimeField.DATE)?.getDouble(DATE_SECONDS);
+  return {
+    date: seconds === undefined ? undefined : new Date(APPLE_EPOCH_MS + seconds * 1000),
+    format: object.message.getString(DateTimeField.FORMAT),
+    locale: object.message.getString(DateTimeField.LOCALE_IDENTIFIER),
+    dateStyle: object.message.getUint(DateTimeField.DATE_STYLE),
+    timeStyle: object.message.getUint(DateTimeField.TIME_STYLE),
+    updatePlan: object.message.getUint(DateTimeField.UPDATE_PLAN),
+  };
 }
 
 /** What a number attachment renders, read back. */

@@ -48,8 +48,12 @@ import {
   ATTACHMENT_TYPE,
   AttachmentKind,
   TextualAttachment,
+  buildBookmark,
+  buildDateField,
   buildNumberAttachment,
+  readDateField,
   readNumberAttachment,
+  type DateFieldOptions,
   type NumberAttachmentInfo,
   type NumberAttachmentOptions,
 } from "./fields.ts";
@@ -904,6 +908,79 @@ export class TextStorage {
       if (info) out.push({ ...info, index: entry.index, objectId: entry.objectId });
     }
     return out;
+  }
+
+  /**
+   * Insert a live date field showing `text`.
+   *
+   * Unlike a page number, a date field spans **real characters**: the text
+   * is in the storage and the app rewrites it when the field updates. So
+   * the text to show is supplied rather than rendered here — formatting a
+   * date the way a given locale and pattern would is Foundation's job, and
+   * approximating it would put subtly wrong text in the document. The field
+   * is marked as needing an update, so the app replaces it with its own
+   * rendering at the first opportunity.
+   */
+  insertDateField(pos: number, text: string, options: DateFieldOptions = {}): bigint {
+    if (text.length === 0) {
+      throw new RangeError("insertDateField: a date field must span some text");
+    }
+    const length = this.text.length;
+    if (pos < 0 || pos > length) {
+      throw new RangeError(`insertDateField: position ${pos} out of range (${length})`);
+    }
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const field = buildDateField(this.store, component, options);
+    this.replaceRange(pos, pos, text);
+    this.spanObject(Storage.TABLE_SMARTFIELD, pos, pos + text.length, field.identifier);
+    return field.identifier;
+  }
+
+  /** The date fields in this storage, with their settings. */
+  dateFields(): { start: number; end: number; fieldId: bigint; date: Date | undefined; format: string | undefined }[] {
+    const out: { start: number; end: number; fieldId: bigint; date: Date | undefined; format: string | undefined }[] = [];
+    for (const run of this.objectRuns(Storage.TABLE_SMARTFIELD)) {
+      if (run.objectId === undefined) continue;
+      const object = this.store.object(run.objectId);
+      const info = object ? readDateField(object) : undefined;
+      if (!info) continue;
+      out.push({
+        start: run.start,
+        end: run.end,
+        fieldId: run.objectId,
+        date: info.date,
+        format: info.format,
+      });
+    }
+    return out;
+  }
+
+  /**
+   * Mark [start, end) as a bookmark — a named destination a link can target.
+   *
+   * A bookmark with no name is what the apps create for a link pointing at
+   * a stretch of text rather than a named place; both shapes occur in the
+   * corpus and both are written here.
+   */
+  addBookmark(start: number, end: number, name?: string): bigint {
+    const length = this.text.length;
+    if (start < 0 || end <= start || end > length) {
+      throw new RangeError(`addBookmark: invalid range ${start}..${end} (len ${length})`);
+    }
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const field = buildBookmark(this.store, component, name);
+    this.spanObject(Storage.TABLE_BOOKMARK, start, end, field.identifier);
+    return field.identifier;
+  }
+
+  /** Remove a bookmark. The text it marked stays. */
+  removeBookmark(fieldId: bigint): boolean {
+    const found = this.bookmarks().find((bookmark) => bookmark.fieldId === fieldId);
+    if (!found) return false;
+    this.spanObject(Storage.TABLE_BOOKMARK, found.start, found.end, undefined);
+    return true;
   }
 
   /** Bookmarks anchored in this storage (named destinations). */

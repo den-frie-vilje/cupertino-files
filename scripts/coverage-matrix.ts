@@ -342,6 +342,17 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
+    name: "Date fields and bookmarks (read + create)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc.textStorages().some((s) => s.bookmarks().length > 0 || s.dateFields().length > 0),
+      ),
+    note: "a date field spans real text the app rewrites, so the display text is supplied rather than formatted here",
+  },
+  {
+    group: "Text & styles",
     name: "Bookmarks",
     apps: "all",
     status: "read",
@@ -523,9 +534,17 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Drawables & media",
-    name: "Floating (non-inline) image placement",
+    name: "Floating (non-inline) drawable placement",
     apps: ["pages"],
-    status: "roadmap",
+    status: "read+write",
+    probe: (c) => safe(() => (c.pages?.floatingDrawablePages().length ?? 0) > 0),
+    note: "per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes",
+    manualProof: {
+      claim: "a drawable copied into a page's floating list is placed and rendered by Pages",
+      why: "the suite proves the copy resolves, keeps its media and survives a save, not that the app lays it out",
+      how: "copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source",
+      risk: "medium",
+    },
   },
 
   // ------------------------------------------------------------------- pages
