@@ -19,6 +19,17 @@ import {
   type IWorkDocument,
   type TableModel,
 } from "../src/index.ts";
+import {
+  AstNodeFields,
+  AstNodeType,
+  clearRegisteredFormulaFunctions,
+  CROSS_TABLE_PREFIX,
+  functionName,
+  isKnownFunction,
+  registerFormulaFunctions,
+  renderFormula,
+} from "../src/index.ts";
+import { RawMessage } from "../src/base/protobuf.ts";
 import { refId } from "../src/tsp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -714,5 +725,149 @@ describe("header and footer bands", () => {
     const header = reloaded.bandTextStyle("headerRow")!.character();
     expect(header.bold).toBe(true);
     expect(header.fontSize).toBe(14);
+  });
+});
+
+describe("formulas", () => {
+  it("renders arithmetic with references resolved against the using cell", () => {
+    // References are stored as offsets from the cell that uses them, so
+    // one formula entry renders differently in every cell that shares it.
+    // Pages, not Numbers: formulas are a table feature, not an app feature.
+    const doc = PagesDocument.load(fixture("libetonyek-pages5-extra-dir.pages"));
+    const table = doc.tables().find((t) => t.formulas().length > 0)!;
+    expect(table.cellFormula(1, 3)).toBe("=B2*C2");
+    // The same stored formula, one row down.
+    expect(table.cellFormula(2, 3)).toBe("=B3*C3");
+    // And its cached value is the product of the cells it names.
+    const value = (row: number, column: number) => Number(table.cellText(row, column));
+    expect(value(1, 1) * value(1, 2)).toBe(value(1, 3));
+  });
+
+  it("names SUM, the one function id the corpus proves", () => {
+    // 168 is identified by arithmetic, not assumption: the cached result
+    // equals the sum of the cells the formula covers.
+    const doc = PagesDocument.load(fixture("libetonyek-pages5-extra-dir.pages"));
+    const table = doc.tables().find((t) => t.formulas().length > 0)!;
+    const total = table.formulas().find((f) => f.formula.startsWith("=SUM"))!;
+    expect(total.formula).toContain("SUM(");
+    const summed = [1, 2, 3].reduce((n, row) => n + Number(table.cellText(row, 3) || 0), 0);
+    expect(Number(table.cellText(total.row, total.column))).toBe(summed);
+  });
+
+  it("resolves both absolute and relative colon tracts", () => {
+    // Ranges come in two encodings. Reading only the absolute pair renders
+    // the relative ones as #REF! — which is what happened before.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v14.4-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const formula = table.formulas()[0]!;
+    expect(formula.formula).toBe("=SUM(C3:K6)");
+    expect(formula.formula).toContain(":");
+  });
+
+  it("marks references into another table instead of faking a local address", () => {
+    // The target table's name is not recoverable, and rendering these as
+    // bare `A2` would read as a cell in the formula's own table.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-categories.numbers"));
+    const table = doc.tables().find((t) => t.name === "Categories")!;
+    const detail = table.cellFormulaDetail(1, 0)!;
+    expect(detail.hasCrossTableReferences).toBe(true);
+    expect(detail.text).toContain(CROSS_TABLE_PREFIX);
+    expect(detail.text).toBe(`=${CROSS_TABLE_PREFIX}A2`);
+  });
+
+  it("reports unknown function ids rather than inventing names", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-xlsx-lineage.numbers"));
+    for (const table of doc.tables()) {
+      if (table.storageGeneration !== "v5") continue;
+      for (const { row, column } of table.formulas()) {
+        const detail = table.cellFormulaDetail(row, column)!;
+        // Anything unnamed must appear as a visible placeholder.
+        for (const id of detail.unknownFunctions) {
+          expect(detail.text).toContain(`FUNCTION_${id}`);
+        }
+      }
+    }
+  });
+
+  it("accepts function names registered at runtime", () => {
+    registerFormulaFunctions({ 999: "MYFUNC" });
+    expect(functionName(999)).toBe("MYFUNC");
+    expect(isKnownFunction(999)).toBe(true);
+    clearRegisteredFormulaFunctions();
+    expect(functionName(999)).toBe("FUNCTION_999");
+    expect(isKnownFunction(999)).toBe(false);
+    // Built-ins survive a clear.
+    expect(functionName(168)).toBe("SUM");
+  });
+
+  it("renders every formula in the corpus without an unknown node type", () => {
+    // Coverage guard: a node type we have no rule for renders as NODE_<n>,
+    // which is visible but useless. This fails when the corpus grows a
+    // formula shape the renderer does not understand.
+    const unknown = new Set<number>();
+    let rendered = 0;
+    for (const name of [
+      "libetonyek-pages5-extra-dir.pages",
+      "picodocs-v14.4-headers-tables.pages",
+      "numbers-parser-v14.4-issue102.numbers",
+      "numbers-parser-v26.0-categories.numbers",
+      "numbers-parser-v26.1-xlsx-lineage.numbers",
+      "numbers-parser-v26.1-custom-formats.numbers",
+    ]) {
+      const doc = name.endsWith(".pages")
+        ? PagesDocument.load(fixture(name))
+        : NumbersDocument.load(fixture(name));
+      for (const table of doc.tables()) {
+        if (table.storageGeneration !== "v5") continue;
+        for (const { row, column, formula } of table.formulas()) {
+          const detail = table.cellFormulaDetail(row, column)!;
+          detail.unknownNodeTypes.forEach((t) => unknown.add(t));
+          expect(formula.startsWith("=")).toBe(true);
+          rendered++;
+        }
+      }
+    }
+    expect(rendered).toBeGreaterThan(100);
+    expect([...unknown]).toEqual([]);
+  });
+
+  it("parenthesises by precedence, since brackets are not stored", () => {
+    // The archive records structure, not the author's typing, so the
+    // renderer must add exactly the brackets the tree requires.
+    const ast = (...nodes: { type: number; extra?: (m: RawMessage) => void }[]) => {
+      const array = RawMessage.create();
+      for (const node of nodes) {
+        const n = RawMessage.create();
+        n.setVarint(1, node.type);
+        node.extra?.(n);
+        array.addMessage(1, n);
+      }
+      const formula = RawMessage.create();
+      formula.setMessage(1, array);
+      return formula;
+    };
+    const num = (v: number) => ({
+      type: AstNodeType.NUMBER,
+      extra: (m: RawMessage) => m.setDouble(AstNodeFields.NUMBER, v),
+    });
+
+    // (1+2)*3 — the multiply's left operand binds looser, so it needs brackets.
+    expect(
+      renderFormula(ast(num(1), num(2), { type: AstNodeType.ADDITION }, num(3), {
+        type: AstNodeType.MULTIPLICATION,
+      })).text,
+    ).toBe("=(1+2)*3");
+    // 1+2*3 — no brackets needed.
+    expect(
+      renderFormula(ast(num(1), num(2), num(3), { type: AstNodeType.MULTIPLICATION }, {
+        type: AstNodeType.ADDITION,
+      })).text,
+    ).toBe("=1+2*3");
+    // 1-(2-3) — right operand of a left-associative operator at equal precedence.
+    expect(
+      renderFormula(ast(num(1), num(2), num(3), { type: AstNodeType.SUBTRACTION }, {
+        type: AstNodeType.SUBTRACTION,
+      })).text,
+    ).toBe("=1-(2-3)");
   });
 });

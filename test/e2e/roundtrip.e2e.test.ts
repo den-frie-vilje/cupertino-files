@@ -331,6 +331,60 @@ describe("e2e: Numbers", () => {
   );
 
   it(
+    "harvests function ids by having Numbers author the formulas",
+    { skip: skip.Numbers ?? false },
+    () => {
+      // `AST_function_node_index` is an index into an Apple-internal list
+      // that no public schema contains, so the library ships only the ids
+      // it can prove and renders the rest as FUNCTION_<id>.
+      //
+      // This is the one place the mapping can be *measured* rather than
+      // guessed: Numbers writes the formula, we read the id back. The test
+      // asserts the id we already claim and prints the rest, so a run on a
+      // Mac produces a table that can be pasted into a registerFormulaFunctions
+      // call — see docs/VERIFICATION.md.
+      session!.remember("Numbers");
+      const path = session!.path("functions.numbers");
+      session!.stageFixture(NUMBERS_FIXTURE, "functions.numbers");
+
+      const probes = ["SUM", "AVERAGE", "MIN", "MAX", "COUNT", "ABS", "ROUND", "MEDIAN"];
+      const assignments = probes
+        .map((fn, i) => `    set value of cell ${i + 2} of column 1 to "=${fn}(B1:B3)"`)
+        .join("\n");
+      osascript(
+        `tell application "Numbers"\n` +
+          `  set theDoc to open ${posix(path)}\n` +
+          `  tell table 1 of sheet 1 of theDoc\n` +
+          `${assignments}\n` +
+          `  end tell\n` +
+          `  save theDoc\n` +
+          `  close theDoc saving no\n` +
+          `end tell`,
+      );
+
+      const table = NumbersDocument.load(readFileSync(path)).tables()[0]!;
+      const found = new Map<string, number>();
+      for (const { row, column } of table.formulas()) {
+        const detail = table.cellFormulaDetail(row, column)!;
+        for (const id of detail.unknownFunctions) {
+          found.set(`FUNCTION_${id}`, id);
+        }
+      }
+      // SUM must render by name — it is the id the corpus already proves.
+      const sums = table.formulas().filter((f) => f.formula.includes("SUM("));
+      expect(sums.length).toBeGreaterThan(0);
+
+      if (found.size > 0) {
+        console.log(
+          `\nunnamed function ids seen (add to registerFormulaFunctions):\n  ` +
+            [...found.values()].sort((a, b) => a - b).join(", ") +
+            `\n`,
+        );
+      }
+    },
+  );
+
+  it(
     "survives Numbers re-saving a package whose cells we wrote",
     { skip: skip.Numbers ?? false },
     () => {
