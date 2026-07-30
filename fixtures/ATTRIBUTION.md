@@ -138,11 +138,19 @@ Newest thing found anywhere, by app:
 | App | Newest `fileFormatVersion` | Newest app build (BuildVersionHistory) |
 |---|---|---|
 | Numbers | **26.1.0** | **`M15.2.1-7048.0.3-2`** |
-| Pages | 14.4.1 | `M14.5-7045.0.17-4` |
+| Pages | **26.1.0** | **`M15.2.1-7048.0.3-2`** |
 | Keynote | 14.4.1 | `M14.5-7045.0.17-4` |
 
-No `.pages` or `.key` file with a 26.x `fileFormatVersion` was found in any open-source
-repository surveyed — see `research/version-survey.md` for the repos checked.
+**Correction.** An earlier pass of this survey concluded that no 26.x `.pages`
+existed in open source; that was wrong. A whole-of-GitHub filename sweep found
+`gomap-v26.1-newest-writer.pages` (`fileFormatVersion` 26.1.0, build
+`M15.2.1-7048.0.3-2` — the same build as the newest Numbers fixtures). Its
+`BuildVersionHistory` records edits by three app generations (M12.2.1 → M14.5 →
+M15.2.1), so it also exercises multi-generation provenance.
+
+**Keynote remains the one gap**: no `.key` newer than 14.4.1 has been found.
+See `research/version-survey.md` and `research/pages-feature-coverage.md` for
+the sources checked.
 
 ### Sources
 
