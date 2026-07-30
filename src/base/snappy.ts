@@ -216,8 +216,57 @@ export function snappyCompressBlock(input: Uint8Array): Uint8Array {
 /** Default uncompressed chunk size used when writing IWA data (Apple uses ≤64 KiB). */
 export const IWA_CHUNK_SIZE = 0x10000;
 
+/**
+ * Compression framing of an `.iwa` component, identified from its first
+ * bytes. Not every component in a package uses Snappy: collaboration-mode
+ * documents write `Index/OperationStorage.iwa` as an Apple **LZFSE**
+ * container (`bvx*` magic), alongside normally-framed components in the
+ * same package.
+ */
+export type IwaFraming = "snappy" | "lzfse" | "unknown";
+
+/** LZFSE/LZVN container magics: "bvxn", "bvx1", "bvx2", "bvx-", "bvx$". */
+function isLzfseMagic(data: Uint8Array): boolean {
+  return (
+    data.length >= 4 &&
+    data[0] === 0x62 && // 'b'
+    data[1] === 0x76 && // 'v'
+    data[2] === 0x78 && // 'x'
+    (data[3] === 0x6e || data[3] === 0x31 || data[3] === 0x32 || data[3] === 0x2d || data[3] === 0x24)
+  );
+}
+
+/** Identify a component's framing without decoding it. */
+export function detectIwaFraming(data: Uint8Array): IwaFraming {
+  if (data.length === 0) return "unknown";
+  if (isLzfseMagic(data)) return "lzfse";
+  return data[0] === 0x00 ? "snappy" : "unknown";
+}
+
+/** Raised when a component's framing is not the Snappy chunking we decode. */
+export class UnsupportedIwaFramingError extends Error {
+  readonly framing: IwaFraming;
+
+  constructor(framing: IwaFraming, detail: string) {
+    super(
+      framing === "lzfse"
+        ? `iwa: component uses Apple LZFSE framing (bvx* magic), not Snappy — ${detail}`
+        : `iwa: unrecognized component framing — ${detail}`,
+    );
+    this.name = "UnsupportedIwaFramingError";
+    this.framing = framing;
+  }
+}
+
 /** Decode a whole `.iwa` file body (sequence of framed Snappy chunks). */
 export function decodeIwaData(data: Uint8Array): Uint8Array {
+  const framing = detectIwaFraming(data);
+  if (framing !== "snappy") {
+    throw new UnsupportedIwaFramingError(
+      framing,
+      `first bytes ${[...data.slice(0, 4)].map((b) => b.toString(16).padStart(2, "0")).join(" ")}`,
+    );
+  }
   const chunks: Uint8Array[] = [];
   let pos = 0;
   while (pos < data.length) {

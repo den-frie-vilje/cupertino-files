@@ -17,6 +17,7 @@
  *    original bytes for perfect round-trip fidelity
  */
 import { IwaObject, parseIwaFile, serializeIwaFile } from "./iwa.ts";
+import { detectIwaFraming, type IwaFraming } from "../base/snappy.ts";
 import { IWorkContainer, locatorForIwaName } from "./package.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { sha1 } from "../base/sha1.ts";
@@ -59,20 +60,49 @@ export class Component {
   /** Set when objects were added/removed (not just edited in place). */
   structurallyDirty = false;
 
+  /**
+   * Set when the component could not be decoded — its bytes are still
+   * preserved verbatim on save, but its objects are not available.
+   *
+   * Collaboration-mode documents are the real case: they write
+   * `Index/OperationStorage.iwa` with Apple LZFSE framing while every other
+   * component uses normal Snappy chunking. Failing the whole document over
+   * one such component would lose the many that parse fine.
+   */
+  readonly framing: IwaFraming;
+  readonly loadError: Error | undefined;
+
   constructor(name: string, bytes: Uint8Array) {
     this.name = name;
     this.locator = locatorForIwaName(name);
     this.originalBytes = bytes;
-    this.objects = parseIwaFile(bytes);
+    this.framing = detectIwaFraming(bytes);
+    let error: Error | undefined;
+    let objects: IwaObject[] = [];
+    try {
+      objects = parseIwaFile(bytes);
+    } catch (e) {
+      error = e as Error;
+    }
+    this.loadError = error;
+    this.objects = objects;
     for (const o of this.objects) this.byId.set(o.identifier, o);
   }
 
+  /** True when this component's objects could not be read. */
+  get isOpaque(): boolean {
+    return this.loadError !== undefined;
+  }
+
   get dirty(): boolean {
+    if (this.isOpaque) return false; // never rewrite what we could not read
     return this.structurallyDirty || this.objects.some((o) => o.isDirty);
   }
 
   serialize(): Uint8Array {
-    if (!this.dirty && this.originalBytes) return this.originalBytes;
+    if (this.isOpaque || (!this.dirty && this.originalBytes)) {
+      return this.originalBytes ?? serializeIwaFile(this.objects);
+    }
     return serializeIwaFile(this.objects);
   }
 }

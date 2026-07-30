@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "./harness.ts";
 import {
+  buildZip,
   bytesEqual,
+  detectIwaFraming,
   eraAtLeast,
   eraOf,
   IWorkVersion,
@@ -343,5 +345,60 @@ describe("current-era Pages document (26.x)", () => {
     const after = reloaded.textBoxes().find((t) => t.storage.id === storageId)!;
     expect(after.storage.text.length).toBe(before.length);
     expect(reloaded.compatibility().formatVersion!.toString()).toBe("26.1.0");
+  });
+});
+
+describe("mixed-codec packages (collaboration mode)", () => {
+  it("detects component framing from magic bytes", () => {
+    expect(detectIwaFraming(new Uint8Array([0x00, 1, 2, 3]))).toBe("snappy");
+    // LZFSE/LZVN container magics: bvxn bvx1 bvx2 bvx- bvx$
+    for (const last of [0x6e, 0x31, 0x32, 0x2d, 0x24]) {
+      expect(detectIwaFraming(new Uint8Array([0x62, 0x76, 0x78, last]))).toBe("lzfse");
+    }
+    expect(detectIwaFraming(new Uint8Array([0x99, 1]))).toBe("unknown");
+    expect(detectIwaFraming(new Uint8Array(0))).toBe("unknown");
+  });
+
+  it("keeps the document usable when one component uses another codec", () => {
+    // Collaboration-mode Pages packages write Index/OperationStorage.iwa as
+    // an Apple LZFSE container while every other component uses Snappy
+    // chunking. One undecodable component must not fail the whole document.
+    const source = ZipReader.parse(fixture("picodocs-v14.4-headers-tables.pages"));
+    const entries = source.entries
+      .filter((e) => !e.isDirectory)
+      .map((e) => ({ name: e.name, data: source.read(e) }));
+    const lzfse = new Uint8Array([
+      0x62, 0x76, 0x78, 0x6e, 0xd6, 0, 0, 0, 0xbb, 0, 0, 0, 9, 9, 9, 0x62, 0x76, 0x78, 0x24,
+    ]);
+    entries.push({ name: "Index/OperationStorage.iwa", data: lzfse });
+
+    const doc = IWorkDocument.open(buildZip(entries));
+    expect(doc.app).toBe("pages");
+    // Every other component loaded.
+    expect(doc.textStorages().filter((s) => s.text.length > 0).length).toBeGreaterThan(10);
+
+    const report = doc.compatibility();
+    expect(report.probe.opaqueComponents.length).toBe(1);
+    expect(report.probe.opaqueComponents[0]!.name).toBe("Index/OperationStorage.iwa");
+    expect(report.probe.opaqueComponents[0]!.framing).toBe("lzfse");
+    expect(report.unsupportedFeatures.join(" ")).toContain("opaque component");
+    expect(report.warnings.join(" ")).toContain("LZFSE");
+
+    // The undecodable component round-trips byte-for-byte.
+    const after = ZipReader.parse(doc.save());
+    expect(bytesEqual(after.read("Index/OperationStorage.iwa"), lzfse)).toBe(true);
+  });
+
+  it("still refuses a package with no decodable component at all", () => {
+    const zip = buildZip([
+      { name: "Index/Document.iwa", data: new Uint8Array([0x62, 0x76, 0x78, 0x6e, 1, 2]) },
+    ]);
+    let threw = false;
+    try {
+      IWorkDocument.open(zip);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
   });
 });

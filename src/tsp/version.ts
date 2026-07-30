@@ -162,6 +162,11 @@ export interface StructuralProbe {
   cellStorage: "none" | "v5" | "preBNC" | "mixed";
   /** Objects whose payload could not be parsed as protobuf at all. */
   unparseableObjectCount: number;
+  /**
+   * Components that could not be decoded at all, with the framing detected.
+   * Their bytes round-trip verbatim; their objects are unavailable.
+   */
+  opaqueComponents: { name: string; framing: string; reason: string }[];
 }
 
 export interface CompatibilityReport {
@@ -267,8 +272,17 @@ export function probeStructure(store: ObjectStore): StructuralProbe {
   const cellStorage: StructuralProbe["cellStorage"] =
     sawV5 && sawPreBNC ? "mixed" : sawV5 ? "v5" : sawPreBNC ? "preBNC" : "none";
 
+  const opaqueComponents = store.components
+    .filter((c) => c.isOpaque)
+    .map((c) => ({
+      name: c.name,
+      framing: c.framing,
+      reason: c.loadError?.message ?? "unknown",
+    }));
+
   return {
     containerLayout: store.container.layout,
+    opaqueComponents,
     unknownTypeIds: [...unknown.keys()].sort((a, b) => a - b),
     unknownTypeObjectCount: [...unknown.values()].reduce((a, b) => a + b, 0),
     patchArchiveCount,
@@ -330,6 +344,18 @@ export function buildCompatibilityReport(inputs: CompatibilityInputs): Compatibi
     unsupportedFeatures.push(
       "pre-BNC table cell storage (iWork '13-era): cell values cannot be decoded",
     );
+  }
+  for (const component of probe.opaqueComponents) {
+    const label =
+      component.framing === "lzfse"
+        ? "Apple LZFSE framing (collaboration-mode documents write " +
+          "OperationStorage.iwa this way)"
+        : "unrecognized framing";
+    warnings.push(
+      `component ${component.name} could not be decoded — ${label}. Its bytes are preserved ` +
+        `verbatim and every other component loaded normally.`,
+    );
+    unsupportedFeatures.push(`opaque component ${component.name} (${component.framing})`);
   }
   if (probe.unparseableObjectCount > 0) {
     warnings.push(

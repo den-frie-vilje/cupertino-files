@@ -85,8 +85,19 @@ offset 0: 01 byte  chunk type      — always 0x00
 (repeat until end of file)
 ```
 
-This is **not** the standard Snappy framing format: there is no `sNaPpY`
-stream identifier and no CRC-32C anywhere. Each payload is a standalone raw
+**Not every component uses this framing.** A component's first bytes
+identify its codec: `0x00` starts the Snappy chunking above, while `bvxn` /
+`bvx1` / `bvx2` / `bvx-` / `bvx$` are Apple **LZFSE/LZVN** containers.
+Collaboration-mode documents write `Index/OperationStorage.iwa` as LZFSE
+while every other component in the same package uses Snappy — so a package
+can mix codecs, and a reader must detect per component rather than assume.
+(`Index/ActivityStream.iwa` is another component seen only in that mode.)
+A reader that fails the whole document over one such component throws away
+the many that parse fine; this library reports them as opaque, preserves
+their bytes verbatim, and loads the rest.
+
+The Snappy framing itself is **not** the standard Snappy framing format:
+there is no `sNaPpY` stream identifier and no CRC-32C anywhere. Each payload is a standalone raw
 Snappy block (its own uncompressed-length varint preamble + literal/copy
 tags). Apple writes chunks of ≤ 64 KiB uncompressed; copy back-references
 never cross chunk boundaries.
