@@ -476,9 +476,28 @@ discontinuity is meaningful — Apple changed what the number *means*:
 | `iwork13` | `1.x` | Pages 5.x / Numbers 3.x / Keynote 6.x (2013–14) | `1.5.0`, build `M5.5.3-2152-2` |
 | `iwork16` | `2.x` | 2015–2016 releases | `2.0.24`, build `T2.6.1 (2160)` |
 | `iwork19` | `3.x` | 2017–2019 releases | `3.2.13`, build `G-r320-3C102` |
-| `modern` | `10.x`–`14.x` | mirrors the **application** version (2020–2024) | Numbers 14.1 writes `14.1.1` |
-| `current` | `26.x` | year-versioned 2025/2026 releases | — |
+| `modern` | `10.x`–`14.x` | mirrors the **application** version (2020–2024) | `14.4.1`, build `M14.5-7045.0.17-4` |
+| `current` | `26.x` | year-versioned 2025/2026 releases | `26.0.0` (build `M15.1`), `26.1.0` (builds `M15.2`, `M15.2.1`) |
 | `future` | anything higher | released after this library's survey | — |
+
+Note the build string stops matching the format version in the `current`
+era: Apple's marketing version jumped to 26 while internal builds continued
+from 15.x, so a `26.1.0` document is written by an `M15.2.x` build. Use
+`fileFormatVersion` for era decisions, not the build string.
+
+Two further observations from the corpus, both relevant to writers:
+
+- **Cell-storage generation is not implied by era.** A 2018-era file
+  (`3.2.13`) already uses BNC/v5 storage, and modern writers *also* emit the
+  legacy pre-BNC buffers as stubs (field 3 padded to `cell_count × 12`
+  bytes). Detect on `Tile.last_saved_in_BNC` / `storage_version`, never on
+  buffer presence.
+- **`Metadata/Properties.plist` keys can be renamed between releases.** The
+  `26.1.0` writer splits
+  `hasExternalReferenceOrMissingOrUnmaterializedRemoteData` into
+  `hasExternalReferenceOrMissingData` + `hasUnmaterializedRemoteData`;
+  `26.0.0` still uses the old key. Readers matching plist key literals must
+  tolerate both.
 
 From 2020 the format version simply tracks the app version, which is why
 `10.x` follows `3.x`. Era classification is exposed as `doc.era`; it is

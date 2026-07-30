@@ -85,8 +85,19 @@ const ERA_INFO: Record<IWorkEra, EraInfo> = {
   iwork13: { era: "iwork13", label: "iWork '13", apps: "Pages 5.x / Numbers 3.x / Keynote 6.x (2013–2014)" },
   iwork16: { era: "iwork16", label: "iWork '15–'16", apps: "Pages 6.x / iOS 2.x builds (2015–2016)" },
   iwork19: { era: "iwork19", label: "iWork '18–'19", apps: "Pages 7.x–8.x (2017–2019)" },
-  modern: { era: "modern", label: "iWork 10–14", apps: "Pages/Numbers/Keynote 10–14 (2020–2024)" },
-  current: { era: "current", label: "iWork 26.x", apps: "the 2025/2026 year-versioned releases" },
+  modern: {
+    era: "modern",
+    label: "iWork 10–14",
+    apps: "Pages/Numbers/Keynote 10–14 (2020–2024); e.g. build M14.5 writes 14.4.1",
+  },
+  current: {
+    era: "current",
+    label: "iWork 26.x",
+    // The marketing version jumped to 26 while internal builds continued
+    // from 15.x, so the build string does NOT match the format version:
+    // build M15.1 writes 26.0.0; builds M15.2/M15.2.1 write 26.1.0.
+    apps: "the 2025/2026 year-versioned releases (internal builds M15.x)",
+  },
   future: { era: "future", label: "newer than known", apps: "released after this library's last survey" },
 };
 
