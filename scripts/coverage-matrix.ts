@@ -695,9 +695,28 @@ const CAPABILITIES: Capability[] = [
   // ----------------------------------------------------------------- keynote
   {
     group: "Keynote",
+    name: "Slide management (add, duplicate, move, remove)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slideCount() ?? 0) > 1),
+    note: "new slides deep-copy their content and share their layout, styles and theme",
+    manualProof: {
+      claim: "Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order.",
+      why:
+        "A slide is only as valid as the graph around it — placeholders, builds, the master reference. " +
+        "Our copies reload through this library and keep the package round-trippable, but whether " +
+        "Keynote considers the result a well-formed slide is its call, not ours.",
+      how:
+        "Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that " +
+        "the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.",
+      risk: "high",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Slide tree (both generations, presentation order)",
     apps: ["keynote"],
-    status: "read",
+    status: "read+write",
     probe: (c) => safe(() => (c.keynote?.slideCount() ?? 0) > 0),
   },
   {

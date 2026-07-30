@@ -110,7 +110,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Slide tree (both generations, presentation order) | Keynote | 🔍 read only | 8 | iwork16→current |
+| Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
+| Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 8 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 2 | iwork16→iwork16 |
 | Transitions<br><sub>validation requires a deck with a non-'none' effect</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
@@ -125,7 +126,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-11 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+12 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -140,6 +141,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
+- 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
 
 ## Validation gaps
 

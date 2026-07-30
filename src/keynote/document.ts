@@ -10,9 +10,11 @@
 import { IWorkDocument } from "../tsa/document.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
-import { refId, SizeFields } from "../tsp/schema.ts";
+import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
+import type { RawMessage } from "../base/protobuf.ts";
+import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import {
@@ -372,6 +374,185 @@ export class KeynoteDocument extends IWorkDocument {
       out.push({ id: obj.identifier, name: obj.message.getString(Slide.NAME) });
     }
     return out;
+  }
+
+  // ------------------------------------------------------ slide management
+
+  /**
+   * Add a slide, copying an existing one.
+   *
+   * Keynote slides are not blank canvases — a usable one carries a style, a
+   * template-slide reference, placeholders and a transition, and inventing
+   * that set from nothing produces a slide the app quietly repairs or
+   * rejects. Copying an existing slide inherits a working set, which is
+   * also how Keynote's own "new slide" works: it instantiates a master.
+   *
+   * `after` is a slide index; -1 puts the new slide first. By default the
+   * copy is emptied of its drawables, giving a fresh slide on the same
+   * layout; pass `withContent` to duplicate outright.
+   */
+  addSlide(options: { copyOf?: number; after?: number; withContent?: boolean } = {}): KeynoteSlide {
+    const slides = this.slides();
+    if (slides.length === 0) throw new RangeError("document has no slide to copy");
+    const sourceIndex = options.copyOf ?? slides.length - 1;
+    const source = slides[sourceIndex];
+    if (!source) throw new RangeError(`no slide at index ${sourceIndex}`);
+
+    const component = this.store.componentOf(source.object.identifier);
+    if (!component) throw new RangeError("source slide has no component");
+
+    // A slide's content is referenced, not held by value, so a shallow copy
+    // would give two slides the same placeholders and drawables — editing
+    // either would change both. Deep-clone the content and share the
+    // presentation (styles, master, theme), which is what the default
+    // policy in tsp/clone.ts encodes.
+    const { clone: slide } = deepCloneObject(this.store, source.object, {
+      follow: (object, depth) =>
+        // Never follow the master: a copied slide is *based on* the same
+        // layout, and cloning it would fork the layout for one slide.
+        object.identifier !== source.masterId &&
+        defaultFollow(object, this.store.typeNameOf(object)) &&
+        depth <= 8,
+    });
+
+    if (!options.withContent) {
+      slide.message.remove(Slide.OWNED_DRAWABLES);
+      slide.message.remove(Slide.DRAWABLES_Z_ORDER);
+      slide.message.remove(Slide.BUILDS);
+      slide.message.remove(Slide.BUILD_CHUNKS);
+      slide.message.remove(Slide.NOTE);
+      // Placeholders are kept — they are what makes the new slide usable on
+      // its layout — but emptied, so it reads as a fresh slide rather than
+      // a copy of its neighbour.
+      for (const field of [
+        Slide.TITLE_PLACEHOLDER,
+        Slide.BODY_PLACEHOLDER,
+        Slide.OBJECT_PLACEHOLDER,
+      ]) {
+        this.storageOfPlaceholder(slide, field)?.setText("");
+      }
+    }
+
+    const nodeComponent = this.store.componentOf(source.node.identifier) ?? component;
+    const node = this.store.createObject(source.node.type, nodeComponent, {
+      cloneFrom: source.node,
+    });
+    // A fresh node owns exactly one slide and no children; inheriting the
+    // source's children would silently indent a copy of its whole subtree.
+    node.message.remove(SlideNode.CHILDREN);
+    node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
+    if (!options.withContent) node.message.remove(SlideNode.HAS_NOTE);
+
+    this.insertSlideNode(node.identifier, options.after ?? sourceIndex);
+    const created = this.slides().find((s) => s.id === slide.identifier);
+    if (!created) throw new RangeError("slide was created but is not reachable from the tree");
+    return created;
+  }
+
+  /** Duplicate a slide, content and all. */
+  duplicateSlide(index: number): KeynoteSlide {
+    return this.addSlide({ copyOf: index, after: index, withContent: true });
+  }
+
+  /**
+   * Remove a slide from the presentation.
+   *
+   * Only the tree entry is removed. The slide archive itself is left in the
+   * package: other objects may still reference it, and this library never
+   * garbage-collects the object graph — an orphan is inert, a dangling
+   * reference is not.
+   */
+  removeSlide(index: number): void {
+    const slides = this.slides();
+    const slide = slides[index];
+    if (!slide) throw new RangeError(`no slide at index ${index}`);
+    if (slides.length <= 1) throw new RangeError("a presentation must keep at least one slide");
+    this.removeSlideNode(slide.node.identifier);
+  }
+
+  /** Move a slide to a new position in presentation order. */
+  moveSlide(from: number, to: number): void {
+    const slides = this.slides();
+    const slide = slides[from];
+    if (!slide) throw new RangeError(`no slide at index ${from}`);
+    if (to < 0 || to >= slides.length) throw new RangeError(`cannot move to index ${to}`);
+    if (from === to) return;
+    const nodeId = slide.node.identifier;
+    this.removeSlideNode(nodeId);
+    // After removal the target index refers to the shortened list, so a
+    // forward move lands one place earlier than the caller's index.
+    this.insertSlideNode(nodeId, to > from ? to - 1 : to - 1);
+  }
+
+  /**
+   * Text storage behind one of a slide's placeholder fields.
+   *
+   * KN.PlaceholderArchive embeds TSWP.ShapeInfoArchive as `super`, so the
+   * storage reference sits one level down from the placeholder itself.
+   */
+  private storageOfPlaceholder(slide: IwaObject, field: number): TextStorage | undefined {
+    const placeholder = this.store.resolve(refId(slide.message, field));
+    if (!placeholder) return undefined;
+    for (const message of [placeholder.message, placeholder.message.getMessage(ShapeInfo.SUPER)]) {
+      if (!message) continue;
+      // Older files keep the storage in `deprecated_storage` instead, and a
+      // placeholder that reads through only one of the two silently keeps
+      // the text it was supposed to clear.
+      const storageId =
+        refId(message, ShapeInfo.OWNED_STORAGE) ?? refId(message, SHAPE_DEPRECATED_STORAGE);
+      const storage = storageId !== undefined ? this.store.object(storageId) : undefined;
+      if (storage?.type === TSWP_TYPE.STORAGE) return new TextStorage(this.store, storage);
+    }
+    return undefined;
+  }
+
+  /** Node ids in presentation order, from whichever tree generation is in use. */
+  private slideNodeOrder(): { ids: bigint[]; container: RawMessage; field: number } {
+    const tree = this.show().message.getMessage(Show.SLIDE_TREE);
+    if (!tree) throw new RangeError("show has no slide tree");
+    const flat = tree.getMessages(SlideTree.SLIDES);
+    if (flat.length > 0) {
+      return {
+        ids: flat.flatMap((ref) => {
+          const id = ref.getVarint(1);
+          return id === undefined ? [] : [id];
+        }),
+        container: tree,
+        field: SlideTree.SLIDES,
+      };
+    }
+    // Legacy generation: the order lives on the root node's children.
+    const rootId = refId(tree, SlideTree.ROOT_SLIDE_NODE);
+    const root = rootId !== undefined ? this.store.object(rootId) : undefined;
+    if (!root) throw new RangeError("slide tree has neither a flat list nor a root node");
+    return {
+      ids: root.message.getMessages(SlideNode.CHILDREN).flatMap((ref) => {
+        const id = ref.getVarint(1);
+        return id === undefined ? [] : [id];
+      }),
+      container: root.message,
+      field: SlideNode.CHILDREN,
+    };
+  }
+
+  private writeSlideNodeOrder(ids: readonly bigint[]): void {
+    const { container, field } = this.slideNodeOrder();
+    container.setMessages(
+      field,
+      ids.map((id) => makeRef(id)),
+    );
+  }
+
+  private insertSlideNode(nodeId: bigint, after: number): void {
+    const { ids } = this.slideNodeOrder();
+    const at = Math.max(0, Math.min(after + 1, ids.length));
+    ids.splice(at, 0, nodeId);
+    this.writeSlideNodeOrder(ids);
+  }
+
+  private removeSlideNode(nodeId: bigint): void {
+    const { ids } = this.slideNodeOrder();
+    this.writeSlideNodeOrder(ids.filter((id) => id !== nodeId));
   }
 
   /** Speaker notes of every slide, in order. */

@@ -179,6 +179,8 @@ export * as pagesSchema from "./pages/schema.ts";
 
 // Object graph & container
 export { ObjectStore, Component } from "./tsp/store.ts";
+export { deepCloneObject, defaultFollow } from "./tsp/clone.ts";
+export type { CloneOptions, CloneResult } from "./tsp/clone.ts";
 export type { ReferenceExtractor } from "./tsp/store.ts";
 export { IWorkContainer, EncryptedDocumentError, canonicalIwaName, locatorForIwaName } from "./tsp/package.ts";
 export { IwaObject, parseIwaFile, serializeIwaFile, parseIwaStream, serializeIwaStream } from "./tsp/iwa.ts";

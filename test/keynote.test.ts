@@ -139,3 +139,104 @@ describe("current-era Keynote decks (26.x)", () => {
     expect(reloaded.compatibility().formatVersion!.toString()).toBe("26.1.0");
   });
 });
+
+describe("slide management", () => {
+  const decks = [
+    "zenodo-v26.1-hyperlinks-masks.key",
+    "tika-testKeynote2013.key",
+    "iwork-mcp-v14.5-sample.key",
+  ];
+
+  it("adds a blank slide on the same layout across both tree generations", () => {
+    // The flat `slideTree.slides` list and the legacy root-node children are
+    // different encodings of the same order; both must accept an insertion.
+    for (const name of decks) {
+      const doc = KeynoteDocument.load(fixture(name));
+      const before = doc.slideCount();
+      const source = doc.slides()[0]!;
+      const added = doc.addSlide({ copyOf: 0, after: 0 });
+
+      expect(doc.slideCount()).toBe(before + 1);
+      expect(added.index).toBe(1);
+      // Same layout, no inherited content.
+      expect(added.masterId).toBe(source.masterId);
+      expect(added.drawables().length).toBe(0);
+      expect((added.title ?? "").trim()).toBe("");
+
+      const reloaded = KeynoteDocument.load(doc.save());
+      expect(reloaded.slideCount()).toBe(before + 1);
+      expect(reloaded.compatibility().canRoundTrip).toBe(true);
+    }
+  });
+
+  it("gives a new slide its own placeholders, not the source's", () => {
+    // The bug a shallow copy would produce: both slides pointing at one
+    // placeholder, so typing into either rewrites the other.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const source = doc.slides()[0]!;
+    const sourceTitle = source.title;
+    expect((sourceTitle ?? "").length).toBeGreaterThan(0);
+
+    const added = doc.addSlide({ copyOf: 0, after: 0 });
+    // No storage object is shared between the two slides.
+    const sourceStorages = new Set(source.textStorages().map((s) => s.id));
+    expect(added.textStorages().some((s) => sourceStorages.has(s.id))).toBe(false);
+
+    const storage = added.textStorages()[0];
+    expect(storage !== undefined).toBe(true);
+    storage!.setText("only on the copy");
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    // Writing through the copy left the original's title alone.
+    expect(reloaded.slides()[0]!.title).toBe(sourceTitle);
+    expect(reloaded.slides()[1]!.textStorages()[0]!.text).toBe("only on the copy");
+  });
+
+  it("duplicates a slide with its content", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const source = doc.slides()[0]!;
+    const drawablesBefore = source.drawables().length;
+    expect(drawablesBefore).toBeGreaterThan(0);
+
+    const copy = doc.duplicateSlide(0);
+    expect(copy.index).toBe(1);
+    expect(copy.drawables().length).toBe(drawablesBefore);
+    // Copied, not shared: no drawable id appears in both slides.
+    const sourceIds = new Set(source.drawables().map((d) => d.id));
+    expect(copy.drawables().some((d) => sourceIds.has(d.id))).toBe(false);
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    expect(reloaded.slides()[1]!.drawables().length).toBe(drawablesBefore);
+    expect(reloaded.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("moves and removes slides", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const titles = doc.slides().map((s) => s.title);
+    expect(titles.length).toBeGreaterThan(2);
+
+    doc.moveSlide(0, 2);
+    const moved = KeynoteDocument.load(doc.save());
+    expect(moved.slides()[2]!.title).toBe(titles[0]);
+    expect(moved.slides()[0]!.title).toBe(titles[1]);
+
+    const countBefore = moved.slideCount();
+    moved.removeSlide(0);
+    const removed = KeynoteDocument.load(moved.save());
+    expect(removed.slideCount()).toBe(countBefore - 1);
+    expect(removed.slides()[0]!.title).toBe(titles[2]);
+    expect(removed.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("refuses to remove the last slide", () => {
+    const doc = KeynoteDocument.load(fixture("tika-testKeynote2018.key"));
+    while (doc.slideCount() > 1) doc.removeSlide(doc.slideCount() - 1);
+    let threw = false;
+    try {
+      doc.removeSlide(0);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+});
