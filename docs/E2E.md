@@ -106,3 +106,10 @@ because no amount of reading Apple's files can prove them:
   asks Numbers, through AppleScript, what it reads back.
 - **Keynote transitions.** No licensed deck in the corpus has a non-`none`
   effect, so the app has to create the case for us (above).
+
+These are the two claims the scripting dictionaries happen to expose.
+Others cannot be reached this way at all — cell fills, paragraph border
+positions, shadow geometry, colour spaces — and those are collected in
+[`docs/VERIFICATION.md`](VERIFICATION.md) with what would settle each. That
+file is generated from the capability table, so it cannot quietly fall
+behind the code.

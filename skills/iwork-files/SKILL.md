@@ -181,7 +181,9 @@ t.name; t.rowCount; t.columnCount; t.headerRowCount; t.footerRowCount;
 if (!t.hasReadableCells) { /* pre-BNC storage — see below */ }
 t.cells();        // [{ row, column, value }] non-empty cells
 t.grid();         // dense (CellValue | null)[][]
-t.merges();       // [{ row, column, rowCount, columnCount }]
+t.merges();       // [{ row, column, rowCount, columnCount }] anchored top-left
+t.mergeAt(0, 1);  // the merge covering a cell, if any
+t.isCovered(0, 1);// true when a merge anchored elsewhere swallows this cell
 cellValueToString(cell.value);
 ```
 
@@ -209,6 +211,11 @@ directly — use `type: "text"`, or edit `t.richTextStorage(row, col)`.
 Rows and columns **cannot be added or removed**; coordinates outside the
 existing table throw.
 
+Writing a value into a cell a merge has swallowed also throws — the value
+would be stored and displayed nowhere. Write to the merge's anchor
+instead, or pass `{ allowCovered: true }` if you mean it. Clearing a
+covered cell is always allowed.
+
 ### Styling cells and tables
 
 ```ts
@@ -233,10 +240,41 @@ properties are inherited rather than lost, and neighbours are unaffected.
 
 ```ts
 t.name = "Q1 Revenue";
-t.setBands({ headerRows: 1, headerColumns: 1, footerRows: 1 });
+t.setBands({ headerRows: 1, headerColumns: 1, footerRows: 1,
+             freezeHeaderRows: true, repeatHeaderRows: true });
 t.setRowHeight(0, 44); t.setColumnWidth(0, 180);
 t.rowHeight(0); t.columnWidth(0); t.isRowHidden(3); t.isColumnHidden(2);
+t.headerRowsFrozen; t.repeatingHeaderRows;
 ```
+
+A band has **two** styles. `t.bandStyle("headerRow")` is the cell (fill,
+borders, padding); `t.bandTextStyle("headerRow")` is the text inside it and
+takes the same `CharacterFormatting` as any other text. Making a header
+bold means the second one.
+
+## Shadows and drawable styling
+
+Cell and table styles have **no shadow field** — the format has no such
+thing. A shadow belongs to the *drawable*: a shape, text box, image, or the
+table as a whole.
+
+```ts
+const style = drawable.style();          // DrawableModel/ImageModel.style()
+style.read();                            // { fill?, stroke?, opacity?, shadow?, reflection? }
+style.set({
+  fill: colorFill(0.2, 0.4, 0.9),        // shapes only — images have no fill
+  stroke: solidStroke({ r: 0, g: 0, b: 0 }, 2),
+  opacity: 0.9,
+  shadow: { angle: 315, offset: 5, radius: 3, opacity: 0.5, enabled: true },
+  reflection: 0.4,                       // mirror opacity, or null to remove
+});
+style.setShadowEnabled(false);           // keep the parameters, untick the box
+drawableStylesOf(doc.store);             // every styled drawable in a document
+```
+
+`null` removes a property; omitting it leaves it. Note that a shadow with
+`enabled: false` and no shadow at all are different states — the apps keep
+your parameters when you untick the box.
 
 **Important:** tables written by iWork '13/'15-era apps use *pre-BNC* cell
 storage, which cannot be decoded. `cells()` and `setCell()` **throw**
@@ -289,6 +327,10 @@ CLI equivalents (after `npm i -g iwork-files` or via npx):
    unknown provenance, and never interpret an empty result as "no data"
    without confirming the feature is supported.
 6. If a needed feature is missing (chart data, formula authoring, table
-   row insertion, footnote creation), fall back to the low-level
-   `RawMessage` layer, and consult `docs/FORMAT.md` in the repository for
-   the format specification — §14 covers tables byte by byte.
+   row insertion, merge writing, footnote creation), fall back to the
+   low-level `RawMessage` layer, and consult `docs/FORMAT.md` for the
+   format specification — §14 covers tables byte by byte.
+7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
+   lists every claim only Apple's app can settle, with the reasoning and a
+   repro. Check it before relying on paragraph border positions, cell
+   styling or colour spaces in anything that matters.

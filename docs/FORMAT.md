@@ -823,7 +823,48 @@ mantissa.
 6. `Tile.maxColumn`/`maxRow`/`numCells` are **0** in Apple's own output;
    maintaining them where the app zeroes them is a gratuitous difference.
 
-### 14.4 Cell and table styles
+### 14.4 Merged cells live in the calc engine, not the region map
+
+The obvious place to look is `DataStore.merge_region_map` (field 13), a
+list of `TST.CellRange` with packed origin/size. **No document in the
+corpus has one** — not Numbers, not Pages, not 2013 through 26.x. Real
+merges are stored as formulas:
+
+```
+TableModelArchive.merge_owner = 47        → TST.MergeOwnerArchive
+├─ owner_id = 1                            (a CFUUID, NOT the table's own)
+└─ formula_store = 2                      → TST.FormulaStoreArchive
+   └─ formulas = 3                        → { formula_index = 1, formula = 2 }
+      └─ TSCE.FormulaArchive.AST_node_array = 1 → repeated AST_node = 1
+```
+
+Each merge is two AST nodes: a **colon-tract node** (type 67) and a
+one-argument function node (type 16). The rectangle is in the colon
+tract:
+
+```proto
+message ASTColonTractArchive {              // AST_node field 40
+  repeated Relative relative_column = 1;    // { range_begin = 1, range_end = 2 }
+  repeated Relative relative_row = 2;
+  repeated Absolute absolute_column = 3;    // { range_begin = 1, range_end = 2 }
+  repeated Absolute absolute_row = 4;
+  optional bool preserve_rectangular = 5 [default = true];
+}
+```
+
+`absolute_column` and `absolute_row` give the merge; an omitted
+`range_end` means a single row or column. Merges observed this way are
+self-consistent in a way that is hard to fake: every anchor holds a value,
+**no covered cell ever holds one**, and the 14.4 and 26.0 saves of the
+same document decode identically.
+
+Writing a merge is *not* supported, and the reason is the owner UUID.
+`merge_owner.owner_id` is not the table's UUID — in every file examined it
+differs from the `table_id` inside the AST node by a small delta in one
+half. Synthesizing a merge means inventing calc-engine identity, and a
+wrong guess corrupts the dependency graph rather than failing loudly.
+
+### 14.5 Cell and table styles
 
 Both are `TSS.StyleArchive` subclasses with their property bag at field 11.
 
@@ -851,6 +892,10 @@ message TST.TableStylePropertiesArchive {
 }
 ```
 
+Neither archive has a **shadow**. A shadow on a table is a shadow on its
+drawable — `TSD.ShapeStyleArchive.shape_properties.shadow` — not on any
+cell. The same is true of opacity and reflection.
+
 A cell points at its style through `cell_style_id` (flag `0x20`), which is a
 **key into `DataStore.styleTable`**, not an object id — the entry's
 `reference = 4` holds the object id. Styling one cell therefore means:
@@ -877,9 +922,10 @@ than in a shape the generic reference extractor understands, its
   writing a literal correctly clears the cell's formula, but building a
   `TSCE.FormulaArchive` AST and its calc-engine dependency records is a
   separate body of work.
-- **Writing merge ranges** needs the calc-engine merge-owner bookkeeping
-  (`MergeOwnerArchive` formulas and `FormulaOwnerDependenciesArchive`);
-  reading them is supported.
+- **Writing merge ranges** is blocked on calc-engine identity: a merge is a
+  formula owned by a UUID that is *not* the table's own (§14.4), so
+  synthesizing one means inventing a calc-engine identifier. Reading merges
+  is fully supported.
 - Chart data (TSCH) and Keynote slide trees are read as opaque objects;
   editing them needs the TSCH/KN models on top of this substrate.
 - Creating documents **from scratch** (the practical route is embedding an

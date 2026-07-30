@@ -61,6 +61,10 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 > coverage per app, every capability with its support status, and how many real fixtures
 > actually exercise it. Regenerate with `npm run coverage`; a test fails if it goes stale.
 > The table below is the short version.
+>
+> **[`docs/VERIFICATION.md`](docs/VERIFICATION.md) lists what the test suite structurally
+> cannot prove** — the claims where the only authority is Apple's own app, each with why
+> and a repro. Also generated, also gated against staleness.
 
 | Capability | Status |
 |---|---|
@@ -77,7 +81,9 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
 | Tables: **write** cells (text, number, date, bool, duration) | ✅ modern storage |
 | Tables: cell styling (fill, four borders, padding, alignment, wrap) and table styling (banding, grid strokes) | ✅ |
-| Tables: name, header/footer bands, row heights, column widths | ✅ |
+| Tables: name, header/footer bands, freeze + repeating headers, row heights, column widths | ✅ |
+| Tables: merged cell ranges (decoded from the calc engine, not the empty region map) | ✅ read |
+| Drawables: shadows, opacity, reflection, fill, stroke on shapes and images | ✅ |
 | Styling values: colours (incl. Display P3), gradients, strokes, dashes, shadows, tabs | ✅ |
 | Charts: type, categories, series names and plotted values | ✅ read |
 | Images: filters/adjustments (exposure, saturation, levels…), masks, media variants | ✅ read/write |
@@ -185,8 +191,32 @@ table.setCellFormatting(1, 0, {
 });
 table.tableStyle()!.setTable({ bandedRows: true, bandedFill: colorFill(0.97, 0.97, 0.97) });
 
-table.setBands({ headerRows: 1, footerRows: 1 });
+table.setBands({ headerRows: 1, footerRows: 1, freezeHeaderRows: true, repeatHeaderRows: true });
 table.setColumnWidth(0, 180);
+table.bandTextStyle("headerRow")!.setCharacter({ bold: true });   // the text, not the cell
+
+table.merges();                          // [{ row, column, rowCount, columnCount }]
+table.isCovered(0, 1);                   // true when a merge anchored elsewhere swallows it
+```
+
+Merges are decoded from the calc engine, where the apps actually keep them —
+the documented `merge_region_map` is empty in every real document. Writing a
+value into a covered cell throws rather than storing something the app will
+never display.
+
+### Shadows and other drawable styling
+
+Cell and table styles have no shadow field: in iWork a shadow belongs to the
+*drawable*, so it applies to a shape, text box, image or the table as a whole.
+
+```ts
+const style = doc.images()[0]!.style()!;   // ImageModel extends DrawableModel
+style.read();                            // { fill?, stroke?, opacity?, shadow?, reflection? }
+style.set({
+  shadow: { angle: 90, offset: 10, radius: 20, opacity: 0.7, enabled: true },
+  opacity: 0.9,
+});
+style.setShadowEnabled(false);           // keeps the parameters, unticks the box
 ```
 
 Writing a cell preserves everything else the record carries — style ids,
