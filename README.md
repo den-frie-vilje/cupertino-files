@@ -100,6 +100,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Drawables: copy, place, reorder and remove across pages, slides and sheets | ✅ |
 | Keynote: slides (add/duplicate/move/remove), speaker notes, transitions, masters | ✅ |
 | Keynote: slide placeholders — read and fill title, body, slide number | ✅ |
+| Keynote: presentation settings (mode, loop, autoplay delays) and slide size | ✅ |
 | Numbers: sheets — add, remove, rename, reorder | ✅ |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
 | Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |

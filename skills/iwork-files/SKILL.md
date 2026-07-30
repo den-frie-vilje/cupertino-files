@@ -517,6 +517,19 @@ synthesizing the geometry and style the master defines for that role, so a
 slide on a layout without a body box is told so rather than given an
 unstyled box at the origin.
 
+### Presentation settings
+
+```ts
+doc.presentation();          // { mode, loops, slideNumbersVisible, autoplay*, idleTimer*, playsUponOpen }
+doc.setPresentation({ mode: ShowMode.AUTOPLAY, autoplayTransitionDelay: 12, loops: true });
+doc.slideSize();             // { width: 1920, height: 1080 }
+doc.setSlideSize(1024, 768); // objects keep their coordinates — nothing is rescaled
+```
+
+Defaults come from the schema rather than from zero: every deck examined
+omits several of these fields, and reading an omitted autoplay delay as 0
+instead of 5 would describe a deck that races through itself.
+
 ## Editing text in Numbers/Keynote
 
 Beyond tables and slides, edit through the shared storages:

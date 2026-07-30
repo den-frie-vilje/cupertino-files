@@ -1009,6 +1009,14 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Presentation settings (mode, loop, autoplay delays, slide size)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => c.keynote?.slideSize() !== undefined),
+    note: "defaults come from the schema, not from zero — every corpus deck omits several and relies on them",
+  },
+  {
+    group: "Keynote",
     name: "Slide placeholders (title, body, slide number) — read and fill",
     apps: ["keynote"],
     status: "read+write",

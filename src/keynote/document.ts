@@ -13,7 +13,7 @@ import { DrawableModel } from "../tsd/drawables.ts";
 import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
@@ -64,6 +64,33 @@ const PLACEHOLDER_FIELDS: readonly (readonly [PlaceholderRole, number])[] = [
   ["object", Slide.OBJECT_PLACEHOLDER],
   ["slideNumber", Slide.SLIDE_NUMBER_PLACEHOLDER],
 ];
+
+/** KN.ShowArchive.KNShowMode — how the deck advances. */
+export const ShowMode = {
+  /** Advances on click. */
+  NORMAL: 0,
+  /** Self-playing, using the autoplay delays. */
+  AUTOPLAY: 1,
+  /** Advances only through hyperlinks — a kiosk deck. */
+  HYPERLINKS_ONLY: 2,
+} as const;
+
+/** The settings behind Keynote's Document inspector. */
+export interface PresentationSettings {
+  /** One of {@link ShowMode}. */
+  mode: number;
+  loops: boolean;
+  slideNumbersVisible: boolean;
+  /** Seconds between slides when self-playing. */
+  autoplayTransitionDelay: number;
+  /** Seconds between builds when self-playing. */
+  autoplayBuildDelay: number;
+  /** Restart the show after a period of no input. */
+  idleTimerActive: boolean;
+  idleTimerDelay: number;
+  /** Start presenting as soon as the deck is opened. */
+  playsUponOpen: boolean;
+}
 
 /** Slide transition parameters, as shown in Keynote's inspector. */
 export interface SlideTransition {
@@ -419,6 +446,72 @@ export class KeynoteDocument extends IWorkDocument {
 
   get loops(): boolean {
     return this.show().message.getBool(Show.LOOP_PRESENTATION) ?? false;
+  }
+
+  /**
+   * How the deck plays: the settings behind Keynote's Document inspector.
+   *
+   * Defaults come from the schema, not from zero — every corpus deck omits
+   * `slideNumbersVisible` and relies on the default, and reading an omitted
+   * `autoplay_transition_delay` as 0 rather than 5 would describe a
+   * self-playing deck that races through itself.
+   */
+  presentation(): PresentationSettings {
+    const show = this.show().message;
+    return {
+      mode: show.getUint(Show.MODE) ?? ShowMode.NORMAL,
+      loops: show.getBool(Show.LOOP_PRESENTATION) ?? false,
+      slideNumbersVisible: show.getBool(Show.SLIDE_NUMBERS_VISIBLE) ?? false,
+      autoplayTransitionDelay: show.getDouble(Show.AUTOPLAY_TRANSITION_DELAY) ?? 5,
+      autoplayBuildDelay: show.getDouble(Show.AUTOPLAY_BUILD_DELAY) ?? 2,
+      idleTimerActive: show.getBool(Show.IDLE_TIMER_ACTIVE) ?? false,
+      idleTimerDelay: show.getDouble(Show.IDLE_TIMER_DELAY) ?? 900,
+      playsUponOpen: show.getBool(Show.AUTOMATICALLY_PLAYS_UPON_OPEN) ?? false,
+    };
+  }
+
+  /** Change how the deck plays. Only the properties given are touched. */
+  setPresentation(settings: Partial<PresentationSettings>): void {
+    const show = this.show().message;
+    if (settings.mode !== undefined) show.setVarint(Show.MODE, settings.mode);
+    if (settings.loops !== undefined) show.setBool(Show.LOOP_PRESENTATION, settings.loops);
+    if (settings.slideNumbersVisible !== undefined) {
+      show.setBool(Show.SLIDE_NUMBERS_VISIBLE, settings.slideNumbersVisible);
+    }
+    if (settings.autoplayTransitionDelay !== undefined) {
+      show.setDouble(Show.AUTOPLAY_TRANSITION_DELAY, settings.autoplayTransitionDelay);
+    }
+    if (settings.autoplayBuildDelay !== undefined) {
+      show.setDouble(Show.AUTOPLAY_BUILD_DELAY, settings.autoplayBuildDelay);
+    }
+    if (settings.idleTimerActive !== undefined) {
+      show.setBool(Show.IDLE_TIMER_ACTIVE, settings.idleTimerActive);
+    }
+    if (settings.idleTimerDelay !== undefined) {
+      show.setDouble(Show.IDLE_TIMER_DELAY, settings.idleTimerDelay);
+    }
+    if (settings.playsUponOpen !== undefined) {
+      show.setBool(Show.AUTOMATICALLY_PLAYS_UPON_OPEN, settings.playsUponOpen);
+    }
+  }
+
+  /**
+   * Resize the slide canvas.
+   *
+   * Changes the coordinate space every drawable on every slide sits in, and
+   * nothing is rescaled to match: a deck resized from 1920×1080 to 1024×768
+   * keeps its objects where they were, which is what Keynote's own
+   * "change slide size" does before you rearrange.
+   */
+  setSlideSize(width: number, height: number): void {
+    const show = this.show().message;
+    let size = show.getMessage(Show.SIZE);
+    if (!size) {
+      size = RawMessage.create();
+      show.setMessage(Show.SIZE, size);
+    }
+    size.setFloat(SizeFields.WIDTH, width);
+    size.setFloat(SizeFields.HEIGHT, height);
   }
 
   /**

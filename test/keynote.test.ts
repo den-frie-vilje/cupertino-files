@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { bytesEqual, KeynoteDocument, PlaceholderKind } from "../src/index.ts";
+import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { readdirSync } from "node:fs";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -328,5 +328,74 @@ describe("slide placeholders", () => {
     // Creating one means synthesizing the theme's geometry and style for
     // that role, which is in the master.
     expect(() => slide.setPlaceholderText(30, "object", "x")).toThrow();
+  });
+});
+
+describe("presentation settings", () => {
+  const decks = readdirSync(FIXTURES).filter((name) => name.endsWith(".key"));
+
+  it("reads defaults from the schema, not from zero", () => {
+    // Every corpus deck omits slideNumbersVisible and relies on the
+    // default; reading an omitted autoplay delay as 0 rather than 5 would
+    // describe a self-playing deck that races through itself.
+    for (const name of decks) {
+      const settings = KeynoteDocument.load(fixture(name)).presentation();
+      expect(`${name} delay=${settings.autoplayTransitionDelay}`).toBe(`${name} delay=5`);
+      expect(`${name} build=${settings.autoplayBuildDelay}`).toBe(`${name} build=2`);
+      expect(`${name} idle=${settings.idleTimerDelay}`).toBe(`${name} idle=900`);
+      expect(`${name} mode=${settings.mode}`).toBe(`${name} mode=${ShowMode.NORMAL}`);
+    }
+  });
+
+  it("changes only the settings it is given", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    const before = document.presentation();
+    document.setPresentation({ mode: ShowMode.AUTOPLAY, autoplayTransitionDelay: 12 });
+
+    const after = document.presentation();
+    expect(after.mode).toBe(ShowMode.AUTOPLAY);
+    expect(after.autoplayTransitionDelay).toBe(12);
+    // Untouched properties keep their values.
+    expect(after.autoplayBuildDelay).toBe(before.autoplayBuildDelay);
+    expect(after.loops).toBe(before.loops);
+    expect(after.idleTimerDelay).toBe(before.idleTimerDelay);
+  });
+
+  it("survives a save", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    document.setPresentation({
+      mode: ShowMode.HYPERLINKS_ONLY,
+      loops: true,
+      slideNumbersVisible: true,
+      playsUponOpen: true,
+      idleTimerActive: true,
+      idleTimerDelay: 60,
+    });
+
+    const reloaded = KeynoteDocument.load(document.save());
+    const settings = reloaded.presentation();
+    expect(settings.mode).toBe(ShowMode.HYPERLINKS_ONLY);
+    expect(settings.loops).toBe(true);
+    expect(settings.slideNumbersVisible).toBe(true);
+    expect(settings.playsUponOpen).toBe(true);
+    expect(settings.idleTimerActive).toBe(true);
+    expect(settings.idleTimerDelay).toBe(60);
+    // The convenience getters agree with the settings object.
+    expect(reloaded.loops).toBe(true);
+    expect(reloaded.slideNumbersVisible).toBe(true);
+  });
+
+  it("resizes the slide canvas", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    expect(document.slideSize()).toEqual({ width: 1920, height: 1080 });
+    document.setSlideSize(1024, 768);
+
+    const reloaded = KeynoteDocument.load(document.save());
+    expect(reloaded.slideSize()).toEqual({ width: 1024, height: 768 });
+    // Nothing is rescaled: objects keep their coordinates, as they do when
+    // Keynote itself changes slide size.
+    const drawables = reloaded.slides()[0]!.container().drawables();
+    const original = document.slides()[0]!.container().drawables();
+    expect(drawables.length).toBe(original.length);
   });
 });
