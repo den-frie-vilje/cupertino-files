@@ -46,6 +46,7 @@ const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
 const TileEntry = { TILEID: 1, TILE: 2 } as const;
 const TileFields = { ROW_INFOS: 5, STORAGE_VERSION: 6, LAST_SAVED_IN_BNC: 7 } as const;
 const TileRowInfo = {
+  STORAGE_VERSION: 5,
   TILE_ROW_INDEX: 1,
   CELL_STORAGE_BUFFER: 6,
   CELL_OFFSETS: 7,
@@ -188,9 +189,18 @@ export class TableModel {
     for (const t of tiles.getMessages(TileStorageFields.TILES)) {
       const tile = this.store.resolve(refId(t, TileEntry.TILE));
       if (!tile) continue;
+      // Authoritative markers first. Presence of the v5 buffer alone is NOT
+      // a safe test: modern writers also emit the legacy fields 3/4 (as
+      // stubs), and pre-BNC files can carry zero-length 6/7.
+      if (tile.message.getBool(TileFields.LAST_SAVED_IN_BNC) === true) return "v5";
+      const storageVersion = tile.message.getUint(TileFields.STORAGE_VERSION);
+      if (storageVersion !== undefined && storageVersion >= 5) return "v5";
       for (const ri of tile.message.getMessages(TileFields.ROW_INFOS)) {
         sawRow = true;
-        if (ri.getBytes(TileRowInfo.CELL_STORAGE_BUFFER) !== undefined) return "v5";
+        const rowVersion = ri.getUint(TileRowInfo.STORAGE_VERSION);
+        if (rowVersion !== undefined && rowVersion >= 5) return "v5";
+        // Fallback: a non-empty modern buffer.
+        if ((ri.getBytes(TileRowInfo.CELL_STORAGE_BUFFER)?.length ?? 0) > 0) return "v5";
       }
     }
     return sawRow ? "preBNC" : "empty";

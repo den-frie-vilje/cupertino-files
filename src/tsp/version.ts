@@ -182,8 +182,10 @@ const COLLABORATION_TYPES = new Set([218, 226, 227, 228, 229, 230, 255, 256, 257
 /** TST.TileRowInfo cell-storage fields. */
 const TST_TILE_TYPE = 6002;
 const TILE_ROW_INFOS = 5;
+const TILE_STORAGE_VERSION = 6;
+const TILE_LAST_SAVED_IN_BNC = 7;
+const ROW_STORAGE_VERSION = 5;
 const ROW_CELL_STORAGE_V5 = 6;
-const ROW_CELL_STORAGE_PRE_BNC = 3;
 
 /** Probe a loaded document's structure. */
 export function probeStructure(store: ObjectStore): StructuralProbe {
@@ -221,10 +223,20 @@ export function probeStructure(store: ObjectStore): StructuralProbe {
         }
       }
       if (obj.type === TST_TILE_TYPE) {
+        // Authoritative markers; buffer presence alone is unreliable because
+        // modern writers also emit stub legacy buffers (see tst/tables.ts).
+        const bnc = message.getBool(TILE_LAST_SAVED_IN_BNC);
+        const tileVersion = message.getUint(TILE_STORAGE_VERSION);
+        let tileIsV5 = bnc === true || (tileVersion !== undefined && tileVersion >= 5);
+        let sawAnyRow = false;
         for (const ri of message.getMessages(TILE_ROW_INFOS)) {
-          if (ri.has(ROW_CELL_STORAGE_V5)) sawV5 = true;
-          else if (ri.has(ROW_CELL_STORAGE_PRE_BNC)) sawPreBNC = true;
+          sawAnyRow = true;
+          const rowVersion = ri.getUint(ROW_STORAGE_VERSION);
+          if (rowVersion !== undefined && rowVersion >= 5) tileIsV5 = true;
+          else if ((ri.getBytes(ROW_CELL_STORAGE_V5)?.length ?? 0) > 0) tileIsV5 = true;
         }
+        if (tileIsV5) sawV5 = true;
+        else if (sawAnyRow) sawPreBNC = true;
       }
     } catch {
       unparseableObjectCount++;

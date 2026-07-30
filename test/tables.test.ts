@@ -228,3 +228,47 @@ describe("table discovery on real fixtures", () => {
     expect(message).toContain("pre-BNC");
   });
 });
+
+describe("cell-storage generation detection", () => {
+  it("uses authoritative tile markers, not buffer presence", () => {
+    // Modern writers ALSO emit the legacy pre-BNC fields as stubs, so
+    // "field 6 present" is not a safe v5 test. Detection must key on
+    // Tile.last_saved_in_BNC / storage_version.
+    const modern = [
+      "numbers-parser-v26.1-date-formats.numbers",
+      "numbers-parser-v26.0-issue102.numbers",
+      "numbers-parser-v14.4-issue102.numbers",
+      "iwork-mcp-v14.5-earnings.numbers",
+    ];
+    for (const name of modern) {
+      const doc = NumbersDocument.load(fixture(name));
+      for (const table of doc.tables()) {
+        expect(table.storageGeneration).toBe("v5");
+        expect(table.hasReadableCells).toBe(true);
+      }
+      expect(doc.compatibility().probe.cellStorage).toBe("v5");
+    }
+
+    const legacy = NumbersDocument.load(fixture("tika-testNumbers2013.numbers"));
+    for (const table of legacy.tables()) expect(table.storageGeneration).toBe("preBNC");
+    expect(legacy.compatibility().probe.cellStorage).toBe("preBNC");
+  });
+
+  it("reads the same document saved by two different app generations", () => {
+    // The A/B pair is the same source document written by Numbers 14.4 and
+    // by Numbers 26.0 — only the writer differs, so cell values must match.
+    const a = NumbersDocument.load(fixture("numbers-parser-v14.4-issue102.numbers"));
+    const b = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    expect(a.compatibility().era).toBe("modern");
+    expect(b.compatibility().era).toBe("current");
+
+    const cellsOf = (doc: NumbersDocument) =>
+      doc
+        .tables()
+        .flatMap((t) => t.cells())
+        .map((c) => `${c.row},${c.column}=${cellValueToString(c.value)}`);
+    const aCells = cellsOf(a);
+    expect(aCells.length).toBeGreaterThan(0);
+    expect(cellsOf(b)).toEqual(aCells);
+  });
+});
