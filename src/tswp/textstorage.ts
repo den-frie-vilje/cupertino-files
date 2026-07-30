@@ -16,25 +16,22 @@
  * the text and adjusts ALL attribute tables so no index ever points past the
  * end of text (stale indexes are a known crash source in the apps).
  */
-import type { IwaObject } from "../iwa.ts";
-import { RawMessage } from "../protobuf.ts";
-import type { ObjectStore } from "../store.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import type { ObjectStore } from "../tsp/store.ts";
 import {
   ATTR_TABLE_ENTRIES,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
-  makeRef,
   OBJECT_TABLE_FIELDS,
   OVERLAP_RANGE,
   OVERLAP_TABLE_FIELDS,
   PARA_ALIGNED_OBJECT_TABLES,
   PARA_DATA_TABLE_FIELDS,
-  RANGE_LENGTH,
-  RANGE_LOCATION,
-  refId,
   Storage,
   STRING_TABLE_FIELDS,
 } from "./schema.ts";
+import { makeRef, RANGE_LENGTH, RANGE_LOCATION, refId } from "../tsp/schema.ts";
 
 export interface ParagraphInfo {
   index: number;

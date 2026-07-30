@@ -4,11 +4,11 @@
  * later milestone; today this subclass provides app detection, the shared
  * text/stylesheet/drawable machinery, sheet enumeration and round-trip save.
  */
-import { IWorkDocument } from "../model/document.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../model/schema.ts";
-import type { IwaObject } from "../iwa.ts";
-import type { IWorkContainer } from "../package.ts";
-import type { ObjectStore } from "../store.ts";
+import { IWorkDocument } from "../tsa/document.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import type { IWorkContainer } from "../tsp/package.ts";
+import type { ObjectStore } from "../tsp/store.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;

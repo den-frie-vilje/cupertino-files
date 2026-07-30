@@ -4,12 +4,12 @@
  * subclass provides app detection, the shared text/stylesheet/drawable
  * machinery, slide counting and round-trip save.
  */
-import { IWorkDocument } from "../model/document.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../model/schema.ts";
-import type { IwaObject } from "../iwa.ts";
-import type { IWorkContainer } from "../package.ts";
-import type { ObjectStore } from "../store.ts";
-import { KEYNOTE_TYPES } from "../registry.ts";
+import { IWorkDocument } from "../tsa/document.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import type { IWorkContainer } from "../tsp/package.ts";
+import type { ObjectStore } from "../tsp/store.ts";
+import { KEYNOTE_TYPES } from "../tsp/registry.ts";
 
 /** KN.DocumentArchive is type 1 in the Keynote registry. */
 const KN_TYPE_DOCUMENT = 1;

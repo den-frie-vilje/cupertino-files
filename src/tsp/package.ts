@@ -13,7 +13,7 @@
  * we detect and refuse it. All non-IWA entries are passed through unchanged
  * on save; IWA entries are replaced only when their component was modified.
  */
-import { buildZip, ZipReader, type ZipWriteEntry } from "./zip.ts";
+import { buildZip, ZipReader, type ZipWriteEntry } from "../base/zip.ts";
 
 export class EncryptedDocumentError extends Error {
   constructor() {

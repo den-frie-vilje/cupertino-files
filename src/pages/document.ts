@@ -4,25 +4,25 @@
  * storage, sections, section templates (page masters), headers/footers and
  * page geometry.
  */
-import { IWorkDocument } from "../model/document.ts";
-import { TextStorage, type ParagraphInfo } from "../model/textstorage.ts";
+import { IWorkDocument } from "../tsa/document.ts";
+import { TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import {
   StylesheetModel,
   type CharacterFormatting,
   type ParagraphFormatting,
   type StyleInfo,
-} from "../model/stylesheet.ts";
+} from "../tss/stylesheet.ts";
 import {
   ATTR_TABLE_ENTRIES,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
-  refId,
-  SHARED_TYPE,
   Storage,
-} from "../model/schema.ts";
-import type { IwaObject } from "../iwa.ts";
-import type { IWorkContainer } from "../package.ts";
-import type { ObjectStore } from "../store.ts";
+  TSWP_TYPE,
+} from "../tswp/schema.ts";
+import { refId } from "../tsp/schema.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import type { IWorkContainer } from "../tsp/package.ts";
+import type { ObjectStore } from "../tsp/store.ts";
 import { PAGES_REFERENCE_EXTRACTORS, Section, SectionTemplate, TP_TYPE, TPDocument } from "./schema.ts";
 
 export interface PageSetup {
@@ -110,7 +110,7 @@ export class PagesSection {
         const list: TextStorage[] = [];
         for (const ref of obj.message.getMessages(f)) {
           const target = this.document.store.resolve(ref.getVarint(1));
-          if (target?.type === SHARED_TYPE.TSWP_STORAGE) {
+          if (target?.type === TSWP_TYPE.STORAGE) {
             list.push(new TextStorage(this.document.store, target));
           }
         }
@@ -282,7 +282,7 @@ export class PagesDocument extends IWorkDocument {
 
   private resolveParagraphStyle(style: string | bigint): bigint {
     if (typeof style === "bigint") return style;
-    const found = this.stylesheet.findByName(style, SHARED_TYPE.TSWP_PARAGRAPH_STYLE);
+    const found = this.stylesheet.findByName(style, TSWP_TYPE.PARAGRAPH_STYLE);
     if (!found) throw new RangeError(`paragraph style not found: ${JSON.stringify(style)}`);
     return found.id;
   }

@@ -16,28 +16,31 @@ export type { PageSetup, SectionTemplateInfo } from "./pages/document.ts";
 export { NumbersDocument } from "./numbers/document.ts";
 export type { SheetInfo } from "./numbers/document.ts";
 export { KeynoteDocument } from "./keynote/document.ts";
-export { IWorkDocument, FormatInfo, detectApp } from "./model/document.ts";
-export type { DocumentStats } from "./model/document.ts";
+export { IWorkDocument, FormatInfo, detectApp } from "./tsa/document.ts";
+export type { DocumentStats } from "./tsa/document.ts";
 
 // Shared model
-export { TextStorage } from "./model/textstorage.ts";
-export type { ParagraphInfo, StyleRun } from "./model/textstorage.ts";
-export { StylesheetModel, describeStyle } from "./model/stylesheet.ts";
+export { TextStorage } from "./tswp/textstorage.ts";
+export type { ParagraphInfo, StyleRun } from "./tswp/textstorage.ts";
+export { StylesheetModel, describeStyle } from "./tss/stylesheet.ts";
 export type {
   CharacterFormatting,
   ParagraphFormatting,
   StyleInfo,
-} from "./model/stylesheet.ts";
-export { DrawableModel, findDrawableCore } from "./model/drawables.ts";
-export type { GeometryInfo } from "./model/drawables.ts";
-export * as schema from "./model/schema.ts";
+} from "./tss/stylesheet.ts";
+export { DrawableModel, findDrawableCore } from "./tsd/drawables.ts";
+export type { GeometryInfo } from "./tsd/drawables.ts";
+export * as tspSchema from "./tsp/schema.ts";
+export * as tswpSchema from "./tswp/schema.ts";
+export * as tssSchema from "./tss/schema.ts";
+export * as tsdSchema from "./tsd/schema.ts";
 export * as pagesSchema from "./pages/schema.ts";
 
 // Object graph & container
-export { ObjectStore, Component } from "./store.ts";
-export type { ReferenceExtractor } from "./store.ts";
-export { IWorkContainer, EncryptedDocumentError, canonicalIwaName, locatorForIwaName } from "./package.ts";
-export { IwaObject, parseIwaFile, serializeIwaFile, parseIwaStream, serializeIwaStream } from "./iwa.ts";
+export { ObjectStore, Component } from "./tsp/store.ts";
+export type { ReferenceExtractor } from "./tsp/store.ts";
+export { IWorkContainer, EncryptedDocumentError, canonicalIwaName, locatorForIwaName } from "./tsp/package.ts";
+export { IwaObject, parseIwaFile, serializeIwaFile, parseIwaStream, serializeIwaStream } from "./tsp/iwa.ts";
 
 // Registry
 export {
@@ -46,23 +49,23 @@ export {
   PAGES_TYPES,
   KEYNOTE_TYPES,
   NUMBERS_TYPES,
-} from "./registry.ts";
-export type { IWorkApp } from "./registry.ts";
+} from "./tsp/registry.ts";
+export type { IWorkApp } from "./tsp/registry.ts";
 
 // Primitives
-export { RawMessage, WireType } from "./protobuf.ts";
-export type { RawField, FieldValue } from "./protobuf.ts";
+export { RawMessage, WireType } from "./base/protobuf.ts";
+export type { RawField, FieldValue } from "./base/protobuf.ts";
 export {
   snappyCompressBlock,
   snappyUncompressBlock,
   decodeIwaData,
   encodeIwaData,
-} from "./snappy.ts";
-export { ZipReader, buildZip } from "./zip.ts";
-export type { ZipEntryMeta, ZipWriteEntry } from "./zip.ts";
-export { inflateRaw } from "./inflate.ts";
-export { crc32 } from "./crc32.ts";
-export { readUvarint, writeUvarint, uvarintLength, zigzagDecode, zigzagEncode } from "./varint.ts";
-export { ByteWriter, concatBytes, bytesEqual, utf8Decode, utf8Encode } from "./bytes.ts";
-export { parseBinaryPlist, xmlPlistStrings } from "./plist.ts";
-export type { PlistValue } from "./plist.ts";
+} from "./base/snappy.ts";
+export { ZipReader, buildZip } from "./base/zip.ts";
+export type { ZipEntryMeta, ZipWriteEntry } from "./base/zip.ts";
+export { inflateRaw } from "./base/inflate.ts";
+export { crc32 } from "./base/crc32.ts";
+export { readUvarint, writeUvarint, uvarintLength, zigzagDecode, zigzagEncode } from "./base/varint.ts";
+export { ByteWriter, concatBytes, bytesEqual, utf8Decode, utf8Encode } from "./base/bytes.ts";
+export { parseBinaryPlist, xmlPlistStrings } from "./base/plist.ts";
+export type { PlistValue } from "./base/plist.ts";

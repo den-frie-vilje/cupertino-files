@@ -1,17 +1,17 @@
 import { describe, expect, it } from "./harness.ts";
 import { deflateRawSync, deflateSync, inflateRawSync } from "node:zlib";
-import { ByteWriter, bytesEqual, concatBytes } from "../src/bytes.ts";
-import { readUvarint, uvarintLength, writeUvarint, zigzagDecode, zigzagEncode } from "../src/varint.ts";
-import { crc32 } from "../src/crc32.ts";
-import { inflateRaw } from "../src/inflate.ts";
+import { ByteWriter, bytesEqual, concatBytes } from "../src/base/bytes.ts";
+import { readUvarint, uvarintLength, writeUvarint, zigzagDecode, zigzagEncode } from "../src/base/varint.ts";
+import { crc32 } from "../src/base/crc32.ts";
+import { inflateRaw } from "../src/base/inflate.ts";
 import {
   decodeIwaData,
   encodeIwaData,
   snappyCompressBlock,
   snappyUncompressBlock,
-} from "../src/snappy.ts";
-import { buildZip, ZipReader } from "../src/zip.ts";
-import { RawMessage, WireType } from "../src/protobuf.ts";
+} from "../src/base/snappy.ts";
+import { buildZip, ZipReader } from "../src/base/zip.ts";
+import { RawMessage, WireType } from "../src/base/protobuf.ts";
 
 function rng(seed: number): () => number {
   let s = seed >>> 0;

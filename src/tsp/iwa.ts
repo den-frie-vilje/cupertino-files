@@ -14,10 +14,10 @@
  * (`data_references`). Keeping those lists in sync with the payload content is
  * required for the apps to load a modified file.
  */
-import { concatBytes, ByteWriter } from "./bytes.ts";
-import { RawMessage } from "./protobuf.ts";
-import { readUvarintNumber, writeUvarint } from "./varint.ts";
-import { decodeIwaData, encodeIwaData } from "./snappy.ts";
+import { concatBytes, ByteWriter } from "../base/bytes.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import { readUvarintNumber, writeUvarint } from "../base/varint.ts";
+import { decodeIwaData, encodeIwaData } from "../base/snappy.ts";
 
 // TSP.ArchiveInfo field numbers.
 const ARCHIVE_IDENTIFIER = 1;

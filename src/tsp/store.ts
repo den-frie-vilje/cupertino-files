@@ -18,7 +18,7 @@
  */
 import { IwaObject, parseIwaFile, serializeIwaFile } from "./iwa.ts";
 import { IWorkContainer, locatorForIwaName } from "./package.ts";
-import { RawMessage } from "./protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import type { IWorkApp } from "./registry.ts";
 
 // TSP.PackageMetadata field numbers.

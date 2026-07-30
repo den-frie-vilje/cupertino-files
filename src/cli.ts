@@ -12,13 +12,13 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { IWorkDocument, detectApp } from "./model/document.ts";
+import { IWorkDocument, detectApp } from "./tsa/document.ts";
 import { PagesDocument } from "./pages/document.ts";
-import { IWorkContainer } from "./package.ts";
-import { decodeIwaData } from "./snappy.ts";
-import { RawMessage, WireType, type RawField } from "./protobuf.ts";
-import { typeName } from "./registry.ts";
-import { utf8Decode } from "./bytes.ts";
+import { IWorkContainer } from "./tsp/package.ts";
+import { decodeIwaData } from "./base/snappy.ts";
+import { RawMessage, WireType, type RawField } from "./base/protobuf.ts";
+import { typeName } from "./tsp/registry.ts";
+import { utf8Decode } from "./base/bytes.ts";
 
 function usage(): never {
   console.error(

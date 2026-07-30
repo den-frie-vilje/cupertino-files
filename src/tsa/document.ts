@@ -11,10 +11,10 @@
  * round-trip untouched. This is the same posture the apps themselves take
  * (forward-compatible readers, additive schema evolution).
  */
-import { IWorkContainer } from "../package.ts";
-import { ObjectStore, type ReferenceExtractor } from "../store.ts";
-import type { IwaObject } from "../iwa.ts";
-import { RawMessage } from "../protobuf.ts";
+import { IWorkContainer } from "../tsp/package.ts";
+import { ObjectStore, type ReferenceExtractor } from "../tsp/store.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import {
   KEYNOTE_TYPES,
   NUMBERS_TYPES,
@@ -22,12 +22,14 @@ import {
   SHARED_TYPES,
   typeName,
   type IWorkApp,
-} from "../registry.ts";
-import { parseBinaryPlist, xmlPlistStrings, type PlistValue } from "../plist.ts";
-import { SHARED_REFERENCE_EXTRACTORS, SHARED_TYPE, StorageKind } from "./schema.ts";
-import { TextStorage } from "./textstorage.ts";
-import { StylesheetModel } from "./stylesheet.ts";
-import { DrawableModel, findDrawableCore } from "./drawables.ts";
+} from "../tsp/registry.ts";
+import { parseBinaryPlist, xmlPlistStrings, type PlistValue } from "../base/plist.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
+import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
+import { TSS_TYPE } from "../tss/schema.ts";
+import { TextStorage } from "../tswp/textstorage.ts";
+import { StylesheetModel } from "../tss/stylesheet.ts";
+import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 
 // TSP.PackageMetadata version fields.
 const PKG_READ_VERSION = 5;
@@ -130,7 +132,7 @@ export class IWorkDocument {
   textStorages(kind?: StorageKind): TextStorage[] {
     const out: TextStorage[] = [];
     for (const { obj } of this.store.allObjects()) {
-      if (obj.type !== SHARED_TYPE.TSWP_STORAGE) continue;
+      if (obj.type !== TSWP_TYPE.STORAGE) continue;
       const storage = new TextStorage(this.store, obj);
       if (kind === undefined || storage.kind === kind) out.push(storage);
     }
@@ -141,7 +143,7 @@ export class IWorkDocument {
   stylesheets(): StylesheetModel[] {
     const out: StylesheetModel[] = [];
     for (const { obj } of this.store.allObjects()) {
-      if (obj.type === SHARED_TYPE.TSS_STYLESHEET) out.push(new StylesheetModel(this.store, obj));
+      if (obj.type === TSS_TYPE.STYLESHEET) out.push(new StylesheetModel(this.store, obj));
     }
     return out;
   }

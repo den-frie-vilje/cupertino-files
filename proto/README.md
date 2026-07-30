@@ -77,3 +77,31 @@ files are redistributed:
 - numbers-parser: MIT, Copyright 2021 Jon Connell
 - iWorkFileFormat: MIT, Copyright (c) 2013 Sean Patrick O'Brien (http://obriensp.com)
 - keynote-parser (cross-check source): MIT, Copyright Peter Sobot
+
+## App-specific schemas: `keynote-14.4/` and `numbers-14.4/` (added 2026-07-30)
+
+Verbatim copies of the **app-local** schema families, vendored to support the
+Keynote (`.key`) and Numbers (`.numbers`) readers (see
+`research/keynote-slides.md`). Nothing has been edited.
+
+| Directory | Files | Source repo | Commit (`git rev-parse HEAD`) | Path in repo | Extraction method | App version dumped | License |
+|---|---|---|---|---|---|---|---|
+| `keynote-14.4/` | 4 × `KN*.proto` (`KNArchives.proto`, `KNArchives_sos.proto`, `KNCommandArchives.proto`, `KNCommandArchives_sos.proto` — every KN file the repo has) | [psobot/keynote-parser](https://github.com/psobot/keynote-parser) | `6bc3849e80f531f51d2878550bd634706d3f036d` | `protos/versions/14.4/` | `dumper/protodump.py` against the Keynote.app binary | Keynote 14.4 | MIT (© Peter Sobot) |
+| `numbers-14.4/` | 6 × `TN*.proto` (`TNArchives.proto`, `TNCommandArchives.proto`, plus both spellings of their SOS companions: `TNArchives_sos.proto`/`TNArchives.sos.proto`, `TNCommandArchives_sos.proto`/`TNCommandArchives.sos.proto` — every TN file the repo has) | [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser) | `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` | `src/protos/` | `src/build/protodump.py` against the Numbers.app binary | Numbers 14.4 | MIT (© 2021 Jon Connell) |
+
+Import-graph notes:
+
+- Every `import` in the KN files and in the **underscore-named** TN files
+  resolves against `current/` (the shared 14.4 `TS*` set) plus the app files
+  themselves. The KN files come from the same 14.4 dump that was cross-checked
+  against `current/` above.
+- As in `current/`, the numbers-parser dot-named duplicates
+  (`TN*.sos.proto`) differ from the underscore-named files **only** in their
+  `import` statement spelling (`TSDArchives.sos.proto` vs
+  `TSDArchives_sos.proto`); they are kept because the source repo ships both,
+  but only the underscore-named set resolves against `current/`.
+- `KNArchives.proto` ends with `extend .TSD.FillArchive` (field 200,
+  `KN.MotionBackgroundFillArchive`) and contains
+  `extend .TSD.MovieArchive` (field 100, `KN.LiveVideoInfo`) inside
+  `KN.LiveVideoInfo` — a proto2 extension pattern the reader must handle when
+  decoding TSD fills/movies found in Keynote documents.

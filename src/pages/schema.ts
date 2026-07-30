@@ -7,8 +7,9 @@
  * (2026 registry dump + fixture evidence). Unknown newer fields are
  * preserved untouched by the RawMessage layer.
  */
-import type { ReferenceExtractor } from "../store.ts";
-import { pushRef, SHARED_REFERENCE_EXTRACTORS } from "../model/schema.ts";
+import type { ReferenceExtractor } from "../tsp/store.ts";
+import { pushRef } from "../tsp/schema.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 
 export const TP_TYPE = {
   DOCUMENT: 10000,

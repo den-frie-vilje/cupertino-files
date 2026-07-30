@@ -8,23 +8,23 @@
  * `parent_to_children_style_map` (when based on another style). The
  * `styles_for_*` compatibility snapshots are deliberately left untouched.
  */
-import type { IwaObject } from "../iwa.ts";
-import { RawMessage } from "../protobuf.ts";
-import type { Component, ObjectStore } from "../store.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import type { Component, ObjectStore } from "../tsp/store.ts";
+import { makeColor, makeRef, refId } from "../tsp/schema.ts";
 import {
   CharProps,
-  IdentifiedStyleEntry,
   LineSpacing,
-  makeColor,
-  makeRef,
   ParaProps,
-  refId,
-  SHARED_TYPE,
   StyleArchive,
+  TextAlignment,
+  TSWP_TYPE,
+} from "../tswp/schema.ts";
+import {
+  IdentifiedStyleEntry,
   StyleChildrenEntry,
   StylesheetFields,
   StyleSuper,
-  TextAlignment,
 } from "./schema.ts";
 
 export interface StyleInfo {
@@ -153,11 +153,11 @@ export class StylesheetModel {
   }
 
   paragraphStyles(): StyleInfo[] {
-    return this.styles().filter((s) => s.type === SHARED_TYPE.TSWP_PARAGRAPH_STYLE);
+    return this.styles().filter((s) => s.type === TSWP_TYPE.PARAGRAPH_STYLE);
   }
 
   characterStyles(): StyleInfo[] {
-    return this.styles().filter((s) => s.type === SHARED_TYPE.TSWP_CHARACTER_STYLE);
+    return this.styles().filter((s) => s.type === TSWP_TYPE.CHARACTER_STYLE);
   }
 
   /**
@@ -171,8 +171,8 @@ export class StylesheetModel {
     character?: CharacterFormatting;
     paragraph?: ParagraphFormatting;
   }): bigint {
-    const parentId = this.resolveBase(options.basedOn, SHARED_TYPE.TSWP_PARAGRAPH_STYLE);
-    const obj = this.store.createObject(SHARED_TYPE.TSWP_PARAGRAPH_STYLE, this.component);
+    const parentId = this.resolveBase(options.basedOn, TSWP_TYPE.PARAGRAPH_STYLE);
+    const obj = this.store.createObject(TSWP_TYPE.PARAGRAPH_STYLE, this.component);
     const m = obj.message;
     m.setMessage(
       StyleArchive.SUPER,
@@ -201,8 +201,8 @@ export class StylesheetModel {
     basedOn?: bigint | string;
     character: CharacterFormatting;
   }): bigint {
-    const parentId = this.resolveBase(options.basedOn, SHARED_TYPE.TSWP_CHARACTER_STYLE);
-    const obj = this.store.createObject(SHARED_TYPE.TSWP_CHARACTER_STYLE, this.component);
+    const parentId = this.resolveBase(options.basedOn, TSWP_TYPE.CHARACTER_STYLE);
+    const obj = this.store.createObject(TSWP_TYPE.CHARACTER_STYLE, this.component);
     const m = obj.message;
     m.setMessage(
       StyleArchive.SUPER,

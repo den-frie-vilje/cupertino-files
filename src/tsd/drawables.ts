@@ -5,11 +5,12 @@
  * chain generically to read and edit geometry without needing the concrete
  * schema of every drawable subclass.
  */
-import type { IwaObject } from "../iwa.ts";
-import { RawMessage, WireType } from "../protobuf.ts";
-import type { ObjectStore } from "../store.ts";
-import { typeName } from "../registry.ts";
-import { Drawable, Geometry, Point, SizeFields } from "./schema.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
+import { RawMessage, WireType } from "../base/protobuf.ts";
+import type { ObjectStore } from "../tsp/store.ts";
+import { typeName } from "../tsp/registry.ts";
+import { Drawable, Geometry } from "./schema.ts";
+import { Point, SizeFields } from "../tsp/schema.ts";
 
 export interface GeometryInfo {
   x: number | undefined;
