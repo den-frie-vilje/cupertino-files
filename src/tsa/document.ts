@@ -24,6 +24,15 @@ import {
   type IWorkApp,
 } from "../tsp/registry.ts";
 import { parseBinaryPlist, xmlPlistStrings, type PlistValue } from "../base/plist.ts";
+import {
+  buildCompatibilityReport,
+  eraOf,
+  IWorkVersion,
+  probeStructure,
+  summarizeCompatibility,
+  type CompatibilityReport,
+  type IWorkEra,
+} from "../tsp/version.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
@@ -193,6 +202,39 @@ export class IWorkDocument {
       objectCount: count,
       typeHistogram: histogram,
     };
+  }
+
+  /**
+   * What this library can and cannot do with THIS document: declared
+   * versions, the era they place it in, structural probes (unknown type
+   * IDs, cell-storage generation, patch archives, collaboration state) and
+   * any unsupported features. Loading never fails on version grounds — this
+   * is how a caller finds out what to expect.
+   */
+  compatibility(): CompatibilityReport {
+    const f = this.format;
+    return buildCompatibilityReport({
+      app: this.app,
+      formatVersion: IWorkVersion.parse(f.propertiesFileFormatVersion),
+      packageFormatVersion: IWorkVersion.parse(f.fileFormatVersion),
+      readVersion: IWorkVersion.parse(f.readVersion),
+      writeVersion: IWorkVersion.parse(f.writeVersion),
+      appBuilds: f.buildHistory,
+      probe: probeStructure(this.store),
+    });
+  }
+
+  /** One-line human summary of {@link compatibility}. */
+  compatibilitySummary(): string {
+    return summarizeCompatibility(this.compatibility());
+  }
+
+  /** Format era this document was written by (see tsp/version.ts). */
+  get era(): IWorkEra {
+    return eraOf(
+      IWorkVersion.parse(this.format.propertiesFileFormatVersion) ??
+        IWorkVersion.parse(this.format.fileFormatVersion),
+    );
   }
 
   /** Serialize the document back to package bytes. */

@@ -39,6 +39,18 @@ export type { CellValue, CellInfo, MergeRange } from "./tst/tables.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { PagesSettings } from "./pages/document.ts";
 export { sha1 } from "./base/sha1.ts";
+export {
+  IWorkVersion,
+  eraOf,
+  eraInfo,
+  eraAtLeast,
+  probeStructure,
+  buildCompatibilityReport,
+  summarizeCompatibility,
+  IWORK_ERAS,
+  HIGHEST_KNOWN_FORMAT_MAJOR,
+} from "./tsp/version.ts";
+export type { IWorkEra, EraInfo, StructuralProbe, CompatibilityReport } from "./tsp/version.ts";
 export { imageDimensions } from "./base/imagesize.ts";
 export * as pagesSchema from "./pages/schema.ts";
 

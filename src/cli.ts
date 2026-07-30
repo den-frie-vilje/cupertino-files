@@ -3,6 +3,7 @@
  * iwork-dump — inspect modern iWork files from the command line.
  *
  *   iwork-dump info <file>              format versions, app, components
+ *   iwork-dump compat <file>            version era + compatibility report
  *   iwork-dump ls <file>                objects per component with type names
  *   iwork-dump text <file>              extract all text
  *   iwork-dump styles <file>            named styles (Pages)
@@ -22,7 +23,7 @@ import { utf8Decode } from "./base/bytes.ts";
 
 function usage(): never {
   console.error(
-    "usage: iwork-dump <info|ls|text|styles|sections|object|extract> <file.pages|.numbers|.key> [args]",
+    "usage: iwork-dump <info|compat|ls|text|styles|sections|object|extract> <file.pages|.numbers|.key> [args]",
   );
   process.exit(2);
 }
@@ -105,6 +106,27 @@ function main(): void {
       if (f.buildHistory.length) console.log(`build history: ${f.buildHistory.join(" | ")}`);
       for (const w of f.warnings) console.log(`warning: ${w}`);
       for (const c of s.components) console.log(`  ${c.name}: ${c.objects} objects`);
+      break;
+    }
+    case "compat": {
+      const doc = IWorkDocument.open(bytes);
+      const r = doc.compatibility();
+      console.log(doc.compatibilitySummary());
+      console.log(`era: ${r.era} (${r.eraLabel})`);
+      if (r.formatVersion) console.log(`fileFormatVersion: ${r.formatVersion}`);
+      if (r.readVersion) console.log(`read/write version: ${r.readVersion} / ${r.writeVersion ?? "-"}`);
+      if (r.appBuilds.length) console.log(`app builds: ${r.appBuilds.join(" | ")}`);
+      console.log(`container layout: ${r.probe.containerLayout}`);
+      console.log(`cell storage: ${r.probe.cellStorage}`);
+      console.log(`versioned style snapshots: ${r.probe.hasVersionedStyleSnapshots}`);
+      console.log(`collaboration state present: ${r.probe.hasCollaborationState}`);
+      console.log(`patch archives: ${r.probe.patchArchiveCount}`);
+      if (r.probe.unknownTypeIds.length) {
+        console.log(`unknown type IDs: ${r.probe.unknownTypeIds.join(", ")} (${r.probe.unknownTypeObjectCount} objects)`);
+      }
+      console.log(`round-trip safe: ${r.canRoundTrip}`);
+      for (const f of r.unsupportedFeatures) console.log(`unsupported: ${f}`);
+      for (const w of r.warnings) console.log(`warning: ${w}`);
       break;
     }
     case "ls": {

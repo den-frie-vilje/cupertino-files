@@ -42,6 +42,12 @@ export class IWorkContainer {
   /** Canonical IWA path (e.g. "Index/Document.iwa") → file bytes. */
   readonly iwaFiles = new Map<string, Uint8Array>();
 
+  /** How this package was laid out on disk (preserved on save). */
+  get layout(): "flat" | "nested-index-zip" | "wrapper-directory" {
+    if (this.indexZipEntry !== undefined) return "nested-index-zip";
+    return this.prefix === "" ? "flat" : "wrapper-directory";
+  }
+
   static fromBytes(bytes: Uint8Array): IWorkContainer {
     const c = new IWorkContainer();
     const zip = ZipReader.parse(bytes);

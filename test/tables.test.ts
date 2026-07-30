@@ -184,6 +184,33 @@ describe("table discovery on real fixtures", () => {
     expect(tables[0]!.columnCount).toBe(3);
   });
 
+  it("decodes real v5 cell storage written by Apple", () => {
+    // The 2018-era Pages file (format 3.2.13) carries a real BNC/v5 table.
+    // Values are cross-checked arithmetically: quantity × unit price = cost,
+    // which only holds if decimal128 decoding is exactly right.
+    const doc = PagesDocument.load(fixture("libetonyek-pages5-extra-dir.pages"));
+    const table = doc.tables()[0]!;
+    expect(table.storageGeneration).toBe("v5");
+    expect(table.hasReadableCells).toBe(true);
+    expect(table.name).toBe("Details");
+
+    const grid = table.grid();
+    const at = (r: number, c: number) => grid[r]![c]!;
+    expect(cellValueToString(at(0, 0))).toBe("Description");
+    expect(cellValueToString(at(0, 3))).toBe("Cost");
+    expect(at(0, 0).type).toBe("richText");
+
+    for (const row of [1, 2]) {
+      const quantity = at(row, 1) as { type: string; value: number };
+      const unitPrice = at(row, 2) as { value: number };
+      const cost = at(row, 3) as { value: number };
+      expect(quantity.type).toBe("number");
+      expect(quantity.value * unitPrice.value).toBe(cost.value);
+    }
+    expect((at(1, 1) as { value: number }).value).toBe(55);
+    expect((at(1, 3) as { value: number }).value).toBe(5500);
+  });
+
   it("reports pre-BNC storage explicitly instead of returning no cells", () => {
     // The 2013-era fixtures predate Numbers 10's "BNC" cell storage. A silent
     // empty result would be indistinguishable from an empty table, so cells()

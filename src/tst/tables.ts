@@ -174,9 +174,10 @@ export class TableModel {
 
   /**
    * Cell-storage generation used by this table:
-   *  - "v5"     modern "BNC" storage (Numbers 10+ / 2020 onwards) — readable
-   *  - "preBNC" storage versions 3/4 written by iWork '13-era apps — NOT
-   *             readable (undocumented layout; the reference Python
+   *  - "v5"     "BNC" storage — readable. Observed in files as early as the
+   *             2018-era apps (format 3.2.13), not only Numbers 10+.
+   *  - "preBNC" storage versions 3/4 written by iWork '13/'15-era apps —
+   *             NOT readable (undocumented layout; the reference Python
    *             implementation refuses these too)
    *  - "empty"  no tile rows at all
    */
@@ -214,7 +215,7 @@ export class TableModel {
     if (this.storageGeneration === "preBNC") {
       throw new RangeError(
         `table ${JSON.stringify(this.name ?? "")}: pre-BNC cell storage (written by an ` +
-          `iWork '13-era app) is not supported; re-save the document in Numbers 10 or later`,
+          `iWork '13/'15-era app) is not supported; re-saving in a current app converts it`,
       );
     }
     const strings = this.stringTable();
