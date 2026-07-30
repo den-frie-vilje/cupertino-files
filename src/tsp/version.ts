@@ -84,7 +84,13 @@ export interface EraInfo {
 const ERA_INFO: Record<IWorkEra, EraInfo> = {
   iwork13: { era: "iwork13", label: "iWork '13", apps: "Pages 5.x / Numbers 3.x / Keynote 6.x (2013–2014)" },
   iwork16: { era: "iwork16", label: "iWork '15–'16", apps: "Pages 6.x / iOS 2.x builds (2015–2016)" },
-  iwork19: { era: "iwork19", label: "iWork '18–'19", apps: "Pages 7.x–8.x (2017–2019)" },
+  iwork19: {
+    era: "iwork19",
+    label: "iWork '18–'19",
+    // The pre-jump sequence ran 1.x → 2.x → 3.x → 4.x before the 2020
+    // renumbering; both 3.x and 4.x land in this era.
+    apps: "Pages 7.x–8.x, format 3.x–4.x (2017–2019)",
+  },
   modern: {
     era: "modern",
     label: "iWork 10–14",
@@ -169,7 +175,11 @@ export interface CompatibilityReport {
   /** Minimum reader version the package declares. */
   readVersion: IWorkVersion | undefined;
   writeVersion: IWorkVersion | undefined;
-  /** Application build strings from BuildVersionHistory.plist. */
+  /**
+   * Application build strings from BuildVersionHistory.plist. The prefix
+   * identifies the writing platform: `M…` for macOS, `T…` for iOS/iPadOS
+   * (both observed writing the same format versions).
+   */
   appBuilds: string[];
   probe: StructuralProbe;
   /**

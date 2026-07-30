@@ -554,3 +554,270 @@ before treating any exact count here as current.
   If licensing is ever clarified upstream, the scrummaster and NeutrinoSys files are the
   two best remaining upgrades.
 - No existing fixture was modified or removed.
+
+---
+
+## Real-world Pages fixtures
+
+Modern IWA `.pages` documents that were **authored in Pages by real users and committed to
+public GitHub repositories** (as opposed to the synthetic files in formal parser test suites).
+Fetched 2026-07-30 with `curl -L` from `raw.githubusercontent.com`; every file is a
+byte-identical copy of the upstream blob (md5 given per file) and every source repository
+carries an explicit open licence — candidates from unlicensed repositories were rejected and
+are listed in `research/realworld-pages-survey.md` instead.
+
+Container check for all six: zip with top-level `Index/*.iwa` (`flat` layout), confirmed by
+`unzip -l` and by `scripts/feature-probe.ts` parsing them without error.
+
+| Source repo | Commit | Branch | Licence |
+|---|---|---|---|
+| https://github.com/desmarais-patrick/notes | `fdd027e083cfab79fe721741c6a6a15c579b3a94` | `master` | MIT (`LICENSE`, © 2019 Patrick Desmarais) |
+| https://github.com/patrickomatic/iwork | `e0f4f297cbbd8e98e38396d3dbc97828ea804a4f` | `main` | MIT (`LICENSE`, © 2026) |
+| https://github.com/CompPhysics/ThesisProjects | `4a752449e8824927b29b724bf873fc82766f23f0` | `master` | CC0-1.0 (`LICENSE`) |
+
+### desmarais-notes-comments-tables.pages
+- Source: https://github.com/desmarais-patrick/notes/blob/master/src/review-01.pages
+- Repo `desmarais-patrick/notes` @ `fdd027e083cfab79fe721741c6a6a15c579b3a94`, licence **MIT**
+- 132,018 bytes, md5 `418d037294781dc3c076a26220ebf5fc`
+- fileFormatVersion **4.1.7**, app build **M8.1-6369-2** (Pages 8.1, "iwork19" era), flat `Index/*.iwa`
+- Content: a personal technical review write-up with reviewer annotations left in the document.
+- **First fixture in the corpus with real comments**, and the first with more than one TOC object.
+- feature-probe:
+  ```
+  pages | era=iwork19 | format=4.1.7 | build=M8.1-6369-2 | flat | 669 objects | score=4
+  textStorages=20  nonEmptyStorages=2  tables=4  tableCellStorage=v5  readableTableCells=4  comments=6  inlineAttachments=5  listStyledParagraphs=22  bodyChars=15612  paragraphs=170  sections=1  namedParagraphStyles=23  namedListStyles=9  tocObjects=3  hasTOC=true
+  ```
+
+### desmarais-notes-sections-hyperlinks.pages
+- Source: https://github.com/desmarais-patrick/notes/blob/master/src/review-02.pages
+- Repo `desmarais-patrick/notes` @ `fdd027e083cfab79fe721741c6a6a15c579b3a94`, licence **MIT**
+- 213,565 bytes, md5 `0cb388a59ea78db63ba677a0c75a8461`
+- fileFormatVersion **4.1.7**, app build **M8.1-6369-2**, flat `Index/*.iwa`
+- Content: long-form structured notes (156 paragraphs, ~14.6k chars) split across **8 document
+  sections** with external hyperlinks and smart fields.
+- **Highest section count in the corpus** (every pre-existing fixture had exactly 1).
+- feature-probe:
+  ```
+  pages | era=iwork19 | format=4.1.7 | build=M8.1-6369-2 | flat | 629 objects | score=4
+  textStorages=145  nonEmptyStorages=1  tableCellStorage=none  hyperlinks=5  smartFields=5  listStyledParagraphs=151  bodyChars=14589  paragraphs=156  sections=8  namedParagraphStyles=23  namedListStyles=9  tocObjects=1  hasTOC=true
+  ```
+
+### patrickomatic-pages26-sections-masks.pages
+- Source: https://github.com/patrickomatic/iwork/blob/main/examples/pages/eternal_sunshine.pages
+- Repo `patrickomatic/iwork` @ `e0f4f297cbbd8e98e38396d3dbc97828ea804a4f`, licence **MIT**
+- 205,537 bytes, md5 `c3f17ba8c699e101af9c24c6798b6394`
+- fileFormatVersion **26.1.0**, app build **M15.2.1-7048.0.3-2** (Pages 15.2.1, "current" era), flat `Index/*.iwa`
+- Content: a long-form narrative document (6 sections, ~9k chars) built from one of the shipped
+  Pages book/novel templates, with masked images, 25 smart fields and floating text boxes.
+- **Newest file-format version in the corpus by a wide margin** (previous max was 14.4.1); the
+  only fixture exercising the `26.x` format alongside multi-section layout.
+- feature-probe:
+  ```
+  pages | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 721 objects | score=6
+  textStorages=113  nonEmptyStorages=4  images=2  imagesWithMask=2  tableCellStorage=none  smartFields=25  inlineAttachments=2  listStyledParagraphs=119  bodyChars=9044  paragraphs=51  sections=6  textBoxes=4  namedParagraphStyles=23  namedListStyles=5  tocObjects=1  hasTOC=true  shapeInfos=4
+  ```
+
+### patrickomatic-termpaper-footers-masks.pages
+- Source: https://github.com/patrickomatic/iwork/blob/main/examples/pages/term_paper.pages
+- Repo `patrickomatic/iwork` @ `e0f4f297cbbd8e98e38396d3dbc97828ea804a4f`, licence **MIT**
+- 221,011 bytes, md5 `fbe5f47ea346151d2843ee55478dbf92`
+- fileFormatVersion **26.1.0**, app build **M15.2.1-7048.0.3-2**, flat `Index/*.iwa`
+- Content: an academic term-paper document with **two non-empty page footers** (running
+  footer text on the section templates) and masked images.
+- **First fixture with real header/footer text** on a `26.x` document.
+- feature-probe:
+  ```
+  pages | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 492 objects | score=5
+  textStorages=19  nonEmptyStorages=3  images=2  imagesWithMask=2  tableCellStorage=none  smartFields=10  inlineAttachments=3  listStyledParagraphs=19  bodyChars=872  paragraphs=18  sections=1  nonEmptyFooters=2  namedParagraphStyles=23  namedListStyles=6  tocObjects=1  hasTOC=true
+  ```
+
+### compphysics-poster-images-masks.pages
+- Source: https://github.com/CompPhysics/ThesisProjects/blob/master/doc/PhD/phd_students/former/Ben/Pairing%20Model%20QPE%20%7C%20Poster.pages
+- Repo `CompPhysics/ThesisProjects` @ `4a752449e8824927b29b724bf873fc82766f23f0`, licence **CC0-1.0**
+- 1,650,801 bytes, md5 `6243a50657bd28c072ab3b3928c81dfb`
+- fileFormatVersion **2.2.4**, app build **M6.2-4582-1** (Pages 6.2, "iwork16" era), flat `Index/*.iwa`
+- Content: a physics conference poster ("Pairing Model QPE") from a University of Oslo
+  computational-physics PhD project — 29 images of which **9 carry image masks**, laid out in
+  48 floating text boxes.
+- **Densest image/mask fixture in the corpus** and the only real-world poster-style layout.
+- feature-probe:
+  ```
+  pages | era=iwork16 | format=2.2.4 | build=M6.2-4582-1 | flat | 489 objects | score=5
+  textStorages=67  nonEmptyStorages=22  images=29  imagesWithMask=9  tableCellStorage=none  inlineAttachments=17  listStyledParagraphs=67  bodyChars=72  paragraphs=54  sections=1  textBoxes=48  namedParagraphStyles=24  namedListStyles=9  tocObjects=1  hasTOC=true  shapeInfos=48
+  ```
+
+### Licence notes for this section
+- Four of the six files are MIT, one is CC0-1.0. All licences are repository-level `LICENSE`
+  files that were fetched and read, not inferred from GitHub metadata.
+- `desmarais-patrick/notes` is a personal repository whose owner chose MIT explicitly.
+  MIT explicitly; the documents contain the authors' own names (Patrick Desmarais, Justin
+  Murphy). They are retained here as unmodified, attributed test fixtures.
+- `patrickomatic/iwork` is an MIT-licensed Rust crate whose `examples/pages/*` documents are
+  derived from stock Pages templates; only the crate author's own rendering is redistributed.
+- Substantially better-scoring real-world documents exist on GitHub but were **rejected for
+  lack of any licence** — see `research/realworld-pages-survey.md` for the full list, including
+  the only files found anywhere that exercise change tracking and image adjustments.
+
+## Open-web fixtures
+
+Six files added on 2026-07-30 from an **open-web** hunt (public repositories and ordinary
+websites, deliberately excluding git forges — see `research/openweb-survey.md` for the full
+survey, including everything probed but *not* shipped and why).
+
+Licensing rule applied: a file was only copied here when its deposit record carries an explicit
+CC-BY / CC0 / public-domain grant. Every file below was downloaded from its publisher's own API
+and its MD5 checked against the checksum the publisher publishes; the local copies are
+byte-identical to the deposited originals.
+
+**Headline result: the first `26.x` Keynote fixtures in the corpus.** Before this pass the
+newest `.key` anywhere in the set was `fileFormatVersion` 14.4.1 (Keynote 14.5). There are now
+three `26.x` Keynote documents, including one written by **iPadOS/iOS Keynote**, which no other
+fixture in the corpus is.
+
+### zenodo-v26.1-hyperlinks-masks.key
+
+- Source URL: <https://zenodo.org/records/20810526> —
+  file `WS - Rainer.key` via `https://zenodo.org/api/records/20810526/files/WS%20-%20Rainer.key/content`
+- Publisher / creator: Krug, Rainer M (SIB Swiss Institute of Bioinformatics).
+  "Building Together: The SIB — Senckenberg Collaboration", Zenodo, 2026-06-14.
+  DOI [10.5281/zenodo.20810526](https://doi.org/10.5281/zenodo.20810526)
+- License: Zenodo record metadata states `"license": {"id": "cc-by-4.0"}` — **Creative Commons
+  Attribution 4.0 International**, <https://creativecommons.org/licenses/by/4.0/>. Attribution
+  as above; the file is redistributed unmodified.
+- 1,475,724 bytes, md5 `38ba0df2c577e5c73fe032d777eaeae4` (matches Zenodo's published checksum)
+- `fileFormatVersion` **26.1.0**; BuildVersionHistory
+  `['Template: 33_DynamicLight (dev/15.3)', 'M15.2.1-7048.0.3-2']` — Keynote 15.2.1 on macOS.
+  Note the origin template is stamped `dev/15.3`, a *newer* train than the writer, the same
+  pattern `numbers-parser-v26.1-date-formats.numbers` shows.
+- Layout: 69 entries, `Index/` + `Data/` + `Metadata/`, three `preview*.jpg`.
+- feature-probe:
+  ```
+  keynote | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 1035 objects | score=4
+  textStorages=98  nonEmptyStorages=47  images=9  imagesWithMask=7  tableCellStorage=none  hyperlinks=7  smartFields=7  inlineAttachments=4  listStyledParagraphs=98
+  ```
+- Why it is here: highest-scoring `26.x` Keynote found anywhere. It is the only `26.x` `.key`
+  in the corpus that exercises **hyperlinks + smart fields + image masks** together.
+
+### zenodo-v26.1-pptx-lineage.key
+
+- Source URL: <https://zenodo.org/records/20813233> — file
+  `The Role of AI in IPBES Assessments and Biodiversity Literature Analysis - hype or Salvation.key`
+- Publisher / creators: Krug, Rainer M (SIB Swiss Institute of Bioinformatics); Ruch, Patrick
+  (HES-SO Genève). Zenodo, 2026-06-23.
+  DOI [10.5281/zenodo.20813233](https://doi.org/10.5281/zenodo.20813233)
+- License: `"license": {"id": "cc-by-4.0"}` — **CC BY 4.0**,
+  <https://creativecommons.org/licenses/by/4.0/>. Redistributed unmodified.
+- 1,277,157 bytes, md5 `6a20bf85e13e19999e7600d6e8835bb9` (matches Zenodo's checksum)
+- `fileFormatVersion` **26.1.0**; BuildVersionHistory `['pptx', 'M15.2.1-7048.0.3-2']`
+- Layout: 51 entries, `Index/` + `Data/` + `Metadata/`.
+- feature-probe:
+  ```
+  keynote | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 1111 objects | score=2
+  textStorages=130  nonEmptyStorages=74  images=13  tableCellStorage=none  inlineAttachments=11  listStyledParagraphs=130
+  ```
+- Why it is here: **import lineage**. Element 0 of BuildVersionHistory is the literal string
+  `pptx`, so this is a PowerPoint deck imported into Keynote and re-saved at 26.1.0. The corpus
+  had `xlsx`/`csv`/`docx` origin markers only on Numbers/Pages files; this is the first
+  `pptx`-origin Keynote, and the first non-template origin marker on any `.key`.
+
+### zenodo-v26.0-ios-writer.key
+
+- Source URL: <https://zenodo.org/records/18500468> — file `final slides.key`
+- Publisher / creator: Böhn, Livana. "Insulin discourse" (dataset), Zenodo, 2026-02-06.
+  DOI [10.5281/zenodo.18500468](https://doi.org/10.5281/zenodo.18500468)
+- License: `"license": {"id": "cc-by-4.0"}` — **CC BY 4.0**,
+  <https://creativecommons.org/licenses/by/4.0/>. Redistributed unmodified.
+- 5,060,510 bytes (4.83 MiB), md5 `26c91f17012f11602facb0dcfd4bc95c` (matches Zenodo's checksum).
+  **Size note:** this is under 5 MiB but marginally over 5 × 10⁶ bytes. It is the largest file
+  in `fixtures/` after `draftjs-v2.3-comments.pages` (3.80 MB). If the size budget is strict
+  decimal, this is the one file in this section to drop — nothing else here exceeds 1.5 MB.
+- `fileFormatVersion` **26.0.0**; BuildVersionHistory
+  `['Template: 36_DynamicWavesLight (release/iwork/15.0)', 'T15.1 (7373.0.281)']`
+- Layout: 88 entries, `Index/` + `Data/` + `Metadata/`.
+- feature-probe:
+  ```
+  keynote | era=current | format=26.0.0 | build=T15.1 (7373.0.281) | flat | 1272 objects | score=4
+  textStorages=136  nonEmptyStorages=67  images=14  imagesWithMask=9  tableCellStorage=none  hyperlinks=4  smartFields=4  inlineAttachments=10  listStyledParagraphs=136
+  ```
+- Why it is here: two firsts. It is the only **`26.0.0`** `.key` found, and the only
+  **iPadOS/iOS-written** document in the modern half of the corpus — build string `T15.1
+  (7373.0.281)`, the `T<ver> (<build>)` form, rather than the macOS `M<ver>-<build>-<n>` form
+  every other modern fixture carries. Its origin template is stamped
+  `release/iwork/15.0`, a branch-name form not seen on any other fixture.
+
+### zenodo-v13.1-tables-images.key
+
+- Source URL: <https://zenodo.org/records/18975601> — file `Role of toxins in dis development.key`
+- Publisher / creator: Amit Chauhan (Udai Pratap College (Autonomous), Varanasi).
+  "Role of toxins in disease development" (lesson), Zenodo, 2026-03-12.
+  DOI [10.5281/zenodo.18975601](https://doi.org/10.5281/zenodo.18975601)
+- License: `"license": {"id": "cc-by-4.0"}` — **CC BY 4.0**,
+  <https://creativecommons.org/licenses/by/4.0/>. Redistributed unmodified.
+- 926,463 bytes, md5 `ed969467dbd98f0e69cb5e172bb4ec6d` (matches Zenodo's checksum)
+- `fileFormatVersion` **13.1.2**; BuildVersionHistory `['Template: White (12.2)', 'M13.1-7037.0.101-2']`
+- Layout: 122 entries, `Index/` + `Data/` + `Metadata/`.
+- feature-probe:
+  ```
+  keynote | era=modern | format=13.1.2 | build=M13.1-7037.0.101-2 | flat | 1139 objects | score=4
+  textStorages=107  nonEmptyStorages=54  images=8  imagesWithMask=7  tables=2  tableCellStorage=v5  readableTableCells=2  inlineAttachments=10  listStyledParagraphs=112
+  ```
+- Why it is here: the only `.key` in the corpus with **readable (BNC v5) table cells**. The
+  existing Keynote table fixture, `tika-testKeynote2013.key`, is pre-BNC and its cell values
+  cannot be decoded at all; `iwork-mcp-v14.5-sample.key` and `tika-testKeynote2018.key` have no
+  tables. It also fills the empty 10.x–14.x band in Keynote version coverage.
+
+### tudortmund-v4.2-footers-table.pages and tudortmund-v14.1-footers-table.pages
+
+Both files come from the **same dataset and are the same document in two format eras** — see the
+note below, which is the reason both were taken.
+
+- Source URLs:
+  `https://data.tu-dortmund.de/api/access/datafile/58415` (`Telemann-Summary-Deutsch.pages`) and
+  `https://data.tu-dortmund.de/api/access/datafile/58416` (`Telemann-Summary-English.pages`),
+  dataset <https://doi.org/10.17877/TUDODATA-2025-MC06WAYR>
+- Publisher / creator: Remes, Derek (TU Dortmund University). G. P. Telemann's *"Exercises in
+  Singing, Keyboard-Playing, and Thoroughbass"*, TUDoData (TU Dortmund research data
+  repository), 2025-06-17.
+- License: the Dataverse dataset record carries
+  `"license": {"name": "CC BY 4.0", "uri": "http://creativecommons.org/licenses/by/4.0", ...}`
+  — **Creative Commons Attribution 4.0 International**,
+  <https://creativecommons.org/licenses/by/4.0/>. Both files redistributed unmodified.
+- `tudortmund-v4.2-footers-table.pages`: 310,177 bytes, md5 `2993169fa65d06aef774070168d7c068`;
+  `fileFormatVersion` **4.2.3**; BuildVersionHistory `['Template: Blank (4.2)', 'M8.2-6520-2']`
+  (Pages 8.2, iWork '19 era); 43 zip entries, `Index/` + `Metadata/`, no `Data/`.
+  ```
+  pages | era=iwork19 | format=4.2.3 | build=M8.2-6520-2 | flat | 580 objects | score=4
+  textStorages=63  nonEmptyStorages=48  tables=1  tableCellStorage=v5  readableTableCells=1  inlineAttachments=3  listStyledParagraphs=63  bodyChars=91  paragraphs=4  sections=1  nonEmptyFooters=3  namedParagraphStyles=21  namedListStyles=9  tocObjects=1  hasTOC=true
+  ```
+- `tudortmund-v14.1-footers-table.pages`: 324,161 bytes, md5 `2874ee73d6762c65be08897ae1a13859`;
+  `fileFormatVersion` **14.1.1**; BuildVersionHistory
+  `['Template: Blank (4.2)', 'M8.2-6520-2', 'M14.1-7040.0.73-4']`; 43 zip entries,
+  `Index/` + `Metadata/`, no `Data/`.
+  ```
+  pages | era=modern | format=14.1.1 | build=M14.1-7040.0.73-4 | flat | 621 objects | score=4
+  textStorages=63  nonEmptyStorages=48  tables=1  tableCellStorage=v5  readableTableCells=1  inlineAttachments=3  listStyledParagraphs=63  bodyChars=100  paragraphs=4  sections=1  nonEmptyFooters=3  namedParagraphStyles=23  namedListStyles=9  tocObjects=1  hasTOC=true
+  ```
+- Why they are here: **a matched upgrade pair.** The two files share the same origin template
+  (`Template: Blank (4.2)`) and the same first writer (`M8.2-6520-2`); the English one was then
+  re-saved by Pages 14.1 and its BuildVersionHistory simply *appends* that build. So the pair
+  isolates exactly what a 4.2.3 → 14.1.1 upgrade changes in a document that is otherwise the
+  same: same 63 text storages, same single BNC-v5 table, same 3 non-empty footers, same 3 inline
+  attachments, +41 archives and +2 named paragraph styles. `4.2.3` also fills a real gap —
+  before this the corpus jumped from Pages `3.2.13` straight to `10.0.10`, so no 4.x/8.x-era
+  Pages writer was represented at all.
+
+### Notes on this section
+
+- Naming follows `<source>-v<fileFormatVersion>-<features>.<ext>`; here the version really is
+  `fileFormatVersion` from `Metadata/Properties.plist`, not the app version (Keynote 15.2.1
+  writes `26.1.0`, Keynote 15.1 on iPadOS writes `26.0.0`).
+- No existing fixture was modified or removed by this pass.
+- CC BY 4.0 requires attribution and an indication of changes. No file above was changed; the
+  creator, title, source and license are recorded per file, which satisfies the notice
+  requirement for verbatim redistribution inside an MIT-licensed repository (the MIT grant
+  covers this project's own code, not these third-party documents — the documents stay under
+  their own CC licenses).
+- Files deliberately **not** taken despite being downloadable — copyright unclear or
+  incompatible — are listed in `research/openweb-survey.md`. The most notable exclusion is
+  Harvard Dataverse `doi:10.7910/DVN/YFY5HI`, whose three `.pages` files are
+  **CC BY-NC-ND 4.0** (the NC clause is incompatible with this repository).

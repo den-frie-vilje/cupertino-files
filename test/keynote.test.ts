@@ -92,3 +92,50 @@ describe("Keynote slide model", () => {
     }
   });
 });
+
+describe("current-era Keynote decks (26.x)", () => {
+  it("reads decks written by both macOS and iOS builds", () => {
+    // Build prefixes identify the writing platform: M… macOS, T… iOS/iPadOS.
+    const cases: [string, string, string][] = [
+      ["zenodo-v26.0-ios-writer.key", "26.0.0", "T15.1"],
+      ["zenodo-v26.1-hyperlinks-masks.key", "26.1.0", "M15.2.1"],
+      ["zenodo-v26.1-pptx-lineage.key", "26.1.0", "M15.2.1"],
+    ];
+    for (const [name, version, build] of cases) {
+      const doc = KeynoteDocument.load(fixture(name));
+      const report = doc.compatibility();
+      expect(report.era).toBe("current");
+      expect(report.formatVersion!.toString()).toBe(version);
+      expect(report.appBuilds.join(" ")).toContain(build);
+      expect(report.unsupportedFeatures.length).toBe(0);
+
+      // The slide model works on current-era decks, not just older ones.
+      expect(doc.slideCount()).toBeGreaterThan(0);
+      expect(doc.slideSize()!.width).toBeGreaterThan(0);
+      expect(doc.masterSlides().length).toBeGreaterThan(0);
+      for (const slide of doc.slides()) {
+        // Every slide carries a transition record, even when disabled.
+        expect(slide.transition() !== undefined).toBe(true);
+      }
+    }
+  });
+
+  it("reads hyperlinks inside a current-era deck", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const links = doc.textStorages().flatMap((s) => s.links());
+    expect(links.length).toBeGreaterThan(0);
+    expect(links.every((l) => l.url.length > 0)).toBe(true);
+  });
+
+  it("edits and round-trips a 26.x deck", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const slideCount = doc.slideCount();
+    doc.slides()[0]!.setTransition({ effect: "apple:transition/dissolve", duration: 1.5 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    expect(reloaded.slideCount()).toBe(slideCount);
+    const transition = reloaded.slides()[0]!.transition()!;
+    expect(transition.effect).toBe("apple:transition/dissolve");
+    expect(transition.duration).toBe(1.5);
+    expect(reloaded.compatibility().formatVersion!.toString()).toBe("26.1.0");
+  });
+});

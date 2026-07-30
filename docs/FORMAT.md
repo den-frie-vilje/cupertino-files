@@ -484,10 +484,15 @@ discontinuity is meaningful — Apple changed what the number *means*:
 |---|---|---|---|
 | `iwork13` | `1.x` | Pages 5.x / Numbers 3.x / Keynote 6.x (2013–14) | `1.5.0`, build `M5.5.3-2152-2` |
 | `iwork16` | `2.x` | 2015–2016 releases | `2.0.24`, build `T2.6.1 (2160)` |
-| `iwork19` | `3.x` | 2017–2019 releases | `3.2.13`, build `G-r320-3C102` |
+| `iwork19` | `3.x`–`4.x` | 2017–2019 releases | `3.2.13` (`G-r320-3C102`), `4.2.3` (`M8.2-6520-2`) |
 | `modern` | `10.x`–`14.x` | mirrors the **application** version (2020–2024) | `14.4.1`, build `M14.5-7045.0.17-4` |
 | `current` | `26.x` | year-versioned 2025/2026 releases | `26.0.0` (build `M15.1`), `26.1.0` (builds `M15.2`, `M15.2.1`) |
 | `future` | anything higher | released after this library's survey | — |
+
+The build-string prefix identifies the **writing platform**: `M…` for macOS,
+`T…` for iOS/iPadOS, `G…` for some older releases. Both platforms write the
+same format versions — a `26.0.0` Keynote in the corpus was written by iOS
+build `T15.1 (7373.0.281)`, alongside macOS-written 26.1.0 files.
 
 Note the build string stops matching the format version in the `current`
 era: Apple's marketing version jumped to 26 while internal builds continued
