@@ -30,6 +30,7 @@ export const TST_TYPE = {
   TABLE_INFO: 6000,
   TABLE_MODEL: 6001,
   TILE: 6002,
+  MERGE_REGION_MAP: 6144,
 } as const;
 
 /** TST.TableInfoArchive. */
@@ -59,6 +60,7 @@ const DataStoreFields = {
   COLUMN_HEADERS: 2,
   TILES: 3,
   STRING_TABLE: 4,
+  ROW_TILE_TREE: 9,
   STYLE_TABLE: 5,
   FORMULA_TABLE: 6,
   MERGE_REGION_MAP: 13,
@@ -115,6 +117,56 @@ const BAND_TEXT_STYLE_FIELDS: Record<TableBand, number> = {
   headerColumn: 26,
   footerRow: 27,
 };
+
+/** TST.TableRBTree: repeated Node { key = 1, value = 2 }. */
+const RbTree = { NODES: 1, KEY: 1, VALUE: 2 } as const;
+
+/** Rows per tile. Apple uses 256 and records it on TileStorage. */
+const DEFAULT_TILE_SIZE = 256;
+
+/** A row's cell records plus the geometry its header carries. */
+interface RowSnapshot {
+  records: (Uint8Array | undefined)[];
+  height: number;
+  hidden: number;
+}
+
+/**
+ * Move a merge across an insert or delete, or drop it.
+ *
+ * A merge that straddles the edit shrinks or grows; one entirely inside a
+ * deleted span disappears. Anything before the edit is untouched.
+ */
+function shiftRange(
+  merge: MergeRange,
+  at: number,
+  delta: number,
+  axis: "row" | "column",
+): MergeRange | undefined {
+  const start = axis === "row" ? merge.row : merge.column;
+  const span = axis === "row" ? merge.rowCount : merge.columnCount;
+  const end = start + span;
+  let nextStart = start;
+  let nextSpan = span;
+
+  if (delta > 0) {
+    if (at <= start) nextStart = start + delta;
+    else if (at < end) nextSpan = span + delta;
+  } else {
+    const removed = -delta;
+    const removeEnd = at + removed;
+    if (removeEnd <= start) nextStart = start - removed;
+    else if (at < end) {
+      const overlap = Math.min(end, removeEnd) - Math.max(start, at);
+      nextSpan = span - overlap;
+      if (at < start) nextStart = at;
+      if (nextSpan < 1) return undefined;
+    }
+  }
+  return axis === "row"
+    ? { ...merge, row: nextStart, rowCount: nextSpan }
+    : { ...merge, column: nextStart, columnCount: nextSpan };
+}
 
 /** TST.HeaderStorage / .HeaderStorageBucket / .Header. */
 const HeaderStorage = { BUCKETS: 2 } as const;
@@ -807,6 +859,319 @@ export class TableModel {
       }
     }
     return undefined;
+  }
+
+  // ------------------------------------------------- rows and columns
+
+  /**
+   * Insert blank rows before `at`.
+   *
+   * The whole table's storage is rebuilt rather than patched: tiles, row
+   * headers and per-column cell counts all have to agree afterwards, and
+   * shifting them independently is how those three drift apart.
+   *
+   * **Formula references are not adjusted.** Relative references survive
+   * by construction — they are offsets from the cell using them, so a
+   * formula that moves keeps pointing at the same relative neighbour — but
+   * an absolute range spanning the insertion point still names its old
+   * bounds. Adjusting those correctly is calc-engine work; see
+   * docs/FORMAT.md §14.7.
+   */
+  insertRows(at: number, count = 1): void {
+    this.requireWritable();
+    if (count <= 0) return;
+    if (at < 0 || at > this.rowCount) {
+      throw new RangeError(`cannot insert at row ${at}: table has ${this.rowCount} rows`);
+    }
+    const rows = this.snapshotRows();
+    const blank = (): RowSnapshot => ({
+      records: new Array<Uint8Array | undefined>(this.columnCount).fill(undefined),
+      // A new row inherits the height of the one it displaces, so inserting
+      // into a table with sized rows does not leave a differently-sized gap.
+      height: rows[Math.min(at, rows.length - 1)]?.height ?? 0,
+      hidden: 0,
+    });
+    rows.splice(at, 0, ...Array.from({ length: count }, blank));
+    this.rewriteRows(rows);
+    this.shiftMergesForRows(at, count);
+  }
+
+  /** Delete rows starting at `at`. */
+  deleteRows(at: number, count = 1): void {
+    this.requireWritable();
+    if (count <= 0) return;
+    const rows = this.snapshotRows();
+    if (at < 0 || at + count > rows.length) {
+      throw new RangeError(`cannot delete rows ${at}..${at + count - 1}: table has ${rows.length}`);
+    }
+    if (rows.length - count < 1) throw new RangeError("a table must keep at least one row");
+    // Release the strings the deleted cells held, so the string table does
+    // not accumulate entries nothing references.
+    for (const row of rows.slice(at, at + count)) this.releaseRowStrings(row);
+    rows.splice(at, count);
+    this.rewriteRows(rows);
+    this.shiftMergesForRows(at, -count);
+  }
+
+  /** Insert blank columns before `at`. */
+  insertColumns(at: number, count = 1): void {
+    this.requireWritable();
+    if (count <= 0) return;
+    if (at < 0 || at > this.columnCount) {
+      throw new RangeError(`cannot insert at column ${at}: table has ${this.columnCount} columns`);
+    }
+    const rows = this.snapshotRows();
+    for (const row of rows) {
+      row.records.splice(at, 0, ...new Array<Uint8Array | undefined>(count).fill(undefined));
+    }
+    const widths = this.columnWidths();
+    const width = widths[Math.min(at, widths.length - 1)] ?? 0;
+    widths.splice(at, 0, ...new Array<number>(count).fill(width));
+    this.object.message.setVarint(TableModelFields.NUMBER_OF_COLUMNS, this.columnCount + count);
+    this.rewriteRows(rows);
+    this.rewriteColumnHeaders(widths, rows);
+    this.shiftMergesForColumns(at, count);
+  }
+
+  /** Delete columns starting at `at`. */
+  deleteColumns(at: number, count = 1): void {
+    this.requireWritable();
+    if (count <= 0) return;
+    if (at < 0 || at + count > this.columnCount) {
+      throw new RangeError(
+        `cannot delete columns ${at}..${at + count - 1}: table has ${this.columnCount}`,
+      );
+    }
+    if (this.columnCount - count < 1) throw new RangeError("a table must keep at least one column");
+    const rows = this.snapshotRows();
+    for (const row of rows) {
+      for (const record of row.records.slice(at, at + count)) this.releaseRecordString(record);
+      row.records.splice(at, count);
+    }
+    const widths = this.columnWidths();
+    widths.splice(at, count);
+    this.object.message.setVarint(TableModelFields.NUMBER_OF_COLUMNS, this.columnCount - count);
+    this.rewriteRows(rows);
+    this.rewriteColumnHeaders(widths, rows);
+    this.shiftMergesForColumns(at, -count);
+  }
+
+  /** Every row's records and header geometry, indexed by table row. */
+  private snapshotRows(): RowSnapshot[] {
+    const rows: RowSnapshot[] = [];
+    for (let row = 0; row < this.rowCount; row++) {
+      const located = this.locateRow(row);
+      const records = located
+        ? readRowLayout(located.rowInfo, this.columnCount).records.slice(0, this.columnCount)
+        : [];
+      while (records.length < this.columnCount) records.push(undefined);
+      const header = this.header(DataStoreFields.ROW_HEADERS, row);
+      rows.push({
+        records,
+        height: header?.getFloat(HeaderFields.SIZE) ?? 0,
+        hidden: header?.getUint(HeaderFields.HIDING_STATE) ?? 0,
+      });
+    }
+    return rows;
+  }
+
+  private columnWidths(): number[] {
+    const widths: number[] = [];
+    for (let column = 0; column < this.columnCount; column++) {
+      widths.push(this.header(DataStoreFields.COLUMN_HEADERS, column)?.getFloat(HeaderFields.SIZE) ?? 0);
+    }
+    return widths;
+  }
+
+  /**
+   * Rebuild every tile, row info and row header from a snapshot.
+   *
+   * Rows are redistributed across tiles of `tile_size` from scratch, which
+   * is what makes an insert in the middle of a multi-tile table correct
+   * rather than only correct within one tile.
+   */
+  private rewriteRows(rows: readonly RowSnapshot[]): void {
+    const ds = this.dataStore();
+    const tiles = ds?.getMessage(DataStoreFields.TILES);
+    if (!ds || !tiles) throw new RangeError("table has no tile storage to rewrite");
+    const tileSize = tiles.getUint(TileStorageFields.TILE_SIZE) ?? DEFAULT_TILE_SIZE;
+    const component = this.store.componentOf(this.object.identifier);
+    if (!component) throw new RangeError("table model has no component");
+
+    const existing = tiles.getMessages(TileStorageFields.TILES);
+    const spare = existing
+      .map((entry) => this.store.resolve(refId(entry, TileEntry.TILE)))
+      .filter((obj): obj is IwaObject => obj !== undefined);
+
+    const tileCount = Math.max(1, Math.ceil(rows.length / tileSize));
+    const entries: RawMessage[] = [];
+    for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+      // Reuse tile objects before minting new ones: a fresh object id for
+      // an unchanged tile is a gratuitous diff against the app's output.
+      const tile = spare[tileIndex] ?? this.store.createObject(TST_TYPE.TILE, component);
+      const message = tile.message;
+      const infos: RawMessage[] = [];
+      const start = tileIndex * tileSize;
+      for (let offset = 0; offset < tileSize && start + offset < rows.length; offset++) {
+        const rowInfo = RawMessage.create();
+        rowInfo.setVarint(TileRowInfo.TILE_ROW_INDEX, offset);
+        this.writeRowLayout(rowInfo, {
+          records: [...rows[start + offset]!.records],
+          offsetSlots: Math.max(this.columnCount, DEFAULT_OFFSET_SLOTS),
+        });
+        infos.push(rowInfo);
+      }
+      message.setMessages(TileFields.ROW_INFOS, infos);
+      message.setVarint(TileFields.NUM_ROWS, infos.length);
+      message.setBool(TileFields.LAST_SAVED_IN_BNC, true);
+      message.setVarint(TileFields.STORAGE_VERSION, 5);
+      // maxColumn/maxRow/numCells are `required` but Apple writes 0.
+      for (const field of [TileFields.MAX_COLUMN, TileFields.MAX_ROW, TileFields.NUM_CELLS]) {
+        if (!message.has(field)) message.setVarint(field, 0);
+      }
+      const entry = RawMessage.create();
+      entry.setVarint(TileEntry.TILEID, tileIndex);
+      entry.setMessage(TileEntry.TILE, makeRef(tile.identifier));
+      entries.push(entry);
+    }
+    tiles.setMessages(TileStorageFields.TILES, entries);
+    if (!tiles.has(TileStorageFields.TILE_SIZE)) {
+      tiles.setVarint(TileStorageFields.TILE_SIZE, tileSize);
+    }
+
+    // The row→tile index must describe the tiles that now exist.
+    const tree = ds.getMessage(DataStoreFields.ROW_TILE_TREE);
+    if (tree) {
+      const nodes: RawMessage[] = [];
+      for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+        const node = RawMessage.create();
+        node.setVarint(RbTree.KEY, tileIndex * tileSize);
+        node.setVarint(RbTree.VALUE, tileIndex);
+        nodes.push(node);
+      }
+      tree.setMessages(RbTree.NODES, nodes);
+    }
+
+    this.rewriteRowHeaders(rows);
+    this.object.message.setVarint(TableModelFields.NUMBER_OF_ROWS, rows.length);
+    this.clampBandsToSize();
+  }
+
+  private rewriteRowHeaders(rows: readonly RowSnapshot[]): void {
+    const bucket = this.headerBucket(DataStoreFields.ROW_HEADERS);
+    if (!bucket) return;
+    const headers: RawMessage[] = rows.map((row, index) => {
+      const header = RawMessage.create();
+      header.setVarint(HeaderFields.INDEX, index);
+      header.setFloat(HeaderFields.SIZE, row.height);
+      header.setVarint(HeaderFields.HIDING_STATE, row.hidden);
+      header.setVarint(
+        HeaderFields.NUMBER_OF_CELLS,
+        row.records.filter((record) => record !== undefined).length,
+      );
+      return header;
+    });
+    bucket.message.setMessages(HeaderBucket.HEADERS, headers);
+  }
+
+  private rewriteColumnHeaders(widths: readonly number[], rows: readonly RowSnapshot[]): void {
+    const bucket = this.headerBucket(DataStoreFields.COLUMN_HEADERS);
+    if (!bucket) return;
+    const headers: RawMessage[] = widths.map((width, index) => {
+      const header = RawMessage.create();
+      header.setVarint(HeaderFields.INDEX, index);
+      header.setFloat(HeaderFields.SIZE, width);
+      header.setVarint(HeaderFields.HIDING_STATE, 0);
+      header.setVarint(
+        HeaderFields.NUMBER_OF_CELLS,
+        rows.filter((row) => row.records[index] !== undefined).length,
+      );
+      return header;
+    });
+    bucket.message.setMessages(HeaderBucket.HEADERS, headers);
+  }
+
+  /** The single bucket object behind a header storage field. */
+  private headerBucket(field: number): IwaObject | undefined {
+    const ds = this.dataStore();
+    if (!ds) return undefined;
+    const storage = ds.getMessage(field);
+    if (storage?.has(HeaderStorage.BUCKETS)) {
+      return this.store.resolve(storage.getMessages(HeaderStorage.BUCKETS)[0]?.getVarint(1));
+    }
+    return this.store.resolve(refId(ds, field));
+  }
+
+  /** Header bands cannot outlive the rows and columns they describe. */
+  private clampBandsToSize(): void {
+    const m = this.object.message;
+    for (const [field, limit] of [
+      [TableModelFields.HEADER_ROWS, this.rowCount],
+      [TableModelFields.FOOTER_ROWS, this.rowCount],
+      [TableModelFields.HEADER_COLUMNS, this.columnCount],
+    ] as const) {
+      const value = m.getUint(field);
+      if (value !== undefined && value > limit) m.setVarint(field, limit);
+    }
+  }
+
+  /** Move or drop merges when rows are inserted (`delta > 0`) or deleted. */
+  private shiftMergesForRows(at: number, delta: number): void {
+    this.rewriteMerges((merge) => shiftRange(merge, at, delta, "row"));
+  }
+
+  private shiftMergesForColumns(at: number, delta: number): void {
+    this.rewriteMerges((merge) => shiftRange(merge, at, delta, "column"));
+  }
+
+  /**
+   * Apply a transform to every merge, writing the result to the region map.
+   *
+   * Merges are *read* from the calc engine's formula store (§14.4), which
+   * cannot be rewritten without inventing calc-engine identity. Writing the
+   * adjusted set to `merge_region_map` instead keeps this library's own
+   * reading correct after a structural edit, and is the encoding the format
+   * documents even though current apps do not emit it. The stale formulas
+   * are left alone rather than corrupted.
+   */
+  private rewriteMerges(transform: (merge: MergeRange) => MergeRange | undefined): void {
+    const before = this.merges();
+    if (before.length === 0) return;
+    const after = before.map(transform).filter((m): m is MergeRange => m !== undefined);
+    const ds = this.dataStore();
+    if (!ds) return;
+    let map = this.store.resolve(refId(ds, DataStoreFields.MERGE_REGION_MAP));
+    if (!map) {
+      const component = this.store.componentOf(this.object.identifier);
+      if (!component) return;
+      map = this.store.createObject(TST_TYPE.MERGE_REGION_MAP, component);
+      ds.setMessage(DataStoreFields.MERGE_REGION_MAP, makeRef(map.identifier));
+    }
+    const ranges: RawMessage[] = after.map((merge) => {
+      const range = RawMessage.create();
+      const origin = RawMessage.create();
+      origin.setFixed32(PACKED_DATA, ((merge.column << 16) | (merge.row & 0xffff)) >>> 0);
+      const size = RawMessage.create();
+      size.setFixed32(PACKED_DATA, ((merge.columnCount << 16) | (merge.rowCount & 0xffff)) >>> 0);
+      range.setMessage(CellRange.ORIGIN, origin);
+      range.setMessage(CellRange.SIZE, size);
+      return range;
+    });
+    map.message.setMessages(MergeMap.CELL_RANGE, ranges);
+    // The formula-store copy would now disagree; drop it so the region map
+    // is the single source rather than one of two conflicting ones.
+    this.object.message.getMessage(TableModelFields.MERGE_OWNER)?.remove(MergeOwner.FORMULA_STORE);
+  }
+
+  /** Decrement string-table refcounts for every string a row referenced. */
+  private releaseRowStrings(row: RowSnapshot): void {
+    for (const record of row.records) this.releaseRecordString(record);
+  }
+
+  private releaseRecordString(record: Uint8Array | undefined): void {
+    if (!record) return;
+    const id = CellRecord.decode(record).id(CellFlag.STRING_ID);
+    if (id !== undefined) this.releaseString(id);
   }
 
   // --------------------------------------------------------------- styling

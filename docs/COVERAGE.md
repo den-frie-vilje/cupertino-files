@@ -98,7 +98,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 18 | iwork19→current |
 | Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
 | Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
-| Table structure (name, header/footer bands, row & column sizes)<br><sub>inserting or deleting rows/columns is not implemented</sub> | all | ✅ read + write | 22 | iwork16→current |
+| Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 22 | iwork16→current |
 | Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | 5 | modern→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 5 | iwork19→current |
@@ -136,7 +136,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
 - 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**
-- 🟠 medium — Numbers & tables → **Table structure (name, header/footer bands, row & column sizes)**
+- 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)**
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*

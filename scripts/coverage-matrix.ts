@@ -582,11 +582,11 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Table structure (name, header/footer bands, row & column sizes)",
+    name: "Table structure (rows, columns, bands, sizes, freeze, repeat)",
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.rowCount > 0)),
-    note: "inserting or deleting rows/columns is not implemented",
+    note: "row and column insert/delete rebuild tiles, headers and the row-tile tree",
     manualProof: {
       claim: "Changed band counts, freeze and repeating-header flags, row heights and column widths take effect.",
       why:

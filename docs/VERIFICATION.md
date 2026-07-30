@@ -28,7 +28,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 3 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
 | 4 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 5 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
-| 6 | 🟠 medium | Numbers & tables → Table structure (name, header/footer bands, row & column sizes) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 6 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 7 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
 | 8 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
 | 9 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
@@ -99,7 +99,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).
 
-### 6. Table structure (name, header/footer bands, row & column sizes)
+### 6. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  

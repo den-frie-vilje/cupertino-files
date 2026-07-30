@@ -871,3 +871,136 @@ describe("formulas", () => {
     ).toBe("=1-(2-3)");
   });
 });
+
+describe("rows and columns", () => {
+  it("inserts blank rows and keeps every other cell where it was", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const before = table.grid().map((row) => row.map((c) => (c ? cellValueToString(c) : null)));
+    const rowsBefore = table.rowCount;
+
+    table.insertRows(1, 2);
+    expect(table.rowCount).toBe(rowsBefore + 2);
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const after = reloaded.grid().map((row) => row.map((c) => (c ? cellValueToString(c) : null)));
+    // Row 0 untouched; rows 1-2 blank; everything else shifted down by two.
+    expect(after[0]).toEqual(before[0]);
+    expect(after[1]!.every((c) => c === null)).toBe(true);
+    expect(after[2]!.every((c) => c === null)).toBe(true);
+    for (let row = 1; row < before.length; row++) expect(after[row + 2]).toEqual(before[row]);
+  });
+
+  it("inserts and deletes columns", () => {
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const table = doc.tables()[0]!;
+    const before = table.grid().map((row) => row.map((c) => (c ? cellValueToString(c) : null)));
+    const columnsBefore = table.columnCount;
+
+    table.insertColumns(1, 1);
+    expect(table.columnCount).toBe(columnsBefore + 1);
+    const inserted = PagesDocument.load(doc.save()).tables()[0]!;
+    expect(inserted.grid()[0]![0]).toEqual(table.grid()[0]![0]);
+    expect(inserted.grid()[0]![1]).toBe(null);
+
+    inserted.deleteColumns(1, 1);
+    const after = PagesDocument.load(
+      (() => {
+        const d = PagesDocument.load(doc.save());
+        d.tables()[0]!.deleteColumns(1, 1);
+        return d.save();
+      })(),
+    )
+      .tables()[0]!
+      .grid()
+      .map((row) => row.map((c) => (c ? cellValueToString(c) : null)));
+    expect(after).toEqual(before);
+  });
+
+  it("round-trips a table through insert and matching delete", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const before = {
+      size: [table.rowCount, table.columnCount],
+      cells: table.cells().length,
+      merges: table.merges(),
+    };
+
+    table.insertRows(1, 2);
+    table.insertColumns(1, 1);
+    table.deleteColumns(1, 1);
+    table.deleteRows(1, 2);
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect([reloaded.rowCount, reloaded.columnCount]).toEqual(before.size);
+    expect(reloaded.cells().length).toBe(before.cells);
+    expect(reloaded.merges()).toEqual(before.merges);
+    expect(NumbersDocument.load(doc.save()).compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("moves merges across an insertion and grows one it lands inside", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    // r6c0 spans two columns; inserting at column 1 falls inside it.
+    expect(table.merges()).toContainEqual({ row: 6, column: 0, rowCount: 1, columnCount: 2 });
+
+    table.insertColumns(1, 1);
+    const merges = table.merges();
+    // Grown, not moved, because the insertion point is interior to it.
+    expect(merges.some((m) => m.row === 6 && m.column === 0 && m.columnCount === 3)).toBe(true);
+    // A merge starting after the insertion point moved right instead.
+    expect(merges.some((m) => m.row === 0 && m.column === 3 && m.columnCount === 8)).toBe(true);
+  });
+
+  it("drops a merge whose rows are all deleted", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    // r2c0 spans rows 2..5.
+    expect(table.merges()).toContainEqual({ row: 2, column: 0, rowCount: 4, columnCount: 1 });
+    const before = table.merges().length;
+    table.deleteRows(2, 4);
+    // Gone, not merely moved — and note another merge shifts up into r2c0,
+    // so identifying it by position alone would pass for the wrong reason.
+    expect(table.merges().some((m) => m.rowCount === 4)).toBe(false);
+    expect(table.merges().length).toBe(before - 1);
+  });
+
+  it("reclaims string-table entries from deleted cells", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, { type: "text", value: "doomed" });
+    expect(stringEntries(doc, table).some((e) => e.text === "doomed")).toBe(true);
+    table.deleteRows(1, 1);
+    expect(stringEntries(doc, table).some((e) => e.text === "doomed")).toBe(false);
+  });
+
+  it("keeps header bands within the table after deletions", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables()[0]!;
+    table.setBands({ headerRows: 3, footerRows: 2 });
+    table.deleteRows(0, table.rowCount - 2);
+    // Bands cannot describe rows that no longer exist.
+    expect(table.headerRowCount).toBeLessThan(3);
+    expect(table.headerRowCount).toBe(2);
+    expect(table.footerRowCount).toBe(2);
+  });
+
+  it("refuses to empty a table entirely", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    for (const attempt of [
+      () => table.deleteRows(0, table.rowCount),
+      () => table.deleteColumns(0, table.columnCount),
+      () => table.insertRows(-1, 1),
+      () => table.deleteRows(0, table.rowCount + 5),
+    ]) {
+      let threw = false;
+      try {
+        attempt();
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    }
+  });
+});
