@@ -9,6 +9,8 @@ import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
+import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { refId } from "../tsp/schema.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -16,6 +18,7 @@ const TN_DOCUMENT_SHEETS = 1;
 /** TN.SheetArchive: name = 1. */
 const TN_TYPE_SHEET = 2;
 const TN_SHEET_NAME = 1;
+const TN_SHEET_DRAWABLE_INFOS = 2;
 
 export interface SheetInfo {
   id: bigint;
@@ -39,6 +42,19 @@ export class NumbersDocument extends IWorkDocument {
     const docObject = store.findByType(TN_TYPE_DOCUMENT);
     if (!docObject) throw new RangeError("TN.DocumentArchive not found — not a Numbers document?");
     return new NumbersDocument(container, store, docObject);
+  }
+
+  /** Tables of one sheet, or of the whole document when no sheet is given. */
+  tables(sheetId?: bigint): TableModel[] {
+    if (sheetId === undefined) return tablesOf(this.store);
+    const sheet = this.store.object(sheetId);
+    if (!sheet) throw new RangeError(`sheet ${sheetId} not found`);
+    const drawableIds: bigint[] = [];
+    for (const ref of sheet.message.getMessages(TN_SHEET_DRAWABLE_INFOS)) {
+      const id = ref.getVarint(1);
+      if (id !== undefined) drawableIds.push(id);
+    }
+    return tablesOf(this.store, drawableIds);
   }
 
   /** The document's sheets (id + name). */

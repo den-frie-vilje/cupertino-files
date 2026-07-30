@@ -62,9 +62,17 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Parse all three container layouts (flat zip, nested `Index.zip`, wrapper dir) | ✅ |
 | Pages: body text read/edit with full attribute-table fixup | ✅ |
 | Pages: paragraph styles (by name), character formatting, style creation | ✅ |
-| Pages: sections, page masters, header/footer text (3 columns × first/even/odd) | ✅ |
+| Pages: sections (read + insert), page masters, header/footer text, master-page drawables | ✅ |
+| Pages: page-layout (body-less) documents | ✅ |
+| Pages: hyperlinks (read/create/remove), smart fields, bookmarks, attachments | ✅ |
+| Pages: list styles by name, footnotes, comments, text boxes, document settings | ✅ |
 | Pages: page setup — size, margins, header/footer margins, orientation | ✅ |
 | Drawables (shapes, images, text boxes, tables): enumerate, move, resize | ✅ |
+| Fluent API: `find()` → `TextRange` → `.bold().link()`, `ParagraphHandle` | ✅ |
+| Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
+| Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
+| Table cell **writing**, charts, Keynote slides/transitions | roadmap |
+| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§12](docs/FORMAT.md)) |
 | Numbers: sheets enumeration + shared text/style machinery | ✅ |
 | Keynote: slide count + shared text/style machinery | ✅ |
 | Byte-identical round-trip of untouched content | ✅ |
@@ -72,7 +80,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |
 | iWork '09 XML documents | detected, rejected |
 | Password-protected documents | detected, rejected |
-| Table cell editing, chart data, slide manipulation, image insertion | roadmap ([FORMAT.md §12](docs/FORMAT.md)) |
+| Pre-BNC (iWork '13-era) table cell storage | ✗ reports explicitly, never guesses |
 
 ## API tour
 

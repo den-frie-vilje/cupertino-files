@@ -19,11 +19,20 @@
 import { IwaObject, parseIwaFile, serializeIwaFile } from "./iwa.ts";
 import { IWorkContainer, locatorForIwaName } from "./package.ts";
 import { RawMessage } from "../base/protobuf.ts";
+import { sha1 } from "../base/sha1.ts";
+import { bytesEqual } from "../base/bytes.ts";
 import type { IWorkApp } from "./registry.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
 const PKG_COMPONENTS = 3;
+const PKG_DATAS = 4;
+// TSP.DataInfo field numbers.
+const DATA_IDENTIFIER = 1;
+const DATA_DIGEST = 2;
+const DATA_PREFERRED_FILE_NAME = 3;
+const DATA_FILE_NAME = 4;
+const DATA_MATERIALIZED_LENGTH = 18;
 // TSP.ComponentInfo field numbers.
 const COMPONENT_IDENTIFIER = 1;
 const COMPONENT_PREFERRED_LOCATOR = 2;
@@ -156,17 +165,73 @@ export class ObjectStore {
    * Create a new object of the given type inside a component. The MessageInfo
    * version list is copied from an existing sibling of the same type when one
    * exists (falling back to [1, 0, 5], which is what numbers-parser writes).
+   * `cloneFrom` seeds the payload with a copy of another object's message.
    */
-  createObject(type: number, component: Component): IwaObject {
+  createObject(type: number, component: Component, options: { cloneFrom?: IwaObject } = {}): IwaObject {
     const id = this.allocateId();
     const obj = IwaObject.create(id, type, [1, 0, 5]);
-    const sibling = this.findByType(type);
+    const sibling = options.cloneFrom ?? this.findByType(type);
     if (sibling) obj.copyVersionsFrom(sibling);
+    if (options.cloneFrom) obj.setMessageBytes(options.cloneFrom.message.toBytes());
     component.objects.push(obj);
     component.byId.set(id, obj);
     component.structurallyDirty = true;
     this.index.set(id, { obj, component });
     return obj;
+  }
+
+  // ------------------------------------------------------------- Data/ files
+
+  /** Files to add to the package on save (e.g. "Data/photo.png"). */
+  readonly pendingFiles = new Map<string, Uint8Array>();
+
+  /**
+   * Register media bytes as a Data/ file: dedupes by SHA-1 digest against
+   * existing DataInfos, allocates a data-space identifier, appends the
+   * DataInfo to PackageMetadata and schedules the file for writing.
+   * Returns the data identifier and stored file name.
+   */
+  addDataFile(data: Uint8Array, preferredFileName: string): { dataId: bigint; fileName: string } {
+    const digest = sha1(data);
+    const pkg = this.packageMetadata.message;
+    let maxId = 0n;
+    for (const info of pkg.getMessages(PKG_DATAS)) {
+      const existing = info.getBytes(DATA_DIGEST);
+      const id = info.getVarint(DATA_IDENTIFIER) ?? 0n;
+      if (existing && bytesEqual(existing, digest)) {
+        return {
+          dataId: id,
+          fileName: info.getString(DATA_FILE_NAME) ?? info.getString(DATA_PREFERRED_FILE_NAME) ?? preferredFileName,
+        };
+      }
+      if (id > maxId) maxId = id;
+    }
+    const dataId = maxId + 1n;
+    // Unique file name among existing Data/ entries and pending additions.
+    const existingNames = new Set<string>();
+    for (const name of this.container.otherFiles().keys()) {
+      if (name.startsWith("Data/")) existingNames.add(name.slice("Data/".length));
+    }
+    for (const name of this.pendingFiles.keys()) {
+      if (name.startsWith("Data/")) existingNames.add(name.slice("Data/".length));
+    }
+    let fileName = preferredFileName;
+    if (existingNames.has(fileName)) {
+      const dot = fileName.lastIndexOf(".");
+      fileName =
+        dot > 0
+          ? `${fileName.slice(0, dot)}-${dataId}${fileName.slice(dot)}`
+          : `${fileName}-${dataId}`;
+    }
+    const info = RawMessage.create();
+    info.setVarint(DATA_IDENTIFIER, dataId);
+    info.setBytes(DATA_DIGEST, digest);
+    info.setString(DATA_PREFERRED_FILE_NAME, preferredFileName);
+    info.setString(DATA_FILE_NAME, fileName);
+    info.setVarint(DATA_MATERIALIZED_LENGTH, data.length);
+    pkg.addMessage(PKG_DATAS, info);
+    this.pendingFiles.set(`Data/${fileName}`, data);
+    return { dataId, fileName };
   }
 
   /** ComponentInfo message inside PackageMetadata for a component, if any. */
@@ -240,7 +305,7 @@ export class ObjectStore {
     for (const component of this.components) {
       if (component.dirty) replacements.set(component.name, component.serialize());
     }
-    return this.container.toBytes(replacements);
+    return this.container.toBytes(replacements, this.pendingFiles);
   }
 }
 

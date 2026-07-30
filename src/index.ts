@@ -34,6 +34,12 @@ export * as tspSchema from "./tsp/schema.ts";
 export * as tswpSchema from "./tswp/schema.ts";
 export * as tssSchema from "./tss/schema.ts";
 export * as tsdSchema from "./tsd/schema.ts";
+export { TableModel, tablesOf, decodeCellRecord, decodeDecimal128, cellValueToString, TST_TYPE } from "./tst/tables.ts";
+export type { CellValue, CellInfo, MergeRange } from "./tst/tables.ts";
+export { TextRange, ParagraphHandle } from "./tswp/range.ts";
+export { PagesSettings } from "./pages/document.ts";
+export { sha1 } from "./base/sha1.ts";
+export { imageDimensions } from "./base/imagesize.ts";
 export * as pagesSchema from "./pages/schema.ts";
 
 // Object graph & container

@@ -121,9 +121,14 @@ export class IWorkContainer {
   /**
    * Rebuild the package, substituting the given IWA files (canonical name →
    * new bytes). Preserves layout, entry order, timestamps and all non-IWA
-   * bytes; appends entries for canonical names that did not previously exist.
+   * bytes; appends entries for canonical names that did not previously
+   * exist. `additions` adds arbitrary non-IWA files (e.g. Data/ media) at
+   * the package level, next to the existing Metadata/Data entries.
    */
-  toBytes(replacements: ReadonlyMap<string, Uint8Array>): Uint8Array {
+  toBytes(
+    replacements: ReadonlyMap<string, Uint8Array>,
+    additions: ReadonlyMap<string, Uint8Array> = new Map(),
+  ): Uint8Array {
     const remaining = new Map(replacements);
 
     if (this.indexZipEntry !== undefined) {
@@ -153,6 +158,9 @@ export class IWorkContainer {
         dosTime: e.dosTime,
         dosDate: e.dosDate,
       }));
+      for (const [name, data] of additions) {
+        outerEntries.push({ name: this.prefix + name, data });
+      }
       return buildZip(outerEntries);
     }
 
@@ -175,6 +183,9 @@ export class IWorkContainer {
     }
     for (const [canonical, data] of remaining) {
       outerEntries.push({ name: this.prefix + canonical, data });
+    }
+    for (const [name, data] of additions) {
+      outerEntries.push({ name: this.prefix + name, data });
     }
     return buildZip(outerEntries);
   }

@@ -471,11 +471,101 @@ How this library stays correct as Apple ships new versions:
   framing (§3) and geometry shapes (§9) are detected from bytes, so
   cosmetic changes in names/locations don't break parsing.
 
-## 12. Known gaps / roadmap
+## 12. Concurrency: open documents and iCloud collaboration
 
-- Table **cell models** (TST tiles: packed cell storage), chart data, and
-  Keynote slide trees are read as opaque objects; editing them needs the
-  TST/TSCH/KN-specific models on top of this substrate.
+Two questions come up constantly, and the format itself answers both.
+
+### 12.1 Editing a document while an app has it open
+
+**Don't.** There is no file-level handshake that makes this safe, and the
+format provides none:
+
+- The apps load the whole object graph into memory on open and write the
+  **entire package** on save (autosave included). They do not re-read the
+  package while it is open, so your edit is invisible to the running app —
+  and the app's next autosave replaces the file wholesale, silently
+  discarding your changes.
+- Coordination on macOS happens above the format, in the document
+  architecture (`NSFileCoordinator`/`NSFilePresenter`, plus APFS document
+  versions). Those are process-level Objective-C APIs; a portable
+  JavaScript library cannot join that protocol, and even doing so would
+  only serialize access — it would not merge edits into the app's live
+  in-memory graph.
+- iWork exposes no plugin or IPC surface for third-party mutation. (macOS
+  AppleScript/JXA automation drives the *application*, not the file, and
+  requires the app to be installed and running.)
+
+Safe workflow: **close the document in the app, edit, reopen.** If a file
+may be open, treat it as read-only — reading a package that is being
+written can also yield a torn zip, so check that the file size and mtime
+are stable before parsing.
+
+### 12.2 iCloud real-time collaboration
+
+**Not harnessable from the file layer** — but it is worth being precise
+about why, because the file *does* carry collaboration state.
+
+iWork collaboration is **operation-based with server-assigned ordering**,
+not a file-merge or CRDT scheme that a library could join offline. The
+evidence is in the schemas:
+
+- **Edits are commands, not diffs.** 394 of the ~750 registry types are
+  `*CommandArchive` classes (`TSK.CommandArchive` at 132 is the base).
+  Every user action has a serializable command form.
+- **Operational transformation.** `TSCK.CollaborationDocumentSessionState`
+  (type 226) carries `rsvp_command_queue_items`,
+  `transformer_from_unprocessed_command_operations_entries`,
+  `collaborator_cursor_transformer_entries` and
+  `acknowledged_commands_pending_resume_process_diffs` — command and cursor
+  *transformers* against unacknowledged operations, i.e. classic OT.
+- **A server is the ordering authority.** The same message has
+  `mailbox_request_document_revision_sequence`,
+  `mailbox_request_document_revision_identifier` and
+  `last_command_send_marker_sequence`; `TSP.DocumentRevision` is
+  `(identifier, sequence)`. Clients send commands to a mailbox and apply
+  what comes back at the revision the service assigns.
+  `TSCK.CollaborationCommandHistoryItem` records each applied command with
+  its `revision_sequence`.
+- **Identity is Apple-account-scoped.** `collaborator_ids`,
+  `TSCK.ActivityAuthorArchive`, `TSCK.SetActivityAuthorShareParticipantIDCommandArchive`
+  and `TSK.AnnotationAuthorArchive` are keyed to share participants.
+
+Joining a live session would therefore require speaking Apple's
+undocumented, authenticated mailbox protocol against their CloudKit-backed
+service, implementing the transformation semantics of hundreds of command
+types, and holding valid Apple-ID credentials. None of that is reachable
+from a file, and none of it is public API. **Treat live collaboration as
+out of scope.**
+
+What *is* available at the file layer, and what this library does:
+
+| Capability | Available? |
+|---|---|
+| Read collaboration/authorship residue (authors, change sessions, comment authors, revision) | ✅ read |
+| Preserve collaboration state across an edit (session state, command history, save tokens, `object_uuid_map_entries`) | ✅ preserved byte-exactly |
+| Edit a document that lives in an iCloud Drive folder, while nobody has it open | ✅ (the sync client uploads it like any file) |
+| Join a live session / merge with concurrent editors / push operations | ❌ not possible |
+
+Practical guidance for iCloud-synced files: edit only when the document is
+closed everywhere, and let sync settle before and after. Two clients
+writing the same package independently produces an iCloud **conflict copy**,
+not a merge — the service resolves at file granularity for non-session
+writes. Because this library preserves object identifiers, save tokens and
+the collaboration history rather than renumbering them, a document it edits
+can subsequently be opened and collaborated on normally.
+
+## 13. Known gaps / roadmap
+
+- **Table cells**: modern "BNC" v5 cell storage is implemented (read-only:
+  numbers, text, rich text, dates, booleans, durations, errors, merges).
+  **Pre-BNC storage versions 3/4**, written by iWork '13-era apps, use an
+  undocumented record layout and are *not* decodable — tables from those
+  files report `storageGeneration === "preBNC"` and `cells()` throws rather
+  than returning a misleading empty result. (The reference Python
+  implementation refuses them too.) Re-saving in Numbers 10+ converts them.
+- **Cell writing** needs formula-dependency and tile bookkeeping.
+- Chart data (TSCH) and Keynote slide trees are read as opaque objects;
+  editing them needs the TSCH/KN models on top of this substrate.
 - Creating documents **from scratch** (the practical route is embedding an
   app-saved empty template, as numbers-parser does).
 - Image/media **insertion** (Data/ plumbing is specified in §5.4/§10 but
@@ -485,8 +575,10 @@ How this library stays correct as Apple ships new versions:
 - Password-protected files (`.iwph` + encrypted payload).
 - `TSP.FieldInfo.object_references` (per-field-path reference lists) are
   preserved but not recomputed; the reference writers behave the same.
+- Live iCloud collaboration (§12.2) and editing documents open in an app
+  (§12.1) are out of scope by construction, not by omission.
 
-## 13. Prior art & provenance
+## 14. Prior art & provenance
 
 - `obriensp/iWorkFileFormat` (2013) — first public IWA analysis + Pages '13
   proto dump (MIT).

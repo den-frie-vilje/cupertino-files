@@ -21,17 +21,28 @@ import { RawMessage } from "../base/protobuf.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import {
   ATTR_TABLE_ENTRIES,
+  BookmarkField,
+  DrawableAttachment,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
+  FootnoteRefAttachment,
+  Highlight,
+  HyperlinkField,
   OBJECT_TABLE_FIELDS,
+  OVERLAP_FIELD,
   OVERLAP_RANGE,
   OVERLAP_TABLE_FIELDS,
   PARA_ALIGNED_OBJECT_TABLES,
   PARA_DATA_TABLE_FIELDS,
   Storage,
   STRING_TABLE_FIELDS,
+  TSWP_TYPE,
 } from "./schema.ts";
 import { makeRef, RANGE_LENGTH, RANGE_LOCATION, refId } from "../tsp/schema.ts";
+import { CommentStorage, TSD_TYPE } from "../tsd/schema.ts";
+import { StylesheetModel } from "../tss/stylesheet.ts";
+import { ParagraphHandle, TextRange } from "./range.ts";
+import { typeName } from "../tsp/registry.ts";
 
 export interface ParagraphInfo {
   index: number;
@@ -409,5 +420,303 @@ export class TextStorage {
       table.addMessage(ATTR_TABLE_ENTRIES, entry);
       this.msg.setMessage(tableField, table);
     }
+  }
+
+  // -------------------------------------------------------- styles & fluency
+
+  /** The stylesheet governing this storage, if resolvable. */
+  sheet(): StylesheetModel | undefined {
+    const id = this.stylesheetId;
+    const obj = id !== undefined ? this.store.object(id) : undefined;
+    return obj ? new StylesheetModel(this.store, obj) : undefined;
+  }
+
+  /** Resolve a style given by name (searched in the sheet chain) or id. */
+  resolveStyle(style: string | bigint, type: number): bigint {
+    if (typeof style === "bigint") return style;
+    const sheet = this.sheet();
+    const found = sheet?.findByName(style, type);
+    if (!found) throw new RangeError(`style not found: ${JSON.stringify(style)}`);
+    return found.id;
+  }
+
+  /** UI name of a style object (via its TSS.StyleArchive super). */
+  styleNameOf(styleId: bigint): string | undefined {
+    return this.store.object(styleId)?.message.getMessage(1)?.getString(1);
+  }
+
+  /** A live fluent handle over [start, end). */
+  range(start: number, end: number): TextRange {
+    return new TextRange(this, start, end);
+  }
+
+  /** Fluent handle for one paragraph. */
+  paragraph(index: number): ParagraphHandle {
+    return new ParagraphHandle(this, index);
+  }
+
+  /** Find matches as fluent ranges (string = literal; RegExp honored with /g). */
+  find(pattern: string | RegExp): TextRange[] {
+    const text = this.text;
+    const out: TextRange[] = [];
+    if (typeof pattern === "string") {
+      if (pattern.length === 0) return out;
+      let from = 0;
+      for (;;) {
+        const at = text.indexOf(pattern, from);
+        if (at === -1) break;
+        out.push(new TextRange(this, at, at + pattern.length));
+        from = at + pattern.length;
+      }
+      return out;
+    }
+    const re = pattern.global ? pattern : new RegExp(pattern.source, pattern.flags + "g");
+    for (const m of text.matchAll(re)) {
+      if (m.index !== undefined && m[0]!.length > 0) {
+        out.push(new TextRange(this, m.index, m.index + m[0]!.length));
+      }
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------- list styles
+
+  /** Effective list-style object id of a paragraph. */
+  listStyleIdAt(paragraphIndex: number): bigint | undefined {
+    const text = this.text;
+    const starts = this.paragraphStarts(text);
+    const start = starts[paragraphIndex];
+    if (start === undefined) throw new RangeError(`paragraph ${paragraphIndex} out of range`);
+    return this.effectiveObjectAt(Storage.TABLE_LIST_STYLE, start);
+  }
+
+  /** Set the list style of a paragraph (see also PagesDocument.setListStyle). */
+  setListStyle(paragraphIndex: number, styleId: bigint | undefined): void {
+    this.setParagraphTableValue(Storage.TABLE_LIST_STYLE, paragraphIndex, styleId);
+  }
+
+  /** Set one paragraph's value in any paragraph-aligned object table. */
+  setParagraphTableValue(
+    tableField: number,
+    paragraphIndex: number,
+    styleId: bigint | undefined,
+  ): void {
+    const text = this.text;
+    const starts = this.paragraphStarts(text);
+    if (paragraphIndex < 0 || paragraphIndex >= starts.length) {
+      throw new RangeError(`paragraph ${paragraphIndex} out of range (${starts.length})`);
+    }
+    const values = this.paragraphValues(tableField, starts, text);
+    values[paragraphIndex] = styleId;
+    this.ensureTable(tableField);
+    this.writeParagraphTable(tableField, starts, values);
+  }
+
+  // -------------------------------------------------------------- hyperlinks
+
+  /** Hyperlink runs in this storage. */
+  links(): { start: number; end: number; url: string; fieldId: bigint }[] {
+    const out: { start: number; end: number; url: string; fieldId: bigint }[] = [];
+    for (const run of this.objectRuns(Storage.TABLE_SMARTFIELD)) {
+      if (run.objectId === undefined) continue;
+      const field = this.store.object(run.objectId);
+      if (field?.type !== TSWP_TYPE.HYPERLINK_FIELD) continue;
+      const url = field.message.getString(HyperlinkField.URL_REF) ?? "";
+      out.push({ start: run.start, end: run.end, url, fieldId: run.objectId });
+    }
+    return out;
+  }
+
+  /**
+   * Make [start, end) a hyperlink. Creates a TSWP.HyperlinkFieldArchive in
+   * this storage's component and spans it in the smart-field table.
+   */
+  insertLink(start: number, end: number, url: string): bigint {
+    const text = this.text;
+    if (start < 0 || end <= start || end > text.length) {
+      throw new RangeError(`insertLink: invalid range ${start}..${end}`);
+    }
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const field = this.store.createObject(TSWP_TYPE.HYPERLINK_FIELD, component);
+    field.message.setMessage(HyperlinkField.SUPER, RawMessage.create());
+    field.message.setString(HyperlinkField.URL_REF, url);
+    this.spanObject(Storage.TABLE_SMARTFIELD, start, end, field.identifier);
+    return field.identifier;
+  }
+
+  /** Remove any hyperlink overlapping [start, end); the text is untouched. */
+  removeLinks(start: number, end: number): number {
+    let removed = 0;
+    for (const link of this.links()) {
+      if (link.start < end && link.end > start) {
+        this.spanObject(Storage.TABLE_SMARTFIELD, link.start, link.end, undefined);
+        removed++;
+      }
+    }
+    return removed;
+  }
+
+  /** Span an object over [start, end) in a character-run object table. */
+  spanObject(tableField: number, start: number, end: number, objectId: bigint | undefined): void {
+    const text = this.text;
+    this.ensureTable(tableField);
+    const table = this.msg.getMessage(tableField)!;
+    const resume = this.effectiveObjectAt(tableField, end);
+    const entries = table.getMessages(ATTR_TABLE_ENTRIES);
+    const kept = entries.filter((e) => {
+      const idx = e.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
+      return idx < start || idx > end;
+    });
+    const mk = (idx: number, id: bigint | undefined): RawMessage => {
+      const e = RawMessage.create();
+      e.setVarint(ENTRY_CHARACTER_INDEX, idx);
+      if (id !== undefined) e.setMessage(ENTRY_OBJECT, makeRef(id));
+      return e;
+    };
+    kept.push(mk(start, objectId));
+    if (end < text.length) kept.push(mk(end, resume));
+    kept.sort(
+      (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
+    );
+    table.setMessages(ATTR_TABLE_ENTRIES, kept);
+  }
+
+  // ------------------------------------------------------------ smart fields
+
+  /**
+   * All smart-field runs (hyperlinks, page numbers, dates, bookmarks, merge
+   * fields, TOC fields, …). `kind` is the registry name of the field archive
+   * so callers can switch on it without importing type IDs.
+   */
+  smartFields(): {
+    start: number;
+    end: number;
+    kind: string;
+    fieldId: bigint;
+    url?: string;
+    name?: string;
+  }[] {
+    const out: {
+      start: number;
+      end: number;
+      kind: string;
+      fieldId: bigint;
+      url?: string;
+      name?: string;
+    }[] = [];
+    for (const run of this.objectRuns(Storage.TABLE_SMARTFIELD)) {
+      if (run.objectId === undefined) continue;
+      const field = this.store.object(run.objectId);
+      if (!field) continue;
+      const kind = typeName(field.type, this.store.app) ?? `type ${field.type}`;
+      const entry: (typeof out)[number] = {
+        start: run.start,
+        end: run.end,
+        kind,
+        fieldId: run.objectId,
+      };
+      if (field.type === TSWP_TYPE.HYPERLINK_FIELD) {
+        entry.url = field.message.getString(HyperlinkField.URL_REF) ?? "";
+      }
+      if (field.type === TSWP_TYPE.BOOKMARK_FIELD) {
+        entry.name = field.message.getString(BookmarkField.NAME);
+      }
+      out.push(entry);
+    }
+    return out;
+  }
+
+  /**
+   * Inline attachment runs: page numbers, page counts, footnote marks and
+   * anchored drawables, each at its U+FFFC character.
+   */
+  attachments(): { index: number; kind: string; objectId: bigint; drawableId?: bigint }[] {
+    const out: { index: number; kind: string; objectId: bigint; drawableId?: bigint }[] = [];
+    const table = this.msg.getMessage(Storage.TABLE_ATTACHMENT);
+    if (!table) return out;
+    for (const e of table.getMessages(ATTR_TABLE_ENTRIES)) {
+      const id = refId(e, ENTRY_OBJECT);
+      const obj = id !== undefined ? this.store.object(id) : undefined;
+      if (!obj || id === undefined) continue;
+      const entry: (typeof out)[number] = {
+        index: e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
+        kind: typeName(obj.type, this.store.app) ?? `type ${obj.type}`,
+        objectId: id,
+      };
+      const drawableId = refId(obj.message, DrawableAttachment.DRAWABLE);
+      if (drawableId !== undefined) entry.drawableId = drawableId;
+      out.push(entry);
+    }
+    return out;
+  }
+
+  /** Bookmarks anchored in this storage (named destinations). */
+  bookmarks(): { start: number; end: number; name: string | undefined; fieldId: bigint }[] {
+    const out: { start: number; end: number; name: string | undefined; fieldId: bigint }[] = [];
+    for (const run of this.objectRuns(Storage.TABLE_BOOKMARK)) {
+      if (run.objectId === undefined) continue;
+      const field = this.store.object(run.objectId);
+      if (!field) continue;
+      out.push({
+        start: run.start,
+        end: run.end,
+        name: field.message.getString(BookmarkField.NAME),
+        fieldId: run.objectId,
+      });
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------ footnotes/comments
+
+  /** Footnotes/endnotes anchored in this storage (their text is editable). */
+  footnotes(): { anchorIndex: number; mark: string | undefined; storage: TextStorage }[] {
+    const out: { anchorIndex: number; mark: string | undefined; storage: TextStorage }[] = [];
+    const table = this.msg.getMessage(Storage.TABLE_FOOTNOTE);
+    if (!table) return out;
+    for (const e of table.getMessages(ATTR_TABLE_ENTRIES)) {
+      const idx = e.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
+      const ref = refId(e, ENTRY_OBJECT);
+      const attachment = ref !== undefined ? this.store.object(ref) : undefined;
+      if (!attachment) continue;
+      const storageId = refId(attachment.message, FootnoteRefAttachment.CONTAINED_STORAGE);
+      const storageObj = storageId !== undefined ? this.store.object(storageId) : undefined;
+      if (!storageObj) continue;
+      out.push({
+        anchorIndex: idx,
+        mark: attachment.message.getString(FootnoteRefAttachment.CUSTOM_MARK),
+        storage: new TextStorage(this.store, storageObj),
+      });
+    }
+    return out;
+  }
+
+  /** Comments anchored in this storage (from both anchor tables). */
+  comments(): { start: number; end: number; text: string }[] {
+    const out: { start: number; end: number; text: string }[] = [];
+    const resolveComment = (highlightId: bigint | undefined): string | undefined => {
+      const highlight = highlightId !== undefined ? this.store.object(highlightId) : undefined;
+      if (!highlight) return undefined;
+      const storageId = refId(highlight.message, Highlight.COMMENT_STORAGE);
+      const comment = storageId !== undefined ? this.store.object(storageId) : undefined;
+      if (comment?.type !== TSD_TYPE.COMMENT_STORAGE) return undefined;
+      return comment.message.getString(CommentStorage.TEXT);
+    };
+    for (const run of this.objectRuns(Storage.TABLE_HIGHLIGHT)) {
+      const text = resolveComment(run.objectId);
+      if (text !== undefined) out.push({ start: run.start, end: run.end, text });
+    }
+    const overlap = this.msg.getMessage(Storage.TABLE_OVERLAPPING_HIGHLIGHT);
+    if (overlap) {
+      for (const e of overlap.getMessages(ATTR_TABLE_ENTRIES)) {
+        const range = e.getMessage(OVERLAP_RANGE);
+        const loc = range?.getUint(RANGE_LOCATION) ?? 0;
+        const len = range?.getUint(RANGE_LENGTH) ?? 0;
+        const text = resolveComment(refId(e, OVERLAP_FIELD));
+        if (text !== undefined) out.push({ start: loc, end: loc + len, text });
+      }
+    }
+    return out.sort((a, b) => a.start - b.start);
   }
 }

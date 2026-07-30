@@ -6,6 +6,7 @@
  */
 import { IWorkDocument } from "../tsa/document.ts";
 import { TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
+import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   StylesheetModel,
   type CharacterFormatting,
@@ -13,17 +14,32 @@ import {
   type StyleInfo,
 } from "../tss/stylesheet.ts";
 import {
+  ATTACHMENT_CHAR,
   ATTR_TABLE_ENTRIES,
+  DrawableAttachment,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
+  ShapeInfo,
   Storage,
   TSWP_TYPE,
 } from "../tswp/schema.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
+import { Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
+import { DrawableModel } from "../tsd/drawables.ts";
+import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import { imageDimensions } from "../base/imagesize.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { PAGES_REFERENCE_EXTRACTORS, Section, SectionTemplate, TP_TYPE, TPDocument } from "./schema.ts";
+import {
+  PAGES_REFERENCE_EXTRACTORS,
+  Section,
+  SectionTemplate,
+  SettingsFields,
+  TP_TYPE,
+  TPDocument,
+} from "./schema.ts";
 
 export interface PageSetup {
   pageWidth: number | undefined;
@@ -142,6 +158,22 @@ export class PagesSection {
     return master?.footers[column]?.text ?? "";
   }
 
+  /**
+   * Drawables placed on this section's master pages (watermarks, logos,
+   * repeating page furniture), keyed by page-master role.
+   */
+  masterDrawables(): { role: "first" | "even" | "odd"; drawables: DrawableModel[] }[] {
+    return this.templates().map((t) => {
+      const template = this.document.store.object(t.templateId);
+      const drawables: DrawableModel[] = [];
+      for (const ref of template?.message.getMessages(SectionTemplate.MASTER_DRAWABLES) ?? []) {
+        const obj = this.document.store.resolve(ref.getVarint(1));
+        if (obj) drawables.push(new DrawableModel(this.document.store, obj));
+      }
+      return { role: t.role, drawables };
+    });
+  }
+
   /** Write header text into every page-master variant (column 0/1/2). */
   setHeaderText(text: string, column = 1): void {
     for (const t of this.templates()) {
@@ -177,22 +209,53 @@ export class PagesDocument extends IWorkDocument {
 
   // ------------------------------------------------------------------- body
 
-  /** The document body text storage. */
-  get body(): TextStorage {
+  /**
+   * The document body text storage, or undefined for page-layout documents
+   * (Pages' "Document Body" switch off) where text lives only in text boxes.
+   */
+  get bodyOrUndefined(): TextStorage | undefined {
     const id = refId(this.docObject.message, TPDocument.BODY_STORAGE);
     const obj = id !== undefined ? this.store.object(id) : undefined;
-    if (!obj) throw new RangeError("body storage not found");
-    return new TextStorage(this.store, obj);
+    return obj ? new TextStorage(this.store, obj) : undefined;
   }
 
-  /** Plain body text (paragraphs separated by \n, attachments as U+FFFC). */
+  /**
+   * The document body text storage. Throws for page-layout documents — check
+   * {@link isPageLayout} or use {@link bodyOrUndefined} when the document
+   * kind is unknown.
+   */
+  get body(): TextStorage {
+    const body = this.bodyOrUndefined;
+    if (!body) {
+      throw new RangeError(
+        "this is a page-layout document (no body text flow); use textBoxes() or bodyOrUndefined",
+      );
+    }
+    return body;
+  }
+
+  /**
+   * True for page-layout documents: TP.SettingsArchive.body is false, or the
+   * document has no body storage at all. Word-processing documents (the
+   * default) have a body text flow; page-layout ones only have text boxes.
+   */
+  get isPageLayout(): boolean {
+    if (this.bodyOrUndefined === undefined) return true;
+    const settingsId = refId(this.docObject.message, TPDocument.SETTINGS);
+    const settings = settingsId !== undefined ? this.store.object(settingsId) : undefined;
+    return settings?.message.getBool(SettingsFields.BODY) === false;
+  }
+
+  /** Plain body text ("" for page-layout documents). */
   get bodyText(): string {
-    return this.body.text;
+    return this.bodyOrUndefined?.text ?? "";
   }
 
+  /** Body paragraphs with resolved style names ([] for page-layout documents). */
   paragraphs(): (ParagraphInfo & { styleName: string | undefined })[] {
-    const sheet = this.stylesheet;
-    return this.body.paragraphs().map((p) => ({
+    const body = this.bodyOrUndefined;
+    if (!body) return [];
+    return body.paragraphs().map((p) => ({
       ...p,
       styleName: p.styleId !== undefined ? nameOfStyle(this.store, p.styleId) : undefined,
     }));
@@ -294,9 +357,9 @@ export class PagesDocument extends IWorkDocument {
    * document has at least one.
    */
   sections(): PagesSection[] {
-    const body = this.body;
-    const text = body.text;
-    const table = body.object.message.getMessage(Storage.TABLE_SECTION);
+    const body = this.bodyOrUndefined;
+    const text = body?.text ?? "";
+    const table = body?.object.message.getMessage(Storage.TABLE_SECTION);
     const out: PagesSection[] = [];
     if (table) {
       const entries = table.getMessages(ATTR_TABLE_ENTRIES);
@@ -355,9 +418,322 @@ export class PagesDocument extends IWorkDocument {
       m.setVarint(TPDocument.ORIENTATION, update.orientation);
     }
   }
+
+  // ------------------------------------------------------- fluent delegates
+
+  /** Fluent range over body text. */
+  range(start: number, end: number): TextRange {
+    return this.body.range(start, end);
+  }
+
+  /** Find body-text matches as fluent ranges. */
+  find(pattern: string | RegExp): TextRange[] {
+    return this.body.find(pattern);
+  }
+
+  /** Fluent handle for one body paragraph. */
+  paragraph(index: number): ParagraphHandle {
+    return this.body.paragraph(index);
+  }
+
+  /** Body hyperlinks ([] for page-layout documents). */
+  links(): { start: number; end: number; url: string; fieldId: bigint }[] {
+    return this.bodyOrUndefined?.links() ?? [];
+  }
+
+  /** Every hyperlink in the document, including those inside text boxes. */
+  allLinks(): { storage: TextStorage; start: number; end: number; url: string }[] {
+    const out: { storage: TextStorage; start: number; end: number; url: string }[] = [];
+    for (const storage of this.textStorages()) {
+      for (const l of storage.links()) {
+        out.push({ storage, start: l.start, end: l.end, url: l.url });
+      }
+    }
+    // Drawables can carry their own hyperlink (TSD.DrawableArchive.hyperlink_url).
+    return out;
+  }
+
+  /** Body smart fields — page numbers, dates, merge fields, links, … */
+  smartFields(): ReturnType<TextStorage["smartFields"]> {
+    return this.bodyOrUndefined?.smartFields() ?? [];
+  }
+
+  /** Body inline attachments (page-number fields, images, footnote marks). */
+  attachments(): ReturnType<TextStorage["attachments"]> {
+    return this.bodyOrUndefined?.attachments() ?? [];
+  }
+
+  /** Bookmarks (named destinations) declared in the body. */
+  bookmarks(): ReturnType<TextStorage["bookmarks"]> {
+    return this.bodyOrUndefined?.bookmarks() ?? [];
+  }
+
+  /** Make a body range a hyperlink. */
+  insertLink(start: number, end: number, url: string): bigint {
+    return this.body.insertLink(start, end, url);
+  }
+
+  /** Footnotes/endnotes anchored in the body (edit via `.storage`). */
+  footnotes(): { anchorIndex: number; mark: string | undefined; storage: TextStorage }[] {
+    return this.bodyOrUndefined?.footnotes() ?? [];
+  }
+
+  /** Comments anchored anywhere in the document. */
+  comments(): { start: number; end: number; text: string }[] {
+    const out: { start: number; end: number; text: string }[] = [];
+    for (const storage of this.textStorages()) out.push(...storage.comments());
+    return out;
+  }
+
+  /** Apply a list style ("Bullet", "Numbered", "None", …) to a paragraph. */
+  setListStyle(paragraphIndex: number, style: string | bigint): void {
+    this.body.setListStyle(
+      paragraphIndex,
+      this.body.resolveStyle(style, TSWP_TYPE.LIST_STYLE),
+    );
+  }
+
+  /** Named list styles available to this document. */
+  listStyles(): StyleInfo[] {
+    const seen = new Set<bigint>();
+    const out: StyleInfo[] = [];
+    for (
+      let sheet: StylesheetModel | undefined = this.stylesheet;
+      sheet;
+      sheet = sheet.parentSheet()
+    ) {
+      for (const s of sheet.styles()) {
+        if (s.type === TSWP_TYPE.LIST_STYLE && s.name !== undefined && !seen.has(s.id)) {
+          seen.add(s.id);
+          out.push(s);
+        }
+      }
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------- more features
+
+  /** Document-wide settings (hyphenation, ligatures, footnote config …). */
+  get settings(): PagesSettings {
+    const id = refId(this.docObject.message, TPDocument.SETTINGS);
+    const obj = id !== undefined ? this.store.object(id) : undefined;
+    if (!obj) throw new RangeError("TP.SettingsArchive not found");
+    return new PagesSettings(obj);
+  }
+
+  /** Tables embedded in this Pages document (read-only cell access). */
+  tables(): TableModel[] {
+    return tablesOf(this.store);
+  }
+
+  /** Text boxes and shapes carrying text: drawable + its text storage. */
+  textBoxes(): { drawable: DrawableModel; storage: TextStorage; isTextBox: boolean }[] {
+    const out: { drawable: DrawableModel; storage: TextStorage; isTextBox: boolean }[] = [];
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== TSWP_TYPE.SHAPE_INFO) continue;
+      const storageId = refId(obj.message, ShapeInfo.OWNED_STORAGE);
+      const storageObj = storageId !== undefined ? this.store.object(storageId) : undefined;
+      if (!storageObj) continue;
+      out.push({
+        drawable: new DrawableModel(this.store, obj),
+        storage: new TextStorage(this.store, storageObj),
+        isTextBox: obj.message.getBool(ShapeInfo.IS_TEXT_BOX) ?? false,
+      });
+    }
+    return out;
+  }
+
+  /**
+   * Start a new section at the given body paragraph. The new section clones
+   * the enclosing section's configuration and shares its page masters
+   * (headers/footers), with `inherit_previous_header_footer` set — matching
+   * Pages' "Create a new section" default. Returns the new section.
+   */
+  insertSectionBreak(
+    paragraphIndex: number,
+    options: { name?: string; pageNumberStart?: number } = {},
+  ): PagesSection {
+    const body = this.body;
+    const starts = body.paragraphStarts();
+    const at = starts[paragraphIndex];
+    if (at === undefined) throw new RangeError(`paragraph ${paragraphIndex} out of range`);
+    if (at === 0) throw new RangeError("cannot insert a section break before the first paragraph");
+    const sections = this.sections();
+    const enclosing =
+      sections.filter((s) => s.start <= at).at(-1) ?? sections[sections.length - 1];
+    if (!enclosing) throw new RangeError("document has no sections");
+    const component = this.store.componentOf(body.id);
+    if (!component) throw new RangeError("body component not found");
+
+    const section = this.store.createObject(TP_TYPE.SECTION, component, {
+      cloneFrom: enclosing.object,
+    });
+    const m = section.message;
+    m.setBool(Section.INHERIT_PREVIOUS_HEADER_FOOTER, true);
+    if (options.name !== undefined) m.setString(Section.NAME, options.name);
+    else m.remove(Section.NAME);
+    if (options.pageNumberStart !== undefined) {
+      m.setVarint(Section.PAGE_NUMBER_START, options.pageNumberStart);
+    }
+
+    // Insert the table_section entry at the paragraph start (run-based:
+    // the previous section's entry ends where ours begins).
+    const table = body.object.message.getMessage(Storage.TABLE_SECTION);
+    if (!table) throw new RangeError("body has no section table");
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, at);
+    entry.setMessage(ENTRY_OBJECT, makeRef(section.identifier));
+    const kept = table
+      .getMessages(ATTR_TABLE_ENTRIES)
+      .filter((e) => (e.getUint(ENTRY_CHARACTER_INDEX) ?? 0) !== at);
+    kept.push(entry);
+    kept.sort(
+      (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
+    );
+    table.setMessages(ATTR_TABLE_ENTRIES, kept);
+    const found = this.sections().find((s) => s.id === section.identifier);
+    if (!found) throw new RangeError("section insertion failed");
+    return found;
+  }
+
+  /**
+   * Insert an image inline at a body-text position (EXPERIMENTAL — see
+   * docs/FORMAT.md §12). Registers the bytes as a Data/ file (SHA-1
+   * deduped), creates the TSD.ImageArchive + attachment objects, anchors
+   * them at a U+FFFC character, and sizes the image from its intrinsic
+   * dimensions (PNG/JPEG/GIF) scaled to fit `maxWidth` (default 400 pt)
+   * unless explicit width/height are given.
+   */
+  insertInlineImage(
+    pos: number,
+    data: Uint8Array,
+    options: { fileName: string; width?: number; height?: number; maxWidth?: number },
+  ): { imageId: bigint; dataId: bigint } {
+    const body = this.body;
+    const component = this.store.componentOf(body.id);
+    if (!component) throw new RangeError("body component not found");
+    const { dataId } = this.store.addDataFile(data, options.fileName);
+
+    // Size: explicit > intrinsic (fitted) > fallback.
+    const dims = imageDimensions(data);
+    const maxWidth = options.maxWidth ?? 400;
+    let width = options.width;
+    let height = options.height;
+    if (width === undefined || height === undefined) {
+      const iw = dims?.width ?? 300;
+      const ih = dims?.height ?? 200;
+      const scale = Math.min(1, maxWidth / iw);
+      width = width ?? iw * scale;
+      height = height ?? ih * (width / iw);
+    }
+
+    const image = this.store.createObject(TSD_TYPE.IMAGE, component);
+    const drawable = RawMessage.create();
+    const geometry = RawMessage.create();
+    const position = RawMessage.create();
+    position.setFloat(Point.X, 0);
+    position.setFloat(Point.Y, 0);
+    const size = RawMessage.create();
+    size.setFloat(SizeFields.WIDTH, width);
+    size.setFloat(SizeFields.HEIGHT, height);
+    geometry.setMessage(Geometry.POSITION, position);
+    geometry.setMessage(Geometry.SIZE, size);
+    drawable.setMessage(Drawable.GEOMETRY, geometry);
+    image.message.setMessage(Image.SUPER, drawable);
+    if (dims) {
+      const natural = RawMessage.create();
+      natural.setFloat(SizeFields.WIDTH, dims.width);
+      natural.setFloat(SizeFields.HEIGHT, dims.height);
+      image.message.setMessage(Image.ORIGINAL_SIZE, natural);
+    }
+    image.message.setMessage(Image.DATA, makeDataRef(dataId));
+    image.setDataReferences([dataId]);
+
+    const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
+    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(image.identifier));
+
+    body.insertText(pos, ATTACHMENT_CHAR);
+    // Attachment entries are point-anchored at the U+FFFC character.
+    const table = body.object.message.getMessage(Storage.TABLE_ATTACHMENT) ?? RawMessage.create();
+    if (!body.object.message.has(Storage.TABLE_ATTACHMENT)) {
+      body.object.message.setMessage(Storage.TABLE_ATTACHMENT, table);
+    }
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, pos);
+    entry.setMessage(ENTRY_OBJECT, makeRef(attachment.identifier));
+    const entries = table.getMessages(ATTR_TABLE_ENTRIES);
+    entries.push(entry);
+    entries.sort(
+      (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
+    );
+    table.setMessages(ATTR_TABLE_ENTRIES, entries);
+
+    return { imageId: image.identifier, dataId };
+  }
 }
 
 function nameOfStyle(store: ObjectStore, id: bigint): string | undefined {
   const obj = store.object(id);
   return obj?.message.getMessage(1)?.getString(1);
+}
+
+/** TP.SettingsArchive accessor (document-wide behavior switches). */
+export class PagesSettings {
+  private readonly object: IwaObject;
+
+  constructor(object: IwaObject) {
+    this.object = object;
+  }
+
+  get hyphenation(): boolean {
+    return this.object.message.getBool(SettingsFields.HYPHENATION) ?? false;
+  }
+
+  set hyphenation(value: boolean) {
+    this.object.message.setBool(SettingsFields.HYPHENATION, value);
+  }
+
+  get useLigatures(): boolean {
+    return this.object.message.getBool(SettingsFields.USE_LIGATURES) ?? false;
+  }
+
+  set useLigatures(value: boolean) {
+    this.object.message.setBool(SettingsFields.USE_LIGATURES, value);
+  }
+
+  /** 0 footnotes, 1 document endnotes, 2 section endnotes. */
+  get footnoteKind(): number {
+    return this.object.message.getUint(SettingsFields.FOOTNOTE_KIND) ?? 0;
+  }
+
+  set footnoteKind(value: number) {
+    this.object.message.setVarint(SettingsFields.FOOTNOTE_KIND, value);
+  }
+
+  /** 0 numeric, 1 roman, 2 symbolic, 3/4 japanese. */
+  get footnoteFormat(): number {
+    return this.object.message.getUint(SettingsFields.FOOTNOTE_FORMAT) ?? 0;
+  }
+
+  set footnoteFormat(value: number) {
+    this.object.message.setVarint(SettingsFields.FOOTNOTE_FORMAT, value);
+  }
+
+  /** 0 continuous, 1 restart each page, 2 restart each section. */
+  get footnoteNumbering(): number {
+    return this.object.message.getUint(SettingsFields.FOOTNOTE_NUMBERING) ?? 0;
+  }
+
+  set footnoteNumbering(value: number) {
+    this.object.message.setVarint(SettingsFields.FOOTNOTE_NUMBERING, value);
+  }
+
+  get language(): string | undefined {
+    return this.object.message.getString(SettingsFields.LANGUAGE);
+  }
+
+  get documentIsRtl(): boolean {
+    return this.object.message.getBool(SettingsFields.DOCUMENT_IS_RTL) ?? false;
+  }
 }

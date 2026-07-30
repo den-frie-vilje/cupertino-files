@@ -77,6 +77,25 @@ export const SectionTemplate = {
   MASTER_DRAWABLES: 3,
 } as const;
 
+/** TP.SettingsArchive. */
+export const SettingsFields = {
+  /** false ⇒ page-layout document (no body text flow). */
+  BODY: 1,
+  HEADERS: 2,
+  FOOTERS: 3,
+  HYPHENATION: 9,
+  USE_LIGATURES: 10,
+  DOCUMENT_IS_RTL: 18,
+  DECIMAL_TAB: 20,
+  LANGUAGE: 21,
+  ORIG_TEMPLATE: 25,
+  CREATION_DATE: 26,
+  FOOTNOTE_KIND: 30,
+  FOOTNOTE_FORMAT: 31,
+  FOOTNOTE_NUMBERING: 32,
+  FOOTNOTE_GAP: 33,
+} as const;
+
 /** TP.FloatingDrawablesArchive. */
 export const FloatingDrawables = { PAGE_GROUPS: 1 } as const;
 export const PageGroup = {

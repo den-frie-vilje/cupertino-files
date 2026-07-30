@@ -93,6 +93,20 @@ export class IwaObject {
     return info ? info.getPackedVarints(MSG_DATA_REFERENCES) : [];
   }
 
+  setDataReferences(ids: readonly bigint[]): void {
+    const info = this.messageInfos[0];
+    if (!info) throw new RangeError(`object ${this.identifier}: no MessageInfo`);
+    if (ids.length === 0) info.remove(MSG_DATA_REFERENCES);
+    else info.setPackedVarints(MSG_DATA_REFERENCES, ids as (bigint | number)[]);
+  }
+
+  /** Replace the primary payload with a parsed copy of the given bytes. */
+  setMessageBytes(bytes: Uint8Array): void {
+    const parsed = RawMessage.parse(bytes.slice());
+    parsed.markDirty();
+    this.parsed = parsed;
+  }
+
   /** Serialize this object's archive (ArchiveInfo length + info + payloads). */
   serialize(): Uint8Array {
     // Refresh payload bytes + MessageInfo.length if the message was edited.
