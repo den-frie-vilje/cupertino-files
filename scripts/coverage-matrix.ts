@@ -27,9 +27,11 @@ import { KeynoteDocument } from "../src/keynote/document.ts";
 import { NumbersDocument } from "../src/numbers/document.ts";
 import { IWORK_ERAS, type IWorkEra, type CompatibilityReport } from "../src/tsp/version.ts";
 import type { IWorkApp } from "../src/tsp/registry.ts";
+import { drawableStylesOf } from "../src/tsd/drawables.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const OUTPUT = new URL("../docs/COVERAGE.md", import.meta.url);
+const VERIFICATION_OUTPUT = new URL("../docs/VERIFICATION.md", import.meta.url);
 
 /** How much of a capability the library implements. */
 type Status = "read+write" | "read" | "experimental" | "roadmap" | "out-of-scope";
@@ -52,6 +54,27 @@ interface DocContext {
   numbers: NumbersDocument | undefined;
 }
 
+/**
+ * A claim no amount of offline testing can settle.
+ *
+ * The fixture suite proves we agree with *our reading* of Apple's files:
+ * that we decode what they wrote and re-encode it identically. It cannot
+ * prove Apple accepts something we invented, because the only authority on
+ * that is the app. Anything in this shape needs a human in front of a Mac.
+ */
+interface ManualProof {
+  /** What is being claimed, in one line. */
+  claim: string;
+  /** Why the offline suite cannot settle it. */
+  why: string;
+  /** Concrete steps that would settle it. */
+  how: string;
+  /** Set when `npm run test:e2e` already covers it on a Mac. */
+  e2e?: boolean;
+  /** How bad it is if the claim turns out false. */
+  risk: "high" | "medium" | "low";
+}
+
 interface Capability {
   group: string;
   name: string;
@@ -60,6 +83,8 @@ interface Capability {
   /** True when this document exercises the capability. Omit if unmeasurable. */
   probe?: (c: DocContext) => boolean;
   note?: string;
+  /** Declared here so the list of unproven claims cannot drift from the code. */
+  manualProof?: ManualProof;
 }
 
 /** Never let one malformed document abort the whole survey. */
@@ -187,6 +212,17 @@ const CAPABILITIES: Capability[] = [
               .some((info) => Object.keys(sheet.style(info.id)?.character() ?? {}).length > 0),
           ),
       ),
+    manualProof: {
+      claim: "Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'.",
+      why:
+        "We infer that a set *_null flag with the value absent means an explicit clear. Fixtures show the " +
+        "encoding but never disambiguate it from plain absence, because both render the same whenever the " +
+        "parent sets nothing either.",
+      how:
+        "Create a style with a font colour, derive a child, clear the colour on the child, open in Pages " +
+        "and confirm the child shows the default colour rather than inheriting the parent's.",
+      risk: "low",
+    },
   },
   {
     group: "Text & styles",
@@ -235,6 +271,18 @@ const CAPABILITIES: Capability[] = [
           ),
       ),
     note: "border_positions semantics inferred, not proven by rendering",
+    manualProof: {
+      claim: "border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.",
+      why:
+        "The mapping is inferred, not observed. It fits three independent constraints — the field is a " +
+        "plain int32 rather than a set, the deprecated enum it replaced packs a position in 0..4 beside a " +
+        "line style, and the Pages inspector offers exactly five choices — but every value in the corpus " +
+        "is 0, 1 or 2, so 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.",
+      how:
+        "Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and " +
+        "read the Borders & Rules control. Ten minutes settles the whole mapping.",
+      risk: "medium",
+    },
   },
   {
     group: "Text & styles",
@@ -243,6 +291,17 @@ const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.stylesheets().length > 0),
     note: "one vocabulary shared by text, table and drawable styling",
+    manualProof: {
+      claim: "A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths.",
+      why:
+        "Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with " +
+        "rgbspace and that the dash array is repeated float, but not that a colour we author with " +
+        "space: 'p3' is treated as wide-gamut rather than reinterpreted.",
+      how:
+        "Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and " +
+        "confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.",
+      risk: "low",
+    },
   },
   {
     group: "Text & styles",
@@ -307,6 +366,32 @@ const CAPABILITIES: Capability[] = [
   },
 
   // --------------------------------------------------------------- drawables
+  {
+    group: "Drawables & media",
+    name: "Drawable style (fill, stroke, opacity, shadow, reflection)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => drawableStylesOf(c.doc.store).some((h) => h.read().stroke !== undefined)),
+    note: "where shadows live — cell and table styles have no shadow field at all",
+  },
+  {
+    group: "Drawables & media",
+    name: "Drawable shadows (enabled, angle, offset, blur, opacity)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => drawableStylesOf(c.doc.store).some((h) => h.read().shadow?.enabled === true)),
+    manualProof: {
+      claim: "A shadow we enable or re-parameterise renders in the app with the geometry we set.",
+      why:
+        "Angle, offset and blur radius are rendering parameters. Fixtures prove we read Apple's values " +
+        "correctly and re-encode them identically, but not that a shadow we author from scratch on a " +
+        "shape that had none is picked up rather than ignored.",
+      how:
+        "Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and " +
+        "compare with the Shadow section of the Style inspector.",
+      risk: "low",
+    },
+  },
   {
     group: "Drawables & media",
     name: "Geometry (enumerate, move, resize)",
@@ -442,6 +527,19 @@ const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => c.report.probe.cellStorage === "v5",
     note: "string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved",
+    manualProof: {
+      claim: "Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote.",
+      why:
+        "Every offline check is self-referential: our encoder round-trips through our decoder. " +
+        "Apple's reader is the only authority on whether the rebuilt row buffers, offset array, " +
+        "cell counts and legacy stubs are all acceptable together.",
+      how:
+        "npm run test:e2e on a Mac — 'writes cells that Numbers itself reads back' asserts the app " +
+        "reports our text and number. Then open the file by hand and check the edited cells look " +
+        "normal (no red triangle, no reformatting) and that undo/redo behaves.",
+      e2e: true,
+      risk: "high",
+    },
   },
   {
     group: "Numbers & tables",
@@ -450,6 +548,18 @@ const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) =>
       safe(() => c.doc.tables().some((t) => t.storageGeneration === "v5" && t.bandStyle("body") !== undefined)),
+    manualProof: {
+      claim: "A cell style we create is picked up by the app and rendered, and the style table stays consistent.",
+      why:
+        "We add a TST.CellStyleArchive and a style-table entry, then point the cell record at the new key. " +
+        "Nothing offline proves the app resolves that key, nor that cloning a style without its name and " +
+        "identifier is acceptable. The scripting dictionary exposes no cell formatting, so even e2e cannot assert it.",
+      how:
+        "Write a fill, four borders, padding and vertical alignment into a cell, open in Numbers, and compare " +
+        "against the same formatting applied by hand in the inspector. Then re-save from the app and diff " +
+        "our style object against what Numbers rewrote.",
+      risk: "high",
+    },
   },
   {
     group: "Numbers & tables",
@@ -457,6 +567,18 @@ const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.tableStyle() !== undefined)),
+    manualProof: {
+      claim: "Banded rows, grid strokes and the visibility toggles render as set.",
+      why:
+        "TableStylePropertiesArchive has separate strokes for the body grid and the outer border plus a " +
+        "set of visibility booleans; which combination the app honours for a given theme is a rendering " +
+        "question no archive inspection answers. Our 'body border' setter writes both the horizontal and " +
+        "vertical border strokes on the assumption the inspector's single control does the same.",
+      how:
+        "Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against " +
+        "the same settings applied through the Table inspector on an untouched copy.",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",
@@ -465,6 +587,18 @@ const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.rowCount > 0)),
     note: "inserting or deleting rows/columns is not implemented",
+    manualProof: {
+      claim: "Changed band counts, freeze and repeating-header flags, row heights and column widths take effect.",
+      why:
+        "These are presentation fields the offline suite can only verify it wrote and can read back. " +
+        "Whether the app agrees a header count is legal for a given table — and whether frozen or repeating " +
+        "headers need companion state we are not writing — only the app can say.",
+      how:
+        "Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check " +
+        "the header/footer controls in the inspector show what we set and that scrolling freezes correctly. " +
+        "For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",
@@ -473,6 +607,18 @@ const CAPABILITIES: Capability[] = [
     status: "read",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.merges().length > 0)),
     note: "writing a merge needs calc-engine owner bookkeeping",
+    manualProof: {
+      claim: "The merge rectangles we decode from the merge-owner formula store match what the app displays.",
+      why:
+        "Decoding is validated only by internal consistency: anchors hold values, covered cells never do, " +
+        "and both format eras of the same document agree. That is strong evidence, not proof — no fixture " +
+        "carries a merge_region_map to cross-check against, and no scripting API reports merges.",
+      how:
+        "Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and " +
+        "confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; " +
+        "Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",
@@ -721,6 +867,22 @@ function render(facts: FixtureFacts[]): string {
     return n > 0 && n <= 2;
   });
 
+  const unproven = CAPABILITIES.filter((c) => c.manualProof);
+  out.push("## Claims that need a Mac");
+  out.push("");
+  out.push(
+    `${unproven.length} capabilities make a claim the offline suite structurally cannot settle — ` +
+      "whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files",
+    "correctly. They are listed with their reasoning and repro steps in",
+    "[`docs/VERIFICATION.md`](VERIFICATION.md):",
+    "",
+  );
+  for (const c of unproven) {
+    const proof = c.manualProof!;
+    out.push(`- ${RISK_LABEL[proof.risk]} — ${c.group} → **${c.name}**${proof.e2e ? " *(covered by `npm run test:e2e`)*" : ""}`);
+  }
+  out.push("");
+
   out.push("## Validation gaps");
   out.push("");
   if (unvalidated.length > 0) {
@@ -797,10 +959,106 @@ function summarize(facts: FixtureFacts[]): string {
   return lines.join("\n");
 }
 
+const RISK_LABEL: Record<"high" | "medium" | "low", string> = {
+  high: "🔴 high",
+  medium: "🟠 medium",
+  low: "🟡 low",
+};
+
+const RISK_ORDER: Record<"high" | "medium" | "low", number> = { high: 0, medium: 1, low: 2 };
+
+/**
+ * Render docs/VERIFICATION.md — every claim that needs a human and a Mac.
+ *
+ * Generated rather than hand-written for the same reason the coverage
+ * matrix is: a hand-kept list of "things we should check some day" goes
+ * stale the moment someone ships a feature and forgets to add a line. This
+ * one is derived from `manualProof` declarations sitting next to the
+ * capabilities they belong to, so it can only drift if the code does.
+ */
+function renderVerification(): string {
+  const pending = CAPABILITIES.filter((c) => c.manualProof).sort(
+    (a, b) =>
+      RISK_ORDER[a.manualProof!.risk] - RISK_ORDER[b.manualProof!.risk] ||
+      a.group.localeCompare(b.group) ||
+      a.name.localeCompare(b.name),
+  );
+  const out: string[] = [];
+  out.push("# Claims we cannot prove offline");
+  out.push("");
+  out.push(
+    "Everything in the test suite proves this library agrees with *its own reading* of Apple's",
+    "files: that it decodes what the apps wrote and re-encodes it byte for byte. That is a real",
+    "guarantee, and it is not the same as proving the apps accept something we invented.",
+    "",
+    "The claims below are the ones where the only authority is the application itself. Each says",
+    "what is being claimed, why the offline suite structurally cannot settle it, and what would.",
+    "",
+    "**This file is generated.** Claims live in `manualProof` blocks beside their capability in",
+    "`scripts/coverage-matrix.ts`; run `npm run coverage` to regenerate. A test fails if it goes stale.",
+    "",
+  );
+
+  const byE2E = pending.filter((c) => c.manualProof!.e2e);
+  out.push("## How much is already automated");
+  out.push("");
+  out.push(
+    `Of ${pending.length} claims, **${byE2E.length}** ${byE2E.length === 1 ? "is" : "are"} covered by ` +
+      "`npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a",
+    "person to look at a rendered document, because the scripting dictionaries expose no way to ask.",
+    "",
+  );
+
+  out.push("## The list");
+  out.push("");
+  out.push("| # | Risk | Capability | Claim | Automated? |");
+  out.push("|---:|---|---|---|---|");
+  pending.forEach((c, i) => {
+    const proof = c.manualProof!;
+    out.push(
+      `| ${i + 1} | ${RISK_LABEL[proof.risk]} | ${c.group} → ${c.name} | ${proof.claim} | ` +
+        `${proof.e2e ? "`test:e2e`" : "manual"} |`,
+    );
+  });
+  out.push("");
+
+  for (const [i, c] of pending.entries()) {
+    const proof = c.manualProof!;
+    out.push(`### ${i + 1}. ${c.name}`);
+    out.push("");
+    out.push(`**Risk if wrong:** ${RISK_LABEL[proof.risk]}  `);
+    out.push(`**Group:** ${c.group}  `);
+    out.push(`**Status in the matrix:** ${STATUS_LABEL[c.status]}`);
+    out.push("");
+    out.push(`**Claim.** ${proof.claim}`);
+    out.push("");
+    out.push(`**Why the suite cannot settle it.** ${proof.why}`);
+    out.push("");
+    out.push(`**How to settle it.** ${proof.how}`);
+    out.push("");
+    if (proof.e2e) {
+      out.push("> Already exercised by `npm run test:e2e` on a Mac with the app installed.");
+      out.push("");
+    }
+  }
+
+  out.push("## Recording an outcome");
+  out.push("");
+  out.push(
+    "When a claim is checked by hand, do not delete its entry — replace the `manualProof` block with",
+    "a `note` recording what was observed, so the finding survives in the matrix. If the check *fails*,",
+    "that is a bug report with a reproduction already written.",
+    "",
+  );
+  return out.join("\n");
+}
+
 function main(): void {
   const facts = surveyFixtures();
   const markdown = render(facts);
   const args = process.argv.slice(2);
+
+  const verification = renderVerification();
 
   if (args.includes("--stdout")) {
     console.log(markdown);
@@ -813,19 +1071,31 @@ function main(): void {
     } catch {
       /* missing counts as stale */
     }
-    if (current !== markdown) {
+    let currentVerification = "";
+    try {
+      currentVerification = readFileSync(VERIFICATION_OUTPUT, "utf8");
+    } catch {
+      /* missing counts as stale */
+    }
+    const stale = [
+      current !== markdown ? "docs/COVERAGE.md" : undefined,
+      currentVerification !== verification ? "docs/VERIFICATION.md" : undefined,
+    ].filter(Boolean);
+    if (stale.length > 0) {
       console.error(
-        "docs/COVERAGE.md is out of date with fixtures/ and the capability table.\n" +
+        `${stale.join(" and ")} out of date with fixtures/ and the capability table.\n` +
           "Run: npm run coverage",
       );
       process.exit(1);
     }
-    console.log("docs/COVERAGE.md is up to date.");
+    console.log("up to date");
     return;
   }
   writeFileSync(OUTPUT, markdown);
+  writeFileSync(VERIFICATION_OUTPUT, verification);
   console.log(summarize(facts));
   console.log(`\nwrote ${fileURLToPath(OUTPUT)}`);
+  console.log(`wrote ${fileURLToPath(VERIFICATION_OUTPUT)}`);
 }
 
 main();

@@ -67,6 +67,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
+| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 37 | all |
+| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 37 | all |
 | Geometry (enumerate, move, resize) | all | ✅ read + write | 34 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
 | Image masks | all | 🔍 read only | 14 | iwork16→current |
@@ -97,7 +99,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
 | Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
 | Table structure (name, header/footer bands, row & column sizes)<br><sub>inserting or deleting rows/columns is not implemented</sub> | all | ✅ read + write | 22 | iwork16→current |
-| Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | **0** | — |
+| Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | 5 | modern→current |
 | Formulas<br><sub>cached values readable and the formula flag exposed; writing a literal clears the formula, but authoring one is not implemented</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Chart writing | all | ○ roadmap | n/a | — |
@@ -119,13 +121,28 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Editing a document open in an app<br><sub>the app rewrites the whole package on autosave; see FORMAT.md §13.1</sub> | all | ✗ out of scope | n/a | — |
 | Live iCloud collaboration<br><sub>server-mediated OT over an authenticated protocol; see FORMAT.md §13.2</sub> | all | ✗ out of scope | n/a | — |
 
+## Claims that need a Mac
+
+9 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+correctly. They are listed with their reasoning and repro steps in
+[`docs/VERIFICATION.md`](VERIFICATION.md):
+
+- 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
+- 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
+- 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
+- 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
+- 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
+- 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
+- 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**
+- 🟠 medium — Numbers & tables → **Table structure (name, header/footer bands, row & column sizes)**
+- 🟠 medium — Numbers & tables → **Merged cell ranges**
+
 ## Validation gaps
 
 **Implemented but exercised by no fixture** — spec-derived only:
 
 - Container → **Wrapper-directory layout**
 - Container → **Mixed-codec packages (LZFSE component beside Snappy)**
-- Numbers & tables → **Merged cell ranges**
 - Keynote → **Transitions**
 
 **Thinly validated** (1–2 fixtures — no cross-check if an encoding varies):

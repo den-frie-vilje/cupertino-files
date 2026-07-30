@@ -6,10 +6,13 @@ const script = fileURLToPath(new URL("../scripts/coverage-matrix.ts", import.met
 const privacy = fileURLToPath(new URL("../scripts/scan-fixture-privacy.ts", import.meta.url));
 
 describe("repository guards", () => {
-  it("docs/COVERAGE.md matches the fixtures and capability table", () => {
-    // The matrix is generated, so it goes stale the moment a fixture is
-    // added or a capability changes status. Failing here is the mechanism
-    // that keeps it honest — run `npm run coverage` to regenerate.
+  it("docs/COVERAGE.md and docs/VERIFICATION.md match the fixtures and capability table", () => {
+    // Both are generated, so they go stale the moment a fixture is added or
+    // a capability changes status. Failing here is the mechanism that keeps
+    // them honest — run `npm run coverage` to regenerate.
+    //
+    // VERIFICATION.md especially: a hand-kept list of "things to check some
+    // day" rots the moment someone ships a feature and forgets a line.
     let ok = true;
     let output = "";
     try {
