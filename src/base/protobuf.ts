@@ -284,6 +284,47 @@ export class RawMessage {
   }
 
   /**
+   * Repeated float field, packed (length-delimited run of 4-byte words) or
+   * unpacked (repeated fixed32 keys), or a mix. Returns values in order.
+   */
+  getFloats(no: number): number[] {
+    const out: number[] = [];
+    for (const f of this.fields) {
+      if (f.no !== no) continue;
+      if (f.wire === WireType.Fixed32) {
+        const b = f.value as Uint8Array;
+        out.push(new DataView(b.buffer, b.byteOffset, 4).getFloat32(0, true));
+      } else if (f.wire === WireType.Bytes) {
+        const b = f.value instanceof RawMessage ? f.value.toBytes() : (f.value as Uint8Array);
+        const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+        for (let pos = 0; pos + 4 <= b.length; pos += 4) out.push(view.getFloat32(pos, true));
+      } else {
+        throw new RangeError(`field ${no}: unexpected wire type for repeated float`);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Replace all occurrences of a repeated float field, preserving position.
+   *
+   * Written unpacked (one fixed32 key per value), which is the proto2 default
+   * and what Apple emits for e.g. `StrokePatternArchive.pattern`.
+   */
+  setFloats(no: number, values: readonly number[]): void {
+    const idx = this.fields.findIndex((f) => f.no === no);
+    this.fields = this.fields.filter((f) => f.no !== no);
+    const inserted: RawField[] = values.map((v) => {
+      const b = new Uint8Array(4);
+      new DataView(b.buffer).setFloat32(0, v, true);
+      return { no, wire: WireType.Fixed32, value: b };
+    });
+    if (idx >= 0) this.fields.splice(idx, 0, ...inserted);
+    else this.fields.push(...inserted);
+    this.markDirty();
+  }
+
+  /**
    * Repeated varint field that may be encoded packed (length-delimited),
    * unpacked (repeated varint keys), or a mix. Returns values in order.
    */

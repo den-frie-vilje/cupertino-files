@@ -18,9 +18,31 @@ export const RANGE_LENGTH = 2;
 export const Point = { X: 1, Y: 2 } as const;
 export const SizeFields = { WIDTH: 1, HEIGHT: 2 } as const;
 
-/** TSP.Color. */
-export const ColorFields = { MODEL: 1, R: 3, G: 4, B: 5, A: 6 } as const;
+/**
+ * TSP.Color. CMYK channels (c/m/y/k = 7..10) and white (w = 11) exist too;
+ * `RGB_SPACE` (12) is written by every 26.x-era colour.
+ *
+ * Field 13 is a fixed32 that first appears in the 26.x era, always paired
+ * with an explicit `rgbspace` and always 1.0 in every document examined.
+ * Its meaning is unknown; it is preserved verbatim like any unknown field.
+ */
+export const ColorFields = {
+  MODEL: 1,
+  R: 3,
+  G: 4,
+  B: 5,
+  A: 6,
+  C: 7,
+  M: 8,
+  Y: 9,
+  K: 10,
+  W: 11,
+  RGB_SPACE: 12,
+} as const;
 export const COLOR_MODEL_RGB = 1;
+export const COLOR_MODEL_CMYK = 2;
+export const COLOR_MODEL_WHITE = 3;
+export const RGB_SPACE = { SRGB: 1, P3: 2 } as const;
 
 /** Build a TSP.Reference message. */
 export function makeRef(id: bigint): RawMessage {
