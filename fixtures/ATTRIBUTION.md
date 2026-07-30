@@ -318,3 +318,231 @@ writer version is held constant.
   `a.numbers` is 11.1.2); `psobot/keynote-parser` `tests/data/` (newest is
   `unicode-asset-filename.key`, 10.1.8 / Keynote 10.1); `6over3/WorkKit` and
   `openpreserve/format-corpus` (ship no iWork documents at all).
+
+---
+
+## Feature-coverage Pages fixtures
+
+Added 2026-07-30. Goal: the corpus's `.pages` files all scored 2–7 on
+`scripts/feature-probe.ts` and between them exercised **none** of image
+filters/adjustments, headers/footers containing text, footnotes, comments,
+hyperlinks, multiple sections, charts, or change tracking. This section adds eight
+files chosen for *complementary* feature coverage.
+
+How they were found: the dedicated format corpora (libetonyek, tika, LibreOffice/core,
+openpreserve/format-corpus, siegfried, fido, fits, file-type, mimetype, WorkKit,
+archivematica-sampledata) were re-checked and are exhausted — see
+`research/pages-feature-coverage.md`. The files below came from a whole-of-GitHub
+file-name sweep (Sourcegraph public search API, `file:\w\.pages$`), 1,154 candidates
+→ 1,038 downloaded → 1,038 probed → 874 modern IWA Pages documents. Selection was
+restricted to repositories carrying an unambiguous license file at the repo root.
+
+Every file below is a **byte-identical, unmodified copy**; the blob SHA-1 of each local
+copy was checked against `git ls-tree` in the upstream repository at the commit given
+(all MATCH), so the provenance is exact rather than approximate.
+
+The probe output quoted per file was taken with the parser at commit `8ef56e4` plus an
+uncommitted edit to `src/tswp/textstorage.ts`. `src/` was under active development during
+this survey, and two counters moved while it ran (`inlineAttachments`,
+`listStyledParagraphs`); the numbers below are the post-change values. No priority-feature
+counter (`imagesWithFilters`, `imagesWithMask`, `nonEmptyHeaders`, `nonEmptyFooters`,
+`footnotes`, `comments`, `hyperlinks`, `sections`, `charts`, `storagesWithChangeTracking`,
+`readableTableCells`) changed, so fixture selection is unaffected — but re-run the probe
+before treating any exact count here as current.
+
+### Sources
+
+| Source | Repo | Commit | License |
+|---|---|---|---|
+| threatconnect | https://github.com/ThreatConnect-Inc/threatconnect-playbooks | `e8115975f456a06a67606a859c254c15823e9a5f` | Apache-2.0 (repo `LICENSE`) |
+| picopalette | https://github.com/picopalette/phishing-detection-plugin | `749811b4ef531c9a273e2f86c337b189cea75911` | MIT (repo `LICENSE`, "Copyright (c) 2018 PicoPalette") |
+| ndpi | https://github.com/ntop/nDPI | `252e2a5548a1ea4eb54d3089af836207b3ef32e6` | LGPL-3.0 (repo `COPYING`) |
+| rougier | https://github.com/rougier/scientific-posters | `00e9acb111d9faa180c75551ad60e3cdd0a7aaa4` | CC BY 4.0 (repo `LICENSE.txt`) |
+| draftjs | https://github.com/thibaudcolas/draftjs-filters | `43e68048b60a303a28237edd2ec9af8e58ac2417` | MIT (repo `LICENSE`) |
+| picodocs | https://github.com/PicoMLX/PicoDocs | `5c18743d3d8120a76da124bd512a3cf5bcc28e82` | MIT (repo `LICENSE`, "Copyright (c) 2025 Pico MLX") |
+| vertx | https://github.com/vert-x3/vertx-guide-for-java-devs | `846b56a5b6187d5368ded6a9bfda73f4549e8b57` | Apache-2.0 (repo `LICENSE`) |
+| gomap | https://github.com/bryceco/GoMap | `40a7f781449c75c45f78feba7bb7ddefdc45ed0c` | ISC (repo `LICENSE.md`, "Copyright (c) 2018, Bryce Cogswell and Go Map!! Contributers") |
+
+### threatconnect-v11.1-headers-footers-sections.pages
+- Original: `apps/TCPB_-_Expressions/doc/Expressions.pages` (ThreatConnect-Inc/threatconnect-playbooks, Apache-2.0)
+- 630,330 bytes, md5 `c456eaa8e4fc17090343acd9485d36ef`
+- `fileFormatVersion` **11.1.2**, app build **`M11.1-7031.0.102-2`** (Pages 11.1)
+- Full feature-probe output:
+  ```
+  pages | era=modern | format=11.1.2 | build=M11.1-7031.0.102-2 | flat | 889 objects | score=11
+  textStorages=82  nonEmptyStorages=34  images=7  imagesWithMask=1  tables=1  tableCellStorage=v5
+  readableTableCells=1  hyperlinks=2  smartFields=2  bookmarks=1  inlineAttachments=36
+  listStyledParagraphs=86  bodyChars=29534  paragraphs=438  sections=3  nonEmptyHeaders=3
+  nonEmptyFooters=3  textBoxes=26  namedParagraphStyles=28  namedListStyles=9  tocObjects=1
+  hasTOC=true  shapeInfos=26
+  ```
+- **Highest-scoring `.pages` document found anywhere (score 11).** Technical manual for a
+  ThreatConnect playbook app. Primary fixture for **multiple sections** (3) where *each*
+  section carries a header *and* a footer with real text — the combination the corpus
+  previously had zero examples of. Also 26 text boxes, 36 inline attachments, a v5/BNC table,
+  and a bookmark.
+
+### picopalette-v3.2-multisection-footnotes.pages
+- Original: `artifacts/report.pages` (picopalette/phishing-detection-plugin, MIT)
+- 3,315,498 bytes, md5 `882ffae08a0459f606a5066b4885c877`
+- `fileFormatVersion` **3.2.13**, app build **`M7.2-5869-2`** (Pages 7.2, iWork '19 era)
+- Full feature-probe output:
+  ```
+  pages | era=iwork19 | format=3.2.13 | build=M7.2-5869-2 | flat | 1222 objects | score=10
+  textStorages=274  nonEmptyStorages=36  images=18  imagesWithMask=3  tables=4
+  tableCellStorage=v5  readableTableCells=4  hyperlinks=1  smartFields=1  footnotes=8
+  inlineAttachments=47  listStyledParagraphs=292  bodyChars=34223  paragraphs=329
+  sections=14  nonEmptyHeaders=13  nonEmptyFooters=1  namedParagraphStyles=27
+  namedListStyles=10  tocObjects=7  hasTOC=true
+  ```
+- A student project report. The **structurally richest** document in the set:
+  **14 sections**, **13 non-empty headers**, **8 footnotes**, **7 TOC objects**,
+  4 v5 tables with readable cells, 18 images (3 masked), 274 text storages.
+  Primary fixture for **footnotes** and for section/header iteration at scale.
+
+### ndpi-v10.0-change-tracking.pages
+- Original: `doc/guide/nDPI_QuickStartGuide.pages` (ntop/nDPI, LGPL-3.0)
+- 133,048 bytes, md5 `920b959ab455237e565eb94302eeb0d2`
+- `fileFormatVersion` **10.0.10**, app build **`M10.0-6748-2`** (Pages 10.0)
+- Full feature-probe output:
+  ```
+  pages | era=modern | format=10.0.10 | build=M10.0-6748-2 | flat | 709 objects | score=9
+  textStorages=23  nonEmptyStorages=9  images=1  tables=1  tableCellStorage=v5
+  readableTableCells=1  hyperlinks=7  smartFields=8  bookmarks=2  inlineAttachments=3
+  listStyledParagraphs=168  storagesWithChangeTracking=1  bodyChars=21281  paragraphs=582
+  sections=1  nonEmptyHeaders=2  nonEmptyFooters=2  namedParagraphStyles=61
+  namedListStyles=55  tocObjects=1  hasTOC=true
+  ```
+- **The only document with change tracking** (`TSWP.StorageArchive` insertion/deletion
+  tables, probe field `storagesWithChangeTracking`) out of all 874 modern Pages documents
+  probed. Also headers *and* footers with text, 7 hyperlinks, 8 smart fields, 2 bookmarks,
+  55 named list styles — and only 130 KB. Highest value-per-byte fixture in the set.
+- License note: LGPL-3.0, i.e. weak copyleft, same posture as the existing MPL-2.0
+  libetonyek fixtures — kept unmodified with this attribution and available upstream.
+
+### rougier-v13.1-image-filters-masks.pages
+- Original: `src/2023-iBAGS.pages` (rougier/scientific-posters, CC BY 4.0)
+- 3,048,375 bytes, md5 `2ad35243d7d50f07271db9ff4ce0f1e6`
+- `fileFormatVersion` **13.1.2**, app build **`M13.1-7037.0.101-2`** (Pages 13.1)
+- Full feature-probe output:
+  ```
+  pages | era=modern | format=13.1.2 | build=M13.1-7037.0.101-2 | flat | 1260 objects | score=7
+  textStorages=140  nonEmptyStorages=45  images=17  imagesWithFilters=1  imagesWithMask=12
+  tableCellStorage=none  hyperlinks=1  smartFields=1  inlineAttachments=1
+  listStyledParagraphs=141  isPageLayout=true  paragraphs=1  sections=1  textBoxes=121
+  namedParagraphStyles=23  namedListStyles=10  tocObjects=1  hasTOC=true  shapeInfos=121
+  ```
+- A scientific conference poster. Primary fixture for **priority 1**: carries
+  `TSD.ImageArchive.imageAdjustments` (field 14) *and* 12 masked images (field 5) in one
+  document. Also the first **page-layout** (`isPageLayout=true`) fixture in the corpus —
+  every previous `.pages` fixture is a word-processing document — plus 121 text boxes /
+  shape infos, by far the most of any file surveyed.
+- Attribution required by CC BY 4.0: © Nicolas P. Rougier, from
+  https://github.com/rougier/scientific-posters, unmodified.
+
+### vertx-v2.2-image-filters.pages
+- Original: `cover.pages` (vert-x3/vertx-guide-for-java-devs, Apache-2.0)
+- 934,324 bytes, md5 `619708c4548e4e77a2fd1b927e26df99`
+- `fileFormatVersion` **2.2.4**, app build **`M6.2-4582-1`** (Pages 6.2, iWork '16 era)
+- Full feature-probe output:
+  ```
+  pages | era=iwork16 | format=2.2.4 | build=M6.2-4582-1 | flat | 315 objects | score=5
+  textStorages=21  nonEmptyStorages=2  images=1  imagesWithFilters=1  tableCellStorage=none
+  listStyledParagraphs=21  isPageLayout=true  paragraphs=1  sections=1  textBoxes=2
+  namedParagraphStyles=24  namedListStyles=9  tocObjects=1  hasTOC=true  shapeInfos=2
+  ```
+- The **second** image-filters sample, deliberately from a much older writer (Pages 6.2,
+  2017) than the rougier poster (Pages 13.1, 2023). Only four documents in the whole sweep
+  carry `imageAdjustments` at all; having two from ~6 years apart is what makes the
+  adjustments payload diffable across writer generations. Also a second page-layout document.
+
+### draftjs-v2.3-comments.pages
+- Original: `pasting/documents/Draft.js paste test document.pages` (thibaudcolas/draftjs-filters, MIT)
+- 3,800,965 bytes, md5 `c6de7a990dfe8b8a74fc5e0b3131d12b`
+- `fileFormatVersion` **2.3.4**, app build **`M6.3.1-5249-2`** (Pages 6.3.1, iWork '16 era)
+- Full feature-probe output:
+  ```
+  pages | era=iwork16 | format=2.3.4 | build=M6.3.1-5249-2 | flat | 410 objects | score=7
+  textStorages=22  nonEmptyStorages=2  images=4  tables=1  tableCellStorage=preBNC
+  hyperlinks=3  smartFields=4  comments=3  bookmarks=1  inlineAttachments=11
+  listStyledParagraphs=33  bodyChars=1823  paragraphs=118  sections=1  textBoxes=3
+  namedParagraphStyles=24  namedListStyles=9  tocObjects=1  hasTOC=true  shapeInfos=3
+  unsupported: pre-BNC table cell storage (iWork '13-era): cell values cannot be decoded
+  ```
+- Primary (and only attributable) fixture for **comments/annotations**. Purpose-built
+  upstream as a rich-content paste-test document, so it deliberately packs comments,
+  hyperlinks, smart fields, images, a table, text boxes and 11 inline attachments into
+  1.8 KB of body text. Only 4 of the 874 modern documents surveyed contain comments at all,
+  and this is the only one whose repository carries a license file.
+- Also the corpus's second `preBNC` table-storage sample (after `tika-testPages2013.pages`),
+  and — not visible in the probe line above — **the corpus's only document containing a real
+  chart**: 1 × `TSCH.ChartDrawableArchive` plus its instance-level `ChartNonStyleArchive`,
+  `ChartAxisNonStyleArchive` (×3) and `LegendNonStyleArchive`. The probe prints no `charts=`
+  field for it because its chart regex is broken; see the Notes below.
+
+### picodocs-v14.4-headers-tables.pages
+- Original: `Tests/PicoDocsTests/Resources/sample.pages` (PicoMLX/PicoDocs, MIT)
+- 858,258 bytes, md5 `72ad84015dafe437164c6e3dc6e0b4f8`
+- `fileFormatVersion` **14.4.1**, app build **`M14.5-7045.0.17-4`** (Pages 14.5)
+- Full feature-probe output:
+  ```
+  pages | era=modern | format=14.4.1 | build=M14.5-7045.0.17-4 | flat | 1095 objects | score=8
+  textStorages=85  nonEmptyStorages=53  images=1  tables=3  tableCellStorage=v5
+  readableTableCells=3  hyperlinks=1  smartFields=1  inlineAttachments=4
+  listStyledParagraphs=88  bodyChars=1430  paragraphs=27  sections=2  nonEmptyHeaders=2
+  nonEmptyFooters=2  namedParagraphStyles=37  namedListStyles=16  tocObjects=1  hasTOC=true
+  ```
+- Same writer build as the incumbent `iwork-mcp-v14.5-sample.pages` (`M14.5-7045.0.17-4`)
+  but score 8 vs 2: it actually exercises 2 sections, headers *and* footers with text, and
+  3 v5/BNC tables with readable cells. Keep both — the pair isolates "what a 14.5 writer
+  emits for a feature-rich document" against "…for a plain one".
+
+### gomap-v26.1-newest-writer.pages
+- Original: `Architecture.pages` (bryceco/GoMap, ISC)
+- 200,315 bytes, md5 `44fffddff3487d8061389af6912a7536`
+- `fileFormatVersion` **26.1.0**, app build **`M15.2.1-7048.0.3-2`** (Pages 15.2.1)
+- Full feature-probe output:
+  ```
+  pages | era=current | format=26.1.0 | build=M15.2.1-7048.0.3-2 | flat | 768 objects | score=3
+  textStorages=49  nonEmptyStorages=27  tableCellStorage=none  listStyledParagraphs=49
+  paragraphs=1  sections=1  textBoxes=29  namedParagraphStyles=24  namedListStyles=9
+  tocObjects=1  hasTOC=true  shapeInfos=29
+  ```
+- Added for **era** rather than feature coverage. This **corrects a claim made earlier in
+  this file**: the "2026-era / modern fixtures" section states that no `.pages` with a 26.x
+  `fileFormatVersion` was found in any open-source repository. One exists. `Architecture.pages`
+  is `fileFormatVersion` **26.1.0**, written by build `M15.2.1-7048.0.3-2` — the *same*
+  newest-anywhere build as `numbers-parser-v26.1-date-formats.numbers`, so the corpus now
+  pins the current writer generation for Numbers *and* Pages.
+- Content: the Go Map!! (OpenStreetMap editor) architecture notes — a diagram-style
+  page-layout document, 29 text boxes / shape infos, no tables or media.
+- Revised "newest thing found anywhere, by app": Numbers **26.1.0** / `M15.2.1-7048.0.3-2`;
+  Pages **26.1.0** / `M15.2.1-7048.0.3-2`; Keynote 14.4.1 / `M14.5-7045.0.17-4` (unchanged —
+  no 26.x `.key` was found).
+
+### Notes
+
+- **Charts (TSCH) are covered — by `draftjs-v2.3-comments.pages` — but the probe cannot see
+  them.** `scripts/feature-probe.ts` matches charts with `/^TSCH\..*(ChartArchive|ChartInfo)$/`,
+  which matches **none** of the 64 `TSCH.*` names in `research/type-registry.json`: no name ends
+  in `ChartArchive`, and the only `ChartInfo` name — `TSCH.PreUFF.ChartInfoArchive` — ends in
+  `Archive`, so the `$` anchor fails. Every `charts=` figure the probe prints is 0 regardless
+  of content. Scanning instead for *instance-level* archives (`TSCH.ChartDrawableArchive`,
+  `TSCH.*NonStyleArchive`, `TSCH.PreUFF.Chart{Info,Grid}Archive` — **not** the `*StyleArchive`
+  families, of which every iWork document carries ~78 as theme defaults) shows 4 of the 874
+  modern documents have a real chart, `draftjs-v2.3-comments.pages` among them. The two
+  chart-richer documents found have no license file:
+  `TheAxeC/machine-learning-…-intrusion-detection-systems` `documents/poster.pages` (3 charts)
+  and `ailzy/RISKIM` `res.pages` (2). Best licensed un-taken chart candidate: `ToFuProject/tofu`
+  `Notes_Upgrades/Eurofusion/EEG-Interim_Report_template_2MS6HK_v2_0.pages` (MIT, 945 KB,
+  chart + footnote + 4 readable table cells + footer). The probe was left unmodified as
+  instructed — see `research/pages-feature-coverage.md`.
+- Rejected despite good scores, for lack of any license file at the repository root:
+  `nerds-odd-e/scrummaster-checklist` (14 footnotes + comments + 5 sections),
+  `NeutrinoSys/java-foundations-solutions` (**17 comments**, the richest comment document
+  found), `abentele/Erbele` (image filters, only 210 KB),
+  `loaydatrain/Optimizing_Millimeter_Wave_Communication` (2 image filters + 10 masks),
+  `xg1990/GCP-Data-Engineer-Study-Guide` (7 footnotes + 31 hyperlinks).
+  If licensing is ever clarified upstream, the scrummaster and NeutrinoSys files are the
+  two best remaining upgrades.
+- No existing fixture was modified or removed.

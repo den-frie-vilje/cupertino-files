@@ -126,17 +126,9 @@ export class TextStorage {
   private paragraphValues(
     tableField: number,
     starts: number[],
-    text: string,
+    _text: string,
   ): (bigint | undefined)[] {
-    const runs = this.objectRuns(tableField, text.length);
-    return starts.map((s) => {
-      let value: bigint | undefined;
-      for (const r of runs) {
-        if (r.start > s) break;
-        if (r.objectId !== undefined) value = r.objectId;
-      }
-      return value;
-    });
+    return this.effectiveObjectsAt(tableField, starts);
   }
 
   /**
@@ -158,6 +150,38 @@ export class TextStorage {
       runs.push({ start, end, objectId: refId(entries[i]!, ENTRY_OBJECT) });
     }
     return runs;
+  }
+
+  /**
+   * Effective object ids at many positions in one pass.
+   *
+   * `positions` must be ascending. Doing this per position would rescan the
+   * whole table each time, which is quadratic on long documents (a 500-
+   * paragraph body has 500 entries per paragraph-aligned table).
+   */
+  private effectiveObjectsAt(tableField: number, positions: readonly number[]): (bigint | undefined)[] {
+    const table = this.msg.getMessage(tableField);
+    if (!table) return positions.map(() => undefined);
+    const entries = table.getMessages(ATTR_TABLE_ENTRIES).map((e) => ({
+      index: e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
+      id: refId(e, ENTRY_OBJECT),
+    }));
+    const carryForward = PARA_ALIGNED_OBJECT_TABLES.includes(tableField);
+    const out: (bigint | undefined)[] = [];
+    let cursor = 0;
+    let value: bigint | undefined;
+    for (const pos of positions) {
+      while (cursor < entries.length && entries[cursor]!.index <= pos) {
+        const id = entries[cursor]!.id;
+        // A char-table entry with no object clears the run; for
+        // paragraph-aligned tables an unset entry means "carry forward".
+        if (id !== undefined) value = id;
+        else if (!carryForward) value = undefined;
+        cursor++;
+      }
+      out.push(value);
+    }
+    return out;
   }
 
   /** Effective object id at a position (last set value at or before `pos`). */
@@ -195,14 +219,14 @@ export class TextStorage {
     // Effective paragraph-aligned values must be computed BEFORE mutation.
     const newStarts = this.paragraphStarts(newText);
     const paraRebuilds = new Map<number, (bigint | undefined)[]>();
+    const oldPositions = newStarts.map((s) => {
+      // Map each new paragraph start back to a position in the old text.
+      const oldPos = s <= start ? s : s >= start + replacement.length ? s - delta : start;
+      return Math.min(Math.max(oldPos, 0), oldText.length);
+    });
     for (const f of PARA_ALIGNED_OBJECT_TABLES) {
       if (!this.msg.has(f)) continue;
-      const values = newStarts.map((s) => {
-        // Map each new paragraph start to a position in the old text.
-        const oldPos = s <= start ? s : s >= start + replacement.length ? s - delta : start;
-        return this.effectiveObjectAt(f, Math.min(oldPos, oldText.length));
-      });
-      paraRebuilds.set(f, values);
+      paraRebuilds.set(f, this.effectiveObjectsAt(f, oldPositions));
     }
 
     // 1. The text itself.

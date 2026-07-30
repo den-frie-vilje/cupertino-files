@@ -66,8 +66,21 @@ export const StorageKind = {
 } as const;
 export type StorageKind = (typeof StorageKind)[keyof typeof StorageKind];
 
-/** The object-replacement character anchoring inline attachments. */
-export const ATTACHMENT_CHAR = "￼";
+/**
+ * U+FFFC OBJECT REPLACEMENT CHARACTER — anchors entries of
+ * `table_attachment` (inline drawables, TOC and page-number attachments).
+ */
+export const ATTACHMENT_CHAR = "\uFFFC";
+
+/**
+ * U+000E SHIFT OUT — the character `table_footnote` entries anchor at.
+ *
+ * Footnote references do NOT use U+FFFC; that is reserved for the
+ * attachment table. Verified against a document with 8 real footnotes,
+ * where the U+FFFC count matched the attachment table exactly and every
+ * footnote anchor landed on U+000E.
+ */
+export const FOOTNOTE_MARK_CHAR = "\u000E";
 
 /** ObjectAttributeTable / StringAttributeTable / ParaDataAttributeTable: entries = 1. */
 export const ATTR_TABLE_ENTRIES = 1;

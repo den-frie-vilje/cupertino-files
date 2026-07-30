@@ -287,9 +287,18 @@ message ObjectAttributeTable {
 Semantics (established empirically and from app behavior):
 
 - **Text conventions:** paragraphs are terminated by `"\n"` (the final
-  paragraph's terminator is optional); inline attachments occupy one
-  `U+FFFC` character; section breaks are paragraph boundaries carrying a
-  `table_section` entry.
+  paragraph's terminator is optional); section breaks are paragraph
+  boundaries carrying a `table_section` entry.
+- **Anchor characters differ per table** — a detail that silently breaks
+  naive implementations:
+  - `U+FFFC` (OBJECT REPLACEMENT CHARACTER) anchors **`table_attachment`**
+    entries: inline drawables, table-of-contents entries, page-number
+    fields.
+  - `U+000E` (SHIFT OUT) anchors **`table_footnote`** entries — footnote and
+    endnote references. They do *not* use `U+FFFC`.
+  Verified on a document with 8 footnotes and 25 attachments: the `U+FFFC`
+  count matched the attachment table exactly, and every footnote anchor sat
+  on `U+000E`.
 - **Indexes are UTF-16 code units** — identical to JavaScript string
   indexing. (Astral characters count as 2.)
 - Entries are sorted by `character_index`; entry *i* covers characters
