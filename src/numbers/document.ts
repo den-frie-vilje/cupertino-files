@@ -12,6 +12,7 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
+import { DrawableContainer } from "../tsd/placement.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -68,6 +69,18 @@ export class NumbersDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  /**
+   * A sheet's drawable list — tables, charts, shapes and images alike.
+   *
+   * Numbers keeps one list with no separate z-order, so paint order is the
+   * list order.
+   */
+  sheetContainer(sheetId: bigint): DrawableContainer {
+    const sheet = this.store.object(sheetId);
+    if (!sheet) throw new RangeError(`sheet ${sheetId} not found`);
+    return new DrawableContainer(this.store, sheet, TN_SHEET_DRAWABLE_INFOS);
   }
 
   // ------------------------------------------------------ sheet management

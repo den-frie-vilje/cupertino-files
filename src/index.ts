@@ -94,6 +94,8 @@ export {
 } from "./tsd/drawables.ts";
 export type { DrawableStyle } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
+export { DrawableContainer, drawableById } from "./tsd/placement.ts";
+export type { DrawablePlacement } from "./tsd/placement.ts";
 export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";
 export type { ChartValue } from "./tsch/charts.ts";
 export type { ImageFilters } from "./tsd/images.ts";

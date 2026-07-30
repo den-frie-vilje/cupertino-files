@@ -15,6 +15,7 @@ import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
+import { DrawableContainer } from "../tsd/placement.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import {
@@ -192,6 +193,21 @@ export class KeynoteSlide {
       add(this.storageOfShape(this.store.resolve(ref.getVarint(1))));
     }
     return out;
+  }
+
+  /**
+   * The slide's drawable list, for adding, removing and reordering.
+   *
+   * Keynote keeps ownership and paint order in two lists, so both move
+   * together — a drawable added to only the first is owned but never drawn.
+   */
+  container(): DrawableContainer {
+    return new DrawableContainer(
+      this.store,
+      this.object,
+      Slide.OWNED_DRAWABLES,
+      Slide.DRAWABLES_Z_ORDER,
+    );
   }
 
   /** All drawables owned by this slide, in z-order where available. */

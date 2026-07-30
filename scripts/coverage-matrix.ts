@@ -368,6 +368,31 @@ const CAPABILITIES: Capability[] = [
   // --------------------------------------------------------------- drawables
   {
     group: "Drawables & media",
+    name: "Placement (copy onto a page/slide/sheet, remove, reorder in z)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(
+        () =>
+          (c.keynote?.slides().some((s) => s.container().ids().length > 0) ?? false) ||
+          (c.numbers?.sheets().some((s) => c.numbers!.sheetContainer(s.id).ids().length > 0) ?? false) ||
+          (c.pages?.floatingDrawablePages().length ?? 0) > 0,
+      ),
+    note: "one abstraction over three containers; copies are deep so the two objects are independent",
+    manualProof: {
+      claim: "A drawable we copied onto another page/slide/sheet appears there, at the geometry we set.",
+      why:
+        "The three apps store the list differently — two lists in Keynote, one in Numbers, per-page " +
+        "wrapped entries in Pages — and each app decides for itself whether an object it owns is " +
+        "renderable. Reloading through this library proves the wiring, not the rendering.",
+      how:
+        "Copy a shape to another slide and a table to another sheet, save, and open both apps: the " +
+        "object should appear where placed, be selectable, and editing it should not change the original.",
+      risk: "high",
+    },
+  },
+  {
+    group: "Drawables & media",
     name: "Drawable style (fill, stroke, opacity, shadow, reflection)",
     apps: "all",
     status: "read+write",

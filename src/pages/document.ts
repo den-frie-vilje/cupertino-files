@@ -26,6 +26,7 @@ import {
 import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
 import { Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
+import { DrawableContainer } from "../tsd/placement.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { imageDimensions } from "../base/imagesize.ts";
@@ -39,6 +40,9 @@ import {
   SettingsFields,
   TP_TYPE,
   TPDocument,
+  FloatingDrawables,
+  PageGroup,
+  DrawableEntry,
 } from "./schema.ts";
 
 export interface PageSetup {
@@ -590,6 +594,45 @@ export class PagesDocument extends IWorkDocument {
     const found = this.sections().find((s) => s.id === section.identifier);
     if (!found) throw new RangeError("section insertion failed");
     return found;
+  }
+
+  /**
+   * Floating drawables of one page, for adding, removing and reordering.
+   *
+   * Pages groups floating objects **per page**, not per section or per
+   * document: `TP.FloatingDrawablesArchive.page_groups` holds one entry per
+   * page that has any, each with background, foreground and main lists.
+   * `pageIndex` selects the group; omit it for the first one the document
+   * has. Pages with no floating objects have no group, so a document can
+   * be missing the page you ask for even though the page exists.
+   */
+  floatingDrawables(pageIndex?: number): DrawableContainer | undefined {
+    const holder = this.store.resolve(refId(this.docObject.message, TPDocument.FLOATING_DRAWABLES));
+    if (!holder) return undefined;
+    const groups = holder.message.getMessages(FloatingDrawables.PAGE_GROUPS);
+    const group =
+      pageIndex === undefined
+        ? groups[0]
+        : groups.find((g) => (g.getUint(PageGroup.PAGE_INDEX) ?? 0) === pageIndex);
+    if (!group) return undefined;
+    // The group is an inline submessage, so the container writes through
+    // the holder object it belongs to.
+    return new DrawableContainer(
+      this.store,
+      holder,
+      PageGroup.DRAWABLES,
+      undefined,
+      group,
+      DrawableEntry.DRAWABLE,
+    );
+  }
+
+  /** Page indexes that currently hold floating drawables. */
+  floatingDrawablePages(): number[] {
+    const holder = this.store.resolve(refId(this.docObject.message, TPDocument.FLOATING_DRAWABLES));
+    return (holder?.message.getMessages(FloatingDrawables.PAGE_GROUPS) ?? []).map(
+      (g) => g.getUint(PageGroup.PAGE_INDEX) ?? 0,
+    );
   }
 
   /**

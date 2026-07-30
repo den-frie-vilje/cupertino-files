@@ -67,6 +67,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
+| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent</sub> | all | ✅ read + write | 27 | iwork16→current |
 | Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 37 | all |
 | Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 37 | all |
 | Geometry (enumerate, move, resize) | all | ✅ read + write | 34 | iwork16→current |
@@ -127,13 +128,14 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-14 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+15 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
 - 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
 - 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
+- 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*

@@ -16,29 +16,42 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 14 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 15 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🔴 high | Keynote → Slide management (add, duplicate, move, remove) | Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order. | manual |
-| 2 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
-| 3 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
-| 4 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
-| 5 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
-| 6 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 7 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 8 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
-| 9 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 10 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 11 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 13 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
-| 14 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 1 | 🔴 high | Drawables & media → Placement (copy onto a page/slide/sheet, remove, reorder in z) | A drawable we copied onto another page/slide/sheet appears there, at the geometry we set. | manual |
+| 2 | 🔴 high | Keynote → Slide management (add, duplicate, move, remove) | Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order. | manual |
+| 3 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
+| 4 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
+| 5 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
+| 6 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
+| 7 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 8 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 9 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
+| 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 12 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 13 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 14 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
+| 15 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
 
-### 1. Slide management (add, duplicate, move, remove)
+### 1. Placement (copy onto a page/slide/sheet, remove, reorder in z)
+
+**Risk if wrong:** 🔴 high  
+**Group:** Drawables & media  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** A drawable we copied onto another page/slide/sheet appears there, at the geometry we set.
+
+**Why the suite cannot settle it.** The three apps store the list differently — two lists in Keynote, one in Numbers, per-page wrapped entries in Pages — and each app decides for itself whether an object it owns is renderable. Reloading through this library proves the wiring, not the rendering.
+
+**How to settle it.** Copy a shape to another slide and a table to another sheet, save, and open both apps: the object should appear where placed, be selectable, and editing it should not change the original.
+
+### 2. Slide management (add, duplicate, move, remove)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Keynote  
@@ -50,7 +63,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.
 
-### 2. Cell styling (fill, four borders, padding, alignment, wrap)
+### 3. Cell styling (fill, four borders, padding, alignment, wrap)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -62,7 +75,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a fill, four borders, padding and vertical alignment into a cell, open in Numbers, and compare against the same formatting applied by hand in the inspector. Then re-save from the app and diff our style object against what Numbers rewrote.
 
-### 3. Sheets (add, duplicate, rename, move, remove)
+### 4. Sheets (add, duplicate, rename, move, remove)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -74,7 +87,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Duplicate a sheet with formulas, rename and reorder, save, and open in Numbers: check the tab bar, that the copy's formulas point within the copy, and that editing one tab leaves the other alone.
 
-### 4. Table cell writing (text, number, date, bool, duration)
+### 5. Table cell writing (text, number, date, bool, duration)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -88,7 +101,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 5. Cell display formats (number, currency, percentage, date, duration, text, boolean)
+### 6. Cell display formats (number, currency, percentage, date, duration, text, boolean)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -100,7 +113,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a currency, percentage and date format, open in Numbers, and compare each cell against the same format applied through the Cell inspector on an untouched copy.
 
-### 6. Formula function names
+### 7. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -114,7 +127,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 7. Formula reading (AST rendered to text)
+### 8. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -126,7 +139,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 8. Merged cell ranges
+### 9. Merged cell ranges
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -138,7 +151,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).
 
-### 9. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 10. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -150,7 +163,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 10. Table styling (banded rows, grid strokes, visibility)
+### 11. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -162,7 +175,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 11. Paragraph background & borders (rule stroke + positions)
+### 12. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -174,7 +187,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 12. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 13. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -186,7 +199,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 13. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
+### 14. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -198,7 +211,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Create a style with a font colour, derive a child, clear the colour on the child, open in Pages and confirm the child shows the default colour rather than inheriting the parent's.
 
-### 14. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 15. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
