@@ -538,6 +538,47 @@ corpus contains exactly two: 0 with `"decimal"` and 2 with `"lower-roman"`.
 `string_value` is a *cache* of the last number the app rendered — writing
 one means asserting a page number nobody computed.
 
+**Two anchor characters exist, and they are not interchangeable.** An
+attachment sits at U+FFFC; a **footnote reference** sits at U+000E and lives
+in `table_footnote`, its own table. A footnote is two storages:
+
+```
+body text …\u000E…                       ← the reference character
+  table_footnote[i] → TSWP.FootnoteReferenceAttachmentArchive (2008)
+                         └ contained_storage → TSWP.StorageArchive, kind = FOOTNOTE (2)
+                              text = "\uFFFC <the note>"
+                              table_attachment[0] → TSWP.TextualAttachmentArchive
+                                                       kind = kKindFootnoteMark (2)
+```
+
+The note's own text begins with a U+FFFC — the spot where the app draws the
+footnote's number. Nothing outside the two storages registers the footnote:
+the only references are body → reference archive → note storage.
+
+### 8.4 Comments
+
+A comment is three objects. The **highlight** makes the words show
+highlighted, the **comment storage** holds the text, and the **author** is
+shared across every comment that person made:
+
+```
+table_highlight run → TSWP.HighlightArchive (2013)
+                         ├ commentStorage → TSD.CommentStorageArchive (3056)
+                         │                     ├ text, creation_date (TSP.Date, 2001 epoch)
+                         │                     └ author → TSK.AnnotationAuthorArchive (212)
+                         └ text_attribute_uuid_string — uppercase v4 UUID
+```
+
+Authors are listed in the document's single
+`TSK.AnnotationAuthorStorageArchive` (213). That sharing is load-bearing: a
+document where each comment carries its own copy of the same person looks
+right in the pane and wrong the moment someone filters by commenter, so a
+writer reuses an existing author rather than minting one, and registers any
+genuinely new author in the roster.
+
+A comment can be anchored through either `table_highlight` (a character run)
+or `table_overlapping_highlight` (a `TSP.Range`), and both occur.
+
 **Run tables and anchor tables delete differently.** An entry at exactly the
 start of a deleted range is a run boundary in `table_char_style` or
 `table_smartfield` — it must survive, or the formatting after the deletion

@@ -22,7 +22,12 @@ export { IWorkDocument, FormatInfo, detectApp } from "./tsa/document.ts";
 export type { DocumentStats } from "./tsa/document.ts";
 
 // Shared model
-export { TextStorage, OBJECT_REPLACEMENT_CHARACTER } from "./tswp/textstorage.ts";
+export {
+  TextStorage,
+  OBJECT_REPLACEMENT_CHARACTER,
+  FOOTNOTE_MARK_CHARACTER,
+  STORAGE_KIND,
+} from "./tswp/textstorage.ts";
 export {
   buildNumberAttachment,
   readNumberAttachment,
@@ -37,6 +42,19 @@ export type {
   NumberAttachmentOptions,
   PageNumberFormatName,
 } from "./tswp/fields.ts";
+export {
+  buildComment,
+  createAuthor,
+  resolveAuthor,
+  authorsOf,
+  readCommentStorage,
+  COMMENT_TYPE,
+  HighlightFields,
+  CommentStorageFields,
+  AuthorFields,
+} from "./tswp/comments.ts";
+export type { CommentInfo, AddCommentOptions } from "./tswp/comments.ts";
+export { randomUuid, isUuidString } from "./base/uuid.ts";
 export type { ParagraphInfo, StyleRun } from "./tswp/textstorage.ts";
 export {
   StylesheetModel,

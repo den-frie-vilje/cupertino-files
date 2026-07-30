@@ -45,12 +45,20 @@ import { StylesheetModel } from "../tss/stylesheet.ts";
 import { ParagraphHandle, TextRange } from "./range.ts";
 import { typeName } from "../tsp/registry.ts";
 import {
+  ATTACHMENT_TYPE,
   AttachmentKind,
+  TextualAttachment,
   buildNumberAttachment,
   readNumberAttachment,
   type NumberAttachmentInfo,
   type NumberAttachmentOptions,
 } from "./fields.ts";
+import {
+  buildComment,
+  readCommentStorage,
+  type AddCommentOptions,
+  type CommentInfo,
+} from "./comments.ts";
 
 /**
  * U+FFFC OBJECT REPLACEMENT CHARACTER — the placeholder every inline
@@ -58,6 +66,29 @@ import {
  * app renders: a page number, a footnote mark, an anchored drawable.
  */
 export const OBJECT_REPLACEMENT_CHARACTER = "\uFFFC";
+
+/**
+ * U+000E SHIFT OUT — the character a footnote *reference* occupies.
+ *
+ * Not U+FFFC. Footnote references live in their own table and use their own
+ * anchor character; the placeholder inside the note, where the number is
+ * drawn, is a U+FFFC like any other attachment. Confusing the two produces
+ * a document whose footnote marks do not appear.
+ */
+export const FOOTNOTE_MARK_CHARACTER = "\u000E";
+
+/** TSWP.StorageArchive.KindType — which container a storage belongs to. */
+export const STORAGE_KIND = {
+  BODY: 0,
+  HEADER: 1,
+  FOOTNOTE: 2,
+  TEXTBOX: 3,
+  NOTE: 4,
+  CELL: 5,
+  UNCLASSIFIED: 6,
+  TABLE_OF_CONTENTS: 7,
+  UNDEFINED: 8,
+} as const;
 
 export interface ParagraphInfo {
   index: number;
@@ -727,13 +758,30 @@ export class TextStorage {
    * pointing one character short.
    */
   insertAttachment(pos: number, objectId: bigint): void {
+    this.anchorObject(pos, objectId, Storage.TABLE_ATTACHMENT, OBJECT_REPLACEMENT_CHARACTER);
+  }
+
+  /**
+   * Insert an anchor character and point a point-anchored table at it.
+   *
+   * Two anchor characters exist and they are not interchangeable: an
+   * attachment sits at U+FFFC, a footnote reference at U+000E. Each has its
+   * own table, and putting one character in the other's table gives a
+   * document the apps render with the mark missing.
+   */
+  private anchorObject(
+    pos: number,
+    objectId: bigint,
+    tableField: number,
+    character: string,
+  ): void {
     const text = this.text;
     if (pos < 0 || pos > text.length) {
-      throw new RangeError(`insertAttachment: position ${pos} out of range (${text.length})`);
+      throw new RangeError(`anchor position ${pos} out of range (${text.length})`);
     }
-    this.replaceRange(pos, pos, OBJECT_REPLACEMENT_CHARACTER);
-    this.ensureTable(Storage.TABLE_ATTACHMENT);
-    const table = this.msg.getMessage(Storage.TABLE_ATTACHMENT)!;
+    this.replaceRange(pos, pos, character);
+    this.ensureTable(tableField);
+    const table = this.msg.getMessage(tableField)!;
     const entry = RawMessage.create();
     entry.setVarint(ENTRY_CHARACTER_INDEX, pos);
     entry.setMessage(ENTRY_OBJECT, makeRef(objectId));
@@ -742,6 +790,94 @@ export class TextStorage {
       (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
     );
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
+  }
+
+  /**
+   * Add a footnote anchored at `pos`, with `text` as its content.
+   *
+   * A footnote is two storages, not one: this one gains a U+000E reference
+   * character, and a new storage of kind FOOTNOTE holds the note itself.
+   * That note's text starts with its own U+FFFC placeholder — the spot
+   * where the app draws the footnote's number — so the note reads
+   * "<mark> your text", exactly as Apple writes it.
+   *
+   * Numbering is not set here. Which number a footnote gets depends on how
+   * many precede it and on the document's numbering settings, both of which
+   * the app resolves when it lays the document out.
+   *
+   * Returns the new footnote storage, so its text can be styled or edited
+   * like any other.
+   */
+  addFootnote(pos: number, text: string): TextStorage {
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+
+    // The note's own storage: same stylesheet as its host, so it inherits
+    // the document's footnote style rather than arriving unstyled.
+    const noteMessage = RawMessage.create();
+    noteMessage.setVarint(Storage.KIND, STORAGE_KIND.FOOTNOTE);
+    const stylesheetId = this.stylesheetId;
+    if (stylesheetId !== undefined) {
+      noteMessage.setMessage(Storage.STYLE_SHEET, makeRef(stylesheetId));
+    }
+    // A leading space so the mark and the text do not run together, which
+    // is what the corpus notes contain.
+    noteMessage.setString(Storage.TEXT, ` ${text}`);
+    const noteObject = this.store.createObject(TSWP_TYPE.STORAGE, component);
+    noteObject.setMessageBytes(noteMessage.toBytes());
+    const note = new TextStorage(this.store, noteObject);
+
+    // The mark placeholder inside the note.
+    const markMessage = RawMessage.create();
+    markMessage.setVarint(TextualAttachment.KIND, AttachmentKind.FOOTNOTE_MARK);
+    const mark = this.store.createObject(ATTACHMENT_TYPE.TEXTUAL, component);
+    mark.setMessageBytes(markMessage.toBytes());
+    note.insertAttachment(0, mark.identifier);
+    note.object.setObjectReferences([
+      ...new Set([
+        ...note.object.getObjectReferences(),
+        mark.identifier,
+        ...(stylesheetId !== undefined ? [stylesheetId] : []),
+      ]),
+    ]);
+
+    // The reference in this storage, pointing at the note.
+    const referenceMessage = RawMessage.create();
+    // An empty `super` is what every corpus reference carries.
+    referenceMessage.setMessage(FootnoteRefAttachment.SUPER, RawMessage.create());
+    referenceMessage.setMessage(
+      FootnoteRefAttachment.CONTAINED_STORAGE,
+      makeRef(noteObject.identifier),
+    );
+    const reference = this.store.createObject(TSWP_TYPE.FOOTNOTE_REF_ATTACHMENT, component);
+    reference.setMessageBytes(referenceMessage.toBytes());
+    reference.setObjectReferences([noteObject.identifier]);
+
+    this.anchorObject(pos, reference.identifier, Storage.TABLE_FOOTNOTE, FOOTNOTE_MARK_CHARACTER);
+    return note;
+  }
+
+  /**
+   * Remove a footnote: its reference character goes, and with it the note.
+   *
+   * Takes the note storage's identifier, which is what {@link footnotes}
+   * reports. The archives stay in the package; what removes the footnote is
+   * the body no longer referencing it.
+   */
+  removeFootnote(noteStorageId: bigint): boolean {
+    const table = this.msg.getMessage(Storage.TABLE_FOOTNOTE);
+    for (const entry of table?.getMessages(ATTR_TABLE_ENTRIES) ?? []) {
+      const reference = this.store.resolve(refId(entry, ENTRY_OBJECT));
+      if (refId(reference?.message, FootnoteRefAttachment.CONTAINED_STORAGE) !== noteStorageId) {
+        continue;
+      }
+      const index = entry.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
+      // Deleting the reference character drops the anchor with it, since
+      // the footnote table is point-anchored.
+      this.replaceRange(index, index + 1, "");
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -812,19 +948,23 @@ export class TextStorage {
   }
 
   /** Comments anchored in this storage (from both anchor tables). */
-  comments(): { start: number; end: number; text: string }[] {
-    const out: { start: number; end: number; text: string }[] = [];
-    const resolveComment = (highlightId: bigint | undefined): string | undefined => {
+  comments(): CommentInfo[] {
+    const out: CommentInfo[] = [];
+    const resolve = (
+      highlightId: bigint | undefined,
+      start: number,
+      end: number,
+    ): void => {
       const highlight = highlightId !== undefined ? this.store.object(highlightId) : undefined;
-      if (!highlight) return undefined;
+      if (!highlight || highlightId === undefined) return;
       const storageId = refId(highlight.message, Highlight.COMMENT_STORAGE);
       const comment = storageId !== undefined ? this.store.object(storageId) : undefined;
-      if (comment?.type !== TSD_TYPE.COMMENT_STORAGE) return undefined;
-      return comment.message.getString(CommentStorage.TEXT);
+      if (comment?.type !== TSD_TYPE.COMMENT_STORAGE) return;
+      const info = readCommentStorage(this.store, comment);
+      if (info) out.push({ ...info, start, end, highlightId });
     };
     for (const run of this.objectRuns(Storage.TABLE_HIGHLIGHT)) {
-      const text = resolveComment(run.objectId);
-      if (text !== undefined) out.push({ start: run.start, end: run.end, text });
+      resolve(run.objectId, run.start, run.end);
     }
     const overlap = this.msg.getMessage(Storage.TABLE_OVERLAPPING_HIGHLIGHT);
     if (overlap) {
@@ -832,10 +972,64 @@ export class TextStorage {
         const range = e.getMessage(OVERLAP_RANGE);
         const loc = range?.getUint(RANGE_LOCATION) ?? 0;
         const len = range?.getUint(RANGE_LENGTH) ?? 0;
-        const text = resolveComment(refId(e, OVERLAP_FIELD));
-        if (text !== undefined) out.push({ start: loc, end: loc + len, text });
+        resolve(refId(e, OVERLAP_FIELD), loc, loc + len);
       }
     }
     return out.sort((a, b) => a.start - b.start);
+  }
+
+  /**
+   * Attach a comment to [start, end).
+   *
+   * Creates the three objects a comment needs — highlight, comment storage,
+   * author — and spans the highlight over the range, which is what makes
+   * the words show highlighted. The author is *reused* by default: a
+   * document where every comment has its own copy of the same person is not
+   * what the apps produce.
+   *
+   * Returns the comment storage's identifier, which {@link removeComment}
+   * takes.
+   */
+  addComment(
+    start: number,
+    end: number,
+    text: string,
+    options: AddCommentOptions = {},
+  ): bigint {
+    const length = this.text.length;
+    if (start < 0 || end <= start || end > length) {
+      throw new RangeError(`addComment: invalid range ${start}..${end} (len ${length})`);
+    }
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const { highlight, commentStorage } = buildComment(this.store, component, text, options);
+    this.spanObject(Storage.TABLE_HIGHLIGHT, start, end, highlight.identifier);
+    return commentStorage.identifier;
+  }
+
+  /**
+   * Detach a comment. The commented text stays; the highlight goes.
+   *
+   * The archives are left in the package, as everywhere else here — what
+   * makes the comment disappear is the text no longer pointing at it.
+   */
+  removeComment(commentStorageId: bigint): boolean {
+    const found = this.comments().find(
+      (comment) => comment.commentStorageId === commentStorageId,
+    );
+    if (!found) return false;
+    this.spanObject(Storage.TABLE_HIGHLIGHT, found.start, found.end, undefined);
+    // A comment anchored through the overlapping table needs its entry
+    // dropping too; the two tables can each carry one.
+    const overlap = this.msg.getMessage(Storage.TABLE_OVERLAPPING_HIGHLIGHT);
+    if (overlap) {
+      overlap.setMessages(
+        ATTR_TABLE_ENTRIES,
+        overlap
+          .getMessages(ATTR_TABLE_ENTRIES)
+          .filter((e) => refId(e, OVERLAP_FIELD) !== found.highlightId),
+      );
+    }
+    return true;
   }
 }

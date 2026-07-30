@@ -59,6 +59,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 23 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 12 | iwork16→current |
 | Bookmarks | all | 🔍 read only | 3 | iwork16→modern |
+| Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 2 | iwork16→iwork19 |
+| Footnote creation and removal<br><sub>the reference is a U+000E in its own table; the note is a separate storage of footnote kind</sub> | Pages | ✅ read + write | 1 | iwork19→iwork19 |
 | Footnotes / endnotes<br><sub>creating footnotes is not implemented</sub> | Pages | 🔍 read only | 1 | iwork19→iwork19 |
 | Comments<br><sub>creating comments is not implemented</sub> | all | 🔍 read only | 2 | iwork16→iwork19 |
 | Change tracking (insertions/deletions)<br><sub>tables preserved and index-shifted correctly; no semantic API</sub> | all | 🔍 read only | 1 | modern→modern |
@@ -140,7 +142,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-22 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+24 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -148,6 +150,8 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**
+- 🟠 medium — Text & styles → **Comment creation and removal**
+- 🟠 medium — Text & styles → **Footnote creation and removal**
 - 🟡 low — Text & styles → **Table of contents (rules read + write, cached entries read)**
 - 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
@@ -179,6 +183,8 @@ correctly. They are listed with their reasoning and repro steps in
 
 - Container → **Nested Index.zip layout** (2)
 - Object graph → **Unknown type IDs preserved across edits** (1)
+- Text & styles → **Comment creation and removal** (2)
+- Text & styles → **Footnote creation and removal** (1)
 - Text & styles → **Footnotes / endnotes** (1)
 - Text & styles → **Comments** (2)
 - Text & styles → **Change tracking (insertions/deletions)** (1)

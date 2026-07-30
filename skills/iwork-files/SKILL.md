@@ -373,6 +373,32 @@ rather than returning an empty array or writing something wrong. Always
 check `t.hasReadableCells` / `t.storageGeneration` when file age is
 unknown.
 
+## Comments and footnotes
+
+```ts
+body.comments();          // [{ start, end, text, authorName, created, commentStorageId, … }]
+const id = body.addComment(10, 20, "Please double-check this.");
+body.addComment(30, 40, "Nit", { author: "Reviewer", created: new Date() });
+body.removeComment(id);   // the text stays; the highlight goes
+
+body.footnotes();         // [{ anchorIndex, mark, storage }]
+const note = body.addFootnote(30, "See the appendix.");
+note.replaceAll("appendix", "annex");   // the note is an ordinary TextStorage
+body.removeFootnote(note.id);
+```
+
+`addComment` **reuses the document's existing annotation author** unless you
+name another. That matters: a document where the same person appears once
+per comment looks fine in the pane and wrong the moment anyone filters by
+commenter. Passing a name reuses an author with that name or creates one and
+adds them to the document's roster.
+
+A footnote is two storages. The body gets a U+000E reference character (not
+the U+FFFC everything else uses), and the note is a separate storage whose
+text starts with its own U+FFFC — the spot where Pages draws the number.
+Numbering is Pages' job: it depends on how many footnotes precede this one
+and on the document's footnote settings.
+
 ## Page numbers
 
 A page number is **not text** — no digits live in the storage, because the
