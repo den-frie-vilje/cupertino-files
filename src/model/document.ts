@@ -1,0 +1,225 @@
+/**
+ * IWorkDocument — the app-agnostic base class for Pages, Numbers and
+ * Keynote documents. Everything built on the shared families (TSP packaging,
+ * TSWP text, TSS styles, TSD drawables) lives here; app subclasses add their
+ * own object-graph roots (TP.* / TN.* / KN.*).
+ *
+ * Version awareness: the constructor never rejects a file for being newer
+ * than this library. Instead {@link FormatInfo} surfaces the declared
+ * versions and any compatibility notes as warnings, and the RawMessage layer
+ * guarantees that unknown fields, types and components survive a load→save
+ * round-trip untouched. This is the same posture the apps themselves take
+ * (forward-compatible readers, additive schema evolution).
+ */
+import { IWorkContainer } from "../package.ts";
+import { ObjectStore, type ReferenceExtractor } from "../store.ts";
+import type { IwaObject } from "../iwa.ts";
+import { RawMessage } from "../protobuf.ts";
+import {
+  KEYNOTE_TYPES,
+  NUMBERS_TYPES,
+  PAGES_TYPES,
+  SHARED_TYPES,
+  typeName,
+  type IWorkApp,
+} from "../registry.ts";
+import { parseBinaryPlist, xmlPlistStrings, type PlistValue } from "../plist.ts";
+import { SHARED_REFERENCE_EXTRACTORS, SHARED_TYPE, StorageKind } from "./schema.ts";
+import { TextStorage } from "./textstorage.ts";
+import { StylesheetModel } from "./stylesheet.ts";
+import { DrawableModel, findDrawableCore } from "./drawables.ts";
+
+// TSP.PackageMetadata version fields.
+const PKG_READ_VERSION = 5;
+const PKG_WRITE_VERSION = 6;
+const PKG_FILE_FORMAT_VERSION = 7;
+
+/** Versions and identity read from the package (all optional, never gating). */
+export class FormatInfo {
+  /** TSP.PackageMetadata read/write/file-format version triples. */
+  readVersion: number[] = [];
+  writeVersion: number[] = [];
+  fileFormatVersion: number[] = [];
+  /** `fileFormatVersion` string from Metadata/Properties.plist (e.g. "14.1.1"). */
+  propertiesFileFormatVersion: string | undefined;
+  documentUUID: string | undefined;
+  /** Build strings from Metadata/BuildVersionHistory.plist (template + app builds). */
+  buildHistory: string[] = [];
+  /** Non-fatal compatibility observations. */
+  warnings: string[] = [];
+
+  static read(container: IWorkContainer, packageMetadata: RawMessage): FormatInfo {
+    const info = new FormatInfo();
+    info.readVersion = packageMetadata.getPackedVarints(PKG_READ_VERSION).map(Number);
+    info.writeVersion = packageMetadata.getPackedVarints(PKG_WRITE_VERSION).map(Number);
+    info.fileFormatVersion = packageMetadata.getPackedVarints(PKG_FILE_FORMAT_VERSION).map(Number);
+    const others = container.otherFiles();
+    const props = others.get("Metadata/Properties.plist");
+    if (props) {
+      try {
+        const plist = parseBinaryPlist(props) as { [k: string]: PlistValue };
+        if (typeof plist["fileFormatVersion"] === "string") {
+          info.propertiesFileFormatVersion = plist["fileFormatVersion"];
+        }
+        if (typeof plist["documentUUID"] === "string") {
+          info.documentUUID = plist["documentUUID"];
+        }
+      } catch {
+        info.warnings.push("Metadata/Properties.plist could not be parsed (non-fatal)");
+      }
+    }
+    const history = others.get("Metadata/BuildVersionHistory.plist");
+    if (history) {
+      try {
+        info.buildHistory = xmlPlistStrings(history);
+      } catch {
+        /* ignore */
+      }
+    }
+    return info;
+  }
+}
+
+export interface DocumentStats {
+  app: IWorkApp;
+  components: { name: string; objects: number }[];
+  objectCount: number;
+  typeHistogram: Map<string, number>;
+}
+
+export class IWorkDocument {
+  readonly container: IWorkContainer;
+  readonly store: ObjectStore;
+  readonly format: FormatInfo;
+
+  protected constructor(container: IWorkContainer, store: ObjectStore) {
+    this.container = container;
+    this.store = store;
+    this.format = FormatInfo.read(container, store.packageMetadata.message);
+  }
+
+  /**
+   * Load any modern iWork document, auto-detecting the app. Prefer the app
+   * subclasses' `load` when the type is known — they expose richer APIs.
+   */
+  static open(bytes: Uint8Array): IWorkDocument {
+    const container = IWorkContainer.fromBytes(bytes);
+    const app = detectApp(container);
+    const store = new ObjectStore(container, {
+      app,
+      referenceExtractors: SHARED_REFERENCE_EXTRACTORS,
+    });
+    return new IWorkDocument(container, store);
+  }
+
+  protected static loadStore(
+    bytes: Uint8Array,
+    app: IWorkApp,
+    extractors: ReadonlyMap<number, ReferenceExtractor>,
+  ): { container: IWorkContainer; store: ObjectStore } {
+    const container = IWorkContainer.fromBytes(bytes);
+    const store = new ObjectStore(container, { app, referenceExtractors: extractors });
+    return { container, store };
+  }
+
+  get app(): IWorkApp {
+    return this.store.app;
+  }
+
+  /** Every text storage in the document (bodies, headers, cells, notes …). */
+  textStorages(kind?: StorageKind): TextStorage[] {
+    const out: TextStorage[] = [];
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== SHARED_TYPE.TSWP_STORAGE) continue;
+      const storage = new TextStorage(this.store, obj);
+      if (kind === undefined || storage.kind === kind) out.push(storage);
+    }
+    return out;
+  }
+
+  /** All stylesheets (document + theme). */
+  stylesheets(): StylesheetModel[] {
+    const out: StylesheetModel[] = [];
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type === SHARED_TYPE.TSS_STYLESHEET) out.push(new StylesheetModel(this.store, obj));
+    }
+    return out;
+  }
+
+  /** Every object that carries drawable geometry (shapes, images, boxes). */
+  drawables(): DrawableModel[] {
+    const out: DrawableModel[] = [];
+    for (const { obj } of this.store.allObjects()) {
+      // Cheap pre-filter: drawable archives live in the TSD/TSWP/app ranges;
+      // findDrawableCore does the authoritative structural check.
+      try {
+        if (findDrawableCore(obj.message)) out.push(new DrawableModel(this.store, obj));
+      } catch {
+        /* opaque/corrupt payloads are skipped, never fatal */
+      }
+    }
+    return out;
+  }
+
+  /** Concatenated plain text of all in-document storages (reading order approximation). */
+  allText(): string {
+    return this.textStorages()
+      .map((s) => s.text)
+      .filter((t) => t.length > 0)
+      .join("\n");
+  }
+
+  object(id: bigint): IwaObject | undefined {
+    return this.store.object(id);
+  }
+
+  typeNameOf(obj: IwaObject): string | undefined {
+    return typeName(obj.type, this.app);
+  }
+
+  stats(): DocumentStats {
+    const histogram = new Map<string, number>();
+    let count = 0;
+    for (const { obj } of this.store.allObjects()) {
+      count++;
+      const name = typeName(obj.type, this.app) ?? `type ${obj.type}`;
+      histogram.set(name, (histogram.get(name) ?? 0) + 1);
+    }
+    return {
+      app: this.app,
+      components: this.store.components.map((c) => ({ name: c.name, objects: c.objects.length })),
+      objectCount: count,
+      typeHistogram: histogram,
+    };
+  }
+
+  /** Serialize the document back to package bytes. */
+  save(): Uint8Array {
+    return this.store.save();
+  }
+}
+
+/**
+ * Detect which app produced a container by scoring app-exclusive type IDs.
+ * Data-driven from the registry, so new type additions refine rather than
+ * break detection.
+ */
+export function detectApp(container: IWorkContainer): IWorkApp {
+  const store = new ObjectStore(container, { app: "pages" });
+  const scores: Record<IWorkApp, number> = { pages: 0, keynote: 0, numbers: 0 };
+  for (const { obj } of store.allObjects()) {
+    const t = obj.type;
+    const inShared = SHARED_TYPES[t] !== undefined;
+    if (inShared) continue;
+    if (PAGES_TYPES[t] !== undefined) scores.pages++;
+    if (KEYNOTE_TYPES[t] !== undefined) scores.keynote++;
+    if (NUMBERS_TYPES[t] !== undefined) scores.numbers++;
+  }
+  // The ambiguous low IDs (1 = app DocumentArchive in both KN and TN) cancel
+  // out; app-unique ranges (TP 10000+, KN slides, TN 12000+) decide.
+  let best: IWorkApp = "pages";
+  for (const app of ["keynote", "numbers"] as const) {
+    if (scores[app] > scores[best]) best = app;
+  }
+  return best;
+}
