@@ -446,6 +446,19 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Drawables & media",
+    name: "Image cropping (set, move, remove a mask)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.images().some((i) => i.hasMask)),
+    manualProof: {
+      claim: "a mask this library writes crops the way Apple's does",
+      why: "the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page",
+      how: "crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Drawables & media",
     name: "Image masks",
     apps: "all",
     status: "read",

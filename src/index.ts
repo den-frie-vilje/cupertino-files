@@ -94,6 +94,15 @@ export {
 } from "./tsd/drawables.ts";
 export type { DrawableStyle } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
+export {
+  MaskModel,
+  buildRectangularMask,
+  MaskFields,
+  PathSourceFields,
+  BezierPathSourceFields,
+  PathElementType,
+} from "./tsd/masks.ts";
+export type { ImageCrop, Rect } from "./tsd/masks.ts";
 export { DrawableContainer, drawableById } from "./tsd/placement.ts";
 export type { DrawablePlacement } from "./tsd/placement.ts";
 export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";

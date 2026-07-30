@@ -456,6 +456,55 @@ component**, point its `super.stylesheet` at the sheet, append to
 `styles`, add an `identifier_to_style_map` entry if it has an identifier,
 and add it under its parent in `parent_to_children_style_map`.
 
+### 8.2 Image masks: cropping
+
+Cropping does not touch the media. The image keeps its whole extent and a
+`TSD.MaskArchive` (type 3006) is laid over it — a second drawable whose
+frame is the window you see through.
+
+**The two frames are in different spaces**, and confusing them misplaces
+every crop:
+
+- the **image**'s geometry is in its parent's space (page, slide, sheet)
+  and covers the entire picture, cropped parts included;
+- the **mask**'s geometry is in the **image's** space.
+
+So the visible rectangle is `image.position + mask.position`, sized by the
+mask. That is measured rather than assumed: across the 79 masked images in
+the corpus this reading puts the visible rectangle at a non-negative
+position 78 times and the crop window inside the image 75 times, against 48
+for the alternative — and it explains the full-bleed cases exactly, where an
+image at (-91, -102) carries a mask at (91, 102) so the crop begins
+precisely at the page origin.
+
+```proto
+message TSD.MaskArchive {
+  required TSD.DrawableArchive super = 1;      // geometry = the crop window
+  optional TSD.PathSourceArchive pathsource = 2;
+}
+message TSD.BezierPathSourceArchive {
+  optional TSP.Size naturalSize = 2;           // what the path is drawn at
+  optional TSP.Path path = 3;
+}
+```
+
+Every corpus mask is a rectangle, but **not at the size it appears to be**.
+The path lives in its own coordinate space and is stretched — independently
+per axis — to `naturalSize`. Of the 79 masks, 30 write the path at exactly
+`naturalSize`, 12 at a uniform scale of it, and 37 at some other scale; one
+is a plain 100×100 reference box stretched to 860×880. So the path's own
+dimensions carry nothing beyond "this shape is a rectangle", and what sizes
+the crop is `naturalSize` — which equals the mask's frame in every file
+examined.
+
+The path Apple writes is `moveTo(0,0)`, three `lineTo`s round the corners,
+`closeSubpath`, then a redundant trailing `moveTo(0,0)`.
+
+Resizing therefore changes the geometry and `naturalSize` and leaves the
+path alone. Instant-alpha and shape crops would not be rectangles — none
+appears in any corpus file — so a mask whose path is not one is refused
+rather than flattened into a box.
+
 ## 9. The Pages document graph (TP)
 
 ```

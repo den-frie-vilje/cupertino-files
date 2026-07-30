@@ -8,6 +8,7 @@ import { pushRef } from "../tsp/schema.ts";
 
 export const TSD_TYPE = {
   IMAGE: 3005,
+  MASK: 3006,
   COMMENT_STORAGE: 3056,
 } as const;
 

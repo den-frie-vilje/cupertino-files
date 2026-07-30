@@ -373,6 +373,33 @@ rather than returning an empty array or writing something wrong. Always
 check `t.hasReadableCells` / `t.storageGeneration` when file age is
 unknown.
 
+## Cropping images
+
+Cropping in iWork does not touch the media: the image keeps its full extent
+and a **mask** defines the window you see through.
+
+```ts
+const crop = image.crop();          // undefined when the image is uncropped
+crop.window;                        // visible rect in the IMAGE's own points
+crop.visible;                       // where that lands on the page/slide
+crop.full;                          // the whole picture's frame
+
+image.setCrop({ x: 20, y: 0, width: 200, height: 150 });   // choose what shows
+image.setVisibleFrame({ x: 72, y: 90, width: 200, height: 150 }); // place the result
+image.removeCrop();                 // show the whole picture again
+```
+
+The one thing to get right: **the mask's frame is in the image's coordinate
+space, not the page's**, so `visible = image.position + window.position`.
+`setCrop` moves the window over the picture — the result moves on the page
+too. `setVisibleFrame` does the opposite: it keeps the same part of the
+picture visible and puts it where you ask.
+
+Cropping an image that has no mask creates one. Non-rectangular masks
+(instant alpha, shape crops) are read but never rewritten — `crop().isRectangular`
+says which you have, and resizing a non-rectangular one throws rather than
+flattening the cut-out into a box.
+
 ## Editing text in Numbers/Keynote
 
 Beyond tables and slides, edit through the shared storages:

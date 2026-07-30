@@ -10,9 +10,10 @@
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { SizeFields } from "../tsp/schema.ts";
+import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
 import { DrawableModel } from "./drawables.ts";
 import { Image, TSD_TYPE } from "./schema.ts";
+import { buildRectangularMask, MaskModel, type ImageCrop, type Rect } from "./masks.ts";
 
 /** TSD.ImageArchive: imageAdjustments = 14, plus the media variants. */
 const IMAGE_ADJUSTMENTS = 14;
@@ -173,6 +174,109 @@ export class ImageModel extends DrawableModel {
   /** True when the image is clipped by a mask (shape crop / instant alpha). */
   get hasMask(): boolean {
     return this.object.message.has(Image.MASK);
+  }
+
+  /** The mask drawable defining the crop, if the image has one. */
+  mask(): MaskModel | undefined {
+    const target = this.store.resolve(refId(this.object.message, Image.MASK));
+    return target ? new MaskModel(this.store, target) : undefined;
+  }
+
+  /**
+   * The crop, in both the spaces that matter.
+   *
+   * `window` is the visible rectangle in the image's own coordinates —
+   * which part of the picture shows. `visible` is where that lands in the
+   * image's parent, which is `image.position + mask.position` (see
+   * `docs/FORMAT.md` §8.2). An uncropped image has no crop at all.
+   */
+  crop(): ImageCrop | undefined {
+    const mask = this.mask();
+    const image = this.geometry();
+    const window = mask?.geometry();
+    if (!mask || !image || !window) return undefined;
+    const full = {
+      x: image.x ?? 0,
+      y: image.y ?? 0,
+      width: image.width ?? 0,
+      height: image.height ?? 0,
+    };
+    const rect = {
+      x: window.x ?? 0,
+      y: window.y ?? 0,
+      width: window.width ?? 0,
+      height: window.height ?? 0,
+    };
+    return {
+      window: rect,
+      visible: { x: full.x + rect.x, y: full.y + rect.y, width: rect.width, height: rect.height },
+      full,
+      isRectangular: mask.isRectangular,
+    };
+  }
+
+  /**
+   * Choose which part of the picture shows, in image-local points.
+   *
+   * The visible rectangle moves with the window: cropping to `{x: 10, …}`
+   * shifts what appears on the page 10pt right, because the window is
+   * positioned relative to the image. To keep the result where it was, call
+   * {@link setVisibleFrame} afterwards — or use it instead, which does both.
+   *
+   * An image with no mask gets one, built as the rectangle Apple writes.
+   */
+  setCrop(window: Rect): void {
+    const existing = this.mask();
+    if (existing) {
+      existing.setGeometry({ x: window.x, y: window.y });
+      existing.setSize(window.width, window.height);
+      return;
+    }
+    const component = this.store.componentOf(this.object.identifier);
+    if (!component) {
+      throw new RangeError(`image ${this.id} is not in a component; cannot add a mask`);
+    }
+    const mask = buildRectangularMask(this.store, window, component);
+    this.object.message.setMessage(Image.MASK, makeRef(mask.identifier));
+    this.object.setObjectReferences([
+      ...new Set([...this.object.getObjectReferences(), mask.identifier]),
+    ]);
+  }
+
+  /**
+   * Place the cropped result at a rectangle in the parent's space.
+   *
+   * Keeps the same part of the picture visible: the image slides so that
+   * `image.position + mask.position` lands on `frame`, and the window is
+   * resized in place. This is the operation "move and resize the cropped
+   * image", as opposed to {@link setCrop}'s "choose what shows".
+   */
+  setVisibleFrame(frame: Rect): void {
+    const crop = this.crop();
+    if (!crop) {
+      this.setGeometry(frame);
+      return;
+    }
+    this.setGeometry({ x: frame.x - crop.window.x, y: frame.y - crop.window.y });
+    this.mask()!.setSize(frame.width, frame.height);
+  }
+
+  /**
+   * Show the whole picture again.
+   *
+   * The mask object is left in the package — something else may reference
+   * it, and this library never collects the graph — but the image no longer
+   * points at it, so the full extent shows at the image's own frame. That
+   * frame is larger than the crop was, which is the point.
+   */
+  removeCrop(): boolean {
+    if (!this.hasMask) return false;
+    const maskId = refId(this.object.message, Image.MASK);
+    this.object.message.remove(Image.MASK);
+    this.object.setObjectReferences(
+      this.object.getObjectReferences().filter((id) => id !== maskId),
+    );
+    return true;
   }
 
   /** True when any image filter is applied. */
