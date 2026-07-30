@@ -310,3 +310,38 @@ describe("older-reader compatibility diffs", () => {
     }
   });
 });
+
+describe("current-era Pages document (26.x)", () => {
+  it("classifies and reads the newest available Pages writer", () => {
+    // Format 26.1.0, written by build M15.2.1 — the same build that wrote
+    // the newest Numbers fixtures. Its build history records edits by three
+    // app generations, so it also exercises multi-generation provenance.
+    const doc = PagesDocument.load(fixture("gomap-v26.1-newest-writer.pages"));
+    const report = doc.compatibility();
+    expect(report.era).toBe("current");
+    expect(report.formatVersion!.toString()).toBe("26.1.0");
+    expect(report.appBuilds.join(" ")).toContain("M15.2.1");
+    expect(report.appBuilds.length).toBeGreaterThan(2);
+    expect(report.unsupportedFeatures.length).toBe(0);
+    expect(report.canRoundTrip).toBe(true);
+    expect(report.probe.hasVersionedStyleSnapshots).toBe(true);
+
+    // The document model works on it, not just the compatibility layer.
+    expect(doc.textBoxes().length).toBeGreaterThan(0);
+    expect(doc.paragraphStyles().some((s) => s.name === "Body")).toBe(true);
+    expect(doc.sections().length).toBeGreaterThan(0);
+  });
+
+  it("edits and round-trips a 26.x document", () => {
+    const doc = PagesDocument.load(fixture("gomap-v26.1-newest-writer.pages"));
+    const box = doc.textBoxes().find((t) => t.storage.text.trim().length > 5)!;
+    const storageId = box.storage.id;
+    const before = box.storage.text;
+    box.storage.replaceRange(0, 1, before[0]!.toUpperCase());
+
+    const reloaded = PagesDocument.load(doc.save());
+    const after = reloaded.textBoxes().find((t) => t.storage.id === storageId)!;
+    expect(after.storage.text.length).toBe(before.length);
+    expect(reloaded.compatibility().formatVersion!.toString()).toBe("26.1.0");
+  });
+});

@@ -59,7 +59,10 @@ function inventory(path: string): FeatureInventory {
         /* opaque payload */
       }
     }
-    if (/^TSCH\..*(ChartArchive|ChartInfo)$/.test(name)) charts++;
+    // The chart placed on a canvas is TSCH.ChartDrawableArchive (and its
+    // PreUFF ancestor). Matching on "…ChartArchive$" finds nothing — no
+    // registered TSCH name ends that way.
+    if (name === "TSCH.ChartDrawableArchive" || name === "TSCH.PreUFF.ChartInfoArchive") charts++;
   }
   features["images"] = images;
   features["imagesWithFilters"] = imagesWithFilters;
