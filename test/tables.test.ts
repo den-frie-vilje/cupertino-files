@@ -774,15 +774,34 @@ describe("formulas", () => {
     expect(formula.formula).toContain(":");
   });
 
-  it("marks references into another table instead of faking a local address", () => {
-    // The target table's name is not recoverable, and rendering these as
-    // bare `A2` would read as a cell in the formula's own table.
+  it("names the table a cross-table reference points at", () => {
+    // Rendering these as a bare `A2` would read as a cell in the formula's
+    // *own* table. The target is a calc-engine owner UUID, resolved through
+    // the formula-owner map — see test/owners.test.ts.
     const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-categories.numbers"));
     const table = doc.tables().find((t) => t.name === "Categories")!;
     const detail = table.cellFormulaDetail(1, 0)!;
     expect(detail.hasCrossTableReferences).toBe(true);
-    expect(detail.text).toContain(CROSS_TABLE_PREFIX);
-    expect(detail.text).toBe(`=${CROSS_TABLE_PREFIX}A2`);
+    expect(detail.hasUnnamedCrossTables).toBe(false);
+    expect(detail.text).toBe("=Uncategorized::A2");
+    expect(detail.text).not.toContain(CROSS_TABLE_PREFIX);
+  });
+
+  it("falls back to the marker when no owner map is supplied", () => {
+    // renderFormula on its own cannot resolve an owner UUID; the honest
+    // rendering is then the marker, never a bare local-looking address.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-categories.numbers"));
+    const table = doc.tables().find((t) => t.name === "Categories")!;
+    const formulaId = table.formulaId(1, 0)!;
+    const store = (table as unknown as { store: typeof doc.store }).store;
+    const dataStore = table.object.message.getMessage(4)!;
+    const list = store.object(dataStore.getMessage(6)!.getVarint(1)!)!;
+    const entry = list.message
+      .getMessages(3)
+      .find((e) => e.getUint(1) === formulaId)!;
+    const bare = renderFormula(entry.getMessage(5), { row: 1, column: 0 });
+    expect(bare.hasUnnamedCrossTables).toBe(true);
+    expect(bare.text).toBe(`=${CROSS_TABLE_PREFIX}A2`);
   });
 
   it("reports unknown function ids rather than inventing names", () => {

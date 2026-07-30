@@ -263,6 +263,17 @@ export {
 } from "./tst/categories.ts";
 export type { CategoryGroup, GroupColumn, GroupValue, ColumnAggregate } from "./tst/categories.ts";
 export { ColumnRowUidMap, uidMapOf, readUid, uidKey, UidMapFields } from "./tst/uidmap.ts";
+export {
+  FormulaOwnerRegistry,
+  ownerKey,
+  readOwnerUid,
+  readCfUid,
+  OwnerKind,
+  FormulaOwnerFields,
+  FORMULA_OWNER_DEPENDENCIES,
+  HAUNTED_OWNER,
+} from "./tsce/owners.ts";
+export type { FormulaOwner, OwnerUid } from "./tsce/owners.ts";
 export type { Uid } from "./tst/uidmap.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";

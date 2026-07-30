@@ -23,10 +23,16 @@
  *    contains. Known ids render by name; unknown ones render as
  *    `FUNCTION_<id>` so a reader can see exactly what is missing rather
  *    than being handed a plausible guess.
+ *
+ * A reference into *another* table names a calc-engine owner rather than a
+ * table, so rendering one requires the owner map in `src/tsce/owners.ts`.
+ * Pass it as {@link RenderOptions.owners} and `OTHER_TABLE::A2` becomes
+ * `Revenue::A2`; `TableModel.cellFormula` does this for you.
  */
 import type { RawMessage } from "../base/protobuf.ts";
 import { decodeDecimal128 } from "./tables.ts";
 import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
+import { readCfUid } from "../tsce/owners.ts";
 
 /** TSCE.FormulaArchive. */
 export const FormulaFields = {
@@ -76,14 +82,16 @@ const ColonTractFields = {
 const TractRangeFields = { BEGIN: 1, END: 2 } as const;
 
 /**
- * Marker for a reference into another table.
+ * Marker for a reference into a table this renderer could not name.
  *
- * The target's name is not recoverable: the `table_id` in the AST is a
- * *derived* UUID that matches no table's own identifier — the same
- * derivation Apple uses for merge owners — and the calc engine's
- * dependency records do not map it back either. Rendering such a reference
- * as a bare `A2` would be actively wrong, since it reads as a cell in the
- * formula's own table, so the marker stays until the mapping is understood.
+ * The AST stores the target as a calc-engine **owner UUID**, not anything
+ * resembling a table. Pass a {@link RenderOptions.owners} registry and the
+ * reference renders as `Revenue::A2`; without one — or for the handful of
+ * owners a document does not resolve — it falls back to this marker,
+ * because rendering a bare `A2` would read as a cell in the formula's *own*
+ * table and be actively wrong.
+ *
+ * See `src/tsce/owners.ts` for how the mapping works.
  */
 export const CROSS_TABLE_PREFIX = "OTHER_TABLE::";
 
@@ -275,11 +283,14 @@ export interface RenderedFormula {
   unknownFunctions: number[];
   /** Node types encountered that the renderer has no rule for. */
   unknownNodeTypes: number[];
-  /**
-   * True when the formula reaches into another table, whose name is not
-   * recoverable — such references carry {@link CROSS_TABLE_PREFIX}.
-   */
+  /** True when the formula reaches into another table. */
   hasCrossTableReferences: boolean;
+  /**
+   * True when at least one of those references could not be named, and so
+   * rendered with {@link CROSS_TABLE_PREFIX}. Naming needs an owner
+   * registry — see {@link RenderOptions.owners}.
+   */
+  hasUnnamedCrossTables: boolean;
 }
 
 interface Operand {
@@ -295,6 +306,27 @@ export interface RenderOptions {
    * Defaults to {@link SELF_CELL_MARKER}.
    */
   selfCell?: string;
+  /**
+   * Resolves a cross-table reference's owner UUID to a table name, turning
+   * `OTHER_TABLE::A2` into `Revenue::A2`. Supply a
+   * {@link ../tsce/owners.ts FormulaOwnerRegistry}, or any function with
+   * the same shape.
+   */
+  owners?: { tableName(uid: { lo: bigint; hi: bigint } | undefined): string | undefined };
+}
+
+/**
+ * The table a cross-table node points at, when the caller can name it.
+ *
+ * Apple quotes a table name in a formula only when it needs to; a name with
+ * a space or a character that would parse as an operator is wrapped in
+ * single quotes, with embedded quotes doubled.
+ */
+function crossTableName(node: RawMessage, options: RenderOptions): string | undefined {
+  const info = node.getMessage(AstNodeFields.CROSS_TABLE_INFO);
+  const name = options.owners?.tableName(readCfUid(info?.getMessage(1)));
+  if (name === undefined) return undefined;
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`;
 }
 
 /**
@@ -312,9 +344,16 @@ export function renderFormula(
   const unknownFunctions: number[] = [];
   const unknownNodeTypes: number[] = [];
   let hasCrossTableReferences = false;
+  const unnamedCrossTables = new Set<string>();
   const nodes = formula?.getMessage(FormulaFields.AST_NODE_ARRAY)?.getMessages(AstNodeArrayFields.NODES);
   if (!nodes || nodes.length === 0) {
-    return { text: "", unknownFunctions, unknownNodeTypes, hasCrossTableReferences };
+    return {
+      text: "",
+      unknownFunctions,
+      unknownNodeTypes,
+      hasCrossTableReferences,
+      hasUnnamedCrossTables: false,
+    };
   }
 
   const stack: Operand[] = [];
@@ -419,10 +458,14 @@ export function renderFormula(
         const crossTable = node.has(AstNodeFields.CROSS_TABLE_INFO);
         if (crossTable) hasCrossTableReferences = true;
         const address = renderCellReference(node, origin);
-        stack.push({
-          text: crossTable && address !== "#REF!" ? `${CROSS_TABLE_PREFIX}${address}` : address,
-          precedence: PRIMARY_PRECEDENCE,
-        });
+        let text = address;
+        if (crossTable && address !== "#REF!") {
+          const name = crossTableName(node, options);
+          if (name !== undefined) unnamedCrossTables.delete(name);
+          text = `${name ?? CROSS_TABLE_PREFIX.slice(0, -2)}::${address}`;
+          if (name === undefined) unnamedCrossTables.add(CROSS_TABLE_PREFIX);
+        }
+        stack.push({ text, precedence: PRIMARY_PRECEDENCE });
         break;
       }
       case AstNodeType.LINKED_CELL_REFERENCE:
@@ -494,6 +537,7 @@ export function renderFormula(
     unknownFunctions,
     unknownNodeTypes,
     hasCrossTableReferences,
+    hasUnnamedCrossTables: unnamedCrossTables.size > 0,
   };
 }
 

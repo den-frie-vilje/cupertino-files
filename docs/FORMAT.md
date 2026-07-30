@@ -1310,6 +1310,47 @@ holding Apple's template numbers — the apps replace those wholesale on
 first edit, so it must be cleared once real data is written. `is_dirty`
 tells the app the chart needs redrawing.
 
+### 14.11 Calc-engine formula owners: naming a cross-table reference
+
+The calc engine does not address tables by object id. Every table gets an
+**owner UUID**, and every structure that owns formulas on it — merges,
+conditional styles, hidden states, categories — gets a *derived* owner UUID.
+A cross-table formula reference stores one of these, which is why the target
+looks unnameable until the map is built.
+
+```proto
+message TSCE.FormulaOwnerDependenciesArchive {   // type 4008
+  required TSP.UUID formula_owner_uid = 1;
+  required uint32 internal_formula_owner_id = 2;
+  optional uint32 owner_kind = 3;
+  optional TSP.Reference formula_owner = 11;     // the object, when it has one
+  optional TSP.UUID base_owner_uid = 12;         // the table this derives from
+}
+```
+
+**Resolution is two hops.** An entry carrying `formula_owner` names its
+object; a derived entry follows `base_owner_uid` to the entry that does.
+Across the corpus that resolves 418 of 524 owners, and every resolution
+lands on a `TST.TableInfoArchive` — nothing else. A table also states its own
+owner through `TableModelArchive.haunted_owner` (field 84), which agrees in
+all 34 cases where both exist.
+
+`TSP.CFUUIDArchive` and `TSP.UUID` are **the same 128 bits in different
+clothes**: the AST writes four `uint32` words, the calc engine two
+`uint64`s, packed `lo = w0 | w1<<32`, `hi = w2 | w3<<32`. That equivalence
+is what lets an AST's `table_id` be looked up in the owner map at all.
+
+Derived UUIDs are additionally *computable* in current files —
+`formula_owner_uid == base_owner_uid + owner_kind` in the low 64 bits, true
+for 339 of the 409 entries carrying a base — but older files use unrelated
+random UUIDs, so a reader must follow the stored base rather than the
+arithmetic.
+
+One `owner_kind` is a sentinel rather than an identity: **kind 200 is the
+document**, and every kind-200 owner in every corpus file, across all three
+apps and every era, has the same hardcoded `uid = 666` derived from
+`base = 466`. It names no table because it is not one.
+
 ## 15. Known gaps / roadmap
 
 - **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)
@@ -1329,9 +1370,10 @@ tells the app the chart needs redrawing.
   building a `TSCE.FormulaArchive` AST needs the function-index table the
   format does not contain plus the calc-engine dependency records.
 - **Writing merge ranges** is blocked on calc-engine identity: a merge is a
-  formula owned by a UUID that is *not* the table's own (§14.4), so
-  synthesizing one means inventing a calc-engine identifier. Reading merges
-  is fully supported.
+  formula owned by a UUID derived from the table's own (§14.4, §14.11).
+  Reading and *naming* those owners is now supported, so this is no longer
+  blocked on understanding — it needs the owner entry, its dependency
+  records and the merge formula written together and checked in an app.
 - Chart **appearance** — type, colours, axis settings, legend — is read as
   opaque style references. The data grid is editable (§14.10); restyling a
   chart needs the TSCH style model on top of this substrate.

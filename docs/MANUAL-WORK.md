@@ -133,30 +133,29 @@ inspector, but 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.
 
 ---
 
-## Protocol 3 — Name a cross-table formula reference
+## Protocol 3 — Name a cross-table formula reference — **SOLVED, no manual work needed**
 
-**What it produces:** a way to resolve the `table_id` inside
-`AST_cross_table_reference_extra_info` to a table, replacing the
-`OTHER_TABLE::` placeholder.
+Kept as a record of how it was closed, because the reasoning generalises to
+the other identity puzzles in this format.
 
-**Why:** the UUID matches no table's own identifier. It is *derived* — in
-every file examined it differs from the table's UUID by a small delta in
-one half, the same pattern used for merge owners — and the calc engine's
-dependency records do not map it back either.
+**The question was:** an AST's `table_id` is a UUID that matches no table's
+own identifier, so a reference into another table could only render as
+`OTHER_TABLE::A2`.
 
-**Procedure:**
+**The answer:** it is not a table identifier at all — it is a *calc-engine
+owner* identifier. `TSCE.FormulaOwnerDependenciesArchive` (type 4008) maps
+every owner UUID to the object that owns it, directly through
+`formula_owner` or, for derived owners, through `base_owner_uid` to the
+entry that carries one. All 1020 cross-table references in the corpus now
+resolve to real table names. See `docs/FORMAT.md` §14.11.
 
-1. In Numbers, create a document with three tables named distinctly, and in
-   table 1 write a formula referencing a known cell in each of tables 2
-   and 3.
-2. Save, and dump both tables' UUID-shaped fields alongside the `table_id`
-   in each formula's AST (`node.getMessage(28)`).
-3. With three known pairs, the derivation should be readable — a fixed
-   offset, a discriminator byte, or a lookup through a structure not yet
-   examined. Record the finding, then implement and test it.
+**What made it findable**, for next time: the proto for the *archive that
+uses* an identifier rarely explains it. The explanation was in the archive
+that *issues* identifiers — the dependency tracker — which nothing in the
+table schema points at. When an identifier looks underivable, look for a
+registry archive elsewhere in the same family before assuming a derivation.
 
-This one is open research rather than a checklist. Record what you learn
-even if it does not resolve, so the next attempt starts further along.
+---
 
 ## Protocol 4 — Map the `predicate_type` enum
 
@@ -220,7 +219,7 @@ knowing it did.
 |---|---|---|---|---|
 | — | 1 — function index | — | **not yet run.** `src/tst/function-names.ts` is empty; only the corpus-proven entry (168 = SUM) is in effect. | — |
 | — | 2 — border positions | — | **not yet run.** Mapping remains inferred. | — |
-| — | 3 — cross-table names | — | **not yet run.** References render with the `OTHER_TABLE::` marker. | — |
+| 2026-07-31 | 3 — cross-table names | n/a — file analysis only | **SOLVED without an app.** The AST's `table_id` is a calc-engine *owner* id, mapped by `TSCE.FormulaOwnerDependenciesArchive`. All 1020 cross-table references in the corpus now name their table. | `src/tsce/owners.ts`, `test/owners.test.ts` |
 | — | 4 — predicate_type enum | — | **not yet run.** Two values known from file analysis (5 = `=`, 9 = `<`); rule authoring stays unimplemented. | — |
 
 ### Findings that came out of file analysis alone
@@ -235,6 +234,10 @@ even though they needed no app:
 | `TSP.Color` gained an undocumented fixed32 at field 13 in the 26.x era | Present only in 26.x files, always paired with an explicit `rgbspace`, always exactly 1.0 across every document examined. |
 | Cell and table styles have no shadow field | `TST.CellStylePropertiesArchive` and `TableStylePropertiesArchive` contain none; shadows are on the drawable's `ShapeStyleArchive`/`MediaStyleArchive`. |
 | Media style bags omit `fill`, shifting later fields down one | Confirmed structurally on 1475 style objects: field 2 is a message in a shape bag and a float in a media bag. |
+| An AST cross-table `table_id` is a **calc-engine owner id**, not a table id | `TSCE.FormulaOwnerDependenciesArchive` maps owner → object; 418 of 524 owners resolve and every one lands on a `TST.TableInfoArchive`. |
+| `TSP.CFUUIDArchive` and `TSP.UUID` are the same 128 bits | Four `uint32` words pack as `lo = w0 \| w1<<32`, `hi = w2 \| w3<<32`; the AST's CFUUID then matches the calc engine's UUID exactly. |
+| Derived owner ids are `base + owner_kind` in current files | Holds for 339 of 409 entries carrying a base; older files use unrelated random UUIDs, so the stored `base_owner_uid` is authoritative. |
+| `owner_kind` 200 is the **document**, with a hardcoded identity | Every kind-200 owner in all 23 files that have one, across three apps and every era, is `uid = 666` derived from `base = 466`. |
 | Conditional formatting and filters share one predicate archive | `TST.FormulaPredicateArchive` is the rule body in both `ConditionalStyleSetArchive` and `FilterRuleArchive`, told apart only by `for_conditional_style`. |
 | `predicate_type` 5 = `=` and 9 = `<` | The three rule sets in `numbers-parser-v26.1-xlsx-lineage.numbers` each carry a formula whose terminal AST node is the documented comparison enum, independently stating the condition. |
 | Conditional rule sets are interned and refcounted like strings | In the same fixture, three sets cover 1921 cells and each data-list `refcount` (957/734/230) equals its cell count exactly. |

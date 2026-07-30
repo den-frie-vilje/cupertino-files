@@ -11,7 +11,11 @@ export function expect(actual: unknown): {
   toContain(item: unknown): void;
   toContainEqual(item: unknown): void;
   toThrow(): void;
-  not: { toBe(expected: unknown): void; toEqual(expected: unknown): void };
+  not: {
+    toBe(expected: unknown): void;
+    toEqual(expected: unknown): void;
+    toContain(needle: string): void;
+  };
 } {
   return {
     toBe(expected) {
@@ -63,6 +67,12 @@ export function expect(actual: unknown): {
       },
       toEqual(expected) {
         assert.notDeepStrictEqual(actual, expected);
+      },
+      toContain(needle) {
+        assert.ok(
+          typeof actual === "string" && !actual.includes(needle),
+          `expected ${JSON.stringify(actual)} not to contain ${JSON.stringify(needle)}`,
+        );
       },
     },
   };

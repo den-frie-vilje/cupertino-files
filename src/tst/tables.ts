@@ -34,6 +34,13 @@ import {
   type TableCategories,
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
+import { FormulaOwnerRegistry } from "../tsce/owners.ts";
+
+/**
+ * One owner registry per store, kept weakly so a closed document is not
+ * held alive by its formula cache.
+ */
+const OWNER_REGISTRIES = new WeakMap<ObjectStore, FormulaOwnerRegistry>();
 import {
   flagForFormat,
   readFormat,
@@ -609,7 +616,24 @@ export class TableModel {
     if (id === undefined) return undefined;
     const formula = this.formulaTable().get(id);
     if (!formula) return undefined;
-    return renderFormula(formula, { row, column });
+    return renderFormula(formula, { row, column }, { owners: this.owners() });
+  }
+
+  /**
+   * The document's calc-engine owner map, built once and cached.
+   *
+   * What turns a cross-table reference from an unnameable identity into
+   * `Revenue::A2`. Scanning every object to build it is not something to do
+   * per formula, so it is memoised on the store — a document's owners do
+   * not change while its formulas are being read.
+   */
+  private owners(): FormulaOwnerRegistry {
+    let registry = OWNER_REGISTRIES.get(this.store);
+    if (!registry) {
+      registry = new FormulaOwnerRegistry(this.store);
+      OWNER_REGISTRIES.set(this.store, registry);
+    }
+    return registry;
   }
 
   /** `formula_id` of a cell, if its record carries one. */
