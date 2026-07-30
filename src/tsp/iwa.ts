@@ -31,6 +31,7 @@ const MSG_LENGTH = 3;
 const MSG_FIELD_INFOS = 4;
 const MSG_OBJECT_REFERENCES = 5;
 const MSG_DATA_REFERENCES = 6;
+const MSG_DIFF_MERGE_VERSION = 8;
 
 /** One object inside an IWA component. */
 export class IwaObject {
@@ -98,6 +99,33 @@ export class IwaObject {
   /** Message types of every payload, in order. */
   get payloadTypes(): number[] {
     return this.messageInfos.map((info) => info.getUint(MSG_TYPE) ?? 0);
+  }
+
+  /**
+   * Reader versions targeted by this archive's compatibility diffs.
+   *
+   * Apple stores, alongside the current message, one type-0 patch per older
+   * reader version (`MessageInfo.diff_merge_version`), so an older app
+   * opening the document applies the diff matching its own version — the
+   * object-level counterpart of the `styles_for_*` stylesheet snapshots.
+   * Observed on TN.UIStateArchive targeting 11.0 / 10.1 / 10.0.
+   */
+  compatibilityPatchVersions(): number[][] {
+    const out: number[][] = [];
+    for (const info of this.messageInfos) {
+      if ((info.getUint(MSG_TYPE) ?? 0) !== 0) continue;
+      out.push(info.getPackedVarints(MSG_DIFF_MERGE_VERSION).map(Number));
+    }
+    return out;
+  }
+
+  /**
+   * True when editing this object's primary payload would leave its
+   * older-reader compatibility diffs stale. This library preserves those
+   * diffs verbatim; it does not recompute them.
+   */
+  get hasCompatibilityPatches(): boolean {
+    return this.compatibilityPatchVersions().length > 0;
   }
 
   /**

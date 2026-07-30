@@ -264,3 +264,49 @@ describe("multi-payload archives (modern documents)", () => {
     expect(older.compatibility().probe.hasVersionedStyleSnapshots).toBe(false);
   });
 });
+
+describe("older-reader compatibility diffs", () => {
+  it("identifies type-0 patches and the reader versions they target", () => {
+    // Numbers 26.1 stores TN.UIStateArchive as a current message plus one
+    // type-0 diff per older reader version (11.0, 10.1, 10.0) — the
+    // object-level analogue of the styles_for_* stylesheet snapshots.
+    const doc = IWorkDocument.open(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const patched = [...doc.store.allObjects()].filter(({ obj }) => obj.isPatchArchive);
+    expect(patched.length).toBeGreaterThan(0);
+
+    const { obj } = patched[0]!;
+    expect(obj.hasCompatibilityPatches).toBe(true);
+    const targets = obj.compatibilityPatchVersions();
+    expect(targets.length).toBeGreaterThan(0);
+    // Each diff names the reader version it is for.
+    expect(targets.every((v) => v.length > 0)).toBe(true);
+    // The base payload is a real typed message; the diffs are type 0.
+    expect(obj.payloadTypes[0] !== 0).toBe(true);
+    expect(obj.payloadTypes.slice(1).every((t) => t === 0)).toBe(true);
+
+    // Reported as a warning, never as a load failure or unsupported feature.
+    const report = doc.compatibility();
+    expect(report.probe.patchArchiveCount).toBeGreaterThan(0);
+    expect(report.canRoundTrip).toBe(true);
+    expect(report.warnings.join(" ")).toContain("older-reader compatibility diffs");
+  });
+
+  it("reports nothing stale when edits avoid patched objects", () => {
+    const doc = IWorkDocument.open(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const storage = doc.textStorages().find((s) => s.text.length > 0);
+    if (storage) storage.replaceAll(storage.text.slice(0, 1), storage.text.slice(0, 1));
+    // Editing ordinary content must not touch UI-state objects.
+    expect(doc.store.staleCompatibilityPatches().length).toBe(0);
+  });
+
+  it("classifies the newest fixtures as the current era with readable cells", () => {
+    for (const name of ["numbers-parser-v26.0-issue102.numbers", "numbers-parser-v26.1-date-formats.numbers"]) {
+      const doc = IWorkDocument.open(fixture(name));
+      const report = doc.compatibility();
+      expect(report.era).toBe("current");
+      expect(report.formatVersion!.major).toBe(26);
+      expect(report.probe.cellStorage).toBe("v5");
+      expect(report.unsupportedFeatures.length).toBe(0);
+    }
+  });
+});

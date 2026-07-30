@@ -281,10 +281,11 @@ export function buildCompatibilityReport(inputs: CompatibilityInputs): Compatibi
   }
   if (probe.patchArchiveCount > 0) {
     warnings.push(
-      `${probe.patchArchiveCount} archive(s) use the merge/patch encoding; they are preserved ` +
-        `as-is and their diff payloads are not interpreted.`,
+      `${probe.patchArchiveCount} archive(s) carry older-reader compatibility diffs ` +
+        `(type-0 patches tagged with diff_merge_version). They are preserved verbatim but not ` +
+        `recomputed, so editing such an object would leave its diffs stale for older apps. ` +
+        `Observed only on UI-state objects, which this library does not modify.`,
     );
-    unsupportedFeatures.push("merge/patch archives (should_merge)");
   }
   if (probe.multiPayloadArchiveCount > 0) {
     warnings.push(

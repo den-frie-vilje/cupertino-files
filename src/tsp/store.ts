@@ -288,6 +288,23 @@ export class ObjectStore {
   }
 
   /**
+   * Objects edited in this session that carry older-reader compatibility
+   * diffs (see IwaObject.compatibilityPatchVersions). The diffs are
+   * preserved verbatim but NOT recomputed, so an older app opening the
+   * saved document would apply a stale diff for those objects. Empty in
+   * practice unless you edit UI-state objects.
+   */
+  staleCompatibilityPatches(): { id: bigint; type: number; targetVersions: number[][] }[] {
+    const out: { id: bigint; type: number; targetVersions: number[][] }[] = [];
+    for (const { obj } of this.allObjects()) {
+      if (obj.isDirty && obj.hasCompatibilityPatches) {
+        out.push({ id: obj.identifier, type: obj.type, targetVersions: obj.compatibilityPatchVersions() });
+      }
+    }
+    return out;
+  }
+
+  /**
    * Serialize the document. Recomputes reference bookkeeping for dirty
    * objects, then rebuilds only the components that changed.
    */
