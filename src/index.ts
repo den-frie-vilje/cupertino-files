@@ -110,6 +110,7 @@ export {
   decodeCellRecord,
   decodeDecimal128,
   cellValueToString,
+  groupValueOf,
   toCellInput,
   TST_TYPE,
 } from "./tst/tables.ts";
@@ -184,6 +185,22 @@ export { ConditionalStyleSet, ConditionalStyleSetFields } from "./tst/conditiona
 export type { ConditionalRule } from "./tst/conditional.ts";
 export { FilterSet, FilterSetFields, FilterSetType } from "./tst/filters.ts";
 export type { FilterRule, FilterMode } from "./tst/filters.ts";
+export {
+  TableCategories,
+  categoriesOf,
+  expandIndexSet,
+  readCellValue,
+  GroupingType,
+  GROUPING_TYPE_NAMES,
+  GroupByFields,
+  GroupColumnFields,
+  GroupNodeFields,
+  ColumnAggregateFields,
+  sameGroupValue,
+} from "./tst/categories.ts";
+export type { CategoryGroup, GroupColumn, GroupValue, ColumnAggregate } from "./tst/categories.ts";
+export { ColumnRowUidMap, uidMapOf, readUid, uidKey, UidMapFields } from "./tst/uidmap.ts";
+export type { Uid } from "./tst/uidmap.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";
 export type { TocRule, TocEntry } from "./tswp/toc.ts";

@@ -112,6 +112,10 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Conditional formatting: authoring new rules<br><sub>needs a predicate_type value for each condition the UI offers; only 2 of the enum's members appear in the corpus</sub> | all | ○ roadmap | n/a | — |
 | Filters (mode, enable state, per-column rules)<br><sub>every filter set in the corpus is empty, so rule reading is schema-derived; the container, mode and enable flag are fixture-proven</sub> | all | 🔍 read only | 12 | modern→current |
 | Filters: enable, disable, combining mode | all | ✅ read + write | 12 | modern→current |
+| Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 1 | current→current |
+| Categories: enable or disable grouping | all | ✅ read + write | 12 | modern→current |
+| Categories: authoring a grouping, and per-group summaries<br><sub>grouping means computing the tree, which is the app's job; no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
+| Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions</sub> | all | 🔍 read only | 22 | iwork16→current |
 | Filters: authoring rules and recomputing hidden rows<br><sub>a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates</sub> | all | ○ roadmap | n/a | — |
 
 ### Keynote
@@ -134,7 +138,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-19 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+20 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -156,6 +160,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
 - 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
+- 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
 
 ## Validation gaps
@@ -180,6 +185,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Charts (type, categories, series, values)** (2)
 - Numbers & tables → **Conditional formatting rules** (1)
 - Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** (1)
+- Numbers & tables → **Categories (row grouping, nesting, date bucketing)** (1)
 - Keynote → **Speaker notes** (2)
 
 ## Fixture inventory

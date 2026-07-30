@@ -28,6 +28,13 @@ import { renderFormula, type RenderedFormula } from "./formulas.ts";
 import { ConditionalStyleSet, type ConditionalRule } from "./conditional.ts";
 import { FilterSet } from "./filters.ts";
 import {
+  categoriesOf,
+  type CategoryGroup,
+  type GroupValue,
+  type TableCategories,
+} from "./categories.ts";
+import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
+import {
   flagForFormat,
   readFormat,
   writeFormat,
@@ -257,6 +264,26 @@ export interface CellInfo {
   row: number;
   column: number;
   value: CellValue;
+}
+
+/**
+ * A cell's value in the plain form categories compare against.
+ *
+ * Durations and errors have no group equivalent — a category never groups
+ * by one — so they read as absent rather than being coerced into a number
+ * that would match the wrong group.
+ */
+export function groupValueOf(value: CellValue | undefined): GroupValue {
+  switch (value?.type) {
+    case "number":
+    case "text":
+    case "richText":
+    case "date":
+    case "bool":
+      return value.value;
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -1505,6 +1532,51 @@ export class TableModel {
       if (rows || columns) return { rows, columns };
     }
     return { rows: undefined, columns: undefined };
+  }
+
+  // ------------------------------------------------------------- categories
+
+  /**
+   * Row and column identities, for the parts of the format that address
+   * cells by UID rather than position.
+   */
+  uidMap(): ColumnRowUidMap {
+    return uidMapOf(this.store, this.object.message);
+  }
+
+  /**
+   * The table's category (row grouping) definitions.
+   *
+   * More than one can exist — Numbers keeps a definition around when
+   * grouping is switched off — so `enabled` says which is live.
+   */
+  categories(): TableCategories[] {
+    return categoriesOf(this.store, this.object.message, this.uidMap());
+  }
+
+  /** The category definition the app is currently applying, if any. */
+  activeCategories(): TableCategories | undefined {
+    return this.categories().find((definition) => definition.enabled);
+  }
+
+  /**
+   * Groups whose cached membership no longer matches the cells.
+   *
+   * The group tree is what the app worked out last time it grouped the
+   * rows; editing cells here does not regroup them. Unlike a table of
+   * contents, the staleness is checkable, because the grouping column's
+   * values are in the table.
+   */
+  staleCategoryGroups(): { group: CategoryGroup; rows: number[] }[] {
+    const definition = this.activeCategories();
+    if (!definition) return [];
+    // Index the cells once: verify asks for one column across many rows,
+    // and cells() walks every tile.
+    const byPosition = new Map<string, CellValue>();
+    for (const cell of this.cells()) byPosition.set(`${cell.row}:${cell.column}`, cell.value);
+    return definition.verify((row, column) =>
+      groupValueOf(byPosition.get(`${row}:${column}`)),
+    );
   }
 
   /** `cell_style_id` of a cell, if its record carries one. */

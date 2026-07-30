@@ -1049,6 +1049,93 @@ therefore fixture-proven; a populated rule list is read from the schema plus
 the predicate encoding that conditional formatting exercises for real, and
 authoring one is not offered.
 
+### 14.8 Row and column identities
+
+Most of a table addresses cells by position, but anything that must survive
+a sort, an insert or a move addresses them by **UID** instead — categories,
+hidden states, calc-engine dependencies. `TableModelArchive.base_column_row_uids`
+(field 46) holds the translation, laid out for binary search rather than as
+a map:
+
+```proto
+message TST.ColumnRowUIDMapArchive {
+  repeated TSP.UUID sorted_column_uids = 1;
+  repeated uint32 column_index_for_uid = 2;   // parallel to the above
+  repeated uint32 column_uid_for_index = 3;   // slots into the above
+  repeated TSP.UUID sorted_row_uids = 4;      // …rows likewise, 5 and 6
+}
+```
+
+`column_index_for_uid[i]` is where `sorted_column_uids[i]` lives;
+`column_uid_for_index[n]` is the *slot* holding column `n`'s UID, so the
+reverse direction dereferences through the sorted list rather than reading
+straight out.
+
+UIDs are **not unique across a document**. A table duplicated from another
+keeps its source's row and column UIDs — in the categories fixture, two
+different tables' row 0 share an identity — so a UID identifies a row
+within its table and must never be used as a document-wide key.
+
+### 14.9 Categories: row grouping
+
+Categorising a table collapses its rows into named groups, up to five
+levels deep. `TableModelArchive.category_owner` (field 86) points at a
+`TST.CategoryOwnerRefArchive`, which references one or more
+`TST.GroupByArchive` — a table can hold a definition with grouping switched
+off, so `is_enabled` says which is live.
+
+```proto
+message TST.GroupByArchive {
+  required TSP.UUID group_by_uid = 1;
+  repeated TST.GroupColumnArchive group_column = 2;   // outermost first
+  optional GroupNodeArchive group_node_root = 3;      // older: inline
+  repeated TST.ColumnAggregateArchive column_agg_type = 5;
+  required bool is_enabled = 6;
+  optional TSP.Reference group_node_root_ref = 18;    // current: referenced
+}
+message TST.GroupColumnArchive {
+  required TSP.UUID column_uid = 1;      // resolved through §14.8
+  required uint32 grouping_type = 2;
+  optional TSCE.FunctorArchive grouping_functor = 3;
+}
+```
+
+`grouping_type` selects how values become buckets. The enum is not
+published, but `numbers-parser-v26.0-categories.numbers` has one table per
+bucketing the UI offers, and each code is confirmed by the *shape* of the
+dates it produces rather than by the table's name:
+
+| Code | Grouping | Confirmed by |
+|---|---|---|
+| 0 | one group per value | group values equal the cells' values |
+| 1 | year | every group value is 1 January |
+| 2 | year and month | every group value is the 1st, months vary |
+| 3 | weekday | ≤7 groups, all dated inside one reference week |
+| 4 | day | one group per distinct date |
+| 5 | year and week | every group value lands on the *same weekday* |
+| 6 | year and quarter | group values only in months 1, 4, 7, 10 |
+
+The groups themselves are a tree of `GroupNodeArchive`. Each node carries
+the value defining it (`group_cell_value`, a `TSCE.CellValueArchive`) and
+its rows in `row_lookup_uids` — which, despite the name, is a plain
+`TSCE.IndexSetArchive` of **row indexes**. That reading is not inferred: in
+every categorised table in the corpus, the rows a group names hold exactly
+that group's value in the grouping column, and the groups partition the
+data rows exactly once.
+
+Children come two ways, matching the root: `child_ref` (referenced, current)
+or `child` (inline, older). A parent's rows are the union of its children's.
+
+The tree is a **cache the app recomputes**, like a table of contents.
+Editing cells here does not regroup them — but unlike a TOC, the staleness
+is checkable, because the grouping column's values are right there in the
+table. Comparison must be on *values*, not rendered text: a boolean group
+is `false` where the cell renders `FALSE`.
+
+Per-group summaries (`column_agg_type`) are read, but no fixture carries a
+non-empty aggregate list, so the `agg_type` codes are passed through
+unnamed.
+
 ## 15. Known gaps / roadmap
 
 - **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)

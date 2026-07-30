@@ -317,6 +317,32 @@ appear in any file examined. `npm run harvest:predicates -- <file>` extracts
 more from a document whose conditions you set up yourself — see
 `docs/MANUAL-WORK.md` protocol 4.
 
+### Categories (row grouping)
+
+```ts
+t.activeCategories();                   // the definition Numbers is applying, if any
+t.categories();                         // all of them, including switched-off ones
+
+const cat = t.activeCategories()!;
+cat.groupColumns();                     // [{ column, groupingType, groupingName }]
+cat.groups();                           // tree: [{ value, label, rows, children, level }]
+cat.flatGroups();                       // the same, flattened
+cat.describe();                         // ["Animal (10 rows)", "  2013-01-01 (2 rows)", …]
+cat.setEnabled(false);                  // ungroup without losing the definition
+
+t.staleCategoryGroups();                // groups whose rows no longer match the data
+```
+
+`groups()[n].rows` are absolute row indexes. Grouping can be by value or
+bucketed — `groupingName` says which ("year", "year and quarter", "weekday"
+…) — and a bucketed group's `value` is the bucket's start date, not any
+cell's value.
+
+Grouping itself happens in Numbers. This library reads the tree and can
+switch it off, but **cannot regroup**: change cells and the tree goes stale.
+`staleCategoryGroups()` tells you when, which is worth checking after any
+edit to a categorised table.
+
 ## Shadows and drawable styling
 
 Cell and table styles have **no shadow field** — the format has no such
