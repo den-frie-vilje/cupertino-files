@@ -10,9 +10,19 @@
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
 import { Storage } from "../tswp/schema.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import { ByteWriter } from "../base/bytes.ts";
+import {
+  CellFlag,
+  CellRecord,
+  CellType,
+  FORMAT_FLAGS,
+  VALUE_FLAGS,
+} from "./cellrecord.ts";
+import type { CellFormatting } from "./styles.ts";
+import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 
 export const TST_TYPE = {
   TABLE_INFO: 6000,
@@ -31,12 +41,18 @@ const TableModelFields = {
   HEADER_ROWS: 9,
   HEADER_COLUMNS: 10,
   FOOTER_ROWS: 11,
+  TABLE_STYLE: 3,
+  DEFAULT_ROW_HEIGHT: 16,
+  DEFAULT_COLUMN_WIDTH: 17,
+  TABLE_NAME_STYLE: 30,
 } as const;
 /** TST.DataStore. */
 const DataStoreFields = {
   ROW_HEADERS: 1,
+  COLUMN_HEADERS: 2,
   TILES: 3,
   STRING_TABLE: 4,
+  STYLE_TABLE: 5,
   FORMULA_TABLE: 6,
   MERGE_REGION_MAP: 13,
   RICH_TEXT_TABLE: 17,
@@ -44,17 +60,61 @@ const DataStoreFields = {
 /** TST.TileStorage / .Tile / .TileRowInfo. */
 const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
 const TileEntry = { TILEID: 1, TILE: 2 } as const;
-const TileFields = { ROW_INFOS: 5, STORAGE_VERSION: 6, LAST_SAVED_IN_BNC: 7 } as const;
+const TileFields = {
+  MAX_COLUMN: 1,
+  MAX_ROW: 2,
+  NUM_CELLS: 3,
+  NUM_ROWS: 4,
+  ROW_INFOS: 5,
+  STORAGE_VERSION: 6,
+  LAST_SAVED_IN_BNC: 7,
+} as const;
 const TileRowInfo = {
-  STORAGE_VERSION: 5,
   TILE_ROW_INDEX: 1,
+  CELL_COUNT: 2,
+  CELL_STORAGE_BUFFER_PRE_BNC: 3,
+  CELL_OFFSETS_PRE_BNC: 4,
+  STORAGE_VERSION: 5,
   CELL_STORAGE_BUFFER: 6,
   CELL_OFFSETS: 7,
   HAS_WIDE_OFFSETS: 8,
 } as const;
+/** TSS.StyleArchive fields we touch on cloned TST styles. */
+const STYLE_SUPER = 1;
+const STYLE_NAME = 1;
+const STYLE_IDENTIFIER = 4;
+
+/**
+ * The bands a table styles separately. Each names a `TSP.Reference` field
+ * on `TST.TableModelArchive` pointing at a `TST.CellStyleArchive`.
+ */
+export type TableBand =
+  | "body"
+  | "headerRow"
+  | "headerColumn"
+  | "footerRow";
+
+const BAND_STYLE_FIELDS: Record<TableBand, number> = {
+  body: 18,
+  headerRow: 19,
+  headerColumn: 20,
+  footerRow: 21,
+};
+
+/** TST.HeaderStorage / .HeaderStorageBucket / .Header. */
+const HeaderStorage = { BUCKETS: 2 } as const;
+const HeaderBucket = { HEADERS: 2 } as const;
+const HeaderFields = { INDEX: 1, SIZE: 2, HIDING_STATE: 3, NUMBER_OF_CELLS: 4 } as const;
 /** TST.TableDataList / .ListEntry. */
-const DataList = { ENTRIES: 3 } as const;
-const ListEntry = { KEY: 1, STRING: 3, FORMULA: 5, RICH_TEXT_PAYLOAD: 9 } as const;
+const DataList = { LIST_TYPE: 1, NEXT_LIST_ID: 2, ENTRIES: 3 } as const;
+const ListEntry = {
+  KEY: 1,
+  REFCOUNT: 2,
+  STRING: 3,
+  REFERENCE: 4,
+  FORMULA: 5,
+  RICH_TEXT_PAYLOAD: 9,
+} as const;
 /** TST.RichTextPayloadArchive: storage = 1. */
 const RichTextPayload = { STORAGE: 1 } as const;
 /** TST.MergeRegionMapArchive: cell_range = 1 { origin = 1, size = 2 (packed fixed32) }. */
@@ -76,6 +136,30 @@ export interface CellInfo {
   row: number;
   column: number;
   value: CellValue;
+}
+
+/**
+ * A value that can be written into a cell.
+ *
+ * Mirrors {@link CellValue} minus the read-only variants: `richText` lives
+ * in a separate storage object, and `error` is produced by formula
+ * evaluation rather than authored.
+ */
+export type CellInput =
+  | { type: "empty" }
+  | { type: "number"; value: number }
+  | { type: "text"; value: string }
+  | { type: "bool"; value: boolean }
+  | { type: "date"; value: Date }
+  | { type: "duration"; seconds: number };
+
+/** Coerce a plain JS value to a {@link CellInput}. */
+export function toCellInput(value: string | number | boolean | Date | null | undefined): CellInput {
+  if (value === null || value === undefined || value === "") return { type: "empty" };
+  if (typeof value === "string") return { type: "text", value };
+  if (typeof value === "number") return { type: "number", value };
+  if (typeof value === "boolean") return { type: "bool", value };
+  return { type: "date", value };
 }
 
 export interface MergeRange {
@@ -103,6 +187,10 @@ export class TableModel {
 
   get name(): string | undefined {
     return this.object.message.getString(TableModelFields.TABLE_NAME);
+  }
+
+  set name(value: string) {
+    this.object.message.setString(TableModelFields.TABLE_NAME, value);
   }
 
   get rowCount(): number {
@@ -293,6 +381,581 @@ export class TableModel {
     }
     return "";
   }
+
+  // --------------------------------------------------------------- writing
+
+  /**
+   * Write a value into an existing cell.
+   *
+   * Presentation the record already carries — cell and text style ids,
+   * number formats, comments, conditional styles — is preserved, except
+   * that format ids tied to the *old* value type are dropped when the type
+   * changes (a date format on a number cell would render nonsense). Writing
+   * a literal also clears any formula on the cell.
+   *
+   * Rich text (`{ type: "richText" }`) cannot be written: the value lives
+   * in a separate TSWP storage object. Set plain `text` instead, or edit
+   * the existing rich-text storage through {@link richTextStorage}.
+   */
+  setCell(row: number, column: number, value: CellInput): void {
+    this.requireWritable();
+    if (row < 0 || row >= this.rowCount || column < 0 || column >= this.columnCount) {
+      throw new RangeError(
+        `cell ${row},${column} is outside the table (${this.rowCount}×${this.columnCount})`,
+      );
+    }
+    const located = this.locateRow(row);
+    if (!located) {
+      throw new RangeError(
+        `row ${row} has no cell storage; only rows the app has materialized can be written`,
+      );
+    }
+    const { rowInfo } = located;
+    const layout = readRowLayout(rowInfo, this.columnCount);
+    const previous = layout.records[column];
+    const record = previous ? CellRecord.decode(previous) : new CellRecord();
+    const previousStringId = record.id(CellFlag.STRING_ID);
+
+    this.applyValue(record, value);
+
+    // A literal supersedes whatever formula produced the old value.
+    record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
+    if (previousStringId !== undefined && record.id(CellFlag.STRING_ID) !== previousStringId) {
+      this.releaseString(previousStringId);
+    }
+
+    layout.records[column] =
+      record.type === CellType.EMPTY && record.flags === 0 ? undefined : record.encode();
+    this.writeRowLayout(rowInfo, layout);
+    this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
+    this.refreshTileTotals();
+  }
+
+  /** Clear a cell's value, keeping its styling. */
+  clearCell(row: number, column: number): void {
+    this.setCell(row, column, { type: "empty" });
+  }
+
+  /** Write a whole row left-to-right, padding with empties. */
+  setRow(row: number, values: readonly CellInput[]): void {
+    for (let column = 0; column < this.columnCount; column++) {
+      this.setCell(row, column, values[column] ?? { type: "empty" });
+    }
+  }
+
+  /** Write a rectangular block anchored at `row`,`column`. */
+  setCells(row: number, column: number, values: readonly (readonly CellInput[])[]): void {
+    for (let r = 0; r < values.length; r++) {
+      const line = values[r]!;
+      for (let c = 0; c < line.length; c++) this.setCell(row + r, column + c, line[c]!);
+    }
+  }
+
+  /** The TSWP storage backing a rich-text cell, for editing its runs. */
+  richTextStorage(row: number, column: number): IwaObject | undefined {
+    const located = this.locateRow(row);
+    if (!located) return undefined;
+    const raw = readRowLayout(located.rowInfo, this.columnCount).records[column];
+    if (!raw) return undefined;
+    const richId = CellRecord.decode(raw).id(CellFlag.RICH_ID);
+    if (richId === undefined) return undefined;
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.RICH_TEXT_TABLE));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      if (e.getUint(ListEntry.KEY) !== richId) continue;
+      const payload = this.store.resolve(refId(e, ListEntry.RICH_TEXT_PAYLOAD));
+      return this.store.resolve(refId(payload?.message, RichTextPayload.STORAGE));
+    }
+    return undefined;
+  }
+
+  // ------------------------------------------------------------- structure
+
+  get footerRowCount(): number {
+    return this.object.message.getUint(TableModelFields.FOOTER_ROWS) ?? 0;
+  }
+
+  /**
+   * Change how many leading rows/columns are header bands.
+   *
+   * Bands are presentation only — cell storage is identical either way —
+   * so this is a safe edit that does not touch the tiles.
+   */
+  setBands(bands: { headerRows?: number; headerColumns?: number; footerRows?: number }): void {
+    const m = this.object.message;
+    if (bands.headerRows !== undefined) {
+      m.setVarint(TableModelFields.HEADER_ROWS, clampBand(bands.headerRows, this.rowCount));
+    }
+    if (bands.headerColumns !== undefined) {
+      m.setVarint(TableModelFields.HEADER_COLUMNS, clampBand(bands.headerColumns, this.columnCount));
+    }
+    if (bands.footerRows !== undefined) {
+      m.setVarint(TableModelFields.FOOTER_ROWS, clampBand(bands.footerRows, this.rowCount));
+    }
+  }
+
+  /** Height of a row in points, falling back to the table default. */
+  rowHeight(row: number): number {
+    const size = this.header(DataStoreFields.ROW_HEADERS, row)?.getFloat(HeaderFields.SIZE) ?? 0;
+    return size > 0 ? size : (this.object.message.getDouble(TableModelFields.DEFAULT_ROW_HEIGHT) ?? 0);
+  }
+
+  columnWidth(column: number): number {
+    const size =
+      this.header(DataStoreFields.COLUMN_HEADERS, column)?.getFloat(HeaderFields.SIZE) ?? 0;
+    return size > 0
+      ? size
+      : (this.object.message.getDouble(TableModelFields.DEFAULT_COLUMN_WIDTH) ?? 0);
+  }
+
+  /** Set an explicit row height; 0 restores the table default. */
+  setRowHeight(row: number, points: number): void {
+    const header = this.header(DataStoreFields.ROW_HEADERS, row);
+    if (!header) throw new RangeError(`row ${row} has no header entry to size`);
+    header.setFloat(HeaderFields.SIZE, points);
+  }
+
+  setColumnWidth(column: number, points: number): void {
+    const header = this.header(DataStoreFields.COLUMN_HEADERS, column);
+    if (!header) throw new RangeError(`column ${column} has no header entry to size`);
+    header.setFloat(HeaderFields.SIZE, points);
+  }
+
+  /** True when the row or column is hidden. */
+  isRowHidden(row: number): boolean {
+    return (this.header(DataStoreFields.ROW_HEADERS, row)?.getUint(HeaderFields.HIDING_STATE) ?? 0) !== 0;
+  }
+
+  isColumnHidden(column: number): boolean {
+    return (
+      (this.header(DataStoreFields.COLUMN_HEADERS, column)?.getUint(HeaderFields.HIDING_STATE) ?? 0) !==
+      0
+    );
+  }
+
+  /**
+   * Locate a row or column header entry.
+   *
+   * `rowHeaders` is a bucket list, `columnHeaders` a single bucket
+   * reference — the two are shaped differently in the proto, so both
+   * spellings are handled here rather than at every call site.
+   */
+  private header(field: number, index: number): RawMessage | undefined {
+    const ds = this.dataStore();
+    if (!ds) return undefined;
+    const buckets: (IwaObject | undefined)[] = [];
+    const storage = ds.getMessage(field);
+    if (storage && storage.has(HeaderStorage.BUCKETS)) {
+      for (const ref of storage.getMessages(HeaderStorage.BUCKETS)) {
+        buckets.push(this.store.resolve(ref.getVarint(1)));
+      }
+    } else {
+      buckets.push(this.store.resolve(refId(ds, field)));
+    }
+    for (const bucket of buckets) {
+      for (const header of bucket?.message.getMessages(HeaderBucket.HEADERS) ?? []) {
+        if (header.getUint(HeaderFields.INDEX) === index) return header;
+      }
+    }
+    return undefined;
+  }
+
+  // --------------------------------------------------------------- styling
+
+  /**
+   * The table's own style (banded rows, grid strokes, visibility toggles).
+   *
+   * Editing it affects every table sharing the style — Numbers' stock
+   * themes give each table its own, but a document built by duplication may
+   * not. {@link styleTable} is where per-cell styles live instead.
+   */
+  tableStyle(): TableStyleHandle | undefined {
+    const obj = this.store.resolve(refId(this.object.message, TableModelFields.TABLE_STYLE));
+    return obj ? new TableStyleHandle(this.store, obj) : undefined;
+  }
+
+  /** Formatting of the cells in a named band, e.g. the header row. */
+  bandStyle(band: TableBand): TableStyleHandle | undefined {
+    const obj = this.store.resolve(refId(this.object.message, BAND_STYLE_FIELDS[band]));
+    return obj ? new TableStyleHandle(this.store, obj) : undefined;
+  }
+
+  /** The cell style applied to one cell, if it has an explicit one. */
+  cellStyle(row: number, column: number): TableStyleHandle | undefined {
+    const id = this.cellStyleId(row, column);
+    if (id === undefined) return undefined;
+    const obj = this.store.resolve(this.styleTableEntry(id));
+    return obj ? new TableStyleHandle(this.store, obj) : undefined;
+  }
+
+  /** Read the formatting in effect for a cell, or `{}` when it has none. */
+  cellFormatting(row: number, column: number): CellFormatting {
+    return this.cellStyle(row, column)?.cell() ?? {};
+  }
+
+  /**
+   * Style one cell: fill, borders, padding, vertical alignment, wrapping.
+   *
+   * A new cell style is created, based on the cell's current one so
+   * unspecified properties are inherited rather than lost, registered in the
+   * table's style table and referenced from the cell record. Styling a cell
+   * therefore never disturbs its neighbours, even when they shared a style.
+   */
+  setCellFormatting(row: number, column: number, formatting: CellFormatting): void {
+    this.requireWritable();
+    const located = this.locateRow(row);
+    if (!located) throw new RangeError(`row ${row} has no cell storage; nothing to style`);
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    const record = existing ? CellRecord.decode(existing) : new CellRecord();
+
+    const basedOn = record.id(CellFlag.CELL_STYLE_ID);
+    const styleId = this.createCellStyle(formatting, basedOn);
+    record.setId(CellFlag.CELL_STYLE_ID, styleId);
+
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
+    this.refreshTileTotals();
+  }
+
+  /** Apply the same formatting to a rectangular block of cells. */
+  setRangeFormatting(
+    row: number,
+    column: number,
+    rowCount: number,
+    columnCount: number,
+    formatting: CellFormatting,
+  ): void {
+    for (let r = row; r < row + rowCount; r++) {
+      for (let c = column; c < column + columnCount; c++) this.setCellFormatting(r, c, formatting);
+    }
+  }
+
+  /** `cell_style_id` of a cell, if its record carries one. */
+  cellStyleId(row: number, column: number): number | undefined {
+    const located = this.locateRow(row);
+    if (!located) return undefined;
+    const raw = readRowLayout(located.rowInfo, this.columnCount).records[column];
+    return raw ? CellRecord.decode(raw).id(CellFlag.CELL_STYLE_ID) : undefined;
+  }
+
+  /**
+   * Create a cell style object and register it in the table's style table.
+   *
+   * The style table is a `TableDataList` of references, so the new object
+   * must be reachable from it *and* from the component's external
+   * references — hence the explicit `object_references` refresh, which the
+   * generic save path cannot do for a type it has no extractor for.
+   */
+  private createCellStyle(formatting: CellFormatting, basedOn?: number): number {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
+    if (!list) throw new RangeError("table has no style table; cannot style cells");
+    const component = this.store.componentOf(list.identifier);
+    if (!component) throw new RangeError("style table has no component");
+
+    const parentId = basedOn !== undefined ? this.styleTableEntry(basedOn) : undefined;
+    const parent = parentId !== undefined ? this.store.resolve(parentId) : undefined;
+    const created = this.store.createObject(TST_STYLE_TYPE.CELL_STYLE, component, {
+      ...(parent ? { cloneFrom: parent } : {}),
+    });
+    // Cloning copies the parent's name/identifier, which must not be reused:
+    // two styles answering to one identifier is a corrupt stylesheet.
+    const sup = created.message.getMessage(STYLE_SUPER);
+    if (sup) {
+      sup.remove(STYLE_NAME);
+      sup.remove(STYLE_IDENTIFIER);
+    }
+    new TableStyleHandle(this.store, created).setCell(formatting);
+
+    const m = list.message;
+    const key = m.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(m);
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(ListEntry.REFERENCE, makeRef(created.identifier));
+    m.addMessage(DataList.ENTRIES, entry);
+    m.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    this.refreshDataListReferences(list);
+    return key;
+  }
+
+  /** Object id behind a style-table key. */
+  private styleTableEntry(key: number): bigint | undefined {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      if (e.getUint(ListEntry.KEY) === key) return refId(e, ListEntry.REFERENCE);
+    }
+    return undefined;
+  }
+
+  /**
+   * Refresh a data list's `object_references`.
+   *
+   * The store's save pass only rewrites references for types it has an
+   * extractor for; TableDataList holds references inline in its entries, so
+   * we collect them here rather than teaching the generic path about a
+   * structure only tables use.
+   */
+  private refreshDataListReferences(list: IwaObject): void {
+    const ids: bigint[] = [];
+    for (const e of list.message.getMessages(DataList.ENTRIES)) {
+      for (const field of [ListEntry.REFERENCE, ListEntry.RICH_TEXT_PAYLOAD]) {
+        const id = refId(e, field);
+        if (id !== undefined) ids.push(id);
+      }
+    }
+    list.setObjectReferences([...new Set(ids)]);
+  }
+
+  private requireWritable(): void {
+    const generation = this.storageGeneration;
+    if (generation === "preBNC") {
+      throw new RangeError(
+        `table ${JSON.stringify(this.name ?? "")}: pre-BNC cell storage cannot be written; ` +
+          `re-saving the document in a current app converts it to v5`,
+      );
+    }
+    if (generation === "empty") {
+      throw new RangeError(
+        `table ${JSON.stringify(this.name ?? "")}: no cell storage to write into`,
+      );
+    }
+  }
+
+  /** Set the value-carrying fields of a record for a new value. */
+  private applyValue(record: CellRecord, value: CellInput): void {
+    const previousType = record.type;
+    record.removeAll(VALUE_FLAGS);
+    switch (value.type) {
+      case "empty":
+        record.type = CellType.EMPTY;
+        break;
+      case "number":
+        record.type = previousType === CellType.CURRENCY ? CellType.CURRENCY : CellType.NUMBER;
+        record.setDecimal128(value.value);
+        break;
+      case "text":
+        record.type = CellType.TEXT;
+        record.setId(CellFlag.STRING_ID, this.internString(value.value));
+        break;
+      case "bool":
+        record.type = CellType.BOOL;
+        record.setDouble(CellFlag.DOUBLE, value.value ? 1 : 0);
+        break;
+      case "date":
+        record.type = CellType.DATE;
+        record.setDouble(CellFlag.SECONDS, (value.value.getTime() - APPLE_EPOCH_MS) / 1000);
+        break;
+      case "duration":
+        record.type = CellType.DURATION;
+        record.setDouble(CellFlag.DOUBLE, value.seconds);
+        break;
+    }
+    // Formats are per-type; keeping a date format on a number is worse than
+    // losing it, so drop them whenever the type actually changes.
+    if (record.type !== previousType) record.removeAll(FORMAT_FLAGS);
+  }
+
+  /** Add or reuse a string-table entry, returning its key. */
+  private internString(text: string): number {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STRING_TABLE));
+    if (!list) throw new RangeError("table has no string table; cannot store text");
+    const m = list.message;
+    for (const e of m.getMessages(DataList.ENTRIES)) {
+      if (e.getString(ListEntry.STRING) !== text) continue;
+      const key = e.getUint(ListEntry.KEY);
+      if (key === undefined) continue;
+      e.setVarint(ListEntry.REFCOUNT, (e.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+      return key;
+    }
+    const key = m.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(m);
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setString(ListEntry.STRING, text);
+    m.addMessage(DataList.ENTRIES, entry);
+    m.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    return key;
+  }
+
+  /** Drop one reference to a string-table entry, removing it at zero. */
+  private releaseString(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STRING_TABLE));
+    if (!list) return;
+    const m = list.message;
+    const entries = m.getMessages(DataList.ENTRIES);
+    const entry = entries.find((e) => e.getUint(ListEntry.KEY) === key);
+    if (!entry) return;
+    const remaining = (entry.getUint(ListEntry.REFCOUNT) ?? 1) - 1;
+    if (remaining > 0) {
+      entry.setVarint(ListEntry.REFCOUNT, remaining);
+      return;
+    }
+    m.setMessages(
+      DataList.ENTRIES,
+      entries.filter((e) => e !== entry),
+    );
+  }
+
+  /** Find the tile row info holding a table row. */
+  private locateRow(row: number): { tile: IwaObject; rowInfo: RawMessage } | undefined {
+    const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
+    if (!tiles) return undefined;
+    const tileSize = tiles.getUint(TileStorageFields.TILE_SIZE) ?? 256;
+    for (const t of tiles.getMessages(TileStorageFields.TILES)) {
+      const tileId = t.getUint(TileEntry.TILEID) ?? 0;
+      const tile = this.store.resolve(refId(t, TileEntry.TILE));
+      if (!tile) continue;
+      for (const rowInfo of tile.message.getMessages(TileFields.ROW_INFOS)) {
+        const inTile = rowInfo.getUint(TileRowInfo.TILE_ROW_INDEX) ?? 0;
+        if (tileId * tileSize + inTile === row) return { tile, rowInfo };
+      }
+    }
+    return undefined;
+  }
+
+  /** Re-serialize a row's cell buffer, offsets and legacy stubs. */
+  private writeRowLayout(rowInfo: RawMessage, layout: RowLayout): void {
+    const buffer = new ByteWriter(256);
+    const offsets = new Int16Array(layout.offsetSlots).fill(-1);
+    let cellCount = 0;
+    // Records are 4-byte multiples by construction (12-byte header plus
+    // 4/8/16-byte fields), which is what makes >> 2 wide offsets lossless.
+    const wide = layout.records.reduce((n, r) => n + (r?.length ?? 0), 0) > 0x7fff;
+    for (let column = 0; column < layout.records.length; column++) {
+      const record = layout.records[column];
+      if (!record) continue;
+      if (column >= offsets.length) {
+        throw new RangeError(`column ${column} exceeds the row's ${offsets.length} offset slots`);
+      }
+      const position = buffer.length;
+      offsets[column] = wide ? position >> 2 : position;
+      buffer.bytes(record);
+      cellCount++;
+    }
+    rowInfo.setBytes(TileRowInfo.CELL_STORAGE_BUFFER, buffer.toBytes());
+    rowInfo.setBytes(TileRowInfo.CELL_OFFSETS, new Uint8Array(offsets.buffer.slice(0)));
+    if (wide) rowInfo.setBool(TileRowInfo.HAS_WIDE_OFFSETS, true);
+    else rowInfo.remove(TileRowInfo.HAS_WIDE_OFFSETS);
+    rowInfo.setVarint(TileRowInfo.CELL_COUNT, cellCount);
+    rowInfo.setVarint(TileRowInfo.STORAGE_VERSION, 5);
+    this.writeLegacyStubs(rowInfo, layout, offsets.length);
+  }
+
+  /**
+   * Rewrite the pre-BNC fields, which proto2 marks `required`.
+   *
+   * Apple's own current writers keep them present but inert: a 12-byte
+   * all-zero record per cell (version byte 4) plus a matching offsets
+   * array. We reproduce that shape exactly rather than leaving stale
+   * offsets pointing into a buffer that no longer matches.
+   */
+  private writeLegacyStubs(rowInfo: RawMessage, layout: RowLayout, slots: number): void {
+    const STUB_SIZE = 12;
+    const offsets = new Int16Array(slots).fill(-1);
+    let count = 0;
+    for (let column = 0; column < layout.records.length; column++) {
+      if (!layout.records[column]) continue;
+      offsets[column] = count * STUB_SIZE;
+      count++;
+    }
+    const buffer = new Uint8Array(count * STUB_SIZE);
+    for (let i = 0; i < count; i++) buffer[i * STUB_SIZE] = 4;
+    rowInfo.setBytes(TileRowInfo.CELL_STORAGE_BUFFER_PRE_BNC, buffer);
+    rowInfo.setBytes(TileRowInfo.CELL_OFFSETS_PRE_BNC, new Uint8Array(offsets.buffer.slice(0)));
+  }
+
+  /** Keep the row header's cell count in step with the row's storage. */
+  private refreshRowHeader(row: number, cellCount: number): void {
+    const storage = this.dataStore()?.getMessage(DataStoreFields.ROW_HEADERS);
+    for (const ref of storage?.getMessages(HeaderStorage.BUCKETS) ?? []) {
+      const bucket = this.store.resolve(ref.getVarint(1));
+      for (const header of bucket?.message.getMessages(HeaderBucket.HEADERS) ?? []) {
+        if (header.getUint(HeaderFields.INDEX) !== row) continue;
+        header.setVarint(HeaderFields.NUMBER_OF_CELLS, cellCount);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Recompute each tile's cell/row totals.
+   *
+   * Apple leaves `maxColumn`/`maxRow`/`numCells` at 0 in files we have
+   * examined, so we only maintain them when they were already non-zero —
+   * writing real values into fields the app zeroes would be a gratuitous
+   * difference from what Numbers itself produces.
+   */
+  private refreshTileTotals(): void {
+    const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
+    for (const t of tiles?.getMessages(TileStorageFields.TILES) ?? []) {
+      const tile = this.store.resolve(refId(t, TileEntry.TILE));
+      if (!tile) continue;
+      const rowInfos = tile.message.getMessages(TileFields.ROW_INFOS);
+      if ((tile.message.getUint(TileFields.NUM_CELLS) ?? 0) > 0) {
+        const total = rowInfos.reduce((n, ri) => n + (ri.getUint(TileRowInfo.CELL_COUNT) ?? 0), 0);
+        tile.message.setVarint(TileFields.NUM_CELLS, total);
+      }
+      if ((tile.message.getUint(TileFields.NUM_ROWS) ?? 0) > 0) {
+        tile.message.setVarint(TileFields.NUM_ROWS, rowInfos.length);
+      }
+    }
+  }
+}
+
+/** A row's records by column, plus how many offset slots the row provides. */
+interface RowLayout {
+  records: (Uint8Array | undefined)[];
+  offsetSlots: number;
+}
+
+/**
+ * Split a row's storage buffer back into per-column records.
+ *
+ * The offsets array is preserved at its original length: Apple writes a
+ * fixed 255-entry array regardless of the table's width, and shrinking it
+ * would be a difference from Numbers' own output for no benefit.
+ */
+function readRowLayout(rowInfo: RawMessage, columnCount: number): RowLayout {
+  const buffer = rowInfo.getBytes(TileRowInfo.CELL_STORAGE_BUFFER) ?? new Uint8Array(0);
+  const rawOffsets = rowInfo.getBytes(TileRowInfo.CELL_OFFSETS) ?? new Uint8Array(0);
+  const scale = rowInfo.getBool(TileRowInfo.HAS_WIDE_OFFSETS) ? 4 : 1;
+  const offsets: number[] = [];
+  for (let i = 0; i + 1 < rawOffsets.length; i += 2) {
+    const v = rawOffsets[i]! | (rawOffsets[i + 1]! << 8);
+    offsets.push(v >= 0x8000 ? v - 0x10000 : v);
+  }
+  const slots = Math.max(offsets.length, columnCount, DEFAULT_OFFSET_SLOTS);
+  const records = new Array<Uint8Array | undefined>(Math.max(offsets.length, columnCount));
+  for (let column = 0; column < offsets.length; column++) {
+    const start = offsets[column]!;
+    if (start < 0) continue;
+    let end = buffer.length;
+    for (let next = column + 1; next < offsets.length; next++) {
+      if (offsets[next]! >= 0) {
+        end = offsets[next]! * scale;
+        break;
+      }
+    }
+    records[column] = buffer.slice(start * scale, end);
+  }
+  return { records, offsetSlots: slots };
+}
+
+/** Apple writes 255 offset slots per row regardless of table width. */
+const DEFAULT_OFFSET_SLOTS = 255;
+
+function clampBand(value: number, limit: number): number {
+  return Math.max(0, Math.min(Math.floor(value), limit));
+}
+
+/** Fallback when a data list has no `nextListID`: one past the highest key. */
+function nextFreeKey(list: RawMessage): number {
+  let max = 0;
+  for (const e of list.getMessages(DataList.ENTRIES)) {
+    max = Math.max(max, e.getUint(ListEntry.KEY) ?? 0);
+  }
+  return max + 1;
 }
 
 export function cellValueToString(v: CellValue): string {

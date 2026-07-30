@@ -45,7 +45,7 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /** Tables of one sheet, or of the whole document when no sheet is given. */
-  tables(sheetId?: bigint): TableModel[] {
+  override tables(sheetId?: bigint): TableModel[] {
     if (sheetId === undefined) return tablesOf(this.store);
     const sheet = this.store.object(sheetId);
     if (!sheet) throw new RangeError(`sheet ${sheetId} not found`);

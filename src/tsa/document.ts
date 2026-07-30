@@ -41,6 +41,7 @@ import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
+import { tablesOf, type TableModel } from "../tst/tables.ts";
 
 // TSP.PackageMetadata version fields.
 const PKG_READ_VERSION = 5;
@@ -182,6 +183,17 @@ export class IWorkDocument {
   /** Every image, with filter/mask access (see ImageModel). */
   images(): ImageModel[] {
     return imagesOf(this.store);
+  }
+
+  /**
+   * Every table (see TableModel).
+   *
+   * Lives on the base because tables are not a Numbers feature: Pages
+   * documents and Keynote slides embed the same TST archives, and the
+   * reading and writing code is identical for all three.
+   */
+  tables(): TableModel[] {
+    return tablesOf(this.store);
   }
 
   /** Concatenated plain text of all in-document storages (reading order approximation). */

@@ -24,12 +24,67 @@ export type { DocumentStats } from "./tsa/document.ts";
 // Shared model
 export { TextStorage } from "./tswp/textstorage.ts";
 export type { ParagraphInfo, StyleRun } from "./tswp/textstorage.ts";
-export { StylesheetModel, describeStyle } from "./tss/stylesheet.ts";
+export {
+  StylesheetModel,
+  StyleHandle,
+  describeStyle,
+  buildCharacterProperties,
+  buildParagraphProperties,
+  applyCharacterProperties,
+  applyParagraphProperties,
+  readCharacterProperties,
+  readParagraphProperties,
+} from "./tss/stylesheet.ts";
 export type {
   CharacterFormatting,
   ParagraphFormatting,
   StyleInfo,
+  TabStop,
 } from "./tss/stylesheet.ts";
+
+// Shared style values (fills, gradients, strokes, shadows, padding)
+export {
+  readColor,
+  writeColor,
+  isColorLike,
+  hexColor,
+  BLACK,
+  WHITE,
+  readFill,
+  writeFill,
+  colorFill,
+  linearGradient,
+  readStroke,
+  writeStroke,
+  solidStroke,
+  readShadow,
+  writeShadow,
+  readPadding,
+  writePadding,
+  FillFields,
+  GradientFields,
+  GradientType,
+  ImageFillFields,
+  ImageFillTechnique,
+  StrokeFields,
+  StrokePatternFields,
+  StrokePatternType,
+  LineCap,
+  LineJoin,
+  ShadowFields,
+  ShadowType,
+  PaddingFields,
+} from "./tsd/style.ts";
+export type {
+  Color,
+  Fill,
+  Gradient,
+  GradientStop,
+  ImageFill,
+  Stroke,
+  Shadow,
+  Padding,
+} from "./tsd/style.ts";
 export { DrawableModel, findDrawableCore } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
 export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";
@@ -40,9 +95,42 @@ export * as tspSchema from "./tsp/schema.ts";
 export * as tswpSchema from "./tswp/schema.ts";
 export * as tssSchema from "./tss/schema.ts";
 export * as tsdSchema from "./tsd/schema.ts";
-export { TableModel, tablesOf, decodeCellRecord, decodeDecimal128, cellValueToString, TST_TYPE } from "./tst/tables.ts";
-export type { CellValue, CellInfo, MergeRange } from "./tst/tables.ts";
+export {
+  TableModel,
+  tablesOf,
+  decodeCellRecord,
+  decodeDecimal128,
+  cellValueToString,
+  toCellInput,
+  TST_TYPE,
+} from "./tst/tables.ts";
+export type { CellValue, CellInput, CellInfo, MergeRange, TableBand } from "./tst/tables.ts";
+export { CellRecord, CellType, CellFlag, encodeDecimal128 } from "./tst/cellrecord.ts";
+export {
+  TableStyleHandle,
+  readCellFormatting,
+  applyCellFormatting,
+  buildCellProperties,
+  readTableFormatting,
+  applyTableFormatting,
+  allBorders,
+  CellStyleProps,
+  TableStyleProps,
+  VerticalAlignment,
+  TST_STYLE_TYPE,
+} from "./tst/styles.ts";
+export type { CellFormatting, TableFormatting, CellBorders } from "./tst/styles.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
+export {
+  BorderPosition,
+  Capitalization,
+  Ligatures,
+  ScriptPosition,
+  StrikethruType,
+  TabAlignment,
+  TextAlignment,
+  UnderlineType,
+} from "./tswp/schema.ts";
 export { PagesSettings } from "./pages/document.ts";
 export { sha1 } from "./base/sha1.ts";
 export {

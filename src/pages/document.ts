@@ -522,11 +522,6 @@ export class PagesDocument extends IWorkDocument {
     return new PagesSettings(obj);
   }
 
-  /** Tables embedded in this Pages document (read-only cell access). */
-  tables(): TableModel[] {
-    return tablesOf(this.store);
-  }
-
   /** Text boxes and shapes carrying text: drawable + its text storage. */
   textBoxes(): { drawable: DrawableModel; storage: TextStorage; isTextBox: boolean }[] {
     const out: { drawable: DrawableModel; storage: TextStorage; isTextBox: boolean }[] = [];
