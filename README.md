@@ -66,6 +66,11 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 > cannot prove** — the claims where the only authority is Apple's own app, each with why
 > and a repro. Also generated, also gated against staleness.
 >
+> **[`docs/BLOCKERS.md`](docs/BLOCKERS.md) is the priority-ordered list of what is still
+> unknown** — each item with the one fact it is blocked on, what that unblocks, and the
+> shortest path to settling it. `npm run probe -- <file>` reports every remaining unknown
+> in a document in one pass, so a well-chosen file closes several at once.
+>
 > **[`docs/MANUAL-WORK.md`](docs/MANUAL-WORK.md) holds the repeatable procedures** for
 > facts that live inside the apps rather than in files, plus a ledger of what has been run
 > against which app version. Each protocol ends in a checked-in artifact, so a finding is
@@ -91,6 +96,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Tables: insert and delete rows and columns; number/date/currency display formats | ✅ |
 | Tables: merged cell ranges (decoded from the calc engine, not the empty region map) | ✅ read |
 | Tables: formulas read and rendered to text — in Pages and Keynote too, not just Numbers | ✅ read |
+| Tables: cross-table references resolved to real table names (`Revenue::A2`) | ✅ read |
 | Numbers: conditional formatting rules and filters (one shared predicate model) | ✅ read |
 | Numbers: categories — row grouping, nesting, every date bucketing, staleness check | ✅ read |
 | Drawables: shadows, opacity, reflection, fill, stroke on shapes and images | ✅ |
@@ -105,7 +111,8 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Numbers: add and remove tables on a sheet, with per-sheet name uniquing | ✅ |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
 | Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |
-| Keynote builds; Numbers cell controls | roadmap — no fixture contains one, so it would be unvalidated |
+| Keynote builds: read and retime; Numbers cell controls: read | 🔍 schema-derived — **no fixture contains one** ([blockers](docs/BLOCKERS.md)) |
+| Creating Keynote builds or cell controls | roadmap — withheld until a real one confirms the read model |
 | Byte-identical round-trip of untouched content | ✅ |
 | Version-aware loading (never hard-fails on newer files) | ✅ |
 | Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |

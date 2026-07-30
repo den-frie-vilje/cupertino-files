@@ -17,7 +17,18 @@ message or a person's memory has to be rediscovered. A finding that lands
 in `data/` and regenerates a source file is permanent and extensible.
 
 Related: [`docs/VERIFICATION.md`](VERIFICATION.md) lists claims that need a
-Mac to *confirm*. This file covers work that produces *new knowledge*.
+Mac to *confirm*. This file covers work that produces *new knowledge*, and
+[`docs/BLOCKERS.md`](BLOCKERS.md) is the priority-ordered view — what is
+still unknown, what each unknown blocks, and the shortest path to settling
+it. **Start there.**
+
+One command reports every remaining unknown in a document at once:
+
+```sh
+npm run probe -- <file...>
+```
+
+so a well-chosen file closes several protocols in a single pass.
 
 ---
 
@@ -207,6 +218,73 @@ step 3, change a cell's value so a *different* rule fires, save again, and
 diff the id. If it tracks which rule matched, it is a live cache; if not,
 it means something this library has yet to identify.
 
+## Protocol 5 — Name the Keynote build vocabulary
+
+**What it produces:** the delivery strings, effect names and attribute
+fields a real animation uses, checking the schema-derived read model in
+`src/keynote/builds.ts` — which today has *nothing* to check it against.
+
+**Why:** all eight decks in the corpus span 2013 to 26.1 and not one has an
+animation. The protos are complete, so the code is written; but a field
+number read from a schema and never seen in a file is a guess with good
+manners.
+
+**Procedure:**
+
+1. In Keynote, make a deck of three slides. On each, animate one object
+   with a *different* effect (say Dissolve, Move In, Anvil). On one slide,
+   animate a text box delivered **by line**, so the build has chunks.
+2. Give one build a non-default duration and delay, so those fields are
+   populated rather than defaulted.
+3. Save, then run:
+
+   ```sh
+   npm run probe -- animated.key
+   ```
+
+   Section 4 prints each build's `delivery`, `effect` and the attribute
+   field numbers it populates.
+4. Record the effect strings in the ledger. If any attribute field appears
+   that `BuildAttributesFields` does not name, add it.
+
+**Bonus:** the same deck settles whether builds survive `duplicateSlide` —
+worth checking, since slide duplication is implemented and untested against
+animated slides.
+
+---
+
+## Protocol 6 — Name the cell-control `interaction_type` enum
+
+**What it produces:** the mapping from `interaction_type` to the five
+widgets, which is what stands between reading controls and writing them.
+
+**Why:** no fixture has one. All 37 were surveyed: zero control spec
+tables, zero cells with the control flag, zero `CellSpecArchive` objects.
+`src/tst/controls.ts` therefore classifies a control by which fields it
+populates, which distinguishes a range widget from a chooser but cannot
+tell a slider from a stepper.
+
+**Procedure:**
+
+1. In Numbers, make a table with five columns and set each to a different
+   control: checkbox, star rating, slider, stepper, pop-up menu.
+2. Give the slider and stepper non-default minimum, maximum and increment,
+   and the pop-up menu three items.
+3. Save, then run:
+
+   ```sh
+   npm run probe -- controls.numbers
+   ```
+
+   Section 3 prints `interaction_type`, the derived shape and the populated
+   field numbers for each.
+4. Five rows of output name the enum. Record them in the ledger and add
+   them to `src/tst/controls.ts`.
+
+**Also worth capturing from the same file:** which list-entry field the
+control-spec table uses to hold its payload. `controlsOf` currently probes
+for it structurally, because no proto in this repository states it.
+
 ---
 
 ## Ledger
@@ -220,7 +298,9 @@ knowing it did.
 | — | 1 — function index | — | **not yet run.** `src/tst/function-names.ts` is empty; only the corpus-proven entry (168 = SUM) is in effect. | — |
 | — | 2 — border positions | — | **not yet run.** Mapping remains inferred. | — |
 | 2026-07-31 | 3 — cross-table names | n/a — file analysis only | **SOLVED without an app.** The AST's `table_id` is a calc-engine *owner* id, mapped by `TSCE.FormulaOwnerDependenciesArchive`. All 1020 cross-table references in the corpus now name their table. | `src/tsce/owners.ts`, `test/owners.test.ts` |
-| — | 4 — predicate_type enum | — | **not yet run.** Two values known from file analysis (5 = `=`, 9 = `<`); rule authoring stays unimplemented. | — |
+| — | 4 — predicate_type enum | — | **not yet run.** Two values known from file analysis (5 = `=`, 9 = `<`), and a full prediction recorded in `PREDICATE_TYPE_HYPOTHESIS` that one run confirms or kills. | — |
+| — | 5 — Keynote build vocabulary | — | **not yet run.** Read model is schema-derived; no deck in the corpus has an animation. | — |
+| — | 6 — cell-control interaction_type | — | **not yet run.** No fixture has a control; shape is derived from populated fields instead. | — |
 
 ### Findings that came out of file analysis alone
 
@@ -229,6 +309,9 @@ even though they needed no app:
 
 | Finding | Evidence |
 |---|---|
+| `AST_function_node_index` **212 = DURATION** | In `numbers-parser-v26.1-custom-formats.numbers`, `=$A$11+FUNCTION_212(,,8,22,11,500)` lands exactly 8h22m11.5s after A11's midnight, and sibling rows differing only in the third argument (8→12→24) shift by that many hours. |
+| The function index is **not alphabetical**, nor category-then-name | `DURATION` sorts before `SUM` in both orderings, yet is 212 against SUM's 168. The table must be measured. |
+| `TOKEN_NODE` marks an **omitted argument**, not a boolean | It carries `AST_token_node_boolean`, so it rendered as `TRUE`; the DURATION arithmetic shows the two leading tokens contribute zero. |
 | `AST_function_node_index` **168 = SUM** | `libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached 7920; the `Cats` TOTAL row in both `numbers-parser-*-issue102.numbers` uses the same index. |
 | Merges live in the calc engine, not `merge_region_map` | No fixture has a region map. Colon-tract nodes in `merge_owner.formula_store` decode to rectangles where every anchor holds a value and no covered cell does, and the 14.4 and 26.0 saves of one document agree. |
 | `TSP.Color` gained an undocumented fixed32 at field 13 in the 26.x era | Present only in 26.x files, always paired with an explicit `rgbspace`, always exactly 1.0 across every document examined. |

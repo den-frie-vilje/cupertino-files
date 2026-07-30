@@ -22,7 +22,12 @@ import { readFileSync } from "node:fs";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { tablesOf } from "../src/tst/tables.ts";
 import { typeName } from "../src/tsp/registry.ts";
-import { readPredicate, PREDICATE_TYPE_OPERATORS, type Predicate } from "../src/tst/predicates.ts";
+import {
+  readPredicate,
+  PREDICATE_TYPE_OPERATORS,
+  PREDICATE_TYPE_HYPOTHESIS,
+  type Predicate,
+} from "../src/tst/predicates.ts";
 import { ConditionalStyleSet } from "../src/tst/conditional.ts";
 
 interface Row {
@@ -184,6 +189,8 @@ function main(argv: string[]): number {
     );
   }
 
+  reportHypothesis(rows);
+
   const additions = suggest(rows);
   console.log(
     additions.length === 0
@@ -191,6 +198,53 @@ function main(argv: string[]): number {
       : `\nNew pairings for PREDICATE_TYPE_OPERATORS in src/tst/predicates.ts:\n${additions.join("\n")}`,
   );
   return conflicts.length > 0 ? 1 : 0;
+}
+
+/**
+ * Score the observed pairings against the predicted enum ordering.
+ *
+ * The point of a run against a real install: `PREDICATE_TYPE_HYPOTHESIS`
+ * says the numeric comparisons run 5 = `=`, 6 = `<>`, 7 = `>`, 8 = `>=`,
+ * 9 = `<`, 10 = `<=`, following Numbers' own condition menu. One document
+ * covering those six conditions either confirms it outright or kills it.
+ */
+function reportHypothesis(rows: Row[]): void {
+  const observed = new Map<number, string>();
+  for (const row of rows) {
+    if (row.predicateType !== undefined && row.operator !== undefined) {
+      observed.set(row.predicateType, row.operator);
+    }
+  }
+  const lines: string[] = [];
+  let agree = 0;
+  let disagree = 0;
+  let untested = 0;
+  for (const [type, predicted] of PREDICATE_TYPE_HYPOTHESIS) {
+    const actual = observed.get(type);
+    if (actual === undefined) {
+      untested++;
+      lines.push(`    ${type} → ${predicted}   (not exercised by this document)`);
+    } else if (actual === predicted) {
+      agree++;
+      lines.push(`    ${type} → ${predicted}   ✓ confirmed`);
+    } else {
+      disagree++;
+      lines.push(`    ${type} → ${predicted}   ✗ file says ${actual}`);
+    }
+  }
+  console.log(`\nPredicted enum ordering (Numbers' condition-menu order from 5):`);
+  console.log(lines.join("\n"));
+  console.log(
+    disagree > 0
+      ? `  ⇒ REFUTED: ${disagree} contradiction(s). The ordering is something else; record the pairs above and drop the hypothesis.`
+      : untested === 0
+        ? "  ⇒ CONFIRMED in full. Promote these into PREDICATE_TYPE_OPERATORS and rule authoring is unblocked."
+        : `  ⇒ ${agree} confirmed, ${untested} still untested. Add a rule using each missing condition and re-run.`,
+  );
+  const beyond = [...observed.keys()].filter((t) => !PREDICATE_TYPE_HYPOTHESIS.has(t));
+  if (beyond.length > 0) {
+    console.log(`  Types outside the predicted range: ${beyond.sort((a, b) => a - b).join(", ")}`);
+  }
 }
 
 process.exitCode = main(process.argv.slice(2));

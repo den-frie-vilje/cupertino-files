@@ -35,6 +35,7 @@ import {
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
 import { FormulaOwnerRegistry } from "../tsce/owners.ts";
+import { controlsOf, type CellControl } from "./controls.ts";
 
 /**
  * One owner registry per store, kept weakly so a closed document is not
@@ -1573,6 +1574,27 @@ export class TableModel {
       if (rows || columns) return { rows, columns };
     }
     return { rows: undefined, columns: undefined };
+  }
+
+  /**
+   * Data-entry controls (checkbox, slider, stepper, pop-up menu) the table
+   * interns, by key. A cell's record points at one through `CONTROL_ID`.
+   *
+   * Empty for every corpus document — see `src/tst/controls.ts`.
+   */
+  controls(): Map<number, CellControl> {
+    return controlsOf(this.store, this.dataStore());
+  }
+
+  /** Key into {@link controls} carried by a cell's record, if it has one. */
+  controlKey(row: number, column: number): number | undefined {
+    return this.recordAt(row, column)?.id(CellFlag.CONTROL_ID);
+  }
+
+  /** The control on one cell, if it has one. */
+  cellControl(row: number, column: number): CellControl | undefined {
+    const key = this.controlKey(row, column);
+    return key === undefined ? undefined : this.controls().get(key);
   }
 
   // ------------------------------------------------------------- categories

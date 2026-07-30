@@ -108,7 +108,9 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | 5 | modern→current |
 | Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 17 | iwork19→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
-| Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 5 | iwork19→current |
+| Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |
+| Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 1 | current→current |
+| Cell controls (checkbox, slider, stepper, pop-up menu)<br><sub>NO FIXTURE: schema-derived. Shape is classified by populated fields, not by the unpublished interaction_type — see docs/BLOCKERS.md priority 3</sub> | Numbers | 🔍 read only | **0** | — |
 | Formula writing (authoring an AST)<br><sub>needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula</sub> | all | ○ roadmap | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
@@ -136,7 +138,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
-| Builds (animations)<br><sub>build count is exposed; the model is not</sub> | Keynote | ○ roadmap | n/a | — |
+| Builds (animations): read and retime<br><sub>NO FIXTURE: schema-derived. Reads and retimes existing builds; will not create one — see docs/BLOCKERS.md priority 4</sub> | Keynote | 🔍 read only | **0** | — |
+| Builds: creating an animation<br><sub>withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written</sub> | Keynote | ○ roadmap | n/a | — |
 
 ### Concurrency
 
@@ -147,7 +150,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-27 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+29 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -171,6 +174,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
+- 🔴 high — Numbers & tables → **Cell controls (checkbox, slider, stepper, pop-up menu)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
@@ -178,6 +182,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
+- 🔴 high — Keynote → **Builds (animations): read and retime**
 
 ## Validation gaps
 
@@ -185,7 +190,9 @@ correctly. They are listed with their reasoning and repro steps in
 
 - Container → **Wrapper-directory layout**
 - Container → **Mixed-codec packages (LZFSE component beside Snappy)**
+- Numbers & tables → **Cell controls (checkbox, slider, stepper, pop-up menu)**
 - Keynote → **Transitions**
+- Keynote → **Builds (animations): read and retime**
 
 **Thinly validated** (1–2 fixtures — no cross-check if an encoding varies):
 
@@ -200,6 +207,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Drawables & media → **Image filters / adjustments** (2)
 - Pages → **Master-page drawables** (1)
 - Pages → **Page-layout (body-less) documents** (2)
+- Numbers & tables → **Cross-table formula references resolved to table names** (1)
 - Numbers & tables → **Charts (type, categories, series, values)** (2)
 - Numbers & tables → **Chart data editing (values, names, series, categories)** (2)
 - Numbers & tables → **Conditional formatting rules** (1)

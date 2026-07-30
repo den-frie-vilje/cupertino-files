@@ -274,6 +274,31 @@ export {
   HAUNTED_OWNER,
 } from "./tsce/owners.ts";
 export type { FormulaOwner, OwnerUid } from "./tsce/owners.ts";
+export {
+  controlsOf,
+  readCellSpec,
+  controlShape,
+  CellSpecFields,
+  CONTROL_CELL_SPEC_TABLE,
+} from "./tst/controls.ts";
+export type { CellControl, ControlShape } from "./tst/controls.ts";
+export {
+  BuildModel,
+  buildsOfSlide,
+  removeBuild,
+  BUILD_TYPE,
+  BuildFields,
+  BuildChunkFields,
+  BuildAttributesFields,
+  TextDelivery,
+  DeliveryOption,
+  Acceleration,
+} from "./keynote/builds.ts";
+export type { BuildInfo, BuildChunk } from "./keynote/builds.ts";
+export {
+  PREDICATE_TYPE_HYPOTHESIS,
+  predicateTypeStatus,
+} from "./tst/predicates.ts";
 export type { Uid } from "./tst/uidmap.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";

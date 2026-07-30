@@ -184,12 +184,26 @@ const PRIMARY_PRECEDENCE = 10;
  *    over a column whose cached result (7920) is exactly the sum of the
  *    cells above it (5500 + 1170 + 1250), and the "Cats" table in
  *    `numbers-parser-*-issue102.numbers` uses the same id for its TOTAL row.
+ *  - **212 = DURATION** — in `numbers-parser-v26.1-custom-formats.numbers`,
+ *    `=$A$11+FUNCTION_212(,,8,22,11,500)` lands exactly 8h 22m 11.5s after
+ *    A11's midnight, and sibling rows differing only in the third argument
+ *    (8 → 12 → 24) shift by exactly that many hours. Six arguments, the
+ *    last four hours/minutes/seconds/milliseconds, the first two omitted:
+ *    `DURATION(weeks, days, hours, minutes, seconds, milliseconds)`.
+ *
+ * **The index is not alphabetical.** Those two points rule it out — D sorts
+ * before S, yet DURATION is 212 and SUM is 168 — and they rule out
+ * category-then-name ordering for the same reason. There is no shortcut:
+ * the table has to be measured against a real install.
  *
  * Extend at runtime with {@link registerFormulaFunctions} — and see
  * `docs/VERIFICATION.md` for how to harvest more ids from a real Numbers
  * install rather than guessing.
  */
-const BUILTIN_FUNCTIONS: ReadonlyMap<number, string> = new Map([[168, "SUM"]]);
+const BUILTIN_FUNCTIONS: ReadonlyMap<number, string> = new Map([
+  [168, "SUM"],
+  [212, "DURATION"],
+]);
 
 const registeredFunctions = new Map<number, string>();
 
@@ -428,10 +442,13 @@ export function renderFormula(
         });
         break;
       case AstNodeType.TOKEN:
-        stack.push({
-          text: node.getBool(AstNodeFields.TOKEN_BOOLEAN) ? "TRUE" : "FALSE",
-          precedence: PRIMARY_PRECEDENCE,
-        });
+        // An *omitted* argument, not a boolean. `AST_token_node_boolean` is
+        // set on these, which makes them look like TRUE — and rendering
+        // them that way produces a formula that evaluates to something
+        // else. The corpus settles it: `DURATION(<token>,<token>,8,22,11,500)`
+        // adds exactly 8h22m11.5s to its base date, so the two leading
+        // tokens contribute nothing. Weeks and days were simply left out.
+        stack.push({ text: "", precedence: PRIMARY_PRECEDENCE });
         break;
       case AstNodeType.STRING:
         // Spreadsheet string literals escape a quote by doubling it.

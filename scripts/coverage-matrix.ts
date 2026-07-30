@@ -825,6 +825,36 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Cross-table formula references resolved to table names",
+    apps: "all",
+    status: "read",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .tables()
+          .some(
+            (t) =>
+              t.storageGeneration === "v5" && t.formulas().some((f) => f.formula.includes("::")),
+          ),
+      ),
+    note: "via the calc-engine owner map; all 1020 cross-table references in the corpus name their table",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Cell controls (checkbox, slider, stepper, pop-up menu)",
+    apps: ["numbers"],
+    status: "read",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.controls().size > 0)),
+    note: "NO FIXTURE: schema-derived. Shape is classified by populated fields, not by the unpublished interaction_type — see docs/BLOCKERS.md priority 3",
+    manualProof: {
+      claim: "cell controls read correctly, and interaction_type means what the widget is",
+      why: "no document in the corpus contains a control at all, so nothing checks the reading",
+      how: "one Numbers file with a checkbox, star rating, slider, stepper and pop-up menu, then `npm run probe -- controls.numbers` — five rows of output name the enum",
+      risk: "high",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Formula writing (authoring an AST)",
     apps: "all",
     status: "roadmap",
@@ -1046,10 +1076,24 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
-    name: "Builds (animations)",
+    name: "Builds (animations): read and retime",
+    apps: ["keynote"],
+    status: "read",
+    probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.builds().length > 0)),
+    note: "NO FIXTURE: schema-derived. Reads and retimes existing builds; will not create one — see docs/BLOCKERS.md priority 4",
+    manualProof: {
+      claim: "the build model reads a real animation correctly",
+      why: "not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation",
+      how: "a three-slide deck with a different effect on each and one text build delivered by line, then `npm run probe -- animated.key`",
+      risk: "high",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Builds: creating an animation",
     apps: ["keynote"],
     status: "roadmap",
-    note: "build count is exposed; the model is not",
+    note: "withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written",
   },
 
   // ------------------------------------------------------------- concurrency

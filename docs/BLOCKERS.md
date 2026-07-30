@@ -1,0 +1,234 @@
+# What is still unknown, why, and exactly how to settle it
+
+Everything in this project that is not done is on this page, with the
+reason it is not done and the shortest path to finishing it. Nothing here
+is "hard"; each item is blocked on one specific fact.
+
+Read this before starting work. It is ordered by how much it unblocks.
+
+---
+
+## The shape of every remaining blocker
+
+There are only two kinds left.
+
+**Kind A — an integer enum Apple never published.** The archive is fully
+readable; one field is a number whose meaning is not in any schema. Reading
+works around it (the value is carried through, and the meaning is derived
+some other way); *writing* cannot, because a wrong code produces a file
+that loads and misbehaves.
+
+**Kind B — a structure no fixture contains.** The schema describes it, so
+the code can be written, but nothing checks the code is right. Shipping it
+unmarked would be the one thing this project refuses to do.
+
+Both are settled the same way: **one document made in the app, read back
+with `npm run probe -- <file>`.** That script reports every unknown in a
+single pass, so a well-chosen document closes several at once.
+
+---
+
+## Priority 1 — Formula authoring
+
+**Blocked on:** the function-index table (Kind A).
+`AST_function_node_index` is a position in an Apple-internal list. Two
+entries are proven by arithmetic against the corpus — 168 = `SUM`,
+212 = `DURATION` — and every function in every fixture now renders by name,
+but authoring a formula means writing an index for a function nobody has
+measured.
+
+**Ruled out already:** the index is **not alphabetical**, and not
+category-then-alphabetical either. `DURATION` sorts before `SUM` in both
+orderings, yet is 212 against SUM's 168. There is no shortcut; it must be
+measured.
+
+**How to settle it — 2 minutes, no scripting:**
+
+```sh
+npm run harvest -- --emit-sheet probe.tsv      # writes a TSV
+# open probe.tsv in Numbers, save as probe.numbers
+npm run harvest -- --ingest probe.numbers      # writes src/tst/function-names.ts
+```
+
+Or, on a Mac with Numbers installed, one command:
+`npm run harvest -- --drive` drives about 300 candidate names through the
+app in a single pass.
+
+The ingest refuses to guess: a name is accepted only when every argument
+shape agreed, an index claimed by two names is rejected, and rows that are
+not genuine probe rows are ignored. Protocol 1 in
+[`MANUAL-WORK.md`](MANUAL-WORK.md).
+
+**What it unblocks:** naming every function in every document; the
+prerequisite for `TableModel.setFormula`.
+
+---
+
+## Priority 2 — Conditional-formatting and filter rule authoring
+
+**Blocked on:** the `predicate_type` enum (Kind A). The corpus contains two
+values, 5 = `=` and 9 = `<`.
+
+**There is a prediction on the table.** Numbers' condition menu lists the
+numeric comparisons in a fixed order — equal to, not equal to, greater
+than, greater than or equal to, less than, less than or equal to — and
+laying that out from 5 puts `=` at 5 and `<` at 9. Both observations land
+exactly where the menu predicts. `PREDICATE_TYPE_HYPOTHESIS` in
+`src/tst/predicates.ts` records the full prediction, and it is **never used
+when reading** — reading takes the operator from the rule's formula, which
+states it outright.
+
+**How to settle it — 10 minutes:** make a Numbers table with one numeric
+column and add a conditional-formatting rule for each of the six
+comparisons, then:
+
+```sh
+npm run harvest:predicates -- rules.numbers
+```
+
+It prints each pairing and scores it against the prediction, ending in
+`CONFIRMED`, `REFUTED`, or a list of conditions still untested. One
+document either promotes the whole enum into `PREDICATE_TYPE_OPERATORS` or
+kills the hypothesis outright. Protocol 4 in [`MANUAL-WORK.md`](MANUAL-WORK.md).
+
+**Then also add**, in the same document, the conditions that are *not*
+plain comparisons — "between", "text contains", "is blank". Those compile
+to function calls, so they surface as unnamed function indexes and feed
+Priority 1 too.
+
+**What it unblocks:** creating conditional formats and filter rules, and
+the "authoring" halves of two capability rows.
+
+---
+
+## Priority 3 — Numbers cell controls
+
+**Blocked on:** `interaction_type` (Kind A) *and* no fixture (Kind B).
+All 37 documents were surveyed: zero control spec tables, zero cells with
+the control flag set, zero `CellSpecArchive` objects.
+
+Reading is implemented in `src/tst/controls.ts` and classifies a control by
+**which fields it populates** rather than by the unpublished enum — a spec
+with min/max/increment is a range widget, one with a popup model is a
+chooser. That is honest but coarse: it cannot tell a slider from a stepper.
+
+**How to settle it — 2 minutes:** one Numbers document with a column of
+each control: checkbox, star rating, slider, stepper, pop-up menu. Then:
+
+```sh
+npm run probe -- controls.numbers
+```
+
+Section 3 prints `interaction_type` and the populated fields for each. Five
+rows of output name the whole enum.
+
+**What it unblocks:** naming the widgets, and writing them — creation is
+withheld today only because a control the apps silently drop is
+indistinguishable from one that was never written.
+
+---
+
+## Priority 4 — Keynote builds
+
+**Blocked on:** no fixture (Kind B). Eight decks span 2013 to 26.1 and not
+one has an animation.
+
+The schema is complete — `KN.BuildArchive`, `KN.BuildChunkArchive`,
+`KN.BuildAttributesArchive` with its five enums — so `src/keynote/builds.ts`
+reads and edits builds today. What it will not do is create one, and
+`effect` is exposed as the raw string Apple stores rather than an enum of
+invented names.
+
+**How to settle it — 5 minutes:** one deck with three slides, each
+animating one object with a different effect, one of them text delivered
+by line so it has build chunks. Then:
+
+```sh
+npm run probe -- animated.key
+```
+
+Section 4 prints each build's delivery string, effect name and the
+attribute fields it populates.
+
+**What it unblocks:** confidence in the read model, an effect vocabulary,
+and build creation.
+
+---
+
+## Priority 5 — Chart appearance
+
+**Blocked on:** nothing but work. Chart *data* is fully editable; type,
+colours, axes and legend are held in style references this library does not
+model. This is a normal implementation task on the TSCH style archives, not
+a reverse-engineering one — the corpus has only two charts, so a document
+with several chart types would help.
+
+---
+
+## Priority 6 — Writing merge ranges
+
+**Blocked on:** nothing conceptual any more. A merge is a formula owned by
+a UUID derived from the table's own, and since the formula-owner map landed
+(`src/tsce/owners.ts`, FORMAT.md §14.11) those identities are readable and
+nameable. What remains is writing the owner entry, its dependency records
+and the merge formula together, then checking the result in Numbers.
+
+---
+
+## Priority 7 — Category authoring, and recomputing filtered rows
+
+**Blocked on:** evaluation, not understanding. Grouping rows means
+computing the group tree; deciding which rows a filter hides means
+evaluating its predicates. Both are calc-engine work. Reading is complete
+for both, including a staleness check for categories.
+
+---
+
+## Settled without a Mac — kept as a record of method
+
+These were on this list and are not any more. The reasoning is worth
+keeping, because it generalises.
+
+**Cross-table formula references.** An AST's `table_id` matched no table,
+and this was filed as an unresolvable derived UUID. It was neither: the id
+is a *calc-engine owner* identifier, and `TSCE.FormulaOwnerDependenciesArchive`
+maps every owner to its object. All 1020 cross-table references in the
+corpus now name their table.
+
+> **The lesson:** the proto for the archive that *uses* an identifier
+> rarely explains it. Look for the archive that *issues* identifiers —
+> usually a registry or dependency tracker elsewhere in the same family —
+> before concluding an identifier is derived or opaque.
+
+**`FUNCTION_212` and the token-node bug.** Chasing the corpus's one unnamed
+function proved 212 = `DURATION` arithmetically, and in doing so exposed a
+rendering bug: `TOKEN_NODE` carries `AST_token_node_boolean`, so omitted
+arguments were rendering as `TRUE`. `DURATION(TRUE,TRUE,8,22,11,500)` would
+evaluate to something eight days off the cached result — which is how the
+bug was caught.
+
+> **The lesson:** when a rendered formula and its cached result disagree,
+> the renderer is wrong. The cached value is a free oracle and it was not
+> being used.
+
+**Owner kind 200.** Looked like an unresolved owner in every document until
+the identities were compared: all 23 are the same hardcoded `uid = 666`
+from `base = 466`. A constant repeated across every file and every app is a
+sentinel, not data.
+
+---
+
+## Running the probes
+
+```sh
+npm run probe -- <file...>              # every unknown, one pass
+npm run harvest -- --emit-sheet f.tsv   # function-index probe sheet
+npm run harvest -- --ingest f.numbers   # ingest it
+npm run harvest -- --drive              # macOS: drive Numbers directly
+npm run harvest:predicates -- f.numbers # score the predicate-enum prediction
+npm run coverage                        # regenerate COVERAGE.md + VERIFICATION.md
+```
+
+Anything learned goes in [`MANUAL-WORK.md`](MANUAL-WORK.md)'s ledger and
+becomes a test. A finding that lives only in a commit message has to be
+rediscovered.

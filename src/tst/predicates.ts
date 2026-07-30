@@ -139,6 +139,48 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
   [9, "<"],
 ]);
 
+/**
+ * A **prediction** for the rest of the enum, held separately from the proof.
+ *
+ * Two facts constrain it. The corpus gives 5 = `=` and 9 = `<`. And
+ * Numbers' condition menu lists the numeric comparisons in a fixed order:
+ * equal to, not equal to, greater than, greater than or equal to, less
+ * than, less than or equal to. Laying that order out from 5 puts `=` at 5
+ * and `<` at 9 — both observations land exactly where the menu says they
+ * should, which is why this is worth writing down.
+ *
+ * It is still a prediction. Two points do not prove six values, and this
+ * map is **never consulted when reading**: {@link readPredicate} takes the
+ * operator from the formula, which states it outright. What this is for is
+ * making the manual harvest decisive — `scripts/harvest-predicates.ts`
+ * checks every observed pairing against it and reports agreements and
+ * contradictions, so one run against a real install either confirms the
+ * ordering or kills it, instead of merely collecting rows.
+ *
+ * See `docs/MANUAL-WORK.md` protocol 4.
+ */
+export const PREDICATE_TYPE_HYPOTHESIS: ReadonlyMap<number, PredicateOperator> = new Map([
+  [5, "="],
+  [6, "<>"],
+  [7, ">"],
+  [8, ">="],
+  [9, "<"],
+  [10, "<="],
+]);
+
+/** Which entries of the hypothesis the corpus has actually confirmed. */
+export function predicateTypeStatus(): {
+  type: number;
+  operator: PredicateOperator;
+  proven: boolean;
+}[] {
+  return [...PREDICATE_TYPE_HYPOTHESIS].map(([type, operator]) => ({
+    type,
+    operator,
+    proven: PREDICATE_TYPE_OPERATORS.get(type) === operator,
+  }));
+}
+
 /** How the operand's value was stored, derived from which field is set. */
 export type PredicateOperandKind =
   | "number"

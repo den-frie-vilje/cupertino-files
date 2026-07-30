@@ -33,6 +33,7 @@ import {
   Transition,
   TransitionAttributes,
 } from "./schema.ts";
+import { buildsOfSlide, removeBuild, BuildModel } from "./builds.ts";
 
 /** TSWP.ShapeInfoArchive.deprecated_storage, still present in older files. */
 const SHAPE_DEPRECATED_STORAGE = 2;
@@ -320,6 +321,21 @@ export class KeynoteSlide {
       add(this.storageOfShape(this.store.resolve(ref.getVarint(1))));
     }
     return out;
+  }
+
+  /**
+   * The slide's animations.
+   *
+   * Empty for every deck in the corpus — see `src/keynote/builds.ts` for
+   * why that matters to how much this claims.
+   */
+  builds(): BuildModel[] {
+    return buildsOfSlide(this.store, this.object);
+  }
+
+  /** Take an animation off this slide. */
+  removeBuild(buildId: bigint): boolean {
+    return removeBuild(this.object, buildId);
   }
 
   /**
