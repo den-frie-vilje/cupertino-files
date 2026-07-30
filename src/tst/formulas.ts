@@ -123,9 +123,25 @@ export const AstNodeType = {
   CELL_REFERENCE: 36,
   COLON_WITH_UIDS: 45,
   REFERENCE_ERROR_WITH_UIDS: 46,
+  LINKED_CELL_REFERENCE: 63,
+  LINKED_COLUMN_REFERENCE: 64,
+  LINKED_ROW_REFERENCE: 65,
   COLON_TRACT: 67,
   INTERSECTION: 69,
 } as const;
+
+/**
+ * Stands in for a linked cell reference that carries no coordinate.
+ *
+ * Filter and conditional-style predicates are written once and applied to
+ * many cells, so the operand under test is not an address — it is
+ * "whichever cell this rule was attached to". Apple encodes that as a
+ * `LINKED_CELL_REFERENCE_NODE` with a table identity but no row or column.
+ * Rendering it as `A1` would name a cell the rule does not mean, so it
+ * renders as this marker unless the caller supplies the concrete address
+ * via {@link RenderOptions.selfCell}.
+ */
+export const SELF_CELL_MARKER = "THIS_CELL";
 
 /** Binary operators, with their symbol and binding power. */
 const BINARY_OPERATORS = new Map<number, { symbol: string; precedence: number }>([
@@ -271,6 +287,16 @@ interface Operand {
   precedence: number;
 }
 
+/** Adjustments to how a formula renders. */
+export interface RenderOptions {
+  /**
+   * Address to substitute for a coordinate-less linked cell reference —
+   * the "cell under test" in a filter or conditional-style predicate.
+   * Defaults to {@link SELF_CELL_MARKER}.
+   */
+  selfCell?: string;
+}
+
 /**
  * Render a `TSCE.FormulaArchive` as infix text.
  *
@@ -281,6 +307,7 @@ interface Operand {
 export function renderFormula(
   formula: RawMessage | undefined,
   origin?: FormulaOrigin,
+  options: RenderOptions = {},
 ): RenderedFormula {
   const unknownFunctions: number[] = [];
   const unknownNodeTypes: number[] = [];
@@ -396,6 +423,23 @@ export function renderFormula(
           text: crossTable && address !== "#REF!" ? `${CROSS_TABLE_PREFIX}${address}` : address,
           precedence: PRIMARY_PRECEDENCE,
         });
+        break;
+      }
+      case AstNodeType.LINKED_CELL_REFERENCE:
+      case AstNodeType.LINKED_COLUMN_REFERENCE:
+      case AstNodeType.LINKED_ROW_REFERENCE: {
+        // A linked reference tracks its target by identity rather than
+        // position, so it may carry no coordinate at all. When it does
+        // carry one it reads exactly like an ordinary reference.
+        const positioned =
+          node.has(AstNodeFields.COLUMN) || node.has(AstNodeFields.ROW);
+        if (node.has(AstNodeFields.CROSS_TABLE_INFO) && positioned) {
+          hasCrossTableReferences = true;
+        }
+        const text = positioned
+          ? renderCellReference(node, origin)
+          : (options.selfCell ?? SELF_CELL_MARKER);
+        stack.push({ text, precedence: PRIMARY_PRECEDENCE });
         break;
       }
       case AstNodeType.COLON:

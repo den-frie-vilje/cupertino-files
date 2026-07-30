@@ -135,8 +135,9 @@ export {
   AstNodeFields,
   FormulaFields,
   CROSS_TABLE_PREFIX,
+  SELF_CELL_MARKER,
 } from "./tst/formulas.ts";
-export type { RenderedFormula, FormulaOrigin } from "./tst/formulas.ts";
+export type { RenderedFormula, FormulaOrigin, RenderOptions } from "./tst/formulas.ts";
 export {
   TableStyleHandle,
   readCellFormatting,
@@ -163,6 +164,26 @@ export {
   FORMAT_FLAG_BY_CATEGORY,
 } from "./tst/formats.ts";
 export type { CellFormat, FormatCategory, NumericFormatOptions } from "./tst/formats.ts";
+export {
+  readPredicate,
+  readOperand,
+  describePredicate,
+  PredicateFields,
+  PrePivotPredicateFields,
+  PredArgFields,
+  PredArgDataFields,
+  PREDICATE_TYPE_OPERATORS,
+} from "./tst/predicates.ts";
+export type {
+  Predicate,
+  PredicateOperand,
+  PredicateOperandKind,
+  PredicateOperator,
+} from "./tst/predicates.ts";
+export { ConditionalStyleSet, ConditionalStyleSetFields } from "./tst/conditional.ts";
+export type { ConditionalRule } from "./tst/conditional.ts";
+export { FilterSet, FilterSetFields, FilterSetType } from "./tst/filters.ts";
+export type { FilterRule, FilterMode } from "./tst/filters.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";
 export type { TocRule, TocEntry } from "./tswp/toc.ts";

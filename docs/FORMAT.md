@@ -966,6 +966,89 @@ key. Because `TableDataList` holds its references inline in entries rather
 than in a shape the generic reference extractor understands, its
 `object_references` must be refreshed explicitly.
 
+### 14.7 Predicates: conditional formatting and filters
+
+Two features that look unrelated in the UI share one archive.
+`TST.FormulaPredicateArchive` answers "does this cell match?" for both
+**conditional formatting** ("colour this red when it is below zero") and
+**filters** ("show rows where this column is below zero"); the only thing
+distinguishing them is a `for_conditional_style` flag.
+
+```proto
+message TST.FormulaPredicateArchive {
+  required int32 predicate_type = 1;          // unpublished enum
+  required int32 qualifier1 = 2;
+  required int32 qualifier2 = 3;
+  optional TST.FormulaPredArgArchive param_value0 = 4;   // …1 = 5, 2 = 6
+  optional TSCE.FormulaArchive formula = 7;
+  optional bool for_conditional_style = 8;
+}
+```
+
+A predicate stores its condition **twice**, and that redundancy is what
+makes it decodable without Apple's enum:
+
+- as a real TSCE **formula** — the AST `<cell> < 0`, which the calc engine
+  evaluates; and
+- as a **template** — `predicate_type` naming the comparison, plus the
+  operands in `param_value0..2`, which is what the condition editor
+  round-trips.
+
+`predicate_type` is an integer no public schema names. The formula's
+terminal operator node is the *documented* `TSCE.ASTNodeType` enum, whose
+meaning is visible in any formula bar. So the formula is authoritative for
+what a condition means, and `predicate_type` is carried through opaquely.
+The corpus supplies two pairings — 5 = `=`, 9 = `<` — and a value outside
+that set reads as `undefined` rather than a guess.
+
+The operand under test carries **no address**. A predicate is written once
+and applied to a whole range, so Apple encodes the tested cell as a
+`LINKED_CELL_REFERENCE_NODE` (type 63) with a table identity but no row or
+column. It renders as `THIS_CELL` unless the caller says which cell they
+are asking about.
+
+**Conditional formatting** interns its rule sets exactly like strings and
+formats: `DataStore.conditionalstyletable` (field 18) is a
+`TST.TableDataList` mapping a small key to a `TST.ConditionalStyleSetArchive`,
+and a cell's record carries that key in flag `0x80`. Sets are shared
+aggressively — in `numbers-parser-v26.1-xlsx-lineage.numbers`, three sets
+cover 1921 cells, and each entry's `refcount` equals its cell count exactly.
+Every set is written twice, as `rules_prepivot` (pre-2016, operands as AST
+indexes) and `rules` (operands as values); readers should prefer the latter
+and fall back.
+
+The second conditional id (flag `0x100`) is **not** interpreted here. By
+position it corresponds to `CellArchive.conditional_style_applied_rule`, but
+the corpus contradicts that reading: every cell on a one-rule set carries
+15 regardless of content, and cells on other sets carry 0, which is not a
+valid key in any of the table's lists. It is preserved verbatim and flagged
+in `docs/VERIFICATION.md`.
+
+**Filters** hang off the hidden-state machinery rather than the table:
+
+```
+TableModelArchive.hidden_states_owner (70)
+  └ HiddenStatesArchive.row_hidden_state_extent (3) / column_… (2)
+      └ HiddenStateExtentArchive.filter_set (8) → TST.FilterSetArchive
+```
+
+That indirection is the format being precise about cause and effect: the
+filter set says *why* rows should be hidden, the hidden-state extent
+records *which* ones are. Changing a rule does not change visibility until
+something re-evaluates the predicates.
+
+A filter set's rules are addressed by column through parallel arrays —
+`filter_offsets[i]` is the column rule `i` tests, `filter_enabled[i]`
+whether it is live — so the three repeated fields must stay the same
+length. Both are written **unpacked** (one varint key per value), the
+proto2 default.
+
+Every `FilterSetArchive` in the corpus is empty, across all three apps: mode
+"all", disabled, no rules. The container, its mode and its enable flag are
+therefore fixture-proven; a populated rule list is read from the schema plus
+the predicate encoding that conditional formatting exercises for real, and
+authoring one is not offered.
+
 ## 15. Known gaps / roadmap
 
 - **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)
@@ -974,10 +1057,12 @@ than in a shape the generic reference extractor understands, its
   and `setCell()` throw rather than return or write something misleading.
   (The reference Python implementation refuses them too.) Re-saving in
   Numbers 10+ converts them to v5.
-- **Inserting or deleting table rows and columns** is not implemented:
-  values, styling, sizes and band counts can all be changed, but the row
-  and column count of a table is fixed. Adding a row means new tile row
-  infos, header entries and RB-tree nodes in step.
+- **Authoring conditional-formatting rules and filter rules** is not
+  implemented (§14.7). An existing rule set can be applied to more cells,
+  and a filter set can be enabled, disabled or switched between "all" and
+  "any" — but building a rule means choosing a `predicate_type`, and only
+  two of that enum's members appear in the corpus. Recomputing which rows a
+  filter hides additionally means evaluating the predicates.
 - **Authoring formulas** is not implemented. Formulas are *read* and
   rendered to text (§14.5), and writing a literal correctly clears one, but
   building a `TSCE.FormulaArchive` AST needs the function-index table the

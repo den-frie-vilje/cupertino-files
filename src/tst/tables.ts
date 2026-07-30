@@ -25,6 +25,8 @@ import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { renderFormula, type RenderedFormula } from "./formulas.ts";
+import { ConditionalStyleSet, type ConditionalRule } from "./conditional.ts";
+import { FilterSet } from "./filters.ts";
 import {
   flagForFormat,
   readFormat,
@@ -60,7 +62,13 @@ const TableModelFields = {
   TABLE_NAME_STYLE: 30,
   REPEATING_HEADER_COLUMNS: 32,
   MERGE_OWNER: 47,
+  HIDDEN_STATES_OWNER: 70,
 } as const;
+
+/** TST.HiddenStatesOwnerArchive / .HiddenStatesArchive / .HiddenStateExtentArchive. */
+const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
+const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
+const HiddenStateExtent = { FILTER_SET: 8 } as const;
 /** TST.DataStore. */
 const DataStoreFields = {
   ROW_HEADERS: 1,
@@ -72,6 +80,7 @@ const DataStoreFields = {
   FORMULA_TABLE: 6,
   MERGE_REGION_MAP: 13,
   RICH_TEXT_TABLE: 17,
+  CONDITIONAL_STYLE_TABLE: 18,
   FORMAT_TABLE: 22,
 } as const;
 /** TST.TileStorage / .Tile / .TileRowInfo. */
@@ -1379,6 +1388,123 @@ export class TableModel {
     for (let r = row; r < row + rowCount; r++) {
       for (let c = column; c < column + columnCount; c++) this.setCellFormatting(r, c, formatting);
     }
+  }
+
+  // --------------------------------------------------- conditional formatting
+
+  /**
+   * Every conditional-formatting rule set the table interns, by key.
+   *
+   * Rule sets are shared: one entry covers every cell it was applied to,
+   * and its `refcount` is that cell count. So this returns a handful of
+   * sets even for a table where hundreds of cells are conditionally
+   * formatted.
+   */
+  conditionalStyleSets(): Map<number, ConditionalStyleSet> {
+    const out = new Map<number, ConditionalStyleSet>();
+    const list = this.store.resolve(
+      refId(this.dataStore(), DataStoreFields.CONDITIONAL_STYLE_TABLE),
+    );
+    for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = entry.getUint(ListEntry.KEY);
+      const target = this.store.resolve(refId(entry, ListEntry.REFERENCE));
+      if (key !== undefined && target) out.set(key, new ConditionalStyleSet(this.store, target, key));
+    }
+    return out;
+  }
+
+  /** Key into {@link conditionalStyleSets} carried by a cell's record. */
+  conditionalStyleKey(row: number, column: number): number | undefined {
+    return this.recordAt(row, column)?.id(CellFlag.COND_STYLE_ID);
+  }
+
+  /**
+   * The second conditional id a cell record carries, meaning unconfirmed.
+   *
+   * Sits in the `COND_RULE_STYLE_ID` slot, which by position corresponds to
+   * `CellArchive.conditional_style_applied_rule` — the rule that last
+   * matched. The corpus does not bear that out: in the one fixture with
+   * real rules, every cell sharing a one-rule set carries the same value
+   * (15) regardless of content, and cells on other sets carry 0, which is
+   * not a valid key in any of the table's lists. So it is exposed raw and
+   * preserved byte-for-byte rather than interpreted. See
+   * `docs/VERIFICATION.md`.
+   */
+  conditionalRuleId(row: number, column: number): number | undefined {
+    return this.recordAt(row, column)?.id(CellFlag.COND_RULE_STYLE_ID);
+  }
+
+  /** The rule set governing one cell, if it has one. */
+  conditionalStyleSet(row: number, column: number): ConditionalStyleSet | undefined {
+    const key = this.conditionalStyleKey(row, column);
+    return key === undefined ? undefined : this.conditionalStyleSets().get(key);
+  }
+
+  /**
+   * The conditional-formatting rules on a cell, in evaluation order.
+   *
+   * Conditions render against the cell asked about, so a rule on B4 reads
+   * `B4<0`. Nothing here evaluates them: deciding which rule *matches*
+   * means running the calc engine over the document, and a wrong answer
+   * would be indistinguishable from a right one.
+   */
+  conditionalRules(row: number, column: number): ConditionalRule[] {
+    return this.conditionalStyleSet(row, column)?.rules({ row, column }) ?? [];
+  }
+
+  /**
+   * Apply an existing rule set to another cell.
+   *
+   * Only re-points a cell at a set the table already interns — the sets
+   * themselves come from the app. That covers the common edit (extend this
+   * conditional format to more cells) without asserting a rule layout no
+   * fixture demonstrates.
+   */
+  setConditionalStyleKey(row: number, column: number, key: number | undefined): void {
+    this.requireWritable();
+    if (key !== undefined && !this.conditionalStyleSets().has(key)) {
+      throw new RangeError(`table has no conditional style set with key ${key}`);
+    }
+    const located = this.locateRow(row);
+    if (!located) throw new RangeError(`row ${row} has no cell storage`);
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    if (!existing) throw new RangeError(`cell ${row},${column} has no storage`);
+    const record = CellRecord.decode(existing);
+    if (key === undefined) {
+      record.remove(CellFlag.COND_STYLE_ID);
+      record.remove(CellFlag.COND_RULE_STYLE_ID);
+    } else {
+      record.setId(CellFlag.COND_STYLE_ID, key);
+    }
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+  }
+
+  // -------------------------------------------------------------- filtering
+
+  /**
+   * The table's row and column filter sets.
+   *
+   * Reached through `hidden_states_owner`, because a filter set belongs to
+   * a hidden-state extent rather than to the table directly — the extent
+   * records *which* rows ended up hidden, the filter set records *why*.
+   * Tables written before that structure existed have neither.
+   */
+  filterSets(): { rows: FilterSet | undefined; columns: FilterSet | undefined } {
+    const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    for (const states of owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
+      const resolve = (field: number): FilterSet | undefined => {
+        const target = this.store.resolve(
+          refId(states.getMessage(field), HiddenStateExtent.FILTER_SET),
+        );
+        return target ? new FilterSet(this.store, target) : undefined;
+      };
+      const rows = resolve(HiddenStates.ROW_EXTENT);
+      const columns = resolve(HiddenStates.COLUMN_EXTENT);
+      if (rows || columns) return { rows, columns };
+    }
+    return { rows: undefined, columns: undefined };
   }
 
   /** `cell_style_id` of a cell, if its record carries one. */

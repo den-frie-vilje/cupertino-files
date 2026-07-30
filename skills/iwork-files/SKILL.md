@@ -282,6 +282,41 @@ borders, padding); `t.bandTextStyle("headerRow")` is the text inside it and
 takes the same `CharacterFormatting` as any other text. Making a header
 bold means the second one.
 
+### Conditional formatting and filters
+
+Both are the same archive underneath — a *predicate* — so they read alike.
+
+```ts
+t.conditionalStyleSets();               // Map<key, ConditionalStyleSet>, shared by many cells
+t.conditionalRules(4, 2);               // rules on one cell, in evaluation order
+t.conditionalRules(4, 2)[0].predicate;  // { operator: "<", operands, text: "C5<0" }
+t.setConditionalStyleKey(9, 2, 1);      // apply an existing rule set to another cell
+
+const { rows, columns } = t.filterSets();
+rows?.mode;                             // "all" | "any"
+rows?.rules();                          // [{ column, enabled, predicate }]
+rows?.setEnabled(true); rows?.setMode("any");
+```
+
+Two things to know before relying on this:
+
+- **Nothing is evaluated.** `conditionalRules()` tells you what the rules
+  *are*, not which one currently matches — that needs the calc engine.
+  Likewise, enabling a filter set does not hide rows; the app recomputes
+  that when it next opens the file.
+- **Conditions are read from the rule's formula**, which states the
+  comparison, rather than from Apple's unpublished `predicate_type`. So a
+  condition reads correctly even for a type code this library has never
+  seen — and `predicate.operator` is `undefined`, rather than a guess, when
+  the rule is something richer than a comparison ("text contains").
+
+**Writing rules is not implemented** for either. Applying an *existing*
+rule set to more cells works; authoring a new one needs the `predicate_type`
+value the condition editor expects, and only two of that enum's members
+appear in any file examined. `npm run harvest:predicates -- <file>` extracts
+more from a document whose conditions you set up yourself — see
+`docs/MANUAL-WORK.md` protocol 4.
+
 ## Shadows and drawable styling
 
 Cell and table styles have **no shadow field** — the format has no such

@@ -158,6 +158,56 @@ dependency records do not map it back either.
 This one is open research rather than a checklist. Record what you learn
 even if it does not resolve, so the next attempt starts further along.
 
+## Protocol 4 — Map the `predicate_type` enum
+
+**What it produces:** entries for `PREDICATE_TYPE_OPERATORS` in
+`src/tst/predicates.ts`, which is what would let this library *author*
+conditional-formatting and filter rules rather than only read them.
+
+**Why:** a predicate stores its condition twice — as a TSCE formula and as
+`predicate_type` plus operands (§14.7). Reading works from the formula, so
+the enum is not needed. Writing is the reverse: the app's condition editor
+reads `predicate_type`, so a rule written with the wrong value shows the
+wrong condition in the UI even though the calc engine evaluates correctly.
+The corpus contains exactly two values (5 = `=`, 9 = `<`), from an xlsx
+import; Numbers' own UI offers roughly twenty conditions.
+
+**Procedure:**
+
+1. In Numbers, make a table with one column of numbers and one of text.
+2. Add conditional-formatting rules one at a time, each with a *distinct*
+   fill colour so they stay distinguishable, working through the whole
+   condition menu: equal to, not equal to, greater than, greater than or
+   equal to, less than, less than or equal to, between, not between, then
+   the text conditions (contains, does not contain, starts with, ends with,
+   is, is not), the date conditions, and the blank/not-blank pair.
+3. Save, then run:
+
+   ```
+   node scripts/harvest-predicates.ts <file.numbers>
+   ```
+
+   It prints one row per rule: `predicate_type`, `qualifier1/2`, the
+   operand kinds, and the operator the formula AST states. The formula is
+   the check — a row where the AST says `>=` pins that `predicate_type` to
+   `>=` with no guessing.
+4. Paste the printed table block into `PREDICATE_TYPE_OPERATORS` and record
+   the Numbers version here. Conditions with no simple operator (text
+   `contains`, `between`) compile to function calls; record their type
+   codes with the function index so they are not lost, but leave the
+   operator map alone.
+
+Order matters for one reason only: rules are stored in the order authored,
+so adding them one at a time and in a known order lets you match a rule to
+the condition you chose even where two look alike.
+
+**Bonus, same document:** conditional rules are the only place the corpus
+exercises real predicates, so this document also settles the open question
+about the second conditional id in a cell record (flag `0x100`). After
+step 3, change a cell's value so a *different* rule fires, save again, and
+diff the id. If it tracks which rule matched, it is a live cache; if not,
+it means something this library has yet to identify.
+
 ---
 
 ## Ledger
@@ -171,6 +221,7 @@ knowing it did.
 | — | 1 — function index | — | **not yet run.** `src/tst/function-names.ts` is empty; only the corpus-proven entry (168 = SUM) is in effect. | — |
 | — | 2 — border positions | — | **not yet run.** Mapping remains inferred. | — |
 | — | 3 — cross-table names | — | **not yet run.** References render with the `OTHER_TABLE::` marker. | — |
+| — | 4 — predicate_type enum | — | **not yet run.** Two values known from file analysis (5 = `=`, 9 = `<`); rule authoring stays unimplemented. | — |
 
 ### Findings that came out of file analysis alone
 
@@ -184,3 +235,8 @@ even though they needed no app:
 | `TSP.Color` gained an undocumented fixed32 at field 13 in the 26.x era | Present only in 26.x files, always paired with an explicit `rgbspace`, always exactly 1.0 across every document examined. |
 | Cell and table styles have no shadow field | `TST.CellStylePropertiesArchive` and `TableStylePropertiesArchive` contain none; shadows are on the drawable's `ShapeStyleArchive`/`MediaStyleArchive`. |
 | Media style bags omit `fill`, shifting later fields down one | Confirmed structurally on 1475 style objects: field 2 is a message in a shape bag and a float in a media bag. |
+| Conditional formatting and filters share one predicate archive | `TST.FormulaPredicateArchive` is the rule body in both `ConditionalStyleSetArchive` and `FilterRuleArchive`, told apart only by `for_conditional_style`. |
+| `predicate_type` 5 = `=` and 9 = `<` | The three rule sets in `numbers-parser-v26.1-xlsx-lineage.numbers` each carry a formula whose terminal AST node is the documented comparison enum, independently stating the condition. |
+| Conditional rule sets are interned and refcounted like strings | In the same fixture, three sets cover 1921 cells and each data-list `refcount` (957/734/230) equals its cell count exactly. |
+| Filter sets belong to a hidden-state extent, not the table | Reached via `hidden_states_owner → HiddenStatesArchive → HiddenStateExtentArchive.filter_set`; the traversal finds every `FilterSetArchive` in every fixture that has one, across all three apps. |
+| Every filter set in the corpus is empty | 20 fixtures contain one; all are mode "all" (one row set is "any"), disabled, with no rules — so filter *rule* layout is schema-derived, not fixture-proven. |

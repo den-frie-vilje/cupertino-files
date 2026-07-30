@@ -768,6 +768,76 @@ const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "roadmap",
   },
+  {
+    group: "Numbers & tables",
+    name: "Conditional formatting rules",
+    apps: "all",
+    status: "read",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.conditionalStyleSets().size > 0)),
+    note: "conditions decoded from the rule's formula, which states the comparison; predicate_type carried through opaque",
+    manualProof: {
+      claim:
+        "the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough",
+      why: "its value contradicts the obvious reading — every cell on a one-rule set carries 15 regardless of content, and cells on other sets carry 0, which is not a valid key in any of the table's lists",
+      how: "author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else",
+      risk: "low",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Conditional formatting: apply an existing rule set to more cells",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.conditionalStyleSets().size > 0)),
+    manualProof: {
+      claim: "re-pointing a cell's conditional-style key makes Numbers apply that rule set to it",
+      why: "the fixture suite proves the key changes and the file reloads, not that the app honours it — evaluation happens in the calc engine",
+      how: "open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Conditional formatting: authoring new rules",
+    apps: "all",
+    status: "roadmap",
+    note: "needs a predicate_type value for each condition the UI offers; only 2 of the enum's members appear in the corpus",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Filters (mode, enable state, per-column rules)",
+    apps: "all",
+    status: "read",
+    probe: (c) =>
+      safe(() =>
+        c.doc.tables().some((t) => {
+          const { rows, columns } = t.filterSets();
+          return rows !== undefined || columns !== undefined;
+        }),
+      ),
+    note: "every filter set in the corpus is empty, so rule reading is schema-derived; the container, mode and enable flag are fixture-proven",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Filters: enable, disable, combining mode",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() => c.doc.tables().some((t) => t.filterSets().rows !== undefined)),
+    manualProof: {
+      claim: "enabling a filter set makes Numbers apply its rules",
+      why: "no fixture has a populated filter set, so the suite can only prove an empty one round-trips with the flag flipped",
+      how: "build a Numbers table with a filter rule, save, flip is_enabled with this library, reopen and confirm the row visibility changes",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Filters: authoring rules and recomputing hidden rows",
+    apps: "all",
+    status: "roadmap",
+    note: "a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates",
+  },
 
   // ----------------------------------------------------------------- keynote
   {

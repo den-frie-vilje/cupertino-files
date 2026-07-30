@@ -420,6 +420,26 @@ export class RawMessage {
     this.setScalar(no, WireType.Fixed32, b);
   }
 
+  /**
+   * Replace all occurrences of a repeated varint field, unpacked.
+   *
+   * The proto2 default, and what Apple emits for the parallel arrays in
+   * e.g. `TST.FilterSetArchive` — `setPackedVarints` writes the other
+   * encoding, which readers accept but which no Apple file uses there.
+   */
+  setVarints(no: number, values: readonly (bigint | number)[]): void {
+    const idx = this.fields.findIndex((f) => f.no === no);
+    this.fields = this.fields.filter((f) => f.no !== no);
+    const inserted: RawField[] = values.map((v) => ({
+      no,
+      wire: WireType.Varint,
+      value: BigInt(v),
+    }));
+    if (idx >= 0) this.fields.splice(idx, 0, ...inserted);
+    else this.fields.push(...inserted);
+    this.markDirty();
+  }
+
   /** Write a repeated varint field packed (replacing all occurrences). */
   setPackedVarints(no: number, values: readonly (bigint | number)[]): void {
     const w = new ByteWriter(values.length * 2);
