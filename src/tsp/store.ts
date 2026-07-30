@@ -22,7 +22,7 @@ import { IWorkContainer, locatorForIwaName } from "./package.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
-import type { IWorkApp } from "./registry.ts";
+import { typeName, type IWorkApp } from "./registry.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -148,6 +148,11 @@ export class ObjectStore {
     if (ref === undefined) return undefined;
     const id = typeof ref === "bigint" ? ref : ref.getVarint(1);
     return id === undefined ? undefined : this.object(id);
+  }
+
+  /** Registry name of an object's archive type, resolved for this app. */
+  typeNameOf(object: IwaObject): string | undefined {
+    return typeName(object.type, this.app);
   }
 
   findByType(type: number): IwaObject | undefined {
