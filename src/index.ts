@@ -63,6 +63,8 @@ export { IwaObject, parseIwaFile, serializeIwaFile, parseIwaStream, serializeIwa
 // Registry
 export {
   typeName,
+  registerTypes,
+  clearRegisteredTypes,
   SHARED_TYPES,
   PAGES_TYPES,
   KEYNOTE_TYPES,

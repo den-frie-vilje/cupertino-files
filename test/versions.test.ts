@@ -9,6 +9,9 @@ import {
   IWorkDocument,
   IWORK_ERAS,
   PagesDocument,
+  registerTypes,
+  clearRegisteredTypes,
+  typeName,
   ZipReader,
 } from "../src/index.ts";
 
@@ -181,5 +184,34 @@ describe("compatibility across every fixture era", () => {
     // otherwise the compatibility model is untested in practice.
     expect(eras.size).toBeGreaterThan(1);
     expect(layouts.size).toBeGreaterThan(1);
+  });
+});
+
+describe("registry extensibility (teaching the library new types)", () => {
+  it("lets callers name types the bundled registry does not know", () => {
+    const doc = PagesDocument.load(fixture("libetonyek-pages5-file.pages"));
+    // Type 608 exists in this 2014-era file but not in the 14.4-era registry.
+    expect(doc.compatibility().probe.unknownTypeIds).toContain(608);
+    const before = doc.store.object(
+      [...doc.store.allObjects()].find(({ obj }) => obj.type === 608)!.obj.identifier,
+    )!;
+    expect(typeName(608, "pages")).toBe(undefined);
+
+    try {
+      registerTypes({ 608: "TSA.LegacyThingArchive" }, "pages");
+      expect(typeName(608, "pages")).toBe("TSA.LegacyThingArchive");
+      // Once registered, the type is no longer reported as unknown.
+      const after = PagesDocument.load(fixture("libetonyek-pages5-file.pages"));
+      expect(after.compatibility().probe.unknownTypeIds).toEqual([]);
+      expect(before.type).toBe(608);
+    } finally {
+      clearRegisteredTypes();
+    }
+    expect(typeName(608, "pages")).toBe(undefined);
+  });
+
+  it("rejects invalid type IDs", () => {
+    expect(() => registerTypes({ "not-a-number": "X.Y" })).toThrow();
+    expect(() => registerTypes({ 0: "X.Y" })).toThrow();
   });
 });

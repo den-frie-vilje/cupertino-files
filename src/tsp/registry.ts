@@ -780,11 +780,62 @@ const APP_TABLES: Record<IWorkApp, Readonly<Record<number, string>>> = {
   numbers: NUMBERS_TYPES,
 };
 
-/** Resolve a type ID to a message name, preferring the app-specific table. */
+/**
+ * Runtime registry extensions, consulted before the bundled tables.
+ *
+ * The bundled registry is a snapshot of the apps at survey time, so a
+ * document written by a newer release can legitimately contain type IDs
+ * this library has never seen. Those objects always load and round-trip
+ * (they are opaque payloads), and `doc.compatibility().probe.unknownTypeIds`
+ * names them — this is how you teach the library what they are, without
+ * waiting for a release or forking the package.
+ */
+const EXTENSIONS: { shared: Map<number, string>; apps: Record<IWorkApp, Map<number, string>> } = {
+  shared: new Map(),
+  apps: { pages: new Map(), keynote: new Map(), numbers: new Map() },
+};
+
+/**
+ * Register additional type-ID → message-name mappings.
+ *
+ * ```ts
+ * registerTypes({ 10176: "TP.SomeNewArchive" }, "pages");
+ * ```
+ *
+ * Registrations are process-wide and take precedence over the bundled
+ * tables, so they can also correct an entry that a newer app changed.
+ */
+export function registerTypes(
+  mapping: Readonly<Record<number | string, string>>,
+  app?: IWorkApp,
+): void {
+  const target = app ? EXTENSIONS.apps[app] : EXTENSIONS.shared;
+  for (const [id, name] of Object.entries(mapping)) {
+    const numeric = Number(id);
+    if (!Number.isInteger(numeric) || numeric <= 0) {
+      throw new RangeError(`registerTypes: invalid type ID ${JSON.stringify(id)}`);
+    }
+    target.set(numeric, name);
+  }
+}
+
+/** Remove all runtime registry extensions (mainly for tests). */
+export function clearRegisteredTypes(): void {
+  EXTENSIONS.shared.clear();
+  for (const app of Object.keys(EXTENSIONS.apps) as IWorkApp[]) EXTENSIONS.apps[app].clear();
+}
+
+/**
+ * Resolve a type ID to a message name. Precedence: runtime app-specific
+ * extension → bundled app table → runtime shared extension → bundled shared
+ * table. Returns undefined for genuinely unknown types (never guesses).
+ */
 export function typeName(type: number, app?: IWorkApp): string | undefined {
   if (app) {
+    const registered = EXTENSIONS.apps[app].get(type);
+    if (registered !== undefined) return registered;
     const specific = APP_TABLES[app][type];
     if (specific !== undefined) return specific;
   }
-  return SHARED_TYPES[type];
+  return EXTENSIONS.shared.get(type) ?? SHARED_TYPES[type];
 }
