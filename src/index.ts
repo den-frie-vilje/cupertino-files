@@ -149,6 +149,18 @@ export {
   TST_STYLE_TYPE,
 } from "./tst/styles.ts";
 export type { CellFormatting, TableFormatting, CellBorders } from "./tst/styles.ts";
+export {
+  readFormat,
+  writeFormat,
+  categoryOfFormatType,
+  flagForFormat,
+  FormatType,
+  FormatFields,
+  NegativeStyle,
+  AUTOMATIC_DECIMALS,
+  FORMAT_FLAG_BY_CATEGORY,
+} from "./tst/formats.ts";
+export type { CellFormat, FormatCategory, NumericFormatOptions } from "./tst/formats.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export {
   BorderPosition,

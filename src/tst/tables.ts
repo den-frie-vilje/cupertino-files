@@ -13,7 +13,7 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { Storage } from "../tswp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { ByteWriter } from "../base/bytes.ts";
+import { ByteWriter, bytesEqual } from "../base/bytes.ts";
 import {
   CellFlag,
   CellRecord,
@@ -25,6 +25,13 @@ import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { renderFormula, type RenderedFormula } from "./formulas.ts";
+import {
+  flagForFormat,
+  readFormat,
+  writeFormat,
+  FORMAT_FLAG_BY_CATEGORY,
+  type CellFormat,
+} from "./formats.ts";
 
 export const TST_TYPE = {
   TABLE_INFO: 6000,
@@ -65,6 +72,7 @@ const DataStoreFields = {
   FORMULA_TABLE: 6,
   MERGE_REGION_MAP: 13,
   RICH_TEXT_TABLE: 17,
+  FORMAT_TABLE: 22,
 } as const;
 /** TST.TileStorage / .Tile / .TileRowInfo. */
 const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
@@ -180,6 +188,7 @@ const ListEntry = {
   STRING: 3,
   REFERENCE: 4,
   FORMULA: 5,
+  FORMAT: 6,
   RICH_TEXT_PAYLOAD: 9,
 } as const;
 /** TST.RichTextPayloadArchive: storage = 1. */
@@ -430,6 +439,115 @@ export class TableModel {
       });
     }
     return out;
+  }
+
+  // ----------------------------------------------------------------- formats
+
+  /**
+   * How a cell's value is displayed, or undefined when it has no explicit
+   * format and the app falls back to its automatic rendering.
+   */
+  cellFormat(row: number, column: number): CellFormat | undefined {
+    const record = this.recordAt(row, column);
+    if (!record) return undefined;
+    const formats = this.formatTable();
+    for (const flag of Object.values(FORMAT_FLAG_BY_CATEGORY)) {
+      const id = record.id(flag);
+      if (id === undefined) continue;
+      const format = formats.get(id);
+      if (format) return readFormat(format);
+    }
+    return undefined;
+  }
+
+  /**
+   * Set how a cell's value is displayed.
+   *
+   * A cell shows one format, so any format the record already carried is
+   * cleared first — leaving a stale currency id beside a new date id would
+   * make the display depend on which flag the app happens to read first.
+   */
+  setCellFormat(row: number, column: number, format: CellFormat): void {
+    this.requireWritable();
+    const located = this.locateRow(row);
+    if (!located) throw new RangeError(`row ${row} has no cell storage to format`);
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    if (!existing) throw new RangeError(`cell ${row},${column} is empty; give it a value first`);
+
+    const record = CellRecord.decode(existing);
+    record.removeAll(FORMAT_FLAGS);
+    record.setId(flagForFormat(format), this.internFormat(format));
+
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+  }
+
+  /** Apply one format across a rectangular block. */
+  setRangeFormat(
+    row: number,
+    column: number,
+    rowCount: number,
+    columnCount: number,
+    format: CellFormat,
+  ): void {
+    for (let r = row; r < row + rowCount; r++) {
+      for (let c = column; c < column + columnCount; c++) {
+        if (this.recordAt(r, c)) this.setCellFormat(r, c, format);
+      }
+    }
+  }
+
+  /** key → TSK.FormatStructArchive from the data store's format table. */
+  private formatTable(): Map<number, RawMessage> {
+    const out = new Map<number, RawMessage>();
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMAT_TABLE));
+    for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = entry.getUint(ListEntry.KEY);
+      const format = entry.getMessage(ListEntry.FORMAT);
+      if (key !== undefined && format) out.set(key, format);
+    }
+    return out;
+  }
+
+  /**
+   * Add or reuse a format-table entry, returning its key.
+   *
+   * Reuse is by encoded equality: two cells showing "2 decimal places, no
+   * separator" should share one entry, exactly as they do in Apple's own
+   * files, rather than growing the table by one per formatted cell.
+   */
+  private internFormat(format: CellFormat): number {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMAT_TABLE));
+    if (!list) throw new RangeError("table has no format table; cannot store a cell format");
+    const encoded = writeFormat(format);
+    const wanted = encoded.toBytes();
+    const m = list.message;
+    for (const entry of m.getMessages(DataList.ENTRIES)) {
+      const candidate = entry.getMessage(ListEntry.FORMAT);
+      const key = entry.getUint(ListEntry.KEY);
+      if (key === undefined || !candidate) continue;
+      if (bytesEqual(candidate.toBytes(), wanted)) {
+        entry.setVarint(ListEntry.REFCOUNT, (entry.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+        return key;
+      }
+    }
+    const key = m.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(m);
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(ListEntry.FORMAT, encoded);
+    m.addMessage(DataList.ENTRIES, entry);
+    m.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    return key;
+  }
+
+  /** The decoded record of a cell, if it has storage. */
+  private recordAt(row: number, column: number): CellRecord | undefined {
+    const located = this.locateRow(row);
+    if (!located) return undefined;
+    const raw = readRowLayout(located.rowInfo, this.columnCount).records[column];
+    return raw ? CellRecord.decode(raw) : undefined;
   }
 
   // ---------------------------------------------------------------- formulas

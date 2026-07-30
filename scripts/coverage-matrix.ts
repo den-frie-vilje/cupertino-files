@@ -634,6 +634,33 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Cell display formats (number, currency, percentage, date, duration, text, boolean)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .tables()
+          .some(
+            (t) =>
+              t.storageGeneration === "v5" &&
+              t.cells().some((cell) => t.cellFormat(cell.row, cell.column) !== undefined),
+          ),
+      ),
+    note: "category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored",
+    manualProof: {
+      claim: "A format we write makes Numbers display the value the way the inspector would.",
+      why:
+        "The type codes were established by correlating every format in the corpus against the flag " +
+        "that referenced it — strong evidence for the categories, but rendering is still the app's.",
+      how:
+        "Write a currency, percentage and date format, open in Numbers, and compare each cell against " +
+        "the same format applied through the Cell inspector on an untouched copy.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Formula reading (AST rendered to text)",
     apps: "all",
     status: "read",

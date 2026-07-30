@@ -15,6 +15,7 @@ import {
   PagesDocument,
   solidStroke,
   VerticalAlignment,
+  type CellFormat,
   type CellValue,
   type IWorkDocument,
   type TableModel,
@@ -71,6 +72,15 @@ function rawRecordsOf(doc: IWorkDocument, table: TableModel): Uint8Array[] {
     }
   }
   return out;
+}
+
+/** The table's format-table entries. */
+function formatEntries(doc: IWorkDocument, table: TableModel): number[] {
+  const list = doc.store.resolve(refId(table.object.message.getMessage(4), 22));
+  return (list?.message.getMessages(3) ?? []).flatMap((e) => {
+    const key = e.getUint(1);
+    return key === undefined || !e.getMessage(6) ? [] : [key];
+  });
 }
 
 /** The table's string-table entries as plain objects. */
@@ -1076,5 +1086,102 @@ describe("Numbers sheet management", () => {
       threw = true;
     }
     expect(threw).toBe(true);
+  });
+});
+
+describe("cell formats", () => {
+  it("reads every format category the corpus contains", () => {
+    const kinds = new Set<string>();
+    for (const name of [
+      "numbers-parser-v26.1-date-formats.numbers",
+      "numbers-parser-v26.1-custom-formats.numbers",
+      "iwork-mcp-v14.5-earnings.numbers",
+      "numbers-parser-v26.0-categories.numbers",
+    ]) {
+      for (const table of NumbersDocument.load(fixture(name)).tables()) {
+        if (table.storageGeneration !== "v5") continue;
+        for (const cell of table.cells()) {
+          const format = table.cellFormat(cell.row, cell.column);
+          if (format) kinds.add(format.kind);
+        }
+      }
+    }
+    // Categories come from which record flag carried the id, not from
+    // guessing at the format's own type code.
+    for (const expected of ["text", "number", "date", "currency", "custom"]) {
+      expect([...kinds]).toContain(expected);
+    }
+  });
+
+  it("writes and reads back each format kind", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const cases: [number, number, CellFormat][] = [
+      [1, 0, { kind: "currency", code: "EUR", decimals: 2, thousandsSeparator: true, accountingStyle: true }],
+      [1, 1, { kind: "percentage", decimals: 1 }],
+      [2, 0, { kind: "date", pattern: "yyyy-MM-dd" }],
+      [2, 1, { kind: "number", decimals: "auto", thousandsSeparator: false }],
+      [3, 0, { kind: "text" }],
+    ];
+    for (const [row, column, format] of cases) {
+      table.setCell(row, column, { type: "number", value: 1 }, { allowCovered: true });
+      table.setCellFormat(row, column, format);
+    }
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    for (const [row, column, format] of cases) {
+      expect(reloaded.cellFormat(row, column)).toEqual(format);
+    }
+    expect(NumbersDocument.load(doc.save()).compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("treats decimal_places 253 as automatic rather than 253 digits", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, { type: "number", value: 1 });
+    table.setCellFormat(1, 0, { kind: "number", decimals: "auto" });
+    const format = NumbersDocument.load(doc.save()).tables()[0]!.cellFormat(1, 0)!;
+    expect(format.kind === "number" && format.decimals).toBe("auto");
+  });
+
+  it("replaces a cell's format rather than stacking a second one", () => {
+    // Two format ids on one record would make the display depend on which
+    // flag the app reads first.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, { type: "number", value: 5 });
+    table.setCellFormat(1, 0, { kind: "currency", code: "USD" });
+    table.setCellFormat(1, 0, { kind: "percentage", decimals: 0 });
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.cellFormat(1, 0)!.kind).toBe("percentage");
+  });
+
+  it("shares one format-table entry between cells formatted alike", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const entriesBefore = formatEntries(doc, table).length;
+    for (const row of [1, 2, 3]) {
+      // allowCovered: this fixture merges rows 2..5 of column 0, and the
+      // point here is the format table, not the merge guard.
+      table.setCell(row, 0, { type: "number", value: row }, { allowCovered: true });
+      table.setCellFormat(row, 0, { kind: "number", decimals: 2 });
+    }
+    // Three cells, one new entry — as in Apple's own files.
+    expect(formatEntries(doc, table).length).toBe(entriesBefore + 1);
+  });
+
+  it("refuses to author a custom format", () => {
+    // Its definition lives elsewhere behind a UUID we cannot mint.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, { type: "number", value: 1 });
+    let message = "";
+    try {
+      table.setCellFormat(1, 0, { kind: "custom", category: "number", formatType: 270 });
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+    expect(message).toContain("custom format");
   });
 });
