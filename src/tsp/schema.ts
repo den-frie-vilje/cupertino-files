@@ -3,7 +3,7 @@
  * references, geometry value types, colors, ranges. Field numbers from
  * proto/current/TSPMessages.proto.
  */
-import { RawMessage } from "../base/protobuf.ts";
+import { RawMessage, WireType } from "../base/protobuf.ts";
 
 export const TSP_TYPE = {
   PACKAGE_METADATA: 11006,
@@ -29,9 +29,21 @@ export function makeRef(id: bigint): RawMessage {
   return m;
 }
 
-/** Read a TSP.Reference field's identifier. */
+/**
+ * Read a TSP.Reference field's identifier.
+ *
+ * Returns undefined rather than throwing when the field is absent or is not
+ * a length-delimited message. Field numbers are reused for different kinds
+ * across message types, and this library reads structures it has no schema
+ * for, so probing a field must never be fatal.
+ */
 export function refId(container: RawMessage | undefined, fieldNo: number): bigint | undefined {
-  return container?.getMessage(fieldNo)?.getVarint(1);
+  if (!container || container.fieldWire(fieldNo) !== WireType.Bytes) return undefined;
+  try {
+    return container.getMessage(fieldNo)?.getVarint(1);
+  } catch {
+    return undefined;
+  }
 }
 
 /** Build a TSP.DataReference message (Data/ identifier space). */
@@ -54,9 +66,13 @@ export function makeColor(r: number, g: number, b: number, a = 1): RawMessage {
 
 /** Collect TSP.Reference identifiers of a (possibly repeated) message field. */
 export function pushRef(out: bigint[], container: RawMessage | undefined, fieldNo: number): void {
-  if (!container) return;
-  for (const ref of container.getMessages(fieldNo)) {
-    const id = ref.getVarint(1);
-    if (id !== undefined) out.push(id);
+  if (!container || container.fieldWire(fieldNo) !== WireType.Bytes) return;
+  try {
+    for (const ref of container.getMessages(fieldNo)) {
+      const id = ref.getVarint(1);
+      if (id !== undefined) out.push(id);
+    }
+  } catch {
+    // Field number reused for a non-reference payload — not a reference list.
   }
 }
