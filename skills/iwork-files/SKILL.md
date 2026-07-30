@@ -116,23 +116,68 @@ Ranges support `.replaceWith() .delete() .format() .bold() .italic()
 .paragraphs()`. Prefer ONE `.format({...})` call with all properties over
 chaining sugar methods — each call creates a style object.
 
-Character/paragraph formatting options: `bold`, `italic`, `fontSize`,
-`fontName` (PostScript name), `fontColor` (`{r,g,b,a?}` 0..1), `underline`,
-`strikethru`, `tracking`, `baselineShift` / `alignment` (0 left, 1 right,
-2 center, 3 justified), `spaceBefore`, `spaceAfter`, `firstLineIndent`,
-`leftIndent`, `rightIndent`, `lineSpacing`, `keepLinesTogether`,
-`keepWithNext`, `pageBreakBefore`, `widowControl`, `outlineLevel`,
-`showInToc`.
+**Character** options: `bold`, `italic`, `fontSize`, `fontName`
+(PostScript name), `fontColor`, `backgroundColor` (highlight), `underline`
+(0 none / 1 single / 2 double / 3 wavy), `underlineColor`,
+`underlineWidth`, `wordUnderline`, `strikethru` (0..3), `strikethruColor`,
+`strikethruWidth`, `wordStrikethru`, `capitalization` (0 none / 1 all caps
+/ 2 small caps / 3 title), `ligatures`, `superscript` (0 / 1 super /
+2 sub), `tracking`, `kerning`, `baselineShift`, `outline`, `outlineColor`,
+`shadow`, `language`.
+
+**Paragraph** options: `alignment` (0 left, 1 right, 2 center,
+3 justified), `spaceBefore`, `spaceAfter`, `firstLineIndent`, `leftIndent`,
+`rightIndent`, `lineSpacing`, `keepLinesTogether`, `keepWithNext`,
+`pageBreakBefore`, `widowControl`, `hyphenate`, `outlineLevel`,
+`showInToc`, `backgroundColor`, `border` (a stroke), `borderPositions`,
+`roundedCorners`, `ruleWidth`, `tabs`, `defaultTabStops`, `decimalTab`,
+`writingDirection`.
+
+Colours are `{ r, g, b, a?, space? }` with channels in 0..1 and `space`
+`"srgb" | "p3"`; `hexColor("#f5f5f0")` parses the usual notations. Passing
+`undefined` for a nullable property (`fontName`, `fontColor`,
+`backgroundColor`, `border`, …) means **explicitly none**, not "inherit".
 
 All text offsets are UTF-16 code units — identical to JavaScript string
 indexing, so `text.indexOf(...)` results are valid offsets.
 
-## Tables (read-only)
+## Editing named styles
+
+Editing a style changes every run that uses it — the difference between
+"make this heading blue" and "make all headings blue".
 
 ```ts
-const tables = numbersDoc.tables();          // or numbersDoc.tables(sheetId), pagesDoc.tables()
+const heading = sheet.style("Heading 1")!;   // or sheet.style(styleId)
+heading.character();                          // what this style overrides
+heading.paragraph();
+heading.resolved().character;                 // with the parent chain folded in
+heading.setCharacter({ fontSize: 20, fontColor: hexColor("#003366") });
+heading.setParagraph({ border: solidStroke({ r: 0, g: 0, b: 0 }, 1),
+                       borderPositions: BorderPosition.BOTTOM });
+```
+
+Setters **merge**: properties the library does not model are preserved.
+
+## Shared style values
+
+Fills, gradients, strokes and shadows are one vocabulary used by text,
+table cells and shapes alike:
+
+```ts
+import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "iwork-files";
+
+colorFill(1, 0.9, 0.2);                                 // flat colour
+linearGradient(hexColor("#fff"), hexColor("#0066ff"));  // two-stop gradient
+solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1pt solid border
+({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: [4, 2] });  // dashed
+```
+
+## Tables
+
+```ts
+const tables = doc.tables();                 // any app; numbersDoc.tables(sheetId) scopes to a sheet
 const t = tables[0];
-t.name; t.rowCount; t.columnCount; t.headerRowCount;
+t.name; t.rowCount; t.columnCount; t.headerRowCount; t.footerRowCount;
 if (!t.hasReadableCells) { /* pre-BNC storage — see below */ }
 t.cells();        // [{ row, column, value }] non-empty cells
 t.grid();         // dense (CellValue | null)[][]
@@ -144,16 +189,64 @@ cellValueToString(cell.value);
 richText | date | bool | duration | error`, each with `isFormula` (formula
 cells carry their cached result, so no evaluator is needed).
 
+### Writing cells
+
+```ts
+t.setCell(1, 0, { type: "text", value: "Revenue" });
+t.setCell(1, 1, { type: "number", value: 143_800_000_000 });
+t.setCell(2, 0, { type: "date", value: new Date() });
+t.setCell(2, 1, { type: "bool", value: true });
+t.setCell(2, 2, { type: "duration", seconds: 3600 });
+t.clearCell(3, 0);
+t.setRow(4, [{ type: "text", value: "Total" }, { type: "number", value: 42 }]);
+t.setCells(5, 0, [[{ type: "number", value: 1 }, { type: "number", value: 2 }]]);
+toCellInput("plain value");   // coerce string|number|boolean|Date|null
+```
+
+Writing preserves the cell's styles, number formats and comments, and
+clears any formula. Rich text (`type: "richText"`) cannot be written
+directly — use `type: "text"`, or edit `t.richTextStorage(row, col)`.
+Rows and columns **cannot be added or removed**; coordinates outside the
+existing table throw.
+
+### Styling cells and tables
+
+```ts
+t.setCellFormatting(1, 0, {
+  fill: colorFill(0.95, 0.95, 1),                      // colour, gradient or image
+  borders: allBorders(solidStroke({ r: 0, g: 0, b: 0 }, 0.5)),  // or { top, right, bottom, left }
+  padding: { left: 6, right: 6, top: 3, bottom: 3 },
+  verticalAlignment: VerticalAlignment.MIDDLE,          // 0 top, 1 middle, 2 bottom
+  textWrap: true,
+});
+t.setRangeFormatting(1, 0, 3, 4, { fill: colorFill(1, 1, 0.9) });
+t.tableStyle()!.setTable({ bandedRows: true, bandedFill: colorFill(0.97, 0.97, 0.97),
+                           tableBorderVisible: true });
+t.bandStyle("headerRow")!.setCell({ fill: colorFill(0.2, 0.3, 0.5) });  // whole band
+```
+
+Setting a border side to `null` removes it; omitting a side leaves it. A
+per-cell style is created based on the cell's current one, so unspecified
+properties are inherited rather than lost, and neighbours are unaffected.
+
+### Structure
+
+```ts
+t.name = "Q1 Revenue";
+t.setBands({ headerRows: 1, headerColumns: 1, footerRows: 1 });
+t.setRowHeight(0, 44); t.setColumnWidth(0, 180);
+t.rowHeight(0); t.columnWidth(0); t.isRowHidden(3); t.isColumnHidden(2);
+```
+
 **Important:** tables written by iWork '13/'15-era apps use *pre-BNC* cell
-storage, which cannot be decoded. `cells()` **throws** rather than returning
-an empty array (which would look like an empty table). Always check
-`t.hasReadableCells` / `t.storageGeneration` when file age is unknown.
-Writing cells is not supported yet.
+storage, which cannot be decoded. `cells()` and `setCell()` **throw**
+rather than returning an empty array or writing something wrong. Always
+check `t.hasReadableCells` / `t.storageGeneration` when file age is
+unknown.
 
 ## Editing text in Numbers/Keynote
 
-Full cell/slide models are not implemented yet; edit through the shared
-storages instead:
+Beyond tables and slides, edit through the shared storages:
 
 ```ts
 for (const storage of doc.textStorages()) {
@@ -195,6 +288,7 @@ CLI equivalents (after `npm i -g iwork-files` or via npx):
 5. Check `doc.compatibility()` before relying on a feature with files of
    unknown provenance, and never interpret an empty result as "no data"
    without confirming the feature is supported.
-6. If a needed feature is missing (cell writing, chart data, Keynote slides,
-   footnote creation), fall back to the low-level `RawMessage` layer, and
-   consult `docs/FORMAT.md` in the repository for the format specification.
+6. If a needed feature is missing (chart data, formula authoring, table
+   row insertion, footnote creation), fall back to the low-level
+   `RawMessage` layer, and consult `docs/FORMAT.md` in the repository for
+   the format specification — §14 covers tables byte by byte.

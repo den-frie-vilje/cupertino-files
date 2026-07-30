@@ -90,9 +90,19 @@ the app itself.
 - The scripting dictionaries are narrow. Pages exposes little beyond
   `body text`; Keynote is richer (slides, presenter notes, transition
   properties); Numbers exposes cell values. Features outside those
-  dictionaries — footnotes, comments, image filters — cannot be asserted
-  this way, and are covered by the fixture suite instead.
+  dictionaries — footnotes, comments, image filters, cell *styling* —
+  cannot be asserted this way, and are covered by the fixture suite
+  instead.
 - These tests are slow and interactive by nature. They are not part of CI.
-- Cell **writing** is not implemented in the library, so the Numbers
-  round-trip asserts that an edited package still opens and re-parses,
-  rather than that we wrote a cell.
+
+## What only the apps can confirm
+
+Two things in this repository are validated *here and nowhere else*,
+because no amount of reading Apple's files can prove them:
+
+- **Cell writing.** The unit suite proves our records re-encode
+  byte-identically and reload through our own parser. Only Numbers can
+  confirm it agrees — so the e2e suite writes a cell with the library and
+  asks Numbers, through AppleScript, what it reads back.
+- **Keynote transitions.** No licensed deck in the corpus has a non-`none`
+  effect, so the app has to create the case for us (above).

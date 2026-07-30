@@ -167,10 +167,82 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
-    name: "Paragraph & character styles (by name, plus creation)",
+    name: "Paragraph & character styles (by name, plus creation and editing)",
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => c.doc.stylesheets().length > 0),
+  },
+  {
+    group: "Text & styles",
+    name: "Character properties (font, colour, highlight, underline, strike, caps, shadow…)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .stylesheets()
+          .some((sheet) =>
+            sheet
+              .characterStyles()
+              .some((info) => Object.keys(sheet.style(info.id)?.character() ?? {}).length > 0),
+          ),
+      ),
+  },
+  {
+    group: "Text & styles",
+    name: "Paragraph properties (indents, spacing, keeps, hyphenation, outline level)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .stylesheets()
+          .some((sheet) =>
+            sheet
+              .paragraphStyles()
+              .some((info) => Object.keys(sheet.style(info.id)?.paragraph() ?? {}).length > 0),
+          ),
+      ),
+  },
+  {
+    group: "Text & styles",
+    name: "Tab stops (position, alignment, leader)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .stylesheets()
+          .some((sheet) =>
+            sheet.paragraphStyles().some((info) => (sheet.style(info.id)?.paragraph().tabs?.length ?? 0) > 0),
+          ),
+      ),
+  },
+  {
+    group: "Text & styles",
+    name: "Paragraph background & borders (rule stroke + positions)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .stylesheets()
+          .some((sheet) =>
+            sheet.paragraphStyles().some((info) => {
+              const paragraph = sheet.style(info.id)?.paragraph();
+              return paragraph?.border !== undefined || paragraph?.backgroundColor !== undefined;
+            }),
+          ),
+      ),
+    note: "border_positions semantics inferred, not proven by rendering",
+  },
+  {
+    group: "Text & styles",
+    name: "Shared style values (colour incl. P3, gradients, strokes, shadows, padding)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.stylesheets().length > 0),
+    note: "one vocabulary shared by text, table and drawable styling",
   },
   {
     group: "Text & styles",
@@ -349,7 +421,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Table cells — modern BNC/v5 storage",
+    name: "Table cell reading — modern BNC/v5 storage",
     apps: "all",
     status: "read",
     probe: (c) => c.report.probe.cellStorage === "v5",
@@ -357,7 +429,7 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Table cells — pre-BNC storage",
+    name: "Table cell reading — pre-BNC storage",
     apps: "all",
     status: "out-of-scope",
     probe: (c) => c.report.probe.cellStorage === "preBNC",
@@ -365,10 +437,59 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Table cell writing",
+    name: "Table cell writing (text, number, date, bool, duration)",
     apps: "all",
-    status: "roadmap",
-    note: "needs formula-dependency and tile bookkeeping",
+    status: "read+write",
+    probe: (c) => c.report.probe.cellStorage === "v5",
+    note: "string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Cell styling (fill, four borders, padding, alignment, wrap)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() => c.doc.tables().some((t) => t.storageGeneration === "v5" && t.bandStyle("body") !== undefined)),
+  },
+  {
+    group: "Numbers & tables",
+    name: "Table styling (banded rows, grid strokes, visibility)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.tableStyle() !== undefined)),
+  },
+  {
+    group: "Numbers & tables",
+    name: "Table structure (name, header/footer bands, row & column sizes)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.rowCount > 0)),
+    note: "inserting or deleting rows/columns is not implemented",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Merged cell ranges",
+    apps: "all",
+    status: "read",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.merges().length > 0)),
+    note: "writing a merge needs calc-engine owner bookkeeping",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Formulas",
+    apps: "all",
+    status: "read",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .tables()
+          .some(
+            (t) =>
+              t.storageGeneration === "v5" &&
+              t.cells().some((cell) => cell.value.type !== "empty" && cell.value.isFormula),
+          ),
+      ),
+    note: "cached values readable and the formula flag exposed; writing a literal clears the formula, but authoring one is not implemented",
   },
   {
     group: "Numbers & tables",

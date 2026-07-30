@@ -48,7 +48,12 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Text read/edit with full attribute-table fixup | all | ✅ read + write | 37 | all |
-| Paragraph & character styles (by name, plus creation) | all | ✅ read + write | 37 | all |
+| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 37 | all |
+| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 37 | all |
+| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 37 | all |
+| Tab stops (position, alignment, leader) | all | ✅ read + write | 33 | all |
+| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions semantics inferred, not proven by rendering</sub> | all | ✅ read + write | 20 | all |
+| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 37 | all |
 | List styles | all | ✅ read + write | 19 | all |
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 12 | iwork16→current |
@@ -86,9 +91,14 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Sheets | Numbers | 🔍 read only | 10 | iwork16→current |
-| Table cells — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 18 | iwork19→current |
-| Table cells — pre-BNC storage<br><sub>undocumented layout; reported explicitly, never guessed</sub> | all | ✗ out of scope | 4 | iwork16→iwork16 |
-| Table cell writing<br><sub>needs formula-dependency and tile bookkeeping</sub> | all | ○ roadmap | n/a | — |
+| Table cell reading — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 18 | iwork19→current |
+| Table cell reading — pre-BNC storage<br><sub>undocumented layout; reported explicitly, never guessed</sub> | all | ✗ out of scope | 4 | iwork16→iwork16 |
+| Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 18 | iwork19→current |
+| Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
+| Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
+| Table structure (name, header/footer bands, row & column sizes)<br><sub>inserting or deleting rows/columns is not implemented</sub> | all | ✅ read + write | 22 | iwork16→current |
+| Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | **0** | — |
+| Formulas<br><sub>cached values readable and the formula flag exposed; writing a literal clears the formula, but authoring one is not implemented</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Chart writing | all | ○ roadmap | n/a | — |
 
@@ -115,6 +125,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 - Container → **Wrapper-directory layout**
 - Container → **Mixed-codec packages (LZFSE component beside Snappy)**
+- Numbers & tables → **Merged cell ranges**
 - Keynote → **Transitions**
 
 **Thinly validated** (1–2 fixtures — no cross-check if an encoding varies):

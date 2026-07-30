@@ -66,7 +66,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 |---|---|
 | Parse all three container layouts (flat zip, nested `Index.zip`, wrapper dir) | ✅ |
 | Pages: body text read/edit with full attribute-table fixup | ✅ |
-| Pages: paragraph styles (by name), character formatting, style creation | ✅ |
+| Pages: paragraph styles (by name), character formatting, style creation + editing | ✅ |
 | Pages: sections (read + insert), page masters, header/footer text, master-page drawables | ✅ |
 | Pages: page-layout (body-less) documents | ✅ |
 | Pages: hyperlinks (read/create/remove), smart fields, bookmarks, attachments | ✅ |
@@ -75,13 +75,17 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Drawables (shapes, images, text boxes, tables): enumerate, move, resize | ✅ |
 | Fluent API: `find()` → `TextRange` → `.bold().link()`, `ParagraphHandle` | ✅ |
 | Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
+| Tables: **write** cells (text, number, date, bool, duration) | ✅ modern storage |
+| Tables: cell styling (fill, four borders, padding, alignment, wrap) and table styling (banding, grid strokes) | ✅ |
+| Tables: name, header/footer bands, row heights, column widths | ✅ |
+| Styling values: colours (incl. Display P3), gradients, strokes, dashes, shadows, tabs | ✅ |
 | Charts: type, categories, series names and plotted values | ✅ read |
 | Images: filters/adjustments (exposure, saturation, levels…), masks, media variants | ✅ read/write |
 | Keynote: slides, speaker notes, transitions, masters, canvas size | ✅ read/write |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
-| Table cell **writing**, chart **writing**, footnote/comment creation | roadmap |
+| Chart **writing**, footnote/comment creation, table row/column insertion, formula authoring | roadmap |
 | Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
-| Numbers: sheets, tables and cell values | ✅ read |
+| Numbers: sheets, tables and cell values | ✅ read/write |
 | Byte-identical round-trip of untouched content | ✅ |
 | Version-aware loading (never hard-fails on newer files) | ✅ |
 | Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |
@@ -138,7 +142,56 @@ sheet.createParagraphStyle({ name: "Note", basedOn: "Body",
   character: { italic: true, fontSize: 11 },
   paragraph:  { leftIndent: 24, spaceBefore: 6 } });
 sheet.createCharacterStyle({ character: { bold: true } });  // anonymous (direct formatting)
+
+// Editing a named style reaches every run that uses it.
+const heading = sheet.style("Heading 1")!;
+heading.character();                     // what this style overrides
+heading.resolved().character;            // …with the parent chain folded in
+heading.setParagraph({
+  border: solidStroke({ r: 0, g: 0, b: 0 }, 1),   // paragraph rule
+  borderPositions: BorderPosition.BOTTOM,
+  backgroundColor: hexColor("#f5f5f0"),
+  tabs: [{ position: 216, alignment: TabAlignment.DECIMAL, leader: "." }],
+});
 ```
+
+Fills, gradients, strokes and shadows are one shared vocabulary — the same
+values style text, table cells and shapes:
+
+```ts
+import { colorFill, linearGradient, solidStroke, hexColor } from "iwork-files";
+
+colorFill(1, 0.9, 0.2);                                    // flat colour
+linearGradient(hexColor("#fff"), hexColor("#0066ff"));     // two-stop gradient
+solidStroke({ r: 0, g: 0, b: 0 }, 1);                      // 1pt border
+({ color: { r: 0, g: 0, b: 0 }, pattern: [4, 2] });        // dashed
+```
+
+### Tables
+
+```ts
+const table = doc.tables()[0]!;
+table.grid();                            // (CellValue | null)[][]
+table.setCell(1, 0, { type: "text", value: "Revenue" });
+table.setCell(1, 1, { type: "number", value: 143_800_000_000 });
+table.setRow(2, [{ type: "date", value: new Date() }, { type: "bool", value: true }]);
+
+table.setCellFormatting(1, 0, {
+  fill: colorFill(0.95, 0.95, 1),
+  borders: allBorders(solidStroke({ r: 0.2, g: 0.2, b: 0.2 }, 0.5)),
+  padding: { left: 6, right: 6, top: 3, bottom: 3 },
+  verticalAlignment: VerticalAlignment.MIDDLE,
+  textWrap: true,
+});
+table.tableStyle()!.setTable({ bandedRows: true, bandedFill: colorFill(0.97, 0.97, 0.97) });
+
+table.setBands({ headerRows: 1, footerRows: 1 });
+table.setColumnWidth(0, 180);
+```
+
+Writing a cell preserves everything else the record carries — style ids,
+number formats, comments — and reference-counts the table's string pool.
+Pre-BNC (iWork '13-era) storage is refused rather than corrupted.
 
 ### Low level
 

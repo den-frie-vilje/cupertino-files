@@ -355,18 +355,92 @@ message TSWP.ParagraphStyleArchive {    // type 2022
 
 `CharacterStylePropertiesArchive` fields (all optional; paired `*_null`
 booleans express "explicitly cleared"): bold=1, italic=2, font_size=3,
-font_name=5 (PostScript name), font_color=7 (`TSP.Color`: model=1 (1=rgb),
-r=3, g=4, b=5, a=6 — floats), superscript=10, underline=11, strikethru=12,
-capitalization=13, baseline_shift=14, kerning=15, ligatures=16,
-background_color=26, tracking=27, … (47 fields in current apps).
+font_name=5 (PostScript name), font_color=7, language=9, superscript=10
+(0 normal/1 super/2 sub), underline=11 (0 none/1 single/2 double/3 wavy),
+strikethru=12 (0 none…3 triple), capitalization=13 (0 none/1 all caps/2
+small caps/3 title), baseline_shift=14, kerning=15, ligatures=16 (0
+required/1 standard/2 all), outline_color=18, outline=19,
+shadow=21 (`TSD.ShadowArchive`), strikethru_color=23, strikethru_width=24,
+background_color=26 (the highlight behind the glyphs), tracking=27,
+underline_color=29, underline_width=30, word_strikethru=31,
+word_underline=32.
 
 `ParagraphStylePropertiesArchive`: alignment=1 (0 left/1 right/2 center/3
-justified/4 natural), first_line_indent=7, keep_lines_together=9,
-keep_with_next=10, left_indent=11, line_spacing=13
-(`LineSpacingArchive{mode=1, amount=2}`), page_break_before=14,
-right_indent=19, space_after=20, space_before=21, tabs=25, widow_control=26,
-outline_level=27, show_in_toc=33, list_style=40 (ref),
-following_style=42 (ref), …
+justified/4 natural), decimal_tab=3, default_tab_stops=4, fill=6,
+first_line_indent=7, hyphenate=8, keep_lines_together=9, keep_with_next=10,
+left_indent=11, line_spacing=13 (`LineSpacingArchive{mode=1, amount=2}`),
+page_break_before=14, rule_width=18, right_indent=19, space_after=20,
+space_before=21, tabs=25, widow_control=26, outline_level=27, stroke=32,
+show_in_toc=33, writing_direction=38, list_style=40 (ref),
+following_style=42 (ref), border_positions=45, rounded_corners=46.
+
+Two of these are easy to get wrong:
+
+- **`fill` (6) is a bare `TSP.Color`, not a `TSD.FillArchive`.** A paragraph
+  background can only be a flat colour — never a gradient or image.
+- **`border_positions` (45) is an int32, not a bitmask of sides.** It
+  replaced a `DeprecatedParagraphBorderType` enum whose values pack a
+  position in 0..4 alongside a line style, and the Pages inspector offers
+  exactly five choices, so the reading `0 none / 1 top / 2 bottom / 3 top
+  and bottom / 4 all` fits both. This is *inferred, not proven by
+  rendering*: every value in the corpus is 0, 1 or 2. The library exposes
+  the raw integer alongside the named constants.
+
+### 8.1 Shared style values (TSD)
+
+Fills, strokes and shadows are not per-family. The same messages carry a
+paragraph background, a table-cell fill, a shape fill and a chart series
+fill; the same `TSD.StrokeArchive` is a paragraph rule, a cell border and a
+shape outline. Modelling them once is what lets one API style text, tables
+and drawables.
+
+```proto
+message TSD.FillArchive {               // exactly one of:
+  optional TSP.Color color = 1;
+  optional TSD.GradientArchive gradient = 2;
+  optional TSD.ImageFillArchive image = 3;
+}
+message TSD.GradientArchive {
+  optional GradientType type = 1;       // 0 linear, 1 radial
+  repeated GradientStop stops = 2;      // { color=1, fraction=2, inflection=3 }
+  optional float opacity = 3;
+}
+message TSD.StrokeArchive {
+  optional TSP.Color color = 1;
+  optional float width = 2;
+  optional LineCap cap = 3;             // 0 butt, 1 round, 2 square
+  optional LineJoin join = 4;           // 0 miter, 1 round, 2 bevel
+  optional float miter_limit = 5;
+  optional StrokePatternArchive pattern = 6;
+}
+message TSD.StrokePatternArchive {
+  optional StrokePatternType type = 1;  // 0 dash pattern, 1 solid, 2 empty
+  optional float phase = 2;
+  optional uint32 count = 3;
+  repeated float pattern = 4;           // dash lengths — FLOATS, not varints
+}
+message TSD.ShadowArchive {
+  optional TSP.Color color = 1;
+  optional float angle = 2 [default = 315];
+  optional float offset = 3 [default = 5];
+  optional int32 radius = 4 [default = 1];
+  optional float opacity = 5 [default = 1];
+  optional bool is_enabled = 6 [default = true];
+}
+```
+
+`StrokePatternArchive.pattern` being `repeated float` is a real trap:
+encoding dash lengths as packed varints produces a message that parses but
+renders wrong.
+
+**`TSP.Color` and colour spaces.** `model = 1` (1 rgb, 2 cmyk, 3 white),
+`r/g/b = 3/4/5`, `a = 6`, cmyk `c/m/y/k = 7..10`, white `w = 11`, and
+`rgbspace = 12` (1 sRGB, 2 Display P3). The 26.x-era apps write an explicit
+`rgbspace` on essentially every colour, so a reader that ignores field 12
+will silently render P3 colours as sRGB. There is also an **undocumented
+fixed32 field 13**, first seen in the 26.x era, always paired with an
+explicit `rgbspace` and always `1.0` in every document examined — meaning
+unknown, preserved verbatim like any unknown field.
 
 **Stylesheets** (`TSS.StylesheetArchive`, type 401): `styles = 1` (refs),
 `identifier_to_style_map = 2` (`{identifier=1, style=2}` entries),
@@ -652,16 +726,160 @@ writes. Because this library preserves object identifiers, save tokens and
 the collaboration history rather than renumbering them, a document it edits
 can subsequently be opened and collaborated on normally.
 
-## 14. Known gaps / roadmap
+## 14. Tables (TST): cell storage and styling
 
-- **Table cells**: modern "BNC" v5 cell storage is implemented (read-only:
-  numbers, text, rich text, dates, booleans, durations, errors, merges).
-  **Pre-BNC storage versions 3/4**, written by iWork '13-era apps, use an
-  undocumented record layout and are *not* decodable — tables from those
-  files report `storageGeneration === "preBNC"` and `cells()` throws rather
-  than returning a misleading empty result. (The reference Python
-  implementation refuses them too.) Re-saving in Numbers 10+ converts them.
-- **Cell writing** needs formula-dependency and tile bookkeeping.
+### 14.1 From table to cells
+
+```
+TST.TableInfoArchive (6000)     ← the drawable on the sheet/page/slide
+└─ tableModel = 2 → TST.TableModelArchive (6001)
+   ├─ table_style = 3            → TST.TableStyleArchive (6003)
+   ├─ base_data_store = 4        (embedded TST.DataStore)
+   │  ├─ rowHeaders = 1          → HeaderStorageBucket(s) (6006)
+   │  ├─ columnHeaders = 2       → HeaderStorageBucket
+   │  ├─ tiles = 3               (embedded TileStorage → TST.Tile, 6002)
+   │  ├─ stringTable = 4         → TST.TableDataList (6005)
+   │  ├─ styleTable = 5          → TableDataList of cell-style references
+   │  ├─ formula_table = 6       → TableDataList of TSCE.FormulaArchive
+   │  ├─ merge_region_map = 13   → TST.MergeRegionMapArchive (6144)
+   │  └─ rich_text_table = 17    → TableDataList of rich-text payloads
+   ├─ number_of_rows = 6, number_of_columns = 7, table_name = 8
+   ├─ number_of_header_rows = 9, header_columns = 10, footer_rows = 11
+   ├─ body_cell_style = 18, header_row_style = 19,
+   │  header_column_style = 20, footer_row_style = 21   → CellStyleArchive (6004)
+   └─ default_row_height = 16, default_column_width = 17
+```
+
+`Tile.rowInfos` holds one `TileRowInfo` per materialized row; the table row
+is `tileid * tile_size + tile_row_index` (tile size is 256). Rows with no
+storage are entirely empty.
+
+### 14.2 The v5 ("BNC") cell record
+
+`TileRowInfo.cell_storage_buffer` (field 6) concatenates the row's records;
+`cell_offsets` (field 7) is a signed-16-bit little-endian array indexed by
+column, `-1` meaning "no record". A record runs from its offset to the next
+non-negative offset, or to the end of the buffer. `has_wide_offsets` (8)
+multiplies every offset by 4 — lossless because every record is a 4-byte
+multiple.
+
+```
+offset  size  meaning
+0       u8    storage version — must be 5
+1       u8    cell type (below)
+2–5     4     zero in every file examined
+6–7     u16   "extras": duplicates which format id is present. Informational
+8–11    u32   flags — which optional fields follow
+12…           optional fields, in ASCENDING BIT ORDER of `flags`
+```
+
+| Cell type | Meaning | Value read from |
+|---:|---|---|
+| 0 | empty | — |
+| 2 | number | decimal128 |
+| 3 | text | `string_id` → stringTable |
+| 5 | date | `seconds` since 2001-01-01 |
+| 6 | bool | `double > 0` |
+| 7 | duration | `double` seconds |
+| 8 | formula error | — |
+| 9 | rich text | `rich_id` → rich_text_table → TSWP storage |
+| 10 | currency | decimal128 |
+
+Flags and payload sizes: `0x1` decimal128 (16), `0x2` double (8), `0x4`
+seconds (8), `0x8` string_id (4), `0x10` rich_id (4), `0x20` cell_style_id
+(4), `0x40` text_style_id (4), `0x80` conditional style (4), `0x100`
+conditional rule style (4), `0x200` formula_id (4), `0x400` control_id (4),
+`0x800` formula-error id (4), `0x1000` suggest_id (4), `0x2000`…`0x40000`
+the six per-type format ids (4 each), `0x80000` comment id (4), `0x100000`
+import-warning id (4).
+
+Numbers are **decimal128** (IEEE 754-2008, binary integer significand,
+biased exponent `0x1820`), not doubles — which is why 0.1 in a Numbers cell
+is exactly 0.1. A writer must therefore derive the significand from the
+*shortest decimal string* that round-trips the value, not from the binary
+mantissa.
+
+### 14.3 Writing a cell: the invariants
+
+1. **Preserve the record's other fields.** Style ids, format ids, comment
+   ids and conditional styles live in the same record as the value.
+   Decoding to a field map and rewriting only the value flags is what stops
+   an edit from stripping a cell's formatting.
+2. **Drop format ids when the value type changes** — a date format on a
+   number renders nonsense — and clear `formula_id` when writing a literal.
+3. **Reference-count the string table.** `TableDataList.entries` carry
+   `{key=1, refcount=2, string=3}` and the list carries `nextListID = 2`.
+   Reuse an existing entry (incrementing its refcount) or allocate
+   `nextListID`; on overwrite, decrement the old entry and remove it at zero.
+4. **Rebuild the whole row**: `cell_storage_buffer`, `cell_offsets`
+   (Apple writes 255 slots regardless of table width), `cell_count`, and
+   the matching `HeaderStorageBucket.Header.numberOfCells`.
+5. **Keep the pre-BNC stubs consistent.** Fields 3/4 are `required` in
+   proto2 and current Apple writers still emit them — as a 12-byte all-zero
+   record per cell with version byte `4`, plus an offsets array at stride
+   12. They are inert (readers use 6/7 once `last_saved_in_BNC` is set) but
+   leaving stale offsets pointing into a rebuilt buffer is worse than
+   reproducing the stub.
+6. `Tile.maxColumn`/`maxRow`/`numCells` are **0** in Apple's own output;
+   maintaining them where the app zeroes them is a gratuitous difference.
+
+### 14.4 Cell and table styles
+
+Both are `TSS.StyleArchive` subclasses with their property bag at field 11.
+
+```proto
+message TST.CellStylePropertiesArchive {
+  optional TSD.FillArchive cell_fill = 1;
+  optional bool text_wrap = 3;
+  optional int32 vertical_alignment = 8;   // 0 top, 1 middle, 2 bottom
+  optional TSWP.PaddingArchive padding = 9;
+  optional TSD.StrokeArchive top_stroke = 10;
+  optional TSD.StrokeArchive right_stroke = 11;
+  optional TSD.StrokeArchive bottom_stroke = 12;
+  optional TSD.StrokeArchive left_stroke = 13;
+}
+message TST.TableStylePropertiesArchive {
+  optional bool banded_rows = 1;
+  optional TSD.FillArchive banded_fill = 2;
+  optional bool v_strokes_visible = 33;    // …h_strokes_visible = 34,
+  optional bool table_border_visible = 38; //   separators 35–37, 39, 42–44
+  optional TSD.StrokeArchive header_row_separator_stroke = 46;
+  optional TSD.StrokeArchive table_body_horizontal_border_stroke = 58;
+  optional TSD.StrokeArchive table_body_vertical_border_stroke = 59;
+  optional TSD.StrokeArchive table_body_horizontal_stroke = 60;
+  optional TSD.StrokeArchive table_body_vertical_stroke = 61;
+}
+```
+
+A cell points at its style through `cell_style_id` (flag `0x20`), which is a
+**key into `DataStore.styleTable`**, not an object id — the entry's
+`reference = 4` holds the object id. Styling one cell therefore means:
+create a `TST.CellStyleArchive` (cloning the cell's current style so
+unspecified properties are inherited, but clearing the clone's name and
+identifier), append a style-table entry, and point the record at the new
+key. Because `TableDataList` holds its references inline in entries rather
+than in a shape the generic reference extractor understands, its
+`object_references` must be refreshed explicitly.
+
+## 15. Known gaps / roadmap
+
+- **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)
+  uses an undocumented record layout and is *not* decodable — tables from
+  those files report `storageGeneration === "preBNC"`, and both `cells()`
+  and `setCell()` throw rather than return or write something misleading.
+  (The reference Python implementation refuses them too.) Re-saving in
+  Numbers 10+ converts them to v5.
+- **Inserting or deleting table rows and columns** is not implemented:
+  values, styling, sizes and band counts can all be changed, but the row
+  and column count of a table is fixed. Adding a row means new tile row
+  infos, header entries and RB-tree nodes in step.
+- **Authoring formulas** is not implemented. Cached values are readable and
+  writing a literal correctly clears the cell's formula, but building a
+  `TSCE.FormulaArchive` AST and its calc-engine dependency records is a
+  separate body of work.
+- **Writing merge ranges** needs the calc-engine merge-owner bookkeeping
+  (`MergeOwnerArchive` formulas and `FormulaOwnerDependenciesArchive`);
+  reading them is supported.
 - Chart data (TSCH) and Keynote slide trees are read as opaque objects;
   editing them needs the TSCH/KN models on top of this substrate.
 - Creating documents **from scratch** (the practical route is embedding an
@@ -676,7 +894,7 @@ can subsequently be opened and collaborated on normally.
 - Live iCloud collaboration (§13.2) and editing documents open in an app
   (§13.1) are out of scope by construction, not by omission.
 
-## 15. Prior art & provenance
+## 16. Prior art & provenance
 
 - `obriensp/iWorkFileFormat` (2013) — first public IWA analysis + Pages '13
   proto dump (MIT).
