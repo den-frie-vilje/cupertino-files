@@ -61,7 +61,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Footnotes / endnotes<br><sub>creating footnotes is not implemented</sub> | Pages | 🔍 read only | 1 | iwork19→iwork19 |
 | Comments<br><sub>creating comments is not implemented</sub> | all | 🔍 read only | 2 | iwork16→iwork19 |
 | Change tracking (insertions/deletions)<br><sub>tables preserved and index-shifted correctly; no semantic API</sub> | all | 🔍 read only | 1 | modern→modern |
-| Table of contents | Pages | ○ roadmap | n/a | — |
+| Table of contents (rules read + write, cached entries read)<br><sub>collection rules are editable; cached entries are a layout result this library will not invent</sub> | Pages | ✅ read + write | 2 | iwork19→iwork19 |
 
 ### Drawables & media
 
@@ -128,13 +128,14 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-15 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+16 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
 - 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
 - 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
+- 🟡 low — Text & styles → **Table of contents (rules read + write, cached entries read)**
 - 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
@@ -163,6 +164,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Text & styles → **Footnotes / endnotes** (1)
 - Text & styles → **Comments** (2)
 - Text & styles → **Change tracking (insertions/deletions)** (1)
+- Text & styles → **Table of contents (rules read + write, cached entries read)** (2)
 - Drawables & media → **Image filters / adjustments** (2)
 - Pages → **Master-page drawables** (1)
 - Pages → **Page-layout (body-less) documents** (2)

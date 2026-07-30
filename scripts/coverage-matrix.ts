@@ -28,6 +28,7 @@ import { NumbersDocument } from "../src/numbers/document.ts";
 import { IWORK_ERAS, type IWorkEra, type CompatibilityReport } from "../src/tsp/version.ts";
 import type { IWorkApp } from "../src/tsp/registry.ts";
 import { drawableStylesOf } from "../src/tsd/drawables.ts";
+import { tablesOfContents } from "../src/tswp/toc.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const OUTPUT = new URL("../docs/COVERAGE.md", import.meta.url);
@@ -360,9 +361,21 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
-    name: "Table of contents",
+    name: "Table of contents (rules read + write, cached entries read)",
     apps: ["pages"],
-    status: "roadmap",
+    status: "read+write",
+    probe: (c) => safe(() => tablesOfContents(c.doc.store).length > 0),
+    note: "collection rules are editable; cached entries are a layout result this library will not invent",
+    manualProof: {
+      claim: "Pages regenerates a TOC whose collection rules we changed, and honours the new rule set.",
+      why:
+        "Rules are an instruction the app acts on at its next repagination. Nothing offline repaginates, " +
+        "so the change is visible in the archive but its effect is not.",
+      how:
+        "Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those " +
+        "headings after it redraws.",
+      risk: "low",
+    },
   },
 
   // --------------------------------------------------------------- drawables

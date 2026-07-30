@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 15 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 16 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -38,6 +38,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 13 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 14 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
 | 15 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 16 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Placement (copy onto a page/slide/sheet, remove, reorder in z)
 
@@ -222,6 +223,18 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Why the suite cannot settle it.** Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with rgbspace and that the dash array is repeated float, but not that a colour we author with space: 'p3' is treated as wide-gamut rather than reinterpreted.
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
+
+### 16. Table of contents (rules read + write, cached entries read)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Text & styles  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Pages regenerates a TOC whose collection rules we changed, and honours the new rule set.
+
+**Why the suite cannot settle it.** Rules are an instruction the app acts on at its next repagination. Nothing offline repaginates, so the change is visible in the archive but its effect is not.
+
+**How to settle it.** Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those headings after it redraws.
 
 ## Recording an outcome
 

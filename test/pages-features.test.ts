@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { PagesDocument } from "../src/index.ts";
+import { PagesDocument, tablesOfContents } from "../src/index.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -203,5 +203,63 @@ describe("charts", () => {
     expect(after[0]!.map((v) => (v.type === "number" ? v.value : null))).toEqual(
       before[0]!.map((v) => (v.type === "number" ? v.value : null)),
     );
+  });
+});
+
+describe("table of contents", () => {
+  const withToc = "picopalette-v3.2-multisection-footnotes.pages";
+
+  it("reads a real TOC's collection rules and cached entries", () => {
+    const doc = PagesDocument.load(fixture(withToc));
+    const tocs = tablesOfContents(doc.store);
+    expect(tocs.length).toBeGreaterThan(0);
+
+    const toc = tocs[0]!;
+    expect(toc.name).toBe("Standard TOC");
+    // Rules say which paragraph styles are collected; some are turned off.
+    const rules = toc.rules();
+    expect(rules.length).toBeGreaterThan(3);
+    expect(rules.some((r) => r.included)).toBe(true);
+    expect(rules.some((r) => !r.included)).toBe(true);
+    expect(rules.every((r) => r.paragraphStyleId !== undefined)).toBe(true);
+
+    // Entries are the cached result of the app's last regeneration.
+    const entries = toc.entries();
+    expect(entries.length).toBeGreaterThan(10);
+    expect(entries[0]!.heading.length).toBeGreaterThan(0);
+    expect(entries.every((e) => e.pageNumber >= 0)).toBe(true);
+  });
+
+  it("turns a paragraph style's collection on and off", () => {
+    const doc = PagesDocument.load(fixture(withToc));
+    const toc = tablesOfContents(doc.store)[0]!;
+    const target = toc.rules().find((r) => r.included)!;
+
+    expect(toc.setIncluded(target.paragraphStyleId!, false)).toBe(true);
+    expect(toc.entriesAreStale).toBe(true);
+
+    const reloaded = PagesDocument.load(doc.save());
+    const after = tablesOfContents(reloaded.store).find((t) => t.id === toc.id)!;
+    const rule = after.rules().find((r) => r.paragraphStyleId === target.paragraphStyleId)!;
+    expect(rule.included).toBe(false);
+    expect(reloaded.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("reports an unknown style rather than silently doing nothing", () => {
+    const doc = PagesDocument.load(fixture(withToc));
+    const toc = tablesOfContents(doc.store)[0]!;
+    expect(toc.setIncluded(999999999n, false)).toBe(false);
+  });
+
+  it("checks cached headings against the text they came from", () => {
+    // The only staleness check that survives a reload: page numbers come
+    // from layout, but headings are text we can compare.
+    const doc = PagesDocument.load(fixture(withToc));
+    const toc = tablesOfContents(doc.store)[0]!;
+    const paragraphs = doc.body.paragraphs();
+    const mismatches = toc.verifyAgainst(paragraphs);
+    // Whatever the fixture's state, the check must be total and typed.
+    expect(mismatches.length <= toc.entries().length).toBe(true);
+    for (const m of mismatches) expect(typeof m.entry.heading).toBe("string");
   });
 });

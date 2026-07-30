@@ -164,6 +164,8 @@ export {
 } from "./tst/formats.ts";
 export type { CellFormat, FormatCategory, NumericFormatOptions } from "./tst/formats.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
+export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";
+export type { TocRule, TocEntry } from "./tswp/toc.ts";
 export {
   BorderPosition,
   Capitalization,
