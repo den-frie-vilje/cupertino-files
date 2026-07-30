@@ -30,6 +30,9 @@
  *     currently schema-derived with nothing to check it against.
  *  5. **Unresolved formula owners** — owner UUIDs that name no object.
  *  6. **Unknown archive types** — type ids absent from the registry.
+ *  7. **Paragraph border positions** — `border_positions` with the styles
+ *     using it. Settles which edge each value draws, the one remaining
+ *     inferred mapping in the text model.
  *
  * Sections with nothing to report say so, so a run against an ordinary
  * document is a short, honest "nothing new here".
@@ -41,7 +44,8 @@ import { tablesOf } from "../src/tst/tables.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { FormulaOwnerRegistry, OwnerKind } from "../src/tsce/owners.ts";
 import { readPredicate } from "../src/tst/predicates.ts";
-import { BuildAttributesFields, BuildFields } from "../src/keynote/builds.ts";
+import { BuildFields } from "../src/keynote/builds.ts";
+import { ParaProps, StyleArchive } from "../src/tswp/schema.ts";
 
 interface Findings {
   file: string;
@@ -58,6 +62,7 @@ interface Findings {
   builds: { slide: number; delivery: string | undefined; effect: string | undefined; attributeFields: number[] }[];
   unresolvedOwners: { kind: number; count: number }[];
   unknownTypes: { type: number; count: number }[];
+  borderPositions: { value: number; style: string | undefined; hasStroke: boolean }[];
 }
 
 function probe(path: string): Findings {
@@ -71,6 +76,7 @@ function probe(path: string): Findings {
     builds: [],
     unresolvedOwners: [],
     unknownTypes: [],
+    borderPositions: [],
   };
 
   // 1 + 2 + 3: everything that hangs off a table.
@@ -145,6 +151,26 @@ function probe(path: string): Findings {
   findings.unresolvedOwners = [...byKind]
     .sort((a, b) => b[1] - a[1])
     .map(([kind, count]) => ({ kind, count }));
+
+  // 7: paragraph border positions, with the style each belongs to.
+  for (const { obj } of document.store.allObjects()) {
+    if (!(typeName(obj.type, document.app) ?? "").endsWith("ParagraphStyleArchive")) continue;
+    const props = obj.message.getMessage(StyleArchive.PARA_PROPERTIES);
+    let value: number | undefined;
+    try {
+      value = props?.getUint(ParaProps.BORDER_POSITIONS);
+    } catch {
+      continue;
+    }
+    // 0 is "no border" and fills every document; only the interesting
+    // values are worth reporting.
+    if (value === undefined || value === 0) continue;
+    findings.borderPositions.push({
+      value,
+      style: obj.message.getMessage(1)?.getString(1),
+      hasStroke: props!.has(ParaProps.STROKE),
+    });
+  }
 
   // 6: type ids the registry does not name.
   const unknown = new Map<number, number>();
@@ -226,6 +252,13 @@ function render(findings: Findings): string {
     findings.unknownTypes.map((t) => `type ${t.type} × ${t.count}`),
     "every type is known",
   );
+  section(
+    "7. Paragraph border positions (which edge each value draws)",
+    findings.borderPositions.map(
+      (b) => `border_positions=${b.value} style=${JSON.stringify(b.style)} hasStroke=${b.hasStroke}`,
+    ),
+    "no paragraph borders here — a document with top/bottom/both/all borders settles the mapping",
+  );
   return out.join("\n");
 }
 
@@ -248,7 +281,8 @@ function main(argv: string[]): number {
   const open =
     all.some((f) => f.unknownFunctions.length) ||
     all.some((f) => f.controls.length) ||
-    all.some((f) => f.builds.length);
+    all.some((f) => f.builds.length) ||
+    all.some((f) => f.borderPositions.length);
   console.log(
     open
       ? "\nSomething here is new. Record it in docs/MANUAL-WORK.md and turn it into a test."

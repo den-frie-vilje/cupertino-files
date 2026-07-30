@@ -127,10 +127,21 @@ never silently wrong. If Apple ships new functions, add them and re-run.
 `ParagraphStylePropertiesArchive.border_positions`, replacing the inferred
 mapping in `src/tswp/schema.ts`.
 
-**Why:** the value is a plain `int32`, and the corpus only ever contains
-0, 1 and 2. The current reading — none / top / bottom / top and bottom /
-all — fits the deprecated enum's shape and the five choices in the Pages
-inspector, but 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.
+**Why:** file analysis got part of the way and then stopped, which is worth
+knowing before you start.
+
+*Established:* **0 is "none"** — 4208 paragraph styles carry position 0 with
+no stroke, and a further 127 carry 0 *with* a stroke, which is a border
+configured and switched off.
+
+*Not established:* which edge 1 and 2 mean. Only **four** styles in the
+entire corpus use a non-zero position — three "Heading 3" and one "Title",
+all inheriting from Apple's stock templates — so there is one effective
+data point per value and no way to tell edges apart without rendering.
+1 and 2 may well be inverted, and 3 and 4 are never observed.
+
+So this protocol only needs to answer one question: **which edge does 1
+draw?** Everything else follows.
 
 **Procedure** (about ten minutes):
 

@@ -283,14 +283,26 @@ export const ParaProps = {
 } as const;
 
 /**
- * Where a paragraph's stroke is drawn (`border_positions`, an int32).
+ * `ParagraphStylePropertiesArchive.border_positions` — which edges draw.
  *
- * **Inferred, not proven by rendering.** Three things line up: the field is
- * a plain integer rather than a set; the deprecated `ParagraphBorderType`
- * enum it replaced packs a position in 0..4 alongside a line style; and the
- * Pages inspector offers exactly five choices (none / top / bottom / top and
- * bottom / all). Every value seen in the corpus is 0, 1 or 2. The raw
- * integer is always available if this mapping ever proves wrong.
+ * **Partly measured, partly inferred, and the inferred half is suspect.**
+ *
+ * What the corpus establishes: **0 is "none"**. 4208 paragraph styles carry
+ * position 0 with no stroke at all, and a further 127 carry 0 *with* a
+ * stroke — a border configured and switched off, which is what Pages leaves
+ * behind when you clear one.
+ *
+ * What it does not establish: which edge 1 and 2 mean. Only four styles in
+ * the whole corpus use a non-zero position — three "Heading 3" and one
+ * "Title", all inheriting from Apple's stock templates — so there is one
+ * effective data point per value and no way to tell an edge apart without
+ * rendering. **1 and 2 could be the other way round**, and 3 and 4 are not
+ * observed at all; they follow the five choices in the Pages inspector
+ * (none / top / bottom / top and bottom / all) and the deprecated enum's
+ * shape.
+ *
+ * Read the raw integer, not this enum, if the distinction matters to you.
+ * Protocol 2 in `docs/MANUAL-WORK.md` settles it in about ten minutes.
  */
 export const BorderPosition = {
   NONE: 0,

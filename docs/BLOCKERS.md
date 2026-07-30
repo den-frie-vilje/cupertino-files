@@ -28,6 +28,49 @@ single pass, so a well-chosen document closes several at once.
 
 ---
 
+## The whole thing in one Mac session — about 25 minutes
+
+Four documents settle everything below. Make them in the apps, drop them
+anywhere, and run the commands. Nothing needs scripting.
+
+**1. `functions.numbers` — 2 min.** Run `npm run harvest -- --emit-sheet probe.tsv`
+first, open the TSV in Numbers, save as `.numbers`. Then
+`npm run harvest -- --ingest functions.numbers`.
+→ *Settles priority 1.* On a Mac with Numbers, `npm run harvest -- --drive`
+does the whole thing in one command instead.
+
+**2. `rules.numbers` — 10 min.** One numeric column, one text column. Add a
+conditional-formatting rule for each of the six numeric comparisons
+(equal to, not equal to, greater than, greater than or equal to, less than,
+less than or equal to), then one "between", one "text contains", one
+"is blank". Then `npm run harvest:predicates -- rules.numbers`.
+→ *Settles priority 2*, and the non-comparison conditions feed priority 1.
+
+**3. `controls.numbers` — 2 min.** Five columns, one control each: checkbox,
+star rating, slider, stepper, pop-up menu. Give the slider and stepper
+non-default min/max/increment and the menu three items. Then
+`npm run probe -- controls.numbers`.
+→ *Settles priority 3.*
+
+**4. `animated.key` — 5 min.** Three slides, a different build effect on
+each; on one, animate a text box delivered **by line** so it has chunks.
+Give one build a non-default duration and delay. Then
+`npm run probe -- animated.key`.
+→ *Settles priority 4.*
+
+**5. `borders.pages` — 5 min.** Four paragraphs, each with a paragraph
+border set to a different position: top, bottom, top-and-bottom, all. Give
+each a distinct rule colour so you can tell them apart in the output. Then
+`npm run probe -- borders.pages`.
+→ *Settles protocol 2*, the one remaining inferred mapping in the text
+model. Note down which paragraph drew which edge; only "which edge does 1
+draw?" is actually in question.
+
+Each finding goes in the [`MANUAL-WORK.md`](MANUAL-WORK.md) ledger and
+becomes a test. Then `npm run coverage` to refresh the matrices.
+
+---
+
 ## Priority 1 — Formula authoring
 
 **Blocked on:** the function-index table (Kind A).
