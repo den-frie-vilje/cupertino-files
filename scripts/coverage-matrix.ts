@@ -320,6 +320,21 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
+    name: "Page numbers and page counts (insert, read, remove)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() => c.doc.textStorages().some((s) => s.pageNumberFields().length > 0)),
+    note: "an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented",
+    manualProof: {
+      claim: "a page-number attachment this library inserts renders as a live number",
+      why: "the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page",
+      how: "insert a page number into a footer, open in Pages across a multi-page document, and confirm it counts up rather than showing a literal or a blank",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Text & styles",
     name: "Smart fields (page number, date, merge, …)",
     apps: "all",
     status: "read",

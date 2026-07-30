@@ -132,6 +132,22 @@ export const OVERLAP_TABLE_FIELDS: readonly number[] = [
 ];
 
 /**
+ * Point-anchored object tables: an entry names the single character it
+ * occupies, rather than starting a run that continues to the next entry.
+ *
+ * Every one of these anchors something at a U+FFFC placeholder — an
+ * attachment, a footnote mark, a section break. The distinction matters
+ * when text is deleted: an entry exactly at the start of a deleted range is
+ * a run boundary that should survive in a run table, and the anchor of a
+ * character that no longer exists in one of these.
+ */
+export const POINT_ANCHORED_OBJECT_TABLES: readonly number[] = [
+  Storage.TABLE_ATTACHMENT,
+  Storage.TABLE_FOOTNOTE,
+  Storage.TABLE_SECTION,
+];
+
+/**
  * Paragraph-aligned object tables: by app convention exactly one entry per
  * paragraph, an entry with `object` unset meaning "unchanged from the
  * previous paragraph".

@@ -34,6 +34,7 @@ import {
   OVERLAP_TABLE_FIELDS,
   PARA_ALIGNED_OBJECT_TABLES,
   PARA_DATA_TABLE_FIELDS,
+  POINT_ANCHORED_OBJECT_TABLES,
   Storage,
   STRING_TABLE_FIELDS,
   TSWP_TYPE,
@@ -43,6 +44,20 @@ import { CommentStorage, TSD_TYPE } from "../tsd/schema.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { ParagraphHandle, TextRange } from "./range.ts";
 import { typeName } from "../tsp/registry.ts";
+import {
+  AttachmentKind,
+  buildNumberAttachment,
+  readNumberAttachment,
+  type NumberAttachmentInfo,
+  type NumberAttachmentOptions,
+} from "./fields.ts";
+
+/**
+ * U+FFFC OBJECT REPLACEMENT CHARACTER — the placeholder every inline
+ * attachment occupies. One character of text standing in for something the
+ * app renders: a page number, a footnote mark, an anchored drawable.
+ */
+export const OBJECT_REPLACEMENT_CHARACTER = "\uFFFC";
 
 export interface ParagraphInfo {
   index: number;
@@ -261,11 +276,15 @@ export class TextStorage {
     if (!table) return;
     const entries = table.getMessages(ATTR_TABLE_ENTRIES);
     if (entries.length === 0) return;
+    // An entry at exactly `start` is a run boundary in a run table — it
+    // survives a deletion beginning there — but in a point-anchored table
+    // it is the anchor of the first deleted character, so it goes with it.
+    const anchored = POINT_ANCHORED_OBJECT_TABLES.includes(tableField);
     const kept: RawMessage[] = [];
     let changed = false;
     for (const e of entries) {
       const idx = e.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
-      if (idx <= start) {
+      if (anchored ? idx < start : idx <= start) {
         kept.push(e);
       } else if (idx < end) {
         changed = true; // dropped
@@ -671,6 +690,82 @@ export class TextStorage {
       const drawableId = refId(obj.message, DrawableAttachment.DRAWABLE);
       if (drawableId !== undefined) entry.drawableId = drawableId;
       out.push(entry);
+    }
+    return out;
+  }
+
+  /**
+   * Insert a live page number (or page count) at `pos`.
+   *
+   * A page number is not text: no digits exist in the storage, because the
+   * value depends on pagination the app performs. What is inserted is a
+   * U+FFFC placeholder plus an attachment archive that renders it — which
+   * is why this cannot simply be `insertText("1")`.
+   *
+   * Returns the attachment's object identifier. Nothing here computes the
+   * number; the app fills it in when it lays the document out.
+   */
+  insertPageNumber(pos: number, options: NumberAttachmentOptions = {}): bigint {
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const attachment = buildNumberAttachment(this.store, component, options);
+    this.insertAttachment(pos, attachment.identifier);
+    return attachment.identifier;
+  }
+
+  /** Insert a live page count — "of 12" — at `pos`. */
+  insertPageCount(pos: number, options: NumberAttachmentOptions = {}): bigint {
+    return this.insertPageNumber(pos, { ...options, kind: AttachmentKind.PAGE_COUNT });
+  }
+
+  /**
+   * Put an existing attachment archive at `pos`.
+   *
+   * Inserts the U+FFFC placeholder through {@link replaceRange}, so every
+   * other attribute table shifts with it, then anchors the attachment at
+   * the new character. Doing it the other way round leaves the entry
+   * pointing one character short.
+   */
+  insertAttachment(pos: number, objectId: bigint): void {
+    const text = this.text;
+    if (pos < 0 || pos > text.length) {
+      throw new RangeError(`insertAttachment: position ${pos} out of range (${text.length})`);
+    }
+    this.replaceRange(pos, pos, OBJECT_REPLACEMENT_CHARACTER);
+    this.ensureTable(Storage.TABLE_ATTACHMENT);
+    const table = this.msg.getMessage(Storage.TABLE_ATTACHMENT)!;
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, pos);
+    entry.setMessage(ENTRY_OBJECT, makeRef(objectId));
+    const entries = [...table.getMessages(ATTR_TABLE_ENTRIES), entry];
+    entries.sort(
+      (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
+    );
+    table.setMessages(ATTR_TABLE_ENTRIES, entries);
+  }
+
+  /**
+   * Remove an attachment and the placeholder character it occupies.
+   *
+   * The archive itself is left in the package, as everywhere else in this
+   * library; what goes is the character and the table entry, which is what
+   * makes the field disappear from the text.
+   */
+  removeAttachment(objectId: bigint): boolean {
+    const found = this.attachments().find((entry) => entry.objectId === objectId);
+    if (!found) return false;
+    // Deleting the character shifts the tables, dropping the entry with it.
+    this.replaceRange(found.index, found.index + 1, "");
+    return true;
+  }
+
+  /** Page-number and page-count fields in this storage, with their formats. */
+  pageNumberFields(): (NumberAttachmentInfo & { index: number; objectId: bigint })[] {
+    const out: (NumberAttachmentInfo & { index: number; objectId: bigint })[] = [];
+    for (const entry of this.attachments()) {
+      const object = this.store.object(entry.objectId);
+      const info = object ? readNumberAttachment(object) : undefined;
+      if (info) out.push({ ...info, index: entry.index, objectId: entry.objectId });
     }
     return out;
   }

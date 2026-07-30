@@ -373,6 +373,33 @@ rather than returning an empty array or writing something wrong. Always
 check `t.hasReadableCells` / `t.storageGeneration` when file age is
 unknown.
 
+## Page numbers
+
+A page number is **not text** — no digits live in the storage, because the
+value comes from pagination the app performs. It is a U+FFFC placeholder
+plus an archive that renders it.
+
+```ts
+// Any TextStorage — a footer, a header, a text box, the body.
+const master = doc.sections()[0].templates().find((t) => t.role === "odd")!;
+const storage = master.footers[1]!;              // 0/1/2 = left/center/right
+storage.insertPageNumber(storage.text.length);          // "Page ￼"
+storage.insertPageCount(pos);                           // "of ￼"
+storage.insertPageNumber(pos, { format: "lower-roman" });
+storage.pageNumberFields();   // [{ index, objectId, isPageCount, formatName, cachedValue }]
+storage.removeAttachment(objectId);   // drops the field and its placeholder
+```
+
+Only `"decimal"` and `"lower-roman"` are written: they are the only formats
+any examined file contains, each with its numeric code stored alongside its
+name so the pairing is not a guess. For another, pass `{ formatCode, formatName }`
+together — one without the other is refused, since a file whose code and
+name disagree is self-contradictory.
+
+`cachedValue` is what the app last rendered. This library never writes it:
+the number depends on layout, and a stale digit in place of a live field is
+worse than a blank the app fills in.
+
 ## Cropping images
 
 Cropping in iWork does not touch the media: the image keeps its full extent

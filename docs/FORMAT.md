@@ -505,6 +505,47 @@ path alone. Instant-alpha and shape crops would not be rectangles — none
 appears in any corpus file — so a mask whose path is not one is refused
 rather than flattened into a box.
 
+### 8.3 Smart fields and inline attachments
+
+Two mechanisms live in text and are easy to confuse.
+
+A **smart field** spans a *range of real characters*, recorded in
+`StorageArchive.table_smartfield`. A hyperlink is one: the words stay in the
+text and the field decorates them.
+
+An **attachment** occupies a *single* U+FFFC OBJECT REPLACEMENT CHARACTER,
+recorded in `table_attachment`, and is rendered from its archive rather than
+from the text. A page number is one — no digits exist in the storage at all,
+because the value depends on pagination.
+
+```proto
+message TSWP.TextualAttachmentArchive {              // type 2004
+  enum Kind { kKindPageNumber = 0; kKindPageCount = 1; kKindFootnoteMark = 2; }
+  optional string string_equivalent = 1;             // what copy-paste yields
+  optional Kind kind = 2;
+}
+message TSWP.NumberAttachmentArchive {               // type 2043
+  optional TSWP.TextualAttachmentArchive super = 1;
+  optional uint32 number_format = 2;
+  optional string string_value = 3;                  // last rendered value
+  optional string number_format_name = 4;
+}
+```
+
+`number_format` is an unpublished enum, but each archive carries its
+`number_format_name` alongside, so the pairing need not be guessed. The
+corpus contains exactly two: 0 with `"decimal"` and 2 with `"lower-roman"`.
+`string_value` is a *cache* of the last number the app rendered — writing
+one means asserting a page number nobody computed.
+
+**Run tables and anchor tables delete differently.** An entry at exactly the
+start of a deleted range is a run boundary in `table_char_style` or
+`table_smartfield` — it must survive, or the formatting after the deletion
+collapses — but in `table_attachment`, `table_footnote` or `table_section`
+it is the anchor of the *first deleted character*, and must go with it.
+Treating both alike leaves an attachment pointing at whatever character
+moves into the gap.
+
 ## 9. The Pages document graph (TP)
 
 ```

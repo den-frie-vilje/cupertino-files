@@ -22,7 +22,21 @@ export { IWorkDocument, FormatInfo, detectApp } from "./tsa/document.ts";
 export type { DocumentStats } from "./tsa/document.ts";
 
 // Shared model
-export { TextStorage } from "./tswp/textstorage.ts";
+export { TextStorage, OBJECT_REPLACEMENT_CHARACTER } from "./tswp/textstorage.ts";
+export {
+  buildNumberAttachment,
+  readNumberAttachment,
+  ATTACHMENT_TYPE,
+  AttachmentKind,
+  NumberAttachment,
+  TextualAttachment,
+  PAGE_NUMBER_FORMATS,
+} from "./tswp/fields.ts";
+export type {
+  NumberAttachmentInfo,
+  NumberAttachmentOptions,
+  PageNumberFormatName,
+} from "./tswp/fields.ts";
 export type { ParagraphInfo, StyleRun } from "./tswp/textstorage.ts";
 export {
   StylesheetModel,
