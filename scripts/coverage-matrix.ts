@@ -820,9 +820,24 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Chart writing",
+    name: "Chart data editing (values, names, series, categories)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.charts().length > 0),
+    note: "the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled",
+    manualProof: {
+      claim: "a series added or removed here leaves the chart's styling on the right series",
+      why: "styling is applied at render time from arrays indexed by series position; the suite proves the indexes shift, not what the app draws",
+      how: "take a chart with distinctly coloured series, remove the middle one, open in the app and confirm the remaining series keep their own colours rather than shifting",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Chart appearance (type, colours, axes, legend)",
     apps: "all",
     status: "roadmap",
+    note: "read as opaque style references; changing them needs the TSCH style model",
   },
   {
     group: "Numbers & tables",

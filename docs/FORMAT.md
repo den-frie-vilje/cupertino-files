@@ -1267,6 +1267,49 @@ Per-group summaries (`column_agg_type`) are read, but no fixture carries a
 non-empty aggregate list, so the `agg_type` codes are passed through
 unnamed.
 
+## 14.10 Charts (TSCH): the data grid
+
+A chart on a canvas is a `TSCH.ChartDrawableArchive` (5021) whose real
+payload hangs off a protobuf **extension** field (`unity = 10000`) holding a
+`TSCH.ChartArchive`. The plotted numbers are inline:
+
+```proto
+message TSCH.ChartGridArchive {
+  repeated string row_name = 1;                 // series names
+  repeated string column_name = 2;              // category names
+  repeated TSCH.GridRow grid_row = 3;           // row-major values
+  optional ChartGridRowColumnIdMap idMap = 4;   // UUID → index, per axis
+}
+message TSCH.GridValue { double numeric = 1; double date_1_0 = 2;
+                         double duration = 3;  double date = 4; }
+```
+
+**Nothing is indexed by a value**, which is what makes editing numbers
+safe: series styling, axes and the id map all key off *positions*. Changing
+the grid's shape is where the care goes, because three structures are
+position-indexed and must move together:
+
+- `idMap` — a UUID per row and per column, which the apps use to follow a
+  series across a reorder. Removing series 1 means dropping its entry and
+  renumbering every higher index down.
+- `series_private_styles` (18) and `series_non_styles` (19) —
+  `TSP.SparseReferenceArray`s whose entries carry an explicit `index`. An
+  absent entry means "use the theme", so a *new* series needs none; but a
+  removed one leaves every later override a position too high, which reads
+  as a chart whose colours have slid onto their neighbours.
+
+In every array examined, `SparseReferenceArray.count` equals the number of
+entries, so it is maintained that way.
+
+`series_theme_styles` (17) is **not** per-series: it is the theme's
+six-colour palette, six entries regardless of how many series the chart
+has, which the app cycles.
+
+Two flags matter when writing. `contains_default_data` marks a chart still
+holding Apple's template numbers — the apps replace those wholesale on
+first edit, so it must be cleared once real data is written. `is_dirty`
+tells the app the chart needs redrawing.
+
 ## 15. Known gaps / roadmap
 
 - **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)
@@ -1289,8 +1332,9 @@ unnamed.
   formula owned by a UUID that is *not* the table's own (§14.4), so
   synthesizing one means inventing a calc-engine identifier. Reading merges
   is fully supported.
-- Chart data (TSCH) and Keynote slide trees are read as opaque objects;
-  editing them needs the TSCH/KN models on top of this substrate.
+- Chart **appearance** — type, colours, axis settings, legend — is read as
+  opaque style references. The data grid is editable (§14.10); restyling a
+  chart needs the TSCH style model on top of this substrate.
 - Creating documents **from scratch** (the practical route is embedding an
   app-saved empty template, as numbers-parser does).
 - Image/media **insertion** (Data/ plumbing is specified in §5.4/§10 but

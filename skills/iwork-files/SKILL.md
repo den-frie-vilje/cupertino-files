@@ -373,6 +373,34 @@ rather than returning an empty array or writing something wrong. Always
 check `t.hasReadableCells` / `t.storageGeneration` when file age is
 unknown.
 
+## Charts
+
+```ts
+const chart = doc.charts()[0];
+chart.chartType;                  // "column2D", "pie2D", …
+chart.rowNames();                 // series names
+chart.columnNames();              // category names
+chart.data();                     // [row][column] of { type: "number" | "date" | ... }
+chart.series();                   // [{ name, values }]
+
+chart.setValue(0, 2, { type: "number", value: 99 });
+chart.setSeriesValues(1, values);      // must match the category count
+chart.setRowName(0, "North");
+chart.setColumnName(3, "Q3");
+chart.addSeries("Region 3", values);   // one value per category
+chart.addCategory("August", values);   // one value per series
+chart.removeSeries(0); chart.removeCategory(1);
+```
+
+Charts are rectangular: a series must have a value for every category. A
+mismatched count throws rather than being padded — padding with zeroes and
+padding with gaps look identical in the data and completely different on the
+page.
+
+Adding or removing a series keeps the chart's id map and its per-series
+style arrays in step, so styling stays on the series it belongs to. Chart
+**appearance** (type, colours, axes) is read-only.
+
 ## Comments and footnotes
 
 ```ts

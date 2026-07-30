@@ -137,7 +137,14 @@ export {
 export type { ImageCrop, Rect } from "./tsd/masks.ts";
 export { DrawableContainer, drawableById } from "./tsd/placement.ts";
 export type { DrawablePlacement } from "./tsd/placement.ts";
-export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";
+export {
+  ChartModel,
+  chartsOf,
+  decodeGridValue,
+  encodeGridValue,
+  CHART_TYPE_NAMES,
+  TSCH_TYPE,
+} from "./tsch/charts.ts";
 export type { ChartValue } from "./tsch/charts.ts";
 export type { ImageFilters } from "./tsd/images.ts";
 export type { GeometryInfo } from "./tsd/drawables.ts";
