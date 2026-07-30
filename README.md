@@ -72,7 +72,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
 | Table cell **writing**, charts, Keynote slides/transitions | roadmap |
-| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§12](docs/FORMAT.md)) |
+| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
 | Numbers: sheets enumeration + shared text/style machinery | ✅ |
 | Keynote: slide count + shared text/style machinery | ✅ |
 | Byte-identical round-trip of untouched content | ✅ |

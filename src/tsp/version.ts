@@ -1,7 +1,7 @@
 /**
  * Version awareness and backwards/forwards compatibility.
  *
- * Design principle (see docs/FORMAT.md §11): **structural detection beats
+ * Design principle (see docs/FORMAT.md §12): **structural detection beats
  * version sniffing**. Declared versions are metadata — informative, and
  * useful for reporting — but every behavioral decision in this library is
  * driven by probing what a document actually contains. A file is never
@@ -296,7 +296,7 @@ export function buildCompatibilityReport(inputs: CompatibilityInputs): Compatibi
   if (probe.hasCollaborationState) {
     warnings.push(
       "document carries iCloud collaboration state; it is preserved but live collaboration " +
-        "cannot be joined from a file (see docs/FORMAT.md §12.2).",
+        "cannot be joined from a file (see docs/FORMAT.md §13.2).",
     );
   }
 

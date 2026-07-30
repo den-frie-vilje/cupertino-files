@@ -450,7 +450,61 @@ This library additionally keeps every **untouched component's** `.iwa`
 bytes identical (the reference Python writers recompress everything;
 byte-stability makes diffs and testing tractable).
 
-## 11. Version compatibility strategy
+## 11. Version markers and format eras
+
+Three independent version markers travel with every document; they agree
+where they overlap, and this library reads all of them.
+
+| Marker | Location | Example |
+|---|---|---|
+| `fileFormatVersion` | `Metadata/Properties.plist` (binary plist) | `"3.2.13"` |
+| `file_format_version` | `TSP.PackageMetadata` field 7 (packed) | `[3, 2, 13]` |
+| `read_version` / `write_version` | `TSP.PackageMetadata` fields 5 / 6 | `[2, 0, 0]` |
+| application build | `Metadata/BuildVersionHistory.plist` (XML) | `"G-r320-3C102"` |
+
+The first two are the same number in two encodings (verified across every
+fixture). `read_version` is the *minimum reader* the package requires and
+moves far more slowly than the format version. `BuildVersionHistory` names
+the actual application build that last wrote the file, plus the template it
+came from.
+
+**Format eras.** The `fileFormatVersion` sequence is not continuous, and the
+discontinuity is meaningful — Apple changed what the number *means*:
+
+| Era | `fileFormatVersion` | Apps | Observed in fixtures |
+|---|---|---|---|
+| `iwork13` | `1.x` | Pages 5.x / Numbers 3.x / Keynote 6.x (2013–14) | `1.5.0`, build `M5.5.3-2152-2` |
+| `iwork16` | `2.x` | 2015–2016 releases | `2.0.24`, build `T2.6.1 (2160)` |
+| `iwork19` | `3.x` | 2017–2019 releases | `3.2.13`, build `G-r320-3C102` |
+| `modern` | `10.x`–`14.x` | mirrors the **application** version (2020–2024) | Numbers 14.1 writes `14.1.1` |
+| `current` | `26.x` | year-versioned 2025/2026 releases | — |
+| `future` | anything higher | released after this library's survey | — |
+
+From 2020 the format version simply tracks the app version, which is why
+`10.x` follows `3.x`. Era classification is exposed as `doc.era`; it is
+**reporting metadata only** — no code path gates on it.
+
+### 11.1 Structural probes
+
+Behavior is decided by what a document *contains*, not what it claims.
+`doc.compatibility()` returns declared versions alongside probes of:
+
+- **container layout** — flat, nested `Index.zip`, or wrapper directory
+- **cell-storage generation** — `v5` (readable) vs `preBNC` (not decodable).
+  Note this is *not* predictable from the era: a 2018-era file (`3.2.13`)
+  in the test corpus already uses v5, while 2015-era files do not.
+- **unknown type IDs** — object types absent from the bundled registry, in
+  either direction: newer files may carry types added after the registry
+  dump, and *older* files carry types since removed (the `1.5.0` fixture
+  contains type `608`, which current apps no longer emit)
+- **patch archives** (`should_merge`), **collaboration state**, and
+  **versioned style snapshots** (`styles_for_*`)
+
+Anything unrecognized is reported through `unsupportedFeatures` /
+`warnings` and preserved byte-for-byte — never guessed at, never silently
+dropped.
+
+## 12. Version compatibility strategy
 
 How this library stays correct as Apple ships new versions:
 
@@ -471,11 +525,11 @@ How this library stays correct as Apple ships new versions:
   framing (§3) and geometry shapes (§9) are detected from bytes, so
   cosmetic changes in names/locations don't break parsing.
 
-## 12. Concurrency: open documents and iCloud collaboration
+## 13. Concurrency: open documents and iCloud collaboration
 
 Two questions come up constantly, and the format itself answers both.
 
-### 12.1 Editing a document while an app has it open
+### 13.1 Editing a document while an app has it open
 
 **Don't.** There is no file-level handshake that makes this safe, and the
 format provides none:
@@ -500,7 +554,7 @@ may be open, treat it as read-only — reading a package that is being
 written can also yield a torn zip, so check that the file size and mtime
 are stable before parsing.
 
-### 12.2 iCloud real-time collaboration
+### 13.2 iCloud real-time collaboration
 
 **Not harnessable from the file layer** — but it is worth being precise
 about why, because the file *does* carry collaboration state.
@@ -554,7 +608,7 @@ writes. Because this library preserves object identifiers, save tokens and
 the collaboration history rather than renumbering them, a document it edits
 can subsequently be opened and collaborated on normally.
 
-## 13. Known gaps / roadmap
+## 14. Known gaps / roadmap
 
 - **Table cells**: modern "BNC" v5 cell storage is implemented (read-only:
   numbers, text, rich text, dates, booleans, durations, errors, merges).
@@ -575,10 +629,10 @@ can subsequently be opened and collaborated on normally.
 - Password-protected files (`.iwph` + encrypted payload).
 - `TSP.FieldInfo.object_references` (per-field-path reference lists) are
   preserved but not recomputed; the reference writers behave the same.
-- Live iCloud collaboration (§12.2) and editing documents open in an app
-  (§12.1) are out of scope by construction, not by omission.
+- Live iCloud collaboration (§13.2) and editing documents open in an app
+  (§13.1) are out of scope by construction, not by omission.
 
-## 14. Prior art & provenance
+## 15. Prior art & provenance
 
 - `obriensp/iWorkFileFormat` (2013) — first public IWA analysis + Pages '13
   proto dump (MIT).
