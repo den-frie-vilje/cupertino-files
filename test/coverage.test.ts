@@ -4,6 +4,7 @@ import { describe, expect, it } from "./harness.ts";
 
 const script = fileURLToPath(new URL("../scripts/coverage-matrix.ts", import.meta.url));
 const privacy = fileURLToPath(new URL("../scripts/scan-fixture-privacy.ts", import.meta.url));
+const harvest = fileURLToPath(new URL("../scripts/harvest-functions.ts", import.meta.url));
 
 describe("repository guards", () => {
   it("docs/COVERAGE.md and docs/VERIFICATION.md match the fixtures and capability table", () => {
@@ -22,6 +23,22 @@ describe("repository guards", () => {
       output = String((e as { stderr?: string }).stderr ?? e);
     }
     expect(ok ? "up to date" : output).toBe("up to date");
+  });
+
+  it("the generated function table matches the recorded harvest", () => {
+    // The function-index table is produced by a manual protocol (see
+    // docs/MANUAL-WORK.md). Both halves are checked in, so a hand-edit to
+    // either one would silently diverge from the measurement that produced
+    // it — this catches that.
+    let ok = true;
+    let output = "";
+    try {
+      output = execFileSync(process.execPath, [harvest, "--check"], { encoding: "utf8" });
+    } catch (e) {
+      ok = false;
+      output = String((e as { stderr?: string }).stderr ?? e);
+    }
+    expect(ok ? "checked" : output).toBe("checked");
   });
 
   it("no fixture carries unreviewed personal data", () => {

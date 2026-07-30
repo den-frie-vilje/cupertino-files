@@ -65,6 +65,11 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 > **[`docs/VERIFICATION.md`](docs/VERIFICATION.md) lists what the test suite structurally
 > cannot prove** — the claims where the only authority is Apple's own app, each with why
 > and a repro. Also generated, also gated against staleness.
+>
+> **[`docs/MANUAL-WORK.md`](docs/MANUAL-WORK.md) holds the repeatable procedures** for
+> facts that live inside the apps rather than in files, plus a ledger of what has been run
+> against which app version. Each protocol ends in a checked-in artifact, so a finding is
+> made once and never rediscovered.
 
 | Capability | Status |
 |---|---|
@@ -214,9 +219,24 @@ using them, so one stored formula renders differently in every cell that
 shares it, which is why rendering takes a position. Function *names* are not
 in the file format at all: `AST_function_node_index` indexes an
 Apple-internal list, so only ids proven by arithmetic are named and the rest
-render as `FUNCTION_<id>` rather than a guess. Supply more with
-`registerFormulaFunctions({ 42: "AVERAGE" })`; `npm run test:e2e` on a Mac
-harvests them by having Numbers author the formulas.
+render as `FUNCTION_<id>` rather than a guess.
+
+The whole table can be *measured* rather than guessed. On a Mac:
+
+```sh
+npm run harvest -- --drive        # ~300 candidates through Numbers, one pass
+```
+
+Without a Mac to hand, `npm run harvest -- --emit-sheet probe.tsv` writes a
+file you open in Numbers and save — about two minutes — then
+`npm run harvest -- --ingest probe.numbers` records the result. Either way
+the output is a checked-in table, not a note. Protocol 1 in
+[`docs/MANUAL-WORK.md`](docs/MANUAL-WORK.md).
+
+The ingest never guesses: a name is accepted only when every argument shape
+agreed, an index claimed by two names is rejected, and rows that are not
+genuine probe rows are ignored — a guard added after an early run happily
+recorded the SUM index as a function named `TOTAL:`.
 
 ### Shadows and other drawable styling
 

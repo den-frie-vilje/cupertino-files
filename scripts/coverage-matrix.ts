@@ -663,10 +663,10 @@ const CAPABILITIES: Capability[] = [
         "schema. The corpus proves exactly one entry (168 = SUM, by arithmetic). Shipping a table of " +
         "plausible-looking guesses would turn a visible gap into silent wrong answers.",
       how:
-        "Run npm run test:e2e on a Mac: 'harvests function ids by having Numbers author the formulas' " +
-        "writes SUM/AVERAGE/MIN/MAX/COUNT/ABS/ROUND/MEDIAN through AppleScript and prints the ids it " +
-        "reads back. Paste the result into registerFormulaFunctions(), or open a PR adding them to " +
-        "BUILTIN_FUNCTIONS with the document that proves each.",
+        "Run `node scripts/harvest-functions.ts --drive` on a Mac — it writes ~300 candidate functions " +
+        "through Numbers and reads every index back in one pass, producing data/function-index.json " +
+        "and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save " +
+        "in Numbers by hand, then `--ingest`. Protocol 1 in docs/MANUAL-WORK.md.",
       e2e: true,
       risk: "medium",
     },
@@ -1037,6 +1037,10 @@ function renderVerification(): string {
     "",
     "**This file is generated.** Claims live in `manualProof` blocks beside their capability in",
     "`scripts/coverage-matrix.ts`; run `npm run coverage` to regenerate. A test fails if it goes stale.",
+    "",
+    "Where a claim can be settled by a *repeatable procedure* rather than a one-off look, that",
+    "procedure lives in [`docs/MANUAL-WORK.md`](MANUAL-WORK.md) along with a ledger of what has",
+    "actually been run and against which app version.",
     "",
   );
 

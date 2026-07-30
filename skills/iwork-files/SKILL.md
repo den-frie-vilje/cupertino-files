@@ -210,7 +210,10 @@ Two honest gaps, both visible in the output rather than papered over:
 
 - **Function names are not in the format.** Only ids proven by arithmetic
   are named (currently just `SUM`); the rest render as `FUNCTION_<id>`.
-  Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`.
+  Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`, or measure
+  the whole table on a Mac with `npm run harvest -- --drive` (Protocol 1 in
+  `docs/MANUAL-WORK.md`). `functionTableProvenance()` reports how many
+  names are in effect and where they came from.
 - **Cross-table references cannot name their target**, so they render with
   an `OTHER_TABLE::` prefix. Do not present that as a real table name.
 
