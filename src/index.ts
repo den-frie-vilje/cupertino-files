@@ -32,6 +32,8 @@ export type {
 } from "./tss/stylesheet.ts";
 export { DrawableModel, findDrawableCore } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
+export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";
+export type { ChartValue } from "./tsch/charts.ts";
 export type { ImageFilters } from "./tsd/images.ts";
 export type { GeometryInfo } from "./tsd/drawables.ts";
 export * as tspSchema from "./tsp/schema.ts";

@@ -167,3 +167,41 @@ describe("Pages features on real documents", () => {
     }
   });
 });
+
+describe("charts", () => {
+  it("reads chart type, categories, series names and plotted values", () => {
+    const doc = PagesDocument.load(fixture("draftjs-v2.3-comments.pages"));
+    const charts = doc.charts();
+    expect(charts.length).toBe(1);
+    const chart = charts[0]!;
+
+    expect(chart.chartType).toBe("column2D");
+    expect(chart.chartTypeId).toBe(1);
+    // Real user data, not Apple's placeholder series.
+    expect(chart.hasDefaultData).toBe(false);
+    expect(chart.rowNames()).toEqual(["Region 1", "Region 2"]);
+    expect(chart.columnNames()).toEqual(["April", "May", "June", "July"]);
+
+    const data = chart.data();
+    expect(data.length).toBe(2);
+    expect(data[0]!.map((v) => (v.type === "number" ? v.value : null))).toEqual([17, 26, 53, 96]);
+    expect(data[1]!.map((v) => (v.type === "number" ? v.value : null))).toEqual([55, 43, 70, 58]);
+
+    // series() pairs names with rows.
+    const series = chart.series();
+    expect(series.map((s) => s.name)).toEqual(["Region 1", "Region 2"]);
+    expect(series[0]!.values.length).toBe(chart.columnNames().length);
+  });
+
+  it("survives an unrelated edit", () => {
+    const doc = PagesDocument.load(fixture("draftjs-v2.3-comments.pages"));
+    const before = doc.charts()[0]!.data();
+    doc.appendParagraph("Unrelated edit.");
+    const reloaded = PagesDocument.load(doc.save());
+    const after = reloaded.charts()[0]!.data();
+    expect(after.length).toBe(before.length);
+    expect(after[0]!.map((v) => (v.type === "number" ? v.value : null))).toEqual(
+      before[0]!.map((v) => (v.type === "number" ? v.value : null)),
+    );
+  });
+});

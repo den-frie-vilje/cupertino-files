@@ -40,6 +40,7 @@ import { TextStorage } from "../tswp/textstorage.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
+import { chartsOf, type ChartModel } from "../tsch/charts.ts";
 
 // TSP.PackageMetadata version fields.
 const PKG_READ_VERSION = 5;
@@ -171,6 +172,11 @@ export class IWorkDocument {
       }
     }
     return out;
+  }
+
+  /** Every chart, with its plotted data (see ChartModel). */
+  charts(): ChartModel[] {
+    return chartsOf(this.store);
   }
 
   /** Every image, with filter/mask access (see ImageModel). */

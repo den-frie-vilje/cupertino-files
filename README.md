@@ -70,11 +70,13 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Drawables (shapes, images, text boxes, tables): enumerate, move, resize | ✅ |
 | Fluent API: `find()` → `TextRange` → `.bold().link()`, `ParagraphHandle` | ✅ |
 | Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
+| Charts: type, categories, series names and plotted values | ✅ read |
+| Images: filters/adjustments (exposure, saturation, levels…), masks, media variants | ✅ read/write |
+| Keynote: slides, speaker notes, transitions, masters, canvas size | ✅ read/write |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
-| Table cell **writing**, charts, Keynote slides/transitions | roadmap |
+| Table cell **writing**, chart **writing**, footnote/comment creation | roadmap |
 | Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
-| Numbers: sheets enumeration + shared text/style machinery | ✅ |
-| Keynote: slide count + shared text/style machinery | ✅ |
+| Numbers: sheets, tables and cell values | ✅ read |
 | Byte-identical round-trip of untouched content | ✅ |
 | Version-aware loading (never hard-fails on newer files) | ✅ |
 | Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |
