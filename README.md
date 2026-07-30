@@ -99,6 +99,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Images: filters/adjustments, media variants; **crop** — set, move and remove a mask | ✅ |
 | Drawables: copy, place, reorder and remove across pages, slides and sheets | ✅ |
 | Keynote: slides (add/duplicate/move/remove), speaker notes, transitions, masters | ✅ |
+| Keynote: slide placeholders — read and fill title, body, slide number | ✅ |
 | Numbers: sheets — add, remove, rename, reorder | ✅ |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
 | Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |

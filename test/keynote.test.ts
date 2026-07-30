@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { bytesEqual, KeynoteDocument } from "../src/index.ts";
+import { bytesEqual, KeynoteDocument, PlaceholderKind } from "../src/index.ts";
+import { readdirSync } from "node:fs";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -238,5 +239,94 @@ describe("slide management", () => {
       threw = true;
     }
     expect(threw).toBe(true);
+  });
+});
+
+describe("slide placeholders", () => {
+  const decks = readdirSync(FIXTURES).filter((name) => name.endsWith(".key"));
+
+  it("finds title, body and slide-number placeholders on every deck", () => {
+    for (const name of decks) {
+      const document = KeynoteDocument.load(fixture(name));
+      const slides = document.slides();
+      expect(`${name}: ${slides.length > 0}`).toBe(`${name}: true`);
+      for (const slide of slides) {
+        const roles = slide.placeholders().map((p) => p.role).sort();
+        expect(`${name}#${slide.index}: ${roles.join(",")}`).toBe(
+          `${name}#${slide.index}: body,slideNumber,title`,
+        );
+      }
+    }
+  });
+
+  it("agrees between the slide's field and the archive's own kind", () => {
+    // Two independent statements about the same placeholder: which slide
+    // field it hangs off, and what the archive says it is. A file where
+    // they disagree is one to look at rather than silently resolve.
+    const expected: Record<string, number> = {
+      title: PlaceholderKind.TITLE,
+      body: PlaceholderKind.BODY,
+      slideNumber: PlaceholderKind.SLIDE_NUMBER,
+      object: PlaceholderKind.OBJECT,
+    };
+    for (const name of decks) {
+      for (const slide of KeynoteDocument.load(fixture(name)).slides()) {
+        for (const placeholder of slide.placeholders()) {
+          expect(`${name} ${placeholder.role}=${placeholder.kind}`).toBe(
+            `${name} ${placeholder.role}=${expected[placeholder.role]}`,
+          );
+        }
+      }
+    }
+  });
+
+  it("sets a title that survives a save", () => {
+    for (const name of decks) {
+      const document = KeynoteDocument.load(fixture(name));
+      const slide = document.slides()[0]!;
+      slide.title = "Rewritten title";
+
+      const reloaded = KeynoteDocument.load(document.save());
+      expect(`${name}: ${reloaded.slides()[0]!.title}`).toBe(`${name}: Rewritten title`);
+    }
+  });
+
+  it("sets a body, and reaches the same storage two ways", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    const slide = document.slides()[0]!;
+    slide.body = "First point\nSecond point";
+
+    expect(slide.placeholder("body")!.text).toBe("First point\nSecond point");
+    expect(slide.placeholders().find((p) => p.role === "body")!.text).toBe(
+      "First point\nSecond point",
+    );
+
+    const reloaded = KeynoteDocument.load(document.save());
+    expect(reloaded.slides()[0]!.body).toBe("First point\nSecond point");
+  });
+
+  it("edits a placeholder's storage like any other text", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    const slide = document.slides()[0]!;
+    const storage = slide.placeholder("title")!;
+    storage.setText("Draft");
+    storage.replaceAll("Draft", "Final");
+    expect(slide.title).toBe("Final");
+  });
+
+  it("reports a role the slide does not have rather than inventing one", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    const slide = document.slides()[0]!;
+    // No corpus deck carries an object placeholder.
+    expect(slide.placeholder("object")).toBe(undefined);
+    expect(slide.placeholders().some((p) => p.role === "object")).toBe(false);
+  });
+
+  it("refuses to fill a placeholder the slide has not got", () => {
+    const document = KeynoteDocument.load(fixture("iwork-mcp-v14.5-sample.key"));
+    const slide = document.slides()[0]!;
+    // Creating one means synthesizing the theme's geometry and style for
+    // that role, which is in the master.
+    expect(() => slide.setPlaceholderText(30, "object", "x")).toThrow();
   });
 });

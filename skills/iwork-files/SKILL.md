@@ -499,6 +499,24 @@ Cropping an image that has no mask creates one. Non-rectangular masks
 says which you have, and resizing a non-rectangular one throws rather than
 flattening the cut-out into a box.
 
+## Keynote slides
+
+```ts
+const slide = doc.slides()[0];
+slide.title;  slide.title = "Q3 Results";      // the title placeholder
+slide.body;   slide.body = "First\nSecond";
+slide.placeholders();        // [{ role, id, kind, storage, text }]
+slide.placeholder("body");   // the TextStorage, editable like any other
+slide.notes = "Remember to mention the caveat.";
+slide.transition();  slide.setTransition({ effect: "dissolve", duration: 1 });
+```
+
+Placeholders are the theme's boxes for you to fill. Setting one only works
+where the slide already carries it — creating a placeholder means
+synthesizing the geometry and style the master defines for that role, so a
+slide on a layout without a body box is told so rather than given an
+unstyled box at the origin.
+
 ## Editing text in Numbers/Keynote
 
 Beyond tables and slides, edit through the shared storages:

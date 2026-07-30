@@ -39,6 +39,32 @@ const SHAPE_DEPRECATED_STORAGE = 2;
 /** KN.PlaceholderArchive.kind. */
 const PLACEHOLDER_KIND = 2;
 
+/**
+ * KN.PlaceholderArchive.Kind, the enum the archive states about itself.
+ *
+ * Distinct from the *slide field* a placeholder hangs off: the field says
+ * which role the slide is filling, the kind says what the archive is. They
+ * agree in every corpus deck, and both are exposed so a disagreement is
+ * visible rather than resolved silently.
+ */
+export const PlaceholderKind = {
+  GENERIC: 0,
+  SLIDE_NUMBER: 1,
+  TITLE: 2,
+  BODY: 3,
+  OBJECT: 4,
+} as const;
+
+/** The placeholder roles a slide can carry, and the field each occupies. */
+export type PlaceholderRole = "title" | "body" | "object" | "slideNumber";
+
+const PLACEHOLDER_FIELDS: readonly (readonly [PlaceholderRole, number])[] = [
+  ["title", Slide.TITLE_PLACEHOLDER],
+  ["body", Slide.BODY_PLACEHOLDER],
+  ["object", Slide.OBJECT_PLACEHOLDER],
+  ["slideNumber", Slide.SLIDE_NUMBER_PLACEHOLDER],
+];
+
 /** Slide transition parameters, as shown in Keynote's inspector. */
 export interface SlideTransition {
   /**
@@ -134,9 +160,83 @@ export class KeynoteSlide {
     return this.placeholderText(Slide.TITLE_PLACEHOLDER);
   }
 
+  set title(text: string) {
+    this.setPlaceholderText(Slide.TITLE_PLACEHOLDER, "title", text);
+  }
+
   /** Body placeholder text, if present. */
   get body(): string | undefined {
     return this.placeholderText(Slide.BODY_PLACEHOLDER);
+  }
+
+  set body(text: string) {
+    this.setPlaceholderText(Slide.BODY_PLACEHOLDER, "body", text);
+  }
+
+  /**
+   * The slide's placeholders, by role.
+   *
+   * A placeholder is a box the theme puts on the slide for you to fill —
+   * title, body, the slide number, or a media well. It is a
+   * `KN.PlaceholderArchive`, which embeds a `TSWP.ShapeInfoArchive` as its
+   * `super`, so its text lives one level deeper than a plain shape's.
+   *
+   * Only placeholders the *slide* owns are listed. A slide showing its
+   * master's title box has none of its own until something fills it, which
+   * is why a slide can present a title it does not carry.
+   */
+  placeholders(): {
+    role: PlaceholderRole;
+    id: bigint;
+    /** Raw `KN.PlaceholderArchive.kind`, when the archive states one. */
+    kind: number | undefined;
+    storage: TextStorage | undefined;
+    text: string | undefined;
+  }[] {
+    const out: {
+      role: PlaceholderRole;
+      id: bigint;
+      kind: number | undefined;
+      storage: TextStorage | undefined;
+      text: string | undefined;
+    }[] = [];
+    for (const [role, field] of PLACEHOLDER_FIELDS) {
+      const id = refId(this.object.message, field);
+      if (id === undefined) continue;
+      const storage = this.placeholderStorage(field);
+      out.push({
+        role,
+        id,
+        kind: this.placeholderKind(field),
+        storage,
+        text: storage?.text,
+      });
+    }
+    return out;
+  }
+
+  /** The text storage behind one placeholder role, if the slide has it. */
+  placeholder(role: PlaceholderRole): TextStorage | undefined {
+    const field = PLACEHOLDER_FIELDS.find(([name]) => name === role)?.[1];
+    return field === undefined ? undefined : this.placeholderStorage(field);
+  }
+
+  /**
+   * Set a placeholder's text.
+   *
+   * Only replaces text in a placeholder the slide already has. Creating one
+   * means synthesizing a shape with the theme's geometry and style for that
+   * role, which lives in the master — so a slide whose layout has no body
+   * box is told so rather than given an unstyled one floating at the origin.
+   */
+  setPlaceholderText(field: number, role: string, text: string): void {
+    const storage = this.placeholderStorage(field);
+    if (!storage) {
+      throw new RangeError(
+        `slide ${this.index} has no ${role} placeholder; it may be using a layout without one, and creating placeholders is not supported`,
+      );
+    }
+    storage.setText(text);
   }
 
   /**

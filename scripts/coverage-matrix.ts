@@ -1009,6 +1009,14 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slide placeholders (title, body, slide number) — read and fill",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.placeholders().length > 0)),
+    note: "fills a placeholder the slide already carries; creating one needs the theme's geometry for that role",
+  },
+  {
+    group: "Keynote",
     name: "Master / layout slides",
     apps: ["keynote"],
     status: "read",

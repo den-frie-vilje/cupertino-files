@@ -132,6 +132,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 8 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 2 | iwork16→iwork16 |
 | Transitions<br><sub>validation requires a deck with a non-'none' effect</sub> | Keynote | ✅ read + write | **0** | — |
+| Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
 | Builds (animations)<br><sub>build count is exposed; the model is not</sub> | Keynote | ○ roadmap | n/a | — |
 
