@@ -23,6 +23,7 @@ import {
 } from "./cellrecord.ts";
 import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
+import { StyleHandle } from "../tss/stylesheet.ts";
 
 export const TST_TYPE = {
   TABLE_INFO: 6000,
@@ -42,9 +43,14 @@ const TableModelFields = {
   HEADER_COLUMNS: 10,
   FOOTER_ROWS: 11,
   TABLE_STYLE: 3,
+  HEADER_ROWS_FROZEN: 12,
+  HEADER_COLUMNS_FROZEN: 13,
   DEFAULT_ROW_HEIGHT: 16,
   DEFAULT_COLUMN_WIDTH: 17,
+  REPEATING_HEADER_ROWS: 29,
   TABLE_NAME_STYLE: 30,
+  REPEATING_HEADER_COLUMNS: 32,
+  MERGE_OWNER: 47,
 } as const;
 /** TST.DataStore. */
 const DataStoreFields = {
@@ -101,6 +107,14 @@ const BAND_STYLE_FIELDS: Record<TableBand, number> = {
   footerRow: 21,
 };
 
+/** The matching TSWP.CharacterStyleArchive references for each band's text. */
+const BAND_TEXT_STYLE_FIELDS: Record<TableBand, number> = {
+  body: 24,
+  headerRow: 25,
+  headerColumn: 26,
+  footerRow: 27,
+};
+
 /** TST.HeaderStorage / .HeaderStorageBucket / .Header. */
 const HeaderStorage = { BUCKETS: 2 } as const;
 const HeaderBucket = { HEADERS: 2 } as const;
@@ -121,6 +135,42 @@ const RichTextPayload = { STORAGE: 1 } as const;
 const MergeMap = { CELL_RANGE: 1 } as const;
 const CellRange = { ORIGIN: 1, SIZE: 2 } as const;
 const PACKED_DATA = 1;
+
+/**
+ * Where modern merges actually live: the calc engine.
+ *
+ * `TST.MergeOwnerArchive { owner_id = 1, formula_store = 2 }` →
+ * `FormulaStoreArchive { next_formula_index = 2, formulas = 3 }` →
+ * `FormulaStorePair { formula_index = 1, formula = 2 }` →
+ * `TSCE.FormulaArchive { AST_node_array = 1 }` → repeated `AST_node = 1`.
+ * A merge is a colon-tract node (type 67) whose `AST_colon_tract` gives
+ * the rectangle in absolute row/column ranges.
+ */
+const MergeOwner = { OWNER_ID: 1, FORMULA_STORE: 2 } as const;
+const FormulaStore = { NEXT_INDEX: 2, FORMULAS: 3, PAIR_INDEX: 1, PAIR_FORMULA: 2 } as const;
+const Formula = { AST_NODE_ARRAY: 1 } as const;
+const AstNodeArray = { NODES: 1 } as const;
+const AstNode = { TYPE: 1, CROSS_TABLE_INFO: 28, STICKY_BITS: 33, COLON_TRACT: 40 } as const;
+const AST_COLON_TRACT_NODE = 67;
+const ColonTract = {
+  RELATIVE_COLUMN: 1,
+  RELATIVE_ROW: 2,
+  ABSOLUTE_COLUMN: 3,
+  ABSOLUTE_ROW: 4,
+  PRESERVE_RECTANGULAR: 5,
+} as const;
+const TractRange = { BEGIN: 1, END: 2 } as const;
+
+/** First absolute range of a colon tract; `range_end` absent means one unit. */
+function absoluteRange(
+  tract: RawMessage | undefined,
+  field: number,
+): { begin: number; end: number } | undefined {
+  const range = tract?.getMessages(field)[0];
+  const begin = range?.getUint(TractRange.BEGIN);
+  if (begin === undefined) return undefined;
+  return { begin, end: range!.getUint(TractRange.END) ?? begin };
+}
 
 export type CellValue =
   | { type: "empty" }
@@ -152,6 +202,14 @@ export type CellInput =
   | { type: "bool"; value: boolean }
   | { type: "date"; value: Date }
   | { type: "duration"; seconds: number };
+
+export interface WriteOptions {
+  /**
+   * Write into a cell a merge has swallowed. Off by default, because such
+   * a value is stored but never displayed.
+   */
+  allowCovered?: boolean;
+}
 
 /** Coerce a plain JS value to a {@link CellInput}. */
 export function toCellInput(value: string | number | boolean | Date | null | undefined): CellInput {
@@ -243,7 +301,67 @@ export class TableModel {
     });
   }
 
+  /**
+   * Merged cell ranges, anchored at their top-left cell.
+   *
+   * Two encodings exist and the *documented* one is not the one current
+   * apps use. `DataStore.merge_region_map` holds packed CellRange values,
+   * but no document in the corpus — Numbers or Pages, 2013 through 26.x —
+   * actually has one. Real merges live in the calc engine, as colon-tract
+   * AST nodes inside `TableModelArchive.merge_owner.formula_store`. A
+   * reader that only knows the region map silently reports zero merges for
+   * every merged table it will ever meet, so the formula store is read
+   * first and the region map kept as a fallback.
+   *
+   * Ranges are deduplicated: a table can carry the same rectangle in both
+   * encodings, and the same merge more than once in the formula store.
+   */
   merges(): MergeRange[] {
+    const out: MergeRange[] = [...this.mergesFromFormulaStore(), ...this.mergesFromRegionMap()];
+    const seen = new Set<string>();
+    return out.filter((m) => {
+      const key = `${m.row},${m.column},${m.rowCount},${m.columnCount}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  /**
+   * Decode merges from the merge owner's formula store.
+   *
+   * Each merge is a one-argument function node over a colon tract whose
+   * `absolute_column` / `absolute_row` ranges give the rectangle. An
+   * omitted `range_end` means a single row or column.
+   */
+  private mergesFromFormulaStore(): MergeRange[] {
+    const out: MergeRange[] = [];
+    const store = this.object.message
+      .getMessage(TableModelFields.MERGE_OWNER)
+      ?.getMessage(MergeOwner.FORMULA_STORE);
+    for (const pair of store?.getMessages(FormulaStore.FORMULAS) ?? []) {
+      const nodes = pair
+        .getMessage(FormulaStore.PAIR_FORMULA)
+        ?.getMessage(Formula.AST_NODE_ARRAY)
+        ?.getMessages(AstNodeArray.NODES);
+      for (const node of nodes ?? []) {
+        if (node.getUint(AstNode.TYPE) !== AST_COLON_TRACT_NODE) continue;
+        const tract = node.getMessage(AstNode.COLON_TRACT);
+        const columns = absoluteRange(tract, ColonTract.ABSOLUTE_COLUMN);
+        const rows = absoluteRange(tract, ColonTract.ABSOLUTE_ROW);
+        if (!columns || !rows) continue;
+        out.push({
+          row: rows.begin,
+          column: columns.begin,
+          rowCount: rows.end - rows.begin + 1,
+          columnCount: columns.end - columns.begin + 1,
+        });
+      }
+    }
+    return out;
+  }
+
+  private mergesFromRegionMap(): MergeRange[] {
     const out: MergeRange[] = [];
     const map = this.store.resolve(refId(this.dataStore(), DataStoreFields.MERGE_REGION_MAP));
     if (!map) return out;
@@ -259,6 +377,28 @@ export class TableModel {
       });
     }
     return out;
+  }
+
+  /** The merge covering a cell, if any — including the one it anchors. */
+  mergeAt(row: number, column: number): MergeRange | undefined {
+    return this.merges().find(
+      (m) =>
+        row >= m.row &&
+        row < m.row + m.rowCount &&
+        column >= m.column &&
+        column < m.column + m.columnCount,
+    );
+  }
+
+  /**
+   * True when a cell is swallowed by a merge anchored elsewhere.
+   *
+   * Such a cell is not displayed at all: the anchor's content spans it.
+   * Writing to it produces a value nobody will ever see.
+   */
+  isCovered(row: number, column: number): boolean {
+    const merge = this.mergeAt(row, column);
+    return merge !== undefined && (merge.row !== row || merge.column !== column);
   }
 
   /**
@@ -397,13 +537,17 @@ export class TableModel {
    * in a separate TSWP storage object. Set plain `text` instead, or edit
    * the existing rich-text storage through {@link richTextStorage}.
    */
-  setCell(row: number, column: number, value: CellInput): void {
+  setCell(row: number, column: number, value: CellInput, options: WriteOptions = {}): void {
     this.requireWritable();
     if (row < 0 || row >= this.rowCount || column < 0 || column >= this.columnCount) {
       throw new RangeError(
         `cell ${row},${column} is outside the table (${this.rowCount}×${this.columnCount})`,
       );
     }
+    // Clearing a covered cell is harmless — it is already invisible, and
+    // Apple leaves covered cells with no record at all. Only a real value
+    // going somewhere nobody will see is worth refusing.
+    if (value.type !== "empty") this.requireVisible(row, column, options);
     const located = this.locateRow(row);
     if (!located) {
       throw new RangeError(
@@ -437,17 +581,22 @@ export class TableModel {
   }
 
   /** Write a whole row left-to-right, padding with empties. */
-  setRow(row: number, values: readonly CellInput[]): void {
+  setRow(row: number, values: readonly CellInput[], options: WriteOptions = {}): void {
     for (let column = 0; column < this.columnCount; column++) {
-      this.setCell(row, column, values[column] ?? { type: "empty" });
+      this.setCell(row, column, values[column] ?? { type: "empty" }, options);
     }
   }
 
   /** Write a rectangular block anchored at `row`,`column`. */
-  setCells(row: number, column: number, values: readonly (readonly CellInput[])[]): void {
+  setCells(
+    row: number,
+    column: number,
+    values: readonly (readonly CellInput[])[],
+    options: WriteOptions = {},
+  ): void {
     for (let r = 0; r < values.length; r++) {
       const line = values[r]!;
-      for (let c = 0; c < line.length; c++) this.setCell(row + r, column + c, line[c]!);
+      for (let c = 0; c < line.length; c++) this.setCell(row + r, column + c, line[c]!, options);
     }
   }
 
@@ -474,13 +623,44 @@ export class TableModel {
     return this.object.message.getUint(TableModelFields.FOOTER_ROWS) ?? 0;
   }
 
+  /** Header rows stay visible while the table scrolls (Numbers). */
+  get headerRowsFrozen(): boolean {
+    return this.object.message.getBool(TableModelFields.HEADER_ROWS_FROZEN) ?? false;
+  }
+
+  get headerColumnsFrozen(): boolean {
+    return this.object.message.getBool(TableModelFields.HEADER_COLUMNS_FROZEN) ?? false;
+  }
+
+  /** Header rows repeat at the top of each page/slide the table spans. */
+  get repeatingHeaderRows(): boolean {
+    return this.object.message.getBool(TableModelFields.REPEATING_HEADER_ROWS) ?? false;
+  }
+
+  get repeatingHeaderColumns(): boolean {
+    return this.object.message.getBool(TableModelFields.REPEATING_HEADER_COLUMNS) ?? false;
+  }
+
   /**
-   * Change how many leading rows/columns are header bands.
+   * Change how many leading rows/columns are header bands, and how those
+   * bands behave.
    *
    * Bands are presentation only — cell storage is identical either way —
-   * so this is a safe edit that does not touch the tiles.
+   * so this is a safe edit that does not touch the tiles. Counts are
+   * clamped to the table's real size: a header count past the last row
+   * would leave the app with no body.
    */
-  setBands(bands: { headerRows?: number; headerColumns?: number; footerRows?: number }): void {
+  setBands(bands: {
+    headerRows?: number;
+    headerColumns?: number;
+    footerRows?: number;
+    /** Keep header rows on screen while scrolling (Numbers). */
+    freezeHeaderRows?: boolean;
+    freezeHeaderColumns?: boolean;
+    /** Repeat header rows on every page the table spans (Pages/Numbers print). */
+    repeatHeaderRows?: boolean;
+    repeatHeaderColumns?: boolean;
+  }): void {
     const m = this.object.message;
     if (bands.headerRows !== undefined) {
       m.setVarint(TableModelFields.HEADER_ROWS, clampBand(bands.headerRows, this.rowCount));
@@ -490,6 +670,15 @@ export class TableModel {
     }
     if (bands.footerRows !== undefined) {
       m.setVarint(TableModelFields.FOOTER_ROWS, clampBand(bands.footerRows, this.rowCount));
+    }
+    for (const [key, field] of [
+      ["freezeHeaderRows", TableModelFields.HEADER_ROWS_FROZEN],
+      ["freezeHeaderColumns", TableModelFields.HEADER_COLUMNS_FROZEN],
+      ["repeatHeaderRows", TableModelFields.REPEATING_HEADER_ROWS],
+      ["repeatHeaderColumns", TableModelFields.REPEATING_HEADER_COLUMNS],
+    ] as const) {
+      const value = bands[key];
+      if (value !== undefined) m.setBool(field, value);
     }
   }
 
@@ -573,10 +762,27 @@ export class TableModel {
     return obj ? new TableStyleHandle(this.store, obj) : undefined;
   }
 
-  /** Formatting of the cells in a named band, e.g. the header row. */
+  /**
+   * Cell formatting of a named band — fill, borders, padding, alignment.
+   *
+   * A band has two styles, not one: this covers the *cell* (background and
+   * borders); {@link bandTextStyle} covers the *text* inside it. Making a
+   * header row bold means editing the text style, not this one.
+   */
   bandStyle(band: TableBand): TableStyleHandle | undefined {
     const obj = this.store.resolve(refId(this.object.message, BAND_STYLE_FIELDS[band]));
     return obj ? new TableStyleHandle(this.store, obj) : undefined;
+  }
+
+  /**
+   * Character formatting of a named band's text.
+   *
+   * A `TSWP.CharacterStyleArchive`, so it takes the same
+   * {@link CharacterFormatting} as any other text in the suite.
+   */
+  bandTextStyle(band: TableBand): StyleHandle | undefined {
+    const obj = this.store.resolve(refId(this.object.message, BAND_TEXT_STYLE_FIELDS[band]));
+    return obj ? new StyleHandle(this.store, obj) : undefined;
   }
 
   /** The cell style applied to one cell, if it has an explicit one. */
@@ -705,6 +911,25 @@ export class TableModel {
       }
     }
     list.setObjectReferences([...new Set(ids)]);
+  }
+
+  /**
+   * Refuse to write a cell a merge has swallowed.
+   *
+   * The value would be stored faithfully and displayed nowhere, because
+   * the merge anchor's content spans the cell. Silently accepting the
+   * write is the worse failure: the caller believes the edit landed.
+   * `allowCovered: true` writes anyway, for callers deliberately staging
+   * data under a merge they are about to remove.
+   */
+  private requireVisible(row: number, column: number, options: WriteOptions): void {
+    if (options.allowCovered || !this.isCovered(row, column)) return;
+    const merge = this.mergeAt(row, column)!;
+    throw new RangeError(
+      `cell ${row},${column} is covered by the merge anchored at ${merge.row},${merge.column} ` +
+        `(${merge.rowCount}×${merge.columnCount}); write to the anchor, or pass ` +
+        `{ allowCovered: true } to write a value the app will not display`,
+    );
   }
 
   private requireWritable(): void {
