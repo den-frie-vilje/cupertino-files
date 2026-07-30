@@ -599,7 +599,7 @@ export class PagesDocument extends IWorkDocument {
 
   /**
    * Insert an image inline at a body-text position (EXPERIMENTAL — see
-   * docs/FORMAT.md §12). Registers the bytes as a Data/ file (SHA-1
+   * docs/FORMAT.md §14). Registers the bytes as a Data/ file (SHA-1
    * deduped), creates the TSD.ImageArchive + attachment objects, anchors
    * them at a U+FFFC character, and sizes the image from its intrinsic
    * dimensions (PNG/JPEG/GIF) scaled to fit `maxWidth` (default 400 pt)

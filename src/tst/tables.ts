@@ -6,7 +6,7 @@
  * rich-text table resolution, decimal128 numbers and merge ranges.
  *
  * Read-only by design for now: cell edits require formula-dependency
- * bookkeeping (see docs/FORMAT.md §12).
+ * bookkeeping (see docs/FORMAT.md §14).
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
