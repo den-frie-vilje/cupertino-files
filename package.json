@@ -1,0 +1,53 @@
+{
+  "name": "iwork-files",
+  "version": "0.1.0",
+  "description": "Read, inspect, and edit Apple iWork files (Pages, and the shared IWA substrate used by Numbers/Keynote) in pure TypeScript with zero runtime dependencies.",
+  "keywords": [
+    "iwork",
+    "pages",
+    "numbers",
+    "keynote",
+    "apple",
+    "iwa",
+    "snappy",
+    "protobuf",
+    "document",
+    "parser"
+  ],
+  "license": "MIT",
+  "author": "Ole Kristensen <ole@kristensen.name>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olekristensen/iwork-files.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "iwork-dump": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --test test/",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.0"
+  }
+}
