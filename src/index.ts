@@ -85,7 +85,14 @@ export type {
   Shadow,
   Padding,
 } from "./tsd/style.ts";
-export { DrawableModel, findDrawableCore } from "./tsd/drawables.ts";
+export {
+  DrawableModel,
+  DrawableStyleHandle,
+  findDrawableCore,
+  drawableStylesOf,
+  DEFAULT_SHADOW,
+} from "./tsd/drawables.ts";
+export type { DrawableStyle } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
 export { ChartModel, chartsOf, decodeGridValue, CHART_TYPE_NAMES, TSCH_TYPE } from "./tsch/charts.ts";
 export type { ChartValue } from "./tsch/charts.ts";
@@ -104,7 +111,14 @@ export {
   toCellInput,
   TST_TYPE,
 } from "./tst/tables.ts";
-export type { CellValue, CellInput, CellInfo, MergeRange, TableBand } from "./tst/tables.ts";
+export type {
+  CellValue,
+  CellInput,
+  CellInfo,
+  MergeRange,
+  TableBand,
+  WriteOptions,
+} from "./tst/tables.ts";
 export { CellRecord, CellType, CellFlag, encodeDecimal128 } from "./tst/cellrecord.ts";
 export {
   TableStyleHandle,
