@@ -1,16 +1,80 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
+  allBorders,
   cellValueToString,
+  CellFlag,
+  CellRecord,
+  CellType,
+  colorFill,
   decodeCellRecord,
   decodeDecimal128,
+  encodeDecimal128,
+  linearGradient,
   NumbersDocument,
   PagesDocument,
+  solidStroke,
+  VerticalAlignment,
   type CellValue,
+  type IWorkDocument,
+  type TableModel,
 } from "../src/index.ts";
+import { refId } from "../src/tsp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
+
+/**
+ * Every raw v5 record of a table, in storage order.
+ *
+ * Reaches past the model deliberately: tests that assert on bytes must not
+ * be filtered through the decoder they are checking.
+ */
+function rawRecordsOf(doc: IWorkDocument, table: TableModel): Uint8Array[] {
+  const out: Uint8Array[] = [];
+  const tiles = table.object.message.getMessage(4)?.getMessage(3);
+  for (const t of tiles?.getMessages(1) ?? []) {
+    const tile = doc.store.resolve(refId(t, 2));
+    for (const row of tile?.message.getMessages(5) ?? []) {
+      const buffer = row.getBytes(6);
+      const rawOffsets = row.getBytes(7);
+      if (!buffer || !rawOffsets) continue;
+      const scale = row.getBool(8) ? 4 : 1;
+      const offsets: number[] = [];
+      for (let i = 0; i + 1 < rawOffsets.length; i += 2) {
+        const v = rawOffsets[i]! | (rawOffsets[i + 1]! << 8);
+        offsets.push(v >= 0x8000 ? v - 0x10000 : v);
+      }
+      for (let c = 0; c < offsets.length; c++) {
+        if (offsets[c]! < 0) continue;
+        let end = buffer.length;
+        for (let n = c + 1; n < offsets.length; n++) {
+          if (offsets[n]! >= 0) {
+            end = offsets[n]! * scale;
+            break;
+          }
+        }
+        const record = buffer.slice(offsets[c]! * scale, end);
+        if (record.length >= 12) out.push(record);
+      }
+    }
+  }
+  return out;
+}
+
+/** The table's string-table entries as plain objects. */
+function stringEntries(
+  doc: IWorkDocument,
+  table: TableModel,
+): { key: number; refcount: number; text: string }[] {
+  const list = doc.store.resolve(refId(table.object.message.getMessage(4), 4));
+  return (list?.message.getMessages(3) ?? []).flatMap((e) => {
+    const key = e.getUint(1);
+    const text = e.getString(3);
+    if (key === undefined || text === undefined) return [];
+    return [{ key, refcount: e.getUint(2) ?? 0, text }];
+  });
+}
 
 /** Build a v5 cell record per docs/FORMAT.md §14 / research/numbers-cells.md §2. */
 function v5Record(cellType: number, fields: { flag: number; bytes: Uint8Array }[]): Uint8Array {
@@ -270,5 +334,264 @@ describe("cell-storage generation detection", () => {
     const aCells = cellsOf(a);
     expect(aCells.length).toBeGreaterThan(0);
     expect(cellsOf(b)).toEqual(aCells);
+  });
+});
+
+describe("cell record codec", () => {
+  it("re-encodes every record in the corpus byte-for-byte", () => {
+    // The strongest available guarantee that the writer speaks the same
+    // dialect as the apps: decode real records, re-encode, compare bytes.
+    // Any drift in field order, extras handling or flag layout shows here.
+    const files = [
+      "numbers-parser-v26.0-issue102.numbers",
+      "numbers-parser-v26.1-date-formats.numbers",
+      "numbers-parser-v26.1-custom-formats.numbers",
+      "iwork-mcp-v14.5-earnings.numbers",
+      "picodocs-v14.4-headers-tables.pages",
+    ];
+    let examined = 0;
+    for (const name of files) {
+      const doc = name.endsWith(".pages")
+        ? PagesDocument.load(fixture(name))
+        : NumbersDocument.load(fixture(name));
+      for (const table of doc.tables()) {
+        if (table.storageGeneration !== "v5") continue;
+        for (const record of rawRecordsOf(doc, table)) {
+          const round = CellRecord.decode(record).encode();
+          expect([...round]).toEqual([...record]);
+          examined++;
+        }
+      }
+    }
+    expect(examined).toBeGreaterThan(500);
+  });
+
+  it("round-trips decimal128 through the shortest decimal representation", () => {
+    // Numbers stores decimals, not binary floats — 0.1 must come back as
+    // exactly 0.1, not the double's 0.1000000000000000055511151231257827.
+    for (const value of [0, 1, -1, 0.1, 0.3, 1234.5, -0.0001, 143_800_000_000, 1e-20]) {
+      const back = decodeDecimal128(encodeDecimal128(value));
+      if (value === 0) expect(back).toBe(0);
+      else expect(Math.abs((back - value) / value) < 1e-15).toBe(true);
+    }
+  });
+
+  it("preserves fields it does not interpret", () => {
+    // A record carrying a comment id and a conditional style must keep them
+    // when only the value changes — this is what stops an edit from
+    // silently stripping a cell's formatting.
+    const record = CellRecord.decode(
+      v5Record(3, [
+        { flag: CellFlag.STRING_ID, bytes: u32(7) },
+        { flag: CellFlag.CELL_STYLE_ID, bytes: u32(12) },
+        { flag: CellFlag.COND_STYLE_ID, bytes: u32(99) },
+        { flag: CellFlag.COMMENT_ID, bytes: u32(3) },
+      ]),
+    );
+    record.setDecimal128(42);
+    record.remove(CellFlag.STRING_ID);
+    record.type = CellType.NUMBER;
+    const back = CellRecord.decode(record.encode());
+    expect(back.id(CellFlag.CELL_STYLE_ID)).toBe(12);
+    expect(back.id(CellFlag.COND_STYLE_ID)).toBe(99);
+    expect(back.id(CellFlag.COMMENT_ID)).toBe(3);
+    expect(back.has(CellFlag.STRING_ID)).toBe(false);
+    expect(back.type).toBe(CellType.NUMBER);
+  });
+});
+
+describe("writing cells", () => {
+  it("writes every value type and reads it back after a save", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const when = new Date(Date.UTC(2026, 6, 30, 12, 0, 0));
+    table.setCell(1, 0, { type: "text", value: "written" });
+    table.setCell(1, 1, { type: "number", value: 1234.5 });
+    table.setCell(2, 0, { type: "bool", value: true });
+    table.setCell(2, 1, { type: "date", value: when });
+    table.setCell(2, 2, { type: "duration", seconds: 3600 });
+
+    const grid = NumbersDocument.load(doc.save()).tables()[0]!.grid();
+    expect(cellValueToString(grid[1]![0]!)).toBe("written");
+    expect(cellValueToString(grid[1]![1]!)).toBe("1234.5");
+    expect(grid[2]![0]).toEqual({ type: "bool", value: true, isFormula: false });
+    expect((grid[2]![1] as { value: Date }).value.getTime()).toBe(when.getTime());
+    expect(cellValueToString(grid[2]![2]!)).toBe("3600s");
+  });
+
+  it("leaves untouched rows byte-identical", () => {
+    // Editing one row must not perturb its neighbours' storage.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const before = rawRecordsOf(doc, table).map((r) => [...r].join(","));
+    table.setCell(1, 0, { type: "text", value: "changed" });
+    const after = rawRecordsOf(doc, table).map((r) => [...r].join(","));
+    // Same number of records; exactly one differs.
+    expect(after.length).toBe(before.length);
+    expect(after.filter((r, i) => r !== before[i]).length).toBe(1);
+  });
+
+  it("reference-counts the string table and reclaims dead entries", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const before = stringEntries(doc, table).length;
+    table.setCell(1, 0, { type: "text", value: "alpha" });
+    table.setCell(1, 1, { type: "text", value: "alpha" });
+    const shared = stringEntries(doc, table).filter((e) => e.text === "alpha");
+    expect(shared.length).toBe(1);
+    expect(shared[0]!.refcount).toBe(2);
+    // Replacing both drops the entry back out of the table.
+    table.setCell(1, 0, { type: "number", value: 1 });
+    table.setCell(1, 1, { type: "number", value: 2 });
+    expect(stringEntries(doc, table).some((e) => e.text === "alpha")).toBe(false);
+    expect(stringEntries(doc, table).length).toBe(before);
+  });
+
+  it("clears a formula when a literal is written over it", () => {
+    const isFormula = (v: CellValue) => v.type !== "empty" && v.isFormula;
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-xlsx-lineage.numbers"));
+    const table = doc.tables().find((t) => t.cells().some((c) => isFormula(c.value)));
+    if (!table) return; // corpus without formulas; nothing to assert
+    const formulaCell = table.cells().find((c) => isFormula(c.value))!;
+    table.setCell(formulaCell.row, formulaCell.column, { type: "number", value: 7 });
+    const reloaded = NumbersDocument.load(doc.save());
+    const same = reloaded
+      .tables()
+      .flatMap((t) => t.cells())
+      .find((c) => c.row === formulaCell.row && c.column === formulaCell.column)!;
+    expect(isFormula(same.value)).toBe(false);
+    expect(cellValueToString(same.value)).toBe("7");
+  });
+
+  it("refuses to write pre-BNC storage rather than corrupt it", () => {
+    const doc = NumbersDocument.load(fixture("tika-testNumbers2013.numbers"));
+    const table = doc.tables()[0]!;
+    let message = "";
+    try {
+      table.setCell(0, 0, { type: "text", value: "nope" });
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+    expect(message).toContain("pre-BNC");
+  });
+
+  it("rejects coordinates outside the table", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    let message = "";
+    try {
+      table.setCell(table.rowCount, 0, { type: "number", value: 1 });
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+    expect(message).toContain("outside the table");
+  });
+});
+
+describe("table styling", () => {
+  it("styles a cell without disturbing its neighbours", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const neighbourBefore = JSON.stringify(table.cellFormatting(1, 1));
+
+    table.setCellFormatting(1, 0, {
+      fill: colorFill(1, 0.9, 0.2),
+      borders: allBorders(solidStroke({ r: 0.8, g: 0, b: 0 }, 2)),
+      padding: { left: 6, top: 3, right: 6, bottom: 3 },
+      verticalAlignment: VerticalAlignment.MIDDLE,
+      textWrap: true,
+    });
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const styled = reloaded.cellFormatting(1, 0);
+    expect(styled.fill?.kind).toBe("color");
+    expect(styled.borders?.top?.width).toBe(2);
+    expect(styled.borders?.left?.pattern).toBe("solid");
+    expect(styled.padding).toEqual({ left: 6, top: 3, right: 6, bottom: 3 });
+    expect(styled.verticalAlignment).toBe(VerticalAlignment.MIDDLE);
+    expect(styled.textWrap).toBe(true);
+    expect(JSON.stringify(reloaded.cellFormatting(1, 1))).toBe(neighbourBefore);
+  });
+
+  it("inherits unspecified properties from the cell's existing style", () => {
+    // Setting only a fill must not clear the padding the cell already had.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const before = table.cellFormatting(1, 1);
+    table.setCellFormatting(1, 1, { fill: colorFill(0, 0, 1) });
+    const after = NumbersDocument.load(doc.save()).tables()[0]!.cellFormatting(1, 1);
+    expect(after.fill?.kind).toBe("color");
+    expect(after.padding).toEqual(before.padding);
+    expect(after.verticalAlignment).toBe(before.verticalAlignment);
+  });
+
+  it("writes a gradient cell fill", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.setCellFormatting(2, 1, {
+      fill: linearGradient({ r: 1, g: 1, b: 1 }, { r: 0, g: 0.4, b: 1 }),
+    });
+    const fill = NumbersDocument.load(doc.save()).tables()[0]!.cellFormatting(2, 1).fill;
+    expect(fill?.kind).toBe("gradient");
+    if (fill?.kind === "gradient") {
+      expect(fill.gradient.type).toBe("linear");
+      expect(fill.gradient.stops.length).toBe(2);
+      expect(fill.gradient.stops[1]!.fraction).toBe(1);
+    }
+  });
+
+  it("edits table-level banding and grid strokes", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.tableStyle()!.setTable({
+      bandedRows: true,
+      bandedFill: colorFill(0.95, 0.95, 1),
+      tableBorderVisible: true,
+      bodyHorizontalStroke: solidStroke({ r: 0.5, g: 0.5, b: 0.5 }, 0.5),
+    });
+    const style = NumbersDocument.load(doc.save()).tables()[0]!.tableStyle()!.table();
+    expect(style.bandedRows).toBe(true);
+    expect(style.bandedFill?.kind).toBe("color");
+    expect(style.tableBorderVisible).toBe(true);
+    expect(style.bodyHorizontalStroke?.width).toBe(0.5);
+  });
+
+  it("exposes the per-band cell styles the themes ship", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    for (const band of ["body", "headerRow", "headerColumn", "footerRow"] as const) {
+      const handle = table.bandStyle(band);
+      expect(handle !== undefined).toBe(true);
+      expect(handle!.isCellStyle).toBe(true);
+    }
+  });
+});
+
+describe("table structure", () => {
+  it("renames, re-bands and resizes without touching cell storage", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables()[0]!;
+    const cellsBefore = table.cells().length;
+    table.name = "Renamed";
+    table.setBands({ headerRows: 2, headerColumns: 1, footerRows: 1 });
+    table.setRowHeight(0, 66);
+    table.setColumnWidth(0, 180);
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.name).toBe("Renamed");
+    expect(reloaded.headerRowCount).toBe(2);
+    expect(reloaded.headerColumnCount).toBe(1);
+    expect(reloaded.footerRowCount).toBe(1);
+    expect(reloaded.rowHeight(0)).toBe(66);
+    expect(reloaded.columnWidth(0)).toBe(180);
+    expect(reloaded.cells().length).toBe(cellsBefore);
+  });
+
+  it("clamps band counts to the table's real size", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables()[0]!;
+    table.setBands({ headerRows: 9999, headerColumns: -3 });
+    expect(table.headerRowCount).toBe(table.rowCount);
+    expect(table.headerColumnCount).toBe(0);
   });
 });

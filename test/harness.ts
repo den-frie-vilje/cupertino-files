@@ -7,6 +7,7 @@ export function expect(actual: unknown): {
   toEqual(expected: unknown): void;
   toBeLessThan(n: number): void;
   toBeGreaterThan(n: number): void;
+  toBeCloseTo(n: number, digits?: number): void;
   toContain(item: unknown): void;
   toThrow(): void;
 } {
@@ -22,6 +23,15 @@ export function expect(actual: unknown): {
     },
     toBeGreaterThan(n) {
       assert.ok((actual as number) > n, `expected ${String(actual)} > ${n}`);
+    },
+    /**
+     * Values that survive a float32 round-trip are never bit-identical, so
+     * comparisons on them need a tolerance rather than strict equality.
+     */
+    toBeCloseTo(n, digits = 2) {
+      const delta = Math.abs((actual as number) - n);
+      const tolerance = Math.pow(10, -digits) / 2;
+      assert.ok(delta < tolerance, `expected ${String(actual)} ≈ ${n} (±${tolerance})`);
     },
     toContain(item) {
       if (typeof actual === "string") {

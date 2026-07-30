@@ -280,8 +280,6 @@ describe("e2e: Numbers", () => {
       const path = session!.path("edited.numbers");
       const marker = `sheet-note-${Date.now()}`;
 
-      // Cell writing is not implemented, so edit through a text storage —
-      // the point is that Numbers still accepts our package.
       const doc = NumbersDocument.load(readFileSync(session!.stageFixture(NUMBERS_FIXTURE)));
       const storage = doc.textStorages().find((s) => s.text.trim().length > 0);
       if (storage) storage.setText(marker);
@@ -292,6 +290,67 @@ describe("e2e: Numbers", () => {
 
       const reparsed = NumbersDocument.load(readFileSync(path));
       expect(reparsed.sheets().length).toBe(doc.sheets().length);
+      expect(reparsed.compatibility().canRoundTrip).toBe(true);
+    },
+  );
+
+  it(
+    "writes cells that Numbers itself reads back",
+    { skip: skip.Numbers ?? false },
+    () => {
+      // The assertion the unit suite structurally cannot make. Our records
+      // re-encode byte-identically and reload through our own parser — but
+      // only Numbers can confirm it agrees with our encoding.
+      session!.remember("Numbers");
+      const path = session!.path("written-cells.numbers");
+      const text = `written-${Date.now()}`;
+
+      const doc = NumbersDocument.load(readFileSync(session!.stageFixture(NUMBERS_FIXTURE)));
+      const table = doc.tables()[0]!;
+      // Row 1 rather than 0: row 0 is often a merged title band.
+      table.setCell(1, 0, { type: "text", value: text });
+      table.setCell(1, 1, { type: "number", value: 1234.5 });
+      table.setCell(2, 0, { type: "bool", value: true });
+      writeFileSync(path, doc.save());
+
+      const reported = osascript(
+        `tell application "Numbers"\n` +
+          `  set theDoc to open ${posix(path)}\n` +
+          `  tell table 1 of sheet 1 of theDoc\n` +
+          `    set a to value of cell 2 of column 1 as string\n` +
+          `    set b to value of cell 2 of column 2 as string\n` +
+          `  end tell\n` +
+          `  close theDoc saving no\n` +
+          `  return a & "|" & b\n` +
+          `end tell`,
+      );
+      const [reportedText, reportedNumber] = reported.split("|");
+      expect(reportedText).toBe(text);
+      expect(Math.abs(Number.parseFloat(reportedNumber ?? "") - 1234.5) < 0.001).toBe(true);
+    },
+  );
+
+  it(
+    "survives Numbers re-saving a package whose cells we wrote",
+    { skip: skip.Numbers ?? false },
+    () => {
+      session!.remember("Numbers");
+      const path = session!.path("resaved-cells.numbers");
+      const text = `resaved-${Date.now()}`;
+
+      const doc = NumbersDocument.load(readFileSync(session!.stageFixture(NUMBERS_FIXTURE)));
+      doc.tables()[0]!.setCell(1, 0, { type: "text", value: text });
+      writeFileSync(path, doc.save());
+
+      // Let Numbers rewrite the entire package, then parse its output.
+      withDocument("Numbers", path, "name of theDoc", { save: true });
+
+      const reparsed = NumbersDocument.load(readFileSync(path));
+      const values = reparsed
+        .tables()[0]!
+        .cells()
+        .map((c) => cellValueToString(c.value));
+      expect(values.some((v) => v === text)).toBe(true);
       expect(reparsed.compatibility().canRoundTrip).toBe(true);
     },
   );
