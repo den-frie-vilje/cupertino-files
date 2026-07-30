@@ -1004,3 +1004,77 @@ describe("rows and columns", () => {
     }
   });
 });
+
+describe("Numbers sheet management", () => {
+  it("duplicates a sheet with tables that are its own", () => {
+    // The failure a shallow copy gives: two tabs editing the same cells.
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const before = doc.sheets().length;
+    const original = doc.sheets()[0]!;
+    const originalText = doc.tables(original.id)[0]!.cellText(1, 0);
+
+    const copy = doc.addSheet({ name: "Copy", copyOf: 0 });
+    expect(doc.sheets().length).toBe(before + 1);
+    expect(doc.tables(copy.id).length).toBe(doc.tables(original.id).length);
+    // No table object appears on both sheets.
+    const originalIds = new Set(doc.tables(original.id).map((t) => t.object.identifier));
+    expect(doc.tables(copy.id).some((t) => originalIds.has(t.object.identifier))).toBe(false);
+
+    doc.tables(copy.id)[0]!.setCell(1, 0, { type: "text", value: "changed in copy" }, { allowCovered: true });
+    const reloaded = NumbersDocument.load(doc.save());
+    const [first, ...rest] = reloaded.sheets();
+    void rest;
+    expect(reloaded.tables(first!.id)[0]!.cellText(1, 0)).toBe(originalText);
+    const reloadedCopy = reloaded.sheets().find((s) => s.name === "Copy")!;
+    expect(reloaded.tables(reloadedCopy.id)[0]!.cellText(1, 0)).toBe("changed in copy");
+    expect(reloaded.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("adds an empty sheet", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const sheet = doc.addSheet({ name: "Blank", withContent: false });
+    expect(doc.tables(sheet.id).length).toBe(0);
+    const reloaded = NumbersDocument.load(doc.save());
+    const found = reloaded.sheets().find((s) => s.name === "Blank")!;
+    expect(reloaded.tables(found.id).length).toBe(0);
+  });
+
+  it("keeps sheet names unique, as the app does", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const existing = doc.sheets()[0]!.name!;
+    const first = doc.addSheet({ name: existing, withContent: false });
+    const second = doc.addSheet({ name: existing, withContent: false });
+    expect(first.name).not.toBe(existing);
+    expect(second.name).not.toBe(first.name);
+    expect(new Set(doc.sheets().map((s) => s.name)).size).toBe(doc.sheets().length);
+  });
+
+  it("renames, reorders and removes sheets", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const names = doc.sheets().map((s) => s.name);
+    expect(names.length).toBeGreaterThan(2);
+
+    doc.renameSheet(0, "First");
+    doc.moveSheet(0, 2);
+    const moved = NumbersDocument.load(doc.save());
+    expect(moved.sheets()[2]!.name).toBe("First");
+    expect(moved.sheets()[0]!.name).toBe(names[1]);
+
+    const count = moved.sheets().length;
+    moved.removeSheet(0);
+    const removed = NumbersDocument.load(moved.save());
+    expect(removed.sheets().length).toBe(count - 1);
+    expect(removed.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("refuses to remove the last sheet", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    let threw = false;
+    try {
+      doc.removeSheet(0);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+});

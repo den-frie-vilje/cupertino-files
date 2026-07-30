@@ -10,7 +10,8 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
+import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -57,7 +58,7 @@ export class NumbersDocument extends IWorkDocument {
     return tablesOf(this.store, drawableIds);
   }
 
-  /** The document's sheets (id + name). */
+  /** The document's sheets (id + name), in tab order. */
   sheets(): SheetInfo[] {
     const out: SheetInfo[] = [];
     for (const ref of this.docObject.message.getMessages(TN_DOCUMENT_SHEETS)) {
@@ -67,5 +68,100 @@ export class NumbersDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  // ------------------------------------------------------ sheet management
+
+  /**
+   * Add a sheet by copying an existing one.
+   *
+   * A sheet is a container for drawables, and a Numbers document with an
+   * empty one is perfectly valid — but the *tables* on a sheet are what
+   * make it useful, and building a table from nothing means synthesising
+   * tiles, header buckets, data lists and a calc-engine owner. Copying is
+   * both simpler and closer to what Numbers does when you duplicate a tab.
+   *
+   * By default the copy keeps its tables (a duplicate); pass
+   * `withContent: false` for an empty sheet.
+   */
+  addSheet(options: { name?: string; copyOf?: number; at?: number; withContent?: boolean } = {}): SheetInfo {
+    const sheets = this.sheets();
+    if (sheets.length === 0) throw new RangeError("document has no sheet to copy");
+    const sourceIndex = options.copyOf ?? sheets.length - 1;
+    const source = this.store.object(sheets[sourceIndex]?.id ?? -1n);
+    if (!source) throw new RangeError(`no sheet at index ${sourceIndex}`);
+
+    const withContent = options.withContent ?? true;
+    let sheet: IwaObject;
+    if (withContent) {
+      // Deep copy, so the duplicate's tables are its own — a shallow one
+      // would leave both tabs editing the same cells.
+      sheet = deepCloneObject(this.store, source, {
+        follow: (object, depth) => defaultFollow(object, this.store.typeNameOf(object)) && depth <= 10,
+        maxObjects: 4096,
+      }).clone;
+    } else {
+      const component = this.store.componentOf(source.identifier);
+      if (!component) throw new RangeError("source sheet has no component");
+      sheet = this.store.createObject(source.type, component, { cloneFrom: source });
+      sheet.message.remove(TN_SHEET_DRAWABLE_INFOS);
+    }
+    sheet.message.setString(TN_SHEET_NAME, this.uniqueSheetName(options.name, sheets));
+
+    const ids = sheets.map((s) => s.id);
+    const at = options.at ?? ids.length;
+    ids.splice(Math.max(0, Math.min(at, ids.length)), 0, sheet.identifier);
+    this.writeSheetOrder(ids);
+    return { id: sheet.identifier, name: sheet.message.getString(TN_SHEET_NAME) };
+  }
+
+  /** Remove a sheet from the document's tab order. */
+  removeSheet(index: number): void {
+    const sheets = this.sheets();
+    const sheet = sheets[index];
+    if (!sheet) throw new RangeError(`no sheet at index ${index}`);
+    if (sheets.length <= 1) throw new RangeError("a document must keep at least one sheet");
+    // Unlinked, not deleted: other objects may still reference the sheet,
+    // and an orphan is harmless where a dangling reference is not.
+    this.writeSheetOrder(sheets.filter((_, i) => i !== index).map((s) => s.id));
+  }
+
+  /** Rename a sheet. Names must be unique, as they are in the app. */
+  renameSheet(index: number, name: string): void {
+    const sheets = this.sheets();
+    const sheet = this.store.object(sheets[index]?.id ?? -1n);
+    if (!sheet) throw new RangeError(`no sheet at index ${index}`);
+    sheet.message.setString(
+      TN_SHEET_NAME,
+      this.uniqueSheetName(name, sheets.filter((_, i) => i !== index)),
+    );
+  }
+
+  /** Move a sheet to a new position in tab order. */
+  moveSheet(from: number, to: number): void {
+    const ids = this.sheets().map((s) => s.id);
+    if (from < 0 || from >= ids.length) throw new RangeError(`no sheet at index ${from}`);
+    if (to < 0 || to >= ids.length) throw new RangeError(`cannot move to index ${to}`);
+    const [moved] = ids.splice(from, 1);
+    ids.splice(to, 0, moved!);
+    this.writeSheetOrder(ids);
+  }
+
+  private writeSheetOrder(ids: readonly bigint[]): void {
+    this.docObject.message.setMessages(
+      TN_DOCUMENT_SHEETS,
+      ids.map((id) => makeRef(id)),
+    );
+  }
+
+  /** Numbers requires distinct sheet names; suffix until one is free. */
+  private uniqueSheetName(preferred: string | undefined, taken: readonly SheetInfo[]): string {
+    const used = new Set(taken.map((s) => s.name).filter((n): n is string => n !== undefined));
+    const base = preferred ?? "Sheet";
+    if (!used.has(base)) return base;
+    for (let n = 2; ; n++) {
+      const candidate = `${base} ${n}`;
+      if (!used.has(candidate)) return candidate;
+    }
   }
 }

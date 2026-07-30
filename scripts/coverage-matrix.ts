@@ -499,10 +499,22 @@ const CAPABILITIES: Capability[] = [
   // ----------------------------------------------------------------- numbers
   {
     group: "Numbers & tables",
-    name: "Sheets",
+    name: "Sheets (add, duplicate, rename, move, remove)",
     apps: ["numbers"],
-    status: "read",
+    status: "read+write",
     probe: (c) => safe(() => (c.numbers?.sheets().length ?? 0) > 0),
+    note: "a duplicated sheet deep-copies its tables, so the two tabs edit different cells",
+    manualProof: {
+      claim: "Numbers opens a document whose sheets we added, duplicated, renamed or reordered.",
+      why:
+        "A sheet is valid only in the context of the calc engine and the document's own bookkeeping. " +
+        "Our copies reload and round-trip, but whether Numbers accepts a duplicated tab — and whether " +
+        "its formulas still resolve against the copy rather than the original — only the app can say.",
+      how:
+        "Duplicate a sheet with formulas, rename and reorder, save, and open in Numbers: check the tab " +
+        "bar, that the copy's formulas point within the copy, and that editing one tab leaves the other alone.",
+      risk: "high",
+    },
   },
   {
     group: "Numbers & tables",

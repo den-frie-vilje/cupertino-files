@@ -92,7 +92,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Sheets | Numbers | 🔍 read only | 10 | iwork16→current |
+| Sheets (add, duplicate, rename, move, remove)<br><sub>a duplicated sheet deep-copies its tables, so the two tabs edit different cells</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
 | Table cell reading — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 18 | iwork19→current |
 | Table cell reading — pre-BNC storage<br><sub>undocumented layout; reported explicitly, never guessed</sub> | all | ✗ out of scope | 4 | iwork16→iwork16 |
 | Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 18 | iwork19→current |
@@ -126,7 +126,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-12 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+13 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -134,6 +134,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
+- 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
 - 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**

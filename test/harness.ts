@@ -11,6 +11,7 @@ export function expect(actual: unknown): {
   toContain(item: unknown): void;
   toContainEqual(item: unknown): void;
   toThrow(): void;
+  not: { toBe(expected: unknown): void; toEqual(expected: unknown): void };
 } {
   return {
     toBe(expected) {
@@ -55,6 +56,14 @@ export function expect(actual: unknown): {
     },
     toThrow() {
       assert.throws(actual as () => unknown);
+    },
+    not: {
+      toBe(expected) {
+        assert.notStrictEqual(actual, expected);
+      },
+      toEqual(expected) {
+        assert.notDeepStrictEqual(actual, expected);
+      },
     },
   };
 }
