@@ -39,6 +39,7 @@ import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
+import { imagesOf, type ImageModel } from "../tsd/images.ts";
 
 // TSP.PackageMetadata version fields.
 const PKG_READ_VERSION = 5;
@@ -170,6 +171,11 @@ export class IWorkDocument {
       }
     }
     return out;
+  }
+
+  /** Every image, with filter/mask access (see ImageModel). */
+  images(): ImageModel[] {
+    return imagesOf(this.store);
   }
 
   /** Concatenated plain text of all in-document storages (reading order approximation). */

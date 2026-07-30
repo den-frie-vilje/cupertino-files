@@ -29,6 +29,8 @@ export type {
   StyleInfo,
 } from "./tss/stylesheet.ts";
 export { DrawableModel, findDrawableCore } from "./tsd/drawables.ts";
+export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
+export type { ImageFilters } from "./tsd/images.ts";
 export type { GeometryInfo } from "./tsd/drawables.ts";
 export * as tspSchema from "./tsp/schema.ts";
 export * as tswpSchema from "./tswp/schema.ts";

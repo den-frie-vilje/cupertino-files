@@ -277,6 +277,16 @@ export class ObjectStore {
     fromInfo.addMessage(COMPONENT_EXTERNAL_REFERENCES, entry);
   }
 
+  /** File name registered for a Data/ identifier, from PackageMetadata.datas. */
+  dataFileName(dataId: bigint): string | undefined {
+    for (const info of this.packageMetadata.message.getMessages(PKG_DATAS)) {
+      if (info.getVarint(DATA_IDENTIFIER) === dataId) {
+        return info.getString(DATA_FILE_NAME) ?? info.getString(DATA_PREFERRED_FILE_NAME);
+      }
+    }
+    return undefined;
+  }
+
   /**
    * Serialize the document. Recomputes reference bookkeeping for dirty
    * objects, then rebuilds only the components that changed.
