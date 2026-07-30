@@ -595,3 +595,124 @@ describe("table structure", () => {
     expect(table.headerColumnCount).toBe(0);
   });
 });
+
+describe("merged cells", () => {
+  it("decodes merges from the merge-owner formula store", () => {
+    // The documented `merge_region_map` is absent from every fixture in the
+    // corpus; real merges live as colon-tract AST nodes in the calc engine.
+    // A reader that only knows the region map reports zero merges for every
+    // merged table it will ever meet.
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables().find((t) => t.name === "Key Metrics")!;
+    const merges = table.merges();
+    expect(merges.length).toBe(2);
+    // A full-width title band across all four columns.
+    expect(merges[0]).toEqual({ row: 0, column: 0, rowCount: 1, columnCount: 4 });
+    expect(merges[1]).toEqual({ row: 1, column: 0, rowCount: 1, columnCount: 4 });
+  });
+
+  it("decodes vertical and offset merges", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const merges = doc.tables()[0]!.merges();
+    // Anchored away from column 0, and one that spans rows rather than columns.
+    expect(merges).toContainEqual({ row: 0, column: 2, rowCount: 1, columnCount: 8 });
+    expect(merges).toContainEqual({ row: 2, column: 0, rowCount: 4, columnCount: 1 });
+  });
+
+  it("agrees across format eras for the same source document", () => {
+    const a = NumbersDocument.load(fixture("numbers-parser-v14.4-issue102.numbers"));
+    const b = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    expect(b.tables()[0]!.merges()).toEqual(a.tables()[0]!.merges());
+  });
+
+  it("never reports a merge whose covered cells hold values", () => {
+    // The invariant Apple maintains, and the strongest check available
+    // without rendering: if a rectangle were wrong, some cell it claims to
+    // cover would still carry a value of its own.
+    let checked = 0;
+    for (const name of [
+      "iwork-mcp-v14.5-earnings.numbers",
+      "numbers-parser-v26.0-issue102.numbers",
+      "numbers-parser-v26.1-custom-formats.numbers",
+      "numbers-parser-v26.1-xlsx-lineage.numbers",
+    ]) {
+      for (const table of NumbersDocument.load(fixture(name)).tables()) {
+        if (table.storageGeneration !== "v5" || table.merges().length === 0) continue;
+        for (const cell of table.cells()) {
+          if (cell.value.type === "empty") continue;
+          expect(table.isCovered(cell.row, cell.column)).toBe(false);
+          checked++;
+        }
+        for (const merge of table.merges()) {
+          expect(merge.row + merge.rowCount <= table.rowCount).toBe(true);
+          expect(merge.column + merge.columnCount <= table.columnCount).toBe(true);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it("refuses to write a value into a cell a merge has swallowed", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables().find((t) => t.name === "Key Metrics")!;
+    expect(table.isCovered(0, 1)).toBe(true);
+    expect(table.isCovered(0, 0)).toBe(false);
+
+    let message = "";
+    try {
+      table.setCell(0, 1, { type: "text", value: "invisible" });
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+    expect(message).toContain("covered by the merge anchored at 0,0");
+
+    // Clearing is fine — a covered cell is already invisible — and the
+    // escape hatch works for callers who mean it.
+    table.clearCell(0, 1);
+    table.setCell(0, 1, { type: "text", value: "deliberate" }, { allowCovered: true });
+    expect(table.cellText(0, 1)).toBe("deliberate");
+    // The anchor is still writable.
+    table.setCell(0, 0, { type: "text", value: "title" });
+    expect(table.cellText(0, 0)).toBe("title");
+  });
+});
+
+describe("header and footer bands", () => {
+  it("reads and writes freeze and repeating-header flags", () => {
+    const doc = NumbersDocument.load(fixture("iwork-mcp-v14.5-earnings.numbers"));
+    const table = doc.tables()[0]!;
+    table.setBands({
+      headerRows: 2,
+      footerRows: 1,
+      freezeHeaderRows: true,
+      freezeHeaderColumns: false,
+      repeatHeaderRows: true,
+      repeatHeaderColumns: false,
+    });
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.headerRowCount).toBe(2);
+    expect(reloaded.footerRowCount).toBe(1);
+    expect(reloaded.headerRowsFrozen).toBe(true);
+    expect(reloaded.headerColumnsFrozen).toBe(false);
+    expect(reloaded.repeatingHeaderRows).toBe(true);
+    expect(reloaded.repeatingHeaderColumns).toBe(false);
+  });
+
+  it("exposes a band's text style separately from its cell style", () => {
+    // A band has two styles: the cell (fill, borders) and the text inside
+    // it. Making a header bold means editing the second, not the first.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    for (const band of ["body", "headerRow", "headerColumn", "footerRow"] as const) {
+      expect(table.bandStyle(band) !== undefined).toBe(true);
+      expect(table.bandTextStyle(band) !== undefined).toBe(true);
+    }
+
+    table.bandTextStyle("headerRow")!.setCharacter({ bold: true, fontSize: 14 });
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const header = reloaded.bandTextStyle("headerRow")!.character();
+    expect(header.bold).toBe(true);
+    expect(header.fontSize).toBe(14);
+  });
+});

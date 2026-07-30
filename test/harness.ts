@@ -9,6 +9,7 @@ export function expect(actual: unknown): {
   toBeGreaterThan(n: number): void;
   toBeCloseTo(n: number, digits?: number): void;
   toContain(item: unknown): void;
+  toContainEqual(item: unknown): void;
   toThrow(): void;
 } {
   return {
@@ -39,6 +40,18 @@ export function expect(actual: unknown): {
       } else {
         assert.ok((actual as unknown[]).includes(item), `expected array to contain ${String(item)}`);
       }
+    },
+    /** Membership by deep equality, for arrays of plain objects. */
+    toContainEqual(item) {
+      const found = (actual as unknown[]).some((candidate) => {
+        try {
+          assert.deepStrictEqual(candidate, item);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      assert.ok(found, `expected ${JSON.stringify(actual)} to contain ${JSON.stringify(item)}`);
     },
     toThrow() {
       assert.throws(actual as () => unknown);

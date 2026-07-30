@@ -9,6 +9,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   BorderPosition,
+  colorFill,
+  drawableStylesOf,
+  IWorkDocument,
+  KeynoteDocument,
   Capitalization,
   hexColor,
   linearGradient,
@@ -410,5 +414,110 @@ describe("direct formatting through the fluent API", () => {
     expect(ParaProps.BORDER_POSITIONS).toBe(45);
     expect(ParaProps.TABS).toBe(25);
     expect(ParaProps.FILL).toBe(6);
+  });
+});
+
+describe("drawable styling", () => {
+  it("reads the shadows Apple's own templates ship", () => {
+    // Shadows do not exist on cell or table styles — the format has no such
+    // field. They live on the drawable's TSD.ShapeStyleArchive or
+    // MediaStyleArchive, which is what this walks.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const styles = drawableStylesOf(doc.store);
+    expect(styles.length).toBeGreaterThan(0);
+
+    const shadows = styles.map((s) => s.read().shadow).filter((s) => s !== undefined);
+    expect(shadows.length).toBeGreaterThan(0);
+    // Apple writes a full parameter set even when the shadow is switched
+    // off, so "has a shadow archive" and "shows a shadow" differ.
+    const enabled = shadows.filter((s) => s!.enabled);
+    expect(enabled.length).toBeGreaterThan(0);
+    for (const shadow of enabled) {
+      expect(Number.isFinite(shadow!.angle!)).toBe(true);
+      expect(shadow!.offset! >= 0).toBe(true);
+    }
+  });
+
+  it("distinguishes shape and media property layouts", () => {
+    // Media bags omit `fill`, so every later field is numbered one lower.
+    // Reading a media style with shape numbering would report the stroke as
+    // a fill and the opacity as a stroke.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const styles = drawableStylesOf(doc.store);
+    const media = styles.filter((s) => s.isMedia);
+    const shapes = styles.filter((s) => !s.isMedia);
+    expect(media.length).toBeGreaterThan(0);
+    expect(shapes.length).toBeGreaterThan(0);
+    // A media style has no fill to report, whatever its bag contains.
+    for (const style of media) expect(style.read().fill).toBe(undefined);
+  });
+
+  it("writes a shadow the library reads back after a save", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const target = drawableStylesOf(doc.store).find((s) => !s.isMedia)!;
+    target.set({
+      shadow: { color: { r: 0, g: 0, b: 0, a: 0.5 }, angle: 90, offset: 10, radius: 20, opacity: 0.7, enabled: true },
+      opacity: 0.75,
+    });
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const style = drawableStylesOf(reloaded.store).find((s) => s.id === target.id)!.read();
+    expect(style.shadow!.angle).toBe(90);
+    expect(style.shadow!.offset).toBe(10);
+    expect(style.shadow!.radius).toBe(20);
+    expect(style.shadow!.enabled).toBe(true);
+    expect(style.opacity).toBeCloseTo(0.75, 5);
+    expect(reloaded.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("distinguishes disabling a shadow from removing it", () => {
+    // Two different states: the apps keep a full parameter set with
+    // is_enabled false, which is how the inspector remembers your settings
+    // after you untick the box.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const style = drawableStylesOf(doc.store).find((s) => s.read().shadow?.enabled)!;
+    const before = style.read().shadow!;
+
+    style.setShadowEnabled(false);
+    const disabled = style.read().shadow!;
+    expect(disabled.enabled).toBe(false);
+    expect(disabled.offset).toBe(before.offset);
+    expect(disabled.angle).toBe(before.angle);
+
+    style.set({ shadow: null });
+    expect(style.read().shadow).toBe(undefined);
+  });
+
+  it("refuses a fill on a media style", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const media = drawableStylesOf(doc.store).find((s) => s.isMedia)!;
+    let message = "";
+    try {
+      media.set({ fill: colorFill(1, 0, 0) });
+    } catch (e) {
+      message = String((e as Error).message);
+    }
+    expect(message).toContain("no fill");
+  });
+
+  it("keeps every drawable style in the corpus readable", () => {
+    let seen = 0;
+    let shadows = 0;
+    for (const name of [
+      "zenodo-v26.1-hyperlinks-masks.key",
+      "gomap-v26.1-newest-writer.pages",
+      "tika-testKeynote2013.key",
+      "libetonyek-pages5-file.pages",
+    ]) {
+      // Mixed apps, so use the generic loader rather than a typed one.
+      const doc = IWorkDocument.open(fixture(name));
+      for (const style of drawableStylesOf(doc.store)) {
+        const read = style.read();
+        if (read.shadow) shadows++;
+        seen++;
+      }
+    }
+    expect(seen).toBeGreaterThan(100);
+    expect(shadows).toBeGreaterThan(0);
   });
 });
