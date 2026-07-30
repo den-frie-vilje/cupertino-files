@@ -45,7 +45,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "node --test test/",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "coverage": "node scripts/coverage-matrix.ts",
+    "coverage:check": "node scripts/coverage-matrix.ts --check",
+    "privacy:check": "node scripts/scan-fixture-privacy.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

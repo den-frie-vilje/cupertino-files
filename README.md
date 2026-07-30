@@ -57,6 +57,11 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 
 ## Feature matrix
 
+> **[`docs/COVERAGE.md`](docs/COVERAGE.md) is the authoritative, generated matrix** — version
+> coverage per app, every capability with its support status, and how many real fixtures
+> actually exercise it. Regenerate with `npm run coverage`; a test fails if it goes stale.
+> The table below is the short version.
+
 | Capability | Status |
 |---|---|
 | Parse all three container layouts (flat zip, nested `Index.zip`, wrapper dir) | ✅ |
