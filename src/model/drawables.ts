@@ -6,7 +6,7 @@
  * schema of every drawable subclass.
  */
 import type { IwaObject } from "../iwa.ts";
-import { RawMessage } from "../protobuf.ts";
+import { RawMessage, WireType } from "../protobuf.ts";
 import type { ObjectStore } from "../store.ts";
 import { typeName } from "../registry.ts";
 import { Drawable, Geometry, Point, SizeFields } from "./schema.ts";
@@ -37,14 +37,22 @@ export function findDrawableCore(message: RawMessage, maxDepth = 6): RawMessage 
 }
 
 function looksLikeGeometry(m: RawMessage): boolean {
-  // A GeometryArchive has only small field numbers with point/size children
-  // or fixed32 floats; a `super` chain member would itself contain field 1
-  // as a message too — disambiguate by checking position/size shape.
-  const pos = m.getMessage(Geometry.POSITION);
-  const size = m.getMessage(Geometry.SIZE);
-  const posOk = pos !== undefined && pos.has(Point.X) && pos.has(Point.Y);
-  const sizeOk = size !== undefined && size.has(SizeFields.WIDTH) && size.has(SizeFields.HEIGHT);
-  return posOk || sizeOk || m.has(Geometry.ANGLE) || m.has(Geometry.FLAGS);
+  // A GeometryArchive holds a TSP.Point at 1 and TSP.Size at 2, both made of
+  // fixed32 floats. Checking wire types (not just presence) is what keeps
+  // unrelated messages with small field numbers from matching.
+  const isFloatPair = (child: RawMessage | undefined, a: number, b: number): boolean =>
+    child !== undefined &&
+    child.fieldWire(a) === WireType.Fixed32 &&
+    child.fieldWire(b) === WireType.Fixed32;
+  let pos: RawMessage | undefined;
+  let size: RawMessage | undefined;
+  try {
+    pos = m.fieldWire(Geometry.POSITION) === WireType.Bytes ? m.getMessage(Geometry.POSITION) : undefined;
+    size = m.fieldWire(Geometry.SIZE) === WireType.Bytes ? m.getMessage(Geometry.SIZE) : undefined;
+  } catch {
+    return false; // field 1/2 not parseable as messages
+  }
+  return isFloatPair(pos, Point.X, Point.Y) || isFloatPair(size, SizeFields.WIDTH, SizeFields.HEIGHT);
 }
 
 export class DrawableModel {

@@ -189,6 +189,11 @@ export class RawMessage {
     return this.lastField(no) !== undefined;
   }
 
+  /** Wire type of the last occurrence of a field, if present. */
+  fieldWire(no: number): WireType | undefined {
+    return this.lastField(no)?.wire;
+  }
+
   getVarint(no: number): bigint | undefined {
     const f = this.lastField(no);
     if (!f) return undefined;
