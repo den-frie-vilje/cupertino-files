@@ -269,6 +269,8 @@ export {
   readOwnerUid,
   readCfUid,
   OwnerKind,
+  OWNER_KIND_NAMES,
+  DOCUMENT_OWNER_UID,
   FormulaOwnerFields,
   FORMULA_OWNER_DEPENDENCIES,
   HAUNTED_OWNER,

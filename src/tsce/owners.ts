@@ -62,20 +62,48 @@ const TABLE_INFO_MODEL = 2;
 const TABLE_MODEL_NAME = 8;
 
 /**
- * `owner_kind` values seen in the corpus.
+ * `owner_kind` — what a derived owner belongs to.
  *
- * Only kind 1 is named, and it is named because it is *demonstrated*: those
- * entries are the ones carrying a `formula_owner` reference to a table, and
- * they are the base every other kind derives from. The rest are recorded
- * with their counts so a reader can see the shape of the enum without being
- * told a meaning nobody has established.
+ * Apple publishes no enum for this, but it does not need to: every derived
+ * owner is *used* by a field somewhere, and matching each field's UUID back
+ * to its owner entry names the kind. Nine of the thirteen values in the
+ * corpus were established that way, each unanimous across every file that
+ * exercises it. The counts below are the evidence.
  *
- * Seen: 1×58, 3×44, 4×49, 5×44, 6×32, 7×41, 8×44, 9×44, 10×44, 11×39,
- * 12×28, 35×34, 200×23.
+ * | kind | meaning | how it was established |
+ * |---|---|---|
+ * | 1 | the table itself | the only entries carrying `formula_owner`; every other kind's base |
+ * | 3 | conditional-style formulas | `TableModelArchive.conditional_style_formula_owner_id` ×44 |
+ * | 4 | hidden-state formulas, **rows** | `hidden_state_formula_owner_for_rows` ×44, and the archive's own id ×49 |
+ * | 5 | merge formulas | the inline `merge_owner`'s id ×18 — and it names the table it sits on |
+ * | 8 | categories (group-by) | `GroupByArchive.group_by_uid` ×32 |
+ * | 9 | summary aggregates | `SummaryModelArchive.aggregate_formula_owner_uuid` ×44 |
+ * | 11 | hidden-state formulas, **columns** | `hidden_state_formula_owner_for_columns` ×39 |
+ * | 35 | the "haunted" owner | `TableModelArchive.haunted_owner` ×34 |
+ * | 200 | the document | fixed sentinel `uid = 666`, in all 23 files that have one |
+ *
+ * Kinds **6, 7, 10 and 12** occur (32, 41, 44 and 28 times) with no field
+ * in this repository's protos pointing at them. They are left unnamed
+ * rather than guessed; naming one means finding the field that uses it, the
+ * same way the others were found.
  */
 export const OwnerKind = {
   /** The table itself. Carries the `formula_owner` reference. */
   TABLE: 1,
+  /** Formulas backing conditional-formatting rules. */
+  CONDITIONAL_STYLE: 3,
+  /** Formulas backing row hiding — filters and manual hides. */
+  HIDDEN_STATE_ROWS: 4,
+  /** Formulas backing merged cell ranges. */
+  MERGE: 5,
+  /** Formulas backing categories (row grouping). */
+  CATEGORIES: 8,
+  /** Formulas backing a category's summary aggregates. */
+  SUMMARY_AGGREGATES: 9,
+  /** Formulas backing column hiding. */
+  HIDDEN_STATE_COLUMNS: 11,
+  /** Apple's "haunted owner" for the table. */
+  HAUNTED: 35,
   /**
    * The document as a whole, not any table.
    *
@@ -87,6 +115,19 @@ export const OwnerKind = {
    */
   DOCUMENT: 200,
 } as const;
+
+/** Human-readable names for the kinds evidence has established. */
+export const OWNER_KIND_NAMES: ReadonlyMap<number, string> = new Map([
+  [OwnerKind.TABLE, "table"],
+  [OwnerKind.CONDITIONAL_STYLE, "conditional style"],
+  [OwnerKind.HIDDEN_STATE_ROWS, "hidden state (rows)"],
+  [OwnerKind.MERGE, "merge"],
+  [OwnerKind.CATEGORIES, "categories"],
+  [OwnerKind.SUMMARY_AGGREGATES, "summary aggregates"],
+  [OwnerKind.HIDDEN_STATE_COLUMNS, "hidden state (columns)"],
+  [OwnerKind.HAUNTED, "haunted owner"],
+  [OwnerKind.DOCUMENT, "document"],
+]);
 
 /** The fixed identity every document-level owner uses. */
 export const DOCUMENT_OWNER_UID: OwnerUid = { lo: 666n, hi: 0n };
@@ -139,6 +180,8 @@ export interface FormulaOwner {
   tableName: string | undefined;
   /** True when `uid` equals `base + kind`, the current apps' derivation. */
   derivedByArithmetic: boolean;
+  /** {@link kind} named, or `undefined` for one still unidentified. */
+  kindName: string | undefined;
 }
 
 /**
@@ -178,6 +221,7 @@ export class FormulaOwnerRegistry {
           base !== undefined &&
           uid.hi === base.hi &&
           uid.lo === ((base.lo + BigInt(kind)) & 0xffffffffffffffffn),
+        kindName: OWNER_KIND_NAMES.get(kind),
       });
     }
 
@@ -204,6 +248,7 @@ export class FormulaOwnerRegistry {
           ownerId: obj.identifier,
           tableName: name,
           derivedByArithmetic: false,
+          kindName: OWNER_KIND_NAMES.get(OwnerKind.TABLE),
         });
       }
     }

@@ -216,6 +216,21 @@ the identities were compared: all 23 are the same hardcoded `uid = 666`
 from `base = 466`. A constant repeated across every file and every app is a
 sentinel, not data.
 
+**The `owner_kind` enum — nine of thirteen values.** Apple publishes no
+enum, and none was needed. Every derived owner is *used* by a field
+somewhere, so matching each field's UUID back to its owner entry names the
+kind: `conditional_style_formula_owner_id` → 3,
+`hidden_state_formula_owner_for_rows` → 4, the inline `merge_owner` → 5,
+`GroupByArchive.group_by_uid` → 8, `aggregate_formula_owner_uuid` → 9,
+`hidden_state_formula_owner_for_columns` → 11, `haunted_owner` → 35. Each
+unanimous across every file that exercises it. Kinds 6, 7, 10 and 12 have
+no field pointing at them in the protos available here, so they stay
+unnamed.
+
+> **The lesson:** an unpublished enum can often be read off the *usage*
+> rather than the definition. If a value labels something, find what reads
+> it. This is the method to try before writing another manual protocol.
+
 ---
 
 ## Running the probes

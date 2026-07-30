@@ -1346,10 +1346,26 @@ for 339 of the 409 entries carrying a base — but older files use unrelated
 random UUIDs, so a reader must follow the stored base rather than the
 arithmetic.
 
-One `owner_kind` is a sentinel rather than an identity: **kind 200 is the
-document**, and every kind-200 owner in every corpus file, across all three
-apps and every era, has the same hardcoded `uid = 666` derived from
-`base = 466`. It names no table because it is not one.
+**`owner_kind` is nameable from files alone.** Apple publishes no enum, but
+every derived owner is *used* by a field somewhere, and matching each
+field's UUID back to its owner entry names the kind. Nine of the thirteen
+values in the corpus were established that way, each unanimous:
+
+| kind | meaning | evidence |
+|---|---|---|
+| 1 | the table itself | the only entries carrying `formula_owner`; every other kind's base |
+| 3 | conditional-style formulas | `TableModelArchive.conditional_style_formula_owner_id` ×44 |
+| 4 | hidden-state formulas, **rows** | `hidden_state_formula_owner_for_rows` ×44 |
+| 5 | merge formulas | the inline `merge_owner`'s id ×18 — and it names the table it sits on |
+| 8 | categories (group-by) | `GroupByArchive.group_by_uid` ×32 |
+| 9 | summary aggregates | `SummaryModelArchive.aggregate_formula_owner_uuid` ×44 |
+| 11 | hidden-state formulas, **columns** | `hidden_state_formula_owner_for_columns` ×39 |
+| 35 | the "haunted" owner | `TableModelArchive.haunted_owner` ×34 |
+| 200 | the document | fixed sentinel `uid = 666` from `base = 466`, in all 23 files that have one |
+
+Kinds 6, 7, 10 and 12 occur without any field in the available protos
+pointing at them, and are left unnamed. Naming one means finding the field
+that uses it — the method above, not a guess.
 
 ## 15. Known gaps / roadmap
 

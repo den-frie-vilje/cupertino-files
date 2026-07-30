@@ -146,6 +146,77 @@ describe("formula owner registry", () => {
   });
 });
 
+describe("owner kinds", () => {
+  /**
+   * Each kind is named because a field somewhere *uses* it. These tests
+   * re-derive the mapping from the files rather than trusting the table, so
+   * a wrong name fails here rather than misleading a reader.
+   */
+  it("matches each named kind to the field that uses it", () => {
+    const usage = new Map<string, Map<number, number>>();
+    const note = (label: string, kind: number | undefined): void => {
+      if (kind === undefined) return;
+      if (!usage.has(label)) usage.set(label, new Map());
+      const counts = usage.get(label)!;
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    };
+    for (const name of fixtureNames) {
+      const document = open(name);
+      if (!document) continue;
+      const registry = new FormulaOwnerRegistry(document.store);
+      for (const table of tablesOf(document.store)) {
+        const model = table.object.message;
+        note(
+          "conditionalStyle",
+          registry.lookup(readCfUid(model.getMessage(39)))?.kind,
+        );
+        note("haunted", registry.lookup(readOwnerUid(model.getMessage(84)?.getMessage(1)))?.kind);
+        note("merge", registry.lookup(readCfUid(model.getMessage(47)?.getMessage(1)))?.kind);
+      }
+    }
+    const only = (label: string): number[] => [...(usage.get(label) ?? new Map()).keys()];
+    expect(only("conditionalStyle")).toEqual([OwnerKind.CONDITIONAL_STYLE]);
+    expect(only("haunted")).toEqual([OwnerKind.HAUNTED]);
+    expect(only("merge")).toEqual([OwnerKind.MERGE]);
+  });
+
+  it("names a merge owner as the table it sits on", () => {
+    // The strongest single check on the whole resolution: a merge owner
+    // must resolve to the very table whose model carries it.
+    let checked = 0;
+    for (const name of fixtureNames) {
+      const document = open(name);
+      if (!document) continue;
+      const registry = new FormulaOwnerRegistry(document.store);
+      for (const table of tablesOf(document.store)) {
+        const owner = registry.lookup(
+          readCfUid(table.object.message.getMessage(47)?.getMessage(1)),
+        );
+        if (!owner?.tableName) continue;
+        expect(`${name}: ${owner.tableName}`).toBe(`${name}: ${table.name}`);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(10);
+  });
+
+  it("labels the kinds it has established and leaves the rest unnamed", () => {
+    const named = new Set<number>();
+    const unnamed = new Set<number>();
+    for (const name of fixtureNames) {
+      const document = open(name);
+      if (!document) continue;
+      for (const owner of new FormulaOwnerRegistry(document.store).all()) {
+        (owner.kindName === undefined ? unnamed : named).add(owner.kind);
+      }
+    }
+    expect([...named].sort((a, b) => a - b)).toEqual([1, 3, 4, 5, 8, 9, 11, 35, 200]);
+    // Four kinds occur with no field in the protos pointing at them. They
+    // stay unnamed rather than guessed — see src/tsce/owners.ts.
+    expect([...unnamed].sort((a, b) => a - b)).toEqual([6, 7, 10, 12]);
+  });
+});
+
 describe("cross-table formula references", () => {
   it("renders a real table name instead of a placeholder", () => {
     const document = open(CATEGORIES)!;
