@@ -44,11 +44,13 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "node --test test/",
+    "test": "node --test test/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "coverage": "node scripts/coverage-matrix.ts",
     "coverage:check": "node scripts/coverage-matrix.ts --check",
-    "privacy:check": "node scripts/scan-fixture-privacy.ts"
+    "privacy:check": "node scripts/scan-fixture-privacy.ts",
+    "test:e2e": "node --test test/e2e/*.e2e.test.ts",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

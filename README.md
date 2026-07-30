@@ -204,10 +204,19 @@ Conventional Commits so releases can be cut mechanically.
 
 ```sh
 npm install
-npm test          # node:test on real fixtures (no external tools involved)
+npm test           # unit + fixture suite (never launches an app)
+npm run test:e2e   # macOS only: drives Pages/Numbers/Keynote via osascript
+npm run coverage   # regenerate docs/COVERAGE.md
 npm run typecheck
-npm run build     # tsc → dist/
+npm run build      # tsc → dist/
 ```
+
+On a Mac with the apps installed, [`npm run test:e2e`](docs/E2E.md) verifies
+what no offline test can: that the apps **open** what this library writes,
+and that the library reads what they save. It also manufactures coverage the
+fixture corpus lacks — Keynote transitions, for instance, exist in no
+licensed document but can be created on demand through AppleScript. Skips
+with a printed reason everywhere else.
 
 Test fixtures are real Apple-generated documents from the Apache Tika and
 libetonyek test suites — see [`fixtures/ATTRIBUTION.md`](fixtures/ATTRIBUTION.md).
