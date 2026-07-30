@@ -622,9 +622,29 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Formulas",
+    name: "Formula reading (AST rendered to text)",
     apps: "all",
     status: "read",
+    probe: (c) => safe(() => c.doc.tables().some((t) => t.storageGeneration === "v5" && t.formulas().length > 0)),
+    note: "not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives",
+    manualProof: {
+      claim: "Rendered formula text matches what the app shows in its formula bar.",
+      why:
+        "Operators, references and ranges are decoded structurally and check out against cached " +
+        "values, but the archive records no brackets and no function names, so the rendering is a " +
+        "reconstruction. Only the app can confirm the reconstruction reads the same.",
+      how:
+        "Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers " +
+        "in Numbers, click the formula cells, and compare the formula bar with cellFormula(). " +
+        "Expect =B2*C2 and =SUM(C3:K6).",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Formula function names",
+    apps: "all",
+    status: "experimental",
     probe: (c) =>
       safe(() =>
         c.doc
@@ -632,10 +652,31 @@ const CAPABILITIES: Capability[] = [
           .some(
             (t) =>
               t.storageGeneration === "v5" &&
-              t.cells().some((cell) => cell.value.type !== "empty" && cell.value.isFormula),
+              t.formulas().some((f) => /[A-Z]+\(/.test(f.formula) && !f.formula.includes("FUNCTION_")),
           ),
       ),
-    note: "cached values readable and the formula flag exposed; writing a literal clears the formula, but authoring one is not implemented",
+    note: "only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()",
+    manualProof: {
+      claim: "The function-index table is incomplete, and every unnamed id is visible rather than guessed.",
+      why:
+        "AST_function_node_index is an index into an Apple-internal list that appears in no public " +
+        "schema. The corpus proves exactly one entry (168 = SUM, by arithmetic). Shipping a table of " +
+        "plausible-looking guesses would turn a visible gap into silent wrong answers.",
+      how:
+        "Run npm run test:e2e on a Mac: 'harvests function ids by having Numbers author the formulas' " +
+        "writes SUM/AVERAGE/MIN/MAX/COUNT/ABS/ROUND/MEDIAN through AppleScript and prints the ids it " +
+        "reads back. Paste the result into registerFormulaFunctions(), or open a PR adding them to " +
+        "BUILTIN_FUNCTIONS with the document that proves each.",
+      e2e: true,
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Formula writing (authoring an AST)",
+    apps: "all",
+    status: "roadmap",
+    note: "needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula",
   },
   {
     group: "Numbers & tables",

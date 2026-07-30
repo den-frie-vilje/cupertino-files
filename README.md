@@ -83,6 +83,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Tables: cell styling (fill, four borders, padding, alignment, wrap) and table styling (banding, grid strokes) | ✅ |
 | Tables: name, header/footer bands, freeze + repeating headers, row heights, column widths | ✅ |
 | Tables: merged cell ranges (decoded from the calc engine, not the empty region map) | ✅ read |
+| Tables: formulas read and rendered to text — in Pages and Keynote too, not just Numbers | ✅ read |
 | Drawables: shadows, opacity, reflection, fill, stroke on shapes and images | ✅ |
 | Styling values: colours (incl. Display P3), gradients, strokes, dashes, shadows, tabs | ✅ |
 | Charts: type, categories, series names and plotted values | ✅ read |
@@ -197,12 +198,25 @@ table.bandTextStyle("headerRow")!.setCharacter({ bold: true });   // the text, n
 
 table.merges();                          // [{ row, column, rowCount, columnCount }]
 table.isCovered(0, 1);                   // true when a merge anchored elsewhere swallows it
+
+table.cellFormula(1, 3);                 // "=B2*C2"
+table.formulas();                        // [{ row, column, formula }]
 ```
 
 Merges are decoded from the calc engine, where the apps actually keep them —
 the documented `merge_region_map` is empty in every real document. Writing a
 value into a covered cell throws rather than storing something the app will
 never display.
+
+**Formulas are a table feature, not a Numbers feature** — Pages documents in
+the corpus contain them too. References are stored as offsets from the cell
+using them, so one stored formula renders differently in every cell that
+shares it, which is why rendering takes a position. Function *names* are not
+in the file format at all: `AST_function_node_index` indexes an
+Apple-internal list, so only ids proven by arithmetic are named and the rest
+render as `FUNCTION_<id>` rather than a guess. Supply more with
+`registerFormulaFunctions({ 42: "AVERAGE" })`; `npm run test:e2e` on a Mac
+harvests them by having Numbers author the formulas.
 
 ### Shadows and other drawable styling
 

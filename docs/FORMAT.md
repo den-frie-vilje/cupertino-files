@@ -864,7 +864,67 @@ differs from the `table_id` inside the AST node by a small delta in one
 half. Synthesizing a merge means inventing calc-engine identity, and a
 wrong guess corrupts the dependency graph rather than failing loudly.
 
-### 14.5 Cell and table styles
+### 14.5 Formulas
+
+Formulas are a **table** feature, not a Numbers feature: the corpus has
+formula cells in Pages documents too, and a Keynote table would carry the
+same archives.
+
+A cell with flag `0x200` has a `formula_id` — a key into
+`DataStore.formula_table` (field 6), a `TableDataList` whose entries hold a
+`TSCE.FormulaArchive`. The cell record *also* holds the cached result with
+its normal type byte, so reading values never needs an evaluator.
+
+```proto
+message TSCE.FormulaArchive {
+  required ASTNodeArrayArchive AST_node_array = 1;   // repeated AST_node = 1
+  optional uint32 host_column = 2;                   // absent in practice
+  optional uint32 host_row = 3;
+}
+```
+
+The node array is **post-order (RPN)**, so rendering is a stack walk:
+operands push, operators pop their arity. The archive stores no brackets,
+so a renderer must re-derive them from precedence.
+
+Node fields worth naming: `AST_node_type = 1`, `AST_function_node_index = 2`,
+`AST_function_node_numArgs = 3`, `AST_number_node_number = 4` (double) with
+`_decimal_low/high = 42/43` (decimal128 halves, authoritative),
+`AST_string_node_string = 6`, `AST_whitespace = 25`, `AST_column = 26`,
+`AST_row = 27`, `AST_cross_table_reference_extra_info = 28`,
+`AST_colon_tract = 40`.
+
+Three traps:
+
+- **Coordinates are relative offsets from the cell using the formula**,
+  zigzag `sint32`, unless the coordinate's `absolute` flag is set. One
+  formula entry is shared by every cell in a filled-down column and renders
+  differently in each. `host_column`/`host_row` are absent in every file
+  examined, so the anchor is the using cell, not the archive.
+- **Colon tracts come in two encodings.** `absolute_column`/`absolute_row`
+  (3/4) hold indexes; `relative_column`/`relative_row` (1/2) hold `int32`
+  offsets. A reader that knows only the absolute pair renders real ranges
+  as `#REF!`.
+- **Function names are not in the format.** `AST_function_node_index` is an
+  index into an Apple-internal list absent from every public schema. Only
+  one entry is derivable from the corpus by arithmetic: **168 = SUM**
+  (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
+  7920). Guessing the rest would convert a visible gap into silent wrong
+  answers, so unknown ids render as `FUNCTION_<id>` and callers can supply
+  a harvested table.
+
+Cross-table references cannot be resolved to a table *name*: the `table_id`
+in `AST_cross_table_reference_extra_info` is a derived UUID matching no
+table's own identifier — the same derivation used for merge owners — and
+the calc engine's dependency records do not map it back either. Rendering
+such a reference as a bare `A2` would read as a cell in the formula's own
+table, so it must be marked.
+
+Writing formulas needs both the function table and the calc-engine
+dependency records, and is not implemented. Writing a *literal* over a
+formula cell correctly clears `formula_id`.
+
+### 14.6 Cell and table styles
 
 Both are `TSS.StyleArchive` subclasses with their property bag at field 11.
 
@@ -918,10 +978,10 @@ than in a shape the generic reference extractor understands, its
   values, styling, sizes and band counts can all be changed, but the row
   and column count of a table is fixed. Adding a row means new tile row
   infos, header entries and RB-tree nodes in step.
-- **Authoring formulas** is not implemented. Cached values are readable and
-  writing a literal correctly clears the cell's formula, but building a
-  `TSCE.FormulaArchive` AST and its calc-engine dependency records is a
-  separate body of work.
+- **Authoring formulas** is not implemented. Formulas are *read* and
+  rendered to text (§14.5), and writing a literal correctly clears one, but
+  building a `TSCE.FormulaArchive` AST needs the function-index table the
+  format does not contain plus the calc-engine dependency records.
 - **Writing merge ranges** is blocked on calc-engine identity: a merge is a
   formula owned by a UUID that is *not* the table's own (§14.4), so
   synthesizing one means inventing a calc-engine identifier. Reading merges

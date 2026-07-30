@@ -191,6 +191,33 @@ cellValueToString(cell.value);
 richText | date | bool | duration | error`, each with `isFormula` (formula
 cells carry their cached result, so no evaluator is needed).
 
+### Formulas
+
+Formulas belong to *tables*, not to Numbers — a table in a Pages document
+or a Keynote slide has the same calc engine.
+
+```ts
+t.cellFormula(1, 3);          // "=B2*C2", or undefined for a literal
+t.formulas();                 // [{ row, column, formula }] for the whole table
+t.cellFormulaDetail(1, 3);    // { text, unknownFunctions, unknownNodeTypes, hasCrossTableReferences }
+```
+
+Rendering takes a position because references are stored as **offsets from
+the cell using them** — one stored formula renders differently in every
+cell of a filled-down column.
+
+Two honest gaps, both visible in the output rather than papered over:
+
+- **Function names are not in the format.** Only ids proven by arithmetic
+  are named (currently just `SUM`); the rest render as `FUNCTION_<id>`.
+  Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`.
+- **Cross-table references cannot name their target**, so they render with
+  an `OTHER_TABLE::` prefix. Do not present that as a real table name.
+
+Writing formulas is not implemented — it needs the missing function table
+plus calc-engine dependency records. Writing a literal over a formula cell
+correctly clears the formula.
+
 ### Writing cells
 
 ```ts

@@ -100,7 +100,9 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
 | Table structure (name, header/footer bands, row & column sizes)<br><sub>inserting or deleting rows/columns is not implemented</sub> | all | ✅ read + write | 22 | iwork16→current |
 | Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | 5 | modern→current |
-| Formulas<br><sub>cached values readable and the formula flag exposed; writing a literal clears the formula, but authoring one is not implemented</sub> | all | 🔍 read only | 7 | iwork19→current |
+| Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
+| Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 5 | iwork19→current |
+| Formula writing (authoring an AST)<br><sub>needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula</sub> | all | ○ roadmap | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Chart writing | all | ○ roadmap | n/a | — |
 
@@ -123,7 +125,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-9 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+11 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -136,6 +138,8 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**
 - 🟠 medium — Numbers & tables → **Table structure (name, header/footer bands, row & column sizes)**
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
+- 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
+- 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 
 ## Validation gaps
 

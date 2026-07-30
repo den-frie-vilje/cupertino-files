@@ -12,7 +12,7 @@ what is being claimed, why the offline suite structurally cannot settle it, and 
 
 ## How much is already automated
 
-Of 9 claims, **1** is covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 11 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -21,13 +21,15 @@ person to look at a rendered document, because the scripting dictionaries expose
 |---:|---|---|---|---|
 | 1 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
 | 2 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
-| 3 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
-| 4 | 🟠 medium | Numbers & tables → Table structure (name, header/footer bands, row & column sizes) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 5 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 6 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 7 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 8 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
-| 9 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 3 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 4 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 5 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
+| 6 | 🟠 medium | Numbers & tables → Table structure (name, header/footer bands, row & column sizes) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 7 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 8 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 9 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 10 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
+| 11 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
 
 ### 1. Cell styling (fill, four borders, padding, alignment, wrap)
 
@@ -55,7 +57,33 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 3. Merged cell ranges
+### 3. Formula function names
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Numbers & tables  
+**Status in the matrix:** ⚠️ experimental
+
+**Claim.** The function-index table is incomplete, and every unnamed id is visible rather than guessed.
+
+**Why the suite cannot settle it.** AST_function_node_index is an index into an Apple-internal list that appears in no public schema. The corpus proves exactly one entry (168 = SUM, by arithmetic). Shipping a table of plausible-looking guesses would turn a visible gap into silent wrong answers.
+
+**How to settle it.** Run npm run test:e2e on a Mac: 'harvests function ids by having Numbers author the formulas' writes SUM/AVERAGE/MIN/MAX/COUNT/ABS/ROUND/MEDIAN through AppleScript and prints the ids it reads back. Paste the result into registerFormulaFunctions(), or open a PR adding them to BUILTIN_FUNCTIONS with the document that proves each.
+
+> Already exercised by `npm run test:e2e` on a Mac with the app installed.
+
+### 4. Formula reading (AST rendered to text)
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Numbers & tables  
+**Status in the matrix:** 🔍 read only
+
+**Claim.** Rendered formula text matches what the app shows in its formula bar.
+
+**Why the suite cannot settle it.** Operators, references and ranges are decoded structurally and check out against cached values, but the archive records no brackets and no function names, so the rendering is a reconstruction. Only the app can confirm the reconstruction reads the same.
+
+**How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
+
+### 5. Merged cell ranges
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -67,7 +95,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).
 
-### 4. Table structure (name, header/footer bands, row & column sizes)
+### 6. Table structure (name, header/footer bands, row & column sizes)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -79,7 +107,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 5. Table styling (banded rows, grid strokes, visibility)
+### 7. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -91,7 +119,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 6. Paragraph background & borders (rule stroke + positions)
+### 8. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -103,7 +131,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 7. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 9. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -115,7 +143,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 8. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
+### 10. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -127,7 +155,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Create a style with a font colour, derive a child, clear the colour on the child, open in Pages and confirm the child shows the default colour rather than inheriting the parent's.
 
-### 9. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 11. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
