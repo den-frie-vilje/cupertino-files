@@ -102,6 +102,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Keynote: slide placeholders — read and fill title, body, slide number | ✅ |
 | Keynote: presentation settings (mode, loop, autoplay delays) and slide size | ✅ |
 | Numbers: sheets — add, remove, rename, reorder | ✅ |
+| Numbers: add and remove tables on a sheet, with per-sheet name uniquing | ✅ |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
 | Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |
 | Keynote builds; Numbers cell controls | roadmap — no fixture contains one, so it would be unvalidated |

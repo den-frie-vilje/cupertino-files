@@ -847,6 +847,23 @@ export class TableModel {
     this.setCell(row, column, { type: "empty" });
   }
 
+  /**
+   * Clear every cell, keeping the table's shape, styling and bands.
+   *
+   * A blank table laid out like the one it was copied from, which is what
+   * "add a table" usually means — as opposed to a duplicate of the data.
+   * Covered cells are cleared too: leaving them would strand values inside
+   * a merge whose anchor is now empty.
+   */
+  clearAllCells(): void {
+    this.requireWritable();
+    for (let row = 0; row < this.rowCount; row++) {
+      for (let column = 0; column < this.columnCount; column++) {
+        this.setCell(row, column, { type: "empty" }, { allowCovered: true });
+      }
+    }
+  }
+
   /** Write a whole row left-to-right, padding with empties. */
   setRow(row: number, values: readonly CellInput[], options: WriteOptions = {}): void {
     for (let column = 0; column < this.columnCount; column++) {

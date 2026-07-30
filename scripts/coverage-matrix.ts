@@ -839,6 +839,20 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Add and remove tables on a sheet",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.numbers?.sheets().length ?? 0) > 0),
+    note: "copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous",
+    manualProof: {
+      claim: "a table added this way is editable in Numbers as a table, not just present in the file",
+      why: "the suite proves it reloads with its own cells and a unique name, not that the app treats it as a first-class table",
+      how: "add a blank table, open in Numbers, type into it and reference it from a formula on another table",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Chart data editing (values, names, series, categories)",
     apps: "all",
     status: "read+write",

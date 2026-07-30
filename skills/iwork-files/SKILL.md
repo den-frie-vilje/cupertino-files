@@ -282,6 +282,22 @@ borders, padding); `t.bandTextStyle("headerRow")` is the text inside it and
 takes the same `CharacterFormatting` as any other text. Making a header
 bold means the second one.
 
+### Adding tables (Numbers)
+
+```ts
+const sheet = doc.sheets()[0];
+doc.tablesOnSheet(sheet.id);
+doc.addTable(sheet.id, { withContent: false, name: "Q3" });  // blank, laid out like its source
+doc.addTable(sheet.id, { copyOf: someTable.infoObject!.identifier });  // a duplicate
+doc.removeTable(sheet.id, table.infoObject!.identifier);
+```
+
+Tables are created by **copying** — building one from nothing means
+synthesising tiles, header buckets, data lists and a calc-engine owner. The
+copy is always renamed, because Numbers addresses tables by name and two
+"Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
+is per sheet, so a copy onto another sheet may keep the original name.
+
 ### Conditional formatting and filters
 
 Both are the same archive underneath — a *predicate* — so they read alike.

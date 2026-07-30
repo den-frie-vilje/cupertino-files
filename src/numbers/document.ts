@@ -9,7 +9,7 @@ import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
@@ -165,6 +165,109 @@ export class NumbersDocument extends IWorkDocument {
       TN_DOCUMENT_SHEETS,
       ids.map((id) => makeRef(id)),
     );
+  }
+
+  // ------------------------------------------------------ table management
+
+  /** The tables on one sheet, in the order the sheet lists them. */
+  tablesOnSheet(sheetId: bigint): TableModel[] {
+    return tablesOf(this.store, this.sheetContainer(sheetId).ids());
+  }
+
+  /**
+   * Add a table to a sheet by copying an existing one.
+   *
+   * Building a table from nothing means synthesising tiles, header buckets,
+   * data lists and a calc-engine owner — the same reason sheets and slides
+   * are created by copying. The source defaults to the first table on the
+   * target sheet, falling back to any table in the document.
+   *
+   * The copy is renamed, because **Numbers addresses tables by name**: two
+   * tables called "Table 1" on one sheet make every cross-table formula
+   * ambiguous. Names must be unique per sheet, not per document, so a copy
+   * onto a different sheet can keep the original's name.
+   *
+   * `withContent: false` clears the cells but keeps the shape, styling and
+   * header bands — a blank table laid out like its source, which is what
+   * you want far more often than a duplicate of the data.
+   */
+  addTable(
+    sheetId: bigint,
+    options: {
+      name?: string;
+      copyOf?: bigint;
+      withContent?: boolean;
+      x?: number;
+      y?: number;
+    } = {},
+  ): TableModel {
+    const container = this.sheetContainer(sheetId);
+    const sourceId = options.copyOf ?? this.defaultTableSource(sheetId);
+    if (sourceId === undefined) {
+      throw new RangeError(
+        "no table to copy: this document contains none, and building one from nothing is not supported",
+      );
+    }
+    const source = this.store.object(sourceId);
+    if (source?.type !== TST_TYPE.TABLE_INFO) {
+      throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
+    }
+
+    const placement: { x?: number; y?: number } = {};
+    if (options.x !== undefined) placement.x = options.x;
+    if (options.y !== undefined) placement.y = options.y;
+    const copy = container.addCopyOf(source, placement);
+
+    const table = tablesOf(this.store, [copy.id])[0];
+    if (!table) throw new RangeError(`copied table ${copy.id} did not resolve`);
+
+    table.name = this.uniqueTableName(options.name, sheetId, copy.id);
+    if (options.withContent === false) table.clearAllCells();
+    return table;
+  }
+
+  /**
+   * Take a table off its sheet.
+   *
+   * The archives stay in the package, as everywhere else here; what removes
+   * the table is the sheet no longer listing it.
+   */
+  removeTable(sheetId: bigint, tableInfoId: bigint): boolean {
+    return this.sheetContainer(sheetId).remove(tableInfoId);
+  }
+
+  /** The table a copy should be based on when the caller names none. */
+  private defaultTableSource(sheetId: bigint): bigint | undefined {
+    const onSheet = this.sheetContainer(sheetId)
+      .ids()
+      .find((id) => this.store.object(id)?.type === TST_TYPE.TABLE_INFO);
+    if (onSheet !== undefined) return onSheet;
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type === TST_TYPE.TABLE_INFO) return obj.identifier;
+    }
+    return undefined;
+  }
+
+  /**
+   * A table name free on this sheet.
+   *
+   * Scoped to the sheet, not the document: Numbers lets two sheets each
+   * have a "Table 1", and forcing global uniqueness would rename tables
+   * that were never in conflict.
+   */
+  private uniqueTableName(preferred: string | undefined, sheetId: bigint, exclude: bigint): string {
+    const used = new Set(
+      this.tablesOnSheet(sheetId)
+        .filter((table) => table.infoObject?.identifier !== exclude)
+        .map((table) => table.name)
+        .filter((name): name is string => name !== undefined),
+    );
+    const base = preferred ?? "Table";
+    if (!used.has(base)) return base;
+    for (let n = 2; ; n++) {
+      const candidate = `${base} ${n}`;
+      if (!used.has(candidate)) return candidate;
+    }
   }
 
   /** Numbers requires distinct sheet names; suffix until one is free. */

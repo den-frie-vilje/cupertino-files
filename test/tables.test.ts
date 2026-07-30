@@ -1185,3 +1185,99 @@ describe("cell formats", () => {
     expect(message).toContain("custom format");
   });
 });
+
+describe("adding and removing tables", () => {
+  const FILE = "numbers-parser-v26.1-date-formats.numbers";
+  const load = (): NumbersDocument =>
+    NumbersDocument.load(new Uint8Array(readFileSync(new URL(FILE, FIXTURES))));
+
+  it("adds a blank table laid out like its source", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const source = document.tablesOnSheet(sheet.id)[0]!;
+    const blank = document.addTable(sheet.id, { withContent: false });
+
+    // Same shape and bands, no data.
+    expect(blank.rowCount).toBe(source.rowCount);
+    expect(blank.columnCount).toBe(source.columnCount);
+    expect(blank.cellText(0, 0)).toBe("");
+    expect(source.cellText(0, 0).length).toBeGreaterThan(0);
+    expect(blank.headerRowCount).toBe(source.headerRowCount);
+  });
+
+  it("duplicates a table with its data when asked", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const source = document.tablesOnSheet(sheet.id)[0]!;
+    const copy = document.addTable(sheet.id, { name: "Copy" });
+
+    expect(copy.name).toBe("Copy");
+    expect(copy.cellText(0, 0)).toBe(source.cellText(0, 0));
+  });
+
+  it("never leaves two tables on a sheet sharing a name", () => {
+    // Numbers addresses tables by name: a duplicate makes every
+    // cross-table formula on the sheet ambiguous.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    document.addTable(sheet.id);
+    document.addTable(sheet.id);
+    document.addTable(sheet.id, { name: "Table 1" }); // the name is taken
+
+    const names = document.tablesOnSheet(sheet.id).map((t) => t.name);
+    expect(names.length).toBe(4);
+    expect(new Set(names).size).toBe(4);
+  });
+
+  it("lets two sheets each keep a table of the same name", () => {
+    // Uniqueness is per sheet, not per document — forcing it globally
+    // would rename tables that were never in conflict.
+    const document = load();
+    const first = document.sheets()[0]!;
+    const second = document.addSheet({ withContent: false });
+    const original = document.tablesOnSheet(first.id)[0]!.name!;
+    const copy = document.addTable(second.id, {
+      name: original,
+      copyOf: document.tablesOnSheet(first.id)[0]!.infoObject!.identifier,
+    });
+    expect(copy.name).toBe(original);
+  });
+
+  it("survives a save, and the copy is independent of its source", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const source = document.tablesOnSheet(sheet.id)[0]!;
+    const before = source.cellText(0, 0);
+    const blank = document.addTable(sheet.id, { withContent: false, name: "Fresh" });
+    blank.setCell(0, 0, { type: "text", value: "Written" });
+
+    const reloaded = NumbersDocument.load(document.save());
+    const tables = reloaded.tablesOnSheet(sheet.id);
+    expect(tables.length).toBe(2);
+    const added = tables.find((t) => t.name === "Fresh")!;
+    expect(added.cellText(0, 0)).toBe("Written");
+    // Editing the copy did not reach through to the original.
+    expect(tables.find((t) => t.name !== "Fresh")!.cellText(0, 0)).toBe(before);
+  });
+
+  it("removes a table from its sheet", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const added = document.addTable(sheet.id, { name: "Temporary" });
+    const infoId = added.infoObject!.identifier;
+
+    expect(document.removeTable(sheet.id, infoId)).toBe(true);
+    expect(document.tablesOnSheet(sheet.id).some((t) => t.name === "Temporary")).toBe(false);
+    expect(document.removeTable(sheet.id, infoId)).toBe(false);
+
+    const reloaded = NumbersDocument.load(document.save());
+    expect(reloaded.tablesOnSheet(sheet.id).length).toBe(1);
+  });
+
+  it("refuses a source that is not a table", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
+    expect(() => document.addTable(999999n)).toThrow();
+  });
+});
