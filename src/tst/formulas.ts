@@ -26,6 +26,7 @@
  */
 import type { RawMessage } from "../base/protobuf.ts";
 import { decodeDecimal128 } from "./tables.ts";
+import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
 
 /** TSCE.FormulaArchive. */
 export const FormulaFields = {
@@ -169,6 +170,31 @@ const BUILTIN_FUNCTIONS: ReadonlyMap<number, string> = new Map([[168, "SUM"]]);
 const registeredFunctions = new Map<number, string>();
 
 /**
+ * Resolution order, narrowest scope first: names registered at runtime,
+ * then a table harvested from a real Numbers install, then the entries the
+ * fixture corpus proves. A caller who has measured their own Numbers
+ * version always wins over anything shipped.
+ */
+function lookup(index: number): string | undefined {
+  return registeredFunctions.get(index) ?? HARVESTED_FUNCTIONS.get(index) ?? BUILTIN_FUNCTIONS.get(index);
+}
+
+/** How the shipped function table was obtained, for diagnostics. */
+export function functionTableProvenance(): {
+  harvested: number;
+  builtin: number;
+  registered: number;
+  app: string;
+} {
+  return {
+    harvested: HARVESTED_FUNCTIONS.size,
+    builtin: BUILTIN_FUNCTIONS.size,
+    registered: registeredFunctions.size,
+    app: HARVEST_PROVENANCE.app,
+  };
+}
+
+/**
  * Teach the renderer more function names.
  *
  * Mirrors `registerTypes()` for the archive registry: the library ships
@@ -187,12 +213,12 @@ export function clearRegisteredFormulaFunctions(): void {
 
 /** Name for a function index, or a visible placeholder when unknown. */
 export function functionName(index: number): string {
-  return registeredFunctions.get(index) ?? BUILTIN_FUNCTIONS.get(index) ?? `FUNCTION_${index}`;
+  return lookup(index) ?? `FUNCTION_${index}`;
 }
 
 /** True when the index has a real name rather than a placeholder. */
 export function isKnownFunction(index: number): boolean {
-  return registeredFunctions.has(index) || BUILTIN_FUNCTIONS.has(index);
+  return lookup(index) !== undefined;
 }
 
 /** Spreadsheet column letters: 0 → A, 25 → Z, 26 → AA. */

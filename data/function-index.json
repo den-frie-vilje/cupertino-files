@@ -1,0 +1,11 @@
+{
+  "functions": {},
+  "unrecognised": [],
+  "conflicts": [],
+  "provenance": {
+    "app": "not yet harvested",
+    "harvestedAt": "",
+    "source": "scripts/harvest-functions.ts",
+    "candidates": 298
+  }
+}

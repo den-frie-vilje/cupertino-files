@@ -48,6 +48,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "coverage": "node scripts/coverage-matrix.ts",
     "coverage:check": "node scripts/coverage-matrix.ts --check",
+    "harvest": "node scripts/harvest-functions.ts",
+    "harvest:check": "node scripts/harvest-functions.ts --check",
     "privacy:check": "node scripts/scan-fixture-privacy.ts",
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
     "test:all": "npm run test && npm run test:e2e"

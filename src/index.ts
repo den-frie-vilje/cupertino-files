@@ -126,6 +126,7 @@ export {
   clearRegisteredFormulaFunctions,
   functionName,
   isKnownFunction,
+  functionTableProvenance,
   columnName,
   cellAddress,
   AstNodeType,
