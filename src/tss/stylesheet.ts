@@ -11,12 +11,16 @@
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
-import { makeColor, makeRef, refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
+import type { Color, Shadow, Stroke } from "../tsd/style.ts";
+import { readColor, readShadow, readStroke, writeColor, writeShadow, writeStroke } from "../tsd/style.ts";
 import {
   CharProps,
   LineSpacing,
   ParaProps,
   StyleArchive,
+  TabArchive,
+  TabsArchive,
   TextAlignment,
   TSWP_TYPE,
 } from "../tswp/schema.ts";
@@ -44,15 +48,47 @@ export interface CharacterFormatting {
   fontSize?: number;
   /** PostScript font name, e.g. "Helvetica-Bold". */
   fontName?: string;
-  /** sRGB components in 0..1. */
-  fontColor?: { r: number; g: number; b: number; a?: number };
-  /** 0 none, 1 single, 2 double, 3 wavy. */
+  fontColor?: Color;
+  /** Text highlight colour behind the glyphs. */
+  backgroundColor?: Color;
+  /** 0 none, 1 single, 2 double, 3 wavy — see {@link UnderlineType}. */
   underline?: number;
-  /** 0 none, 1 single, … */
+  underlineColor?: Color;
+  underlineWidth?: number;
+  /** Underline words only, skipping the spaces between them. */
+  wordUnderline?: boolean;
+  /** 0 none, 1 single, 2 double, 3 triple — see {@link StrikethruType}. */
   strikethru?: number;
+  strikethruColor?: Color;
+  strikethruWidth?: number;
+  wordStrikethru?: boolean;
+  /** 0 none, 1 all caps, 2 small caps, 3 title case. */
+  capitalization?: number;
+  /** 0 required, 1 standard, 2 all. */
+  ligatures?: number;
+  /** 0 normal, 1 superscript, 2 subscript. */
+  superscript?: number;
   /** Additional tracking (fraction of font size). */
   tracking?: number;
+  /** Manual kerning adjustment. */
+  kerning?: number;
   baselineShift?: number;
+  /** Glyph outline width; 0 = filled text. */
+  outline?: number;
+  outlineColor?: Color;
+  shadow?: Shadow;
+  /** BCP-47 language tag used for spelling and hyphenation. */
+  language?: string;
+}
+
+/** A single tab stop. */
+export interface TabStop {
+  /** Distance from the left text margin, in points. */
+  position: number;
+  /** 0 left, 1 center, 2 right, 3 decimal — see {@link TabAlignment}. */
+  alignment?: number;
+  /** Repeated to fill the tab, e.g. "." for a dot leader. */
+  leader?: string;
 }
 
 export interface ParagraphFormatting {
@@ -69,9 +105,28 @@ export interface ParagraphFormatting {
   keepWithNext?: boolean;
   pageBreakBefore?: boolean;
   widowControl?: boolean;
+  hyphenate?: boolean;
   /** Heading outline level (1-based; 0 = body). */
   outlineLevel?: number;
   showInToc?: boolean;
+  /** Paragraph background. Apple stores a flat colour here, never a gradient. */
+  backgroundColor?: Color;
+  /** The paragraph rule / border line. */
+  border?: Stroke;
+  /** Where {@link border} is drawn — see {@link BorderPosition}. */
+  borderPositions?: number;
+  /** Round the corners of a four-sided border. */
+  roundedCorners?: boolean;
+  /** Historical rule width, kept in step with `border.width` by the apps. */
+  ruleWidth?: number;
+  /** Explicit tab stops. An empty array clears them. */
+  tabs?: TabStop[];
+  /** Spacing of the implicit tab grid used beyond the last explicit stop. */
+  defaultTabStops?: number;
+  /** Character a decimal tab aligns on (locale-dependent: "." or ","). */
+  decimalTab?: string;
+  /** 0 natural, 1 left-to-right, 2 right-to-left. */
+  writingDirection?: number;
 }
 
 export class StylesheetModel {
@@ -215,6 +270,20 @@ export class StylesheetModel {
     return obj.identifier;
   }
 
+  /**
+   * Handle for reading and editing an existing style, by id or UI name.
+   *
+   * Editing a style reaches every run that uses it — which is the point of a
+   * stylesheet, and the difference between "make this heading blue" and
+   * "make all headings blue".
+   */
+  style(style: bigint | string, type?: number): StyleHandle | undefined {
+    const id = typeof style === "bigint" ? style : this.findByName(style, type)?.id;
+    if (id === undefined) return undefined;
+    const obj = this.store.resolve(id);
+    return obj ? new StyleHandle(this.store, obj) : undefined;
+  }
+
   private resolveBase(basedOn: bigint | string | undefined, type: number): bigint | undefined {
     if (basedOn === undefined) return undefined;
     if (typeof basedOn === "bigint") return basedOn;
@@ -247,6 +316,98 @@ export class StylesheetModel {
   }
 }
 
+/**
+ * A live view of one concrete style archive.
+ *
+ * Reads return only what this style *overrides*; use {@link resolved} to
+ * fold in the parent chain, which is what the app actually renders.
+ */
+export class StyleHandle {
+  readonly store: ObjectStore;
+  readonly object: IwaObject;
+
+  constructor(store: ObjectStore, object: IwaObject) {
+    this.store = store;
+    this.object = object;
+  }
+
+  get id(): bigint {
+    return this.object.identifier;
+  }
+
+  get info(): StyleInfo {
+    return describeStyle(this.object);
+  }
+
+  parent(): StyleHandle | undefined {
+    const parentId = this.info.parentId;
+    const obj = parentId !== undefined ? this.store.resolve(parentId) : undefined;
+    return obj ? new StyleHandle(this.store, obj) : undefined;
+  }
+
+  character(): CharacterFormatting {
+    return readCharacterProperties(this.object.message.getMessage(StyleArchive.CHAR_PROPERTIES));
+  }
+
+  paragraph(): ParagraphFormatting {
+    return readParagraphProperties(this.object.message.getMessage(StyleArchive.PARA_PROPERTIES));
+  }
+
+  /**
+   * Formatting with inherited values folded in, nearest override winning.
+   *
+   * Cycles in the parent chain are broken defensively — a corrupt document
+   * should not hang a reader.
+   */
+  resolved(): { character: CharacterFormatting; paragraph: ParagraphFormatting } {
+    const chain: StyleHandle[] = [];
+    const seen = new Set<bigint>();
+    for (let node: StyleHandle | undefined = this; node && !seen.has(node.id); node = node.parent()) {
+      seen.add(node.id);
+      chain.push(node);
+    }
+    const character: CharacterFormatting = {};
+    const paragraph: ParagraphFormatting = {};
+    // Furthest ancestor first, so nearer overrides land on top.
+    for (const node of chain.reverse()) {
+      Object.assign(character, node.character());
+      Object.assign(paragraph, node.paragraph());
+    }
+    return { character, paragraph };
+  }
+
+  /** Merge character formatting into this style, preserving unmodelled properties. */
+  setCharacter(formatting: CharacterFormatting): this {
+    const m = this.object.message;
+    const props = m.getMessage(StyleArchive.CHAR_PROPERTIES) ?? RawMessage.create();
+    applyCharacterProperties(props, formatting);
+    m.setMessage(StyleArchive.CHAR_PROPERTIES, props);
+    this.refreshOverrideCount();
+    return this;
+  }
+
+  /** Merge paragraph formatting into this style, preserving unmodelled properties. */
+  setParagraph(formatting: ParagraphFormatting): this {
+    const m = this.object.message;
+    if (this.object.type === TSWP_TYPE.CHARACTER_STYLE) {
+      throw new RangeError(`style ${this.id} is a character style; it has no paragraph properties`);
+    }
+    const props = m.getMessage(StyleArchive.PARA_PROPERTIES) ?? RawMessage.create();
+    applyParagraphProperties(props, formatting);
+    m.setMessage(StyleArchive.PARA_PROPERTIES, props);
+    this.refreshOverrideCount();
+    return this;
+  }
+
+  /** `override_count` is the number of properties this style sets. */
+  private refreshOverrideCount(): void {
+    const m = this.object.message;
+    const chars = m.getMessage(StyleArchive.CHAR_PROPERTIES)?.fields.length ?? 0;
+    const paras = m.getMessage(StyleArchive.PARA_PROPERTIES)?.fields.length ?? 0;
+    m.setVarint(StyleArchive.OVERRIDE_COUNT, chars + paras);
+  }
+}
+
 export function describeStyle(obj: IwaObject): StyleInfo {
   const sup = obj.message.getMessage(StyleArchive.SUPER);
   return {
@@ -272,44 +433,283 @@ function buildStyleSuper(
   return sup;
 }
 
-export function buildCharacterProperties(f: CharacterFormatting): RawMessage {
-  const m = RawMessage.create();
+/**
+ * Set a value field and clear its paired `*_null` flag.
+ *
+ * A style property that can be inherited has two encodings for "no value":
+ * absent (inherit the parent's) and a `*_null` flag set to true (explicitly
+ * none). Writing a value while a stale null flag is still set is
+ * contradictory, so the two always move together.
+ */
+function setNullable(
+  m: RawMessage,
+  valueField: number,
+  nullField: number,
+  value: RawMessage | string | undefined,
+): void {
+  if (value === undefined) {
+    m.remove(valueField);
+    m.setBool(nullField, true);
+    return;
+  }
+  m.remove(nullField);
+  if (typeof value === "string") m.setString(valueField, value);
+  else m.setMessage(valueField, value);
+}
+
+/**
+ * Apply character formatting onto an existing property bag.
+ *
+ * Editing in place rather than rebuilding matters: a real style carries
+ * properties this library does not model, and rebuilding would drop them.
+ */
+export function applyCharacterProperties(m: RawMessage, f: CharacterFormatting): void {
   if (f.bold !== undefined) m.setBool(CharProps.BOLD, f.bold);
   if (f.italic !== undefined) m.setBool(CharProps.ITALIC, f.italic);
   if (f.fontSize !== undefined) m.setFloat(CharProps.FONT_SIZE, f.fontSize);
-  if (f.fontName !== undefined) m.setString(CharProps.FONT_NAME, f.fontName);
-  if (f.fontColor !== undefined) {
-    m.setMessage(
-      CharProps.FONT_COLOR,
-      makeColor(f.fontColor.r, f.fontColor.g, f.fontColor.b, f.fontColor.a ?? 1),
+  if ("fontName" in f) setNullable(m, CharProps.FONT_NAME, CharProps.FONT_NAME_NULL, f.fontName);
+  if ("language" in f) setNullable(m, CharProps.LANGUAGE, CharProps.LANGUAGE_NULL, f.language);
+  for (const [key, valueField, nullField] of [
+    ["fontColor", CharProps.FONT_COLOR, CharProps.FONT_COLOR_NULL],
+    ["backgroundColor", CharProps.BACKGROUND_COLOR, CharProps.BACKGROUND_COLOR_NULL],
+    ["underlineColor", CharProps.UNDERLINE_COLOR, CharProps.UNDERLINE_COLOR_NULL],
+    ["strikethruColor", CharProps.STRIKETHRU_COLOR, CharProps.STRIKETHRU_COLOR_NULL],
+    ["outlineColor", CharProps.OUTLINE_COLOR, CharProps.OUTLINE_COLOR_NULL],
+  ] as const) {
+    if (!(key in f)) continue;
+    const color = f[key];
+    setNullable(m, valueField, nullField, color ? writeColor(color) : undefined);
+  }
+  if ("shadow" in f) {
+    setNullable(
+      m,
+      CharProps.SHADOW,
+      CharProps.SHADOW_NULL,
+      f.shadow ? writeShadow(f.shadow) : undefined,
     );
   }
-  if (f.underline !== undefined) m.setVarint(CharProps.UNDERLINE, f.underline);
-  if (f.strikethru !== undefined) m.setVarint(CharProps.STRIKETHRU, f.strikethru);
-  if (f.tracking !== undefined) m.setFloat(CharProps.TRACKING, f.tracking);
-  if (f.baselineShift !== undefined) m.setFloat(CharProps.BASELINE_SHIFT, f.baselineShift);
+  for (const [key, field] of [
+    ["underline", CharProps.UNDERLINE],
+    ["strikethru", CharProps.STRIKETHRU],
+    ["capitalization", CharProps.CAPITALIZATION],
+    ["ligatures", CharProps.LIGATURES],
+    ["superscript", CharProps.SUPERSCRIPT],
+  ] as const) {
+    const value = f[key];
+    if (value !== undefined) m.setVarint(field, value);
+  }
+  for (const [key, field] of [
+    ["tracking", CharProps.TRACKING],
+    ["kerning", CharProps.KERNING],
+    ["baselineShift", CharProps.BASELINE_SHIFT],
+    ["outline", CharProps.OUTLINE],
+    ["underlineWidth", CharProps.UNDERLINE_WIDTH],
+    ["strikethruWidth", CharProps.STRIKETHRU_WIDTH],
+  ] as const) {
+    const value = f[key];
+    if (value !== undefined) m.setFloat(field, value);
+  }
+  if (f.wordUnderline !== undefined) m.setBool(CharProps.WORD_UNDERLINE, f.wordUnderline);
+  if (f.wordStrikethru !== undefined) m.setBool(CharProps.WORD_STRIKETHRU, f.wordStrikethru);
+}
+
+export function buildCharacterProperties(f: CharacterFormatting): RawMessage {
+  const m = RawMessage.create();
+  applyCharacterProperties(m, f);
   return m;
 }
 
-export function buildParagraphProperties(f: ParagraphFormatting): RawMessage {
-  const m = RawMessage.create();
+/** Read a character property bag back into the same shape used to write it. */
+export function readCharacterProperties(m: RawMessage | undefined): CharacterFormatting {
+  const f: CharacterFormatting = {};
+  if (!m) return f;
+  const bold = m.getBool(CharProps.BOLD);
+  if (bold !== undefined) f.bold = bold;
+  const italic = m.getBool(CharProps.ITALIC);
+  if (italic !== undefined) f.italic = italic;
+  const fontSize = m.getFloat(CharProps.FONT_SIZE);
+  if (fontSize !== undefined) f.fontSize = fontSize;
+  const fontName = m.getString(CharProps.FONT_NAME);
+  if (fontName !== undefined) f.fontName = fontName;
+  const language = m.getString(CharProps.LANGUAGE);
+  if (language !== undefined) f.language = language;
+  for (const [key, field] of [
+    ["fontColor", CharProps.FONT_COLOR],
+    ["backgroundColor", CharProps.BACKGROUND_COLOR],
+    ["underlineColor", CharProps.UNDERLINE_COLOR],
+    ["strikethruColor", CharProps.STRIKETHRU_COLOR],
+    ["outlineColor", CharProps.OUTLINE_COLOR],
+  ] as const) {
+    const color = readColor(m.getMessage(field));
+    if (color) f[key] = color;
+  }
+  const shadow = readShadow(m.getMessage(CharProps.SHADOW));
+  if (shadow) f.shadow = shadow;
+  for (const [key, field] of [
+    ["underline", CharProps.UNDERLINE],
+    ["strikethru", CharProps.STRIKETHRU],
+    ["capitalization", CharProps.CAPITALIZATION],
+    ["ligatures", CharProps.LIGATURES],
+    ["superscript", CharProps.SUPERSCRIPT],
+  ] as const) {
+    const value = m.getUint(field);
+    if (value !== undefined) f[key] = value;
+  }
+  for (const [key, field] of [
+    ["tracking", CharProps.TRACKING],
+    ["kerning", CharProps.KERNING],
+    ["baselineShift", CharProps.BASELINE_SHIFT],
+    ["outline", CharProps.OUTLINE],
+    ["underlineWidth", CharProps.UNDERLINE_WIDTH],
+    ["strikethruWidth", CharProps.STRIKETHRU_WIDTH],
+  ] as const) {
+    const value = m.getFloat(field);
+    if (value !== undefined) f[key] = value;
+  }
+  const wordUnderline = m.getBool(CharProps.WORD_UNDERLINE);
+  if (wordUnderline !== undefined) f.wordUnderline = wordUnderline;
+  const wordStrikethru = m.getBool(CharProps.WORD_STRIKETHRU);
+  if (wordStrikethru !== undefined) f.wordStrikethru = wordStrikethru;
+  return f;
+}
+
+/** Apply paragraph formatting onto an existing property bag (see above). */
+export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting): void {
   if (f.alignment !== undefined) m.setVarint(ParaProps.ALIGNMENT, f.alignment);
-  if (f.spaceBefore !== undefined) m.setFloat(ParaProps.SPACE_BEFORE, f.spaceBefore);
-  if (f.spaceAfter !== undefined) m.setFloat(ParaProps.SPACE_AFTER, f.spaceAfter);
-  if (f.firstLineIndent !== undefined) m.setFloat(ParaProps.FIRST_LINE_INDENT, f.firstLineIndent);
-  if (f.leftIndent !== undefined) m.setFloat(ParaProps.LEFT_INDENT, f.leftIndent);
-  if (f.rightIndent !== undefined) m.setFloat(ParaProps.RIGHT_INDENT, f.rightIndent);
+  for (const [key, field] of [
+    ["spaceBefore", ParaProps.SPACE_BEFORE],
+    ["spaceAfter", ParaProps.SPACE_AFTER],
+    ["firstLineIndent", ParaProps.FIRST_LINE_INDENT],
+    ["leftIndent", ParaProps.LEFT_INDENT],
+    ["rightIndent", ParaProps.RIGHT_INDENT],
+    ["defaultTabStops", ParaProps.DEFAULT_TAB_STOPS],
+    ["ruleWidth", ParaProps.RULE_WIDTH],
+  ] as const) {
+    const value = f[key];
+    if (value !== undefined) m.setFloat(field, value);
+  }
   if (f.lineSpacing !== undefined) {
     const ls = RawMessage.create();
     ls.setVarint(LineSpacing.MODE, 0);
     ls.setFloat(LineSpacing.AMOUNT, f.lineSpacing);
+    m.remove(ParaProps.LINE_SPACING_NULL);
     m.setMessage(ParaProps.LINE_SPACING, ls);
   }
-  if (f.keepLinesTogether !== undefined) m.setBool(ParaProps.KEEP_LINES_TOGETHER, f.keepLinesTogether);
-  if (f.keepWithNext !== undefined) m.setBool(ParaProps.KEEP_WITH_NEXT, f.keepWithNext);
-  if (f.pageBreakBefore !== undefined) m.setBool(ParaProps.PAGE_BREAK_BEFORE, f.pageBreakBefore);
-  if (f.widowControl !== undefined) m.setBool(ParaProps.WIDOW_CONTROL, f.widowControl);
-  if (f.outlineLevel !== undefined) m.setVarint(ParaProps.OUTLINE_LEVEL, f.outlineLevel);
-  if (f.showInToc !== undefined) m.setBool(ParaProps.SHOW_IN_TOC, f.showInToc);
+  for (const [key, field] of [
+    ["keepLinesTogether", ParaProps.KEEP_LINES_TOGETHER],
+    ["keepWithNext", ParaProps.KEEP_WITH_NEXT],
+    ["pageBreakBefore", ParaProps.PAGE_BREAK_BEFORE],
+    ["widowControl", ParaProps.WIDOW_CONTROL],
+    ["hyphenate", ParaProps.HYPHENATE],
+    ["showInToc", ParaProps.SHOW_IN_TOC],
+    ["roundedCorners", ParaProps.ROUNDED_CORNERS],
+  ] as const) {
+    const value = f[key];
+    if (value !== undefined) m.setBool(field, value);
+  }
+  for (const [key, field] of [
+    ["outlineLevel", ParaProps.OUTLINE_LEVEL],
+    ["borderPositions", ParaProps.BORDER_POSITIONS],
+    ["writingDirection", ParaProps.WRITING_DIRECTION],
+  ] as const) {
+    const value = f[key];
+    if (value !== undefined) m.setVarint(field, value);
+  }
+  if ("backgroundColor" in f) {
+    setNullable(
+      m,
+      ParaProps.FILL,
+      ParaProps.FILL_NULL,
+      f.backgroundColor ? writeColor(f.backgroundColor) : undefined,
+    );
+  }
+  if ("border" in f) {
+    setNullable(m, ParaProps.STROKE, ParaProps.STROKE_NULL, f.border ? writeStroke(f.border) : undefined);
+  }
+  if ("decimalTab" in f) {
+    setNullable(m, ParaProps.DECIMAL_TAB, ParaProps.DECIMAL_TAB_NULL, f.decimalTab);
+  }
+  if (f.tabs !== undefined) {
+    const tabs = RawMessage.create();
+    for (const tab of f.tabs) {
+      const entry = RawMessage.create();
+      entry.setFloat(TabArchive.POSITION, tab.position);
+      if (tab.alignment !== undefined) entry.setVarint(TabArchive.ALIGNMENT, tab.alignment);
+      if (tab.leader !== undefined) entry.setString(TabArchive.LEADER, tab.leader);
+      tabs.addMessage(TabsArchive.TABS, entry);
+    }
+    // An empty TabsArchive is how "no tab stops" is expressed; the null flag
+    // means "inherit nothing", which is a different thing.
+    m.remove(ParaProps.TABS_NULL);
+    m.setMessage(ParaProps.TABS, tabs);
+  }
+}
+
+export function buildParagraphProperties(f: ParagraphFormatting): RawMessage {
+  const m = RawMessage.create();
+  applyParagraphProperties(m, f);
   return m;
+}
+
+/** Read a paragraph property bag back into the same shape used to write it. */
+export function readParagraphProperties(m: RawMessage | undefined): ParagraphFormatting {
+  const f: ParagraphFormatting = {};
+  if (!m) return f;
+  const alignment = m.getUint(ParaProps.ALIGNMENT);
+  if (alignment !== undefined) f.alignment = alignment as TextAlignment;
+  for (const [key, field] of [
+    ["spaceBefore", ParaProps.SPACE_BEFORE],
+    ["spaceAfter", ParaProps.SPACE_AFTER],
+    ["firstLineIndent", ParaProps.FIRST_LINE_INDENT],
+    ["leftIndent", ParaProps.LEFT_INDENT],
+    ["rightIndent", ParaProps.RIGHT_INDENT],
+    ["defaultTabStops", ParaProps.DEFAULT_TAB_STOPS],
+    ["ruleWidth", ParaProps.RULE_WIDTH],
+  ] as const) {
+    const value = m.getFloat(field);
+    if (value !== undefined) f[key] = value;
+  }
+  const spacing = m.getMessage(ParaProps.LINE_SPACING);
+  if (spacing && (spacing.getUint(LineSpacing.MODE) ?? 0) === 0) {
+    const amount = spacing.getFloat(LineSpacing.AMOUNT);
+    if (amount !== undefined) f.lineSpacing = amount;
+  }
+  for (const [key, field] of [
+    ["keepLinesTogether", ParaProps.KEEP_LINES_TOGETHER],
+    ["keepWithNext", ParaProps.KEEP_WITH_NEXT],
+    ["pageBreakBefore", ParaProps.PAGE_BREAK_BEFORE],
+    ["widowControl", ParaProps.WIDOW_CONTROL],
+    ["hyphenate", ParaProps.HYPHENATE],
+    ["showInToc", ParaProps.SHOW_IN_TOC],
+    ["roundedCorners", ParaProps.ROUNDED_CORNERS],
+  ] as const) {
+    const value = m.getBool(field);
+    if (value !== undefined) f[key] = value;
+  }
+  for (const [key, field] of [
+    ["outlineLevel", ParaProps.OUTLINE_LEVEL],
+    ["borderPositions", ParaProps.BORDER_POSITIONS],
+    ["writingDirection", ParaProps.WRITING_DIRECTION],
+  ] as const) {
+    const value = m.getUint(field);
+    if (value !== undefined) f[key] = value;
+  }
+  const background = readColor(m.getMessage(ParaProps.FILL));
+  if (background) f.backgroundColor = background;
+  const border = readStroke(m.getMessage(ParaProps.STROKE));
+  if (border) f.border = border;
+  const decimalTab = m.getString(ParaProps.DECIMAL_TAB);
+  if (decimalTab !== undefined) f.decimalTab = decimalTab;
+  const tabs = m.getMessage(ParaProps.TABS);
+  if (tabs) {
+    f.tabs = tabs.getMessages(TabsArchive.TABS).map((tab) => {
+      const stop: TabStop = { position: tab.getFloat(TabArchive.POSITION) ?? 0 };
+      const alignment = tab.getUint(TabArchive.ALIGNMENT);
+      if (alignment !== undefined) stop.alignment = alignment;
+      const leader = tab.getString(TabArchive.LEADER);
+      if (leader !== undefined) stop.leader = leader;
+      return stop;
+    });
+  }
+  return f;
 }

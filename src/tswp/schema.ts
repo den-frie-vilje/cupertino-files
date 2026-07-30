@@ -152,7 +152,14 @@ export const StyleArchive = {
   PARA_PROPERTIES: 12, // ParagraphStyleArchive only
 } as const;
 
-/** TSWP.CharacterStylePropertiesArchive. */
+/**
+ * TSWP.CharacterStylePropertiesArchive.
+ *
+ * The `*_NULL` booleans are how a *child* style says "clear the inherited
+ * value" as opposed to "inherit it": the value field is absent and the null
+ * flag is true. Setting the value field and the null flag together is
+ * contradictory, so writers must clear the flag whenever they set a value.
+ */
 export const CharProps = {
   BOLD: 1,
   ITALIC: 2,
@@ -161,6 +168,8 @@ export const CharProps = {
   FONT_NAME: 5,
   FONT_COLOR_NULL: 6,
   FONT_COLOR: 7,
+  LANGUAGE_NULL: 8,
+  LANGUAGE: 9,
   SUPERSCRIPT: 10,
   UNDERLINE: 11,
   STRIKETHRU: 12,
@@ -168,9 +177,22 @@ export const CharProps = {
   BASELINE_SHIFT: 14,
   KERNING: 15,
   LIGATURES: 16,
+  OUTLINE_COLOR_NULL: 17,
+  OUTLINE_COLOR: 18,
+  OUTLINE: 19,
+  SHADOW_NULL: 20,
+  SHADOW: 21,
+  STRIKETHRU_COLOR_NULL: 22,
+  STRIKETHRU_COLOR: 23,
+  STRIKETHRU_WIDTH: 24,
   BACKGROUND_COLOR_NULL: 25,
   BACKGROUND_COLOR: 26,
   TRACKING: 27,
+  UNDERLINE_COLOR_NULL: 28,
+  UNDERLINE_COLOR: 29,
+  UNDERLINE_WIDTH: 30,
+  WORD_STRIKETHRU: 31,
+  WORD_UNDERLINE: 32,
 } as const;
 
 export const UnderlineType = {
@@ -180,9 +202,37 @@ export const UnderlineType = {
   WAVY: 3,
 } as const;
 
-/** TSWP.ParagraphStylePropertiesArchive. */
+export const StrikethruType = {
+  NONE: 0,
+  SINGLE: 1,
+  DOUBLE: 2,
+  TRIPLE: 3,
+} as const;
+
+/** Capitalization is a rendering transform; the stored text is unchanged. */
+export const Capitalization = {
+  NONE: 0,
+  ALL_CAPS: 1,
+  SMALL_CAPS: 2,
+  TITLE_CASE: 3,
+} as const;
+
+export const Ligatures = { REQUIRED: 0, STANDARD: 1, ALL: 2 } as const;
+
+export const ScriptPosition = { NORMAL: 0, SUPERSCRIPT: 1, SUBSCRIPT: 2 } as const;
+
+/**
+ * TSWP.ParagraphStylePropertiesArchive.
+ *
+ * Note `FILL` is a bare `TSP.Color`, *not* a `TSD.FillArchive` — a paragraph
+ * background can only be a flat colour, never a gradient or image. The
+ * paragraph rule/border is a `TSD.StrokeArchive` at `STROKE`, positioned by
+ * `BORDER_POSITIONS`.
+ */
 export const ParaProps = {
   ALIGNMENT: 1,
+  DECIMAL_TAB_NULL: 2,
+  DECIMAL_TAB: 3,
   DEFAULT_TAB_STOPS: 4,
   FILL_NULL: 5,
   FILL: 6,
@@ -194,6 +244,7 @@ export const ParaProps = {
   LINE_SPACING_NULL: 12,
   LINE_SPACING: 13,
   PAGE_BREAK_BEFORE: 14,
+  RULE_WIDTH: 18,
   RIGHT_INDENT: 19,
   SPACE_AFTER: 20,
   SPACE_BEFORE: 21,
@@ -201,13 +252,43 @@ export const ParaProps = {
   TABS: 25,
   WIDOW_CONTROL: 26,
   OUTLINE_LEVEL: 27,
+  STROKE_NULL: 31,
+  STROKE: 32,
   SHOW_IN_TOC: 33,
   WRITING_DIRECTION: 38,
   LIST_STYLE_NULL: 39,
   LIST_STYLE: 40,
   FOLLOWING_STYLE_NULL: 41,
   FOLLOWING_STYLE: 42,
+  SHOW_IN_BOOKMARKS_LIST: 43,
+  SHOW_IN_TOC_NAVIGATOR: 44,
+  BORDER_POSITIONS: 45,
+  ROUNDED_CORNERS: 46,
 } as const;
+
+/**
+ * Where a paragraph's stroke is drawn (`border_positions`, an int32).
+ *
+ * **Inferred, not proven by rendering.** Three things line up: the field is
+ * a plain integer rather than a set; the deprecated `ParagraphBorderType`
+ * enum it replaced packs a position in 0..4 alongside a line style; and the
+ * Pages inspector offers exactly five choices (none / top / bottom / top and
+ * bottom / all). Every value seen in the corpus is 0, 1 or 2. The raw
+ * integer is always available if this mapping ever proves wrong.
+ */
+export const BorderPosition = {
+  NONE: 0,
+  TOP: 1,
+  BOTTOM: 2,
+  TOP_AND_BOTTOM: 3,
+  ALL: 4,
+} as const;
+
+/** TSWP.TabsArchive: repeated TabArchive at 1. */
+export const TabsArchive = { TABS: 1 } as const;
+/** TSWP.TabArchive. */
+export const TabArchive = { POSITION: 1, ALIGNMENT: 2, LEADER: 3 } as const;
+export const TabAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2, DECIMAL: 3 } as const;
 
 export const TextAlignment = {
   LEFT: 0,

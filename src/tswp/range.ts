@@ -7,8 +7,9 @@
  * return values, which carry updated ranges).
  */
 import type { TextStorage } from "./textstorage.ts";
-import type { CharacterFormatting } from "../tss/stylesheet.ts";
-import { Storage, TSWP_TYPE, UnderlineType } from "./schema.ts";
+import type { CharacterFormatting, ParagraphFormatting } from "../tss/stylesheet.ts";
+import type { Color } from "../tsd/style.ts";
+import { ScriptPosition, Storage, StrikethruType, TSWP_TYPE, UnderlineType } from "./schema.ts";
 
 export class TextRange {
   readonly storage: TextStorage;
@@ -76,6 +77,29 @@ export class TextRange {
 
   color(r: number, g: number, b: number, a = 1): this {
     return this.format({ fontColor: { r, g, b, a } });
+  }
+
+  /** Highlight colour drawn behind the glyphs. */
+  highlight(color: Color | undefined): this {
+    return this.format({ backgroundColor: color });
+  }
+
+  strikethrough(value = true): this {
+    return this.format({ strikethru: value ? StrikethruType.SINGLE : StrikethruType.NONE });
+  }
+
+  superscript(): this {
+    return this.format({ superscript: ScriptPosition.SUPERSCRIPT });
+  }
+
+  subscript(): this {
+    return this.format({ superscript: ScriptPosition.SUBSCRIPT });
+  }
+
+  /** Apply direct paragraph formatting to every paragraph in this range. */
+  formatParagraphs(formatting: ParagraphFormatting): this {
+    for (const p of this.paragraphs()) p.format(formatting);
+    return this;
   }
 
   /** Apply a character style by name or id (undefined restores paragraph style). */
@@ -176,6 +200,27 @@ export class ParagraphHandle {
       this.index,
       this.storage.resolveStyle(style, TSWP_TYPE.PARAGRAPH_STYLE),
     );
+    return this;
+  }
+
+  /**
+   * Apply direct paragraph formatting: create an anonymous paragraph style
+   * parented on the one currently in effect, and assign it to this paragraph
+   * alone. Prefer editing a named style when the change should apply
+   * everywhere that style is used.
+   */
+  format(formatting: ParagraphFormatting, character?: CharacterFormatting): this {
+    const sheet = this.storage.sheet();
+    if (!sheet) throw new RangeError("storage has no stylesheet; cannot create styles");
+    const options: {
+      basedOn?: bigint;
+      paragraph: ParagraphFormatting;
+      character?: CharacterFormatting;
+    } = { paragraph: formatting };
+    const current = this.styleId;
+    if (current !== undefined) options.basedOn = current;
+    if (character) options.character = character;
+    this.storage.setParagraphStyle(this.index, sheet.createParagraphStyle(options));
     return this;
   }
 
