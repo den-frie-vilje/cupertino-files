@@ -78,8 +78,9 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Pages: paragraph styles (by name), character formatting, style creation + editing | ✅ |
 | Pages: sections (read + insert), page masters, header/footer text, master-page drawables | ✅ |
 | Pages: page-layout (body-less) documents | ✅ |
-| Pages: hyperlinks (read/create/remove), smart fields, bookmarks, attachments | ✅ |
-| Pages: list styles by name, footnotes, comments, text boxes, document settings | ✅ |
+| Pages: hyperlinks, bookmarks, date fields, page numbers/counts — read and create | ✅ |
+| Pages: list styles by name, text boxes, document settings, table of contents | ✅ |
+| Pages: comments and footnotes — read *and* create, reusing the document's author | ✅ |
 | Pages: page setup — size, margins, header/footer margins, orientation | ✅ |
 | Drawables (shapes, images, text boxes, tables): enumerate, move, resize | ✅ |
 | Fluent API: `find()` → `TextRange` → `.bold().link()`, `ParagraphHandle` | ✅ |
@@ -87,20 +88,25 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Tables: **write** cells (text, number, date, bool, duration) | ✅ modern storage |
 | Tables: cell styling (fill, four borders, padding, alignment, wrap) and table styling (banding, grid strokes) | ✅ |
 | Tables: name, header/footer bands, freeze + repeating headers, row heights, column widths | ✅ |
+| Tables: insert and delete rows and columns; number/date/currency display formats | ✅ |
 | Tables: merged cell ranges (decoded from the calc engine, not the empty region map) | ✅ read |
 | Tables: formulas read and rendered to text — in Pages and Keynote too, not just Numbers | ✅ read |
+| Numbers: conditional formatting rules and filters (one shared predicate model) | ✅ read |
+| Numbers: categories — row grouping, nesting, every date bucketing, staleness check | ✅ read |
 | Drawables: shadows, opacity, reflection, fill, stroke on shapes and images | ✅ |
 | Styling values: colours (incl. Display P3), gradients, strokes, dashes, shadows, tabs | ✅ |
-| Charts: type, categories, series names and plotted values | ✅ read |
-| Images: filters/adjustments (exposure, saturation, levels…), masks, media variants | ✅ read/write |
-| Keynote: slides, speaker notes, transitions, masters, canvas size | ✅ read/write |
+| Charts: read the grid; edit values, names, series and categories | ✅ data only |
+| Images: filters/adjustments, media variants; **crop** — set, move and remove a mask | ✅ |
+| Drawables: copy, place, reorder and remove across pages, slides and sheets | ✅ |
+| Keynote: slides (add/duplicate/move/remove), speaker notes, transitions, masters | ✅ |
+| Numbers: sheets — add, remove, rename, reorder | ✅ |
 | Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
-| Chart **writing**, footnote/comment creation, table row/column insertion, formula authoring | roadmap |
-| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
-| Numbers: sheets, tables and cell values | ✅ read/write |
+| Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |
+| Keynote builds; Numbers cell controls | roadmap — no fixture contains one, so it would be unvalidated |
 | Byte-identical round-trip of untouched content | ✅ |
 | Version-aware loading (never hard-fails on newer files) | ✅ |
 | Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |
+| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
 | iWork '09 XML documents | detected, rejected |
 | Password-protected documents | detected, rejected |
 | Pre-BNC (iWork '13-era) table cell storage | ✗ reports explicitly, never guesses |
@@ -237,6 +243,87 @@ The ingest never guesses: a name is accepted only when every argument shape
 agreed, an index claimed by two names is rejected, and rows that are not
 genuine probe rows are ignored — a guard added after an early run happily
 recorded the SUM index as a function named `TOTAL:`.
+
+### Numbers: conditional formatting, filters and categories
+
+```ts
+table.conditionalRules(4, 2);      // [{ predicate: { operator: "<", text: "C5<0" }, cellStyleId }]
+table.filterSets();                // { rows, columns } — mode, enable state, per-column rules
+
+const categories = table.activeCategories();
+categories?.groupColumns();        // [{ column, groupingType, groupingName: "year and month" }]
+categories?.groups();              // tree: [{ value, label, rows, children }]
+table.staleCategoryGroups();       // groups whose rows no longer match the data
+```
+
+Conditional formatting and filters are the **same archive** underneath, so
+they share one predicate model. The condition is read from the rule's
+*formula*, whose comparison node is the documented TSCE enum — not from
+Apple's unpublished `predicate_type`, of which the corpus contains two
+members. So a condition reads correctly even for a type code never seen, and
+`operator` is `undefined` rather than a guess when the rule is richer than a
+comparison.
+
+Categories decode completely — nesting to four levels, and every date
+bucketing the UI offers, each code confirmed by the *shape* of the dates it
+produces rather than by a fixture's name: year groups are all 1 January, week
+groups every land on the same weekday. Group membership is cross-checked
+against cell contents, and in every categorised table in the corpus it agrees
+for every group.
+
+Nothing here evaluates. `conditionalRules()` says what the rules *are*, not
+which currently matches; enabling a filter changes the rule, not the visible
+rows. Both need the calc engine, and a wrong answer would be
+indistinguishable from a right one.
+
+### Comments, footnotes and page numbers
+
+```ts
+body.addComment(10, 20, "Please double-check this.");   // reuses the document's author
+const note = body.addFootnote(30, "See the appendix."); // returns the note's own storage
+footer.insertPageNumber(footer.text.length);            // a field, not the digit "1"
+footer.insertPageCount(pos);
+storage.insertDateField(0, "November 2, 2024", { date, format: "MMMM d, y" });
+body.addBookmark(10, 20, "Introduction");
+```
+
+Three details that decide the API. A **page number is not text** — no digits
+exist in the storage, because the value comes from pagination — so it is a
+placeholder plus an archive, and `string_value`, the app's cache of the last
+rendered number, is deliberately left unwritten. A **date field is** text,
+spanning characters the app rewrites, so the display text is supplied rather
+than formatted here. And a **footnote reference is a U+000E**, not the U+FFFC
+every other attachment uses; the U+FFFC belongs to the note, marking where
+the number is drawn.
+
+`addComment` reuses the document's existing annotation author unless told
+otherwise — a document where the same person appears once per comment looks
+right in the pane and wrong the moment anyone filters by commenter.
+
+### Charts and image crops
+
+```ts
+const chart = doc.charts()[0]!;
+chart.series();                                    // [{ name, values }]
+chart.setValue(0, 2, { type: "number", value: 99 });
+chart.addSeries("Region 3", values);               // one value per category
+chart.removeSeries(0);                             // id map and styles shift with it
+
+image.crop();                                      // { window, visible, full, isRectangular }
+image.setCrop({ x: 20, y: 0, width: 200, height: 150 });   // choose what shows
+image.setVisibleFrame({ x: 72, y: 90, width: 200, height: 150 }); // place the result
+image.removeCrop();
+```
+
+Chart *data* is editable; appearance is not. Changing numbers is safe because
+nothing in the archive is indexed by a value — but changing the grid's shape
+moves three position-indexed structures together, or the chart's colours slide
+onto the wrong series.
+
+Cropping never touches the media. The image keeps its full extent and a mask
+defines the window; the mask's frame is in the **image's** coordinate space,
+so the visible rectangle is the sum of the two positions — a reading measured
+across the corpus rather than assumed.
 
 ### Shadows and other drawable styling
 
