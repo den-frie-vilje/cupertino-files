@@ -114,6 +114,14 @@ export class ObjectStore {
   private readonly index = new Map<bigint, { obj: IwaObject; component: Component }>();
   private readonly refExtractors: ReadonlyMap<number, ReferenceExtractor>;
   private nextId: bigint | undefined;
+  /**
+   * Objects this library created, as opposed to ones Apple wrote.
+   *
+   * Their reference declarations are ours to get right: nothing in the file
+   * vouches for them, and their archive types generally have no registered
+   * extractor. See {@link save}.
+   */
+  private readonly created = new Set<bigint>();
 
   constructor(
     container: IWorkContainer,
@@ -212,6 +220,7 @@ export class ObjectStore {
     component.byId.set(id, obj);
     component.structurallyDirty = true;
     this.index.set(id, { obj, component });
+    this.created.add(id);
     return obj;
   }
 
@@ -413,8 +422,22 @@ export class ObjectStore {
       for (const obj of component.objects) {
         if (!obj.isDirty) continue;
         const extractor = this.refExtractors.get(obj.type);
-        if (!extractor) continue;
-        const refs = dedupe(extractor(obj.message));
+        // An object we created has no history to fall back on: whatever it
+        // references, it references because this library put it there, and
+        // its archive type usually has no extractor. Scanning it is safe
+        // for the same reason it would be unsafe on an Apple archive — we
+        // know exactly what is in it.
+        //
+        // Getting this wrong is not a subtle failure. An undeclared
+        // reference into another component makes Numbers refuse the whole
+        // document as damaged, because external_references is how it
+        // decides which components to load.
+        const refs = extractor
+          ? dedupe(extractor(obj.message))
+          : this.created.has(obj.identifier)
+            ? dedupe(referencedIds(obj.message).filter((id) => this.index.has(id)))
+            : undefined;
+        if (!refs) continue;
         obj.setObjectReferences(refs);
         for (const id of refs) {
           const target = this.index.get(id);

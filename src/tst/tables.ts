@@ -2086,18 +2086,29 @@ export class TableModel {
     const dataStore = this.dataStore();
     if (!dataStore) throw new RangeError("table has no data store");
     let list = this.store.resolve(refId(dataStore, DataStoreFields.CONDITIONAL_STYLE_TABLE));
-    const component = this.store.componentOf(this.object.identifier);
-    if (!component) throw new RangeError("table object has no component");
     if (!list) {
-      list = this.store.createObject(TABLE_DATA_LIST_TYPE, component);
+      const tableComponent = this.store.componentOf(this.object.identifier);
+      if (!tableComponent) throw new RangeError("table object has no component");
+      list = this.store.createObject(TABLE_DATA_LIST_TYPE, tableComponent);
       list.message.setVarint(DataList.LIST_TYPE, CONDITIONAL_LIST_TYPE);
       list.message.setVarint(DataList.NEXT_LIST_ID, 1);
       dataStore.setMessage(DataStoreFields.CONDITIONAL_STYLE_TABLE, makeRef(list.identifier));
       this.object.message.markDirty();
     }
-    // The set is a standalone archive the entry points at, not an inline
-    // submessage — unlike a control spec, and the reader already resolves
-    // it that way.
+    // **In the list's component, not the table's.** Apple gives every data
+    // list a component of its own — `Index/Tables/DataList-904495-2.iwa` —
+    // and the archives it points at live there with it. Creating the set
+    // beside the table model instead put it in CalculationEngine.iwa, one
+    // component away from the list that references it, and that reference
+    // was never declared in ComponentInfo.external_references because the
+    // list's type has no extractor. Numbers decides which components to
+    // load from those declarations, so it found a reference into a
+    // component it had no reason to open, and called the document damaged.
+    //
+    // Keeping the object with its list sidesteps the whole question: there
+    // is no cross-component reference left to declare.
+    const component = this.store.componentOf(list.identifier);
+    if (!component) throw new RangeError("conditional style table has no component");
     const object = this.store.createObject(CONDITIONAL_STYLE_SET_TYPE, component);
     object.setMessageBytes(set.toBytes());
 
@@ -2384,8 +2395,10 @@ export class TableModel {
     if (!dataStore) throw new RangeError("table has no data store; cannot store a control");
     let list = this.store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
     if (!list) {
-      // No document in the corpus has one, so it is built the way every
-      // other interning table in the same data store is built.
+      // No document in the corpus lacks one, so this path is close to
+      // unreachable; when it does run, the list goes beside the table
+      // rather than in a component of its own, which is a simplification
+      // worth knowing about if a file built this way is ever rejected.
       const component = this.store.componentOf(this.object.identifier);
       if (!component) throw new RangeError("table object has no component");
       list = this.store.createObject(TABLE_DATA_LIST_TYPE, component);
