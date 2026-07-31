@@ -63,7 +63,13 @@ interface Findings {
   builds: { slide: number; delivery: string | undefined; effect: string | undefined; attributeFields: number[] }[];
   unresolvedOwners: { kind: number; count: number }[];
   unknownTypes: { type: number; count: number }[];
-  borderPositions: { value: number; style: string | undefined; hasStroke: boolean }[];
+  borderPositions: {
+    value: number;
+    style: string | undefined;
+    hasStroke: boolean;
+    /** True when a paragraph actually uses this style — see below. */
+    used: boolean;
+  }[];
 }
 
 function probe(path: string): Findings {
@@ -155,6 +161,20 @@ function probe(path: string): Findings {
     .map(([kind, count]) => ({ kind, count }));
 
   // 7: paragraph border positions, with the style each belongs to.
+  //
+  // Whether the style is *used* is the point. Apple's templates define
+  // bordered heading styles that most documents never apply, so a corpus
+  // can look like it has border evidence and have none: across 128
+  // documents, every non-zero border_positions belonged to an unused
+  // template style and not one paragraph drew a border. Only a used style
+  // shows up in the package's rendered preview, which is the one way to
+  // see which edge a value draws without opening the app.
+  const usedStyleIds = new Set<bigint>();
+  for (const storage of document.textStorages()) {
+    for (const paragraph of storage.paragraphs()) {
+      if (paragraph.styleId !== undefined) usedStyleIds.add(paragraph.styleId);
+    }
+  }
   for (const { obj } of document.store.allObjects()) {
     if (!(typeName(obj.type, document.app) ?? "").endsWith("ParagraphStyleArchive")) continue;
     const props = obj.message.getMessage(StyleArchive.PARA_PROPERTIES);
@@ -171,6 +191,7 @@ function probe(path: string): Findings {
       value,
       style: obj.message.getMessage(1)?.getString(1),
       hasStroke: props!.has(ParaProps.STROKE),
+      used: usedStyleIds.has(obj.identifier),
     });
   }
 
@@ -258,7 +279,11 @@ function render(findings: Findings): string {
   section(
     "7. Paragraph border positions (which edge each value draws)",
     findings.borderPositions.map(
-      (b) => `border_positions=${b.value} style=${JSON.stringify(b.style)} hasStroke=${b.hasStroke}`,
+      (b) =>
+        `border_positions=${b.value} style=${JSON.stringify(b.style)} hasStroke=${b.hasStroke}` +
+        (b.used
+          ? "  USED — extract preview.jpg from the package to see which edge it draws"
+          : "  (defined but unused: no paragraph applies it, so nothing renders)"),
     ),
     "no paragraph borders here — a document with top/bottom/both/all borders settles the mapping",
   );
@@ -285,7 +310,7 @@ function main(argv: string[]): number {
     all.some((f) => f.unknownFunctions.length) ||
     all.some((f) => f.controls.length) ||
     all.some((f) => f.builds.length) ||
-    all.some((f) => f.borderPositions.length);
+    all.some((f) => f.borderPositions.some((b) => b.used));
   console.log(
     open
       ? "\nSomething here is new. Record it in docs/MANUAL-WORK.md and turn it into a test."

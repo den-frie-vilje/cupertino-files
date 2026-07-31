@@ -62,6 +62,17 @@ each a distinct rule colour so you can tell them apart. Then
 → *Settles protocol 2*, the one remaining inferred mapping in the text
 model. Only "which edge does 1 draw?" is actually in question.
 
+**Nobody needs to report back on this one.** An iWork package carries a
+rendered `preview.jpg` of its first page, so the file itself shows which
+edge each value drew — the whole answer is inside it. Just make the
+document and hand it over.
+
+The catch, and the reason 128 documents produced no evidence: Apple's
+templates *define* bordered heading styles that documents never apply, and
+an unused style renders nothing. The paragraphs must actually carry the
+border. `npm run probe` now labels each one `USED` or
+`(defined but unused)` so this cannot be missed twice.
+
 Each finding goes in the [`MANUAL-WORK.md`](MANUAL-WORK.md) ledger and
 becomes a test. Then `npm run coverage` to refresh the matrices.
 
