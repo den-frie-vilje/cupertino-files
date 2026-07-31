@@ -213,6 +213,41 @@ recompute the list from the message content. Same for `data_references` and
 library follows numbers-parser's proven scheme — round the current maximum
 up to the next multiple of 1,000,000 and allocate upward from there.
 
+#### 5.2.1 `field_infos` is a schema descriptor, not a reference index
+
+`MessageInfo.field_infos` looks like a second, finer-grained copy of
+`object_references` — one entry per field path, each with its own
+`object_references` list. It is tempting to recompute it the same way. That
+would be wrong, and a survey of 28,867 archives across the corpus says why:
+
+| observation | count |
+| --- | --- |
+| archives carrying `object_references` **with no `field_infos` at all** | 7,311 |
+| `field_infos` present but `object_references` empty | 4,120 |
+| both present, and the per-field union **differs** from the top-level list | 3,608 |
+| both present and in agreement | 4,153 |
+| `FieldInfo.type` = `Value`(0) / `ObjectReference`(1) / `DataReference`(2) / `Message`(3) | 14,390 / 5,364 / 6 / 6,502 |
+| `unknown_field_rule` = `IgnoreAndPreserveUntilModified`(0) / `IgnoreAndPreserve`(1) | 6,018 / 20,244 |
+
+Field paths run up to four levels deep (`[4,22]`, `[11,43]`).
+
+The first row settles it: a well-formed archive can declare references and
+carry no `field_infos` whatsoever, so their absence is not an error. What
+the entries actually encode is Apple's *schema* — which field holds what
+kind of value, and what a reader that does not understand the field should
+do with it. That comes from the `.proto` definitions the writer was
+compiled against, not from the bytes, so it cannot be derived by scanning a
+message. A schema-light library that generated them would be asserting
+compatibility rules it has no basis for.
+
+So they are preserved verbatim. The one hazard that remains is staleness —
+an entry naming an object a later edit removed. Auditing every authoring
+path in the library (cells, formulas, merges, controls, conditional rules,
+row deletion, `blankFrom`) found **zero** dangling ids, at either level,
+because the edits reshape field *contents* rather than the reference
+topology those entries describe. Should an authoring feature ever move
+references between field paths, this is the invariant it would break.
+
 ### 5.3 Cross-component references
 
 When an object in component A references an object X in component B, A's
@@ -1400,8 +1435,8 @@ that uses it — the method above, not a guess.
 - Footnote/comment/change-tracking editing (tables are preserved and
   shifted correctly; semantic APIs pending).
 - Password-protected files (`.iwph` + encrypted payload).
-- `TSP.FieldInfo.object_references` (per-field-path reference lists) are
-  preserved but not recomputed; the reference writers behave the same.
+- `TSP.FieldInfo` entries are preserved byte-for-byte and never recomputed.
+  This is deliberate, not pending — see §5.2.1 for the measurement behind it.
 - Live iCloud collaboration (§13.2) and editing documents open in an app
   (§13.1) are out of scope by construction, not by omission.
 

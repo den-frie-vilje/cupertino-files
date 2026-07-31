@@ -55,7 +55,7 @@ describe("writing conditional rules", () => {
     const apple = applesSet();
     const doc = load();
     const table = doc.tables()[0]!;
-    const key = table.setConditionalRules({ row: 1, column: 0 }, [
+    const key = table.setConditionalRules(1, 0, [
       {
         operator: "<",
         value: 0,
@@ -72,9 +72,10 @@ describe("writing conditional rules", () => {
     // three sets cover 1921 cells in this document.
     const doc = load();
     const table = doc.tables()[0]!;
-    const key = table.setConditionalRules({ row: 1, column: 0, rowCount: 3, columnCount: 2 }, [
-      { operator: "=", value: 42 },
-    ]);
+    const key = table.setConditionalRules(1, 0, [{ operator: "=", value: 42 }], {
+      rowCount: 3,
+      columnCount: 2,
+    });
 
     const after = NumbersDocument.load(doc.save()).tables()[0]!;
     for (let row = 1; row <= 3; row++) {
@@ -91,7 +92,7 @@ describe("writing conditional rules", () => {
     // as whichever cell the caller names.
     const doc = load();
     const table = doc.tables()[0]!;
-    table.setConditionalRules({ row: 2, column: 1 }, [{ operator: "<=", value: -1.5 }]);
+    table.setConditionalRules(2, 1, [{ operator: "<=", value: -1.5 }]);
 
     const after = NumbersDocument.load(doc.save()).tables()[0]!;
     const rules = after.conditionalRules(2, 1);
@@ -104,7 +105,7 @@ describe("writing conditional rules", () => {
     for (const operator of ["=", "<>", "<", "<="] as const) {
       const doc = load();
       const table = doc.tables()[0]!;
-      table.setConditionalRules({ row: 1, column: 0 }, [{ operator, value: 7 }]);
+      table.setConditionalRules(1, 0, [{ operator, value: 7 }]);
       const after = NumbersDocument.load(doc.save()).tables()[0]!;
       expect(`${operator}: ${after.conditionalRules(1, 0)[0]?.predicate?.operator}`).toBe(
         `${operator}: ${operator}`,
@@ -120,7 +121,7 @@ describe("writing conditional rules", () => {
     for (const operator of [">", ">="] as const) {
       let message = "";
       try {
-        table.setConditionalRules({ row: 1, column: 0 }, [{ operator, value: 0 }]);
+        table.setConditionalRules(1, 0, [{ operator, value: 0 }]);
       } catch (error) {
         message = (error as Error).message;
       }
@@ -133,7 +134,7 @@ describe("writing conditional rules", () => {
   it("writes several rules into one set, in order", () => {
     const doc = load();
     const table = doc.tables()[0]!;
-    table.setConditionalRules({ row: 1, column: 0 }, [
+    table.setConditionalRules(1, 0, [
       { operator: "<", value: 0 },
       { operator: "=", value: 0 },
       { operator: "<>", value: 99 },
@@ -146,7 +147,7 @@ describe("writing conditional rules", () => {
     const table = load().tables()[0]!;
     let message = "";
     try {
-      table.setConditionalRules({ row: 1, column: 0 }, []);
+      table.setConditionalRules(1, 0, []);
     } catch (error) {
       message = (error as Error).message;
     }

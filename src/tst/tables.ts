@@ -2043,7 +2043,12 @@ export class TableModel {
   }
 
   /**
-   * Attach a conditional-formatting rule set to a range of cells.
+   * Attach a conditional-formatting rule set to a cell, or to a block of
+   * them via `span`.
+   *
+   * `(row, column)` first, like every other cell method — the reader
+   * {@link conditionalRules} is positional, and taking a range object here
+   * made the pair read as two unrelated APIs.
    *
    * The set is interned in the table's conditional-style table and every
    * cell in the range points at it — which is how the app writes it too:
@@ -2057,8 +2062,10 @@ export class TableModel {
    * that is very hard to spot. Refused rather than guessed.
    */
   setConditionalRules(
-    range: { row: number; column: number; rowCount?: number; columnCount?: number },
+    row: number,
+    column: number,
     conditions: readonly ConditionalCondition[],
+    span: { rowCount?: number; columnCount?: number } = {},
   ): number {
     this.requireWritable();
     const uid = this.crossTableInfo()?.getMessage(1);
@@ -2070,12 +2077,12 @@ export class TableModel {
     }
     const key = this.internConditionalSet(buildConditionalStyleSet(conditions, uid));
 
-    const rows = range.rowCount ?? 1;
-    const columns = range.columnCount ?? 1;
-    for (let row = range.row; row < range.row + rows; row++) {
-      for (let column = range.column; column < range.column + columns; column++) {
-        if (row >= this.rowCount || column >= this.columnCount) continue;
-        this.setConditionalStyleKey(row, column, key);
+    const rows = span.rowCount ?? 1;
+    const columns = span.columnCount ?? 1;
+    for (let r = row; r < row + rows; r++) {
+      for (let c = column; c < column + columns; c++) {
+        if (r >= this.rowCount || c >= this.columnCount) continue;
+        this.setConditionalStyleKey(r, c, key);
       }
     }
     return key;

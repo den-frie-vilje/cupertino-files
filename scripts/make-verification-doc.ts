@@ -98,9 +98,7 @@ function main(argv: string[]): number {
       (row) => {
         table.setCell(row, 1, 10);
         table.setCell(row, 2, -10);
-        table.setConditionalRules({ row, column: 1, columnCount: 2 }, [
-          { operator: "<", value: 0 },
-        ]);
+        table.setConditionalRules(row, 1, [{ operator: "<", value: 0 }], { columnCount: 2 });
       },
     ],
     [

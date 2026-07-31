@@ -112,7 +112,7 @@ const RUNGS: { name: string; note: string; build: (doc: NumbersDocument) => void
     build: (doc) => {
       const table = doc.tables()[0]!;
       table.setCell(1, 0, -10);
-      table.setConditionalRules({ row: 1, column: 0 }, [{ operator: "<", value: 0 }]);
+      table.setConditionalRules(1, 0, [{ operator: "<", value: 0 }]);
     },
   },
   {
