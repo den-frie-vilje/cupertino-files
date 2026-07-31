@@ -31,6 +31,7 @@
  * caller knows which cell they are asking about.
  */
 import type { RawMessage } from "../base/protobuf.ts";
+import type { FormulaOwnerRegistry } from "../tsce/owners.ts";
 import { decodeDecimal128 } from "./tables.ts";
 import {
   AstNodeArrayFields,
@@ -260,9 +261,17 @@ export interface Predicate {
   inconsistent: boolean;
 }
 
-export interface ReadPredicateOptions extends FormulaOrigin {
+export interface ReadPredicateOptions extends Partial<FormulaOrigin> {
   /** Address to render in place of the coordinate-less "cell under test". */
   selfCell?: string;
+  /**
+   * Owner registry, so a predicate reaching into another table names it.
+   *
+   * A filter or conditional rule is an ordinary TSCE formula and can
+   * reference another table exactly as a cell formula can. Without this it
+   * renders `OTHER_TABLE::C1`, which is honest but useless.
+   */
+  owners?: FormulaOwnerRegistry;
 }
 
 /**
@@ -305,6 +314,7 @@ export function readPredicate(
       : undefined;
   const formula = renderFormula(formulaMessage, origin, {
     selfCell: options.selfCell ?? SELF_CELL_MARKER,
+    ...(options.owners ? { owners: options.owners } : {}),
   });
 
   const operator = terminalOperator(formulaMessage);

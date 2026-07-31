@@ -26,162 +26,144 @@ Both are settled the same way: **one document made in the app, read back
 with `npm run probe -- <file>`.** That script reports every unknown in a
 single pass, so a well-chosen document closes several at once.
 
-**Kind C — a layout nobody wrote down, in files we already have.** No app
-and no new document is involved; the evidence is on disk and the work is
-measurement. Priority 8 is the only one of these, and it is only on this
-page because it was mislabelled "out of scope" for long enough to matter.
-Before writing another manual protocol, check the question is not really
-this kind.
+**Kind C — a layout or an enum nobody wrote down, in files that already
+exist.** No app and no new document is involved; the evidence is on disk,
+or on somebody's disk, and the work is measurement. This turned out to be
+most of the page — priorities 1, 3 and 8 were all this kind while filed as
+something harder. **Before writing another manual protocol, check the
+question is not really this one**; see "Borrowed corpora" below.
 
 ---
 
-## The whole thing in one Mac session — about 25 minutes
+## What still needs a Mac — about 12 minutes
 
-Four documents settle everything below. Make them in the apps, drop them
-anywhere, and run the commands. Nothing needs scripting.
+Most of this page has been settled without one. Three documents remain, and
+none of them takes long.
 
-**1. `functions.numbers` — 2 min.** Run `npm run harvest -- --emit-sheet probe.tsv`
-first, open the TSV in Numbers, save as `.numbers`. Then
-`npm run harvest -- --ingest functions.numbers`.
-→ *Settles priority 1.* On a Mac with Numbers, `npm run harvest -- --drive`
-does the whole thing in one command instead.
+**1. `rules.numbers` — 5 min.** One numeric column. Add a
+conditional-formatting rule using **greater than** and another using
+**greater than or equal to** — those two conditions, specifically; the other
+four comparisons are already confirmed. Then
+`npm run harvest:predicates -- rules.numbers`.
+→ *Finishes priority 2.* While you are there, add "between", "text
+contains" and "is blank": those compile to function calls and widen the
+function table.
 
-**2. `rules.numbers` — 10 min.** One numeric column, one text column. Add a
-conditional-formatting rule for each of the six numeric comparisons
-(equal to, not equal to, greater than, greater than or equal to, less than,
-less than or equal to), then one "between", one "text contains", one
-"is blank". Then `npm run harvest:predicates -- rules.numbers`.
-→ *Settles priority 2*, and the non-comparison conditions feed priority 1.
-
-**3. `controls.numbers` — 2 min.** Five columns, one control each: checkbox,
-star rating, slider, stepper, pop-up menu. Give the slider and stepper
-non-default min/max/increment and the menu three items. Then
-`npm run probe -- controls.numbers`.
-→ *Settles priority 3.*
-
-**4. `animated.key` — 5 min.** Three slides, a different build effect on
+**2. `animated.key` — 5 min.** Three slides, a different build effect on
 each; on one, animate a text box delivered **by line** so it has chunks.
 Give one build a non-default duration and delay. Then
 `npm run probe -- animated.key`.
-→ *Settles priority 4.*
+→ *Settles priority 4*, the last gap with no data anywhere.
 
-**5. `borders.pages` — 5 min.** Four paragraphs, each with a paragraph
+**3. `borders.pages` — 2 min.** Four paragraphs, each with a paragraph
 border set to a different position: top, bottom, top-and-bottom, all. Give
-each a distinct rule colour so you can tell them apart in the output. Then
+each a distinct rule colour so you can tell them apart. Then
 `npm run probe -- borders.pages`.
 → *Settles protocol 2*, the one remaining inferred mapping in the text
-model. Note down which paragraph drew which edge; only "which edge does 1
-draw?" is actually in question.
+model. Only "which edge does 1 draw?" is actually in question.
 
 Each finding goes in the [`MANUAL-WORK.md`](MANUAL-WORK.md) ledger and
 becomes a test. Then `npm run coverage` to refresh the matrices.
 
+**Before making any of these, read "Borrowed corpora" below.** Two of the
+three might already exist in somebody's test data, and reading a file is
+faster than making one.
+
 ---
 
-## Priority 1 — Formula authoring
+## Priority 1 — Formula authoring — **reading DONE, authoring open**
 
-**Blocked on:** the function-index table (Kind A).
-`AST_function_node_index` is a position in an Apple-internal list. Two
-entries are proven by arithmetic against the corpus — 168 = `SUM`,
-212 = `DURATION` — and every function in every fixture now renders by name,
-but authoring a formula means writing an index for a function nobody has
-measured.
+**271 function indexes are named**, harvested from public spreadsheets that
+spell each call out as text beside the live formula — the same layout this
+script emits, authored by someone else. Zero conflicts, and the two indexes
+previously proven by arithmetic (168 `SUM`, 212 `DURATION`) came out of the
+harvest unchanged. Every function in every committed fixture renders by
+name.
 
-**Ruled out already:** the index is **not alphabetical**, and not
+**Ruled out along the way:** the index is **not alphabetical**, and not
 category-then-alphabetical either. `DURATION` sorts before `SUM` in both
-orderings, yet is 212 against SUM's 168. There is no shortcut; it must be
-measured.
+orderings, yet is 212 against SUM's 168.
 
-**How to settle it — 2 minutes, no scripting:**
+**What is still open** is authoring, and it is no longer about the table: a
+function outside the 271 has no index, and writing a formula also means
+writing the dependency records the calc engine keeps beside it. Widening
+the table is the same harvest against more documents.
+
+The harvest itself is unchanged and re-runnable:
 
 ```sh
-npm run harvest -- --emit-sheet probe.tsv      # writes a TSV
-# open probe.tsv in Numbers, save as probe.numbers
-npm run harvest -- --ingest probe.numbers      # writes src/tst/function-names.ts
+npm run harvest -- --ingest doc.numbers [more.numbers ...]
+npm run harvest -- --emit-sheet probe.tsv   # to author a probe sheet
+npm run harvest -- --drive                  # macOS: drive Numbers directly
 ```
 
-Or, on a Mac with Numbers installed, one command:
-`npm run harvest -- --drive` drives about 300 candidate names through the
-app in a single pass.
-
-The ingest refuses to guess: a name is accepted only when every argument
-shape agreed, an index claimed by two names is rejected, and rows that are
-not genuine probe rows are ignored. Protocol 1 in
-[`MANUAL-WORK.md`](MANUAL-WORK.md).
-
-**What it unblocks:** naming every function in every document; the
-prerequisite for `TableModel.setFormula`.
+It refuses to guess: a name is accepted only when every observation agreed,
+an index claimed by two names is rejected, and rows that are not genuine
+probe rows are ignored. Protocol 1 in [`MANUAL-WORK.md`](MANUAL-WORK.md).
 
 ---
 
 ## Priority 2 — Conditional-formatting and filter rule authoring
 
-**Blocked on:** the `predicate_type` enum (Kind A). The corpus contains two
-values, 5 = `=` and 9 = `<`.
+**Blocked on:** two codes of the `predicate_type` enum, and only their
+pairing.
 
-**There is a prediction on the table.** Numbers' condition menu lists the
-numeric comparisons in a fixed order — equal to, not equal to, greater
-than, greater than or equal to, less than, less than or equal to — and
-laying that out from 5 puts `=` at 5 and `<` at 9. Both observations land
-exactly where the menu predicts. `PREDICATE_TYPE_HYPOTHESIS` in
-`src/tst/predicates.ts` records the full prediction, and it is **never used
-when reading** — reading takes the operator from the rule's formula, which
-states it outright.
+Numbers' condition menu lists the numeric comparisons in a fixed order —
+equal to, not equal to, greater than, greater than or equal to, less than,
+less than or equal to — and laying that out from 5 predicts all six codes.
+**Four are now observed**: 5 `=`, 6 `<>`, 9 `<`, 10 `<=`, each exactly
+where the menu says. That leaves codes 7 and 8 and operators `>` and `>=`;
+the only open question is whether they are in menu order or swapped.
 
-**How to settle it — 10 minutes:** make a Numbers table with one numeric
-column and add a conditional-formatting rule for each of the six
-comparisons, then:
+`PREDICATE_TYPE_HYPOTHESIS` in `src/tst/predicates.ts` records the full
+prediction and is **never used when reading** — reading takes the operator
+from the rule's formula, which states it outright.
+
+**How to settle it:** any document with a "greater than" conditional rule.
 
 ```sh
 npm run harvest:predicates -- rules.numbers
 ```
 
-It prints each pairing and scores it against the prediction, ending in
-`CONFIRMED`, `REFUTED`, or a list of conditions still untested. One
-document either promotes the whole enum into `PREDICATE_TYPE_OPERATORS` or
-kills the hypothesis outright. Protocol 4 in [`MANUAL-WORK.md`](MANUAL-WORK.md).
+It prints each pairing, scores it against the prediction, and ends in
+`CONFIRMED`, `REFUTED`, or a list of conditions still untested. Protocol 4
+in [`MANUAL-WORK.md`](MANUAL-WORK.md).
 
-**Then also add**, in the same document, the conditions that are *not*
-plain comparisons — "between", "text contains", "is blank". Those compile
-to function calls, so they surface as unnamed function indexes and feed
-Priority 1 too.
-
-**What it unblocks:** creating conditional formats and filter rules, and
-the "authoring" halves of two capability rows.
+**What it unblocks:** creating conditional formats and filter rules.
 
 ---
 
-## Priority 3 — Numbers cell controls
+## Priority 3 — Numbers cell controls — **DONE**
 
-**Blocked on:** `interaction_type` (Kind A) *and* no fixture (Kind B).
-All 37 documents were surveyed: zero control spec tables, zero cells with
-the control flag set, zero `CellSpecArchive` objects.
+`interaction_type` is **4 stepper, 5 slider, 6 star rating, 7 pop-up menu,
+8 checkbox**, measured from borrowed documents that lay one widget out per
+row and say in their own cell values which row is which: a checkbox row
+holding FALSE/TRUE, a star row bounded `[0…5]`, a slider row whose bounds
+match a published test building exactly that cell as a slider. Stepper is
+the remaining range widget once the other four are accounted for.
 
-Reading is implemented in `src/tst/controls.ts` and classifies a control by
-**which fields it populates** rather than by the unpublished enum — a spec
-with min/max/increment is a range widget, one with a popup model is a
-chooser. That is honest but coarse: it cannot tell a slider from a stepper.
+That also found a bug. A checkbox's whole archive is a single varint, and
+the reader skipped exactly that shape to avoid misreading a bare
+`TSP.Reference` — so it dropped every checkbox in every file. The list
+entry's spec is field 12, which removes the guess and the bug together.
 
-**How to settle it — 2 minutes:** one Numbers document with a column of
-each control: checkbox, star rating, slider, stepper, pop-up menu. Then:
+`controlShape` survives and stays useful: it classifies by populated fields
+independently of the enum, so a future sixth widget degrades to "range" or
+"chooser" rather than misreading.
 
-```sh
-npm run probe -- controls.numbers
-```
-
-Section 3 prints `interaction_type` and the populated fields for each. Five
-rows of output name the whole enum.
-
-**What it unblocks:** naming the widgets, and writing them — creation is
-withheld today only because a control the apps silently drop is
-indistinguishable from one that was never written.
+**Still open:** *writing* a control. Nothing here creates one — a widget the
+apps silently drop looks exactly like one that was never written, and that
+needs the app to check.
 
 ---
 
 ## Priority 4 — Keynote builds
 
-**Blocked on:** no fixture (Kind B). Eight decks span 2013 to 26.1 and not
-one has an animation.
+**Blocked on:** no fixture (Kind B), and this is now the *only* gap with no
+data anywhere. Eight decks in this repository span 2013 to 26.1, and a
+further seven borrowed from three parser projects were checked as well —
+fifteen decks, not one animation. Keynote test corpora do not animate,
+so this one really does need a deck made on purpose.
 
 The schema is complete — `KN.BuildArchive`, `KN.BuildChunkArchive`,
 `KN.BuildAttributesArchive` with its five enums — so `src/keynote/builds.ts`
@@ -290,6 +272,47 @@ are also not decoded; `isFormula` is false throughout rather than guessed.
 
 ---
 
+## Borrowed corpora — the technique that closed most of this page
+
+Three of the blockers on this page were settled in an afternoon by a method
+worth naming, because it applies to the rest.
+
+**Somebody has already made the document you need.** Every parser project
+for a format keeps test files, and those files exist precisely to exercise
+one feature each — which is exactly what a fixture gap is. A public
+spreadsheet that demonstrates 271 functions by writing each call out as text
+beside a live formula *is* the probe sheet this project emits, already
+filled in.
+
+The rule that keeps it clean: **read the properties, keep the measurement,
+discard the file.** Nothing borrowed is committed here. What survives is
+constants with the evidence written down, and tests that rebuild the
+structures byte-for-byte from that evidence — see `test/controls.test.ts`,
+where each spec is reconstructed as it appeared rather than as it would be
+convenient. A test that needs a file nobody may redistribute is a test that
+cannot run.
+
+Two tools make a borrowed corpus pay:
+
+```sh
+npm run stress -- <dir>    # every reader over every file; what throws?
+npm run probe -- <dir>/*   # every unknown, one pass
+```
+
+`stress` answers robustness, and it is the one that finds bugs. The first
+run over 87 borrowed documents turned up two: `readPredicate` assumed a
+field was length-delimited where a real document put a varint, and the
+control reader dropped every checkbox. Neither could have surfaced from the
+committed corpus, because neither shape is in it.
+
+**What the scale also says.** Across 176 borrowed tables, exactly **one**
+carried filter rules — 164 had a filter set and 163 of those were empty.
+The long-standing worry that this library's filter reader was untested was
+half right: it is barely exercised because Numbers writes an empty set for
+almost every table, not because the corpus was unlucky.
+
+---
+
 ## Settled without a Mac — kept as a record of method
 
 These were on this list and are not any more. The reasoning is worth
@@ -348,6 +371,7 @@ npm run harvest -- --ingest f.numbers   # ingest it
 npm run harvest -- --drive              # macOS: drive Numbers directly
 npm run harvest:predicates -- f.numbers # score the predicate-enum prediction
 npm run prebnc                          # measure the pre-BNC cell record
+npm run stress -- <dir>                 # every reader over every file: what throws?
 npm run coverage                        # regenerate COVERAGE.md + VERIFICATION.md
 ```
 

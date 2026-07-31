@@ -22,7 +22,7 @@
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
-import { readPredicate, type Predicate } from "./predicates.ts";
+import { readPredicate, type Predicate, type ReadPredicateOptions } from "./predicates.ts";
 import { cellAddress } from "./formulas.ts";
 
 /** TST.ConditionalStyleSetArchive. */
@@ -90,9 +90,16 @@ export class ConditionalStyleSet {
    * render generically, which is right when describing the set itself
    * rather than its effect on one cell.
    */
-  rules(subject?: { row: number; column: number }): ConditionalRule[] {
+  rules(
+    subject?: { row: number; column: number },
+    extra: ReadPredicateOptions = {},
+  ): ConditionalRule[] {
     const selfCell = subject ? cellAddress(subject.row, subject.column) : undefined;
-    const options = { ...(subject ?? {}), ...(selfCell !== undefined ? { selfCell } : {}) };
+    const options = {
+      ...extra,
+      ...(subject ?? {}),
+      ...(selfCell !== undefined ? { selfCell } : {}),
+    };
 
     const modern = this.object.message
       .getMessage(ConditionalStyleSetFields.RULES)

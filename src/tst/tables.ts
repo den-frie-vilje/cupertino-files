@@ -26,7 +26,7 @@ import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { renderFormula, type RenderedFormula } from "./formulas.ts";
 import { ConditionalStyleSet, type ConditionalRule } from "./conditional.ts";
-import { FilterSet } from "./filters.ts";
+import { FilterSet, type FilterRule } from "./filters.ts";
 import {
   categoriesOf,
   type CategoryGroup,
@@ -1622,7 +1622,9 @@ export class TableModel {
    * would be indistinguishable from a right one.
    */
   conditionalRules(row: number, column: number): ConditionalRule[] {
-    return this.conditionalStyleSet(row, column)?.rules({ row, column }) ?? [];
+    return (
+      this.conditionalStyleSet(row, column)?.rules({ row, column }, { owners: this.owners() }) ?? []
+    );
   }
 
   /**
@@ -1678,6 +1680,19 @@ export class TableModel {
       if (rows || columns) return { rows, columns };
     }
     return { rows: undefined, columns: undefined };
+  }
+
+  /**
+   * A filter set's rules with this table's owner registry supplied, so a
+   * rule reaching into another table names it instead of rendering
+   * `OTHER_TABLE::`.
+   *
+   * {@link FilterSet.rules} takes the registry as an argument rather than
+   * finding it itself: a `FilterSet` is constructible from any object and
+   * has no table to ask.
+   */
+  filterRules(set: FilterSet | undefined): FilterRule[] {
+    return set?.rules({ owners: this.owners() }) ?? [];
   }
 
   /**

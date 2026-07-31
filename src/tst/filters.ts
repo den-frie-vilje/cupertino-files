@@ -32,7 +32,7 @@
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { readPredicate, type Predicate } from "./predicates.ts";
+import { readPredicate, type Predicate, type ReadPredicateOptions } from "./predicates.ts";
 import { columnName } from "./formulas.ts";
 
 /** TST.FilterSetArchive. */
@@ -127,7 +127,7 @@ export class FilterSet {
    * them; a file written before the 2016 format change carries only the
    * older one.
    */
-  rules(): FilterRule[] {
+  rules(options: ReadPredicateOptions = {}): FilterRule[] {
     const offsets = this.offsets();
     const enabled = this.ruleFlags();
     const build = (messages: ReturnType<IwaObject["message"]["getMessages"]>, legacy: boolean): FilterRule[] =>
@@ -139,7 +139,7 @@ export class FilterSet {
         enabled: legacy
           ? !(rule.getBool(FilterRuleFields.DISABLED) ?? false)
           : (enabled[index] ?? true),
-        predicate: readPredicate(rule.getMessage(FilterRuleFields.PREDICATE)),
+        predicate: readPredicate(rule.getMessage(FilterRuleFields.PREDICATE), options),
         legacy,
       }));
 
