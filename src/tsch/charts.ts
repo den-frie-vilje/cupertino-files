@@ -16,16 +16,24 @@
  * the sparse per-series style arrays so styling does not slide onto its
  * neighbour.
  *
- * Chart *appearance* — type, colours, axis settings — is not modeled.
+ * Chart *appearance* — colours, opacity — lives in the parallel style
+ * archives; see `appearance.ts`. The chart **type** is here, because it is a
+ * field of the `ChartArchive` itself rather than of any style.
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUuid } from "../base/uuid.ts";
+import { ChartSeriesStyle, REFERENCE_IDENTIFIER, SparseEntry, sparseRefs } from "./appearance.ts";
+import type { Fill } from "../tsd/style.ts";
 
 export const TSCH_TYPE = {
   CHART_DRAWABLE: 5021,
   PREUFF_CHART_INFO: 5000,
+  CHART_STYLE: 5022,
+  LEGEND_STYLE: 5024,
+  AXIS_STYLE: 5026,
+  SERIES_STYLE: 5028,
 } as const;
 
 /** TSCH.ChartDrawableArchive. */
@@ -63,7 +71,14 @@ const GridValue = {
   DATE: 4,
 } as const;
 
-/** TSCH.ChartType enum values. */
+/**
+ * TSCH.ChartType enum values, complete against `TSCHArchives_Common.proto`.
+ *
+ * The table used to stop at 21, which was not a judgement call — it was
+ * simply short. Two chart types in real documents (22 and 25) rendered as
+ * `"type 22"` and `"type 25"` because of it. They are `bubble2D` and
+ * `donut2D`.
+ */
 export const CHART_TYPE_NAMES: Readonly<Record<number, string>> = {
   0: "undefined",
   1: "column2D",
@@ -87,7 +102,18 @@ export const CHART_TYPE_NAMES: Readonly<Record<number, string>> = {
   19: "stackedArea3D",
   20: "multiDataColumn2D",
   21: "multiDataBar2D",
+  22: "bubble2D",
+  23: "multiDataScatter2D",
+  24: "multiDataBubble2D",
+  25: "donut2D",
+  26: "donut3D",
+  27: "radar2D",
 };
+
+/** {@link CHART_TYPE_NAMES} inverted, for {@link ChartModel.setChartType}. */
+export const CHART_TYPE_IDS: ReadonlyMap<string, number> = new Map(
+  Object.entries(CHART_TYPE_NAMES).map(([id, name]) => [name, Number(id)]),
+);
 
 /** One plotted value. Charts store numbers, dates and durations distinctly. */
 export type ChartValue =
@@ -126,6 +152,128 @@ export class ChartModel {
   get chartType(): string {
     const id = this.chartTypeId;
     return id === undefined ? "undefined" : (CHART_TYPE_NAMES[id] ?? `type ${id}`);
+  }
+
+  /**
+   * Change the chart type, by name or by raw enum value.
+   *
+   * This sets one field. It does **not** rebuild the style archives, and
+   * that is a real limitation rather than an omission: a pie chart's axis
+   * styles are meaningless and a scatter chart wants two value axes, so
+   * switching between distant geometries leaves styling the previous type
+   * chose. Within a family — column ⇄ bar ⇄ stacked, pie ⇄ donut — the same
+   * archives apply and the switch is clean, which is why every series
+   * carries a fill per geometry (see `appearance.ts`).
+   *
+   * Numbers redraws from the type, so a mismatch shows up as styling that
+   * looks untouched, not as a damaged document.
+   */
+  setChartType(type: string | number): void {
+    const id = typeof type === "number" ? type : CHART_TYPE_IDS.get(type);
+    if (id === undefined) {
+      throw new RangeError(
+        `unknown chart type ${JSON.stringify(type)}; expected one of ` +
+          `${[...CHART_TYPE_IDS.keys()].join(", ")}, or a raw enum value`,
+      );
+    }
+    const chart = this.chart();
+    if (!chart) throw new RangeError(`chart ${this.id} has no TSCH.ChartArchive`);
+    chart.setVarint(Chart.CHART_TYPE, id);
+    this.object.message.markDirty();
+  }
+
+  /**
+   * Per-series styles, in series order.
+   *
+   * Sparse by design — a chart styles the series the template gave a colour
+   * to and leaves the rest inheriting — so the returned entries carry their
+   * own {@link ChartSeriesStyle.index} and there may be fewer than
+   * {@link rowCount}.
+   */
+  seriesStyles(): ChartSeriesStyle[] {
+    const array = this.chart()?.getMessage(Chart.SERIES_PRIVATE_STYLES);
+    const out: ChartSeriesStyle[] = [];
+    for (const { index, id } of sparseRefs(array)) {
+      const object = this.store.resolve(id);
+      if (object) out.push(new ChartSeriesStyle(this.store, object, index));
+    }
+    return out.sort((a, b) => a.index - b.index);
+  }
+
+  /** The style of one series, if it has its own rather than inheriting. */
+  seriesStyle(index: number): ChartSeriesStyle | undefined {
+    return this.seriesStyles().find((style) => style.index === index);
+  }
+
+  /**
+   * Set the colour of one series — the safe way.
+   *
+   * **Series style archives are shared.** They live in the document
+   * stylesheet, and a template hands the same archive to every chart that
+   * uses that palette slot: in one borrowed document a single
+   * `ChartSeriesStyleArchive` is referenced by ten different charts, and
+   * nine of the eighteen present are used by more than one. Reaching for
+   * {@link ChartSeriesStyle.setFill} directly on such an archive recolours
+   * every chart sharing it, with nothing in the result to suggest anything
+   * unusual happened.
+   *
+   * So this copies on write. If the archive is referenced by anything other
+   * than this chart it is cloned, this chart's slot is repointed at the
+   * clone, and the clone is what gets the new colour. An archive already
+   * private to this chart is edited in place.
+   *
+   * Returns the style that was actually written, which is the clone when
+   * one was made.
+   */
+  setSeriesFill(index: number, fill: Fill): ChartSeriesStyle {
+    const style = this.seriesStyle(index);
+    if (!style) {
+      throw new RangeError(
+        `chart ${this.id} has no private style for series ${index}; it inherits ` +
+          "from the chart's preset, and this library does not synthesise style archives",
+      );
+    }
+    const target = this.privatiseSeriesStyle(style);
+    target.setFill(fill);
+    return target;
+  }
+
+  /**
+   * Give this chart its own copy of a series style, if it is sharing one.
+   *
+   * Split out because the sharing check and the repointing are the
+   * interesting part; the colour is not.
+   */
+  private privatiseSeriesStyle(style: ChartSeriesStyle): ChartSeriesStyle {
+    const others = this.store.referrers(style.id).filter((id) => id !== this.id);
+    if (others.length === 0) return style;
+
+    const component = this.store.componentOf(style.id);
+    if (!component) throw new RangeError(`chart style ${style.id} has no component`);
+    // Cloned into the stylesheet beside the archive it copies, which is
+    // where every other chart style lives and where the chart already has
+    // an external reference pointing.
+    const clone = this.store.createObject(style.object.type, component, {
+      cloneFrom: style.object,
+    });
+
+    const array = this.chart()?.getMessage(Chart.SERIES_PRIVATE_STYLES);
+    if (!array) throw new RangeError(`chart ${this.id} has no series style array`);
+    let repointed = false;
+    for (const entry of array.getMessages(SparseArray.ENTRIES)) {
+      if ((entry.getUint(SparseArray.ENTRY_INDEX) ?? 0) !== style.index) continue;
+      const reference = entry.getMessage(SparseEntry.REFERENCE);
+      if (!reference) continue;
+      reference.setVarint(REFERENCE_IDENTIFIER, clone.identifier);
+      repointed = true;
+    }
+    if (!repointed) {
+      throw new RangeError(`chart ${this.id} has no style slot at series ${style.index}`);
+    }
+
+    this.object.message.markDirty();
+    this.store.retargetReference(this.object, style.id, clone.identifier);
+    return new ChartSeriesStyle(this.store, clone, style.index);
   }
 
   /** True when the chart still holds Apple's placeholder data. */

@@ -29,6 +29,7 @@ import { IWORK_ERAS, type IWorkEra, type CompatibilityReport } from "../src/tsp/
 import type { IWorkApp } from "../src/tsp/registry.ts";
 import { drawableStylesOf } from "../src/tsd/drawables.ts";
 import { tablesOfContents } from "../src/tswp/toc.ts";
+import { chartsOf } from "../src/tsch/charts.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const OUTPUT = new URL("../docs/COVERAGE.md", import.meta.url);
@@ -975,10 +976,32 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Chart appearance (type, colours, axes, legend)",
+    name: "Chart appearance: type and series colours",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => chartsOf(c.doc.store).some((chart) => chart.seriesStyles().length > 0)),
+    note:
+      "chart type reads and writes against the full TSCHArchives_Common enum (a test parses the " +
+      "proto, so the next value Apple adds fails the suite rather than a document). Series colour " +
+      "copies on write: style archives are shared — one is referenced by ten charts in a borrowed " +
+      "document — so setSeriesFill clones a shared archive, repoints this chart's slot and " +
+      "retargets the reference declaration, instead of recolouring every chart at once",
+    manualProof: {
+      claim: "a recoloured series shows the new colour, and only in the chart that was edited",
+      why: "the suite proves the archives and declarations are right, not that Numbers draws them",
+      how: "recolour one series of one chart in a document with several, reopen, check the others",
+      risk: "low",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Chart appearance: axes, legend, gridlines",
     apps: "all",
     status: "roadmap",
-    note: "read as opaque style references; changing them needs the TSCH style model",
+    note:
+      "the archives are located and their property bags decode (TSCH.ChartAxisStyleArchive, " +
+      "LegendStyleArchive — same TSS.StyleArchive + generated-properties-at-10000 shape as the " +
+      "series styles), but no property in them is named yet",
   },
   {
     group: "Numbers & tables",
@@ -1016,8 +1039,12 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Conditional formatting: authoring new rules",
     apps: "all",
-    status: "roadmap",
-    note: "needs a predicate_type value for each condition the UI offers; only 2 of the enum's members appear in the corpus",
+    status: "read+write",
+    note:
+      "= <> < and <= are written, whose predicate_type codes are observed; > and >= are refused " +
+      "because theirs are only predicted, and a rule filed under a wrong code reads back correctly " +
+      "while showing the wrong condition in the editor. A rule built for a condition Apple also " +
+      "wrote is byte-identical to Apple's, all 424 bytes",
   },
   {
     group: "Numbers & tables",

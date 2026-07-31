@@ -158,9 +158,19 @@ export {
   decodeGridValue,
   encodeGridValue,
   CHART_TYPE_NAMES,
+  CHART_TYPE_IDS,
   TSCH_TYPE,
 } from "./tsch/charts.ts";
 export type { ChartValue } from "./tsch/charts.ts";
+export {
+  ChartStyleArchive,
+  ChartSeriesStyle,
+  SeriesStyleProperty,
+  GENERATED_PROPERTIES,
+  sparseRefs,
+  sparseCount,
+} from "./tsch/appearance.ts";
+export type { SparseRef } from "./tsch/appearance.ts";
 export type { ImageFilters } from "./tsd/images.ts";
 export type { GeometryInfo } from "./tsd/drawables.ts";
 export * as tspSchema from "./tsp/schema.ts";

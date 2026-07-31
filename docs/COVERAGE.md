@@ -118,10 +118,11 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
 | Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
-| Chart appearance (type, colours, axes, legend)<br><sub>read as opaque style references; changing them needs the TSCH style model</sub> | all | ○ roadmap | n/a | — |
+| Chart appearance: type and series colours<br><sub>chart type reads and writes against the full TSCHArchives_Common enum (a test parses the proto, so the next value Apple adds fails the suite rather than a document). Series colour copies on write: style archives are shared — one is referenced by ten charts in a borrowed document — so setSeriesFill clones a shared archive, repoints this chart's slot and retargets the reference declaration, instead of recolouring every chart at once</sub> | all | ✅ read + write | 1 | iwork16→iwork16 |
+| Chart appearance: axes, legend, gridlines<br><sub>the archives are located and their property bags decode (TSCH.ChartAxisStyleArchive, LegendStyleArchive — same TSS.StyleArchive + generated-properties-at-10000 shape as the series styles), but no property in them is named yet</sub> | all | ○ roadmap | n/a | — |
 | Conditional formatting rules<br><sub>conditions decoded from the rule's formula, which states the comparison. setConditionalRules writes = <> < and <=, whose predicate_type codes are observed; > and >= are refused because their codes are only predicted. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | 1 | current→current |
 | Conditional formatting: apply an existing rule set to more cells | all | ✅ read + write | 1 | current→current |
-| Conditional formatting: authoring new rules<br><sub>needs a predicate_type value for each condition the UI offers; only 2 of the enum's members appear in the corpus</sub> | all | ○ roadmap | n/a | — |
+| Conditional formatting: authoring new rules<br><sub>= <> < and <= are written, whose predicate_type codes are observed; > and >= are refused because theirs are only predicted, and a rule filed under a wrong code reads back correctly while showing the wrong condition in the editor. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | n/a | — |
 | Filters (mode, enable state, per-column rules)<br><sub>every filter set in the corpus is empty, so rule reading is schema-derived; the container, mode and enable flag are fixture-proven</sub> | all | 🔍 read only | 12 | modern→current |
 | Filters: enable, disable, combining mode | all | ✅ read + write | 12 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 1 | current→current |
@@ -153,7 +154,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-31 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+32 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -182,6 +183,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Numbers & tables → **Formula writing (authoring an AST)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
+- 🟡 low — Numbers & tables → **Chart appearance: type and series colours**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
 - 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
@@ -215,6 +217,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Cross-table formula references resolved to table names** (1)
 - Numbers & tables → **Charts (type, categories, series, values)** (2)
 - Numbers & tables → **Chart data editing (values, names, series, categories)** (2)
+- Numbers & tables → **Chart appearance: type and series colours** (1)
 - Numbers & tables → **Conditional formatting rules** (1)
 - Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** (1)
 - Numbers & tables → **Categories (row grouping, nesting, date bucketing)** (1)

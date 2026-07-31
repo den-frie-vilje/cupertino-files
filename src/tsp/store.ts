@@ -412,6 +412,55 @@ export class ObjectStore {
   }
 
   /**
+   * Objects declaring a reference to `id`, per `MessageInfo.object_references`.
+   *
+   * The cheap, accurate way to ask "is this archive shared?" — Apple keeps
+   * the declarations current, so a style used by ten charts is named by ten
+   * objects. Answering by scanning payloads instead would mean parsing every
+   * archive in the document.
+   *
+   * Only as good as the declarations: an object whose references this
+   * library has not recomputed reports what it reported when Apple wrote it.
+   * For deciding whether to copy-on-write, that errs toward copying, which
+   * is the safe direction.
+   */
+  referrers(id: bigint): bigint[] {
+    const out: bigint[] = [];
+    for (const { obj } of this.allObjects()) {
+      if (obj.getObjectReferences().includes(id)) out.push(obj.identifier);
+    }
+    return out;
+  }
+
+  /**
+   * Note that `referrer` now points at `newId` where it pointed at `oldId`.
+   *
+   * Used after copy-on-write: the payload has been repointed, and the
+   * bookkeeping has to follow. Doing it here rather than through a
+   * {@link ReferenceExtractor} is deliberate — an extractor replaces the
+   * *whole* declared list, so writing one for a type as broad as
+   * `TSCH.ChartDrawableArchive` would silently drop every reference it
+   * failed to enumerate. This changes exactly the one that moved.
+   *
+   * `oldId` is dropped only when the payload no longer mentions it: one
+   * archive can be pointed at from several slots, and a shared style being
+   * privatised for series 2 may still be in use by series 4. The membership
+   * test over-approximates, so the failure mode is keeping a declaration a
+   * little too long — harmless, since the object still exists — rather than
+   * dropping a live one.
+   */
+  retargetReference(referrer: IwaObject, oldId: bigint, newId: bigint): void {
+    const declared = new Set(referrer.getObjectReferences());
+    declared.add(newId);
+    if (!referencedIds(referrer.message).includes(oldId)) declared.delete(oldId);
+    referrer.setObjectReferences([...declared]);
+
+    const from = this.componentOf(referrer.identifier);
+    const to = this.componentOf(newId);
+    if (from && to && from !== to) this.ensureExternalReference(from, to, newId);
+  }
+
+  /**
    * Serialize the document. Recomputes reference bookkeeping for dirty
    * objects, then rebuilds only the components that changed.
    */
