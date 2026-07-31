@@ -50,6 +50,7 @@
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
 import { HARVESTED_FUNCTIONS } from "./function-names.ts";
+import { encodeDecimal128 } from "./cellrecord.ts";
 
 /** An expression to compile. Built by {@link parseFormula} or by hand. */
 export type FormulaExpression =
@@ -167,10 +168,20 @@ function emit(
 ): void {
   const node = RawMessage.create();
   switch (expression.kind) {
-    case "number":
+    case "number": {
       node.setVarint(AstNodeFields.TYPE, AstNodeType.NUMBER);
       node.setDouble(AstNodeFields.NUMBER, expression.value);
+      // Apple writes the same number twice: an IEEE double *and* a
+      // decimal128, in every one of the 140 number nodes in the corpus.
+      // The reader only needs the double, so omitting these round-trips
+      // fine here and would still be a file no app ever wrote — and the
+      // decimal is the one the calc engine trusts for money.
+      const decimal = encodeDecimal128(expression.value);
+      const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
+      node.setVarint(AstNodeFields.NUMBER_DECIMAL_LOW, view.getBigUint64(0, true));
+      node.setVarint(AstNodeFields.NUMBER_DECIMAL_HIGH, view.getBigUint64(8, true));
       break;
+    }
     case "string":
       node.setVarint(AstNodeFields.TYPE, AstNodeType.STRING);
       node.setString(AstNodeFields.STRING, expression.value);

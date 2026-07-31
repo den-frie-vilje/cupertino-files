@@ -389,7 +389,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
-**Status in the matrix:** 🔍 read only
+**Status in the matrix:** ✅ read + write
 
 **Claim.** the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough
 

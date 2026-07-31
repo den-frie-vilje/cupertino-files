@@ -984,9 +984,13 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Conditional formatting rules",
     apps: "all",
-    status: "read",
+    status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.conditionalStyleSets().size > 0)),
-    note: "conditions decoded from the rule's formula, which states the comparison; predicate_type carried through opaque",
+    note:
+      "conditions decoded from the rule's formula, which states the comparison. setConditionalRules " +
+      "writes = <> < and <=, whose predicate_type codes are observed; > and >= are refused because " +
+      "their codes are only predicted. A rule built for a condition Apple also wrote is " +
+      "byte-identical to Apple's, all 424 bytes",
     manualProof: {
       claim:
         "the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough",

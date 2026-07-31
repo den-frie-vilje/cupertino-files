@@ -30,7 +30,12 @@ import {
   renderFormula,
   type RenderedFormula,
 } from "./formulas.ts";
-import { ConditionalStyleSet, type ConditionalRule } from "./conditional.ts";
+import {
+  buildConditionalStyleSet,
+  ConditionalStyleSet,
+  type ConditionalCondition,
+  type ConditionalRule,
+} from "./conditional.ts";
 import { FilterSet, type FilterRule } from "./filters.ts";
 import {
   categoriesOf,
@@ -231,6 +236,9 @@ const TABLE_DATA_LIST_TYPE = 6005;
  * control list almost always already has one.
  */
 const CONTROL_LIST_TYPE = 12;
+/** `list_type` of the conditional-style table, and the set's archive type. */
+const CONDITIONAL_LIST_TYPE = 9;
+const CONDITIONAL_STYLE_SET_TYPE = 6010;
 const CONTROL_LIST_ENTRY_SPEC = 12;
 const ListEntry = {
   KEY: 1,
@@ -2032,6 +2040,75 @@ export class TableModel {
       if (key !== undefined && target) out.set(key, new ConditionalStyleSet(this.store, target, key));
     }
     return out;
+  }
+
+  /**
+   * Attach a conditional-formatting rule set to a range of cells.
+   *
+   * The set is interned in the table's conditional-style table and every
+   * cell in the range points at it — which is how the app writes it too:
+   * three sets cover 1921 cells in one corpus document, because a rule is
+   * authored once and applied to a column.
+   *
+   * Only the four comparisons whose `predicate_type` has been *observed*
+   * can be written. `>` and `>=` are predicted to be 7 and 8, and a rule
+   * stored under a wrong code is one the condition editor shows as a
+   * different condition while the formula says the truth — a disagreement
+   * that is very hard to spot. Refused rather than guessed.
+   */
+  setConditionalRules(
+    range: { row: number; column: number; rowCount?: number; columnCount?: number },
+    conditions: readonly ConditionalCondition[],
+  ): number {
+    this.requireWritable();
+    const uid = this.crossTableInfo()?.getMessage(1);
+    if (!uid) {
+      throw new RangeError(
+        "table has no calc-engine owner; a conditional rule names its table and this library " +
+          "will not invent an identity",
+      );
+    }
+    const key = this.internConditionalSet(buildConditionalStyleSet(conditions, uid));
+
+    const rows = range.rowCount ?? 1;
+    const columns = range.columnCount ?? 1;
+    for (let row = range.row; row < range.row + rows; row++) {
+      for (let column = range.column; column < range.column + columns; column++) {
+        if (row >= this.rowCount || column >= this.columnCount) continue;
+        this.setConditionalStyleKey(row, column, key);
+      }
+    }
+    return key;
+  }
+
+  /** Add a rule set to the conditional-style table, returning its key. */
+  private internConditionalSet(set: RawMessage): number {
+    const dataStore = this.dataStore();
+    if (!dataStore) throw new RangeError("table has no data store");
+    let list = this.store.resolve(refId(dataStore, DataStoreFields.CONDITIONAL_STYLE_TABLE));
+    const component = this.store.componentOf(this.object.identifier);
+    if (!component) throw new RangeError("table object has no component");
+    if (!list) {
+      list = this.store.createObject(TABLE_DATA_LIST_TYPE, component);
+      list.message.setVarint(DataList.LIST_TYPE, CONDITIONAL_LIST_TYPE);
+      list.message.setVarint(DataList.NEXT_LIST_ID, 1);
+      dataStore.setMessage(DataStoreFields.CONDITIONAL_STYLE_TABLE, makeRef(list.identifier));
+      this.object.message.markDirty();
+    }
+    // The set is a standalone archive the entry points at, not an inline
+    // submessage — unlike a control spec, and the reader already resolves
+    // it that way.
+    const object = this.store.createObject(CONDITIONAL_STYLE_SET_TYPE, component);
+    object.setMessageBytes(set.toBytes());
+
+    const key = Number(list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message));
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(ListEntry.REFERENCE, makeRef(object.identifier));
+    list.message.addMessage(DataList.ENTRIES, entry);
+    list.message.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    return key;
   }
 
   /** Key into {@link conditionalStyleSets} carried by a cell's record. */
