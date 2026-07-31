@@ -641,9 +641,11 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Table cell reading — pre-BNC storage",
     apps: "all",
-    status: "out-of-scope",
+    status: "roadmap",
     probe: (c) => c.report.probe.cellStorage === "preBNC",
-    note: "undocumented layout; reported explicitly, never guessed",
+    note:
+      "reported explicitly, never guessed. Was filed out of scope; that was wrong — the layout " +
+      "is being measured from the corpus with `npm run prebnc`, no Mac involved. BLOCKERS.md §8",
   },
   {
     group: "Numbers & tables",

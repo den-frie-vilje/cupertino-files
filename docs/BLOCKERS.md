@@ -10,7 +10,7 @@ Read this before starting work. It is ordered by how much it unblocks.
 
 ## The shape of every remaining blocker
 
-There are only two kinds left.
+There are three kinds left, and only the first two need a Mac.
 
 **Kind A — an integer enum Apple never published.** The archive is fully
 readable; one field is a number whose meaning is not in any schema. Reading
@@ -25,6 +25,13 @@ unmarked would be the one thing this project refuses to do.
 Both are settled the same way: **one document made in the app, read back
 with `npm run probe -- <file>`.** That script reports every unknown in a
 single pass, so a well-chosen document closes several at once.
+
+**Kind C — a layout nobody wrote down, in files we already have.** No app
+and no new document is involved; the evidence is on disk and the work is
+measurement. Priority 8 is the only one of these, and it is only on this
+page because it was mislabelled "out of scope" for long enough to matter.
+Before writing another manual protocol, check the question is not really
+this kind.
 
 ---
 
@@ -227,6 +234,49 @@ for both, including a staleness check for categories.
 
 ---
 
+## Priority 8 — Pre-BNC cell storage
+
+**Blocked on:** one field, and it is being measured now. This was filed
+"out of scope" and that was wrong — the classification was inherited from
+the reference Python implementation rather than earned. Six of the corpus's
+fifty tables use it, in four files already on disk, and **no Mac is
+involved**: the records are here and the string table beside them is a free
+oracle.
+
+`npm run prebnc` does the measuring. What it establishes:
+
+- The header is 12 bytes and is v5's header with a wider extras word:
+  version(1) type(1) pad(2) flags(u32 @4) extras(u32 @8). Version is 4 and
+  the pad is 0 in all 123 records.
+- Payload sizes come out of a linear system — flag word against record
+  length — that six flag combinations over-determine. Bits 1, 3 and 7 are
+  pinned outright at 4 bytes by pairs differing in exactly that bit. The
+  rest are pinned relative to bit 2: `size(2)+size(4)=8`,
+  `size(2)+size(5)=16`, `size(2)+size(6)=16`.
+- Bit 2 is set in every record, so it is a marker or a field every cell
+  carries — which is why its size is the last free variable, and why
+  `size(2)` is 0 or 4 with nothing else fitting.
+- The values are already legible. Text cells resolve against the string
+  table exactly: a whole header row (`Type · Date · Description · Category ·
+  Amount · Balance`) and a whole description column come back as sensible
+  English. Number cells hold IEEE doubles landing on exact bit patterns
+  (2.0, 0.5, 0.1, 7.0); date cells hold seconds-since-2001 the same way.
+
+**What is left:** cells whose flag word sets bit 7 keep their text somewhere
+other than the plain string slot. Column 0 of the `Transactions` fixture is
+the one that does it, and it reads like a pop-up menu (`Type`, `101`, `102`,
+`Debit Card`, `DEP`) — while `src/tst/formats.ts` already records format 266
+as a pre-BNC-only pop-up menu. So bit 7 is very likely the control field and
+a menu cell's text lives with the menu. Confirming that fixes `size(2)` and
+the decoder follows.
+
+Reading is the whole goal here. **Writing pre-BNC storage is not** — a
+current app converts these files on open, so the useful behaviour is to read
+an old document and save it in the modern storage, not to author a 2013
+format.
+
+---
+
 ## Settled without a Mac — kept as a record of method
 
 These were on this list and are not any more. The reasoning is worth
@@ -284,6 +334,7 @@ npm run harvest -- --emit-sheet f.tsv   # function-index probe sheet
 npm run harvest -- --ingest f.numbers   # ingest it
 npm run harvest -- --drive              # macOS: drive Numbers directly
 npm run harvest:predicates -- f.numbers # score the predicate-enum prediction
+npm run prebnc                          # measure the pre-BNC cell record
 npm run coverage                        # regenerate COVERAGE.md + VERIFICATION.md
 ```
 

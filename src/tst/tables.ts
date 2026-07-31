@@ -60,7 +60,7 @@ export const TST_TYPE = {
 /** TST.TableInfoArchive. */
 const TableInfo = { SUPER: 1, TABLE_MODEL: 2 } as const;
 /** TST.TableModelArchive (reader-relevant fields). */
-const TableModelFields = {
+export const TableModelFields = {
   BASE_DATA_STORE: 4,
   NUMBER_OF_ROWS: 6,
   NUMBER_OF_COLUMNS: 7,
@@ -85,7 +85,7 @@ const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
 const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
 const HiddenStateExtent = { FILTER_SET: 8 } as const;
 /** TST.DataStore. */
-const DataStoreFields = {
+export const DataStoreFields = {
   ROW_HEADERS: 1,
   COLUMN_HEADERS: 2,
   TILES: 3,
@@ -99,9 +99,9 @@ const DataStoreFields = {
   FORMAT_TABLE: 22,
 } as const;
 /** TST.TileStorage / .Tile / .TileRowInfo. */
-const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
-const TileEntry = { TILEID: 1, TILE: 2 } as const;
-const TileFields = {
+export const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
+export const TileEntry = { TILEID: 1, TILE: 2 } as const;
+export const TileFields = {
   MAX_COLUMN: 1,
   MAX_ROW: 2,
   NUM_CELLS: 3,
@@ -110,7 +110,7 @@ const TileFields = {
   STORAGE_VERSION: 6,
   LAST_SAVED_IN_BNC: 7,
 } as const;
-const TileRowInfo = {
+export const TileRowInfo = {
   TILE_ROW_INDEX: 1,
   CELL_COUNT: 2,
   CELL_STORAGE_BUFFER_PRE_BNC: 3,

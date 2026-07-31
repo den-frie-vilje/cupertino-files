@@ -100,7 +100,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 |---|---|---|---:|---|
 | Sheets (add, duplicate, rename, move, remove)<br><sub>a duplicated sheet deep-copies its tables, so the two tabs edit different cells</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
 | Table cell reading — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 18 | iwork19→current |
-| Table cell reading — pre-BNC storage<br><sub>undocumented layout; reported explicitly, never guessed</sub> | all | ✗ out of scope | 4 | iwork16→iwork16 |
+| Table cell reading — pre-BNC storage<br><sub>reported explicitly, never guessed. Was filed out of scope; that was wrong — the layout is being measured from the corpus with `npm run prebnc`, no Mac involved. BLOCKERS.md §8</sub> | all | ○ roadmap | 4 | iwork16→iwork16 |
 | Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 18 | iwork19→current |
 | Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
 | Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
