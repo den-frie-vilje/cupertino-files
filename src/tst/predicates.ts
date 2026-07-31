@@ -131,31 +131,54 @@ export type PredicateOperator = "=" | "<>" | ">" | ">=" | "<" | "<=";
  * silently read as "greater than" when it means "greater than or equal"
  * is worse than one honestly reported as unknown.
  *
- * Sources: `numbers-parser-v26.1-xlsx-lineage.numbers` — three
- * conditional-style sets, types 9 (`<`) and 5 (`=`).
+ * Sources: `numbers-parser-v26.1-xlsx-lineage.numbers` in this repository —
+ * three conditional-style sets, types 9 (`<`) and 5 (`=`). Types 6 (`<>`)
+ * and 10 (`<=`) come from public conditional-formatting demo documents read
+ * and discarded; each was confirmed by its own formula, and
+ * `scripts/harvest-predicates.ts` re-derives all four from any such file.
  */
 export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = new Map([
   [5, "="],
+  [6, "<>"],
   [9, "<"],
+  [10, "<="],
+]);
+
+/**
+ * `predicate_type` values whose formula is a function call, not a
+ * comparison.
+ *
+ * Numbers' non-comparison conditions — "is blank", "text contains", and the
+ * rest — compile to a function rather than an operator, so they have no
+ * entry in {@link PREDICATE_TYPE_OPERATORS}. Recording the codes anyway
+ * means a reader can say *which* condition it is looking at, and it keeps
+ * them from being mistaken for gaps in the comparison enum.
+ */
+export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
+  [34, "ISBLANK"],
+  [54, "SUM"],
 ]);
 
 /**
  * A **prediction** for the rest of the enum, held separately from the proof.
  *
- * Two facts constrain it. The corpus gives 5 = `=` and 9 = `<`. And
  * Numbers' condition menu lists the numeric comparisons in a fixed order:
  * equal to, not equal to, greater than, greater than or equal to, less
- * than, less than or equal to. Laying that order out from 5 puts `=` at 5
- * and `<` at 9 — both observations land exactly where the menu says they
- * should, which is why this is worth writing down.
+ * than, less than or equal to. Laying that order out from 5 predicts all
+ * six codes, and **four of the six are now observed** — 5 `=`, 6 `<>`,
+ * 9 `<`, 10 `<=` — each landing exactly where the menu says it should.
  *
- * It is still a prediction. Two points do not prove six values, and this
- * map is **never consulted when reading**: {@link readPredicate} takes the
- * operator from the formula, which states it outright. What this is for is
- * making the manual harvest decisive — `scripts/harvest-predicates.ts`
- * checks every observed pairing against it and reports agreements and
- * contradictions, so one run against a real install either confirms the
- * ordering or kills it, instead of merely collecting rows.
+ * What is left is narrower than it looks. Two codes remain, 7 and 8, and
+ * two operators remain, `>` and `>=`; the only open question is whether
+ * they are in menu order or swapped. No document read so far uses either
+ * condition.
+ *
+ * It is still a prediction, and this map is **never consulted when
+ * reading**: {@link readPredicate} takes the operator from the formula,
+ * which states it outright. What this is for is making a harvest decisive
+ * — `scripts/harvest-predicates.ts` checks every observed pairing against
+ * it and reports agreements and contradictions, so one document with a
+ * "greater than" rule settles the rest instead of merely collecting rows.
  *
  * See `docs/MANUAL-WORK.md` protocol 4.
  */
@@ -243,6 +266,18 @@ export interface ReadPredicateOptions extends FormulaOrigin {
 }
 
 /**
+ * True when a field is present *and* length-delimited.
+ *
+ * `has` alone is not enough: field 7 is the formula in the modern predicate
+ * archive, and a document in the wild puts a varint there. Reading wire
+ * type before reaching for a submessage is the schema-light rule this
+ * library is built on, and this is the spot that forgot it.
+ */
+function hasMessageAt(message: RawMessage, field: number): boolean {
+  return message.fields.some((f) => f.no === field && f.wire === 2);
+}
+
+/**
  * Decode a `TST.FormulaPredicateArchive`.
  *
  * Also accepts the pre-pivot shape, whose field numbers differ; the two
@@ -254,9 +289,15 @@ export function readPredicate(
   options: Partial<ReadPredicateOptions> = {},
 ): Predicate | undefined {
   if (!message) return undefined;
-  const prePivot = !message.has(PredicateFields.FORMULA) && message.has(PrePivotPredicateFields.FORMULA);
+  const prePivot = !hasMessageAt(message, PredicateFields.FORMULA) &&
+    hasMessageAt(message, PrePivotPredicateFields.FORMULA);
   const fields = prePivot ? PrePivotPredicateFields : PredicateFields;
-  const formulaMessage = message.getMessage(fields.FORMULA);
+  // Not `getMessage`: some archives put a scalar where the modern schema
+  // puts the formula, and a predicate with no readable formula is still a
+  // predicate worth reporting — with its type — rather than a crash.
+  const formulaMessage = hasMessageAt(message, fields.FORMULA)
+    ? message.getMessage(fields.FORMULA)
+    : undefined;
 
   const origin =
     options.row !== undefined && options.column !== undefined

@@ -19,23 +19,16 @@
  * }
  * ```
  *
- * **No fixture contains one.** All 37 documents were surveyed: zero control
- * spec tables, zero cells with the control flag set, zero `CellSpecArchive`
- * objects. So unlike the rest of this library, the reading here rests on
- * the schema alone, and two consequences follow:
+ * `interaction_type` is an enum Apple never published, and it is now known
+ * — measured, not guessed, from documents that put one widget per row and
+ * say in their own cell values which row is which. See
+ * {@link InteractionType} for the evidence behind each name.
  *
- *  - `interactionType` is exposed as a **raw number**. The field names make
- *    the *shapes* obvious — a control with min/max/increment is a slider or
- *    a stepper, one with a popup model is a menu — so
- *    {@link controlShape} reports what the archive demonstrably contains
- *    rather than which of the five widgets Apple would draw.
- *  - Nothing here creates a control. A widget the apps quietly drop looks
- *    exactly like one that was never written.
- *
- * `scripts/probe-controls.ts` prints everything a real document's controls
- * contain. One Numbers file with a checkbox, a slider and a pop-up menu —
- * two minutes of work on any Mac — pins `interaction_type` for good. See
- * `docs/MANUAL-WORK.md` protocol 6.
+ * {@link controlShape} survives that discovery and stays useful: it reports
+ * what the archive *demonstrably contains* — min/max/increment, or a popup
+ * model — independently of the enum. A file from a future Numbers with a
+ * sixth widget will still classify as a range or a chooser, which is a
+ * better answer than an unrecognised number.
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
@@ -55,6 +48,42 @@ export const CellSpecFields = {
   CHOOSER_POPUP_MODEL: 6,
   CHOOSER_START_WITH_FIRST: 7,
 } as const;
+
+/**
+ * `TST.CellSpecArchive.interaction_type`.
+ *
+ * Apple publishes no enum. These names come from documents that lay one
+ * widget out per row and state in their own cell values which row is which:
+ *
+ *  - **8 — checkbox.** Its row holds `FALSE` and `TRUE`, and its spec is a
+ *    lone `interaction_type` with nothing to configure.
+ *  - **6 — star rating.** Bounded `[0…5]` step 1 in every instance, with
+ *    values 0, 3 and 5 in the row beneath.
+ *  - **5 — slider.** One instance is `[1…50]` step 0.1, matching a
+ *    published test that builds exactly that cell as a slider.
+ *  - **4 — stepper.** The remaining range widget; Numbers offers five
+ *    controls in total and the other four are accounted for.
+ *  - **7 — pop-up menu.** The only one carrying a chooser popup model.
+ *
+ * Values outside this set are carried through untouched rather than
+ * rejected — see {@link controlShape}, which classifies by contents.
+ */
+export const InteractionType = {
+  STEPPER: 4,
+  SLIDER: 5,
+  STAR_RATING: 6,
+  POPUP_MENU: 7,
+  CHECKBOX: 8,
+} as const;
+
+/** Display names for {@link InteractionType}; `undefined` when unrecognised. */
+export const INTERACTION_TYPE_NAMES: ReadonlyMap<number, string> = new Map([
+  [InteractionType.STEPPER, "stepper"],
+  [InteractionType.SLIDER, "slider"],
+  [InteractionType.STAR_RATING, "star rating"],
+  [InteractionType.POPUP_MENU, "pop-up menu"],
+  [InteractionType.CHECKBOX, "checkbox"],
+]);
 
 /**
  * What the archive's own contents show the control to be.
@@ -79,6 +108,13 @@ export interface CellControl {
   key: number;
   /** Raw `interaction_type`; the enum is not published, see the module note. */
   interactionType: number | undefined;
+  /**
+   * The widget Numbers draws, from {@link INTERACTION_TYPE_NAMES}.
+   *
+   * `undefined` for a code this library has not seen — the raw number is
+   * still in {@link interactionType}, and {@link shape} still classifies it.
+   */
+  widget: string | undefined;
   shape: ControlShape;
   /** Slider and stepper bounds. */
   minimum: number | undefined;
@@ -117,9 +153,11 @@ export function controlShape(spec: RawMessage): ControlShape {
 
 /** Read one `TST.CellSpecArchive`. */
 export function readCellSpec(spec: RawMessage, key: number): CellControl {
+  const interactionType = spec.getUint(CellSpecFields.INTERACTION_TYPE);
   return {
     key,
-    interactionType: spec.getUint(CellSpecFields.INTERACTION_TYPE),
+    interactionType,
+    widget: interactionType === undefined ? undefined : INTERACTION_TYPE_NAMES.get(interactionType),
     shape: controlShape(spec),
     minimum: spec.getDouble(CellSpecFields.RANGE_MIN),
     maximum: spec.getDouble(CellSpecFields.RANGE_MAX),
@@ -131,31 +169,64 @@ export function readCellSpec(spec: RawMessage, key: number): CellControl {
   };
 }
 
-/** TST.TableDataList / .ListEntry, as used by the control-spec table. */
+/**
+ * TST.TableDataList / .ListEntry, as used by the control-spec table.
+ *
+ * `CELL_SPEC` is field 12, read off real documents. It used to be a guess,
+ * and the guess came with a heuristic that skipped any single-varint
+ * submessage so a bare `TSP.Reference` would not be misread as a control —
+ * which silently dropped every checkbox, whose whole spec *is* one varint.
+ * Knowing the field number removes the need to guess and the bug with it.
+ */
 const DataList = { ENTRIES: 3 } as const;
-const ListEntry = { KEY: 1, CELL_SPEC: 7 } as const;
+const ListEntry = { KEY: 1, CELL_SPEC: 12 } as const;
 
 /**
  * Every control a table interns, by key.
  *
- * The list entry's payload field is not stated by any proto this repository
- * has, so both plausible slots are tried: a `cell_spec` submessage, and a
- * reference to a standalone archive. A file that uses either decodes; one
- * that uses neither yields nothing rather than a wrong reading.
+ * Field 12 first, then a scan of the entry's other submessages so a layout
+ * from another Numbers version still decodes rather than yielding nothing.
  */
 export function controlsOf(store: ObjectStore, dataStore: RawMessage | undefined): Map<number, CellControl> {
-  const out = new Map<number, CellControl>();
   const list = store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
-  for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+  return list ? readControlList(list.message) : new Map();
+}
+
+/**
+ * Decode a control-spec `TST.TableDataList`.
+ *
+ * Split out from {@link controlsOf} so the entry-unwrapping — the part that
+ * once dropped checkboxes — can be exercised without a document around it.
+ */
+export function readControlList(list: RawMessage): Map<number, CellControl> {
+  const out = new Map<number, CellControl>();
+  for (const entry of list.getMessages(DataList.ENTRIES)) {
     const key = entry.getUint(ListEntry.KEY);
     if (key === undefined) continue;
-    const inline = readSpecMessage(entry);
-    if (inline) out.set(key, readCellSpec(inline, key));
+    const spec = specAt(entry, ListEntry.CELL_SPEC) ?? readSpecMessage(entry);
+    if (spec) out.set(key, readCellSpec(spec, key));
   }
   return out;
 }
 
-/** The spec inside a list entry, inline or referenced. */
+/** The spec at a known field, if the entry carries one there. */
+function specAt(entry: RawMessage, field: number): RawMessage | undefined {
+  let sub: RawMessage | undefined;
+  try {
+    sub = entry.getMessage(field);
+  } catch {
+    return undefined;
+  }
+  return sub?.has(CellSpecFields.INTERACTION_TYPE) ? sub : undefined;
+}
+
+/**
+ * Fallback: the spec inside a list entry at some other field.
+ *
+ * Only reached when field 12 holds nothing. The single-varint guard stays
+ * here — at an unknown field a lone varint really could be a reference —
+ * but it no longer costs us checkboxes, which {@link specAt} finds first.
+ */
 function readSpecMessage(entry: RawMessage): RawMessage | undefined {
   for (const field of entry.fields) {
     if (field.wire !== 2) continue;

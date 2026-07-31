@@ -138,56 +138,137 @@ function isPlausibleFunctionName(name: string): boolean {
 }
 
 /**
- * Read a harvested document back into a mapping.
+ * One function call, written out as text: `NAME(` and nothing else like it.
  *
- * For every row, column A gives the name we asked for and column C holds
- * the formula Numbers built. Walking C's AST for a FUNCTION node yields the
- * index; an UNKNOWN_FUNCTION node means Numbers did not recognise the name.
+ * Used to recognise the *other* useful sheet layout — one where a column
+ * spells a formula out as a string beside a column that actually computes
+ * it. Any test or documentation spreadsheet built to demonstrate functions
+ * tends to look like this, which makes such a document a harvest source
+ * without anyone having to author the probe sheet.
  */
-function ingest(path: string, appLabel: string): Harvested {
-  const doc = IWorkDocument.open(new Uint8Array(readFileSync(path)));
+const FUNCTION_CALL_IN_TEXT = /\b([A-Z][A-Z0-9.]*)\s*\(/g;
+
+/**
+ * Harvest from a "name as text beside the live formula" sheet.
+ *
+ * The pairing is only accepted when the text names **exactly one** function
+ * and the neighbouring formula's AST holds **exactly one** function node.
+ * That is deliberately strict: with one of each there is nothing to line up
+ * and no ordering to get wrong, whereas a nested call would need the text's
+ * outside-in order reconciled against the AST's inside-out order for no
+ * extra coverage — a sheet demonstrating `SUM(IF(…))` almost always
+ * demonstrates `SUM` and `IF` on their own rows too.
+ *
+ * Every candidate still goes through the same conflict check as the probe
+ * sheet, so an index claimed by two names is dropped rather than guessed.
+ */
+function collectPairedColumns(
+  table: ReturnType<IWorkDocument["tables"]>[number],
+  formulaTable: ReturnType<typeof formulaTableOf>,
+  observations: Map<string, Set<number>>,
+): number {
+  let paired = 0;
+  for (let column = 0; column + 1 < table.columnCount; column++) {
+    for (let row = 0; row < table.rowCount; row++) {
+      // The text cell must not itself be a formula: a cell computing
+      // `="SUM("&…` is not a label.
+      if (table.formulaId(row, column) !== undefined) continue;
+      const text = table.cellText(row, column).trim();
+      if (text.length === 0) continue;
+      const names = [...text.matchAll(FUNCTION_CALL_IN_TEXT)].map((m) => m[1]!);
+      if (names.length !== 1) continue;
+      const name = names[0]!;
+      if (!isPlausibleFunctionName(name)) continue;
+
+      const formulaId = table.formulaId(row, column + 1);
+      if (formulaId === undefined) continue;
+      const indexes = astNodes(formulaTable.get(formulaId))
+        .filter((node) => node.getUint(AstNodeFields.TYPE) === AstNodeType.FUNCTION)
+        .map((node) => node.getUint(AstNodeFields.FUNCTION_INDEX))
+        .filter((index): index is number => index !== undefined);
+      if (indexes.length !== 1) continue;
+
+      const seen = observations.get(name) ?? new Set<number>();
+      seen.add(indexes[0]!);
+      observations.set(name, seen);
+      paired++;
+    }
+  }
+  return paired;
+}
+
+/**
+ * Read harvested documents back into a mapping.
+ *
+ * Two layouts are understood. In the probe sheet this script emits, column
+ * A gives the name we asked for, column B carries a variant label proving
+ * the row is ours, and column C holds the formula Numbers built. In the
+ * paired-column layout, a text column spells a call out beside a column
+ * that computes it — see {@link collectPairedColumns}.
+ *
+ * Walking a formula's AST for a FUNCTION node yields the index; an
+ * UNKNOWN_FUNCTION node means Numbers did not recognise the name.
+ */
+function ingest(paths: readonly string[], appLabel: string): Harvested {
   const observations = new Map<string, Set<number>>();
   const unrecognised = new Set<string>();
+  const skipped: string[] = [];
   let tablesSeen = 0;
 
-  for (const table of doc.tables()) {
-    if (table.storageGeneration !== "v5") continue;
-    tablesSeen++;
-    const formulaTable = formulaTableOf(doc, table.object.message);
-    if (formulaTable.size === 0) continue;
+  for (const path of paths) {
+    let doc: IWorkDocument;
+    try {
+      doc = IWorkDocument.open(new Uint8Array(readFileSync(path)));
+    } catch (error) {
+      // Harvesting a directory of documents should not stop at the first
+      // one that will not open. Say which, and carry on: a run over
+      // twenty sheets is worth more than an exact exit code.
+      skipped.push(`${path}: ${error instanceof Error ? error.message : String(error)}`);
+      continue;
+    }
+    for (const table of doc.tables()) {
+      if (table.storageGeneration !== "v5") continue;
+      tablesSeen++;
+      const formulaTable = formulaTableOf(doc, table.object.message);
+      if (formulaTable.size === 0) continue;
 
-    for (let row = 0; row < table.rowCount; row++) {
-      const name = table.cellText(row, PROBE_COLUMN.NAME).trim();
-      // Column B must hold one of our variant labels. Without this guard a
-      // harvest run against a document containing any other table happily
-      // attributes that table's formulas to whatever text sits in its first
-      // column — which is how an early run recorded 168 as "TOTAL:".
-      const variant = table.cellText(row, PROBE_COLUMN.VARIANT).trim();
-      if (!VARIANT_LABELS.has(variant)) continue;
-      if (!isPlausibleFunctionName(name)) continue;
-      const formulaId = table.formulaId(row, PROBE_COLUMN.FORMULA);
-      if (formulaId === undefined) continue;
-      const nodes = astNodes(formulaTable.get(formulaId));
-      for (const node of nodes) {
-        const type = node.getUint(AstNodeFields.TYPE);
-        if (type === AstNodeType.FUNCTION) {
-          const index = node.getUint(AstNodeFields.FUNCTION_INDEX);
-          if (index === undefined) continue;
-          const seen = observations.get(name) ?? new Set<number>();
-          seen.add(index);
-          observations.set(name, seen);
-        } else if (type === AstNodeType.UNKNOWN_FUNCTION) {
-          unrecognised.add(name);
+      for (let row = 0; row < table.rowCount; row++) {
+        const name = table.cellText(row, PROBE_COLUMN.NAME).trim();
+        // Column B must hold one of our variant labels. Without this guard a
+        // harvest run against a document containing any other table happily
+        // attributes that table's formulas to whatever text sits in its first
+        // column — which is how an early run recorded 168 as "TOTAL:".
+        const variant = table.cellText(row, PROBE_COLUMN.VARIANT).trim();
+        if (!VARIANT_LABELS.has(variant)) continue;
+        if (!isPlausibleFunctionName(name)) continue;
+        const formulaId = table.formulaId(row, PROBE_COLUMN.FORMULA);
+        if (formulaId === undefined) continue;
+        const nodes = astNodes(formulaTable.get(formulaId));
+        for (const node of nodes) {
+          const type = node.getUint(AstNodeFields.TYPE);
+          if (type === AstNodeType.FUNCTION) {
+            const index = node.getUint(AstNodeFields.FUNCTION_INDEX);
+            if (index === undefined) continue;
+            const seen = observations.get(name) ?? new Set<number>();
+            seen.add(Number(index));
+            observations.set(name, seen);
+          } else if (type === AstNodeType.UNKNOWN_FUNCTION) {
+            unrecognised.add(name);
+          }
         }
       }
+
+      collectPairedColumns(table, formulaTable, observations);
     }
   }
 
   if (tablesSeen === 0) {
     throw new Error(
-      `${path} has no readable tables — was it saved from Numbers after opening the probe sheet?`,
+      `no readable tables in ${paths.length} document(s) — was the sheet saved from Numbers ` +
+        `after opening it?${skipped.length ? `\n  skipped: ${skipped.join("\n  skipped: ")}` : ""}`,
     );
   }
+  for (const note of skipped) console.error(`  skipped ${note}`);
 
   const functions: Record<string, string> = {};
   const conflicts: { name: string; indexes: number[] }[] = [];
@@ -347,7 +428,7 @@ function drive(): void {
       `  close theDoc saving no\n` +
       `end tell`,
   );
-  report(ingest(docPath, `Numbers ${version}`));
+  report(ingest([docPath], `Numbers ${version}`));
 }
 
 function report(harvested: Harvested): void {
@@ -394,11 +475,25 @@ function main(): void {
 
   const ingestPath = valueFor("--ingest");
   if (ingestPath !== undefined) {
-    if (!existsSync(ingestPath)) {
-      console.error(`no such file: ${ingestPath}`);
+    // Everything after --ingest that is not a flag is another document.
+    // Function coverage comes from many small sheets more often than one
+    // big one, and merging them in a single pass is what makes the
+    // conflict check meaningful across sources.
+    // Contiguous only: stop at the next flag, so `--ingest a b --app X`
+    // does not swallow X as a third document.
+    const after = args.slice(args.indexOf("--ingest") + 2);
+    const extra: string[] = [];
+    for (const arg of after) {
+      if (arg.startsWith("--")) break;
+      extra.push(arg);
+    }
+    const paths = [ingestPath, ...extra];
+    const missing = paths.filter((p) => !existsSync(p));
+    if (missing.length > 0) {
+      console.error(`no such file: ${missing.join(", ")}`);
       process.exit(1);
     }
-    const harvested = ingest(ingestPath, valueFor("--app") ?? "unknown Numbers version");
+    const harvested = ingest(paths, valueFor("--app") ?? "unknown Numbers version");
     if (args.includes("--dry-run")) {
       // Machine-readable and side-effect free, so the ingest can be
       // exercised by the test suite without a Mac and without touching

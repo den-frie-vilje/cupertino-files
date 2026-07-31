@@ -237,6 +237,7 @@ export {
   PredArgFields,
   PredArgDataFields,
   PREDICATE_TYPE_OPERATORS,
+  PREDICATE_TYPE_FUNCTIONS,
 } from "./tst/predicates.ts";
 export type {
   Predicate,
@@ -278,10 +279,13 @@ export {
 export type { FormulaOwner, OwnerUid } from "./tsce/owners.ts";
 export {
   controlsOf,
+  readControlList,
   readCellSpec,
   controlShape,
   CellSpecFields,
   CONTROL_CELL_SPEC_TABLE,
+  InteractionType,
+  INTERACTION_TYPE_NAMES,
 } from "./tst/controls.ts";
 export type { CellControl, ControlShape } from "./tst/controls.ts";
 export {

@@ -55,6 +55,7 @@ interface Findings {
   controls: {
     key: number;
     interactionType: number | undefined;
+    widget: string | undefined;
     shape: string;
     fields: number[];
     detail: string;
@@ -105,6 +106,7 @@ function probe(path: string): Findings {
       findings.controls.push({
         key,
         interactionType: control.interactionType,
+        widget: control.widget,
         shape: control.shape,
         fields: control.populatedFields,
         detail: describeControl(control),
@@ -227,12 +229,13 @@ function render(findings: Findings): string {
     "no conditional-formatting or filter rules here",
   );
   section(
-    "3. Cell controls (interaction_type is the unknown)",
+    "3. Cell controls",
     findings.controls.map(
       (c) =>
-        `key ${c.key}: interaction_type=${c.interactionType} shape=${c.shape} fields=[${c.fields.join(",")}]  ${c.detail}`,
+        `key ${c.key}: interaction_type=${c.interactionType} (${c.widget ?? "UNRECOGNISED — measure it"})` +
+          ` shape=${c.shape} fields=[${c.fields.join(",")}]  ${c.detail}`,
     ),
-    "no cell controls here — this is the gap a checkbox/slider/menu document closes",
+    "no cell controls in this document",
   );
   section(
     "4. Keynote builds",

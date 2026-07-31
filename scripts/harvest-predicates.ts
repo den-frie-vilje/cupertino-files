@@ -52,7 +52,15 @@ interface Row {
 
 function rowsFor(path: string): Row[] {
   const out: Row[] = [];
-  const document = IWorkDocument.open(new Uint8Array(readFileSync(path)));
+  let document: IWorkDocument;
+  try {
+    document = IWorkDocument.open(new Uint8Array(readFileSync(path)));
+  } catch (error) {
+    // Scoring a directory should not stop at the first file that will not
+    // open — say which, and keep going.
+    console.error(`  skipped ${path}: ${error instanceof Error ? error.message : String(error)}`);
+    return out;
+  }
   const file = path.split("/").pop() ?? path;
 
   const push = (

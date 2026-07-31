@@ -110,7 +110,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 1 | current→current |
-| Cell controls (checkbox, slider, stepper, pop-up menu)<br><sub>NO FIXTURE: schema-derived. Shape is classified by populated fields, not by the unpublished interaction_type — see docs/BLOCKERS.md priority 3</sub> | Numbers | 🔍 read only | **0** | — |
+| Cell controls (checkbox, star rating, slider, stepper, pop-up menu)<br><sub>NO FIXTURE in this repository: interaction_type was measured from public widget-demo documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox). Shape is still classified by populated fields, so an unrecognised code degrades rather than misreads</sub> | Numbers | 🔍 read only | **0** | — |
 | Formula writing (authoring an AST)<br><sub>needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula</sub> | all | ○ roadmap | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
@@ -174,7 +174,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
-- 🔴 high — Numbers & tables → **Cell controls (checkbox, slider, stepper, pop-up menu)**
+- 🔴 high — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
@@ -190,7 +190,7 @@ correctly. They are listed with their reasoning and repro steps in
 
 - Container → **Wrapper-directory layout**
 - Container → **Mixed-codec packages (LZFSE component beside Snappy)**
-- Numbers & tables → **Cell controls (checkbox, slider, stepper, pop-up menu)**
+- Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - Keynote → **Transitions**
 - Keynote → **Builds (animations): read and retime**
 

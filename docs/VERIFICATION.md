@@ -26,7 +26,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 1 | 🔴 high | Drawables & media → Placement (copy onto a page/slide/sheet, remove, reorder in z) | A drawable we copied onto another page/slide/sheet appears there, at the geometry we set. | manual |
 | 2 | 🔴 high | Keynote → Builds (animations): read and retime | the build model reads a real animation correctly | manual |
 | 3 | 🔴 high | Keynote → Slide management (add, duplicate, move, remove) | Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order. | manual |
-| 4 | 🔴 high | Numbers & tables → Cell controls (checkbox, slider, stepper, pop-up menu) | cell controls read correctly, and interaction_type means what the widget is | manual |
+| 4 | 🔴 high | Numbers & tables → Cell controls (checkbox, star rating, slider, stepper, pop-up menu) | cell controls read correctly, and interaction_type means what the widget is | manual |
 | 5 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
 | 6 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
 | 7 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
@@ -89,7 +89,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.
 
-### 4. Cell controls (checkbox, slider, stepper, pop-up menu)
+### 4. Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  

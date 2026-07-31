@@ -843,11 +843,15 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Cell controls (checkbox, slider, stepper, pop-up menu)",
+    name: "Cell controls (checkbox, star rating, slider, stepper, pop-up menu)",
     apps: ["numbers"],
     status: "read",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.controls().size > 0)),
-    note: "NO FIXTURE: schema-derived. Shape is classified by populated fields, not by the unpublished interaction_type — see docs/BLOCKERS.md priority 3",
+    note:
+      "NO FIXTURE in this repository: interaction_type was measured from public widget-demo " +
+      "documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, " +
+      "8 checkbox). Shape is still classified by populated fields, so an unrecognised code " +
+      "degrades rather than misreads",
     manualProof: {
       claim: "cell controls read correctly, and interaction_type means what the widget is",
       why: "no document in the corpus contains a control at all, so nothing checks the reading",
