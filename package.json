@@ -53,6 +53,7 @@
     "harvest:predicates": "node scripts/harvest-predicates.ts",
     "prebnc": "node scripts/analyse-prebnc.ts",
     "stress": "node scripts/stress-readers.ts",
+    "proto:check": "node scripts/check-proto-drift.ts --check",
     "probe": "node scripts/probe-unknowns.ts",
     "privacy:check": "node scripts/scan-fixture-privacy.ts",
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
