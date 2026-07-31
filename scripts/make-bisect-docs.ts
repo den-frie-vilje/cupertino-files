@@ -27,11 +27,20 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { NumbersDocument } from "../src/numbers/document.ts";
+import { chartsOf } from "../src/tsch/charts.ts";
 
 const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", import.meta.url);
+/** A rung needing something the main template has not got: here, a chart. */
+const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", import.meta.url);
 
 /** Each rung: a name, and what it does to a freshly loaded fixture. */
-const RUNGS: { name: string; note: string; build: (doc: NumbersDocument) => void }[] = [
+const RUNGS: {
+  name: string;
+  note: string;
+  build: (doc: NumbersDocument) => void;
+  /** Defaults to {@link TEMPLATE}. */
+  template?: URL;
+}[] = [
   {
     name: "00-untouched",
     note: "loaded and saved with no edits; every archive is identical to the fixture's",
@@ -127,17 +136,54 @@ const RUNGS: { name: string; note: string; build: (doc: NumbersDocument) => void
     note: "blankFrom only, no edits — this one removes ten tables from the template",
     build: () => {},
   },
+  {
+    name: "11-regroup",
+    note: "a categorised row moved to another group, and the group tree rebuilt to match",
+    build: (doc) => {
+      const table = doc.tables().find((t) => t.name === "Categories");
+      if (!table) throw new Error("template has no Categories table");
+      const categories = table.activeCategories();
+      if (!categories) throw new Error("Categories table is not grouped");
+      const column = categories.groupColumns()[0]?.column;
+      if (column === undefined) throw new Error("grouping column does not resolve");
+      const groups = categories.groups();
+      const from = groups[0]!;
+      const to = groups.find((g) => g.label !== from.label)!;
+      table.setCell(from.rows[0]!, column, to.label);
+      table.regroupCategories();
+    },
+  },
+  {
+    name: "12-chart-colour",
+    note: "one chart series recoloured red; the only rung on the chart fixture",
+    template: CHART_TEMPLATE,
+    build: (doc) => {
+      const chart = chartsOf(doc.store)[0];
+      if (!chart) throw new Error("chart template has no chart");
+      chart.setSeriesFill(0, { kind: "color", color: { r: 1, g: 0, b: 0, space: "srgb" } });
+    },
+  },
 ];
 
 function main(argv: string[]): number {
   const outDir = (argv[0] ?? ".").replace(/\/$/, "");
-  const template = new Uint8Array(readFileSync(TEMPLATE));
+  const cache = new Map<string, Uint8Array>();
+  const templateBytes = (url: URL): Uint8Array => {
+    const key = url.href;
+    let bytes = cache.get(key);
+    if (!bytes) {
+      bytes = new Uint8Array(readFileSync(url));
+      cache.set(key, bytes);
+    }
+    return bytes;
+  };
 
   for (const rung of RUNGS) {
+    const bytes = templateBytes(rung.template ?? TEMPLATE);
     const doc =
       rung.name === "10-blank-from"
-        ? NumbersDocument.blankFrom(template, { tableName: "Blank" })
-        : NumbersDocument.load(template);
+        ? NumbersDocument.blankFrom(bytes, { tableName: "Blank" })
+        : NumbersDocument.load(bytes);
     rung.build(doc);
     const path = `${outDir}/${rung.name}.numbers`;
     writeFileSync(path, doc.save());
