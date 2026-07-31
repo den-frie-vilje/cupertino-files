@@ -56,6 +56,7 @@
     "proto:check": "node scripts/check-proto-drift.ts --check",
     "probe": "node scripts/probe-unknowns.ts",
     "verify:doc": "node scripts/make-verification-doc.ts",
+    "bisect:docs": "node scripts/make-bisect-docs.ts",
     "privacy:check": "node scripts/scan-fixture-privacy.ts",
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
     "test:all": "npm run test && npm run test:e2e"
