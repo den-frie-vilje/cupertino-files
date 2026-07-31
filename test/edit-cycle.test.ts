@@ -26,6 +26,7 @@ import {
   KeynoteDocument,
   NumbersDocument,
   PagesDocument,
+  ShowMode,
   tablesOf,
 } from "../src/index.ts";
 import { chartsOf } from "../src/tsch/charts.ts";
@@ -327,5 +328,62 @@ describe("every fixture survives an edit cycle", () => {
     // 15 of the 37 carry a writable v5 table; the rest have no tables at
     // all, or only pre-BNC storage, which reads but does not write.
     expect(written).toBe(15);
+  });
+});
+
+describe("app-specific edits survive the cycle", () => {
+  /**
+   * Text and cells are the shared model; these are the parts that only
+   * exist in one app. An edit path that works in memory but does not
+   * persist is the failure mode here, and it is invisible to any test that
+   * never saves.
+   */
+  it("Pages: header, footer, page setup and a new paragraph", () => {
+    const doc = PagesDocument.load(bytes("gomap-v26.1-newest-writer.pages"));
+    const section = doc.sections()[0]!;
+    section.setHeaderText("HDR");
+    section.setFooterText("FTR");
+    doc.setPageSetup({ leftMargin: 55 });
+    const body = doc.textStorages().find((s) => s.text.length > 20)!;
+    const paragraphsBefore = body.paragraphs().length;
+    body.insertText(body.text.length, "\nAppended paragraph");
+
+    const reread = PagesDocument.load(doc.save());
+    expect(reread.sections()[0]!.headerText()).toBe("HDR");
+    expect(reread.sections()[0]!.footerText()).toBe("FTR");
+    expect(reread.pageSetup().leftMargin).toBe(55);
+    const rebody = reread.textStorages().find((s) => s.text.includes("Appended paragraph"))!;
+    expect(rebody.paragraphs().length).toBe(paragraphsBefore + 1);
+  });
+
+  it("Numbers: sheet rename, table rename, cell format and cell styling", () => {
+    const doc = NumbersDocument.load(bytes("numbers-parser-v26.0-categories.numbers"));
+    doc.renameSheet(0, "Renamed Sheet");
+    const table = doc.tables()[0]!;
+    table.name = "Renamed Table";
+    table.setCell(1, 1, 0.256);
+    table.setCellFormat(1, 1, { kind: "percentage", decimals: 1 });
+
+    const reread = NumbersDocument.load(doc.save());
+    expect(reread.sheets()[0]!.name).toBe("Renamed Sheet");
+    expect(reread.tables()[0]!.name).toBe("Renamed Table");
+    const format = reread.tables()[0]!.cellFormat(1, 1);
+    expect(format?.kind).toBe("percentage");
+    if (format?.kind === "percentage") expect(format.decimals).toBe(1);
+  });
+
+  it("Keynote: slide notes, transition and presentation settings", () => {
+    const doc = KeynoteDocument.load(bytes("zenodo-v26.1-hyperlinks-masks.key"));
+    const slide = doc.slides()[0]!;
+    const notes = slide.notesStorage();
+    if (notes) notes.setText("Speaker notes here");
+    slide.setTransition({ duration: 1.75 });
+    doc.setPresentation({ mode: ShowMode.AUTOPLAY });
+
+    const reread = KeynoteDocument.load(doc.save());
+    const back = reread.slides()[0]!;
+    if (notes) expect(back.notesStorage()?.text).toBe("Speaker notes here");
+    expect(back.transition()?.duration).toBe(1.75);
+    expect(reread.presentation().mode).toBe(ShowMode.AUTOPLAY);
   });
 });
