@@ -21,15 +21,22 @@
  * The tree is a **cache the app recomputes**, in the same sense as a table
  * of contents: it is what Numbers worked out last time it grouped the rows.
  * Editing cells through this library does not regroup them, so
- * {@link TableCategories.verify} exists to say whether the cached tree
- * still matches the data. That is also why this module reads the tree and
- * writes only `is_enabled` — a group membership this library invented would
- * be a claim about data it did not group.
+ * {@link TableCategories.verify} says whether the cached tree still matches
+ * the data and {@link TableCategories.regroup} brings it back into line.
+ *
+ * Regrouping moves rows between groups that already exist and nothing else.
+ * Which rows belong to "Animal" is a question the grouping column answers
+ * directly, so it can be settled offline; what a *new* group's identity
+ * should be, where the app would sort it, and how the per-column and
+ * per-row fields alongside the tree should change are questions no fixture
+ * answers. So a value with no group is refused. That line — recompute what
+ * the data determines, refuse what only the app knows — is the same one
+ * drawn for conditional rules and filters.
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import { ColumnRowUidMap, readUid, type Uid } from "./uidmap.ts";
 
 /** TST.TableModelArchive.category_owner. */
@@ -364,6 +371,81 @@ export class TableCategories {
     return mismatches;
   }
 
+  /**
+   * Re-sort rows into the groups their values now put them in.
+   *
+   * {@link verify} says the cached tree has gone stale; this fixes it. Only
+   * membership moves — every group node, its identity and its value stay
+   * exactly as the app wrote them, and only the row index set inside each
+   * one is rewritten.
+   *
+   * That restriction is what makes this safe to do offline. Deciding which
+   * rows belong to "Animal" is reading the grouping column and comparing
+   * values, which needs nothing this library cannot already do. *Creating*
+   * a group would mean minting a group identity, placing the node in
+   * whatever order the app sorts groups in, and populating the several
+   * per-column and per-row fields alongside the tree whose meaning no
+   * fixture explains. So a value with no group is refused rather than
+   * invented, and the tree is left untouched when that happens.
+   *
+   * Returns how many rows moved. Regrouping data that has not changed moves
+   * none and rewrites the archive to the same bytes, which is how the tests
+   * check it.
+   *
+   * @throws RangeError if a row's value matches no existing group, or if
+   * the outermost grouping is bucketed rather than by value.
+   */
+  regroup(valueAt: (row: number, column: number) => GroupValue): number {
+    const [first] = this.groupColumns();
+    if (!first || first.column === undefined) {
+      throw new RangeError("category has no resolvable grouping column");
+    }
+    if (first.groupingType !== GroupingType.BY_VALUE) {
+      throw new RangeError(
+        `grouping is by ${GROUPING_TYPE_NAMES.get(first.groupingType) ?? first.groupingType}, ` +
+          "not by value; bucketing a row means evaluating the grouping formula",
+      );
+    }
+
+    const root = this.rootNode();
+    if (!root) throw new RangeError("category has no group tree");
+    const nodes = this.childNodes(root);
+    // Every row the tree currently accounts for. Rows outside it are not
+    // this category's to place — a row can be excluded by a filter.
+    const known = new Set<number>();
+    for (const node of nodes) for (const row of expandIndexSet(node.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS))) known.add(row);
+
+    const wanted = new Map<RawMessage, number[]>();
+    for (const node of nodes) wanted.set(node, []);
+    let moved = 0;
+    for (const row of [...known].sort((a, b) => a - b)) {
+      const value = valueAt(row, first.column);
+      const node = nodes.find((candidate) =>
+        sameGroupValue(value, readCellValue(candidate.getMessage(GroupNodeFields.GROUP_CELL_VALUE))),
+      );
+      if (!node) {
+        throw new RangeError(
+          `row ${row} holds ${JSON.stringify(labelOf(value))}, which has no group; ` +
+            "this library will not create one",
+        );
+      }
+      wanted.get(node)!.push(row);
+      if (!expandIndexSet(node.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS)).includes(row)) moved++;
+    }
+
+    // Only rewrite the sets that actually changed. Writing them all would
+    // dirty the component even when nothing moved, and a no-op regroup
+    // rebuilding a component is both wasteful and a lie about what
+    // happened.
+    for (const [node, rows] of wanted) {
+      const current = expandIndexSet(node.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS));
+      if (current.length === rows.length && current.every((row, at) => row === rows[at])) continue;
+      node.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet(rows));
+      this.object.message.markDirty();
+    }
+    return moved;
+  }
+
   /** Readable summary, one line per group. */
   describe(): string[] {
     return this.flatGroups().map(
@@ -383,6 +465,37 @@ export function expandIndexSet(set: RawMessage | undefined): number[] {
     for (let index = begin; index <= end; index++) out.push(index);
   }
   return out;
+}
+
+/**
+ * Build a `TSCE.IndexSetArchive` from indexes — the inverse of
+ * {@link expandIndexSet}.
+ *
+ * Consecutive indexes collapse into one range, and a range covering a
+ * single index is written with `range_begin` alone. Both match what Apple
+ * writes: a root node covering rows 1–30 stores one entry with an end, and
+ * a group holding seven scattered rows stores seven entries without one.
+ * Getting that detail wrong would still read back correctly, and would stop
+ * a regrouped archive being byte-identical to the app's.
+ */
+export function writeIndexSet(indexes: readonly number[]): RawMessage {
+  const sorted = [...new Set(indexes)].sort((a, b) => a - b);
+  const set = RawMessage.create();
+  const entries: RawMessage[] = [];
+  for (let at = 0; at < sorted.length; ) {
+    const begin = sorted[at]!;
+    let end = begin;
+    while (at + 1 < sorted.length && sorted[at + 1] === end + 1) {
+      end = sorted[++at]!;
+    }
+    at++;
+    const entry = RawMessage.create();
+    entry.setVarint(IndexRange.BEGIN, begin);
+    if (end !== begin) entry.setVarint(IndexRange.END, end);
+    entries.push(entry);
+  }
+  set.setMessages(IndexSet.ENTRIES, entries);
+  return set;
 }
 
 /** Decode a `TSCE.CellValueArchive`. */

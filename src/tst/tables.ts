@@ -2479,6 +2479,26 @@ export class TableModel {
     );
   }
 
+  /**
+   * Put rows back in the groups their current values call for.
+   *
+   * The fix for what {@link staleCategoryGroups} reports. Returns the number
+   * of rows that moved — zero when the tree was already correct, in which
+   * case the archive is rewritten to the same bytes.
+   *
+   * Throws if a row's value has no group: see
+   * {@link TableCategories.regroup} for why creating one is refused.
+   */
+  regroupCategories(): number {
+    const definition = this.activeCategories();
+    if (!definition) return 0;
+    const byPosition = new Map<string, CellValue>();
+    for (const cell of this.cells()) byPosition.set(`${cell.row}:${cell.column}`, cell.value);
+    return definition.regroup((row, column) =>
+      groupValueOf(byPosition.get(`${row}:${column}`)),
+    );
+  }
+
   /** `cell_style_id` of a cell, if its record carries one. */
   cellStyleId(row: number, column: number): number | undefined {
     const located = this.locateRow(row);

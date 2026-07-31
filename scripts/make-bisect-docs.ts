@@ -12,9 +12,16 @@
  * first rung that fails names the culprit with no further narrowing.
  *
  * Rung 0 is the control. It loads the fixture and saves it with **no edits
- * at all** — the bytes come back identical, so if Numbers rejects that one,
- * the fault is in the container or the package layer and nothing above it
- * matters. Every later rung changes one thing more than the one before.
+ * at all**, so if Numbers rejects that one, the fault is in the container
+ * or the package layer and nothing above it matters. Every later rung
+ * changes one thing more than the one before.
+ *
+ * "No edits" means every *archive* comes back identical, which is the
+ * identity that matters. The container bytes do not: an IWA payload
+ * re-compresses to different-but-equivalent Snappy output, and the zip
+ * writer sets the UTF-8 filename flag where Apple leaves it clear. A
+ * resaved document is never a byte-for-byte copy of its input, and no
+ * conclusion should be drawn from that.
  *
  * Open them in order and stop at the first failure. Report that name.
  */
@@ -27,7 +34,7 @@ const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", 
 const RUNGS: { name: string; note: string; build: (doc: NumbersDocument) => void }[] = [
   {
     name: "00-untouched",
-    note: "loaded and saved with no edits; bytes are identical to the fixture",
+    note: "loaded and saved with no edits; every archive is identical to the fixture's",
     build: () => {},
   },
   {

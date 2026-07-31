@@ -1097,10 +1097,27 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Categories: authoring a grouping, and per-group summaries",
+    name: "Categories: regrouping rows after an edit",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() => c.doc.tables().some((t) => (t.activeCategories()?.groups().length ?? 0) > 0)),
+    note:
+      "regroupCategories puts rows back in the groups their values now call for, and writes only " +
+      "the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for " +
+      "byte across every by-value table in the fixture. Creating or removing a group is refused: " +
+      "which rows are \"Animal\" the data answers, but a new group's identity, its sort position " +
+      "and the per-column fields beside the tree are things only the app knows",
+  },
+  {
+    group: "Numbers & tables",
+    name: "Categories: creating a grouping, and per-group summaries",
     apps: "all",
     status: "roadmap",
-    note: "grouping means computing the tree, which is the app's job; no fixture has a non-empty aggregate list, so summary rows are read but unexercised",
+    note:
+      "creating a group needs its identity, its sort position and the several per-column and " +
+      "per-row fields written alongside the tree, none of which any fixture explains; and no " +
+      "fixture has a non-empty aggregate list, so summary rows are read but unexercised",
   },
   {
     group: "Numbers & tables",

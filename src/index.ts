@@ -265,6 +265,7 @@ export {
   TableCategories,
   categoriesOf,
   expandIndexSet,
+  writeIndexSet,
   readCellValue,
   GroupingType,
   GROUPING_TYPE_NAMES,

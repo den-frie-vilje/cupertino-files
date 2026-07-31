@@ -127,7 +127,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Filters: enable, disable, combining mode | all | ✅ read + write | 12 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 1 | current→current |
 | Categories: enable or disable grouping | all | ✅ read + write | 12 | modern→current |
-| Categories: authoring a grouping, and per-group summaries<br><sub>grouping means computing the tree, which is the app's job; no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
+| Categories: regrouping rows after an edit<br><sub>regroupCategories puts rows back in the groups their values now call for, and writes only the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for byte across every by-value table in the fixture. Creating or removing a group is refused: which rows are "Animal" the data answers, but a new group's identity, its sort position and the per-column fields beside the tree are things only the app knows</sub> | all | ✅ read + write | 1 | current→current |
+| Categories: creating a grouping, and per-group summaries<br><sub>creating a group needs its identity, its sort position and the several per-column and per-row fields written alongside the tree, none of which any fixture explains; and no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
 | Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions</sub> | all | 🔍 read only | 22 | iwork16→current |
 | Filters: authoring rules and recomputing hidden rows<br><sub>a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates</sub> | all | ○ roadmap | n/a | — |
 
@@ -221,6 +222,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Conditional formatting rules** (1)
 - Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** (1)
 - Numbers & tables → **Categories (row grouping, nesting, date bucketing)** (1)
+- Numbers & tables → **Categories: regrouping rows after an edit** (1)
 - Keynote → **Speaker notes** (2)
 
 ## Fixture inventory
