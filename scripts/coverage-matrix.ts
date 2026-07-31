@@ -151,6 +151,29 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Container",
+    name: "New document from a template (blankFrom)",
+    apps: "all",
+    status: "read+write",
+    probe: () => true,
+    note:
+      "empties a real document rather than synthesising one: every identity, style and master " +
+      "stays as an Apple app wrote it. There is no from-nothing constructor — that graph could " +
+      "be written but not checked, and unverifiable inventions are the one thing this project " +
+      "refuses to ship",
+  },
+  {
+    group: "Container",
+    name: "Compaction (drop unreachable archives)",
+    apps: "all",
+    status: "read+write",
+    probe: () => true,
+    note:
+      "correct but currently collects little: removing a sheet leaves calc-engine references to " +
+      "its tables, so they stay reachable. A no-op on every untouched fixture, which is the " +
+      "property that matters",
+  },
+  {
+    group: "Container",
     name: "Mixed-codec packages (LZFSE component beside Snappy)",
     apps: "all",
     status: "read",

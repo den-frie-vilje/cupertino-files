@@ -581,9 +581,12 @@ CLI equivalents (after `npm i -g iwork-files` or via npx):
 
 ## Rules of thumb
 
-1. Never construct documents from scratch — load a real file and edit it
-   (the format requires dozens of interlinked objects; the library keeps
-   them consistent only for loaded documents).
+1. Never construct documents from scratch — there is no API for it and
+   there will not be one. To make a *new* document, use
+   `NumbersDocument.blankFrom(template)` (or `PagesDocument`/
+   `KeynoteDocument`), which empties a real file and keeps every identity,
+   style and master an Apple app wrote. Any document works as the template,
+   including one the user hands you.
 2. Make all edits through the API, not by writing raw protobuf fields,
    unless the task is explicitly about the wire format — the API maintains
    attribute-table indexes, object references, and package metadata that

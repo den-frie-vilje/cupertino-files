@@ -215,6 +215,69 @@ export class ObjectStore {
     return obj;
   }
 
+  /**
+   * Drop objects nothing can reach, and report how many went.
+   *
+   * Deleting a sheet or a slide unlinks its archives but does not remove
+   * them: they sit in their component, unreferenced, and go on being
+   * written out. A document blanked from a real one is mostly this — a
+   * template with eleven tables becomes one table and ten ghosts.
+   *
+   * ## Why the scan is deliberately crude
+   *
+   * Reachability is computed by walking **every submessage of every
+   * object** and treating anything shaped like a `TSP.Reference` — a
+   * message whose only field is varint 1 — as a pointer, if that value
+   * names an object. No schema is consulted.
+   *
+   * That over-approximates: a field that happens to hold an integer equal
+   * to some object's id keeps that object alive for no reason. This is the
+   * safe direction. The alternative, walking only the references this
+   * library knows how to extract, would silently drop whatever an
+   * unmodelled archive points at — and a document that loses an object it
+   * needed is unrecoverable, while one that keeps a few too many is merely
+   * larger than it could be.
+   *
+   * Objects in components that failed to decode are never touched, and
+   * neither are the roots.
+   */
+  prune(roots: readonly bigint[]): number {
+    const reachable = new Set<bigint>();
+    const queue: bigint[] = [];
+    for (const root of roots) {
+      if (this.index.has(root) && !reachable.has(root)) {
+        reachable.add(root);
+        queue.push(root);
+      }
+    }
+
+    while (queue.length > 0) {
+      const object = this.index.get(queue.pop()!)?.obj;
+      if (!object) continue;
+      for (const id of referencedIds(object.message)) {
+        if (!this.index.has(id) || reachable.has(id)) continue;
+        reachable.add(id);
+        queue.push(id);
+      }
+    }
+
+    let removed = 0;
+    for (const component of this.components) {
+      if (component.isOpaque) continue;
+      const keep = component.objects.filter((o) => reachable.has(o.identifier));
+      if (keep.length === component.objects.length) continue;
+      for (const object of component.objects) {
+        if (reachable.has(object.identifier)) continue;
+        component.byId.delete(object.identifier);
+        this.index.delete(object.identifier);
+        removed++;
+      }
+      component.objects = keep;
+      component.structurallyDirty = true;
+    }
+    return removed;
+  }
+
   // ------------------------------------------------------------- Data/ files
 
   /** Files to add to the package on save (e.g. "Data/photo.png"). */
@@ -380,5 +443,47 @@ function dedupe(ids: readonly bigint[]): bigint[] {
       out.push(id);
     }
   }
+  return out;
+}
+
+/**
+ * Every object id a message could be pointing at.
+ *
+ * Recursive over submessages, and deliberately shape-based: a `TSP.Reference`
+ * is a message whose sole field is varint 1, so anything matching that is
+ * treated as a pointer. See {@link ObjectStore.prune} for why guessing wide
+ * is the safe direction here.
+ */
+function referencedIds(message: RawMessage): bigint[] {
+  const out: bigint[] = [];
+  const visit = (node: RawMessage, depth: number): void => {
+    // Deep nesting is real (an AST inside a formula inside a list entry),
+    // but unbounded recursion on hostile input is not worth the risk.
+    if (depth > 24) return;
+    const fields = node.fields;
+    if (fields.length === 1 && fields[0]!.no === 1 && fields[0]!.wire === 0) {
+      const id = node.getVarint(1);
+      if (id !== undefined && id > 0n) out.push(id);
+      return;
+    }
+    // Every occurrence, not just the first: repeated fields are how a data
+    // list holds its entries, and reading one entry per list would strand
+    // hundreds of live objects — which is exactly what it did.
+    const seen = new Set<number>();
+    for (const field of fields) {
+      if (field.wire !== 2 || seen.has(field.no)) continue;
+      seen.add(field.no);
+      let subs: RawMessage[] = [];
+      try {
+        subs = node.getMessages(field.no);
+      } catch {
+        continue; // bytes that are not messages
+      }
+      for (const sub of subs) {
+        if (sub.fields.length > 0) visit(sub, depth + 1);
+      }
+    }
+  };
+  visit(message, 0);
   return out;
 }

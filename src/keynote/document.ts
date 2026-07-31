@@ -538,6 +538,29 @@ export class KeynoteDocument extends IWorkDocument {
    * the slides off `rootSlideNode.children`. Indented slides are reached via
    * each node's `children`, walked pre-order to match navigator order.
    */
+  /**
+   * A new, empty deck built from one you supply.
+   *
+   * **There is no from-nothing constructor, and there will not be one.** A
+   * deck is dozens of interlinked archives — theme, masters, slide styles —
+   * and inventing that graph would produce a file nothing offline could
+   * validate. Emptying a real one keeps every identity and master exactly
+   * as an Apple app wrote it.
+   *
+   * One slide survives, with its text placeholders emptied. Masters are
+   * untouched: they are the template.
+   */
+  static blankFrom(template: Uint8Array): KeynoteDocument {
+    const doc = KeynoteDocument.load(template);
+    for (let index = doc.slides().length - 1; index > 0; index--) doc.removeSlide(index);
+    if (doc.slides().length === 0) {
+      throw new RangeError("template has no slides; nothing to build a blank deck from");
+    }
+    for (const storage of doc.slides()[0]!.textStorages()) storage.setText("");
+    doc.compact();
+    return doc;
+  }
+
   slides(): KeynoteSlide[] {
     const tree = this.show().message.getMessage(Show.SLIDE_TREE);
     if (!tree) return [];

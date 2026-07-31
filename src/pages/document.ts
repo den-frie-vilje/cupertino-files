@@ -211,6 +211,33 @@ export class PagesDocument extends IWorkDocument {
     return new PagesDocument(container, store, docObject);
   }
 
+  /**
+   * A new, empty document built from one you supply.
+   *
+   * **There is no from-nothing constructor, and there will not be one.** A
+   * Pages document is dozens of interlinked archives — theme, stylesheet,
+   * section templates, master drawables — and inventing that graph would
+   * produce a file nothing offline could validate. Emptying a real one is
+   * safe: every identity, style and master stays exactly as an Apple app
+   * wrote it, and only the content goes.
+   *
+   * The body text is cleared and the first paragraph's style is kept, so
+   * the result is a blank page in the template's design. Headers, footers
+   * and masters are left alone — they are the template.
+   */
+  static blankFrom(template: Uint8Array): PagesDocument {
+    const doc = PagesDocument.load(template);
+    const body = doc.bodyOrUndefined;
+    if (!body) {
+      throw new RangeError(
+        "template has no document body (a page-layout document); nothing to blank",
+      );
+    }
+    body.setText("");
+    doc.compact();
+    return doc;
+  }
+
   // ------------------------------------------------------------------- body
 
   /**

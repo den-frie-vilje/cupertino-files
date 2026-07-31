@@ -31,6 +31,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Wrapper-directory layout | all | ✅ read + write | **0** | — |
 | Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 37 | all |
 | Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 37 | all |
+| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 37 | all |
+| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 37 | all |
 | Mixed-codec packages (LZFSE component beside Snappy)<br><sub>undecodable components stay opaque and are preserved, never fatal</sub> | all | 🔍 read only | **0** | — |
 | iWork '09 XML documents<br><sub>detected and rejected with a clear error</sub> | all | ✗ out of scope | n/a | — |
 | Password-protected documents<br><sub>detected via .iwph and rejected</sub> | all | ✗ out of scope | n/a | — |

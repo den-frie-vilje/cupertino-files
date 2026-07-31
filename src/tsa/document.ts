@@ -262,6 +262,54 @@ export class IWorkDocument {
   }
 
   /** Serialize the document back to package bytes. */
+  /**
+   * Drop archives nothing can reach, returning how many went.
+   *
+   * **What this collects today is very little, and that is worth knowing
+   * before reaching for it.** Removing a sheet or a table unlinks it from
+   * the document tree, but the calc engine keeps its own references to
+   * every table it ever knew, so those archives stay genuinely reachable.
+   * The gap is in *removal* — unregistering a table's formula owners is
+   * calc-engine surgery this library does not do yet — not in the walk.
+   * What compaction does reclaim is objects created and then abandoned.
+   *
+   * Roots are the package metadata, each component's first object, and
+   * every selection archive; see {@link ObjectStore.prune} for the scan and
+   * for why it errs towards keeping things. It is a no-op on every
+   * untouched document in the corpus, which is the property that matters:
+   * a collector that trims a file nobody edited is broken.
+   */
+  compact(): number {
+    return this.store.prune(this.pruneRoots());
+  }
+
+  /**
+   * Objects that must survive {@link compact}.
+   *
+   * The package metadata anchors the component and data tables, and each
+   * component's first object anchors that component — a component whose
+   * objects all vanished would still be listed in the metadata, which is a
+   * worse state than a few extra archives.
+   */
+  protected pruneRoots(): bigint[] {
+    const roots: bigint[] = [2n];
+    for (const component of this.store.components) {
+      const first = component.objects[0];
+      if (first) roots.push(first.identifier);
+    }
+    // Selection archives — which cell was active, which slide was showing —
+    // are the one category of object nothing in the document points at.
+    // They are view state the apps restore on open, not garbage, and a
+    // reachability walk has no way to tell the difference. Rooting them by
+    // type is narrower and more honest than loosening the walk.
+    for (const { obj } of this.store.allObjects()) {
+      if ((this.store.typeNameOf(obj) ?? "").endsWith("SelectionArchive")) {
+        roots.push(obj.identifier);
+      }
+    }
+    return roots;
+  }
+
   save(): Uint8Array {
     return this.store.save();
   }

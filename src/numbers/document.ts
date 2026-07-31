@@ -46,6 +46,55 @@ export class NumbersDocument extends IWorkDocument {
     return new NumbersDocument(container, store, docObject);
   }
 
+  /**
+   * A new, empty spreadsheet built from a document you supply.
+   *
+   * **There is no from-nothing constructor, and there will not be one.** A
+   * Numbers document is dozens of interlinked archives — theme, stylesheet,
+   * calc-engine owners, table styles — and inventing that graph would
+   * produce a file nothing offline could validate. What *is* safe is
+   * emptying a real one: every identity, style and reference stays
+   * exactly as an Apple app wrote it, and only the content goes.
+   *
+   * The result keeps one sheet holding one blank table, laid out like the
+   * template's first. Everything else — extra sheets, extra tables, their
+   * data — is removed.
+   *
+   * Reach for a document you own or one the user hands you; any `.numbers`
+   * will do, including an empty one saved from Numbers.
+   */
+  static blankFrom(template: Uint8Array, options: { sheetName?: string; tableName?: string } = {}): NumbersDocument {
+    const doc = NumbersDocument.load(template);
+    // Back to front: removing by index invalidates the indexes after it.
+    for (let index = doc.sheets().length - 1; index > 0; index--) doc.removeSheet(index);
+    if (doc.sheets().length === 0) {
+      throw new RangeError("template has no sheets; nothing to build a blank document from");
+    }
+    if (options.sheetName !== undefined) doc.renameSheet(0, options.sheetName);
+
+    const sheet = doc.sheets()[0]!;
+    const tables = doc.tables(sheet.id);
+    if (tables.length === 0) {
+      throw new RangeError("template's first sheet has no table; nothing to blank");
+    }
+    for (const table of tables.slice(1)) {
+      if (table.infoObject) doc.removeTable(sheet.id, table.infoObject.identifier);
+    }
+    const table = doc.tables(sheet.id)[0]!;
+    // Merges first: clearing a covered cell is fine, but leaving a merge
+    // over a blank table means cells the caller cannot write to.
+    for (const merge of table.merges()) table.unmergeCells(merge.row, merge.column);
+    table.clearAllCells();
+    if (options.tableName !== undefined) table.name = options.tableName;
+    // Reclaims abandoned archives. It will not shrink the file much: the
+    // calc engine still references the tables that were removed, so they
+    // stay reachable and stay in the bytes. A blank document is therefore
+    // about the size of its template — the same is true of a new document
+    // made in Numbers, which is also a template with the content deleted.
+    doc.compact();
+    return doc;
+  }
+
   /** Tables of one sheet, or of the whole document when no sheet is given. */
   override tables(sheetId?: bigint): TableModel[] {
     if (sheetId === undefined) return tablesOf(this.store);
