@@ -40,7 +40,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 15 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
 | 16 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
 | 17 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 18 | 🟠 medium | Numbers & tables → Merged cell ranges | The merge rectangles we decode from the merge-owner formula store match what the app displays. | manual |
+| 18 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
 | 19 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 20 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
 | 21 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates appears in the app's comment pane, attributed correctly | manual |
@@ -268,13 +268,13 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
-**Status in the matrix:** 🔍 read only
+**Status in the matrix:** ✅ read + write
 
-**Claim.** The merge rectangles we decode from the merge-owner formula store match what the app displays.
+**Claim.** Numbers accepts a merge this library wrote, and shows it where we put it.
 
-**Why the suite cannot settle it.** Decoding is validated only by internal consistency: anchors hold values, covered cells never do, and both format eras of the same document agree. That is strong evidence, not proof — no fixture carries a merge_region_map to cross-check against, and no scripting API reports merges.
+**Why the suite cannot settle it.** The bytes we write match Apple's exactly for the same rectangle, which is the strongest offline evidence available — but byte equality of one node is not the same as the engine accepting the document, and no scripting API reports merges.
 
-**How to settle it.** Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).
+**How to settle it.** Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
 
 ### 19. Table structure (rows, columns, bands, sizes, freeze, repeat)
 

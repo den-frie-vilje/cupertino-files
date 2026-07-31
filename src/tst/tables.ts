@@ -24,7 +24,12 @@ import {
 import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
-import { renderFormula, type RenderedFormula } from "./formulas.ts";
+import {
+  AstNodeFields,
+  AstNodeType,
+  renderFormula,
+  type RenderedFormula,
+} from "./formulas.ts";
 import { ConditionalStyleSet, type ConditionalRule } from "./conditional.ts";
 import { FilterSet, type FilterRule } from "./filters.ts";
 import {
@@ -34,7 +39,7 @@ import {
   type TableCategories,
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
-import { FormulaOwnerRegistry } from "../tsce/owners.ts";
+import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
 import { controlsOf, type CellControl } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 
@@ -249,6 +254,59 @@ const ColonTract = {
 const TractRange = { BEGIN: 1, END: 2 } as const;
 
 /** First absolute range of a colon tract; `range_end` absent means one unit. */
+/**
+ * The function node that wraps a merge's rectangle.
+ *
+ * Every merge in every document is `SUM` (index 168) over one argument.
+ * Nothing evaluates it — the value is never shown — but the engine stores
+ * a merge as a formula, and a formula needs a call. Omitting this node
+ * produces a file our own reader accepts and Apple's engine would find
+ * malformed.
+ */
+function mergeFunctionNode(): RawMessage {
+  const node = RawMessage.create();
+  node.setVarint(AstNodeFields.TYPE, AstNodeType.FUNCTION);
+  node.setVarint(AstNodeFields.FUNCTION_INDEX, MERGE_FUNCTION_INDEX);
+  node.setVarint(AstNodeFields.FUNCTION_NUM_ARGS, 1);
+  return node;
+}
+
+/** `SUM` — the call a merge's range sits inside. */
+const MERGE_FUNCTION_INDEX = 168;
+
+/** A tract range as the calc engine writes it; `end` omitted when equal. */
+function absoluteRangeMessage(begin: number, end: number): RawMessage {
+  const range = RawMessage.create();
+  range.setVarint(TractRange.BEGIN, begin);
+  // Apple omits the end for a single row or column, and the reader treats
+  // an absent end as "same as begin". Writing it anyway would be readable
+  // but would not match what the app produces.
+  if (end !== begin) range.setVarint(TractRange.END, end);
+  return range;
+}
+
+/** The rectangle a merge-store pair describes, if it describes one. */
+function mergeRangeOfPair(pair: RawMessage): MergeRange | undefined {
+  const nodes = pair
+    .getMessage(FormulaStore.PAIR_FORMULA)
+    ?.getMessage(Formula.AST_NODE_ARRAY)
+    ?.getMessages(AstNodeArray.NODES);
+  for (const node of nodes ?? []) {
+    if (node.getUint(AstNode.TYPE) !== AST_COLON_TRACT_NODE) continue;
+    const tract = node.getMessage(AstNode.COLON_TRACT);
+    const columns = absoluteRange(tract, ColonTract.ABSOLUTE_COLUMN);
+    const rows = absoluteRange(tract, ColonTract.ABSOLUTE_ROW);
+    if (!columns || !rows) continue;
+    return {
+      row: rows.begin,
+      column: columns.begin,
+      rowCount: rows.end - rows.begin + 1,
+      columnCount: columns.end - columns.begin + 1,
+    };
+  }
+  return undefined;
+}
+
 function absoluteRange(
   tract: RawMessage | undefined,
   field: number,
@@ -1034,6 +1092,209 @@ export class TableModel {
   /** Clear a cell's value, keeping its styling. */
   clearCell(row: number, column: number): void {
     this.setCell(row, column, { type: "empty" });
+  }
+
+  /**
+   * Merge a rectangle of cells, anchored at its top-left.
+   *
+   * A merge is not a property of the cells. It is a **formula owned by the
+   * calc engine**: `TableModelArchive.merge_owner.formula_store` holds one
+   * colon-tract AST node per merged rectangle, and the covered cells are
+   * simply deleted — Apple leaves them with no record at all, which is why
+   * `cellValue` returns `undefined` for them rather than "empty".
+   *
+   * Every table in every document examined already carries a `merge_owner`
+   * with an owner id, merged or not, so nothing here has to mint a calc
+   * engine identity. A table that somehow lacks one is refused rather than
+   * guessed at: an owner the engine does not know about is worse than no
+   * merge, because the document would load and then behave oddly.
+   *
+   * The anchor's value survives; everything the rectangle covers is
+   * discarded, exactly as merging does in the app.
+   */
+  mergeCells(row: number, column: number, rowCount: number, columnCount: number): void {
+    this.requireWritable();
+    if (rowCount < 1 || columnCount < 1) {
+      throw new RangeError(`merge must span at least one cell, got ${rowCount}×${columnCount}`);
+    }
+    if (rowCount === 1 && columnCount === 1) {
+      throw new RangeError("a 1×1 merge is not a merge; nothing to do");
+    }
+    const lastRow = row + rowCount - 1;
+    const lastColumn = column + columnCount - 1;
+    if (row < 0 || column < 0 || lastRow >= this.rowCount || lastColumn >= this.columnCount) {
+      throw new RangeError(
+        `merge ${row},${column} ${rowCount}×${columnCount} is outside the table ` +
+          `(${this.rowCount}×${this.columnCount})`,
+      );
+    }
+    // Overlapping merges are the one thing the format cannot express: the
+    // covered cells would belong to two rectangles at once.
+    for (const existing of this.merges()) {
+      const overlaps =
+        row <= existing.row + existing.rowCount - 1 &&
+        existing.row <= lastRow &&
+        column <= existing.column + existing.columnCount - 1 &&
+        existing.column <= lastColumn;
+      if (overlaps) {
+        throw new RangeError(
+          `merge ${row},${column} ${rowCount}×${columnCount} overlaps the existing merge at ` +
+            `${existing.row},${existing.column} ${existing.rowCount}×${existing.columnCount}`,
+        );
+      }
+    }
+
+    const owner = this.object.message.getMessage(TableModelFields.MERGE_OWNER);
+    if (!owner || !owner.has(MergeOwner.OWNER_ID)) {
+      throw new RangeError(
+        "table has no merge owner; merging would need a calc-engine identity this library " +
+          "will not invent",
+      );
+    }
+    const store = owner.getMessage(MergeOwner.FORMULA_STORE) ?? RawMessage.create();
+    const index = Number(store.getUint(FormulaStore.NEXT_INDEX) ?? 0);
+
+    const pair = RawMessage.create();
+    pair.setVarint(FormulaStore.PAIR_INDEX, index);
+    const formula = RawMessage.create();
+    const nodes = RawMessage.create();
+    // Two nodes, in the postfix order the engine evaluates: the rectangle,
+    // then the call that consumes it. A merge is stored as SUM(range) —
+    // not because anything sums, but because the engine needs a formula to
+    // own the range, and that is the one Apple writes.
+    nodes.addMessage(AstNodeArray.NODES, this.mergeNode(row, column, lastRow, lastColumn));
+    nodes.addMessage(AstNodeArray.NODES, mergeFunctionNode());
+    formula.setMessage(Formula.AST_NODE_ARRAY, nodes);
+    pair.setMessage(FormulaStore.PAIR_FORMULA, formula);
+
+    store.addMessage(FormulaStore.FORMULAS, pair);
+    store.setVarint(FormulaStore.NEXT_INDEX, index + 1);
+    owner.setMessage(MergeOwner.FORMULA_STORE, store);
+    this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
+    this.object.message.markDirty();
+
+    // Everything the merge swallows loses its record entirely.
+    for (let r = row; r <= lastRow; r++) {
+      for (let c = column; c <= lastColumn; c++) {
+        if (r === row && c === column) continue;
+        this.deleteCellRecord(r, c);
+      }
+    }
+  }
+
+  /**
+   * Remove the merge anchored at a cell, returning false if there is none.
+   *
+   * The cells it covered come back empty, which is what the app does: the
+   * values they held before merging were discarded at merge time and are
+   * not recoverable from the file.
+   */
+  unmergeCells(row: number, column: number): boolean {
+    this.requireWritable();
+    const owner = this.object.message.getMessage(TableModelFields.MERGE_OWNER);
+    const store = owner?.getMessage(MergeOwner.FORMULA_STORE);
+    if (!owner || !store) return false;
+
+    const kept = store
+      .getMessages(FormulaStore.FORMULAS)
+      .filter((pair) => {
+        const range = mergeRangeOfPair(pair);
+        return !(range && range.row === row && range.column === column);
+      });
+    if (kept.length === store.getMessages(FormulaStore.FORMULAS).length) return false;
+
+    // next_index is a high-water mark, not a count: leaving it alone keeps
+    // ids unique against anything the engine still remembers.
+    store.setMessages(FormulaStore.FORMULAS, kept);
+    owner.setMessage(MergeOwner.FORMULA_STORE, store);
+    this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
+    this.object.message.markDirty();
+    return true;
+  }
+
+  /**
+   * One merged rectangle as the calc engine stores it.
+   *
+   * `cross_table_info` names the table's *own* formula owner — a merge
+   * reaches nowhere else — and is taken from the registry rather than
+   * derived arithmetically, because the `base + kind` derivation holds for
+   * most files and demonstrably not all (see `src/tsce/owners.ts`). When an
+   * existing merge is present its cross-table info is copied verbatim,
+   * which is both cheaper and safer than reconstructing it.
+   */
+  private mergeNode(row: number, column: number, lastRow: number, lastColumn: number): RawMessage {
+    const node = RawMessage.create();
+    node.setVarint(AstNode.TYPE, AST_COLON_TRACT_NODE);
+
+    const template = this.existingMergeNode();
+    const crossTable = template?.getMessage(AstNode.CROSS_TABLE_INFO) ?? this.crossTableInfo();
+    if (crossTable) node.setMessage(AstNode.CROSS_TABLE_INFO, crossTable);
+
+    // Every merge in every document sets all four sticky bits: a merged
+    // rectangle does not move when rows or columns are inserted around it.
+    const sticky = template?.getMessage(AstNode.STICKY_BITS) ?? RawMessage.create();
+    if (!template) for (const field of [1, 2, 3, 4]) sticky.setVarint(field, 1);
+    node.setMessage(AstNode.STICKY_BITS, sticky);
+
+    const tract = RawMessage.create();
+    tract.setMessage(ColonTract.ABSOLUTE_COLUMN, absoluteRangeMessage(column, lastColumn));
+    tract.setMessage(ColonTract.ABSOLUTE_ROW, absoluteRangeMessage(row, lastRow));
+    tract.setVarint(ColonTract.PRESERVE_RECTANGULAR, 1);
+    node.setMessage(AstNode.COLON_TRACT, tract);
+    return node;
+  }
+
+  /** A merge node already in this table, to copy the invariant parts from. */
+  private existingMergeNode(): RawMessage | undefined {
+    const store = this.object.message
+      .getMessage(TableModelFields.MERGE_OWNER)
+      ?.getMessage(MergeOwner.FORMULA_STORE);
+    for (const pair of store?.getMessages(FormulaStore.FORMULAS) ?? []) {
+      const nodes = pair
+        .getMessage(FormulaStore.PAIR_FORMULA)
+        ?.getMessage(Formula.AST_NODE_ARRAY)
+        ?.getMessages(AstNodeArray.NODES);
+      for (const node of nodes ?? []) {
+        if (node.getUint(AstNode.TYPE) === AST_COLON_TRACT_NODE) return node;
+      }
+    }
+    return undefined;
+  }
+
+  /** `cross_table_info` naming this table's own formula owner. */
+  private crossTableInfo(): RawMessage | undefined {
+    // Owners name the table's *info* object, not its model — the two are
+    // different archives and only the info one is registered.
+    const ours = new Set(
+      [this.object.identifier, this.infoObject?.identifier].filter((id) => id !== undefined),
+    );
+    const own = this.owners()
+      .all()
+      .find((o) => o.kind === OwnerKind.TABLE && o.ownerId !== undefined && ours.has(o.ownerId));
+    if (!own) return undefined;
+    const uid = RawMessage.create();
+    uid.setVarint(2, Number(own.uid.lo & 0xffffffffn));
+    uid.setVarint(3, Number(own.uid.lo >> 32n));
+    uid.setVarint(4, Number(own.uid.hi & 0xffffffffn));
+    uid.setVarint(5, Number(own.uid.hi >> 32n));
+    const info = RawMessage.create();
+    info.setMessage(1, uid);
+    return info;
+  }
+
+  /** Delete a cell's record outright, as merging does to a covered cell. */
+  private deleteCellRecord(row: number, column: number): void {
+    const located = this.locateRow(row);
+    if (!located) return;
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    if (!existing) return;
+    const stringId = CellRecord.decode(existing).id(CellFlag.STRING_ID);
+    if (stringId !== undefined) this.releaseString(stringId);
+    layout.records[column] = undefined;
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
+    this.refreshTileTotals();
   }
 
   /**

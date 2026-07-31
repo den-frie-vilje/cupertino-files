@@ -106,7 +106,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
 | Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
 | Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 22 | iwork16→current |
-| Merged cell ranges<br><sub>writing a merge needs calc-engine owner bookkeeping</sub> | all | 🔍 read only | 5 | modern→current |
+| Merged cell ranges<br><sub>mergeCells/unmergeCells. A merge we build for a rectangle Apple also merged is byte-identical to Apple's own node — cross-table info, sticky bits, tract and the SUM wrapper — reconstructed from the object graph, not copied</sub> | all | ✅ read + write | 5 | modern→current |
 | Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 17 | iwork19→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |

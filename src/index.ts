@@ -176,6 +176,7 @@ export {
   groupValueOf,
   normalizeCellInput,
   TST_TYPE,
+  TableModelFields,
 } from "./tst/tables.ts";
 export type {
   CellValue,

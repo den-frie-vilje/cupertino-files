@@ -754,19 +754,22 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Merged cell ranges",
     apps: "all",
-    status: "read",
+    status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.merges().length > 0)),
-    note: "writing a merge needs calc-engine owner bookkeeping",
+    note:
+      "mergeCells/unmergeCells. A merge we build for a rectangle Apple also merged is " +
+      "byte-identical to Apple's own node — cross-table info, sticky bits, tract and the SUM " +
+      "wrapper — reconstructed from the object graph, not copied",
     manualProof: {
-      claim: "The merge rectangles we decode from the merge-owner formula store match what the app displays.",
+      claim: "Numbers accepts a merge this library wrote, and shows it where we put it.",
       why:
-        "Decoding is validated only by internal consistency: anchors hold values, covered cells never do, " +
-        "and both format eras of the same document agree. That is strong evidence, not proof — no fixture " +
-        "carries a merge_region_map to cross-check against, and no scripting API reports merges.",
+        "The bytes we write match Apple's exactly for the same rectangle, which is the strongest " +
+        "offline evidence available — but byte equality of one node is not the same as the engine " +
+        "accepting the document, and no scripting API reports merges.",
       how:
-        "Open iwork-mcp-v14.5-earnings.numbers and numbers-parser-v26.0-issue102.numbers in Numbers and " +
-        "confirm the merges match what merges() reports (Key Metrics: rows 0 and 1 span all 4 columns; " +
-        "Cats: r0c2 8 wide, r2c0 4 tall, r6c0 2 wide, r6c2 9 wide).",
+        "Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately " +
+        "checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key " +
+        "Metrics: rows 0 and 1 span all 4 columns).",
       risk: "medium",
     },
   },
