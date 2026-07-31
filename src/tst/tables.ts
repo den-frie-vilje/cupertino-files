@@ -36,6 +36,7 @@ import {
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
 import { FormulaOwnerRegistry } from "../tsce/owners.ts";
 import { controlsOf, type CellControl } from "./controls.ts";
+import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 
 /**
  * One owner registry per store, kept weakly so a closed document is not
@@ -335,6 +336,32 @@ export interface MergeRange {
 
 /** Seconds between the Unix epoch and Apple's 2001-01-01 epoch. */
 const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
+
+/**
+ * A pre-BNC record as a {@link CellValue}, or `undefined` when the record's
+ * shape has not been measured.
+ *
+ * `undefined` is not "empty": the caller omits the cell and counts it, so a
+ * partial read stays visible. `isFormula` is always false — pre-BNC
+ * formulas are not decoded, and claiming otherwise would be a guess.
+ */
+function preBncCellValue(
+  record: PreBncRecord | undefined,
+  strings: Map<number, string>,
+): CellValue | undefined {
+  if (!record) return undefined;
+  if (record.stringId !== undefined) {
+    const text = strings.get(record.stringId);
+    return text === undefined ? undefined : { type: "text", value: text, isFormula: false };
+  }
+  if (record.number !== undefined) {
+    return { type: "number", value: record.number, isFormula: false };
+  }
+  if (record.seconds !== undefined) {
+    return { type: "date", value: new Date(APPLE_EPOCH_MS + record.seconds * 1000), isFormula: false };
+  }
+  return undefined;
+}
 const DECIMAL128_BIAS = 0x1820;
 
 export class TableModel {
@@ -726,28 +753,32 @@ export class TableModel {
     return sawRow ? "preBNC" : "empty";
   }
 
-  /** True when {@link cells} can decode this table's storage. */
+  /**
+   * True when {@link cells} decodes **every** cell in this table.
+   *
+   * Always true for v5 storage. For pre-BNC it means every record matched a
+   * measured shape — the interesting case is `false`, which says the list
+   * `cells()` returns is short and {@link undecodedPreBncCells} says by how
+   * much.
+   */
   get hasReadableCells(): boolean {
-    return this.storageGeneration !== "preBNC";
+    return this.storageGeneration !== "preBNC" || this.undecodedPreBncCells() === 0;
   }
 
   /**
    * All non-empty cells in reading order.
    *
-   * Throws for pre-BNC storage rather than returning an empty list — a
-   * silent [] would be indistinguishable from a genuinely empty table.
-   * Check {@link hasReadableCells} first when handling files of unknown age.
+   * Reads pre-BNC (storage version 4) tables too, for the record shapes
+   * that have been measured — see {@link ./prebnc.ts}. A cell whose shape
+   * is unmeasured is **omitted**, and {@link undecodedPreBncCells} counts
+   * them, so "this table read clean" and "this table half-read" stay
+   * distinguishable.
    */
   cells(): CellInfo[] {
     const out: CellInfo[] = [];
     const ds = this.dataStore();
     if (!ds) return out;
-    if (this.storageGeneration === "preBNC") {
-      throw new RangeError(
-        `table ${JSON.stringify(this.name ?? "")}: pre-BNC cell storage (written by an ` +
-          `iWork '13/'15-era app) is not supported; re-saving in a current app converts it`,
-      );
-    }
+    if (this.storageGeneration === "preBNC") return this.preBncCells(ds);
     const strings = this.stringTable();
     const richText = this.richTextTable();
     const tiles = ds.getMessage(DataStoreFields.TILES);
@@ -792,6 +823,67 @@ export class TableModel {
     return out;
   }
 
+  /**
+   * Cells of a pre-BNC table.
+   *
+   * Kept separate from the v5 path rather than folded into it: the two
+   * share a header shape and nothing else, and interleaving them would
+   * make both harder to read for no gain.
+   */
+  private preBncCells(ds: RawMessage): CellInfo[] {
+    const out: CellInfo[] = [];
+    const strings = this.stringTable();
+    const tiles = ds.getMessage(DataStoreFields.TILES);
+    if (!tiles) return out;
+    const tileSize = tiles.getUint(TileStorageFields.TILE_SIZE) ?? 256;
+
+    for (const t of tiles.getMessages(TileStorageFields.TILES)) {
+      const tileId = t.getUint(TileEntry.TILEID) ?? 0;
+      const tile = this.store.resolve(refId(t, TileEntry.TILE));
+      if (!tile) continue;
+      for (const ri of tile.message.getMessages(TileFields.ROW_INFOS)) {
+        const row = tileId * tileSize + (ri.getUint(TileRowInfo.TILE_ROW_INDEX) ?? 0);
+        const buffer = ri.getBytes(TileRowInfo.CELL_STORAGE_BUFFER_PRE_BNC);
+        const offsets = ri.getBytes(TileRowInfo.CELL_OFFSETS_PRE_BNC);
+        if (!buffer || !offsets) continue;
+        for (const { column, bytes } of splitPreBncRow(buffer, offsets)) {
+          if (column >= this.columnCount) continue;
+          const value = preBncCellValue(decodePreBncRecord(bytes), strings);
+          if (value) out.push({ row, column, value });
+        }
+      }
+    }
+    out.sort((a, b) => a.row - b.row || a.column - b.column);
+    return out;
+  }
+
+  /**
+   * How many pre-BNC cells this table holds that {@link cells} could not
+   * decode — zero for a v5 table, and zero for a pre-BNC table that read
+   * cleanly.
+   *
+   * Exposed because a partial read is the one outcome a caller must be able
+   * to detect: `cells()` returning fewer rows than the file contains is
+   * otherwise indistinguishable from a sparse table.
+   */
+  undecodedPreBncCells(): number {
+    if (this.storageGeneration !== "preBNC") return 0;
+    const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
+    let undecoded = 0;
+    for (const t of tiles?.getMessages(TileStorageFields.TILES) ?? []) {
+      const tile = this.store.resolve(refId(t, TileEntry.TILE));
+      for (const ri of tile?.message.getMessages(TileFields.ROW_INFOS) ?? []) {
+        const buffer = ri.getBytes(TileRowInfo.CELL_STORAGE_BUFFER_PRE_BNC);
+        const offsets = ri.getBytes(TileRowInfo.CELL_OFFSETS_PRE_BNC);
+        if (!buffer || !offsets) continue;
+        for (const { bytes } of splitPreBncRow(buffer, offsets)) {
+          if (!decodePreBncRecord(bytes)) undecoded++;
+        }
+      }
+    }
+    return undecoded;
+  }
+
   /** Dense 2-D array of the table (null = empty cell). */
   grid(): (CellValue | null)[][] {
     const rows: (CellValue | null)[][] = [];
@@ -806,12 +898,24 @@ export class TableModel {
     return rows;
   }
 
+  /**
+   * One cell's typed value, or `undefined` when the cell is empty.
+   *
+   * `undefined` also covers a pre-BNC cell whose record shape has not been
+   * measured — see {@link undecodedPreBncCells}, which is how the two are
+   * told apart.
+   */
+  cellValue(row: number, column: number): CellValue | undefined {
+    for (const c of this.cells()) {
+      if (c.row === row && c.column === column) return c.value;
+    }
+    return undefined;
+  }
+
   /** Convenience: cell text/number as a display string ("" for empty). */
   cellText(row: number, column: number): string {
-    for (const c of this.cells()) {
-      if (c.row === row && c.column === column) return cellValueToString(c.value);
-    }
-    return "";
+    const value = this.cellValue(row, column);
+    return value === undefined ? "" : cellValueToString(value);
   }
 
   // --------------------------------------------------------------- writing

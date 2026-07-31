@@ -288,6 +288,8 @@ export {
   INTERACTION_TYPE_NAMES,
 } from "./tst/controls.ts";
 export type { CellControl, ControlShape } from "./tst/controls.ts";
+export { decodePreBncRecord, splitPreBncRow, PRE_BNC_VERSION, PRE_BNC_LAYOUTS } from "./tst/prebnc.ts";
+export type { PreBncRecord } from "./tst/prebnc.ts";
 export {
   BuildModel,
   buildsOfSlide,

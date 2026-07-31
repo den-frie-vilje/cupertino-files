@@ -639,13 +639,15 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Table cell reading — pre-BNC storage",
+    name: "Table cell reading — pre-BNC storage (iWork '13/'15)",
     apps: "all",
-    status: "roadmap",
+    status: "read",
     probe: (c) => c.report.probe.cellStorage === "preBNC",
     note:
-      "reported explicitly, never guessed. Was filed out of scope; that was wrong — the layout " +
-      "is being measured from the corpus with `npm run prebnc`, no Mac involved. BLOCKERS.md §8",
+      "text, numbers and dates. Layout measured from the corpus itself (`npm run prebnc`), not " +
+      "documented anywhere; a record shape that was not measured is refused and counted by " +
+      "undecodedPreBncCells() rather than guessed. Writing this storage is out of scope — a " +
+      "current app converts these files on open",
   },
   {
     group: "Numbers & tables",

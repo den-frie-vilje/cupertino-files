@@ -234,16 +234,22 @@ for both, including a staleness check for categories.
 
 ---
 
-## Priority 8 — Pre-BNC cell storage
+## Priority 8 — Pre-BNC cell storage — **DONE**
 
-**Blocked on:** one field, and it is being measured now. This was filed
-"out of scope" and that was wrong — the classification was inherited from
-the reference Python implementation rather than earned. Six of the corpus's
-fifty tables use it, in four files already on disk, and **no Mac is
-involved**: the records are here and the string table beside them is a free
-oracle.
+Filed "out of scope", which was wrong: the classification was inherited
+from the reference Python implementation rather than earned. Six of the
+corpus's fifty tables use it, in four files already on disk, and no Mac was
+involved — the records were here and the string table beside them was a
+free oracle.
 
-`npm run prebnc` does the measuring. What it establishes:
+**All 123 pre-BNC records in the corpus now decode, none refused.** The
+proof is not that values come out; a wrong offset also produces values. It
+is that the values *mean* something: `tika-testNumbers2013.numbers` reads
+as a month of October 2009 transactions in date order, with descriptions
+matching their amounts, rent negative and the paycheck positive.
+
+`src/tst/prebnc.ts` decodes; `npm run prebnc` re-derives the measurements
+on demand. What they establish:
 
 - The header is 12 bytes and is v5's header with a wider extras word:
   version(1) type(1) pad(2) flags(u32 @4) extras(u32 @8). Version is 4 and
@@ -262,18 +268,25 @@ oracle.
   English. Number cells hold IEEE doubles landing on exact bit patterns
   (2.0, 0.5, 0.1, 7.0); date cells hold seconds-since-2001 the same way.
 
-**What is left:** cells whose flag word sets bit 7 keep their text somewhere
-other than the plain string slot. Column 0 of the `Transactions` fixture is
-the one that does it, and it reads like a pop-up menu (`Type`, `101`, `102`,
-`Debit Card`, `DEP`) — while `src/tst/formats.ts` already records format 266
-as a pre-BNC-only pop-up menu. So bit 7 is very likely the control field and
-a menu cell's text lives with the menu. Confirming that fixes `size(2)` and
-the decoder follows.
+**Why it decodes by position, not by flag.** Bit 2 is set in every record,
+so its size cannot be separated from bits 4, 5 and 6 by length alone, and
+the exact flag→field assignment stays open. What is *not* open is where the
+value sits: across all six combinations it lands at the same place relative
+to the **end** of the record — a text cell's string key is the last four
+bytes, a number or date's double is the eight before a single trailing
+word. That is what the reader uses, and it refuses any record shape it has
+not measured rather than extending the rule on faith.
 
-Reading is the whole goal here. **Writing pre-BNC storage is not** — a
-current app converts these files on open, so the useful behaviour is to read
-an old document and save it in the modern storage, not to author a 2013
-format.
+**Still unnamed, and deliberately so.** Bit 2's size (0 or 4); what the
+leading words are (they look like per-cell style keys, incrementing by row);
+what the trailing word after a number is (constant per column, so probably a
+format key). None of these are needed to read a value, and none are guessed
+— `PreBncRecord.leading` and `.trailingId` report them raw.
+
+**Not implemented and not planned: writing pre-BNC storage.** A current app
+converts these documents on open, so the useful operation is to read an old
+file and save it modern, which the v5 writer already does. Pre-BNC formulas
+are also not decoded; `isFormula` is false throughout rather than guessed.
 
 ---
 

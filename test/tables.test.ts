@@ -296,21 +296,17 @@ describe("table discovery on real fixtures", () => {
     expect((at(1, 3) as { value: number }).value).toBe(5500);
   });
 
-  it("reports pre-BNC storage explicitly instead of returning no cells", () => {
-    // The 2013-era fixtures predate Numbers 10's "BNC" cell storage. A silent
-    // empty result would be indistinguishable from an empty table, so cells()
-    // must throw and hasReadableCells must be false.
+  it("reads pre-BNC storage rather than refusing it", () => {
+    // The 2013-era fixtures predate Numbers 10's "BNC" cell storage. This
+    // used to throw; the layout has since been measured, so the storage
+    // generation is still reported — callers may care — but the cells come
+    // out. See test/prebnc.test.ts for what they are.
     const doc = NumbersDocument.load(fixture("tika-testNumbers2013.numbers"));
     const table = doc.tables()[0]!;
     expect(table.storageGeneration).toBe("preBNC");
-    expect(table.hasReadableCells).toBe(false);
-    let message = "";
-    try {
-      table.cells();
-    } catch (e) {
-      message = String((e as Error).message);
-    }
-    expect(message).toContain("pre-BNC");
+    expect(table.hasReadableCells).toBe(true);
+    expect(table.undecodedPreBncCells()).toBe(0);
+    expect(table.cells().length).toBeGreaterThan(0);
   });
 });
 
