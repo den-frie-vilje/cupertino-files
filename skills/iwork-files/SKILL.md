@@ -224,16 +224,22 @@ correctly clears the formula.
 ### Writing cells
 
 ```ts
-t.setCell(1, 0, { type: "text", value: "Revenue" });
-t.setCell(1, 1, { type: "number", value: 143_800_000_000 });
-t.setCell(2, 0, { type: "date", value: new Date() });
-t.setCell(2, 1, { type: "bool", value: true });
+// Plain values work; the type follows from the value.
+t.setCell(1, 0, "Revenue");
+t.setCell(1, 1, 143_800_000_000);
+t.setCell(2, 0, new Date());
+t.setCell(2, 1, true);
+t.setCell(3, 0, null);                            // same as clearCell
+// A duration is the one type with no plain form — a bare number means the
+// number — so it keeps the tagged form.
 t.setCell(2, 2, { type: "duration", seconds: 3600 });
-t.clearCell(3, 0);
-t.setRow(4, [{ type: "text", value: "Total" }, { type: "number", value: 42 }]);
-t.setCells(5, 0, [[{ type: "number", value: 1 }, { type: "number", value: 2 }]]);
-toCellInput("plain value");   // coerce string|number|boolean|Date|null
+t.setRow(4, ["Total", 42]);
+t.setCells(5, 0, [[1, 2]]);
 ```
+
+An unrecognised value **throws** rather than writing an empty cell, and it
+throws before touching the row, so a rejected write leaves the table
+untouched. `NaN`, `Infinity` and an invalid `Date` are all refused.
 
 Writing preserves the cell's styles, number formats and comments, and
 clears any formula. Rich text (`type: "richText"`) cannot be written

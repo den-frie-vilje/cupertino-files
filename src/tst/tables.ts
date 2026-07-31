@@ -302,13 +302,78 @@ export function groupValueOf(value: CellValue | undefined): GroupValue {
  * in a separate storage object, and `error` is produced by formula
  * evaluation rather than authored.
  */
-export type CellInput =
+/**
+ * A value to write into a cell.
+ *
+ * The tagged forms are exact — `{ type: "duration", seconds }` is the only
+ * way to say "45 minutes" rather than "the number 2700". Everything else
+ * has an obvious plain form, so a bare `string`, `number`, `boolean`,
+ * `Date` or `null` is accepted and normalised by {@link normalizeCellInput}.
+ *
+ * Bare values were not accepted originally, and passing one *silently
+ * cleared the cell*: the tag was `undefined`, no case matched, and the
+ * record came out empty. Erasing data because a caller wrote the natural
+ * thing is not a tolerable failure mode, so plain values are now first
+ * class and anything genuinely unrecognised throws.
+ */
+export type CellInput = TaggedCellInput | string | number | boolean | Date | null;
+
+export type TaggedCellInput =
   | { type: "empty" }
   | { type: "number"; value: number }
   | { type: "text"; value: string }
   | { type: "bool"; value: boolean }
   | { type: "date"; value: Date }
   | { type: "duration"; seconds: number };
+
+/**
+ * Put a {@link CellInput} in tagged form, or throw.
+ *
+ * `null` and `undefined` mean "empty" — clearing a cell by writing nothing
+ * is the natural reading, and it is what `clearCell` does anyway. `NaN` is
+ * refused: it is almost always a failed parse upstream, and storing it
+ * produces a cell the apps render as an error with no clue why.
+ */
+export function normalizeCellInput(value: CellInput | undefined): TaggedCellInput {
+  if (value === null || value === undefined) return { type: "empty" };
+  switch (typeof value) {
+    case "string":
+      return { type: "text", value };
+    case "boolean":
+      return { type: "bool", value };
+    case "number":
+      if (!Number.isFinite(value)) {
+        throw new RangeError(
+          `cannot write ${value} to a cell; use a finite number, or clear the cell instead`,
+        );
+      }
+      return { type: "number", value };
+    case "object":
+      break;
+    default:
+      throw new RangeError(`cannot write a ${typeof value} to a cell`);
+  }
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) throw new RangeError("cannot write an invalid Date to a cell");
+    return { type: "date", value };
+  }
+  const tag = (value as { type?: unknown }).type;
+  if (
+    tag === "empty" ||
+    tag === "number" ||
+    tag === "text" ||
+    tag === "bool" ||
+    tag === "date" ||
+    tag === "duration"
+  ) {
+    return value as TaggedCellInput;
+  }
+  // The case that used to erase the cell.
+  throw new RangeError(
+    `unrecognised cell value ${JSON.stringify(tag)}; pass a string, number, boolean, Date, ` +
+      `null, or a tagged value such as { type: "duration", seconds: 60 }`,
+  );
+}
 
 export interface WriteOptions {
   /**
@@ -318,14 +383,6 @@ export interface WriteOptions {
   allowCovered?: boolean;
 }
 
-/** Coerce a plain JS value to a {@link CellInput}. */
-export function toCellInput(value: string | number | boolean | Date | null | undefined): CellInput {
-  if (value === null || value === undefined || value === "") return { type: "empty" };
-  if (typeof value === "string") return { type: "text", value };
-  if (typeof value === "number") return { type: "number", value };
-  if (typeof value === "boolean") return { type: "bool", value };
-  return { type: "date", value };
-}
 
 export interface MergeRange {
   row: number;
@@ -933,7 +990,10 @@ export class TableModel {
    * in a separate TSWP storage object. Set plain `text` instead, or edit
    * the existing rich-text storage through {@link richTextStorage}.
    */
-  setCell(row: number, column: number, value: CellInput, options: WriteOptions = {}): void {
+  setCell(row: number, column: number, input: CellInput, options: WriteOptions = {}): void {
+    // Normalise first: an unrecognised value must throw before anything is
+    // touched, not after the row layout has been rebuilt.
+    const value = normalizeCellInput(input);
     this.requireWritable();
     if (row < 0 || row >= this.rowCount || column < 0 || column >= this.columnCount) {
       throw new RangeError(
@@ -1872,7 +1932,7 @@ export class TableModel {
   }
 
   /** Set the value-carrying fields of a record for a new value. */
-  private applyValue(record: CellRecord, value: CellInput): void {
+  private applyValue(record: CellRecord, value: TaggedCellInput): void {
     const previousType = record.type;
     record.removeAll(VALUE_FLAGS);
     switch (value.type) {

@@ -174,12 +174,13 @@ export {
   decodeDecimal128,
   cellValueToString,
   groupValueOf,
-  toCellInput,
+  normalizeCellInput,
   TST_TYPE,
 } from "./tst/tables.ts";
 export type {
   CellValue,
   CellInput,
+  TaggedCellInput,
   CellInfo,
   MergeRange,
   TableBand,

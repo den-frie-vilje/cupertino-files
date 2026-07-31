@@ -19,6 +19,7 @@ import {
   type CellValue,
   type IWorkDocument,
   type TableModel,
+  normalizeCellInput,
 } from "../src/index.ts";
 import {
   AstNodeFields,
@@ -1294,5 +1295,69 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
+  });
+});
+
+describe("cell input normalisation", () => {
+  /**
+   * `setCell` used to take only the tagged union, and a bare value fell
+   * through every case and wrote an **empty** record — so the natural call
+   * silently erased the cell. Plain values are now first class, and
+   * anything genuinely unrecognised throws instead of destroying data.
+   */
+  it("accepts the plain form of every type that has one", () => {
+    expect(normalizeCellInput("hi")).toEqual({ type: "text", value: "hi" });
+    expect(normalizeCellInput(42)).toEqual({ type: "number", value: 42 });
+    expect(normalizeCellInput(0)).toEqual({ type: "number", value: 0 });
+    expect(normalizeCellInput(false)).toEqual({ type: "bool", value: false });
+    expect(normalizeCellInput("")).toEqual({ type: "text", value: "" });
+    const when = new Date(Date.UTC(2024, 0, 2));
+    expect(normalizeCellInput(when)).toEqual({ type: "date", value: when });
+  });
+
+  it("treats null and undefined as clearing the cell", () => {
+    expect(normalizeCellInput(null)).toEqual({ type: "empty" });
+    expect(normalizeCellInput(undefined)).toEqual({ type: "empty" });
+  });
+
+  it("passes a tagged value through untouched", () => {
+    // The duration tag is the reason the tagged form survives at all: a
+    // bare number cannot say "45 minutes" rather than "the number 2700".
+    const duration = { type: "duration", seconds: 2700 } as const;
+    expect(normalizeCellInput(duration)).toBe(duration);
+    expect(normalizeCellInput({ type: "empty" })).toEqual({ type: "empty" });
+  });
+
+  it("throws on the shapes that used to erase the cell", () => {
+    const rejected = (value: unknown): string => {
+      try {
+        normalizeCellInput(value as never);
+        return "accepted";
+      } catch (error) {
+        return (error as Error).message;
+      }
+    };
+    expect(rejected({ value: "no tag" })).toContain("unrecognised cell value");
+    expect(rejected({ type: "richText", value: "x" })).toContain("unrecognised cell value");
+    expect(rejected(NaN)).toContain("cannot write NaN");
+    expect(rejected(Infinity)).toContain("cannot write Infinity");
+    expect(rejected(new Date("nonsense"))).toContain("invalid Date");
+    expect(rejected(() => 1)).toContain("cannot write a function");
+  });
+
+  it("refuses before touching the row, so a bad write changes nothing", () => {
+    // Normalising after the layout was rebuilt would leave the table
+    // half-written on a throw.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-categories.numbers"));
+    const table = doc.tables()[0]!;
+    const before = table.cellText(1, 0);
+    let threw = false;
+    try {
+      table.setCell(1, 0, { value: "no tag" } as never);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+    expect(table.cellText(1, 0)).toBe(before);
   });
 });
