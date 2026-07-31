@@ -42,6 +42,7 @@ import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
 import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
 import { controlsOf, type CellControl } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
+import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
 
 /**
  * One owner registry per store, kept weakly so a closed document is not
@@ -1092,6 +1093,113 @@ export class TableModel {
   /** Clear a cell's value, keeping its styling. */
   clearCell(row: number, column: number): void {
     this.setCell(row, column, { type: "empty" });
+  }
+
+  /**
+   * Write a formula into a cell.
+   *
+   * The formula is compiled to a TSCE AST, interned in the table's formula
+   * table, and the cell's record points at it — the same three steps the
+   * app performs. Relative references are stored as offsets from this cell,
+   * so `=A1+1` in B2 and in B3 compile to different bytes, exactly as in
+   * the app.
+   *
+   * **Nothing here evaluates.** A cell record carries the formula *and* its
+   * cached result, and the apps display the cache until the engine
+   * recalculates. `value` is that cache: supply it and the cell reads
+   * correctly before any app has touched the file; omit it and whatever the
+   * cell held is kept, which is right when the formula reproduces the value
+   * already there and wrong otherwise. There is no third option that does
+   * not involve implementing Apple's calc engine.
+   *
+   * Refuses a function it has no index for rather than inventing one — see
+   * `authorableFunctions()` for the 271 it knows.
+   */
+  setFormula(
+    row: number,
+    column: number,
+    formula: string | FormulaExpression,
+    options: WriteOptions & { value?: CellInput } = {},
+  ): void {
+    this.requireWritable();
+    if (row < 0 || row >= this.rowCount || column < 0 || column >= this.columnCount) {
+      throw new RangeError(
+        `cell ${row},${column} is outside the table (${this.rowCount}×${this.columnCount})`,
+      );
+    }
+    this.requireVisible(row, column, options);
+
+    const expression = typeof formula === "string" ? parseFormula(formula) : formula;
+    const ast = buildFormula(expression, { row, column });
+    const archive = RawMessage.create();
+    archive.setMessage(Formula.AST_NODE_ARRAY, ast);
+    const key = this.internFormula(archive);
+
+    // The cached value first, so its flags are in place before the formula
+    // id is attached; `value: undefined` deliberately leaves the old cache.
+    if (options.value !== undefined) this.setCell(row, column, options.value, options);
+
+    const located = this.locateRow(row);
+    if (!located) {
+      throw new RangeError(
+        `row ${row} has no cell storage; only rows the app has materialized can be written`,
+      );
+    }
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    const record = existing ? CellRecord.decode(existing) : new CellRecord();
+    record.setId(CellFlag.FORMULA_ID, key);
+    record.remove(CellFlag.FORMULA_ERROR_ID);
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
+    this.refreshTileTotals();
+  }
+
+  /**
+   * Remove a cell's formula, keeping the value it last cached.
+   *
+   * Returns false when the cell had none. This is what "convert to value"
+   * does in the app: the number stays, the recipe goes.
+   */
+  clearFormula(row: number, column: number): boolean {
+    this.requireWritable();
+    const located = this.locateRow(row);
+    if (!located) return false;
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    if (!existing) return false;
+    const record = CellRecord.decode(existing);
+    if (record.id(CellFlag.FORMULA_ID) === undefined) return false;
+    record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshTileTotals();
+    return true;
+  }
+
+  /**
+   * Add a formula to the table's formula table, returning its key.
+   *
+   * Unlike strings, formulas are not deduplicated: two cells running the
+   * same calculation from different origins compile to different ASTs, and
+   * comparing encoded messages to find the rare true duplicate would cost
+   * more than the entry it saves.
+   */
+  private internFormula(archive: RawMessage): number {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    if (!list) {
+      throw new RangeError("table has no formula table; cannot store a formula");
+    }
+    const message = list.message;
+    const key = Number(message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(message));
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(ListEntry.FORMULA, archive);
+    message.addMessage(DataList.ENTRIES, entry);
+    message.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    return key;
   }
 
   /**

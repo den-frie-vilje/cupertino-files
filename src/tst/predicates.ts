@@ -33,11 +33,8 @@
 import type { RawMessage } from "../base/protobuf.ts";
 import type { FormulaOwnerRegistry } from "../tsce/owners.ts";
 import { decodeDecimal128 } from "./tables.ts";
+import { AstNodeArrayFields, AstNodeFields, AstNodeType, FormulaFields } from "../tsce/ast.ts";
 import {
-  AstNodeArrayFields,
-  AstNodeFields,
-  AstNodeType,
-  FormulaFields,
   renderFormula,
   SELF_CELL_MARKER,
   type FormulaOrigin,

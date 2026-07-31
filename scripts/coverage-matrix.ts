@@ -895,8 +895,23 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Formula writing (authoring an AST)",
     apps: "all",
-    status: "roadmap",
-    note: "needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula",
+    status: "experimental",
+    note:
+      "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
+      "anchored references, ranges, nested calls, omitted arguments, and any of the 271 " +
+      "harvested functions. Nothing evaluates — pass the cached result as `value`. Cross-table " +
+      "references and arrays are refused: both need a calc-engine identity registered elsewhere",
+    manualProof: {
+      claim: "Numbers computes what a formula we authored says, and does not report it as damaged.",
+      why:
+        "Round-tripping proves the writer and the renderer agree, which is real evidence but " +
+        "not the engine's opinion. Nothing offline can say whether the engine wants dependency " +
+        "records beside the AST that we are not writing.",
+      how:
+        "setFormula a few shapes — an arithmetic expression, a range SUM, an anchored reference " +
+        "— save, open in Numbers, and check the values recompute rather than showing an error.",
+      risk: "high",
+    },
   },
   {
     group: "Numbers & tables",

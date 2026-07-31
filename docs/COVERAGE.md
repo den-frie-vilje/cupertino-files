@@ -112,7 +112,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 1 | current→current |
 | Cell controls (checkbox, star rating, slider, stepper, pop-up menu)<br><sub>NO FIXTURE in this repository: interaction_type was measured from public widget-demo documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox). Shape is still classified by populated fields, so an unrecognised code degrades rather than misreads</sub> | Numbers | 🔍 read only | **0** | — |
-| Formula writing (authoring an AST)<br><sub>needs a function-name table plus calc-engine dependency records; writing a literal correctly clears an existing formula</sub> | all | ○ roadmap | n/a | — |
+| Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, nested calls, omitted arguments, and any of the 271 harvested functions. Nothing evaluates — pass the cached result as `value`. Cross-table references and arrays are refused: both need a calc-engine identity registered elsewhere</sub> | all | ⚠️ experimental | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
 | Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
@@ -151,7 +151,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-30 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+31 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -177,6 +177,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
+- 🔴 high — Numbers & tables → **Formula writing (authoring an AST)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**

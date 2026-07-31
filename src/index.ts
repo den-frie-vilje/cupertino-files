@@ -290,6 +290,18 @@ export {
   INTERACTION_TYPE_NAMES,
 } from "./tst/controls.ts";
 export type { CellControl, ControlShape } from "./tst/controls.ts";
+export {
+  buildFormula,
+  parseFormula,
+  parseReference,
+  authorableFunctions,
+} from "./tst/formula-builder.ts";
+export type {
+  FormulaExpression,
+  BinaryOperator,
+  UnaryOperator,
+  Coordinate,
+} from "./tst/formula-builder.ts";
 export { decodePreBncRecord, splitPreBncRow, PRE_BNC_VERSION, PRE_BNC_LAYOUTS } from "./tst/prebnc.ts";
 export type { PreBncRecord } from "./tst/prebnc.ts";
 export {
