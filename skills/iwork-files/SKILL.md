@@ -588,18 +588,25 @@ CLI equivalents (after `npm i -g iwork-files` or via npx):
    unless the task is explicitly about the wire format — the API maintains
    attribute-table indexes, object references, and package metadata that
    the apps validate.
-3. `doc.save()` output opens in current Pages/Numbers/Keynote; formatting
-   fidelity of *unedited* content is guaranteed byte-for-byte.
+3. What `doc.save()` guarantees, precisely: **unedited content is
+   byte-identical**, enforced for every fixture, and every fixture also
+   survives an open→edit→save→reopen cycle with nothing else disturbed.
+   That the *apps* then open the result is a separate claim only a Mac can
+   settle — `npm run test:e2e`, and claim 1 in `docs/VERIFICATION.md`.
+   Do not promise a user it will open; say it round-trips.
 4. **Never edit a document that is open in an iWork app** — the app rewrites
    the whole package on its next autosave and your changes vanish. Close it
    first. Live iCloud collaboration cannot be joined from a file at all.
 5. Check `doc.compatibility()` before relying on a feature with files of
    unknown provenance, and never interpret an empty result as "no data"
    without confirming the feature is supported.
-6. If a needed feature is missing (chart data, formula authoring, table
-   row insertion, merge writing, footnote creation), fall back to the
-   low-level `RawMessage` layer, and consult `docs/FORMAT.md` for the
-   format specification — §14 covers tables byte by byte.
+6. Check `docs/COVERAGE.md` before assuming a feature is missing — it is
+   generated from the code and says read, write or neither for every
+   capability. Genuinely absent today: authoring formulas, conditional
+   and filter *rules*, categories, merge ranges, chart appearance, and
+   creating cell controls or Keynote builds. For those, drop to the
+   low-level `RawMessage` layer and consult `docs/FORMAT.md` — §14 covers
+   tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
    repro. Check it before relying on paragraph border positions, cell

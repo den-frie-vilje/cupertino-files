@@ -176,7 +176,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
-- 🔴 high — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
+- 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**

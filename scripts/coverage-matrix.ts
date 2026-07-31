@@ -876,10 +876,16 @@ const CAPABILITIES: Capability[] = [
       "8 checkbox). Shape is still classified by populated fields, so an unrecognised code " +
       "degrades rather than misreads",
     manualProof: {
-      claim: "cell controls read correctly, and interaction_type means what the widget is",
-      why: "no document in the corpus contains a control at all, so nothing checks the reading",
-      how: "one Numbers file with a checkbox, star rating, slider, stepper and pop-up menu, then `npm run probe -- controls.numbers` — five rows of output name the enum",
-      risk: "high",
+      claim: "interaction_type 4 is the stepper and 5 the slider, rather than the other way round",
+      why:
+        "the other three widgets identify themselves — a checkbox row holds FALSE/TRUE, a star " +
+        "row is bounded [0…5], a pop-up carries a chooser model. Stepper and slider store the " +
+        "identical field set, so nothing in a file separates them. The pairing rests on one " +
+        "slider whose bounds match a published test, plus elimination.",
+      how:
+        "a Numbers file with one slider and one stepper, then `npm run probe -- controls.numbers`: " +
+        "if 4 and 5 come out swapped against the column they are in, the names are wrong.",
+      risk: "medium",
     },
   },
   {

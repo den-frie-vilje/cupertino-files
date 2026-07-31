@@ -27,13 +27,13 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 2 | 🔴 high | Drawables & media → Placement (copy onto a page/slide/sheet, remove, reorder in z) | A drawable we copied onto another page/slide/sheet appears there, at the geometry we set. | manual |
 | 3 | 🔴 high | Keynote → Builds (animations): read and retime | the build model reads a real animation correctly | manual |
 | 4 | 🔴 high | Keynote → Slide management (add, duplicate, move, remove) | Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order. | manual |
-| 5 | 🔴 high | Numbers & tables → Cell controls (checkbox, star rating, slider, stepper, pop-up menu) | cell controls read correctly, and interaction_type means what the widget is | manual |
-| 6 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
-| 7 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
-| 8 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
-| 9 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 10 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does | manual |
-| 11 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 5 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
+| 6 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
+| 7 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
+| 8 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
+| 9 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does | manual |
+| 10 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 11 | 🟠 medium | Numbers & tables → Cell controls (checkbox, star rating, slider, stepper, pop-up menu) | interaction_type 4 is the stepper and 5 the slider, rather than the other way round | manual |
 | 12 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
 | 13 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
 | 14 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
@@ -104,19 +104,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.
 
-### 5. Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
-
-**Risk if wrong:** 🔴 high  
-**Group:** Numbers & tables  
-**Status in the matrix:** 🔍 read only
-
-**Claim.** cell controls read correctly, and interaction_type means what the widget is
-
-**Why the suite cannot settle it.** no document in the corpus contains a control at all, so nothing checks the reading
-
-**How to settle it.** one Numbers file with a checkbox, star rating, slider, stepper and pop-up menu, then `npm run probe -- controls.numbers` — five rows of output name the enum
-
-### 6. Cell styling (fill, four borders, padding, alignment, wrap)
+### 5. Cell styling (fill, four borders, padding, alignment, wrap)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -128,7 +116,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a fill, four borders, padding and vertical alignment into a cell, open in Numbers, and compare against the same formatting applied by hand in the inspector. Then re-save from the app and diff our style object against what Numbers rewrote.
 
-### 7. Sheets (add, duplicate, rename, move, remove)
+### 6. Sheets (add, duplicate, rename, move, remove)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -140,7 +128,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Duplicate a sheet with formulas, rename and reorder, save, and open in Numbers: check the tab bar, that the copy's formulas point within the copy, and that editing one tab leaves the other alone.
 
-### 8. Table cell writing (text, number, date, bool, duration)
+### 7. Table cell writing (text, number, date, bool, duration)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -154,7 +142,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 9. Floating (non-inline) drawable placement
+### 8. Floating (non-inline) drawable placement
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Drawables & media  
@@ -166,7 +154,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source
 
-### 10. Image cropping (set, move, remove a mask)
+### 9. Image cropping (set, move, remove a mask)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Drawables & media  
@@ -178,7 +166,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says
 
-### 11. Add and remove tables on a sheet
+### 10. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -189,6 +177,18 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Why the suite cannot settle it.** the suite proves it reloads with its own cells and a unique name, not that the app treats it as a first-class table
 
 **How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
+
+### 11. Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Numbers & tables  
+**Status in the matrix:** 🔍 read only
+
+**Claim.** interaction_type 4 is the stepper and 5 the slider, rather than the other way round
+
+**Why the suite cannot settle it.** the other three widgets identify themselves — a checkbox row holds FALSE/TRUE, a star row is bounded [0…5], a pop-up carries a chooser model. Stepper and slider store the identical field set, so nothing in a file separates them. The pairing rests on one slider whose bounds match a published test, plus elimination.
+
+**How to settle it.** a Numbers file with one slider and one stepper, then `npm run probe -- controls.numbers`: if 4 and 5 come out swapped against the column they are in, the names are wrong.
 
 ### 12. Cell display formats (number, currency, percentage, date, duration, text, boolean)
 
