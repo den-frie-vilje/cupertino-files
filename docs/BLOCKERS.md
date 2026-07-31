@@ -35,6 +35,38 @@ question is not really this one**; see "Borrowed corpora" below.
 
 ---
 
+## Start here on a Mac: does our output open at all?
+
+Everything below settles an unknown. **This settles a risk**, and it is the
+larger of the two.
+
+Merges and conditional rules come out byte-identical to what Apple wrote
+for the same thing, and formulas, controls and cell writes round-trip
+through a reader that shares no code with the writer. None of that is the
+app's opinion, and **no iWork app has ever opened a document this library
+authored a formula, a control or a merge into**.
+
+```sh
+npm run verify:doc          # writes iwork-files-verification.numbers
+```
+
+One row per authoring feature, labelled in column A. Open it in Numbers
+and answer, in order:
+
+1. Does it open with no "repaired" or "damaged" warning? A no here
+   invalidates far more than a probe result would.
+2. Do the formulas recompute when a value they depend on changes?
+3. Is the slider a slider and the stepper a stepper? That pairing is the
+   one enum value settled by elimination rather than observation.
+4. Is the conditional format on the negative number and not the positive?
+5. Is the merged row actually merged?
+
+A failure is worth more than a pass: each feature sits in its own row, so
+whatever breaks localises immediately. `npm run test:e2e` covers the first
+question automatically.
+
+---
+
 ## What still needs a Mac — about 12 minutes
 
 Most of this page has been settled without one. Three documents remain, and
@@ -383,6 +415,8 @@ npm run harvest -- --drive              # macOS: drive Numbers directly
 npm run harvest:predicates -- f.numbers # score the predicate-enum prediction
 npm run prebnc                          # measure the pre-BNC cell record
 npm run stress -- <dir>                 # every reader over every file: what throws?
+npm run verify:doc                      # a document exercising everything we author
+npm run proto:check                     # field constants against the vendored schemas
 npm run coverage                        # regenerate COVERAGE.md + VERIFICATION.md
 ```
 
