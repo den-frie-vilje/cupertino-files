@@ -25,6 +25,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
+import type { CellFormatting } from "../src/tst/styles.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const bytes = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -32,6 +33,14 @@ const bytes = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTUR
 const FIXTURE = "numbers-parser-v26.1-xlsx-lineage.numbers";
 
 const load = () => NumbersDocument.load(bytes(FIXTURE));
+
+/**
+ * The formatting a rule applies, for tests about the *predicate*.
+ *
+ * Not decoration: `cell_style` and `text_style` are `required`, so a rule
+ * has to format something to be a well-formed message at all.
+ */
+const RED: CellFormatting = { fill: { kind: "color", color: { r: 1, g: 0, b: 0, space: "srgb" } } };
 const hex = (b: Uint8Array): string => [...b].map((x) => x.toString(16).padStart(2, "0")).join(" ");
 
 /** Apple's own `THIS_CELL < 0` set, with the styles it points at. */
@@ -72,7 +81,7 @@ describe("writing conditional rules", () => {
     // three sets cover 1921 cells in this document.
     const doc = load();
     const table = doc.tables()[0]!;
-    const key = table.setConditionalRules(1, 0, [{ operator: "=", value: 42 }], {
+    const key = table.setConditionalRules(1, 0, [{ operator: "=", value: 42, cell: RED }], {
       rowCount: 3,
       columnCount: 2,
     });
@@ -92,7 +101,7 @@ describe("writing conditional rules", () => {
     // as whichever cell the caller names.
     const doc = load();
     const table = doc.tables()[0]!;
-    table.setConditionalRules(2, 1, [{ operator: "<=", value: -1.5 }]);
+    table.setConditionalRules(2, 1, [{ operator: "<=", value: -1.5, cell: RED }]);
 
     const after = NumbersDocument.load(doc.save()).tables()[0]!;
     const rules = after.conditionalRules(2, 1);
@@ -105,7 +114,7 @@ describe("writing conditional rules", () => {
     for (const operator of ["=", "<>", "<", "<="] as const) {
       const doc = load();
       const table = doc.tables()[0]!;
-      table.setConditionalRules(1, 0, [{ operator, value: 7 }]);
+      table.setConditionalRules(1, 0, [{ operator, value: 7, cell: RED }]);
       const after = NumbersDocument.load(doc.save()).tables()[0]!;
       expect(`${operator}: ${after.conditionalRules(1, 0)[0]?.predicate?.operator}`).toBe(
         `${operator}: ${operator}`,
@@ -121,7 +130,7 @@ describe("writing conditional rules", () => {
     for (const operator of [">", ">="] as const) {
       let message = "";
       try {
-        table.setConditionalRules(1, 0, [{ operator, value: 0 }]);
+        table.setConditionalRules(1, 0, [{ operator, value: 0, cell: RED }]);
       } catch (error) {
         message = (error as Error).message;
       }
@@ -135,12 +144,43 @@ describe("writing conditional rules", () => {
     const doc = load();
     const table = doc.tables()[0]!;
     table.setConditionalRules(1, 0, [
-      { operator: "<", value: 0 },
-      { operator: "=", value: 0 },
-      { operator: "<>", value: 99 },
+      { operator: "<", value: 0, cell: RED },
+      { operator: "=", value: 0, cell: RED },
+      { operator: "<>", value: 99, cell: RED },
     ]);
     const rules = NumbersDocument.load(doc.save()).tables()[0]!.conditionalRules(1, 0);
     expect(rules.map((r) => r.predicate?.operator)).toEqual(["<", "=", "<>"]);
+  });
+
+  it("refuses a rule that formats nothing, rather than writing a malformed message", () => {
+    // TST.ConditionalStyleRule declares cell_style and text_style as
+    // `required`. A rule without them is not a rule that formats less — it
+    // is a message Numbers cannot parse, and it rejects the whole document.
+    // This shipped once: the byte-identity test could not catch it, because
+    // the only rule Apple wrote to compare against has both styles and
+    // there is no such thing as an unstyled one to compare with.
+    const table = load().tables()[0]!;
+    let message = "";
+    try {
+      table.setConditionalRules(1, 0, [{ operator: "<", value: 0 }]);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message.includes("must format something")).toBe(true);
+  });
+
+  it("defaults the text style to the table's own, so text is left alone", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    const expected = table.bandTextStyle("body")!.object.identifier;
+    table.setConditionalRules(1, 0, [{ operator: "<", value: 0, cell: RED }]);
+
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+    const rule = after.conditionalRules(1, 0)[0]!;
+    expect(rule.textStyleId).toBe(expected);
+    // And the cell style is a new archive carrying the fill we asked for.
+    expect(rule.cellStyleId !== undefined).toBe(true);
+    expect(rule.cellStyleId === expected).toBe(false);
   });
 
   it("refuses an empty rule set", () => {

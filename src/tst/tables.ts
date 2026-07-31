@@ -160,7 +160,13 @@ const BAND_STYLE_FIELDS: Record<TableBand, number> = {
   footerRow: 21,
 };
 
-/** The matching TSWP.CharacterStyleArchive references for each band's text. */
+/**
+ * The matching text-style reference for each band.
+ *
+ * `TSWP.ParagraphStyleArchive`, despite what an earlier comment here said —
+ * checked across three fixtures. Worth being precise about, because a
+ * conditional rule's required `text_style` points at one of these.
+ */
 const BAND_TEXT_STYLE_FIELDS: Record<TableBand, number> = {
   body: 24,
   headerRow: 25,
@@ -2075,7 +2081,8 @@ export class TableModel {
           "will not invent an identity",
       );
     }
-    const key = this.internConditionalSet(buildConditionalStyleSet(conditions, uid));
+    const resolved = conditions.map((condition) => this.resolveConditionStyles(condition));
+    const key = this.internConditionalSet(buildConditionalStyleSet(resolved, uid));
 
     const rows = span.rowCount ?? 1;
     const columns = span.columnCount ?? 1;
@@ -2515,6 +2522,52 @@ export class TableModel {
    * references — hence the explicit `object_references` refresh, which the
    * generic save path cannot do for a type it has no extractor for.
    */
+  /**
+   * Fill in a condition's two required style references.
+   *
+   * `TST.ConditionalStyleRule` declares `cell_style` and `text_style` as
+   * `required`, so neither can be left out — a rule missing one is a
+   * malformed message, not a rule that formats less. Callers should not
+   * have to know that, so:
+   *
+   *  - `cell` formatting becomes a new `TST.CellStyleArchive`, interned in
+   *    the table's style table the same way {@link setCellFormatting} does.
+   *  - the text style defaults to the table's **body** text style, which is
+   *    a real `TSWP.ParagraphStyleArchive` and leaves the text looking
+   *    exactly as it did. Satisfying the reference is the point; changing
+   *    the text is opt-in via `textStyleId`.
+   *
+   * A condition naming no formatting at all is refused. It cannot be
+   * represented, and silently pointing it at the defaults would write a
+   * rule that does nothing while reading back as though it did.
+   */
+  private resolveConditionStyles(condition: ConditionalCondition): ConditionalCondition {
+    if (condition.cellStyleId === undefined && !condition.cell) {
+      throw new RangeError(
+        "a conditional rule must format something: pass `cell` formatting (e.g. " +
+          "{ cell: { fill: { kind: 'color', color: red } } }) or an existing cellStyleId. " +
+          "TST.ConditionalStyleRule declares both style references as `required`, so a rule " +
+          "that formats nothing cannot be written — it would be a malformed message",
+      );
+    }
+
+    const cellStyleId =
+      condition.cellStyleId ?? this.styleTableEntry(this.createCellStyle(condition.cell!));
+    if (cellStyleId === undefined) {
+      throw new RangeError("failed to intern a cell style for the conditional rule");
+    }
+
+    const textStyleId = condition.textStyleId ?? this.bandTextStyle("body")?.object.identifier;
+    if (textStyleId === undefined) {
+      throw new RangeError(
+        "the table has no body text style to point the rule's required text_style at; " +
+          "pass textStyleId explicitly",
+      );
+    }
+
+    return { ...condition, cellStyleId, textStyleId };
+  }
+
   private createCellStyle(formatting: CellFormatting, basedOn?: number): number {
     const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
     if (!list) throw new RangeError("table has no style table; cannot style cells");

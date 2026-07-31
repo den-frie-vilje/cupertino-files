@@ -124,11 +124,13 @@ const RUNGS: {
   },
   {
     name: "09-conditional-rule",
-    note: "one conditional format; the archive is byte-identical to Apple's",
+    note: "one conditional format, filling matches red; C should differ from B",
     build: (doc) => {
       const table = doc.tables()[0]!;
       table.setCell(1, 0, -10);
-      table.setConditionalRules(1, 0, [{ operator: "<", value: 0 }]);
+      table.setConditionalRules(1, 0, [
+        { operator: "<", value: 0, cell: { fill: { kind: "color", color: { r: 1, g: 0.2, b: 0.2, space: "srgb" } } } },
+      ]);
     },
   },
   {

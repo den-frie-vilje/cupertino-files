@@ -40,6 +40,7 @@ import { buildFormula } from "./formula-builder.ts";
 import { encodeDecimal128 } from "./cellrecord.ts";
 import { readCfUid } from "../tsce/owners.ts";
 import { cellAddress } from "./formulas.ts";
+import type { CellFormatting } from "./styles.ts";
 
 /** TST.ConditionalStyleSetArchive. */
 export const ConditionalStyleSetFields = {
@@ -175,9 +176,22 @@ export interface ConditionalCondition {
   operator: PredicateOperator;
   /** The literal the cell is compared against. */
   value: number;
-  /** `TST.CellStyleArchive` to apply on a match. */
+  /**
+   * Formatting to apply on a match — the usual way to write a rule.
+   *
+   * A `TST.CellStyleArchive` is created from it and referenced. Supply this
+   * or {@link cellStyleId}; a rule must format *something*, because both
+   * style references are `required` (see {@link buildConditionalStyleSet}).
+   */
+  cell?: CellFormatting;
+  /** An existing `TST.CellStyleArchive`, when one is already interned. */
   cellStyleId?: bigint;
-  /** Character style to apply to the cell's text on a match. */
+  /**
+   * Paragraph style for the cell's text on a match.
+   *
+   * Defaults to the table's own body text style, which satisfies the
+   * required reference while leaving the text as it was.
+   */
   textStyleId?: bigint;
 }
 
@@ -257,15 +271,40 @@ export function buildConditionalStyleSet(
   return set;
 }
 
+/**
+ * One rule: the predicate, and the two styles it applies.
+ *
+ * **Both style references are `required`**, in `ConditionalStyleRule` and in
+ * its pre-pivot twin alike:
+ *
+ * ```proto
+ * message ConditionalStyleRule {
+ *   optional .TST.FormulaPredicateArchive predicate = 1;
+ *   required .TSP.Reference cell_style = 2;
+ *   required .TSP.Reference text_style = 3;
+ * }
+ * ```
+ *
+ * Omitting them does not produce a rule that formats nothing — it produces
+ * a **malformed message**, which Numbers refuses along with the whole
+ * document. This was shipped once, and the byte-identity test did not catch
+ * it because the only rule Apple wrote to compare against has both styles;
+ * there is no such thing as an unstyled conditional rule to compare with.
+ * So they are required here too, rather than written when present.
+ */
 function rule(predicate: RawMessage, condition: ConditionalCondition): RawMessage {
+  if (condition.cellStyleId === undefined || condition.textStyleId === undefined) {
+    throw new RangeError(
+      "a conditional rule needs both a cell style and a text style: TST.ConditionalStyleRule " +
+        "declares cell_style and text_style as `required`, so a rule without them is a malformed " +
+        "message and Numbers rejects the document. Pass `cell` formatting and let the table " +
+        "create the styles, or give cellStyleId and textStyleId directly",
+    );
+  }
   const out = RawMessage.create();
   out.setMessage(ConditionalStyleRuleFields.PREDICATE, predicate);
-  if (condition.cellStyleId !== undefined) {
-    out.setMessage(ConditionalStyleRuleFields.CELL_STYLE, makeRef(condition.cellStyleId));
-  }
-  if (condition.textStyleId !== undefined) {
-    out.setMessage(ConditionalStyleRuleFields.TEXT_STYLE, makeRef(condition.textStyleId));
-  }
+  out.setMessage(ConditionalStyleRuleFields.CELL_STYLE, makeRef(condition.cellStyleId));
+  out.setMessage(ConditionalStyleRuleFields.TEXT_STYLE, makeRef(condition.textStyleId));
   return out;
 }
 
