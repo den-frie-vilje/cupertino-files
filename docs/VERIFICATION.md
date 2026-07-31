@@ -195,7 +195,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
-**Status in the matrix:** 🔍 read only
+**Status in the matrix:** ⚠️ experimental
 
 **Claim.** interaction_type 4 is the stepper and 5 the slider, rather than the other way round
 

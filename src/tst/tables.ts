@@ -40,7 +40,13 @@ import {
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
 import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
-import { controlsOf, type CellControl } from "./controls.ts";
+import {
+  controlsOf,
+  CellSpecFields,
+  CONTROL_CELL_SPEC_TABLE,
+  InteractionType,
+  type CellControl,
+} from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
 
@@ -213,6 +219,19 @@ const HeaderBucket = { HEADERS: 2 } as const;
 const HeaderFields = { INDEX: 1, SIZE: 2, HIDING_STATE: 3, NUMBER_OF_CELLS: 4 } as const;
 /** TST.TableDataList / .ListEntry. */
 const DataList = { LIST_TYPE: 1, NEXT_LIST_ID: 2, ENTRIES: 3 } as const;
+/** TST.TableDataList archive type, for the rare case of creating one. */
+const TABLE_DATA_LIST_TYPE = 6005;
+/**
+ * `list_type` and entry payload field of the control-spec table.
+ *
+ * Neither is a guess. Apple writes the control list into 44 of the corpus's
+ * 50 tables — empty, because none of those documents uses a widget — and
+ * every one of them declares `list_type = 12`. The payload field is 12 too,
+ * read off documents that do carry controls. So a table that needs a
+ * control list almost always already has one.
+ */
+const CONTROL_LIST_TYPE = 12;
+const CONTROL_LIST_ENTRY_SPEC = 12;
 const ListEntry = {
   KEY: 1,
   REFCOUNT: 2,
@@ -2143,6 +2162,179 @@ export class TableModel {
   cellControl(row: number, column: number): CellControl | undefined {
     const key = this.controlKey(row, column);
     return key === undefined ? undefined : this.controls().get(key);
+  }
+
+  /**
+   * Put a data-entry widget on a cell — checkbox, star rating, slider or
+   * stepper.
+   *
+   * The spec is interned in the table's control table exactly as strings
+   * and formats are, and the cell's record points at it through
+   * `CONTROL_ID`. Identical specs are shared: a column of checkboxes is one
+   * archive and forty pointers, which is what the app writes.
+   *
+   * The **value still lives in the cell**, and the widget only changes how
+   * it is edited. A checkbox therefore needs a boolean in its cell and a
+   * slider a number; writing the widget without the value gives a control
+   * with nothing to show, so the value is set here when one is supplied.
+   *
+   * Pop-up menus are not created. A menu needs a `chooser_control_popup_model`
+   * — a separate archive holding the list of choices — and no document
+   * examined here contains one to learn its shape from. {@link setPopupMenu}
+   * attaches an existing model when a caller already has one.
+   */
+  setCellControl(
+    row: number,
+    column: number,
+    control:
+      | { widget: "checkbox"; value?: boolean }
+      | { widget: "starRating"; value?: number }
+      | { widget: "slider" | "stepper"; minimum: number; maximum: number; increment: number; value?: number },
+    options: WriteOptions = {},
+  ): number {
+    this.requireWritable();
+    const spec = RawMessage.create();
+    switch (control.widget) {
+      case "checkbox":
+        spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.CHECKBOX);
+        break;
+      case "starRating":
+        // Every star rating in every document is bounded [0…5] step 1, and
+        // the app offers no way to change that.
+        spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.STAR_RATING);
+        spec.setDouble(CellSpecFields.RANGE_MIN, 0);
+        spec.setDouble(CellSpecFields.RANGE_MAX, 5);
+        spec.setDouble(CellSpecFields.RANGE_INCREMENT, 1);
+        break;
+      default: {
+        if (!(control.increment > 0)) {
+          throw new RangeError(`increment must be positive, got ${control.increment}`);
+        }
+        if (!(control.maximum > control.minimum)) {
+          throw new RangeError(
+            `maximum ${control.maximum} must exceed minimum ${control.minimum}`,
+          );
+        }
+        spec.setVarint(
+          CellSpecFields.INTERACTION_TYPE,
+          control.widget === "slider" ? InteractionType.SLIDER : InteractionType.STEPPER,
+        );
+        spec.setDouble(CellSpecFields.RANGE_MIN, control.minimum);
+        spec.setDouble(CellSpecFields.RANGE_MAX, control.maximum);
+        spec.setDouble(CellSpecFields.RANGE_INCREMENT, control.increment);
+      }
+    }
+
+    if (control.value !== undefined) this.setCell(row, column, control.value, options);
+    const key = this.internControl(spec);
+    this.attachControl(row, column, key);
+    return key;
+  }
+
+  /**
+   * Point a cell at a pop-up menu model that already exists.
+   *
+   * Separate from {@link setCellControl} because the model is the part this
+   * library cannot build: no document examined contains a
+   * `chooser_control_popup_model`, so its shape is unmeasured. Given one —
+   * from another cell, or another document — attaching it is the same
+   * interning step as any other control.
+   */
+  setPopupMenu(
+    row: number,
+    column: number,
+    popupModelId: bigint,
+    options: { startsWithFirstItem?: boolean } = {},
+  ): number {
+    this.requireWritable();
+    const spec = RawMessage.create();
+    spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.POPUP_MENU);
+    spec.setMessage(CellSpecFields.CHOOSER_POPUP_MODEL, makeRef(popupModelId));
+    spec.setVarint(
+      CellSpecFields.CHOOSER_START_WITH_FIRST,
+      options.startsWithFirstItem === false ? 0 : 1,
+    );
+    const key = this.internControl(spec);
+    this.attachControl(row, column, key);
+    return key;
+  }
+
+  /** Take the widget off a cell, keeping its value. Returns false if none. */
+  removeCellControl(row: number, column: number): boolean {
+    this.requireWritable();
+    const located = this.locateRow(row);
+    if (!located) return false;
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    if (!existing) return false;
+    const record = CellRecord.decode(existing);
+    if (record.id(CellFlag.CONTROL_ID) === undefined) return false;
+    record.remove(CellFlag.CONTROL_ID);
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshTileTotals();
+    return true;
+  }
+
+  /** Point a cell's record at a control key. */
+  private attachControl(row: number, column: number, key: number): void {
+    const located = this.locateRow(row);
+    if (!located) {
+      throw new RangeError(
+        `row ${row} has no cell storage; only rows the app has materialized can be written`,
+      );
+    }
+    const layout = readRowLayout(located.rowInfo, this.columnCount);
+    const existing = layout.records[column];
+    const record = existing ? CellRecord.decode(existing) : new CellRecord();
+    record.setId(CellFlag.CONTROL_ID, key);
+    layout.records[column] = record.encode();
+    this.writeRowLayout(located.rowInfo, layout);
+    this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
+    this.refreshTileTotals();
+  }
+
+  /**
+   * Add a control spec to the table's control table, reusing an identical
+   * one, and creating the table itself when the document has none.
+   *
+   * Deduplication matters here in a way it does not for formulas: a column
+   * of checkboxes is one spec shared by every cell, and writing forty
+   * copies would be both larger and unlike anything the app produces.
+   */
+  private internControl(spec: RawMessage): number {
+    const dataStore = this.dataStore();
+    if (!dataStore) throw new RangeError("table has no data store; cannot store a control");
+    let list = this.store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
+    if (!list) {
+      // No document in the corpus has one, so it is built the way every
+      // other interning table in the same data store is built.
+      const component = this.store.componentOf(this.object.identifier);
+      if (!component) throw new RangeError("table object has no component");
+      list = this.store.createObject(TABLE_DATA_LIST_TYPE, component);
+      list.message.setVarint(DataList.LIST_TYPE, CONTROL_LIST_TYPE);
+      list.message.setVarint(DataList.NEXT_LIST_ID, 1);
+      dataStore.setMessage(CONTROL_CELL_SPEC_TABLE, makeRef(list.identifier));
+      this.object.message.markDirty();
+    }
+
+    const encoded = spec.toBytes();
+    for (const entry of list.message.getMessages(DataList.ENTRIES)) {
+      const existing = entry.getMessage(CONTROL_LIST_ENTRY_SPEC);
+      const key = entry.getUint(ListEntry.KEY);
+      if (key === undefined || !existing || !bytesEqual(existing.toBytes(), encoded)) continue;
+      entry.setVarint(ListEntry.REFCOUNT, (entry.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+      return key;
+    }
+
+    const key = Number(list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message));
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(CONTROL_LIST_ENTRY_SPEC, spec);
+    list.message.addMessage(DataList.ENTRIES, entry);
+    list.message.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    return key;
   }
 
   // ------------------------------------------------------------- categories

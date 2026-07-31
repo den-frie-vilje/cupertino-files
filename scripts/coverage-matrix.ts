@@ -894,13 +894,15 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Cell controls (checkbox, star rating, slider, stepper, pop-up menu)",
     apps: ["numbers"],
-    status: "read",
+    status: "experimental",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.controls().size > 0)),
     note:
       "NO FIXTURE in this repository: interaction_type was measured from public widget-demo " +
       "documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, " +
-      "8 checkbox). Shape is still classified by populated fields, so an unrecognised code " +
-      "degrades rather than misreads",
+      "8 checkbox). setCellControl writes checkbox, star rating, slider and stepper, sharing one " +
+      "spec between cells that want the same widget; a pop-up menu can be attached to an " +
+      "existing model but not built, since no document here contains one. Shape is still " +
+      "classified by populated fields, so an unrecognised code degrades rather than misreads",
     manualProof: {
       claim: "interaction_type 4 is the stepper and 5 the slider, rather than the other way round",
       why:

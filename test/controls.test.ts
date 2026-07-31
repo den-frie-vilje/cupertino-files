@@ -13,7 +13,9 @@
  * entry's field 12 wrapper — so the reader is checked against the real
  * layout rather than against a convenient one.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
+import { NumbersDocument } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import {
   CellSpecFields,
@@ -180,5 +182,132 @@ describe("the control spec table", () => {
 
   it("yields nothing rather than guessing when the table is absent", () => {
     expect(readControlList(RawMessage.create()).size).toBe(0);
+  });
+});
+
+describe("writing cell controls", () => {
+  /**
+   * Creating a widget was withheld until `interaction_type` was measured:
+   * a control the apps silently drop looks exactly like one that was never
+   * written, so a wrong code is undetectable from here.
+   *
+   * The list these are interned in is not invented either. Apple writes the
+   * control table into 44 of the corpus's 50 tables — empty, because none
+   * of those documents uses a widget — and every one declares
+   * `list_type = 12`.
+   */
+  const FIXTURES = new URL("../fixtures/", import.meta.url);
+  const load = () =>
+    NumbersDocument.load(
+      new Uint8Array(readFileSync(new URL("numbers-parser-v26.0-categories.numbers", FIXTURES))),
+    );
+
+  it("writes every widget it can build, and reads each one back", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, { widget: "checkbox", value: true });
+    table.setCellControl(2, 0, { widget: "starRating", value: 3 });
+    table.setCellControl(3, 0, {
+      widget: "slider",
+      minimum: 1,
+      maximum: 50,
+      increment: 0.1,
+      value: 12.3,
+    });
+    table.setCellControl(4, 0, {
+      widget: "stepper",
+      minimum: 0,
+      maximum: 10,
+      increment: 1,
+      value: 4,
+    });
+
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(after.cellControl(1, 0)?.widget).toBe("checkbox");
+    expect(after.cellControl(2, 0)?.widget).toBe("star rating");
+    expect(after.cellControl(3, 0)?.widget).toBe("slider");
+    expect(after.cellControl(4, 0)?.widget).toBe("stepper");
+    // The widget changes how a value is edited; the value is still the
+    // cell's, and a control with nothing to show is not much of a control.
+    expect(after.cellText(1, 0)).toBe("TRUE");
+    expect(after.cellText(2, 0)).toBe("3");
+    expect(after.cellText(3, 0)).toBe("12.3");
+  });
+
+  it("shares one spec between cells that want the same widget", () => {
+    // A column of checkboxes is one archive and forty pointers in the app's
+    // own output; writing forty copies would be larger and unlike it.
+    const doc = load();
+    const table = doc.tables()[0]!;
+    const first = table.setCellControl(1, 0, { widget: "checkbox", value: true });
+    const second = table.setCellControl(2, 0, { widget: "checkbox", value: false });
+    expect(second).toBe(first);
+    expect(table.controls().size).toBe(1);
+
+    // A different configuration is a different spec.
+    table.setCellControl(3, 0, { widget: "stepper", minimum: 0, maximum: 9, increment: 1 });
+    expect(table.controls().size).toBe(2);
+  });
+
+  it("keeps the bounds it was given", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, {
+      widget: "slider",
+      minimum: -100,
+      maximum: 100,
+      increment: 0.25,
+      value: 0,
+    });
+    const control = NumbersDocument.load(doc.save()).tables()[0]!.cellControl(1, 0)!;
+    expect(control.minimum).toBe(-100);
+    expect(control.maximum).toBe(100);
+    expect(control.increment).toBe(0.25);
+    // A star rating's bounds are fixed; the app offers no way to change them.
+    const other = load().tables()[0]!;
+    other.setCellControl(2, 0, { widget: "starRating" });
+    expect(other.cellControl(2, 0)?.maximum).toBe(5);
+  });
+
+  it("takes a widget off without taking the value with it", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, { widget: "starRating", value: 4 });
+    expect(table.removeCellControl(1, 0)).toBe(true);
+    expect(table.removeCellControl(1, 0)).toBe(false);
+
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(after.cellControl(1, 0)).toBe(undefined);
+    expect(after.cellText(1, 0)).toBe("4");
+  });
+
+  it("refuses bounds that describe no usable widget", () => {
+    const table = load().tables()[0]!;
+    const rejected = (fn: () => void): string => {
+      try {
+        fn();
+        return "accepted";
+      } catch (error) {
+        return (error as Error).message;
+      }
+    };
+    expect(
+      rejected(() => table.setCellControl(1, 0, { widget: "slider", minimum: 0, maximum: 10, increment: 0 })),
+    ).toContain("increment must be positive");
+    expect(
+      rejected(() => table.setCellControl(1, 0, { widget: "stepper", minimum: 10, maximum: 1, increment: 1 })),
+    ).toContain("must exceed minimum");
+  });
+
+  it("attaches a pop-up menu model but will not invent one", () => {
+    // The menu's list of choices is a separate archive whose shape no
+    // document here contains. Given one, attaching it is ordinary.
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setPopupMenu(1, 0, 12345n);
+    const control = NumbersDocument.load(doc.save()).tables()[0]!.cellControl(1, 0)!;
+    expect(control.widget).toBe("pop-up menu");
+    expect(control.popupModelId).toBe(12345n);
+    expect(control.startsWithFirstItem).toBe(true);
   });
 });
