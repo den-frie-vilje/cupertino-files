@@ -24,7 +24,16 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUuid } from "../base/uuid.ts";
-import { ChartSeriesStyle, REFERENCE_IDENTIFIER, SparseEntry, sparseRefs } from "./appearance.ts";
+import {
+  ChartAxisStyle,
+  ChartLegendStyle,
+  ChartSeriesStyle,
+  ChartStyleArchive,
+  REFERENCE_IDENTIFIER,
+  SparseEntry,
+  sparseRefs,
+  type AxisKind,
+} from "./appearance.ts";
 import type { Fill } from "../tsd/style.ts";
 
 export const TSCH_TYPE = {
@@ -46,6 +55,9 @@ const Chart = {
   SERIES_DIRECTION: 5,
   CONTAINS_DEFAULT_DATA: 6,
   GRID: 7,
+  LEGEND_STYLE: 11,
+  VALUE_AXIS_STYLES: 13,
+  CATEGORY_AXIS_STYLES: 15,
   SERIES_PRIVATE_STYLES: 18,
   SERIES_NON_STYLES: 19,
   IS_DIRTY: 24,
@@ -203,6 +215,91 @@ export class ChartModel {
   /** The style of one series, if it has its own rather than inheriting. */
   seriesStyle(index: number): ChartSeriesStyle | undefined {
     return this.seriesStyles().find((style) => style.index === index);
+  }
+
+  /** The legend's style archive, if the chart has one of its own. */
+  legendStyle(): ChartLegendStyle | undefined {
+    const id = this.chart()?.getMessage(Chart.LEGEND_STYLE)?.getVarint(REFERENCE_IDENTIFIER);
+    const object = id === undefined ? undefined : this.store.resolve(id);
+    return object ? new ChartLegendStyle(this.store, object) : undefined;
+  }
+
+  /**
+   * Axis styles, category axes first.
+   *
+   * The chart keeps the two kinds in separate repeated fields, so nothing
+   * has to be inferred — which matters, because an axis archive populates
+   * only its own family of properties and reading a value axis as a
+   * category one would silently return `undefined` for everything.
+   */
+  axisStyles(): ChartAxisStyle[] {
+    const out: ChartAxisStyle[] = [];
+    for (const [field, kind] of [
+      [Chart.CATEGORY_AXIS_STYLES, "category"],
+      [Chart.VALUE_AXIS_STYLES, "value"],
+    ] as const) {
+      const references = this.chart()?.getMessages(field) ?? [];
+      references.forEach((reference, index) => {
+        const object = this.store.resolve(reference.getVarint(REFERENCE_IDENTIFIER));
+        if (object) out.push(new ChartAxisStyle(this.store, object, kind, index));
+      });
+    }
+    return out;
+  }
+
+  /** The first axis style of a kind, which is the only one most charts have. */
+  axisStyle(kind: AxisKind, index = 0): ChartAxisStyle | undefined {
+    return this.axisStyles().find((axis) => axis.kind === kind && axis.index === index);
+  }
+
+  /**
+   * Give this chart its own copy of an axis or legend style, if it shares one.
+   *
+   * The same hazard as {@link setSeriesFill} — these archives live in the
+   * document stylesheet and a template hands one to every chart using it —
+   * but the reference is a plain `TSP.Reference` in a repeated field rather
+   * than a sparse-array entry, so the repointing differs and the sharing
+   * check does not.
+   *
+   * Returns the archive to write to, which is the clone when one was made.
+   */
+  privatiseStyle(style: ChartStyleArchive, field: number, index = 0): IwaObject {
+    const others = this.store.referrers(style.id).filter((id) => id !== this.id);
+    if (others.length === 0) return style.object;
+
+    const component = this.store.componentOf(style.id);
+    if (!component) throw new RangeError(`chart style ${style.id} has no component`);
+    const clone = this.store.createObject(style.object.type, component, {
+      cloneFrom: style.object,
+    });
+
+    const chart = this.chart();
+    if (!chart) throw new RangeError(`chart ${this.id} has no TSCH.ChartArchive`);
+    // A repeated field holds one reference per axis; a singular one holds
+    // exactly the one. `index` picks within the repeated case.
+    const references = chart.getMessages(field);
+    const reference = references.length > 1 ? references[index] : references[0];
+    if (!reference) throw new RangeError(`chart ${this.id} has no style reference at field ${field}`);
+    reference.setVarint(REFERENCE_IDENTIFIER, clone.identifier);
+
+    this.object.message.markDirty();
+    this.store.retargetReference(this.object, style.id, clone.identifier);
+    return clone;
+  }
+
+  /**
+   * Show or hide an axis's major gridlines, copying on write.
+   *
+   * The convenience wrapper for the common axis edit; anything else goes
+   * through {@link privatiseStyle} and the {@link ChartAxisStyle} setters.
+   */
+  setAxisMajorGridlines(kind: AxisKind, visible: boolean, index = 0): ChartAxisStyle {
+    const axis = this.axisStyle(kind, index);
+    if (!axis) throw new RangeError(`chart ${this.id} has no ${kind} axis style at ${index}`);
+    const field = kind === "category" ? Chart.CATEGORY_AXIS_STYLES : Chart.VALUE_AXIS_STYLES;
+    const target = new ChartAxisStyle(this.store, this.privatiseStyle(axis, field, index), kind, index);
+    target.setShowMajorGridlines(visible);
+    return target;
   }
 
   /**

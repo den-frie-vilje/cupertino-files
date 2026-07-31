@@ -165,12 +165,16 @@ export type { ChartValue } from "./tsch/charts.ts";
 export {
   ChartStyleArchive,
   ChartSeriesStyle,
+  ChartAxisStyle,
+  ChartLegendStyle,
   SeriesStyleProperty,
+  AxisStyleProperty,
+  LegendStyleProperty,
   GENERATED_PROPERTIES,
   sparseRefs,
   sparseCount,
 } from "./tsch/appearance.ts";
-export type { SparseRef } from "./tsch/appearance.ts";
+export type { SparseRef, AxisKind } from "./tsch/appearance.ts";
 export type { ImageFilters } from "./tsd/images.ts";
 export type { GeometryInfo } from "./tsd/drawables.ts";
 export * as tspSchema from "./tsp/schema.ts";

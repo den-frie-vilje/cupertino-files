@@ -997,11 +997,14 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Chart appearance: axes, legend, gridlines",
     apps: "all",
-    status: "roadmap",
+    status: "read+write",
+    probe: (c) => safe(() => chartsOf(c.doc.store).some((chart) => chart.axisStyles().length > 0)),
     note:
-      "the archives are located and their property bags decode (TSCH.ChartAxisStyleArchive, " +
-      "LegendStyleArchive — same TSS.StyleArchive + generated-properties-at-10000 shape as the " +
-      "series styles), but no property in them is named yet",
+      "axis visibility, gridlines, tick marks and gridline strokes read and write, per axis and " +
+      "per kind. Nearly every axis property exists twice — once for category, once for value — " +
+      "and an archive fills only its own family, so reading the wrong one returns undefined for " +
+      "everything and looks like an empty archive rather than a bug; the chart names the two " +
+      "kinds in separate fields, so nothing is inferred. Writes copy on write like series fills",
   },
   {
     group: "Numbers & tables",

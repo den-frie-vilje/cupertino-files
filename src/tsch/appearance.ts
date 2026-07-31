@@ -58,7 +58,7 @@
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
-import { readFill, writeFill, type Fill } from "../tsd/style.ts";
+import { readFill, writeFill, readStroke, writeStroke, type Fill, type Stroke } from "../tsd/style.ts";
 
 /**
  * The extension field every TSCH style archive keeps its properties in.
@@ -262,5 +262,176 @@ export class ChartSeriesStyle extends ChartStyleArchive {
       throw new RangeError(`opacity must be between 0 and 1, got ${value}`);
     }
     this.setFloatProperty(SeriesStyleProperty.DEFAULT_OPACITY, value);
+  }
+}
+
+/**
+ * Property numbers inside `TSCH.Generated.LegendStyleArchive`.
+ *
+ * The whole message is five fields, so this one is complete rather than a
+ * selection.
+ */
+export const LegendStyleProperty = {
+  /** `TSD.FillArchive` */
+  FILL: 1,
+  LABEL_PARAGRAPH_STYLE_INDEX: 2,
+  /** float */
+  OPACITY: 3,
+  /** `TSD.ShadowArchive` */
+  SHADOW: 4,
+  /** `TSD.StrokeArchive` */
+  STROKE: 5,
+} as const;
+
+/** The legend's background, border and opacity. */
+export class ChartLegendStyle extends ChartStyleArchive {
+  fill(): Fill | undefined {
+    return this.fillProperty(LegendStyleProperty.FILL);
+  }
+
+  setFill(fill: Fill): void {
+    this.setFillProperty(LegendStyleProperty.FILL, fill);
+  }
+
+  stroke(): Stroke | undefined {
+    return readStroke(this.properties()?.getMessage(LegendStyleProperty.STROKE));
+  }
+
+  setStroke(stroke: Stroke): void {
+    this.requireProperties().setMessage(LegendStyleProperty.STROKE, writeStroke(stroke));
+    this.object.message.markDirty();
+  }
+
+  get opacity(): number | undefined {
+    return this.floatProperty(LegendStyleProperty.OPACITY);
+  }
+
+  setOpacity(value: number): void {
+    if (!(value >= 0 && value <= 1)) {
+      throw new RangeError(`opacity must be between 0 and 1, got ${value}`);
+    }
+    this.setFloatProperty(LegendStyleProperty.OPACITY, value);
+  }
+}
+
+/** Which axis an axis style belongs to. */
+export type AxisKind = "category" | "value";
+
+/**
+ * Property numbers inside `TSCH.Generated.ChartAxisStyleArchive`, as
+ * `[category, value]` pairs.
+ *
+ * Nearly every axis property exists twice, once for each kind, and an
+ * archive populates only its own family: in a real chart the category
+ * axis's bag holds fields 1, 3, 5, 12, 14, 16, 18, 20, 22, 24 … and the
+ * value axis's holds 2, 4, 13, 15, 17, 19, 21, 25 … — the counterparts,
+ * with nothing in common but the shared label-style field 7. So a reader
+ * has to know which kind it is holding, and {@link ChartAxisStyle} is told
+ * by the chart, which keeps `value_axis_styles` and `category_axis_styles`
+ * in separate fields.
+ */
+export const AxisStyleProperty: Readonly<Record<string, readonly [number, number]>> = {
+  /** bool — is the axis line drawn at all */
+  SHOW_AXIS: [24, 25],
+  /** bool */
+  SHOW_MAJOR_GRIDLINES: [27, 28],
+  /** bool */
+  SHOW_MINOR_GRIDLINES: [32, 33],
+  /** bool */
+  SHOW_MAJOR_TICK_MARKS: [29, 30],
+  /** bool */
+  SHOW_MINOR_TICK_MARKS: [34, 35],
+  /** `TSD.StrokeArchive` */
+  MAJOR_GRIDLINE_STROKE: [16, 17],
+  /** `TSD.StrokeArchive` */
+  MINOR_GRIDLINE_STROKE: [22, 23],
+  /** float */
+  MAJOR_GRIDLINE_OPACITY: [12, 13],
+  /** float */
+  MINOR_GRIDLINE_OPACITY: [18, 19],
+  /** float — label rotation */
+  LABELS_ORIENTATION: [9, 11],
+  /** int — where tick marks sit relative to the axis */
+  TICK_MARK_LOCATION: [36, 37],
+};
+
+/** One axis's gridlines, tick marks and visibility. */
+export class ChartAxisStyle extends ChartStyleArchive {
+  readonly kind: AxisKind;
+  /** Position among the axes of this kind. */
+  readonly index: number;
+
+  constructor(store: ObjectStore, object: IwaObject, kind: AxisKind, index: number) {
+    super(store, object);
+    this.kind = kind;
+    this.index = index;
+  }
+
+  /** Resolve a `[category, value]` pair against this axis's kind. */
+  field(property: keyof typeof AxisStyleProperty): number {
+    const pair = AxisStyleProperty[property];
+    if (!pair) throw new RangeError(`unknown axis property ${String(property)}`);
+    return this.kind === "category" ? pair[0] : pair[1];
+  }
+
+  bool(property: keyof typeof AxisStyleProperty): boolean | undefined {
+    return this.properties()?.getBool(this.field(property));
+  }
+
+  setBool(property: keyof typeof AxisStyleProperty, value: boolean): void {
+    this.requireProperties().setBool(this.field(property), value);
+    this.object.message.markDirty();
+  }
+
+  stroke(property: keyof typeof AxisStyleProperty): Stroke | undefined {
+    return readStroke(this.properties()?.getMessage(this.field(property)));
+  }
+
+  setStroke(property: keyof typeof AxisStyleProperty, stroke: Stroke): void {
+    this.requireProperties().setMessage(this.field(property), writeStroke(stroke));
+    this.object.message.markDirty();
+  }
+
+  get showAxis(): boolean | undefined {
+    return this.bool("SHOW_AXIS");
+  }
+
+  setShowAxis(value: boolean): void {
+    this.setBool("SHOW_AXIS", value);
+  }
+
+  get showMajorGridlines(): boolean | undefined {
+    return this.bool("SHOW_MAJOR_GRIDLINES");
+  }
+
+  setShowMajorGridlines(value: boolean): void {
+    this.setBool("SHOW_MAJOR_GRIDLINES", value);
+  }
+
+  majorGridlineStroke(): Stroke | undefined {
+    return this.stroke("MAJOR_GRIDLINE_STROKE");
+  }
+
+  setMajorGridlineStroke(stroke: Stroke): void {
+    this.setStroke("MAJOR_GRIDLINE_STROKE", stroke);
+  }
+
+  /** Everything this module names, for inspection. */
+  describe(): Record<string, unknown> {
+    const properties = this.properties();
+    if (!properties) return {};
+    const out: Record<string, unknown> = { kind: this.kind, index: this.index };
+    for (const name of Object.keys(AxisStyleProperty)) {
+      const field = this.field(name);
+      if (!properties.has(field)) continue;
+      const raw = properties.fields.find((f) => f.no === field);
+      out[name] =
+        raw?.wire === 0
+          ? properties.getUint(field)
+          : raw?.wire === 5
+            ? properties.getFloat(field)
+            : (readStroke(properties.getMessage(field)) ?? "(message)");
+    }
+    return out;
   }
 }

@@ -20,7 +20,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { CHART_TYPE_NAMES, CHART_TYPE_IDS, chartsOf } from "../src/tsch/charts.ts";
-import { ChartSeriesStyle } from "../src/tsch/appearance.ts";
+import { ChartSeriesStyle, ChartAxisStyle } from "../src/tsch/appearance.ts";
 import type { Fill } from "../src/tsd/style.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -227,5 +227,85 @@ describe("series opacity", () => {
     chart.seriesStyle(0)!.setOpacity(0.5);
     const after = chartsOf(IWorkDocument.open(doc.save()).store)[0]!;
     expect(after.seriesStyle(0)!.opacity).toBe(0.5);
+  });
+});
+
+describe("axis and legend styles", () => {
+  it("reads each axis against its own family of properties", () => {
+    // Nearly every axis property exists twice, once per kind, and an
+    // archive populates only its own set. Reading a value axis as a
+    // category one returns undefined for everything and looks like an
+    // empty archive rather than a bug, so this pins the pairing.
+    const { chart } = firstChart(UNSTYLED);
+    const category = chart.axisStyle("category")!;
+    const value = chart.axisStyle("value")!;
+
+    expect(category.field("SHOW_AXIS")).toBe(24);
+    expect(value.field("SHOW_AXIS")).toBe(25);
+
+    // A default column chart: baseline drawn, no vertical gridlines;
+    // horizontal gridlines on, no value-axis line. Both answer, which they
+    // could not do if the pairing were reversed.
+    expect(`category axis ${category.showAxis}`).toBe("category axis true");
+    expect(`category gridlines ${category.showMajorGridlines}`).toBe("category gridlines false");
+    expect(`value axis ${value.showAxis}`).toBe("value axis false");
+    expect(`value gridlines ${value.showMajorGridlines}`).toBe("value gridlines true");
+  });
+
+  it("reads gridline strokes", () => {
+    const { chart } = firstChart(UNSTYLED);
+    const stroke = chart.axisStyle("value")!.majorGridlineStroke();
+    expect(stroke !== undefined).toBe(true);
+    expect(stroke!.width).toBe(1);
+  });
+
+  it("exposes the legend style", () => {
+    const { chart } = firstChart(UNSTYLED);
+    const legend = chart.legendStyle();
+    expect(legend !== undefined).toBe(true);
+    expect(legend!.opacity).toBe(1);
+  });
+
+  it("toggles gridlines and reads them back after a save", () => {
+    const { doc, chart } = firstChart(UNSTYLED);
+    expect(chart.axisStyle("value")!.showMajorGridlines).toBe(true);
+    chart.setAxisMajorGridlines("value", false);
+
+    const after = chartsOf(IWorkDocument.open(doc.save()).store)[0]!;
+    expect(after.axisStyle("value")!.showMajorGridlines).toBe(false);
+    // The other axis is untouched.
+    expect(after.axisStyle("category")!.showMajorGridlines).toBe(false);
+    expect(after.axisStyle("category")!.showAxis).toBe(true);
+  });
+
+  it("copies an axis style on write when another object shares it", () => {
+    const { doc, chart } = firstChart(UNSTYLED);
+    const shared = chart.axisStyle("value")!.id;
+    const other = [...doc.store.allObjects()].find(
+      ({ obj }) => obj.identifier !== chart.id && obj.identifier !== shared,
+    )!.obj;
+    other.setObjectReferences([...other.getObjectReferences(), shared]);
+
+    const written = chart.setAxisMajorGridlines("value", false);
+    expect(written.id === shared).toBe(false);
+
+    const reloaded = IWorkDocument.open(doc.save());
+    const after = chartsOf(reloaded.store)[0]!;
+    expect(after.axisStyle("value")!.id).toBe(written.id);
+    expect(after.axisStyle("value")!.showMajorGridlines).toBe(false);
+    // The shared original still says what it said.
+    const original = new ChartAxisStyle(reloaded.store, reloaded.store.resolve(shared)!, "value", 0);
+    expect(original.showMajorGridlines).toBe(true);
+  });
+
+  it("refuses a property name it does not know", () => {
+    const { chart } = firstChart(UNSTYLED);
+    let message = "";
+    try {
+      chart.axisStyle("category")!.bool("SHOW_SOMETHING" as never);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message.includes("unknown axis property")).toBe(true);
   });
 });
