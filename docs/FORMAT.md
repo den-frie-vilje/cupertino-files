@@ -774,9 +774,11 @@ Behavior is decided by what a document *contains*, not what it claims.
 `doc.compatibility()` returns declared versions alongside probes of:
 
 - **container layout** — flat, nested `Index.zip`, or wrapper directory
-- **cell-storage generation** — `v5` (readable) vs `preBNC` (not decodable).
-  Note this is *not* predictable from the era: a 2018-era file (`3.2.13`)
-  in the test corpus already uses v5, while 2015-era files do not.
+- **cell-storage generation** — `v5` or `preBNC`. Both read; only v5 is
+  written, and `setCell` on a pre-BNC table refuses rather than converting
+  it. Note the generation is *not* predictable from the era: a 2018-era
+  file (`3.2.13`) in the test corpus already uses v5, while 2015-era files
+  do not.
 - **unknown type IDs** — object types absent from the bundled registry, in
   either direction: newer files may carry types added after the registry
   dump, and *older* files carry types since removed (the `1.5.0` fixture
@@ -1420,6 +1422,23 @@ reference declaration across.
 is shared: Apple keeps those declarations current, so counting the objects
 that name an id answers it without parsing a single payload.
 
+**Axis styles carry every property twice.** `ChartAxisStyleArchive`'s bag
+declares a category variant and a value variant of nearly everything —
+`show_axis` is 24 and 25, the major-gridline stroke 16 and 17, the
+minor-gridline opacity 18 and 19 — and an archive populates **only its own
+family**. A real category axis fills 1, 3, 5, 12, 14, 16, 18, 20, 22, 24…;
+its value counterpart fills 2, 4, 13, 15, 17, 19, 21, 23, 25…, sharing only
+the label-style field 7. Reading one through the other's numbers returns
+`undefined` for every property, which looks like an inherited archive
+rather than a mistake. Nothing needs to be inferred, though: `ChartArchive`
+keeps `value_axis_styles` (13) and `category_axis_styles` (15) in separate
+repeated fields, so the chart says which is which.
+
+The values read back coherently, which is the check that matters. A default
+column chart reports its category axis line on with no vertical gridlines,
+and its value axis line off with horizontal gridlines on — which is exactly
+how such a chart is drawn.
+
 ### 14.11 Calc-engine formula owners: naming a cross-table reference
 
 The calc engine does not address tables by object id. Every table gets an
@@ -1479,36 +1498,38 @@ that uses it — the method above, not a guess.
 
 ## 15. Known gaps / roadmap
 
-- **Pre-BNC cell storage** (versions 3/4, written by iWork '13-era apps)
-  uses an undocumented record layout and is *not* decodable — tables from
-  those files report `storageGeneration === "preBNC"`, and both `cells()`
-  and `setCell()` throw rather than return or write something misleading.
-  (The reference Python implementation refuses them too.) Re-saving in
-  Numbers 10+ converts them to v5.
-- **Authoring conditional-formatting rules and filter rules** is not
-  implemented (§14.7). An existing rule set can be applied to more cells,
-  and a filter set can be enabled, disabled or switched between "all" and
-  "any" — but building a rule means choosing a `predicate_type`, and only
-  two of that enum's members appear in the corpus. Recomputing which rows a
-  filter hides additionally means evaluating the predicates.
-- **Authoring formulas** is not implemented. Formulas are *read* and
-  rendered to text (§14.5), and writing a literal correctly clears one, but
-  building a `TSCE.FormulaArchive` AST needs the function-index table the
-  format does not contain plus the calc-engine dependency records.
-- **Writing merge ranges** is blocked on calc-engine identity: a merge is a
-  formula owned by a UUID derived from the table's own (§14.4, §14.11).
-  Reading and *naming* those owners is now supported, so this is no longer
-  blocked on understanding — it needs the owner entry, its dependency
-  records and the merge formula written together and checked in an app.
-- Chart **appearance** — type, colours, axis settings, legend — is read as
-  opaque style references. The data grid is editable (§14.10); restyling a
-  chart needs the TSCH style model on top of this substrate.
-- Creating documents **from scratch** (the practical route is embedding an
-  app-saved empty template, as numbers-parser does).
+This list is kept honest by deletion: an entry leaves it when the thing
+ships, not when it looks close. Pre-BNC storage, formula authoring, merge
+writing and chart appearance all used to be here.
+
+- **Authoring filter rules** is not implemented (§14.7). An existing rule
+  set can be applied to more cells, and a filter set can be enabled,
+  disabled or switched between "all" and "any" — but building a rule means
+  choosing a `predicate_type`, and the one populated filter set across 176
+  borrowed tables uses code 54, a function call rather than a comparison.
+  So there is no worked example of the common case. Recomputing which rows
+  a filter hides additionally means evaluating the predicates.
+- **Authoring conditional rules** covers `=`, `<>`, `<` and `<=`, whose
+  `predicate_type` codes are observed. `>` and `>=` are **refused**: their
+  codes are predicted (7 and 8) but unconfirmed, and a rule filed under the
+  wrong one reads back correctly while showing a different condition in the
+  editor. One document with a "greater than" rule settles it.
+- **Creating a category group** (§14.9). Rows can be *regrouped* among
+  groups that exist, byte-identically to Apple; creating one needs its
+  identity, its sort position and the fields the archive carries beside the
+  tree, which no fixture explains. Bucketed groupings need the grouping
+  formula evaluated.
+- **Creating a Keynote build** (animation). The model reads; authoring one
+  needs a deck with a build to compare against.
+- Creating documents **from scratch**. `blankFrom()` derives an empty
+  document from a real one, which is the practical route and the one
+  numbers-parser takes; synthesising a package with no template is not
+  attempted.
 - Image/media **insertion** (Data/ plumbing is specified in §5.4/§10 but
   not yet wrapped in a high-level API).
-- Footnote/comment/change-tracking editing (tables are preserved and
-  shifted correctly; semantic APIs pending).
+- **Change-tracking editing.** Its tables are preserved and shifted
+  correctly, but there is no semantic API. Comments and footnotes *can* be
+  created (`buildComment`, the footnote helpers); change tracking cannot.
 - Password-protected files (`.iwph` + encrypted payload).
 - `TSP.FieldInfo` entries are preserved byte-for-byte and never recomputed.
   This is deliberate, not pending — see §5.2.1 for the measurement behind it.

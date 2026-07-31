@@ -353,6 +353,7 @@ cat.describe();                         // ["Animal (10 rows)", "  2013-01-01 (2
 cat.setEnabled(false);                  // ungroup without losing the definition
 
 t.staleCategoryGroups();                // groups whose rows no longer match the data
+t.regroupCategories();                  // put them back; returns how many rows moved
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -360,10 +361,15 @@ bucketed — `groupingName` says which ("year", "year and quarter", "weekday"
 …) — and a bucketed group's `value` is the bucket's start date, not any
 cell's value.
 
-Grouping itself happens in Numbers. This library reads the tree and can
-switch it off, but **cannot regroup**: change cells and the tree goes stale.
-`staleCategoryGroups()` tells you when, which is worth checking after any
-edit to a categorised table.
+Editing cells does not regroup them, so call `regroupCategories()` after
+touching a categorised table. It moves rows between groups that already
+exist and does nothing else: a value with no group **throws** rather than
+creating one, and a bucketed grouping throws too, because placing a row in
+"Q3 2014" means evaluating the grouping formula. Regrouping unchanged data
+moves nothing and writes nothing.
+
+So the pattern is: change the cell, then regroup, and be ready for the
+throw if you wrote a value the table has no group for.
 
 ## Shadows and drawable styling
 
@@ -420,8 +426,37 @@ padding with gaps look identical in the data and completely different on the
 page.
 
 Adding or removing a series keeps the chart's id map and its per-series
-style arrays in step, so styling stays on the series it belongs to. Chart
-**appearance** (type, colours, axes) is read-only.
+style arrays in step, so styling stays on the series it belongs to.
+
+### Chart appearance
+
+```ts
+chart.setChartType("donut2D");         // name or raw enum; unknown names throw
+chart.setSeriesFill(0, { kind: "color", color: { r: 1, g: 0, b: 0 } });
+chart.seriesStyle(0)?.fill();          // and .fills() for the per-geometry breakdown
+chart.seriesStyle(0)?.setOpacity(0.5);
+
+chart.axisStyle("value")?.showMajorGridlines;
+chart.setAxisMajorGridlines("value", false);
+chart.axisStyle("category")?.showAxis;
+chart.legendStyle()?.opacity;
+```
+
+**Always go through the chart, never the style object, when writing.**
+Style archives live in the document stylesheet and templates hand the same
+one to several charts — in a real document a single series style was shared
+by ten. `chart.setSeriesFill` and `chart.setAxisMajorGridlines` clone a
+shared archive first and repoint this chart at the copy;
+`chart.seriesStyle(0)!.setFill(…)` writes straight through and recolours
+every chart sharing it. The result is a well-formed file either way, which
+is what makes it worth knowing.
+
+Each axis kind reads its own properties: ask for `"category"` or `"value"`,
+because the archives use different field numbers for the same concept and
+the wrong one answers `undefined` for everything.
+
+A chart that inherits its styling from a preset has no archives to write
+into, and setting a colour on one throws rather than synthesising them.
 
 ## Comments and footnotes
 
