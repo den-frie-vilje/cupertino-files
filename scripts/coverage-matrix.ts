@@ -130,6 +130,27 @@ const CAPABILITIES: Capability[] = [
   },
   {
     group: "Container",
+    name: "Edit cycle: open → edit → save → reopen",
+    apps: "all",
+    status: "read+write",
+    probe: () => true,
+    note:
+      "every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, " +
+      "which also compares a census — objects, components, text, tables, cells, formulas, " +
+      "merges, charts, styles, unknown archive types — before and after, so an edit that " +
+      "lands while dropping something else fails",
+    manualProof: {
+      claim: "Pages, Numbers and Keynote open a document this library has edited and saved.",
+      why:
+        "The offline suite proves self-consistency: we read back what we wrote. Only the apps " +
+        "can say whether they accept it.",
+      how: "npm run test:e2e on a Mac opens each edited document in its app.",
+      e2e: true,
+      risk: "high",
+    },
+  },
+  {
+    group: "Container",
     name: "Mixed-codec packages (LZFSE component beside Snappy)",
     apps: "all",
     status: "read",

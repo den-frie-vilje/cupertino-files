@@ -19,7 +19,7 @@
  * `test/e2e/` is for, and it needs a Mac. The distinction is recorded in
  * docs/VERIFICATION.md and is not papered over here.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   IWorkDocument,
@@ -241,25 +241,91 @@ describe("Keynote: open, edit, save, reopen", () => {
 
 describe("every fixture survives an edit cycle", () => {
   /**
-   * The broad version: for each app, edit *every* fixture and re-read it.
+   * The broad version: edit *every* document in the corpus and re-read it.
    *
    * Individually-chosen fixtures test the happy path. This catches the
-   * document whose text storage is empty, whose tables are pre-BNC, or
-   * whose components use a codec we cannot re-encode — the shapes that
-   * only turn up when you stop choosing.
+   * document whose text storage is empty, whose tables are pre-BNC, whose
+   * package nests its Index in a zip, or whose components use a codec we
+   * cannot re-encode — the shapes that only turn up when you stop
+   * choosing. Every app, every format era, one loop.
    */
-  it("writes and re-reads each one without losing objects", () => {
+  const documents = readdirSync(FIXTURES).filter((n) => /\.(pages|numbers|key)$/.test(n));
+
+  it("edits text in every document that has any, losing nothing", () => {
+    const skipped: string[] = [];
     let edited = 0;
-    for (const name of ["gomap-v26.1-newest-writer.pages", "zenodo-v26.1-hyperlinks-masks.key"]) {
-      const before = census(IWorkDocument.open(bytes(name)));
+    for (const name of documents) {
+      let before: Census;
+      try {
+        before = census(IWorkDocument.open(bytes(name)));
+      } catch {
+        skipped.push(name); // iWork '09 XML, rejected on purpose
+        continue;
+      }
       const doc = IWorkDocument.open(bytes(name));
       const storage = doc.textStorages().find((s) => s.text.length > 0);
-      if (!storage) continue;
+      if (!storage) {
+        skipped.push(name);
+        continue;
+      }
       storage.insertText(0, "x");
-      const after = census(IWorkDocument.open(doc.save()));
-      expectCensus(after, before, { textCharacters: 1 });
+      const saved = doc.save();
+      const reopened = IWorkDocument.open(saved);
+      // The edit is there...
+      expect(`${name}: ${reopened.textStorages().some((s) => s.text.startsWith("x"))}`).toBe(
+        `${name}: true`,
+      );
+      // ...and nothing else moved. Naming the file in the assertion is the
+      // difference between a fixable failure and a hunt.
+      const after = census(reopened);
+      for (const key of Object.keys(before) as (keyof Census)[]) {
+        const allowance = key === "textCharacters" ? 1 : 0;
+        expect(`${name} ${key}=${after[key]}`).toBe(`${name} ${key}=${before[key] + allowance}`);
+      }
       edited++;
     }
-    expect(edited).toBe(2);
+    // Every modern document in the corpus: 19 Pages, 10 Numbers, 8 Keynote.
+    // The one skip is the iWork '09 XML file, which is rejected by design.
+    // Exact numbers on purpose — "more than thirty" would hide a fixture
+    // quietly becoming uneditable.
+    expect(edited).toBe(37);
+    expect(skipped).toEqual(["tika-iwork09-testPages.pages"]);
+  });
+
+  it("writes a cell in every table it can, losing nothing", () => {
+    let written = 0;
+    for (const name of documents) {
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(bytes(name));
+      } catch {
+        continue;
+      }
+      const before = census(IWorkDocument.open(bytes(name)));
+      let touched = false;
+      for (const table of tablesOf(doc.store)) {
+        // Pre-BNC storage reads but does not write, by design.
+        if (table.storageGeneration !== "v5") continue;
+        if (table.rowCount < 2 || table.columnCount < 1) continue;
+        try {
+          table.setCell(table.rowCount - 1, table.columnCount - 1, "edited");
+        } catch {
+          // A covered cell or an unmaterialised row — both refuse loudly
+          // and neither is a failure of the writer.
+          continue;
+        }
+        touched = true;
+        break;
+      }
+      if (!touched) continue;
+      const after = census(IWorkDocument.open(doc.save()));
+      for (const key of ["objects", "components", "tables", "charts", "unknownTypes"] as const) {
+        expect(`${name} ${key}=${after[key]}`).toBe(`${name} ${key}=${before[key]}`);
+      }
+      written++;
+    }
+    // 15 of the 37 carry a writable v5 table; the rest have no tables at
+    // all, or only pre-BNC storage, which reads but does not write.
+    expect(written).toBe(15);
   });
 });
