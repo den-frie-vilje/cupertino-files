@@ -172,7 +172,10 @@ It prints each pairing, scores it against the prediction, and ends in
 `CONFIRMED`, `REFUTED`, or a list of conditions still untested. Protocol 4
 in [`MANUAL-WORK.md`](MANUAL-WORK.md).
 
-**What it unblocks:** creating conditional formats and filter rules.
+**What it unblocks:** the remaining two conditional-formatting operators.
+Conditional-rule authoring itself is **done** for `=`, `<>`, `<` and `<=`,
+byte-identical to Apple's. Filter authoring needs more than this code: see
+Priority 7.
 
 ---
 
@@ -250,12 +253,25 @@ and the merge formula together, then checking the result in Numbers.
 
 ---
 
-## Priority 7 — Category authoring, and recomputing filtered rows
+## Priority 7 — Category *creation*, and recomputing filtered rows — **half done**
 
-**Blocked on:** evaluation, not understanding. Grouping rows means
-computing the group tree; deciding which rows a filter hides means
-evaluating its predicates. Both are calc-engine work. Reading is complete
-for both, including a staleness check for categories.
+The old entry filed both under "evaluation, not understanding", and for
+categories that was half wrong. Grouping rows by a column's value is not
+calc-engine work — the values are right there — so `regroupCategories`
+now puts rows back where their values say they belong, and regrouping
+unchanged data reproduces Apple's archive **byte for byte** across every
+by-value table in the fixture.
+
+What is genuinely blocked is *creating* a group: its identity, its sort
+position, and the run of fields the archive carries beside the tree (eight
+messages at fields 7–13 and 16, a count at 14, per-row UUID pairs at 15)
+are not explained by any fixture. Bucketed groupings ("dates by quarter")
+stay blocked too — placing a row in a bucket means evaluating the
+grouping formula.
+
+Filters remain fully blocked, for the original reason: which rows a filter
+hides lives in `TST.HiddenStateExtentArchive` and computing it means
+evaluating predicates.
 
 ---
 
@@ -353,6 +369,24 @@ carried filter rules — 164 had a filter set and 163 of those were empty.
 The long-standing worry that this library's filter reader was untested was
 half right: it is barely exercised because Numbers writes an empty set for
 almost every table, not because the corpus was unlucky.
+
+**A second run, targeted at the three remaining gaps.** Borrowing again —
+this time asking only "which documents demonstrate filters, categories or
+charts?" — settled two of them and sharpened the third:
+
+- **Charts.** 14 real charts across 10 chart types showed that series style
+  archives are *shared*: one was referenced by ten charts, and nine of the
+  eighteen present by more than one. That turned a straightforward setter
+  into a copy-on-write one, and it is not a thing any amount of reading the
+  proto would have suggested. See FORMAT.md §14.10.1.
+- **Categories.** The borrowed corpus turned out to be unnecessary — the
+  committed fixture already carries every grouping the UI offers. Worth
+  recording as a caution: check what is already on disk before borrowing.
+- **Filters.** The one populated set uses `predicate_type` 54, whose
+  predicates are function calls rather than comparisons. It teaches the
+  container and nothing about the common case.
+
+The files were read and deleted, as before. Nothing borrowed is committed.
 
 ---
 

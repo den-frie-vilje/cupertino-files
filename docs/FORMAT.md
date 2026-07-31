@@ -1215,6 +1215,19 @@ therefore fixture-proven; a populated rule list is read from the schema plus
 the predicate encoding that conditional formatting exercises for real, and
 authoring one is not offered.
 
+That is not a corpus accident. Across 176 borrowed tables from public
+parser projects, **164 had a filter set and 163 of them were empty** —
+Numbers writes the container for almost every table whether or not anyone
+filters. The single populated one carries four rules, all with
+`predicate_type` **54**, whose predicates render as function calls
+(`SUM(OTHER_TABLE::C[0])`) rather than the simple comparisons conditional
+formatting uses. So the one real example teaches the *container* layout and
+says nothing about how a "column is greater than 5" filter is encoded,
+which remains the gap. Authoring one would also only be half a feature:
+which rows a filter hides is stored separately, in
+`TST.HiddenStateExtentArchive`, and computing it means evaluating the
+predicates.
+
 ### 14.8 Row and column identities
 
 Most of a table addresses cells by position, but anything that must survive
@@ -1294,9 +1307,32 @@ or `child` (inline, older). A parent's rows are the union of its children's.
 
 The tree is a **cache the app recomputes**, like a table of contents.
 Editing cells here does not regroup them — but unlike a TOC, the staleness
-is checkable, because the grouping column's values are right there in the
-table. Comparison must be on *values*, not rendered text: a boolean group
-is `false` where the cell renders `FALSE`.
+is both checkable *and fixable*, because the grouping column's values are
+right there in the table. Comparison must be on *values*, not rendered
+text: a boolean group is `false` where the cell renders `FALSE`.
+
+Rewriting membership means rewriting `row_lookup_uids`, and the index-set
+encoding has to match the app's exactly or the archive stops being
+byte-comparable: **consecutive indexes collapse into one range, and a range
+covering a single index is written with `range_begin` alone**, no
+`range_end`. Apple's root node stores rows 1–30 as one entry *with* an end;
+a group holding seven scattered rows stores seven entries *without* one.
+Either encoding reads back correctly, so only a byte comparison catches it.
+
+What can be recomputed offline stops at membership. Creating a group would
+mean minting its identity, placing it in whatever order the app sorts
+groups in, and updating the run of fields the archive carries beside the
+tree — eight messages of shape `{ f2: <small int>, f3: 0 }` at fields 7–13
+and 16, a count at 14, and a list of per-row UUID pairs at 15. Their
+meaning is not documented by any fixture, so a group this library invented
+would be a claim about all of them.
+
+Two further shape notes. A real archive carries **both** `group_node_root`
+(3, inline) and `group_node_root_ref` (18) — the reference is the live tree
+and the inline copy is the older encoding, so a reader taking the first
+match gets a stale tree. And `row_lookup_uids`, despite the name, is a
+plain `TSCE.IndexSetArchive` of row indexes, not UUIDs; that reading is
+confirmed against cell contents across the corpus.
 
 Per-group summaries (`column_agg_type`) are read, but no fixture carries a
 non-empty aggregate list, so the `agg_type` codes are passed through
@@ -1344,6 +1380,45 @@ Two flags matter when writing. `contains_default_data` marks a chart still
 holding Apple's template numbers — the apps replace those wholesale on
 first edit, so it must be cleared once real data is written. `is_dirty`
 tells the app the chart needs redrawing.
+
+### 14.10.1 Chart appearance, and why it cannot be edited in place
+
+Colour and opacity are in a parallel set of archives, one per styleable
+thing: `ChartStyleArchive` (5022), `LegendStyleArchive` (5024),
+`ChartAxisStyleArchive` (5026), `ChartSeriesStyleArchive` (5028), each with
+a `NonStyle` twin. They all have the same declaration —
+
+```proto
+optional .TSS.StyleArchive super = 1;
+extensions 10000 to 536870911;
+```
+
+— with `TSCH.Generated.<name> current = 10000` filling the extension. That
+generated message is a **flat property bag whose field numbers name the
+properties**: on a series, 11–17 are `TSD.FillArchive` fills (area, bar,
+column, default, mixed-area, mixed-column, pie), 18–29 are paragraph style
+indexes, 24 is a float opacity. A real archive holds 108 of them. The
+values are ordinary `TSD` types, so the fill/stroke/shadow codecs apply
+unchanged.
+
+A series carries a **fill per geometry** so that turning a column chart
+into a pie keeps its colours; Apple writes all six identically and leaves
+`tschchartseriesdefaultfill` — the template fallback — different.
+
+**The trap: these archives are shared.** They live in the document
+stylesheet, and a template hands the same archive to every chart using that
+palette slot. In one document a single `ChartSeriesStyleArchive` is
+referenced by **ten** charts, and nine of the eighteen present are used by
+more than one. Editing one in place recolours every chart sharing it, and
+the result is perfectly well-formed — it just belongs to more charts than
+the caller meant. So a writer must copy on write: clone, repoint this
+chart's entry in `series_private_styles` (a `TSP.SparseReferenceArray`,
+whose entry `index` is authoritative and not its position), and move the
+reference declaration across.
+
+`MessageInfo.object_references` is the cheap way to ask whether an archive
+is shared: Apple keeps those declarations current, so counting the objects
+that name an id answers it without parsing a single payload.
 
 ### 14.11 Calc-engine formula owners: naming a cross-table reference
 
