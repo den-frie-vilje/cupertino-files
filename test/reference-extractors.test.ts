@@ -135,13 +135,24 @@ describe("reference extractors agree with Apple", () => {
   });
 
   it("does not let the overall disagreement count grow", () => {
-    // A budget, not an endorsement. These are real disagreements in types
-    // this library does not yet write — TSD.ImageArchive, section
-    // placeholders, stylesheets themselves. Each is a latent version of the
-    // bug above, and the number is here so it can only go down.
+    // A budget, not an endorsement, and it only goes down. What remains,
+    // characterised:
+    //
+    //   * Keynote type 5 (148) — we OMIT references Apple declares, to
+    //     guide storages and text styles. Omission is the worse direction:
+    //     an undeclared cross-component reference is what makes an app call
+    //     a document damaged.
+    //   * TSWP.SectionPlaceholderArchive (47) — we omit one each.
+    //   * TSS.StylesheetArchive (36) — we ADD hundreds, declaring the styles
+    //     the sheet contains. This is the container rule again and it is on
+    //     a live path: creating a character style dirties the stylesheet.
+    //
+    // Two instances of that container rule are already fixed — a storage
+    // must not declare its stylesheet, a drawable must not declare its
+    // parent — and both were found by exactly this comparison.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=382: ${disagree <= 382} (${disagree})`).toBe(
-      `disagree<=382: true (${disagree})`,
+    expect(`disagree<=231: ${disagree <= 231} (${disagree})`).toBe(
+      `disagree<=231: true (${disagree})`,
     );
   });
 

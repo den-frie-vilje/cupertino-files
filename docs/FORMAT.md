@@ -1395,6 +1395,33 @@ unmodified Apple archive already carries the correct list, so running our
 extractor over the corpus and comparing is ground truth. It found 10381
 disagreements across 11253 archives the first time it ran.
 
+#### The same rule, elsewhere: a child never declares its container
+
+The storage/stylesheet case is one instance of a general pattern, and a
+sweep of the corpus found more:
+
+| archive | field | present | Apple declares |
+| --- | --- | ---: | ---: |
+| `TSWP.StorageArchive` | `style_sheet` | 2676 | **0** |
+| `TSD.ImageArchive` | `drawable.parent` | 151 | **0** |
+| `TSD.ImageArchive` | `style` | 163 | 163 |
+| `TSD.ImageArchive` | `mask` | 79 | 79 |
+| `TSD.ImageArchive` | `title` / `caption` | 80 | 80 |
+| `TSWP.*StyleArchive` | `super.stylesheet` | many | **0** |
+
+An archive declares what it *resolves through* and never the container that
+holds it. The same shows up in `ComponentInfo.external_references`: a
+component declares every cross-component object it references **except**
+another component's root — in one measured document, 374 of 378 targets
+declared, the four omissions being exactly the stylesheet, view state,
+calculation engine and author storage roots.
+
+It is not a universal ban on referencing a root. 1755 `object_references`
+in the corpus do target a foreign component root, almost all from
+`TST.TableModelArchive` and `TST.SummaryModelArchive`. The rule is
+per-archive-type, which is why `test/reference-extractors.test.ts` compares
+against the corpus rather than encoding a principle.
+
 #### Text colour lives in the fill, not in `font_color`
 
 `TSWP.CharacterStylePropertiesArchive` has an `optional .TSP.Color

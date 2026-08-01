@@ -59,7 +59,17 @@ export const imageExtractor: ReferenceExtractor = (m) => {
   pushRef(out, m, Image.STYLE);
   pushRef(out, m, Image.MASK);
   const drawable = m.getMessage(Image.SUPER);
-  pushRef(out, drawable, Drawable.PARENT);
+  // **Not `parent`.** A drawable points back at its containing group or
+  // canvas, and Apple never declares that: across the corpus 151 images
+  // carry the field and zero list it, while every style (163/163), mask
+  // (79/79), title (80/80) and caption (80/80) is declared. Eighty of those
+  // parents are another component's root object.
+  //
+  // Same rule as `TSWP.StorageArchive` and its stylesheet: an archive
+  // declares what it *resolves through*, never the container that holds it.
+  // Getting it wrong there made Pages render a whole document unstyled, and
+  // this is the same defect one type over — latent only because inserting an
+  // image has never been opened in the app.
   pushRef(out, drawable, Drawable.COMMENT);
   pushRef(out, drawable, Drawable.TITLE);
   pushRef(out, drawable, Drawable.CAPTION);
