@@ -165,6 +165,37 @@ const RUNGS: {
       chart.setSeriesFill(0, { kind: "color", color: { r: 1, g: 0, b: 0, space: "srgb" } });
     },
   },
+  {
+    // Widget-per-rung, so "the controls document fails" narrows to one
+    // widget rather than four. 07 and 08 cover checkbox and slider+stepper;
+    // these two isolate the rest.
+    name: "13-star-rating",
+    note: "a star rating alone — the only widget whose format code rests on one document",
+    build: (doc) => doc.tables()[0]!.setCellControl(1, 0, { widget: "starRating", value: 3 }),
+  },
+  {
+    name: "14-stepper-only",
+    note: "a stepper alone, separating it from the slider it shares a rung with",
+    build: (doc) =>
+      doc.tables()[0]!.setCellControl(1, 0, {
+        widget: "stepper",
+        minimum: 0,
+        maximum: 10,
+        increment: 1,
+        value: 4,
+      }),
+  },
+  {
+    name: "15-all-four-widgets",
+    note: "checkbox, star rating, slider and stepper in one table",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCellControl(1, 0, { widget: "checkbox", value: true });
+      table.setCellControl(2, 0, { widget: "starRating", value: 3 });
+      table.setCellControl(3, 0, { widget: "slider", minimum: 1, maximum: 50, increment: 0.1, value: 12.3 });
+      table.setCellControl(4, 0, { widget: "stepper", minimum: 0, maximum: 10, increment: 1, value: 4 });
+    },
+  },
 ];
 
 function main(argv: string[]): number {
