@@ -213,6 +213,39 @@ recompute the list from the message content. Same for `data_references` and
 library follows numbers-parser's proven scheme — round the current maximum
 up to the next multiple of 1,000,000 and allocate upward from there.
 
+#### 5.2.0 `required` fields, and why a writer must honour them
+
+The protos are proto2, and proto2 has `required`. A message missing one is
+not a message with less in it — it is a message **no conforming parser
+accepts**, so the app refuses the whole document rather than the field.
+
+This is the easiest invariant in the format to break from a schema-light
+writer, because nothing in the bytes hints at it and every local check
+passes. Concretely, `TST.ConditionalStyleRule` declares
+
+```proto
+required .TSP.Reference cell_style = 2;
+required .TSP.Reference text_style = 3;
+```
+
+so there is **no such thing as a conditional rule that formats nothing**.
+Rules were written here without either, and: the reader read them back
+correctly, the round-trip tests passed, and a byte-comparison against a
+rule Apple wrote passed too — because Apple only ever writes the styled
+case, so the comparison covered a case that was already right. Numbers was
+the first thing in the chain to object.
+
+Two lessons generalise. **Reading back what you wrote cannot find this**,
+because a tolerant reader mirrors a tolerant writer. **Comparing against
+the app's output only proves the cases the app produces**; the dangerous
+shapes are the ones it never produces, so there is nothing to compare with.
+
+`npm run required:check` reads the vendored protos and verifies every
+archive the library authors, recursively. A second violation turned up the
+moment it existed: `TST.CellStyleArchive.super` is `required`, and a cell
+style created without a parent to clone omitted it — which affected cell
+formatting generally, not just conditional rules.
+
 #### 5.2.1 `field_infos` is a schema descriptor, not a reference index
 
 `MessageInfo.field_infos` looks like a second, finer-grained copy of

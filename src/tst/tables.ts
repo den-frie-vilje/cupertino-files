@@ -24,6 +24,7 @@ import {
 import type { CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
+import { StyleSuper } from "../tss/schema.ts";
 import {
   AstNodeFields,
   AstNodeType,
@@ -138,10 +139,16 @@ export const TileRowInfo = {
   CELL_OFFSETS: 7,
   HAS_WIDE_OFFSETS: 8,
 } as const;
-/** TSS.StyleArchive fields we touch on cloned TST styles. */
+/**
+ * `TST.CellStyleArchive.super`, and the `TSS.StyleArchive` fields inside it.
+ *
+ * The field numbers come from {@link StyleSuper} rather than being restated
+ * here: a local copy had `style_identifier` as 4, which is `is_variation`.
+ * The clone path was stripping the wrong field and leaving the parent's
+ * identifier in place — two styles answering to one identifier, which is
+ * exactly what the code was trying to avoid.
+ */
 const STYLE_SUPER = 1;
-const STYLE_NAME = 1;
-const STYLE_IDENTIFIER = 4;
 
 /**
  * The bands a table styles separately. Each names a `TSP.Reference` field
@@ -2568,6 +2575,24 @@ export class TableModel {
     return { ...condition, cellStyleId, textStyleId };
   }
 
+  /**
+   * The stylesheet a new style should belong to.
+   *
+   * Read off a style the table already interns rather than looked up from
+   * the document, so a table in a component with its own stylesheet gets
+   * that one. `undefined` when the table has no styles to learn from, which
+   * leaves the reference out rather than pointing it somewhere wrong.
+   */
+  private stylesheetReference(): bigint | undefined {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
+    for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const style = this.store.resolve(refId(entry, ListEntry.REFERENCE));
+      const id = refId(style?.message.getMessage(STYLE_SUPER), StyleSuper.STYLESHEET);
+      if (id !== undefined) return id;
+    }
+    return undefined;
+  }
+
   private createCellStyle(formatting: CellFormatting, basedOn?: number): number {
     const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
     if (!list) throw new RangeError("table has no style table; cannot style cells");
@@ -2583,8 +2608,20 @@ export class TableModel {
     // two styles answering to one identifier is a corrupt stylesheet.
     const sup = created.message.getMessage(STYLE_SUPER);
     if (sup) {
-      sup.remove(STYLE_NAME);
-      sup.remove(STYLE_IDENTIFIER);
+      sup.remove(StyleSuper.NAME);
+      sup.remove(StyleSuper.STYLE_IDENTIFIER);
+    } else {
+      // **`super` is `required`.** With a parent to clone it arrives for
+      // free; created from nothing it does not, and a TST.CellStyleArchive
+      // without it is a message Numbers will not parse — it refuses the
+      // whole document. Apple's own cell styles carry a style_identifier
+      // and a stylesheet reference here; the identifier must not be
+      // duplicated, but the stylesheet must be right, so it is copied from
+      // a style the table already has.
+      const fresh = RawMessage.create();
+      const stylesheet = this.stylesheetReference();
+      if (stylesheet !== undefined) fresh.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheet));
+      created.message.setMessage(STYLE_SUPER, fresh);
     }
     new TableStyleHandle(this.store, created).setCell(formatting);
 

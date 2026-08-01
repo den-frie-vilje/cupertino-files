@@ -54,6 +54,7 @@
     "prebnc": "node scripts/analyse-prebnc.ts",
     "stress": "node scripts/stress-readers.ts",
     "proto:check": "node scripts/check-proto-drift.ts --check",
+    "required:check": "node scripts/check-required-fields.ts",
     "survey:fieldinfos": "node scripts/survey-field-infos.ts",
     "probe": "node scripts/probe-unknowns.ts",
     "verify:doc": "node scripts/make-verification-doc.ts",
