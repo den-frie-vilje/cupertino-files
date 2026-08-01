@@ -286,6 +286,25 @@ const ITEM_FORMAT_TYPE = { STRING: 260, NUMBER: 256 } as const;
 export type PopupItem = string | number;
 
 /**
+ * What, if anything, precedes the choices in a menu model.
+ *
+ * **An open question, being measured.** A model written as a plain list of
+ * choices comes back one short in Numbers: `[Apple, Pear, Quince]` offers
+ * only Pear and Quince, and `[10, 20, 50]` only 20 and 50. The first entry
+ * is consumed rather than rejected — the document opens clean and the menu
+ * works — so `tsce_item[0]` evidently means something other than "the first
+ * choice", and this selects which candidate meaning to write while that is
+ * settled in the app.
+ *
+ *  - `"none"` — the plain list, which is known to lose its first item.
+ *  - `"nil"` — a leading `NIL_TYPE` value, on the theory that slot 0 is the
+ *    blank option a Numbers menu can start on.
+ *  - a value — a leading copy of the selected item, on the theory that slot
+ *    0 holds the current selection and the choices follow it.
+ */
+export type PopupLeading = "none" | "nil" | { value: PopupItem };
+
+/**
  * Build a `TST.PopUpMenuModel` from a list of choices.
  *
  * ```proto
@@ -312,13 +331,25 @@ export type PopupItem = string | number;
  * no format was flawless on paper and invisible in the app. Treat a menu
  * as unproven until someone opens one.
  */
-export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
+export function buildPopupMenuModel(
+  items: readonly PopupItem[],
+  leading: PopupLeading = "none",
+): RawMessage {
   if (items.length === 0) throw new RangeError("a pop-up menu needs at least one item");
   const model = RawMessage.create();
+  const entries: (PopupItem | "nil")[] = [...items];
+  if (leading === "nil") entries.unshift("nil");
+  else if (leading !== "none") entries.unshift(leading.value);
   model.setMessages(
     PopUpMenuModelFields.ITEM,
-    items.map((item) => {
+    entries.map((item) => {
       const value = RawMessage.create();
+      if (item === "nil") {
+        // A NIL_TYPE value carries no body at all — the type is the whole
+        // message, and every value field is optional.
+        value.setVarint(CellValueFields.TYPE, CellValueType.NIL);
+        return value;
+      }
       const format = RawMessage.create();
       const body = RawMessage.create();
       if (typeof item === "string") {
@@ -341,7 +372,14 @@ export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
   return model;
 }
 
-/** Read a `TST.PopUpMenuModel` back into its list of choices. */
+/**
+ * Read a `TST.PopUpMenuModel` back into its list of choices.
+ *
+ * A `NIL_TYPE` entry is skipped rather than reported. Numbers appears to
+ * treat slot 0 as something other than a choice — a plain three-item model
+ * offers only two in the app — so a nil there is structural, not an item
+ * somebody meant to put in the menu.
+ */
 export function readPopupMenuModel(model: RawMessage | undefined): PopupItem[] {
   if (!model) return [];
   const out: PopupItem[] = [];

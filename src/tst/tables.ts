@@ -54,6 +54,7 @@ import {
   InteractionType,
   type CellControl,
   type PopupItem,
+  type PopupLeading,
 } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
@@ -2121,8 +2122,8 @@ export class TableModel {
    * model with the list that points at it means there is no cross-component
    * reference to declare in the first place.
    */
-  private internPopupModel(items: readonly PopupItem[]): bigint {
-    const encoded = buildPopupMenuModel(items).toBytes();
+  private internPopupModel(items: readonly PopupItem[], leading: PopupLeading): bigint {
+    const encoded = buildPopupMenuModel(items, leading).toBytes();
     const dataStore = this.dataStore();
     if (!dataStore) throw new RangeError("table has no data store; cannot store a menu");
     const list = this.store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
@@ -2345,6 +2346,12 @@ export class TableModel {
           items: readonly PopupItem[];
           value?: string | number;
           startsWithFirstItem?: boolean;
+          /**
+           * What occupies slot 0 of the model. **Under measurement** — a
+           * plain list loses its first choice in Numbers, so this selects
+           * which candidate explanation to write. See {@link PopupLeading}.
+           */
+          leading?: PopupLeading;
         },
     options: WriteOptions = {},
   ): number {
@@ -2365,7 +2372,7 @@ export class TableModel {
         spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.POPUP_MENU);
         spec.setMessage(
           CellSpecFields.CHOOSER_POPUP_MODEL,
-          makeRef(this.internPopupModel(control.items)),
+          makeRef(this.internPopupModel(control.items, control.leading ?? "none")),
         );
         spec.setVarint(
           CellSpecFields.CHOOSER_START_WITH_FIRST,

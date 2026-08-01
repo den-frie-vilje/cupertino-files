@@ -218,6 +218,52 @@ const RUNGS: {
       table.setCellControl(1, 0, { widget: "popupMenu", items: [10, 20, 50], value: 20 });
     },
   },
+  // 18-20 are one experiment, not three features. A plain three-item menu
+  // shows only its last two in Numbers, so slot 0 of the model is not a
+  // choice; these write the three candidate meanings for it and exactly one
+  // should offer all three fruits.
+  {
+    name: "18-menu-start-flag-off",
+    note: "hypothesis: chooser_control_start_w_first consumes the first item",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(0, 0, "Expect Apple, Pear, Quince");
+      table.setCellControl(1, 0, {
+        widget: "popupMenu",
+        items: ["Apple", "Pear", "Quince"],
+        value: "Pear",
+        startsWithFirstItem: false,
+      });
+    },
+  },
+  {
+    name: "19-menu-leading-nil",
+    note: "hypothesis: slot 0 is the blank option a menu can start on",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(0, 0, "Expect Apple, Pear, Quince");
+      table.setCellControl(1, 0, {
+        widget: "popupMenu",
+        items: ["Apple", "Pear", "Quince"],
+        value: "Pear",
+        leading: "nil",
+      });
+    },
+  },
+  {
+    name: "20-menu-leading-selection",
+    note: "hypothesis: slot 0 holds the current selection and choices follow",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(0, 0, "Expect Apple, Pear, Quince");
+      table.setCellControl(1, 0, {
+        widget: "popupMenu",
+        items: ["Apple", "Pear", "Quince"],
+        value: "Pear",
+        leading: { value: "Pear" },
+      });
+    },
+  },
 ];
 
 function main(argv: string[]): number {
