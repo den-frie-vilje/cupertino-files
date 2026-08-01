@@ -40,7 +40,32 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PagesDocument } from "../src/index.ts";
 
-const TEMPLATE = new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url);
+/**
+ * Two bases, deliberately.
+ *
+ * A rung proves something about the *era* of document it was built on. The
+ * ladder ran for six rounds on a Pages 14.4 file before anyone asked whether
+ * that was current — it was not, and Pages upgrades such a document on open,
+ * which is a different path from loading a native one. So every rung is now
+ * emitted twice.
+ *
+ * `file_format_version` is the app that wrote the document;
+ * `read_version`/`write_version` are the minimum reader and writer it needs,
+ * which stay low when a document uses no newer feature. The 26.1.0 base below
+ * is genuinely current and happens to also be plain.
+ */
+const BASES: { tag: string; url: URL; note: string }[] = [
+  {
+    tag: "v26",
+    url: new URL("../fixtures/patrickomatic-termpaper-footers-masks.pages", import.meta.url),
+    note: "file format 26.1.0 — written by a current Pages",
+  },
+  {
+    tag: "v14",
+    url: new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url),
+    note: "file format 14.4.1 — an older document Pages upgrades on open",
+  },
+];
 
 /**
  * Refuse a base whose page is too busy to read a one-line change against.
@@ -194,20 +219,23 @@ const RUNGS: { name: string; note: string; build: (doc: PagesDocument) => void }
 function main(argv: string[]): number {
   const outDir = (argv[0] ?? ".").replace(/\/$/, "");
   mkdirSync(outDir, { recursive: true });
-  const bytes = new Uint8Array(readFileSync(TEMPLATE));
-  assertPlainBase(bytes);
 
   let failed = 0;
-  for (const rung of RUNGS) {
-    const path = `${outDir}/${rung.name}.pages`;
-    try {
-      const doc = PagesDocument.load(bytes);
-      rung.build(doc);
-      writeFileSync(path, doc.save());
-      console.log(`${rung.name.padEnd(24)} ${rung.note}`);
-    } catch (error) {
-      failed++;
-      console.log(`${rung.name.padEnd(24)} COULD NOT BUILD: ${(error as Error).message}`);
+  for (const base of BASES) {
+    const bytes = new Uint8Array(readFileSync(base.url));
+    assertPlainBase(bytes);
+    console.log(`\n=== ${base.tag}: ${base.note} ===`);
+    for (const rung of RUNGS) {
+      const path = `${outDir}/${base.tag}-${rung.name}.pages`;
+      try {
+        const doc = PagesDocument.load(bytes);
+        rung.build(doc);
+        writeFileSync(path, doc.save());
+        console.log(`${(base.tag + "-" + rung.name).padEnd(28)} ${rung.note}`);
+      } catch (error) {
+        failed++;
+        console.log(`${(base.tag + "-" + rung.name).padEnd(28)} COULD NOT BUILD: ${(error as Error).message}`);
+      }
     }
   }
 
@@ -215,6 +243,7 @@ function main(argv: string[]): number {
   console.log("Open these in order and stop at the first one Pages refuses.");
   console.log("P00-untouched failing means the container layer, not any feature.");
   console.log("Everything from P01 up changes exactly one thing more than the rung below.");
+  console.log("Check the v26 set first: it is the current format, v14 is the upgrade path.");
   if (failed) console.log(`\n${failed} rung(s) could not be built — see above.`);
   return 0;
 }
