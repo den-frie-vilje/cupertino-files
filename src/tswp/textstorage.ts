@@ -274,9 +274,21 @@ export class TextStorage {
       const oldPos = s <= start ? s : s >= start + replacement.length ? s - delta : start;
       return Math.min(Math.max(oldPos, 0), oldText.length);
     });
+    // Which paragraphs already carried an entry, so the rebuild can put the
+    // table back the shape it was in. See writeParagraphTable.
+    const paraExisting = new Map<number, boolean[]>();
     for (const f of PARA_ALIGNED_OBJECT_TABLES) {
       if (!this.msg.has(f)) continue;
       paraRebuilds.set(f, this.effectiveObjectsAt(f, oldPositions));
+      const present = new Set(
+        (this.msg.getMessage(f)?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map(
+          (e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
+        ),
+      );
+      paraExisting.set(
+        f,
+        oldPositions.map((pos) => present.has(pos)),
+      );
     }
 
     // 1. The text itself.
@@ -296,7 +308,7 @@ export class TextStorage {
 
     // 3. Paragraph-aligned tables: rebuild one entry per paragraph.
     for (const [f, values] of paraRebuilds) {
-      this.writeParagraphTable(f, newStarts, values);
+      this.writeParagraphTable(f, newStarts, values, paraExisting.get(f));
     }
   }
 
@@ -371,22 +383,48 @@ export class TextStorage {
   }
 
   /** Rebuild a paragraph-aligned table: entry per paragraph, ∅ for repeats. */
+  /**
+   * Rewrite a paragraph-aligned run table.
+   *
+   * **Do not densify.** An earlier version wrote one entry per paragraph,
+   * leaving the reference off where the value was unchanged, on the reading
+   * that an empty entry carries the previous one forward. Our own reader
+   * agrees with that (see {@link effectiveObjectsAt}), so it round-tripped
+   * perfectly — and appending a single paragraph to a real document stripped
+   * the layout and list styling from every paragraph but the first. Pages
+   * treats an empty entry in these tables as *clear*, not as carry-forward.
+   *
+   * The shapes are not uniform even within one file. In the sample used by
+   * the Pages ladder, Apple writes `table_para_style` densely — an entry per
+   * paragraph, several of them empty — while `table_list_style` and
+   * `table_layout_style` each hold exactly one entry covering the whole
+   * text. So there is no single convention to copy, and inventing entries is
+   * what does the damage.
+   *
+   * `existing` therefore says which paragraphs already had an entry before
+   * the edit. One is written where the value genuinely changes, or where
+   * there was one before; anywhere else the table is left sparse. A table
+   * that arrived with one entry leaves with one entry.
+   */
   private writeParagraphTable(
     tableField: number,
     starts: number[],
     values: (bigint | undefined)[],
+    existing?: readonly boolean[],
   ): void {
     const table = this.msg.getMessage(tableField);
     if (!table) return;
     const entries: RawMessage[] = [];
-    // An explicit reference declares the value; an empty entry carries the
-    // previous one forward (the apps' own dedup convention).
     let carried: bigint | undefined;
     for (let i = 0; i < starts.length; i++) {
+      const v = values[i];
+      const changed = v !== undefined && v !== carried;
+      // No `existing` means a caller that is deliberately setting one
+      // paragraph's style, where the dense form is what it asked for.
+      if (!changed && existing && !existing[i]) continue;
       const entry = RawMessage.create();
       entry.setVarint(ENTRY_CHARACTER_INDEX, starts[i]!);
-      const v = values[i];
-      if (v !== undefined && v !== carried) {
+      if (changed) {
         entry.setMessage(ENTRY_OBJECT, makeRef(v));
         carried = v;
       }

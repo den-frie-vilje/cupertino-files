@@ -1298,6 +1298,37 @@ which rows a filter hides is stored separately, in
 `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
+#### An empty entry in a paragraph-aligned run table clears, it does not inherit
+
+`table_para_style` (5), `table_list_style` (7) and `table_layout_style` (12)
+are sparse run tables: an entry names a character index and, usually, an
+object. The run continues until the next entry.
+
+An entry with **no object** does not mean "carry the previous value
+forward". Pages reads it as *clear*. Writing one entry per paragraph and
+omitting the reference wherever the value is unchanged — a plausible dedup,
+and one this library used — strips the styling from every paragraph after
+the first. The document opens, the text is intact, and the formatting is
+gone.
+
+Nothing about the file is malformed, and a reader that shares the
+carry-forward assumption round-trips it perfectly.
+
+The shapes differ per table, even inside one document. In
+`iwork-mcp-v14.5-sample.pages`:
+
+| table | entries | for 14 paragraphs |
+| --- | --- | --- |
+| `table_para_style` | 15 | dense — one per paragraph, four with no object |
+| `table_list_style` | 1 | one run covering the whole text |
+| `table_layout_style` | 1 | one run covering the whole text |
+
+So there is no single convention to copy, and the safe rule for an edit is
+not to invent entries: preserve the shape the table arrived in, writing an
+entry only where a value genuinely changes or where one already existed.
+Apple's own dense `para` table keeps its empty entries; the single-entry
+tables stay single-entry.
+
 #### Text colour lives in the fill, not in `font_color`
 
 `TSWP.CharacterStylePropertiesArchive` has an `optional .TSP.Color

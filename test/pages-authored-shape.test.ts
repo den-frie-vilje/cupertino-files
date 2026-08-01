@@ -27,8 +27,11 @@ import { readCharacterProperties } from "../src/tss/stylesheet.ts";
 import type { RawMessage } from "../src/base/protobuf.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
+// The base the Pages ladder uses: fourteen paragraphs of plain notes, with
+// `table_list_style` and `table_layout_style` each holding a single run over
+// the whole text. A one-paragraph document cannot show a densifying rebuild.
 const TEMPLATE = new Uint8Array(
-  readFileSync(new URL("gomap-v26.1-newest-writer.pages", FIXTURES)),
+  readFileSync(new URL("iwork-mcp-v14.5-sample.pages", FIXTURES)),
 );
 
 /** TSWP.CharacterStyleArchive, and the field holding its property bag. */
@@ -66,6 +69,81 @@ function authorRedWord(): { bytes: Uint8Array; at: number } {
   });
   return { bytes: doc.save(), at };
 }
+
+describe("editing text leaves the document's other styling alone", () => {
+  /** Decode a run table to `index:objectId` pairs, for comparison. */
+  const runTable = (doc: PagesDocument, field: number): string => {
+    const table = doc.store.resolve(doc.body.id)?.message.getMessage(field);
+    if (!table) return "(absent)";
+    return table
+      .getMessages(1)
+      .map((e) => `${e.getUint(1) ?? 0}:${e.getMessage(2)?.getUint(1) ?? "none"}`)
+      .join(" ");
+  };
+
+  // table_para_style, table_list_style, table_layout_style
+  const PARA_ALIGNED: [string, number][] = [
+    ["para", 5],
+    ["list", 7],
+    ["layout", 12],
+  ];
+
+  it("appending a paragraph does not rewrite the run tables", () => {
+    // The bug this pins: the rebuild wrote one entry per paragraph, leaving
+    // the reference off wherever the value was unchanged. Our reader treats
+    // an empty entry as carry-forward, so it round-tripped perfectly. Pages
+    // treats it as *clear*, and one appended line stripped the layout and
+    // list styling from every paragraph but the first.
+    const before = PagesDocument.load(TEMPLATE);
+    const after = PagesDocument.load(TEMPLATE);
+    after.appendParagraph("appended");
+
+    for (const [name, field] of PARA_ALIGNED) {
+      expect(`${name}: ${runTable(after, field)}`).toBe(`${name}: ${runTable(before, field)}`);
+    }
+  });
+
+  it("keeps a single-entry table single-entry", () => {
+    // The sharpest form of the same thing: a table covering the whole text
+    // with one run must not come back with an entry per paragraph.
+    const before = PagesDocument.load(TEMPLATE);
+    const sparse = PARA_ALIGNED.filter(([, f]) => runTable(before, f).split(" ").length === 1);
+    expect(sparse.length > 0).toBe(true);
+
+    const after = PagesDocument.load(TEMPLATE);
+    after.appendParagraph("appended");
+    for (const [name, field] of sparse) {
+      expect(`${name} entries: ${runTable(after, field).split(" ").length}`).toBe(
+        `${name} entries: 1`,
+      );
+    }
+  });
+
+  it("survives a save and reload", () => {
+    const before = PagesDocument.load(TEMPLATE);
+    const edited = PagesDocument.load(TEMPLATE);
+    edited.appendParagraph("appended");
+    const reopened = PagesDocument.load(edited.save());
+    for (const [name, field] of PARA_ALIGNED) {
+      expect(`${name}: ${runTable(reopened, field)}`).toBe(`${name}: ${runTable(before, field)}`);
+    }
+  });
+
+  it("still lets a deliberate paragraph-style change through", () => {
+    // Preserving shape must not mean refusing edits: setParagraphStyle asks
+    // for a specific paragraph to change, and it has to.
+    const doc = PagesDocument.load(TEMPLATE);
+    const index = doc.appendParagraph("styled line");
+    const title = doc.paragraphStyles().find((s) => /title|heading/i.test(s.name ?? ""));
+    expect(title !== undefined).toBe(true);
+    doc.setParagraphStyle(index, title!.name ?? title!.id);
+
+    const reopened = PagesDocument.load(doc.save());
+    const starts = reopened.body.paragraphStarts();
+    const at = starts[starts.length - 1]!;
+    expect(reopened.body.effectiveObjectAt(5, at) !== undefined).toBe(true);
+  });
+});
 
 describe("a character style we author has what Apple's has", () => {
   it("writes the fill as well as font_color, because only the fill renders", () => {
