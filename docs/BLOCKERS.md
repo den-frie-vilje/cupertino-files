@@ -74,6 +74,29 @@ mechanically enforce.
 slider and stepper all draw, which also settles the 4/5 stepper/slider
 pairing that used to rest on elimination.
 
+### Pages has its own ladder now, and none of it has been run
+
+Everything above is Numbers. Every rung of `npm run bisect:docs` writes a
+`.numbers` file, so **no document this library authored has ever been opened
+in Pages** — despite Pages having the most fixtures here (20 of 38) and the
+largest write surface. Thirteen unverified claims touch it, three of them
+high risk, including the most basic one there is: that Pages opens a file we
+saved at all.
+
+```sh
+npm run pages:docs ~/Desktop/pages-rungs    # P00 … P11
+```
+
+P00 is the load-and-save-with-no-edit case, which isolates the container
+layer from every feature above it. P01 up each add one thing: a paragraph,
+character formatting, a paragraph style, a hyperlink, header and footer
+text, a page-number field, a section break, a comment, a footnote, page
+setup, an inline image.
+
+All twelve pass `npm run required:check` and read back their own change, so
+what remains is exactly the class of fault that check cannot see — the one
+that cost three round trips on the Numbers side.
+
 ### Still to answer
 
 Open the ladder in order and stop at the first failure — each rung changes

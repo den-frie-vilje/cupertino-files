@@ -61,7 +61,8 @@
     "bisect:docs": "node scripts/make-bisect-docs.ts",
     "privacy:check": "node scripts/scan-fixture-privacy.ts",
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "pages:docs": "node scripts/make-pages-docs.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

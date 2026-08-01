@@ -107,7 +107,7 @@ const safe = (fn: () => boolean): boolean => {
   }
 };
 
-const CAPABILITIES: Capability[] = [
+export const CAPABILITIES: Capability[] = [
   // ---------------------------------------------------------------- container
   {
     group: "Container",
