@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 32 claims, **3** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 31 claims, **3** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -34,27 +34,26 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 9 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
 | 10 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does | manual |
 | 11 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
-| 12 | 🟠 medium | Numbers & tables → Cell controls (checkbox, star rating, slider, stepper, pop-up menu) | interaction_type 4 is the stepper and 5 the slider, rather than the other way round | manual |
-| 13 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
-| 14 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
-| 15 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 16 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
-| 17 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 18 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 19 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
-| 20 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 21 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 22 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates appears in the app's comment pane, attributed correctly | manual |
-| 23 | 🟠 medium | Text & styles → Footnote creation and removal | a footnote this library creates is numbered and laid out by Pages | manual |
-| 24 | 🟠 medium | Text & styles → Page numbers and page counts (insert, read, remove) | a page-number attachment this library inserts renders as a live number | manual |
-| 25 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 26 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 27 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 28 | 🟡 low | Numbers & tables → Chart appearance: type and series colours | a recoloured series shows the new colour, and only in the chart that was edited | manual |
-| 29 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 30 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
-| 31 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 32 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 12 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
+| 13 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
+| 14 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 15 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
+| 16 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 17 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 18 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
+| 19 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 20 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 21 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates appears in the app's comment pane, attributed correctly | manual |
+| 22 | 🟠 medium | Text & styles → Footnote creation and removal | a footnote this library creates is numbered and laid out by Pages | manual |
+| 23 | 🟠 medium | Text & styles → Page numbers and page counts (insert, read, remove) | a page-number attachment this library inserts renders as a live number | manual |
+| 24 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 25 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 26 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 27 | 🟡 low | Numbers & tables → Chart appearance: type and series colours | a recoloured series shows the new colour, and only in the chart that was edited | manual |
+| 28 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 29 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
+| 30 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 31 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Edit cycle: open → edit → save → reopen
 
@@ -192,19 +191,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
 
-### 12. Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ⚠️ experimental
-
-**Claim.** interaction_type 4 is the stepper and 5 the slider, rather than the other way round
-
-**Why the suite cannot settle it.** the other three widgets identify themselves — a checkbox row holds FALSE/TRUE, a star row is bounded [0…5], a pop-up carries a chooser model. Stepper and slider store the identical field set, so nothing in a file separates them. The pairing rests on one slider whose bounds match a published test, plus elimination.
-
-**How to settle it.** a Numbers file with one slider and one stepper, then `npm run probe -- controls.numbers`: if 4 and 5 come out swapped against the column they are in, the names are wrong.
-
-### 13. Cell display formats (number, currency, percentage, date, duration, text, boolean)
+### 12. Cell display formats (number, currency, percentage, date, duration, text, boolean)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -216,7 +203,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a currency, percentage and date format, open in Numbers, and compare each cell against the same format applied through the Cell inspector on an untouched copy.
 
-### 14. Chart data editing (values, names, series, categories)
+### 13. Chart data editing (values, names, series, categories)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -228,7 +215,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a chart with distinctly coloured series, remove the middle one, open in the app and confirm the remaining series keep their own colours rather than shifting
 
-### 15. Conditional formatting: apply an existing rule set to more cells
+### 14. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -240,7 +227,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 16. Filters: enable, disable, combining mode
+### 15. Filters: enable, disable, combining mode
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -252,7 +239,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** build a Numbers table with a filter rule, save, flip is_enabled with this library, reopen and confirm the row visibility changes
 
-### 17. Formula function names
+### 16. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -266,7 +253,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 18. Formula reading (AST rendered to text)
+### 17. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -278,7 +265,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 19. Merged cell ranges
+### 18. Merged cell ranges
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -290,7 +277,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
 
-### 20. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 19. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -302,7 +289,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 21. Table styling (banded rows, grid strokes, visibility)
+### 20. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -314,7 +301,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 22. Comment creation and removal
+### 21. Comment creation and removal
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -326,7 +313,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add a comment, open in Pages, and confirm it shows in the sidebar with the right author, date and highlighted range
 
-### 23. Footnote creation and removal
+### 22. Footnote creation and removal
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -338,7 +325,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add footnotes at two positions, open in Pages, and confirm they number in document order and render at the page foot
 
-### 24. Page numbers and page counts (insert, read, remove)
+### 23. Page numbers and page counts (insert, read, remove)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -350,7 +337,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** insert a page number into a footer, open in Pages across a multi-page document, and confirm it counts up rather than showing a literal or a blank
 
-### 25. Paragraph background & borders (rule stroke + positions)
+### 24. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -362,7 +349,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 26. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 25. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -374,7 +361,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 27. Categories: enable or disable grouping
+### 26. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -386,7 +373,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 28. Chart appearance: type and series colours
+### 27. Chart appearance: type and series colours
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -398,7 +385,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** recolour one series of one chart in a document with several, reopen, check the others
 
-### 29. Conditional formatting rules
+### 28. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -410,7 +397,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 30. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
+### 29. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -422,7 +409,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Create a style with a font colour, derive a child, clear the colour on the child, open in Pages and confirm the child shows the default colour rather than inheriting the parent's.
 
-### 31. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 30. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -434,7 +421,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 32. Table of contents (rules read + write, cached entries read)
+### 31. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -446,8 +433,22 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those headings after it redraws.
 
+## Settled
+
+1 claim has been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+result mean something; what changed is that it is no longer a request.
+
+### ✅ Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
+
+**Was claimed.** interaction_type 4 is the stepper and 5 the slider, rather than the other way round
+
+**Why it needed an app.** the other three widgets identify themselves — a checkbox row holds FALSE/TRUE, a star row is bounded [0…5], a pop-up carries a chooser model. Stepper and slider store the identical field set, so nothing in a file separates them. The pairing rests on one slider whose bounds match a published test, plus elimination.
+
+**Outcome.** **Confirmed in Numbers.** All four widgets this library writes — checkbox, star rating, slider and stepper — were opened and each drew as its label said, so the 4/5 pairing is observed rather than inferred. This also settled the larger question underneath it: a control needs a *format* as well as a spec, and without one the cell renders its value and the widget never appears (FORMAT.md §14.7.1). That was invisible to every offline check and is why the widgets had never once been seen before this.
+
 ## Recording an outcome
 
-When a claim is checked by hand, do not delete its entry — replace the `manualProof` block with
-a `note` recording what was observed, so the finding survives in the matrix. If the check *fails*,
-that is a bug report with a reproduction already written.
+When a claim is checked by hand, do not delete its entry — add `settled:` to its `manualProof`
+block saying what was observed. The claim moves to the section above, keeping the reasoning that
+made it worth checking. If the check *fails*, that is a bug report with a reproduction already
+written.

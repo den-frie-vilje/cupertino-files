@@ -65,6 +65,12 @@ export const CellSpecFields = {
  *    controls in total and the other four are accounted for.
  *  - **7 — pop-up menu.** The only one carrying a chooser popup model.
  *
+ * The 4/5 pairing was the weak one — a stepper and a slider store the
+ * identical field set, so nothing in a file separates them and the names
+ * rested on one matching instance plus elimination. It is now **observed**:
+ * a document authoring one of each was opened in Numbers and both drew as
+ * labelled.
+ *
  * Values outside this set are carried through untouched rather than
  * rejected — see {@link controlShape}, which classifies by contents.
  */

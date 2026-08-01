@@ -40,30 +40,56 @@ question is not really this one**; see "Borrowed corpora" below.
 Everything below settles an unknown. **This settles a risk**, and it is the
 larger of the two.
 
-Merges and conditional rules come out byte-identical to what Apple wrote
-for the same thing, and formulas, controls and cell writes round-trip
-through a reader that shares no code with the writer. None of that is the
-app's opinion, and **no iWork app has ever opened a document this library
-authored a formula, a control or a merge into**.
-
 ```sh
-npm run verify:doc          # writes iwork-files-verification.numbers
+npm run bisect:docs ~/Desktop/rungs    # one document per feature, 00 … 15
+npm run verify:doc                     # or everything in one file
 ```
 
-One row per authoring feature, labelled in column A. Open it in Numbers
-and answer, in order:
+### What the app has already told us
 
-1. Does it open with no "repaired" or "damaged" warning? A no here
-   invalidates far more than a probe result would.
-2. Do the formulas recompute when a value they depend on changes?
-3. Is the slider a slider and the stepper a stepper? That pairing is the
-   one enum value settled by elimination rather than observation.
-4. Is the conditional format on the negative number and not the positive?
-5. Is the merged row actually merged?
+Three rounds of opening these in Numbers found three bugs the offline suite
+could not, and they are worth reading as a set, because each failed
+differently:
 
-A failure is worth more than a pass: each feature sits in its own row, so
-whatever breaks localises immediately. `npm run test:e2e` covers the first
-question automatically.
+1. **A conditional rule was malformed.** `cell_style` and `text_style` are
+   `required` in proto2 and were being omitted. Numbers refused the whole
+   document. Now caught by `npm run required:check`, which reads the
+   vendored schema instead of trusting the writer.
+2. **A cell style was missing `super`**, also `required` — found by that
+   same checker the moment it existed, in `setCellFormatting`, a feature
+   that had been shipped for some time.
+3. **Controls never drew.** Nothing was malformed: a widget needs a *format*
+   as well as a spec, and without one the cell renders its value and the
+   widget is simply absent (FORMAT.md §14.7.1). Every offline check passed,
+   including a byte comparison against Apple, because a byte comparison
+   confirms the parts you thought to write.
+
+The third is the instructive one. It is why
+`test/authored-shape.test.ts` now asks the opposite question — what does a
+*real* cell have that ours does not — and why the answer to "is it
+verified?" has to come from the app for anything the format does not
+mechanically enforce.
+
+**Verified in Numbers so far:** the file opens; checkbox, star rating,
+slider and stepper all draw, which also settles the 4/5 stepper/slider
+pairing that used to rest on elimination.
+
+### Still to answer
+
+Open the ladder in order and stop at the first failure — each rung changes
+exactly one thing more than the one below, so whatever breaks names itself.
+
+1. Do the formulas recompute when a value they depend on changes?
+2. Is the conditional format on the negative number and not the positive?
+3. Is the merged row actually merged?
+4. Does the regrouped table (rung 11) show the moved row under its new
+   group heading?
+5. In rung 12, is *only* the first chart's first series recoloured — the
+   others share that style archive, and the copy-on-write is the thing
+   being tested.
+
+A failure is worth more than a pass. `npm run test:e2e` covers "does it
+open" automatically.
 
 ---
 

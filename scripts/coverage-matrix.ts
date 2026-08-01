@@ -73,6 +73,15 @@ interface ManualProof {
   how: string;
   /** Set when `npm run test:e2e` already covers it on a Mac. */
   e2e?: boolean;
+  /**
+   * What was observed when someone actually did it, if they have.
+   *
+   * A verification page that never shrinks is a page nobody trusts. When a
+   * claim is checked in the app, the finding goes here and the row moves
+   * out of the outstanding list — the reasoning is kept, because it is what
+   * makes the result mean something, but it stops being a request.
+   */
+  settled?: string;
   /** How bad it is if the claim turns out false. */
   risk: "high" | "medium" | "low";
 }
@@ -895,7 +904,7 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Cell controls (checkbox, star rating, slider, stepper, pop-up menu)",
     apps: ["numbers"],
-    status: "experimental",
+    status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.controls().size > 0)),
     note:
       "NO FIXTURE in this repository: interaction_type was measured from public widget-demo " +
@@ -914,6 +923,13 @@ const CAPABILITIES: Capability[] = [
       how:
         "a Numbers file with one slider and one stepper, then `npm run probe -- controls.numbers`: " +
         "if 4 and 5 come out swapped against the column they are in, the names are wrong.",
+      settled:
+        "**Confirmed in Numbers.** All four widgets this library writes — checkbox, star rating, " +
+        "slider and stepper — were opened and each drew as its label said, so the 4/5 pairing is " +
+        "observed rather than inferred. This also settled the larger question underneath it: a " +
+        "control needs a *format* as well as a spec, and without one the cell renders its value " +
+        "and the widget never appears (FORMAT.md §14.7.1). That was invisible to every offline " +
+        "check and is why the widgets had never once been seen before this.",
       risk: "medium",
     },
   },
@@ -1513,7 +1529,13 @@ const RISK_ORDER: Record<"high" | "medium" | "low", number> = { high: 0, medium:
  * capabilities they belong to, so it can only drift if the code does.
  */
 function renderVerification(): string {
-  const pending = CAPABILITIES.filter((c) => c.manualProof).sort(
+  const withProof = CAPABILITIES.filter((c) => c.manualProof);
+  const settled = withProof
+    .filter((c) => c.manualProof!.settled)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const pending = withProof
+    .filter((c) => !c.manualProof!.settled)
+    .sort(
     (a, b) =>
       RISK_ORDER[a.manualProof!.risk] - RISK_ORDER[b.manualProof!.risk] ||
       a.group.localeCompare(b.group) ||
@@ -1582,12 +1604,35 @@ function renderVerification(): string {
     }
   }
 
+  if (settled.length) {
+    out.push("## Settled");
+    out.push("");
+    out.push(
+      `${settled.length} claim${settled.length === 1 ? " has" : "s have"} been checked in the app` +
+        " and moved off the list above. The reasoning is kept, because it is what makes the",
+      "result mean something; what changed is that it is no longer a request.",
+      "",
+    );
+    for (const c of settled) {
+      const proof = c.manualProof!;
+      out.push(`### ✅ ${c.name}`);
+      out.push("");
+      out.push(`**Was claimed.** ${proof.claim}`);
+      out.push("");
+      out.push(`**Why it needed an app.** ${proof.why}`);
+      out.push("");
+      out.push(`**Outcome.** ${proof.settled}`);
+      out.push("");
+    }
+  }
+
   out.push("## Recording an outcome");
   out.push("");
   out.push(
-    "When a claim is checked by hand, do not delete its entry — replace the `manualProof` block with",
-    "a `note` recording what was observed, so the finding survives in the matrix. If the check *fails*,",
-    "that is a bug report with a reproduction already written.",
+    "When a claim is checked by hand, do not delete its entry — add `settled:` to its `manualProof`",
+    "block saying what was observed. The claim moves to the section above, keeping the reasoning that",
+    "made it worth checking. If the check *fails*, that is a bug report with a reproduction already",
+    "written.",
     "",
   );
   return out.join("\n");
