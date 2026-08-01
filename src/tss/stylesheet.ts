@@ -13,7 +13,16 @@ import { RawMessage } from "../base/protobuf.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import type { Color, Shadow, Stroke } from "../tsd/style.ts";
-import { readColor, readShadow, readStroke, writeColor, writeShadow, writeStroke } from "../tsd/style.ts";
+import {
+  readColor,
+  readFill,
+  readShadow,
+  readStroke,
+  writeColor,
+  writeFill,
+  writeShadow,
+  writeStroke,
+} from "../tsd/style.ts";
 import {
   CharProps,
   LineSpacing,
@@ -469,6 +478,23 @@ export function applyCharacterProperties(m: RawMessage, f: CharacterFormatting):
   if (f.fontSize !== undefined) m.setFloat(CharProps.FONT_SIZE, f.fontSize);
   if ("fontName" in f) setNullable(m, CharProps.FONT_NAME, CharProps.FONT_NAME_NULL, f.fontName);
   if ("language" in f) setNullable(m, CharProps.LANGUAGE, CharProps.LANGUAGE_NULL, f.language);
+  // Text colour goes in two places. `font_color` is the field the name
+  // suggests and the one this library wrote for a long time; on its own it
+  // does nothing visible in a recent Pages, which renders text from
+  // `tsd_fill` and leaves the glyphs in the inherited colour. Bold applies,
+  // red does not, and no offline check can see the difference — the style
+  // is valid, the reader agrees with the writer, and the word stays black.
+  // Every colour-carrying character style written by a current Pages holds
+  // both, the fill being a plain `{ color }`.
+  if ("fontColor" in f) {
+    const color = f.fontColor;
+    setNullable(
+      m,
+      CharProps.TSD_FILL,
+      CharProps.TSD_FILL_NULL,
+      color ? writeFill({ kind: "color", color }) : undefined,
+    );
+  }
   for (const [key, valueField, nullField] of [
     ["fontColor", CharProps.FONT_COLOR, CharProps.FONT_COLOR_NULL],
     ["backgroundColor", CharProps.BACKGROUND_COLOR, CharProps.BACKGROUND_COLOR_NULL],
@@ -542,6 +568,14 @@ export function readCharacterProperties(m: RawMessage | undefined): CharacterFor
   ] as const) {
     const color = readColor(m.getMessage(field));
     if (color) f[key] = color;
+  }
+  // A style may carry its text colour only as a fill — Apple writes both,
+  // but an importer or an older writer need not. Reading the fill when
+  // `font_color` is absent means the colour is reported either way; a solid
+  // fill is the only kind that maps onto a single colour.
+  if (f.fontColor === undefined) {
+    const fill = readFill(m.getMessage(CharProps.TSD_FILL));
+    if (fill?.kind === "color") f.fontColor = fill.color;
   }
   const shadow = readShadow(m.getMessage(CharProps.SHADOW));
   if (shadow) f.shadow = shadow;

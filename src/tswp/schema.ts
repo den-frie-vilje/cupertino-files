@@ -183,6 +183,17 @@ export const CharProps = {
   FONT_NAME_NULL: 4,
   FONT_NAME: 5,
   FONT_COLOR_NULL: 6,
+  /**
+   * `tsd_fill` — where modern Pages actually reads text colour from.
+   *
+   * `font_color` (7) alone is not enough. A character style carrying only
+   * field 7 renders in the inherited colour: bold applies, red does not,
+   * and nothing about the file is malformed. Every colour-carrying style
+   * written by a recent Pages — including the newest writer in the corpus
+   * — carries both, the fill holding a plain `{ color }`.
+   */
+  TSD_FILL: 46,
+  TSD_FILL_NULL: 45,
   FONT_COLOR: 7,
   LANGUAGE_NULL: 8,
   LANGUAGE: 9,

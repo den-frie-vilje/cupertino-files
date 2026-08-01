@@ -1298,6 +1298,31 @@ which rows a filter hides is stored separately, in
 `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
+#### Text colour lives in the fill, not in `font_color`
+
+`TSWP.CharacterStylePropertiesArchive` has an `optional .TSP.Color
+font_color = 7`, and it is not what a recent Pages renders from. Text colour
+comes from `optional .TSD.FillArchive tsd_fill = 46`, holding a plain
+`{ color }`.
+
+A style with only `font_color` is accepted and partly honoured: other
+properties in the same bag apply normally, and the glyphs stay in the
+inherited colour. Bold arrives, red does not. Nothing is malformed, the
+field number is right, the colour is right, and reading the file back
+returns exactly what was written.
+
+Both fields are written by every current Pages. Older writers set only
+`font_color` — it still exists and is still read on import — so the pairing
+is what to emit, not a replacement:
+
+| what the style carries | what Pages draws |
+| --- | --- |
+| `font_color` only | inherited colour; the setting is ignored |
+| `tsd_fill` only | the fill colour |
+| both | the fill colour |
+
+`tsd_fill_null` is field 45, and clearing the colour means clearing both.
+
 #### 14.7.2 A pop-up menu's first item is not a choice
 
 A menu is the only control needing a second archive: `TST.PopUpMenuModel`,

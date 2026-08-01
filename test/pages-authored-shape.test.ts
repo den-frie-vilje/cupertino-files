@@ -1,0 +1,134 @@
+/**
+ * What does a *real* Pages style have that ours does not?
+ *
+ * The Numbers side of this question has its own file. This is the Pages
+ * one, and it exists because of a bug found the first time a document this
+ * library wrote was opened in Pages at all:
+ *
+ *   A character style carrying `bold` and `font_color` applied the bold and
+ *   ignored the colour. The word rendered black.
+ *
+ * Nothing was malformed. `font_color` is a real field, at the right number,
+ * holding the right colour, and reading the file back returned red. The
+ * fault was omission: a recent Pages renders text colour from `tsd_fill`
+ * (field 46), and a style with only `font_color` leaves the glyphs in the
+ * inherited colour. Every colour-carrying character style written by a
+ * current Pages holds both.
+ *
+ * That is the third appearance of this exact shape — valid,
+ * round-trippable, invisible — so the guard is the same: compare what we
+ * write against what Apple writes, and treat *absence* as the failure.
+ */
+import { readFileSync, readdirSync } from "node:fs";
+import { describe, expect, it } from "./harness.ts";
+import { PagesDocument } from "../src/index.ts";
+import { CharProps } from "../src/tswp/schema.ts";
+import { readCharacterProperties } from "../src/tss/stylesheet.ts";
+import type { RawMessage } from "../src/base/protobuf.ts";
+
+const FIXTURES = new URL("../fixtures/", import.meta.url);
+const TEMPLATE = new Uint8Array(
+  readFileSync(new URL("gomap-v26.1-newest-writer.pages", FIXTURES)),
+);
+
+/** TSWP.CharacterStyleArchive, and the field holding its property bag. */
+const CHARACTER_STYLE_TYPE = 2021;
+const PROPERTIES = 11;
+/** `table_char_style` in a TSWP storage. */
+const TABLE_CHAR_STYLE = 8;
+
+/**
+ * The property bag of the style actually covering `at`.
+ *
+ * Deliberately not "every style in the document" — the template ships with
+ * its own coloured styles, and asserting across all of them tests Apple's
+ * output rather than ours.
+ */
+function propertiesAt(bytes: Uint8Array, at: number): RawMessage {
+  const doc = PagesDocument.load(bytes);
+  const id = doc.body.effectiveObjectAt(TABLE_CHAR_STYLE, at);
+  if (id === undefined) throw new Error(`no character style covers offset ${at}`);
+  const object = doc.store.resolve(id);
+  if (!object) throw new Error(`character style ${id} does not resolve`);
+  const props = object.message.getMessage(PROPERTIES);
+  if (!props) throw new Error(`character style ${id} has no property bag`);
+  return props;
+}
+
+/** Author one red, bold word and return the document bytes plus its offset. */
+function authorRedWord(): { bytes: Uint8Array; at: number } {
+  const doc = PagesDocument.load(TEMPLATE);
+  doc.appendParagraph("the word RED should be red");
+  const at = doc.body.text.lastIndexOf("RED");
+  doc.applyCharacterFormatting(at, at + 3, {
+    bold: true,
+    fontColor: { r: 1, g: 0, b: 0, space: "srgb" },
+  });
+  return { bytes: doc.save(), at };
+}
+
+describe("a character style we author has what Apple's has", () => {
+  it("writes the fill as well as font_color, because only the fill renders", () => {
+    const { bytes, at } = authorRedWord();
+    const props = propertiesAt(bytes, at);
+
+    // Both. font_color alone is what shipped, and it rendered black.
+    expect(props.has(CharProps.FONT_COLOR)).toBe(true);
+    expect(props.has(CharProps.TSD_FILL)).toBe(true);
+
+    // And the fill is a solid red, not an empty message that merely exists.
+    const color = props.getMessage(CharProps.TSD_FILL)?.getMessage(1);
+    expect(color?.getFloat(3)).toBe(1);
+    expect(color?.getFloat(4)).toBe(0);
+    expect(color?.getFloat(5)).toBe(0);
+  });
+
+  it("keeps the bold that did work", () => {
+    const { bytes, at } = authorRedWord();
+    expect(readCharacterProperties(propertiesAt(bytes, at)).bold).toBe(true);
+  });
+
+  it("reads a colour carried only as a fill", () => {
+    // An importer, or an older writer, may set the fill without
+    // font_color. The reader should report the colour either way rather
+    // than returning nothing for text that is plainly coloured.
+    const { bytes, at } = authorRedWord();
+    const props = propertiesAt(bytes, at);
+    const stripped = props.clone();
+    stripped.remove(CharProps.FONT_COLOR);
+    expect(stripped.has(CharProps.FONT_COLOR)).toBe(false);
+
+    const read = readCharacterProperties(stripped);
+    expect(read.fontColor?.r).toBe(1);
+    expect(read.fontColor?.g).toBe(0);
+  });
+
+  it("agrees with what real Pages documents do", () => {
+    // Not a claim about our output — a check that the rule enforced above
+    // is still the rule Apple follows. If a future Pages stops writing
+    // tsd_fill, this fails and the guard needs revisiting.
+    let both = 0;
+    let colorOnly = 0;
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        if (obj.type !== CHARACTER_STYLE_TYPE) continue;
+        const props = obj.message.getMessage(PROPERTIES);
+        if (!props?.has(CharProps.FONT_COLOR)) continue;
+        if (props.has(CharProps.TSD_FILL)) both++;
+        else colorOnly++;
+      }
+    }
+    // Both shapes exist — older writers set only font_color — but the
+    // pairing has to be the common case or the premise is wrong.
+    expect(`paired=${both} colour-only=${colorOnly} → ${both > colorOnly}`).toBe(
+      `paired=${both} colour-only=${colorOnly} → true`,
+    );
+  });
+});
