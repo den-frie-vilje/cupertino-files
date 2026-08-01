@@ -107,9 +107,16 @@ Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
-**Not yet checked:** P04 through P11 — hyperlink, header/footer, page
-number, section break, comment, footnote, page setup, inline image. Nothing
-above them is known to be wrong; nothing about them is known to be right.
+**Not yet checked:** P04 through P18 — hyperlink, header/footer, page
+number, section break, comment, footnote, page setup, inline image, bulleted
+list, in-place text replacement, range deletion, a newly created paragraph
+style, date field, page count, bookmark. Nothing above them is known to be
+wrong; nothing about them is known to be right.
+
+P13 is worth checking early for a reason the others are not: every rung
+before it appends at the end of the document, and P13 changes the
+document's own existing words. That is the edit shape a real caller performs
+most often and the ladder had no coverage of it at all.
 
 ### Still to answer
 

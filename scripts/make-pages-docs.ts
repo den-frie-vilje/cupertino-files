@@ -203,6 +203,79 @@ const RUNGS: { name: string; note: string; build: (doc: PagesDocument) => void }
     },
   },
   {
+    name: "P12-bulleted-list",
+    note: "three paragraphs turned into a bulleted list",
+    build: (doc) => {
+      const bullet = doc.listStyles().find((s) => /^bullet$/i.test(s.name ?? ""));
+      if (!bullet) throw new Error("template has no Bullet list style");
+      for (const line of ["P12: first bullet", "P12: second bullet", "P12: third bullet"]) {
+        doc.setListStyle(doc.appendParagraph(line), bullet.name ?? bullet.id);
+      }
+    },
+  },
+  {
+    name: "P13-replace-existing-text",
+    note: "an edit to text that was already there, rather than an append",
+    build: (doc) => {
+      // Every other rung adds at the end. This one changes the document's
+      // own words, which is the edit shape a real caller performs most.
+      // Pick a word the base actually contains: the two bases share no
+      // vocabulary, and a rung that silently replaces nothing proves nothing.
+      const word = ["Geology", "Attendees", "the"].find((w) => doc.body.text.includes(w));
+      if (!word) throw new Error("no anchor word found in this base");
+      const n = doc.replaceText(word, `[${word.toUpperCase()}]`);
+      if (n === 0) throw new Error("nothing replaced");
+    },
+  },
+  {
+    name: "P14-delete-a-range",
+    note: "a phrase removed from the middle of the body",
+    build: (doc) => {
+      doc.appendParagraph("P14: the word DELETEME should not appear anywhere.");
+      const at = doc.body.text.lastIndexOf(" DELETEME");
+      doc.deleteRange(at, at + " DELETEME".length);
+    },
+  },
+  {
+    name: "P15-new-paragraph-style",
+    note: "a paragraph style created from scratch, not reused from the sheet",
+    build: (doc) => {
+      const index = doc.appendParagraph("P15: this line should be large and blue.");
+      const id = doc.createParagraphStyle({
+        name: "P15 Custom",
+        character: { fontSize: 24, fontColor: { r: 0, g: 0.3, b: 0.9, space: "srgb" } },
+      });
+      doc.setParagraphStyle(index, id);
+    },
+  },
+  {
+    name: "P16-date-field",
+    note: "a live date field",
+    build: (doc) => {
+      doc.appendParagraph("P16: a live date follows here: ");
+      // A date field spans visible text, unlike a page number, so it takes
+      // the string it should display.
+      doc.body.insertDateField(doc.body.text.length, "1 January 2026");
+    },
+  },
+  {
+    name: "P17-page-count",
+    note: "a live page count — the 'of N' half of a page number",
+    build: (doc) => {
+      doc.appendParagraph("P17: this document has this many pages: ");
+      doc.body.insertPageCount(doc.body.text.length);
+    },
+  },
+  {
+    name: "P18-bookmark",
+    note: "a bookmark over a phrase, which Pages lists in its bookmark pane",
+    build: (doc) => {
+      doc.appendParagraph("P18: the words BOOKMARK HERE should be bookmarked.");
+      const at = doc.body.text.lastIndexOf("BOOKMARK HERE");
+      doc.body.addBookmark(at, at + "BOOKMARK HERE".length, "P18 bookmark");
+    },
+  },
+  {
     name: "P11-inline-image",
     note: "a 1x1 red PNG inserted inline and scaled up — the experimental one",
     build: (doc) => {
