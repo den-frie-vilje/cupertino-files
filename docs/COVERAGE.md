@@ -156,7 +156,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-33 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+34 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -191,6 +191,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
+- 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 

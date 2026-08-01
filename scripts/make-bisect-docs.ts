@@ -140,7 +140,10 @@ const RUNGS: {
   },
   {
     name: "11-regroup",
-    note: "a categorised row moved to another group, and the group tree rebuilt to match",
+    note:
+      "a categorised row moved to another group, and the group tree rebuilt to match. " +
+      "The fixture declares no column aggregates, so its group headings carry no counts — " +
+      "nothing is missing when none appear",
     build: (doc) => {
       const table = doc.tables().find((t) => t.name === "Categories");
       if (!table) throw new Error("template has no Categories table");

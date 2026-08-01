@@ -1175,6 +1175,29 @@ const CAPABILITIES: Capability[] = [
       "byte across every by-value table in the fixture. Creating or removing a group is refused: " +
       "which rows are \"Animal\" the data answers, but a new group's identity, its sort position " +
       "and the per-column fields beside the tree are things only the app knows",
+    manualProof: {
+      claim:
+        "a row whose grouping value changed appears under its new group heading in Numbers, and " +
+        "per-group summaries — where a table has any — follow it",
+      why:
+        "the offline check reads the tree this library just wrote, using the reader that shares " +
+        "its assumptions. Whether Numbers honours a rebuilt tree, or recomputes its own and " +
+        "ignores ours, is not visible from the file.",
+      how:
+        "`npm run bisect:docs` rung 11 moves the Bear row from Animal to Fruit in " +
+        "numbers-parser-v26.0-categories.numbers and rebuilds the tree. Open it: Bear should sit " +
+        "under the Fruit heading.",
+      settled:
+        "**Confirmed in Numbers — the move half.** Bear appears under Fruit. The summaries half " +
+        "is untested and cannot be tested here: that fixture declares **zero** " +
+        "TST.ColumnAggregateArchive entries, so its group headings show no counts or totals at " +
+        "all, and there is nothing for a regroup to get wrong. regroupCategories does not touch " +
+        "aggregates, which is correct only if Numbers recomputes them; on a table that does " +
+        "declare a summary, moving a row between groups would change both groups\' totals, and " +
+        "nothing here establishes whether ours would go stale. Needs a categorised fixture with " +
+        "a per-column summary, which this repository does not have",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",

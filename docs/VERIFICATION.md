@@ -422,8 +422,16 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-3 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+4 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
+
+### ✅ Categories: regrouping rows after an edit
+
+**Was claimed.** a row whose grouping value changed appears under its new group heading in Numbers, and per-group summaries — where a table has any — follow it
+
+**Why it needed an app.** the offline check reads the tree this library just wrote, using the reader that shares its assumptions. Whether Numbers honours a rebuilt tree, or recomputes its own and ignores ours, is not visible from the file.
+
+**Outcome.** **Confirmed in Numbers — the move half.** Bear appears under Fruit. The summaries half is untested and cannot be tested here: that fixture declares **zero** TST.ColumnAggregateArchive entries, so its group headings show no counts or totals at all, and there is nothing for a regroup to get wrong. regroupCategories does not touch aggregates, which is correct only if Numbers recomputes them; on a table that does declare a summary, moving a row between groups would change both groups' totals, and nothing here establishes whether ours would go stale. Needs a categorised fixture with a per-column summary, which this repository does not have
 
 ### ✅ Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
 
