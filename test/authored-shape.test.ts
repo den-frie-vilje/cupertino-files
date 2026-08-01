@@ -95,6 +95,18 @@ const SHAPES: Shape[] = [
     at: [1, 0],
   },
   {
+    feature: "pop-up menu",
+    // Two real popup cells, both carrying the text format: a populated one
+    // (STRING_ID|CONTROL_ID|SUGGEST_ID|TEXT_FORMAT_ID) and an empty one
+    // (CONTROL_ID|TEXT_FORMAT_ID). The empty one is why SUGGEST_ID is not
+    // in `needs` — it is not universal, and the format is.
+    source: "borrowed widget-demo document, populated and empty menu cells",
+    cellType: 3,
+    needs: ["CONTROL_ID", "TEXT_FORMAT_ID"],
+    build: (t) => t.setCellControl(1, 0, { widget: "popupMenu", items: ["A", "B"], value: "A" }),
+    at: [1, 0],
+  },
+  {
     feature: "conditional rule",
     source: "numbers-parser-v26.1-xlsx-lineage.numbers — a styled cell points at a rule set",
     cellType: 2,
@@ -143,7 +155,7 @@ describe("an authored cell has what a real one has", () => {
     // The guard that matters: a widget added without an entry here gets no
     // shape check at all, and that is how the control bug survived.
     const covered = new Set(SHAPES.map((s) => s.feature));
-    for (const widget of ["checkbox", "star rating", "slider", "stepper"]) {
+    for (const widget of ["checkbox", "star rating", "slider", "stepper", "pop-up menu"]) {
       expect(`${widget} covered: ${covered.has(widget)}`).toBe(`${widget} covered: true`);
     }
   });

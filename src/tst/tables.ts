@@ -48,10 +48,12 @@ import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
 import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
 import {
   controlsOf,
+  buildPopupMenuModel,
   CellSpecFields,
   CONTROL_CELL_SPEC_TABLE,
   InteractionType,
   type CellControl,
+  type PopupItem,
 } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
@@ -252,6 +254,8 @@ const CONTROL_LIST_TYPE = 12;
 /** `list_type` of the conditional-style table, and the set's archive type. */
 const CONDITIONAL_LIST_TYPE = 9;
 const CONDITIONAL_STYLE_SET_TYPE = 6010;
+/** TST.PopUpMenuModel — the list of choices behind a pop-up menu. */
+const POPUP_MENU_MODEL_TYPE = 6206;
 const CONTROL_LIST_ENTRY_SPEC = 12;
 const ListEntry = {
   KEY: 1,
@@ -2102,6 +2106,40 @@ export class TableModel {
     return key;
   }
 
+  /**
+   * Create — or reuse — the `TST.PopUpMenuModel` behind a menu.
+   *
+   * Two cells offering the same choices share one archive, matched on the
+   * encoded bytes, which is what Apple does and what keeps a column of
+   * forty menus from becoming forty identical objects.
+   *
+   * The model goes in **the control list's own component**, for the reason
+   * a conditional rule set does: Numbers decides which components to open
+   * from `ComponentInfo.external_references`, a data list's type has no
+   * extractor to declare them, and a reference reaching out of the
+   * component it was found in gets the document called damaged. Keeping the
+   * model with the list that points at it means there is no cross-component
+   * reference to declare in the first place.
+   */
+  private internPopupModel(items: readonly PopupItem[]): bigint {
+    const encoded = buildPopupMenuModel(items).toBytes();
+    const dataStore = this.dataStore();
+    if (!dataStore) throw new RangeError("table has no data store; cannot store a menu");
+    const list = this.store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
+    const component = list
+      ? this.store.componentOf(list.identifier)
+      : this.store.componentOf(this.object.identifier);
+    if (!component) throw new RangeError("control spec table has no component");
+
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== POPUP_MENU_MODEL_TYPE) continue;
+      if (bytesEqual(obj.message.toBytes(), encoded)) return obj.identifier;
+    }
+    const object = this.store.createObject(POPUP_MENU_MODEL_TYPE, component);
+    object.setMessageBytes(encoded);
+    return object.identifier;
+  }
+
   /** Add a rule set to the conditional-style table, returning its key. */
   private internConditionalSet(set: RawMessage): number {
     const dataStore = this.dataStore();
@@ -2287,10 +2325,13 @@ export class TableModel {
    * slider a number; writing the widget without the value gives a control
    * with nothing to show, so the value is set here when one is supplied.
    *
-   * Pop-up menus are not created. A menu needs a `chooser_control_popup_model`
-   * — a separate archive holding the list of choices — and no document
-   * examined here contains one to learn its shape from. {@link setPopupMenu}
-   * attaches an existing model when a caller already has one.
+   * A pop-up menu additionally needs a `chooser_control_popup_model` — a
+   * separate archive holding the list of choices — which is created here
+   * and shared between cells given the same items. That part is built from
+   * the vendored schema rather than measured against a real menu, so it is
+   * the one widget here nobody has yet seen work; see
+   * {@link buildPopupMenuModel}. {@link setPopupMenu} still attaches a
+   * model a caller already has.
    */
   setCellControl(
     row: number,
@@ -2298,7 +2339,13 @@ export class TableModel {
     control:
       | { widget: "checkbox"; value?: boolean }
       | { widget: "starRating"; value?: number }
-      | { widget: "slider" | "stepper"; minimum: number; maximum: number; increment: number; value?: number },
+      | { widget: "slider" | "stepper"; minimum: number; maximum: number; increment: number; value?: number }
+      | {
+          widget: "popupMenu";
+          items: readonly PopupItem[];
+          value?: string | number;
+          startsWithFirstItem?: boolean;
+        },
     options: WriteOptions = {},
   ): number {
     this.requireWritable();
@@ -2307,6 +2354,25 @@ export class TableModel {
       case "checkbox":
         spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.CHECKBOX);
         break;
+      case "popupMenu": {
+        // The value has to be one of the choices — a menu showing something
+        // it cannot offer is a state the app has no way to represent.
+        if (control.value !== undefined && !control.items.includes(control.value)) {
+          throw new RangeError(
+            `value ${JSON.stringify(control.value)} is not one of the menu's items`,
+          );
+        }
+        spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.POPUP_MENU);
+        spec.setMessage(
+          CellSpecFields.CHOOSER_POPUP_MODEL,
+          makeRef(this.internPopupModel(control.items)),
+        );
+        spec.setVarint(
+          CellSpecFields.CHOOSER_START_WITH_FIRST,
+          control.startsWithFirstItem === false ? 0 : 1,
+        );
+        break;
+      }
       case "starRating":
         // Every star rating in every document is bounded [0…5] step 1, and
         // the app offers no way to change that.
@@ -2337,7 +2403,12 @@ export class TableModel {
     if (control.value !== undefined) this.setCell(row, column, control.value, options);
     const key = this.internControl(spec);
     this.attachControl(row, column, key);
-    this.ensureControlFormat(row, column, control.widget);
+    this.ensureControlFormat(
+      row,
+      column,
+      control.widget,
+      control.widget === "popupMenu" ? typeof control.items[0] : undefined,
+    );
     return key;
   }
 
@@ -2361,15 +2432,33 @@ export class TableModel {
    * A format the caller already set is left alone, so choosing a percentage
    * for a stepper survives.
    */
-  private ensureControlFormat(row: number, column: number, widget: string): void {
+  private ensureControlFormat(
+    row: number,
+    column: number,
+    widget: string,
+    itemType?: string,
+  ): void {
+    const numberFormat: CellFormat = {
+      // Apple writes the two zeros explicitly on a slider's plain number
+      // format, so this comes out byte-identical to theirs.
+      kind: "number",
+      decimals: "auto",
+      negativeStyle: 0,
+      thousandsSeparator: false,
+    };
     const format: CellFormat =
       widget === "checkbox"
         ? { kind: "checkbox" }
         : widget === "starRating"
           ? { kind: "starRating" }
-          : // Apple writes the two zeros explicitly on a slider's plain
-            // number format, so this comes out byte-identical to theirs.
-            { kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false };
+          : // A menu follows its items: Apple's text menus carry a
+            // `text_format` and its numeric ones a `num_format`, the same
+            // value-type rule every other control cell obeys.
+            widget === "popupMenu"
+            ? itemType === "number"
+              ? numberFormat
+              : { kind: "text" }
+            : numberFormat;
     if (this.recordAt(row, column)?.id(flagForFormat(format)) !== undefined) return;
     this.setCellFormat(row, column, format);
   }
@@ -2377,17 +2466,23 @@ export class TableModel {
   /**
    * Point a cell at a pop-up menu model that already exists.
    *
-   * Separate from {@link setCellControl} because the model is the part this
-   * library cannot build: no document examined contains a
-   * `chooser_control_popup_model`, so its shape is unmeasured. Given one —
-   * from another cell, or another document — attaching it is the same
-   * interning step as any other control.
+   * Kept alongside {@link setCellControl}, which builds a model from a list
+   * of items, for the case where a caller already has one — from another
+   * cell, or another document — and wants that exact archive shared rather
+   * than a second copy of the same choices.
+   *
+   * `itemType` decides the cell's format, and the default is `"string"`
+   * because text menus are the common case. Passing the wrong one leaves a
+   * numeric menu formatted as text; passing none on a numeric menu does the
+   * same. This path shipped for a while with **no format at all**, which is
+   * the defect that made every other widget invisible — a spec without a
+   * format is a control the app never draws.
    */
   setPopupMenu(
     row: number,
     column: number,
     popupModelId: bigint,
-    options: { startsWithFirstItem?: boolean } = {},
+    options: { startsWithFirstItem?: boolean; itemType?: "string" | "number" } = {},
   ): number {
     this.requireWritable();
     const spec = RawMessage.create();
@@ -2399,6 +2494,7 @@ export class TableModel {
     );
     const key = this.internControl(spec);
     this.attachControl(row, column, key);
+    this.ensureControlFormat(row, column, "popupMenu", options.itemType ?? "string");
     return key;
   }
 

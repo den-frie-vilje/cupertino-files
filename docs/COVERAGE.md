@@ -113,7 +113,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 1 | current→current |
-| Cell controls (checkbox, star rating, slider, stepper, pop-up menu)<br><sub>NO FIXTURE in this repository: interaction_type was measured from public widget-demo documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox). setCellControl writes checkbox, star rating, slider and stepper, sharing one spec between cells that want the same widget; a pop-up menu can be attached to an existing model but not built, since no document here contains one. Shape is still classified by populated fields, so an unrecognised code degrades rather than misreads</sub> | Numbers | ✅ read + write | **0** | — |
+| Cell controls (checkbox, star rating, slider, stepper, pop-up menu)<br><sub>NO FIXTURE in this repository: interaction_type was measured from public widget-demo documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox). setCellControl writes all five widgets, sharing one spec between cells that want the same one. The four range and toggle widgets are confirmed drawing in Numbers; a pop-up menu additionally builds its TST.PopUpMenuModel from the vendored schema and has NOT been seen working. Shape is still classified by populated fields, so an unrecognised code degrades rather than misreads</sub> | Numbers | ✅ read + write | **0** | — |
+| Pop-up menu creation (TST.PopUpMenuModel)<br><sub>The one widget built from the schema rather than measured. A menu is the only control needing a second archive — the model holding its choices — and no document available here contains one, so its shape comes from the vendored proto2 definition: repeated TSCE.CellValueArchive, each item carrying the TSK.FormatStructArchive its schema marks required. Cells sharing choices share one model. Reading, round-tripping and the cell's own format are all checked offline; none of that is the app's opinion</sub> | Numbers | ⚠️ experimental | n/a | — |
 | Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, nested calls, omitted arguments, and any of the 271 harvested functions. Nothing evaluates — pass the cached result as `value`. Cross-table references and arrays are refused: both need a calc-engine identity registered elsewhere</sub> | all | ⚠️ experimental | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
@@ -155,7 +156,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-32 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+33 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -181,6 +182,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
+- 🟠 medium — Numbers & tables → **Pop-up menu creation (TST.PopUpMenuModel)**
 - 🔴 high — Numbers & tables → **Formula writing (authoring an AST)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**

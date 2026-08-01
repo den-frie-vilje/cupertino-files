@@ -909,10 +909,11 @@ const CAPABILITIES: Capability[] = [
     note:
       "NO FIXTURE in this repository: interaction_type was measured from public widget-demo " +
       "documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, " +
-      "8 checkbox). setCellControl writes checkbox, star rating, slider and stepper, sharing one " +
-      "spec between cells that want the same widget; a pop-up menu can be attached to an " +
-      "existing model but not built, since no document here contains one. Shape is still " +
-      "classified by populated fields, so an unrecognised code degrades rather than misreads",
+      "8 checkbox). setCellControl writes all five widgets, sharing one spec between cells that " +
+      "want the same one. The four range and toggle widgets are confirmed drawing in Numbers; a " +
+      "pop-up menu additionally builds its TST.PopUpMenuModel from the vendored schema and has " +
+      "NOT been seen working. Shape is still classified by populated fields, so an unrecognised " +
+      "code degrades rather than misreads",
     manualProof: {
       claim: "interaction_type 4 is the stepper and 5 the slider, rather than the other way round",
       why:
@@ -924,12 +925,40 @@ const CAPABILITIES: Capability[] = [
         "a Numbers file with one slider and one stepper, then `npm run probe -- controls.numbers`: " +
         "if 4 and 5 come out swapped against the column they are in, the names are wrong.",
       settled:
-        "**Confirmed in Numbers.** All four widgets this library writes — checkbox, star rating, " +
+        "**Confirmed in Numbers.** All four range and toggle widgets — checkbox, star rating, " +
         "slider and stepper — were opened and each drew as its label said, so the 4/5 pairing is " +
         "observed rather than inferred. This also settled the larger question underneath it: a " +
         "control needs a *format* as well as a spec, and without one the cell renders its value " +
         "and the widget never appears (FORMAT.md §14.7.1). That was invisible to every offline " +
         "check and is why the widgets had never once been seen before this.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Pop-up menu creation (TST.PopUpMenuModel)",
+    apps: ["numbers"],
+    status: "experimental",
+    note:
+      "The one widget built from the schema rather than measured. A menu is the only control " +
+      "needing a second archive — the model holding its choices — and no document available " +
+      "here contains one, so its shape comes from the vendored proto2 definition: repeated " +
+      "TSCE.CellValueArchive, each item carrying the TSK.FormatStructArchive its schema marks " +
+      "required. Cells sharing choices share one model. Reading, round-tripping and the cell's " +
+      "own format are all checked offline; none of that is the app's opinion",
+    manualProof: {
+      claim: "a TST.PopUpMenuModel built from the schema is one Numbers will open and draw",
+      why:
+        "every other control was measured against a real one before being written. This one " +
+        "could not be, and the failure mode just demonstrated by cell controls is precisely a " +
+        "structure that is valid in every offline respect and still does not render — required " +
+        "fields present, reader agrees, app shows nothing. A menu has more surface for that than " +
+        "the others: it is two archives and a cross-object reference rather than one flag.",
+      how:
+        "`npm run bisect:docs` writes a document whose menu column offers three choices. Open it " +
+        "in Numbers: the cell should show a disclosure chevron and clicking it should list the " +
+        "three items. A cell showing the bare text with no chevron means the model was ignored; " +
+        "a repair warning means it was rejected.",
       risk: "medium",
     },
   },

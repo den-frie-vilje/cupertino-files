@@ -32,7 +32,7 @@
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import { refId } from "../tsp/schema.ts";
 
 /** TST.DataStore.control_cell_spec_table. */
@@ -258,6 +258,108 @@ export function cellSpecObjects(store: ObjectStore, typeId: number): IwaObject[]
   const out: IwaObject[] = [];
   for (const { obj } of store.allObjects()) {
     if (obj.type === typeId) out.push(obj);
+  }
+  return out;
+}
+
+/** `TST.PopUpMenuModel`, the archive holding a menu's list of choices. */
+export const PopUpMenuModelFields = {
+  /** `repeated CellValue item` — Apple marks this deprecated. */
+  LEGACY_ITEM: 1,
+  /** `repeated TSCE.CellValueArchive tsce_item` — the live one. */
+  ITEM: 2,
+} as const;
+
+/** `TSCE.CellValueArchive`. */
+const CellValueFields = { TYPE: 1, BOOLEAN: 2, DATE: 3, NUMBER: 4, STRING: 5 } as const;
+
+/** `TSCE.CellValueArchive.CellValueType`. */
+const CellValueType = { NIL: 1, BOOLEAN: 2, DATE: 3, NUMBER: 4, STRING: 5 } as const;
+
+/**
+ * `TSK.FormatStructArchive.format_type` for the two kinds of item a menu
+ * holds. Same codes the cell formats use — 260 text, 256 plain number.
+ */
+const ITEM_FORMAT_TYPE = { STRING: 260, NUMBER: 256 } as const;
+
+/** An entry in a pop-up menu. Numbers allows text and numeric menus. */
+export type PopupItem = string | number;
+
+/**
+ * Build a `TST.PopUpMenuModel` from a list of choices.
+ *
+ * ```proto
+ * message TST.PopUpMenuModel {
+ *   repeated CellValue item = 1 [deprecated = true];
+ *   repeated TSCE.CellValueArchive tsce_item = 2;
+ * }
+ * ```
+ *
+ * Each item is a `TSCE.CellValueArchive`, and the trap is one level down:
+ * both `StringCellValueArchive.format` and `NumberCellValueArchive.format`
+ * are `required`, so an item without one is a malformed message and takes
+ * the whole document with it. `TSK.FormatStructArchive` has no required
+ * fields of its own, but `format_type` is written anyway — an empty format
+ * is *valid* and says nothing, and this library has already learned once
+ * what valid-but-empty costs.
+ *
+ * The deprecated `item` field is left off. It is Apple's own older shape
+ * and nothing in the current schema requires both.
+ *
+ * **Unverified.** No document available here contains a pop-up menu, so
+ * this is built from the schema rather than measured against one, and
+ * schema-correct has already proved not to mean working — a control with
+ * no format was flawless on paper and invisible in the app. Treat a menu
+ * as unproven until someone opens one.
+ */
+export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
+  if (items.length === 0) throw new RangeError("a pop-up menu needs at least one item");
+  const model = RawMessage.create();
+  model.setMessages(
+    PopUpMenuModelFields.ITEM,
+    items.map((item) => {
+      const value = RawMessage.create();
+      const format = RawMessage.create();
+      const body = RawMessage.create();
+      if (typeof item === "string") {
+        value.setVarint(CellValueFields.TYPE, CellValueType.STRING);
+        format.setVarint(1, ITEM_FORMAT_TYPE.STRING);
+        body.setString(1, item);
+        body.setMessage(2, format); // required
+        value.setMessage(CellValueFields.STRING, body);
+      } else {
+        if (!Number.isFinite(item)) throw new RangeError(`menu item is not finite: ${item}`);
+        value.setVarint(CellValueFields.TYPE, CellValueType.NUMBER);
+        format.setVarint(1, ITEM_FORMAT_TYPE.NUMBER);
+        body.setDouble(1, item);
+        body.setMessage(3, format); // required, and field 3 here, not 2
+        value.setMessage(CellValueFields.NUMBER, body);
+      }
+      return value;
+    }),
+  );
+  return model;
+}
+
+/** Read a `TST.PopUpMenuModel` back into its list of choices. */
+export function readPopupMenuModel(model: RawMessage | undefined): PopupItem[] {
+  if (!model) return [];
+  const out: PopupItem[] = [];
+  for (const value of model.getMessages(PopUpMenuModelFields.ITEM)) {
+    switch (value.getUint(CellValueFields.TYPE)) {
+      case CellValueType.STRING: {
+        const s = value.getMessage(CellValueFields.STRING)?.getString(1);
+        if (s !== undefined) out.push(s);
+        break;
+      }
+      case CellValueType.NUMBER: {
+        const n = value.getMessage(CellValueFields.NUMBER)?.getDouble(1);
+        if (n !== undefined) out.push(n);
+        break;
+      }
+      default:
+        break;
+    }
   }
   return out;
 }

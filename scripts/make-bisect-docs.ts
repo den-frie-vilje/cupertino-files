@@ -196,6 +196,28 @@ const RUNGS: {
       table.setCellControl(4, 0, { widget: "stepper", minimum: 0, maximum: 10, increment: 1, value: 4 });
     },
   },
+  {
+    name: "16-popup-menu-text",
+    note: "a three-choice text menu — the one widget never seen working",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(0, 0, "Pick a fruit");
+      table.setCellControl(1, 0, {
+        widget: "popupMenu",
+        items: ["Apple", "Pear", "Quince"],
+        value: "Pear",
+      });
+    },
+  },
+  {
+    name: "17-popup-menu-numeric",
+    note: "a numeric menu, which takes a number format where a text one takes text",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(0, 0, "Pick a size");
+      table.setCellControl(1, 0, { widget: "popupMenu", items: [10, 20, 50], value: 20 });
+    },
+  },
 ];
 
 function main(argv: string[]): number {
