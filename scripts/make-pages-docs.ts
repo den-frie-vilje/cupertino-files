@@ -13,16 +13,56 @@
  * write-capable surface. Thirteen unverified claims touch it, three of them
  * high risk.
  *
- * The base is `gomap-v26.1-newest-writer.pages`: effectively empty, and
- * written by the newest Pages in the corpus, so a rung's change is the only
- * thing on the page and nothing has to be untangled from existing content.
+ * ## Choosing the base
+ *
+ * The base is `iwork-mcp-v14.5-sample.pages`: a page of plain notes with no
+ * floating drawables, no tables and no text boxes, so a rung's change is
+ * the only thing to look at.
+ *
+ * It replaced `iwork-mcp-v14.5-sample.pages`, which was picked for being
+ * the newest writer in the corpus and "effectively empty" — one paragraph,
+ * zero body characters. That reading came from counting paragraphs and text
+ * length, which is not what a reader sees. The document holds **51 floating
+ * drawables**: a full-page diagram with the body text wrapping between its
+ * boxes. Every rung was legible only to a parser.
+ *
+ * Hence {@link assertPlainBase}. A ladder whose whole value is "look at the
+ * page and see one difference" should refuse a base that buries the
+ * difference, and the check is cheap enough to run every time.
+ *
+ * The trade is a v14.5 writer rather than v26.1. No document in the corpus
+ * is both current-era and visually plain, and legibility matters more here:
+ * the container layer is already covered by P00 either way, and Pages
+ * upgrades an older document on open.
  *
  * Usage: `npm run pages:docs -- ~/Desktop/pages-rungs`
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PagesDocument } from "../src/index.ts";
 
-const TEMPLATE = new URL("../fixtures/gomap-v26.1-newest-writer.pages", import.meta.url);
+const TEMPLATE = new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url);
+
+/**
+ * Refuse a base whose page is too busy to read a one-line change against.
+ *
+ * Not a correctness check — a legibility one. The first base looked empty
+ * by every number this script had to hand and turned out to be a full-page
+ * diagram.
+ */
+function assertPlainBase(bytes: Uint8Array): void {
+  const doc = PagesDocument.load(bytes);
+  let floating = 0;
+  for (const page of doc.floatingDrawablePages()) {
+    floating += doc.floatingDrawables(page)?.drawables().length ?? 0;
+  }
+  const boxes = doc.textBoxes().length;
+  if (floating > 0 || boxes > 0) {
+    throw new Error(
+      `template is not visually plain: ${floating} floating drawable(s), ${boxes} text box(es). ` +
+        "Pick a base whose page is mostly body text, or a rung's change will be lost in it.",
+    );
+  }
+}
 
 /** A 1×1 red PNG, for the rung that inserts an image. */
 const RED_DOT = Uint8Array.from(
@@ -155,6 +195,7 @@ function main(argv: string[]): number {
   const outDir = (argv[0] ?? ".").replace(/\/$/, "");
   mkdirSync(outDir, { recursive: true });
   const bytes = new Uint8Array(readFileSync(TEMPLATE));
+  assertPlainBase(bytes);
 
   let failed = 0;
   for (const rung of RUNGS) {

@@ -274,8 +274,10 @@ export const CAPABILITIES: Capability[] = [
         "character style applying its `bold` and ignoring its `font_color` — the word rendered " +
         "black. Text colour comes from `tsd_fill` (field 46), not `font_color` (7); a style with " +
         "only the latter is valid, round-trips, and does nothing visible (FORMAT.md). Both are " +
-        "now written and `test/pages-authored-shape.test.ts` guards the pairing. The *_null " +
-        "question above is still open — what was verified is that colour reaches the page",
+        "now written, **the fix is confirmed in Pages** — the word renders bold and red — and " +
+        "`test/pages-authored-shape.test.ts` guards the pairing against the fixture corpus. The " +
+        "*_null question in the claim above is still open; what is settled is that an authored " +
+        "colour reaches the page",
       why:
         "We infer that a set *_null flag with the value absent means an explicit clear. Fixtures show the " +
         "encoding but never disambiguate it from plain absence, because both render the same whenever the " +
