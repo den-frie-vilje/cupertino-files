@@ -1043,7 +1043,17 @@ const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "a recoloured series shows the new colour, and only in the chart that was edited",
       why: "the suite proves the archives and declarations are right, not that Numbers draws them",
-      how: "recolour one series of one chart in a document with several, reopen, check the others",
+      how:
+        "`npm run bisect:docs` rung 12 recolours series 0 of the chart in " +
+        "tika-testNumbers2013.numbers to pure red. That fixture holds **one** chart with six " +
+        "series, so it settles the within-chart half only; the cross-chart half needs a document " +
+        "with several charts sharing a style archive, which this repository does not have",
+      settled:
+        "**Half confirmed in Numbers.** The recoloured series drew red and the chart was " +
+        "otherwise correct — so the clone-and-repoint worked where it is observable: five other " +
+        "series kept their colours despite the shared archive. The cross-chart half is still " +
+        "unobserved, because the only chart fixture here has a single chart, and a copy-on-write " +
+        "that leaks would need a second chart to leak into. Same mechanism, so the risk stays low",
       risk: "low",
     },
   },

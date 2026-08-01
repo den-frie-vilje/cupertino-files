@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 31 claims, **3** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 30 claims, **3** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -49,11 +49,10 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 24 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
 | 25 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 26 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 27 | 🟡 low | Numbers & tables → Chart appearance: type and series colours | a recoloured series shows the new colour, and only in the chart that was edited | manual |
-| 28 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 29 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
-| 30 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 31 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 27 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 28 | 🟡 low | Text & styles → Character properties (font, colour, highlight, underline, strike, caps, shadow…) | Clearing a property by writing its *_null flag reads as 'none', not as 'inherit'. | manual |
+| 29 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 30 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Edit cycle: open → edit → save → reopen
 
@@ -373,19 +372,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 27. Chart appearance: type and series colours
-
-**Risk if wrong:** 🟡 low  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a recoloured series shows the new colour, and only in the chart that was edited
-
-**Why the suite cannot settle it.** the suite proves the archives and declarations are right, not that Numbers draws them
-
-**How to settle it.** recolour one series of one chart in a document with several, reopen, check the others
-
-### 28. Conditional formatting rules
+### 27. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -397,7 +384,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 29. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
+### 28. Character properties (font, colour, highlight, underline, strike, caps, shadow…)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -409,7 +396,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Create a style with a font colour, derive a child, clear the colour on the child, open in Pages and confirm the child shows the default colour rather than inheriting the parent's.
 
-### 30. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 29. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -421,7 +408,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 31. Table of contents (rules read + write, cached entries read)
+### 30. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -435,7 +422,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-2 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+3 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Cell controls (checkbox, star rating, slider, stepper, pop-up menu)
@@ -445,6 +432,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the other three widgets identify themselves — a checkbox row holds FALSE/TRUE, a star row is bounded [0…5], a pop-up carries a chooser model. Stepper and slider store the identical field set, so nothing in a file separates them. The pairing rests on one slider whose bounds match a published test, plus elimination.
 
 **Outcome.** **Confirmed in Numbers.** All four range and toggle widgets — checkbox, star rating, slider and stepper — were opened and each drew as its label said, so the 4/5 pairing is observed rather than inferred. This also settled the larger question underneath it: a control needs a *format* as well as a spec, and without one the cell renders its value and the widget never appears (FORMAT.md §14.7.1). That was invisible to every offline check and is why the widgets had never once been seen before this.
+
+### ✅ Chart appearance: type and series colours
+
+**Was claimed.** a recoloured series shows the new colour, and only in the chart that was edited
+
+**Why it needed an app.** the suite proves the archives and declarations are right, not that Numbers draws them
+
+**Outcome.** **Half confirmed in Numbers.** The recoloured series drew red and the chart was otherwise correct — so the clone-and-repoint worked where it is observable: five other series kept their colours despite the shared archive. The cross-chart half is still unobserved, because the only chart fixture here has a single chart, and a copy-on-write that leaks would need a second chart to leak into. Same mechanism, so the risk stays low
 
 ### ✅ Pop-up menu creation (TST.PopUpMenuModel)
 
