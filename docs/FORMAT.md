@@ -1329,6 +1329,34 @@ entry only where a value genuinely changes or where one already existed.
 Apple's own dense `para` table keeps its empty entries; the single-entry
 tables stay single-entry.
 
+#### A paragraph does not end only at `\n`
+
+`table_para_style` maps character offsets to paragraph styles, and an entry
+sits at the first character of each paragraph. So the table itself says
+where Pages thinks paragraphs begin: an entry at index `i > 0` means the
+character at `i - 1` ended one.
+
+Counting that across the Pages fixtures gives the terminator set:
+
+| character | entries following it | what it is |
+| --- | ---: | --- |
+| `U+000A` | 2002 | line feed |
+| `U+0004` | 28 | section break |
+| `U+0005` | 17 | layout / column break |
+| `U+000C` | 1 | page break |
+| `U+2028` | **0** (205 present) | soft line break — *not* a terminator |
+
+`U+2028` is the one that stops this being "any control character". It is
+what a shift-return inserts, it appears throughout the corpus, and it never
+starts a paragraph.
+
+Splitting on `\n` alone is not a read-side inaccuracy that stops there.
+Rebuilding `table_para_style` after an edit uses the writer's own idea of
+where paragraphs start, so a boundary it cannot see loses its entry — and
+the document opens with its body unstyled. A single `\f` is enough, and
+nothing offline notices, because a reader that splits the same wrong way
+agrees with the writer perfectly.
+
 #### A storage must not declare its own stylesheet in `object_references`
 
 Every archive's `ArchiveInfo.message_info.object_references` lists the

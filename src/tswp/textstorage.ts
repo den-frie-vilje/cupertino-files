@@ -94,6 +94,36 @@ export const STORAGE_KIND = {
   UNDEFINED: 8,
 } as const;
 
+/**
+ * Characters that end a paragraph.
+ *
+ * **Not just `\n`.** This was `charCodeAt(i) === 10` and that is wrong in a
+ * way nothing offline could show: our reader and writer agreed with each
+ * other, so every round trip was clean, while Pages disagreed about where
+ * paragraphs begin. Since `writeParagraphTable` rebuilds `table_para_style`
+ * from *our* paragraph starts, any boundary we failed to see had its style
+ * entry silently dropped, and Pages rendered the body unstyled.
+ *
+ * The set is measured, not guessed. Across the Pages fixtures, taking every
+ * `table_para_style` entry at index > 0 and looking at the character just
+ * before it gives:
+ *
+ * | before an entry | count | meaning |
+ * | --- | ---: | --- |
+ * | `U+000A` | 2002 | line feed |
+ * | `U+0004` | 28 | section break |
+ * | `U+0005` | 17 | layout/column break |
+ * | `U+000C` | 1 | page break |
+ *
+ * `U+2028` is the instructive one: it occurs 205 times in the same corpus
+ * and is **never** followed by an entry. It is a soft line break inside a
+ * paragraph — a shift-return — and treating it as a terminator would break
+ * the mapping just as thoroughly in the other direction.
+ */
+function isParagraphTerminator(code: number): boolean {
+  return code === 0x0a || code === 0x04 || code === 0x05 || code === 0x0c;
+}
+
 export interface ParagraphInfo {
   index: number;
   /** UTF-16 offset of the first character. */
@@ -153,7 +183,7 @@ export class TextStorage {
     if (text.length === 0) return [0];
     const starts = [0];
     for (let i = 0; i < text.length - 1; i++) {
-      if (text.charCodeAt(i) === 10) starts.push(i + 1);
+      if (isParagraphTerminator(text.charCodeAt(i))) starts.push(i + 1);
     }
     return starts;
   }
@@ -163,8 +193,8 @@ export class TextStorage {
     const starts = this.paragraphStarts(text);
     const styles = this.paragraphValues(Storage.TABLE_PARA_STYLE, starts, text);
     return starts.map((start, i) => {
-      let end = text.indexOf("\n", start);
-      if (end === -1) end = text.length;
+      let end = start;
+      while (end < text.length && !isParagraphTerminator(text.charCodeAt(end))) end++;
       return { index: i, start, end, text: text.slice(start, end), styleId: styles[i] };
     });
   }
