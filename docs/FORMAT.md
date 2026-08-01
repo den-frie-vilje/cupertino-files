@@ -1329,6 +1329,44 @@ entry only where a value genuinely changes or where one already existed.
 Apple's own dense `para` table keeps its empty entries; the single-entry
 tables stay single-entry.
 
+#### A storage must not declare its own stylesheet in `object_references`
+
+Every archive's `ArchiveInfo.message_info.object_references` lists the
+objects its payload points at. It is bookkeeping the apps rely on, and it is
+**not** simply "every reference in the message".
+
+A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
+(field 2). Apple never lists that target in `object_references`. Across the
+fixtures here, 2676 storages carry the field and **zero** declare it. What
+they declare is what the run tables *resolve to* — the paragraph, list and
+column styles — plus same-component placeholders.
+
+Declaring it anyway is not inert, and the symptom is nowhere near the cause:
+Pages opens the document, keeps every character, and renders the entire body
+**unstyled**. Nothing is malformed. The reference is real, the target
+exists, the schema is satisfied, and the file round-trips byte for byte
+through its own reader.
+
+Worse, it fires on *any* edit. The list is recomputed whenever an archive is
+re-serialized, so replacing one character breaks a document as completely as
+appending a paragraph — while loading and saving with no edit at all is
+fine, because unmodified components are passed through untouched.
+
+The same rule holds one level down: `TSS.StyleArchive` has both `parent`
+(field 3) and `stylesheet` (field 5) inside its `super`, and only the parent
+is declared.
+
+| archive | declares | does not declare |
+| --- | --- | --- |
+| `TSWP.StorageArchive` | styles the run tables resolve to | its `style_sheet` |
+| `TSWP.*StyleArchive` | `parent`, list style, following style | its owning `stylesheet` |
+| document root | the stylesheet | — |
+
+`test/reference-extractors.test.ts` checks this without an app: an
+unmodified Apple archive already carries the correct list, so running our
+extractor over the corpus and comparing is ground truth. It found 10381
+disagreements across 11253 archives the first time it ran.
+
 #### Text colour lives in the fill, not in `font_color`
 
 `TSWP.CharacterStylePropertiesArchive` has an `optional .TSP.Color

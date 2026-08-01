@@ -377,7 +377,20 @@ export const ShapeInfo = { SUPER: 1, TEXT_FLOW: 3, OWNED_STORAGE: 4, IS_TEXT_BOX
 
 export const storageExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];
-  pushRef(out, m, Storage.STYLE_SHEET);
+  // **Not `style_sheet`.** A storage points at its stylesheet through field
+  // 2, and Apple never declares that in `object_references`: across every
+  // fixture here, 2676 storages carry the field and none of them list it.
+  // What they list is the concrete styles the run tables resolve to — the
+  // paragraph, list and column styles — plus same-component placeholders.
+  //
+  // Declaring it anyway is not inert. Pages opens such a document, keeps
+  // the text, and renders the whole body unstyled: the storage's own
+  // paragraph styling silently stops applying. Nothing is malformed, the
+  // reference is real, the target exists, and every offline check passes.
+  // It cost six rounds in the app to find, because the symptom appears on
+  // any edit at all — the declaration is rewritten whenever the archive is
+  // re-serialized, so a one-character change triggers it as surely as
+  // appending a paragraph.
   for (const tableField of OBJECT_TABLE_FIELDS) {
     const table = m.getMessage(tableField);
     if (!table) continue;
@@ -399,7 +412,10 @@ export const styleExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];
   const sup = m.getMessage(StyleArchive.SUPER);
   pushRef(out, sup, 3); // TSS.StyleArchive.parent
-  pushRef(out, sup, 5); // TSS.StyleArchive.stylesheet
+  // Not field 5, the owning stylesheet — see storageExtractor. The same
+  // rule holds here: Apple declares what a style *resolves through* (its
+  // parent, its list style, its following style) and never the stylesheet
+  // that contains it.
   const para = m.getMessage(StyleArchive.PARA_PROPERTIES);
   pushRef(out, para, ParaProps.LIST_STYLE);
   pushRef(out, para, ParaProps.FOLLOWING_STYLE);
