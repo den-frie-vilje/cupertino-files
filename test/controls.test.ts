@@ -16,6 +16,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
+import { CellFlag } from "../src/tst/cellrecord.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import {
   CellSpecFields,
@@ -309,5 +310,107 @@ describe("writing cell controls", () => {
     expect(control.widget).toBe("pop-up menu");
     expect(control.popupModelId).toBe(12345n);
     expect(control.startsWithFirstItem).toBe(true);
+  });
+});
+
+/**
+ * The format that draws the control.
+ *
+ * A control needs two things and the suite only ever checked one. The spec
+ * says *what* the widget is; a format on the cell says to **draw** the cell
+ * as that widget rather than as its value. Written without the format, a
+ * checkbox cell is a boolean cell that reads back as having a checkbox and
+ * renders in Numbers as the word TRUE. That shipped, and every test here
+ * passed, because a reader that resolves the spec answers "checkbox" either
+ * way.
+ *
+ * The evidence is four borrowed documents: every control cell in all of
+ * them carries a format id matching its value type. The minimal one settles
+ * which part is load-bearing — a checkbox in `test-format-save.numbers` has
+ * the boolean format and no number format at all.
+ */
+describe("controls carry the format that draws them", () => {
+  const FIXTURES = new URL("../fixtures/", import.meta.url);
+  const load = () =>
+    NumbersDocument.load(
+      new Uint8Array(readFileSync(new URL("numbers-parser-v26.0-categories.numbers", FIXTURES))),
+    );
+
+  const formatOf = (table: ReturnType<NumbersDocument["tables"]>[number], row: number, flag: number) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (table as any).recordAt(row, 0)?.id(flag);
+
+  it("gives a checkbox a boolean format, not just a spec", () => {
+    const doc = load();
+    doc.tables()[0]!.setCellControl(1, 0, { widget: "checkbox", value: true });
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+
+    const key = formatOf(after, 1, CellFlag.BOOL_FORMAT_ID);
+    expect(`bool format present: ${key !== undefined}`).toBe("bool format present: true");
+    expect(after.cellFormat(1, 0)?.kind).toBe("checkbox");
+  });
+
+  it("gives a slider and a stepper a number format", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, { widget: "slider", minimum: 1, maximum: 50, increment: 0.1, value: 12.3 });
+    table.setCellControl(2, 0, { widget: "stepper", minimum: 0, maximum: 10, increment: 1, value: 4 });
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+
+    for (const row of [1, 2]) {
+      expect(`row ${row}: ${formatOf(after, row, CellFlag.NUM_FORMAT_ID) !== undefined}`).toBe(
+        `row ${row}: true`,
+      );
+    }
+  });
+
+  it("gives a star rating its own number format, distinct from a slider's", () => {
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, { widget: "starRating", value: 3 });
+    table.setCellControl(2, 0, { widget: "slider", minimum: 1, maximum: 50, increment: 1, value: 3 });
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+
+    expect(after.cellFormat(1, 0)?.kind).toBe("starRating");
+    expect(after.cellFormat(2, 0)?.kind).toBe("number");
+  });
+
+  it("writes the exact format bytes Apple writes", () => {
+    // 263 and 267 are unpublished codes read off borrowed documents. Both
+    // are a bare `{ format_type: N }`, and getting the body wrong would
+    // still read back as the right kind.
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCellControl(1, 0, { widget: "checkbox", value: true });
+    table.setCellControl(2, 0, { widget: "starRating", value: 3 });
+
+    const saved = NumbersDocument.load(doc.save());
+    const seen = new Map<number, string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const { obj } of (saved as any).store.index.values()) {
+      if (obj.type !== 6005 || obj.message.getUint(1) !== 2) continue;
+      for (const entry of obj.message.getMessages(3)) {
+        const format = entry.getMessage(6);
+        const type = format?.getUint(1);
+        if (type === 263 || type === 267) {
+          seen.set(type, [...format!.toBytes()].map((b) => b.toString(16).padStart(2, "0")).join(" "));
+        }
+      }
+    }
+    expect(seen.get(263)).toBe("08 87 02");
+    expect(seen.get(267)).toBe("08 8b 02");
+  });
+
+  it("leaves a format the caller already chose alone", () => {
+    // Choosing a percentage for a stepper must survive attaching it.
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, 4);
+    table.setCellFormat(1, 0, { kind: "percentage", decimals: 1 });
+    table.setCellControl(1, 0, { widget: "stepper", minimum: 0, maximum: 10, increment: 1 });
+
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(after.cellFormat(1, 0)?.kind).toBe("percentage");
+    expect(after.cellControl(1, 0)?.widget).toBe("stepper");
   });
 });

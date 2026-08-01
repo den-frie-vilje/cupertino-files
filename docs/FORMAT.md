@@ -1244,6 +1244,41 @@ whether it is live — so the three repeated fields must stay the same
 length. Both are written **unpacked** (one varint key per value), the
 proto2 default.
 
+#### 14.7.1 A control needs a format, not just a spec
+
+A cell widget is **two** things, and writing only one of them produces a
+document that opens cleanly and shows nothing:
+
+1. a `TST.CellSpecArchive` in the table's control list, saying *what* the
+   widget is, pointed at by the cell record's `CONTROL_ID`; and
+2. a **format** on the cell, saying to draw the cell as that widget rather
+   than as its value.
+
+Without (2), a checkbox cell is a boolean cell that reads back as having a
+checkbox and renders as the word `TRUE`. This library shipped exactly that:
+the spec was written, every reader resolved it, the tests passed, and no
+cell ever showed a widget.
+
+The format id used is the one matching the cell's **value type** — bool
+cells `bool_format`, string cells `text_format`, numeric cells
+`num_format`. Across four borrowed documents every control cell has one.
+The minimal case shows which part is load-bearing: a checkbox in
+`test-format-save.numbers` carries the boolean format and *no* number
+format at all.
+
+| widget | cell type | format id | format type |
+| --- | --- | --- | --- |
+| checkbox | boolean | `bool_format` | **263**, body `{ format_type: 263 }` |
+| star rating | number | `num_format` | **267**, body `{ format_type: 267 }` |
+| slider, stepper | number | `num_format` | 256 (plain number) |
+| pop-up menu | string | `text_format` | 260 (text) |
+
+263 and 267 are unpublished — the format-type enum is not in any available
+proto, so they are measured, like `predicate_type`. Both bodies are a bare
+type code, byte-identical to Apple's, and 263 appears in two independent
+documents. Sliders and steppers take an ordinary number format because they
+*display* their value; a checkbox and a rating do not.
+
 Every `FilterSetArchive` in the corpus is empty, across all three apps: mode
 "all", disabled, no rules. The container, its mode and its enable flag are
 therefore fixture-proven; a populated rule list is read from the schema plus

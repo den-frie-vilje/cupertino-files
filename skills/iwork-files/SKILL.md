@@ -371,6 +371,35 @@ moves nothing and writes nothing.
 So the pattern is: change the cell, then regroup, and be ready for the
 throw if you wrote a value the table has no group for.
 
+### Cell controls (checkbox, slider, stepper, star rating)
+
+```ts
+t.setCellControl(1, 0, { widget: "checkbox", value: true });
+t.setCellControl(2, 0, { widget: "starRating", value: 3 });
+t.setCellControl(3, 0, { widget: "slider", minimum: 1, maximum: 50, increment: 0.1, value: 12.3 });
+t.setCellControl(4, 0, { widget: "stepper", minimum: 0, maximum: 10, increment: 1, value: 4 });
+
+t.cellControl(1, 0);            // { widget, shape, minimum, maximum, … }
+t.removeCellControl(1, 0);      // keeps the value
+```
+
+A widget is **two** things: a spec saying what it is, and a *format* on the
+cell saying to draw it. `setCellControl` writes both — that matters because
+writing only the spec produces a document that opens fine and shows the
+underlying value instead of the widget, which is what this library used to
+do. If you set the format yourself afterwards, use a kind matching the
+cell's value type or the widget disappears.
+
+A format you set *first* is kept: choosing a percentage for a stepper
+survives attaching it.
+
+The control needs a value of the right type — a boolean for a checkbox, a
+number for the others — so pass `value` unless the cell already holds one.
+
+Pop-up menus are not created: the menu's list of choices lives in a
+`chooser_control_popup_model` no examined document contains.
+`setPopupMenu(row, column, modelId)` attaches one you already have.
+
 ## Shadows and drawable styling
 
 Cell and table styles have **no shadow field** — the format has no such

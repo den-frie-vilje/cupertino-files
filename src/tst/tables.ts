@@ -2337,7 +2337,41 @@ export class TableModel {
     if (control.value !== undefined) this.setCell(row, column, control.value, options);
     const key = this.internControl(spec);
     this.attachControl(row, column, key);
+    this.ensureControlFormat(row, column, control.widget);
     return key;
+  }
+
+  /**
+   * Give a control cell the format that draws it.
+   *
+   * **The spec alone is not enough.** A control needs two things: the spec,
+   * which says what the widget is, and a *format*, which says to draw the
+   * cell as that widget rather than as its value. Without the format
+   * Numbers renders the underlying value — `TRUE` for a checkbox, a bare
+   * number for a slider — and the control is nowhere to be seen. That is
+   * exactly what shipped: the spec was written, the reader read it back,
+   * and no cell ever showed a widget.
+   *
+   * Every control cell in every borrowed document carries a format id
+   * matching its value type: bool cells a `bool_format`, string cells a
+   * `text_format`, numeric cells a `num_format`. The minimal case settles
+   * which is load-bearing — a checkbox in `test-format-save.numbers` has
+   * the boolean format and no number format at all.
+   *
+   * A format the caller already set is left alone, so choosing a percentage
+   * for a stepper survives.
+   */
+  private ensureControlFormat(row: number, column: number, widget: string): void {
+    const format: CellFormat =
+      widget === "checkbox"
+        ? { kind: "checkbox" }
+        : widget === "starRating"
+          ? { kind: "starRating" }
+          : // Apple writes the two zeros explicitly on a slider's plain
+            // number format, so this comes out byte-identical to theirs.
+            { kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false };
+    if (this.recordAt(row, column)?.id(flagForFormat(format)) !== undefined) return;
+    this.setCellFormat(row, column, format);
   }
 
   /**

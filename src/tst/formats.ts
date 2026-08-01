@@ -61,6 +61,25 @@ export const FormatType = {
   TEXT: 260,
   DATE: 261,
   MULTIPLE_CHOICE: 266,
+  /**
+   * How a checkbox cell is drawn — a boolean format, not a number one.
+   *
+   * Measured, not published: two borrowed documents put a checkbox cell's
+   * `bool_format` at a format whose whole body is `{ format_type: 263 }`.
+   * The minimal case is the convincing one — `test-format-save.numbers` has
+   * a checkbox with this format and *no* number format at all, which is
+   * what shows the format is the thing that draws the control.
+   */
+  CHECKBOX: 263,
+  /**
+   * How a star-rating cell is drawn — a number format.
+   *
+   * Weaker evidence than {@link CHECKBOX}: one document, where it is the
+   * `num_format` of both the star-rating cell and (alongside its bool
+   * format) the checkbox. Sliders and steppers use a plain NUMBER instead,
+   * which fits — they display their value and a rating does not.
+   */
+  STAR_RATING: 267,
   CUSTOM_NUMBER: 270,
   CUSTOM_TEXT: 271,
   CUSTOM_DATE: 272,
@@ -125,6 +144,15 @@ export type CellFormat =
   | { kind: "duration"; style?: number; largestUnit?: number; smallestUnit?: number }
   | { kind: "text" }
   | { kind: "boolean"; trueString?: string; falseString?: string }
+  /**
+   * Draw the cell as its control rather than as a value.
+   *
+   * A control cell needs two things: a spec saying what the widget is, and
+   * a *format* saying to draw it. {@link TableModel.setCellControl} writes
+   * both, so this is rarely constructed by hand.
+   */
+  | { kind: "checkbox" }
+  | { kind: "starRating" }
   | {
       /**
        * A user-defined format. Its definition lives elsewhere in the
@@ -152,6 +180,10 @@ export function categoryOfFormatType(formatType: number): FormatCategory | undef
     case FormatType.TEXT:
     case FormatType.CUSTOM_TEXT:
       return "text";
+    case FormatType.CHECKBOX:
+      return "boolean";
+    case FormatType.STAR_RATING:
+      return "number";
     case FormatType.DATE:
     case FormatType.CUSTOM_DATE:
       return "date";
@@ -177,7 +209,10 @@ export function flagForFormat(format: CellFormat): number {
     case "text":
       return CellFlag.TEXT_FORMAT_ID;
     case "boolean":
+    case "checkbox":
       return CellFlag.BOOL_FORMAT_ID;
+    case "starRating":
+      return CellFlag.NUM_FORMAT_ID;
     case "custom":
       return FORMAT_FLAG_BY_CATEGORY[format.category];
     default:
@@ -217,6 +252,10 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
   }
 
   switch (formatType) {
+    case FormatType.CHECKBOX:
+      return { kind: "checkbox" };
+    case FormatType.STAR_RATING:
+      return { kind: "starRating" };
     case FormatType.NUMBER:
       return { kind: "number", ...readNumeric(message) };
     case FormatType.PERCENTAGE:
@@ -342,6 +381,13 @@ export function writeFormat(format: CellFormat): RawMessage {
       if (format.falseString !== undefined) {
         m.setString(FormatFields.BOOL_FALSE_STRING, format.falseString);
       }
+      break;
+    case "checkbox":
+      // The whole body, in both documents that have one.
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CHECKBOX);
+      break;
+    case "starRating":
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.STAR_RATING);
       break;
     case "custom":
       throw new RangeError(
