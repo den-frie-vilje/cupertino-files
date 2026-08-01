@@ -1298,36 +1298,36 @@ which rows a filter hides is stored separately, in
 `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
-#### An empty entry in a paragraph-aligned run table clears, it does not inherit
+#### The paragraph-aligned run tables do not share a density rule
 
 `table_para_style` (5), `table_list_style` (7) and `table_layout_style` (12)
-are sparse run tables: an entry names a character index and, usually, an
-object. The run continues until the next entry.
+all map character offsets to objects, and they are **not** maintained the
+same way. Measured across the Pages fixtures, for 2060 paragraphs:
 
-An entry with **no object** does not mean "carry the previous value
-forward". Pages reads it as *clear*. Writing one entry per paragraph and
-omitting the reference wherever the value is unchanged — a plausible dedup,
-and one this library used — strips the styling from every paragraph after
-the first. The document opens, the text is intact, and the formatting is
-gone.
+| table | entries | documents where every paragraph has one |
+| --- | ---: | --- |
+| `table_para_style` | 2067 | **19 of 19** |
+| `table_list_style` | 216 | 3 of 19 (all single-paragraph) |
+| `table_layout_style` | 20 | 3 of 19 (all single-paragraph) |
 
-Nothing about the file is malformed, and a reader that shares the
-carry-forward assumption round-trips it perfectly.
+So the paragraph-style table is **dense** — every paragraph carries an
+entry, without exception — while the other two are **sparse**, carrying one
+only where the value changes. An entry with no object reference means "carry
+the previous value forward", which is why the dense table still contains
+entries that look empty.
 
-The shapes differ per table, even inside one document. In
-`iwork-mcp-v14.5-sample.pages`:
+Both halves matter, and each is visible only in the app:
 
-| table | entries | for 14 paragraphs |
-| --- | --- | --- |
-| `table_para_style` | 15 | dense — one per paragraph, four with no object |
-| `table_list_style` | 1 | one run covering the whole text |
-| `table_layout_style` | 1 | one run covering the whole text |
+- Leave an appended paragraph out of `table_para_style` and Pages drops the
+  styling for the **whole body**, not just that paragraph. The same document
+  with an explicit entry renders correctly, which is the cleanest way to see
+  it: append a line and set its style, and everything is fine; append a line
+  and set nothing, and the document arrives unstyled.
+- Densify `table_list_style` or `table_layout_style` and a single run
+  covering the text becomes one entry per paragraph, which is not what Apple
+  writes.
 
-So there is no single convention to copy, and the safe rule for an edit is
-not to invent entries: preserve the shape the table arrived in, writing an
-entry only where a value genuinely changes or where one already existed.
-Apple's own dense `para` table keeps its empty entries; the single-entry
-tables stay single-entry.
+A writer that picks one rule for all three gets two of them wrong.
 
 #### A paragraph does not end only at `\n`
 

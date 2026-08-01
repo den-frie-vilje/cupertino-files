@@ -109,24 +109,23 @@ describe("paragraph boundaries match Apple's", () => {
     expect(`entries on non-starts: ${bad.slice(0, 5).join(" ")}`).toBe("entries on non-starts: ");
   });
 
-  it("keeps the style table intact across an edit, on both ladder bases", () => {
+  it("keeps every paragraph covered across an edit, on both ladder bases", () => {
     // The end-to-end consequence. A base containing a page break is the one
-    // that exposed this; the plain base is kept as a control.
+    // that exposed the missing terminator; the plain base is the control.
+    // The assertion is coverage rather than byte-identity: table_para_style
+    // is dense, so appending a paragraph must *add* an entry.
     for (const base of ["patrickomatic-termpaper-footers-masks.pages", "iwork-mcp-v14.5-sample.pages"]) {
       const bytes = new Uint8Array(readFileSync(new URL(base, FIXTURES)));
-      const read = (doc: PagesDocument) =>
-        doc.store
-          .resolve(doc.body.id)!
-          .message.getMessage(TABLE_PARA_STYLE)!
-          .getMessages(1)
-          .map((e) => `${e.getUint(1) ?? 0}:${e.getMessage(2)?.getUint(1) ?? "none"}`)
-          .join(" ");
-
-      const before = read(PagesDocument.load(bytes));
       const edited = PagesDocument.load(bytes);
       edited.appendParagraph("appended");
-      const after = read(PagesDocument.load(edited.save()));
-      expect(`${base}: ${after}`).toBe(`${base}: ${before}`);
+      const after = PagesDocument.load(edited.save());
+
+      const at = new Set(
+        (after.store.resolve(after.body.id)?.message.getMessage(TABLE_PARA_STYLE)?.getMessages(1) ??
+          []).map((e) => e.getUint(1) ?? 0),
+      );
+      const uncovered = after.body.paragraphStarts().filter((s) => !at.has(s));
+      expect(`${base} uncovered: ${uncovered.join(",")}`).toBe(`${base} uncovered: `);
     }
   });
 });

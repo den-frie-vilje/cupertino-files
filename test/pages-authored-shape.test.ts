@@ -70,7 +70,7 @@ function authorRedWord(): { bytes: Uint8Array; at: number } {
   return { bytes: doc.save(), at };
 }
 
-describe("editing text leaves the document's other styling alone", () => {
+describe("editing text keeps the run tables in Apple's shape", () => {
   /** Decode a run table to `index:objectId` pairs, for comparison. */
   const runTable = (doc: PagesDocument, field: number): string => {
     const table = doc.store.resolve(doc.body.id)?.message.getMessage(field);
@@ -80,59 +80,65 @@ describe("editing text leaves the document's other styling alone", () => {
       .map((e) => `${e.getUint(1) ?? 0}:${e.getMessage(2)?.getUint(1) ?? "none"}`)
       .join(" ");
   };
+  const entryIndexes = (doc: PagesDocument, field: number): Set<number> =>
+    new Set(
+      (doc.store.resolve(doc.body.id)?.message.getMessage(field)?.getMessages(1) ?? []).map(
+        (e) => e.getUint(1) ?? 0,
+      ),
+    );
 
-  // table_para_style, table_list_style, table_layout_style
-  const PARA_ALIGNED: [string, number][] = [
-    ["para", 5],
-    ["list", 7],
-    ["layout", 12],
-  ];
+  const BASES = ["patrickomatic-termpaper-footers-masks.pages", "iwork-mcp-v14.5-sample.pages"];
+  const load = (base: string) =>
+    PagesDocument.load(new Uint8Array(readFileSync(new URL(base, FIXTURES))));
+  const appended = (base: string) => {
+    const doc = load(base);
+    doc.appendParagraph("appended");
+    return PagesDocument.load(doc.save());
+  };
 
-  it("appending a paragraph does not rewrite the run tables", () => {
-    // The bug this pins: the rebuild wrote one entry per paragraph, leaving
-    // the reference off wherever the value was unchanged. Our reader treats
-    // an empty entry as carry-forward, so it round-tripped perfectly. Pages
-    // treats it as *clear*, and one appended line stripped the layout and
-    // list styling from every paragraph but the first.
-    const before = PagesDocument.load(TEMPLATE);
-    const after = PagesDocument.load(TEMPLATE);
-    after.appendParagraph("appended");
-
-    for (const [name, field] of PARA_ALIGNED) {
-      expect(`${name}: ${runTable(after, field)}`).toBe(`${name}: ${runTable(before, field)}`);
+  it("gives every paragraph an entry in table_para_style", () => {
+    // The rule, measured: across the fixtures all 2060 paragraph starts
+    // carry an entry, in 19 of 19 documents. A paragraph without one makes
+    // Pages drop the styling for the whole body — which is exactly what an
+    // appended line used to produce, while the rung that also called
+    // setParagraphStyle rendered correctly.
+    for (const base of BASES) {
+      const doc = appended(base);
+      const at = entryIndexes(doc, 5);
+      const uncovered = doc.body.paragraphStarts().filter((s) => !at.has(s));
+      expect(`${base} uncovered: ${uncovered.join(",")}`).toBe(`${base} uncovered: `);
     }
   });
 
-  it("keeps a single-entry table single-entry", () => {
-    // The sharpest form of the same thing: a table covering the whole text
-    // with one run must not come back with an entry per paragraph.
-    const before = PagesDocument.load(TEMPLATE);
-    const sparse = PARA_ALIGNED.filter(([, f]) => runTable(before, f).split(" ").length === 1);
-    expect(sparse.length > 0).toBe(true);
-
-    const after = PagesDocument.load(TEMPLATE);
-    after.appendParagraph("appended");
-    for (const [name, field] of sparse) {
-      expect(`${name} entries: ${runTable(after, field).split(" ").length}`).toBe(
-        `${name} entries: 1`,
-      );
+  it("leaves the list and layout tables sparse", () => {
+    // The other half of the same rule. Those tables carry 216 and 20 entries
+    // for the same 2060 paragraphs, so densifying them is equally wrong —
+    // and was the first thing tried.
+    for (const base of BASES) {
+      const before = runTable(load(base), 7);
+      const after = runTable(appended(base), 7);
+      expect(`${base} list: ${after}`).toBe(`${base} list: ${before}`);
+      const beforeLayout = runTable(load(base), 12);
+      const afterLayout = runTable(appended(base), 12);
+      expect(`${base} layout: ${afterLayout}`).toBe(`${base} layout: ${beforeLayout}`);
     }
   });
 
-  it("survives a save and reload", () => {
-    const before = PagesDocument.load(TEMPLATE);
-    const edited = PagesDocument.load(TEMPLATE);
-    edited.appendParagraph("appended");
-    const reopened = PagesDocument.load(edited.save());
-    for (const [name, field] of PARA_ALIGNED) {
-      expect(`${name}: ${runTable(reopened, field)}`).toBe(`${name}: ${runTable(before, field)}`);
+  it("keeps every pre-existing paragraph pointing at the style it had", () => {
+    // Density alone is not enough: the entries have to carry the same
+    // effective values, or the text is styled but styled wrongly.
+    for (const base of BASES) {
+      const before = load(base);
+      const after = appended(base);
+      const originals = before.body.paragraphStarts();
+      const effective = (doc: PagesDocument, at: number) => doc.body.effectiveObjectAt(5, at);
+      const drift = originals.filter((at) => effective(before, at) !== effective(after, at));
+      expect(`${base} drifted: ${drift.join(",")}`).toBe(`${base} drifted: `);
     }
   });
 
   it("still lets a deliberate paragraph-style change through", () => {
-    // Preserving shape must not mean refusing edits: setParagraphStyle asks
-    // for a specific paragraph to change, and it has to.
-    const doc = PagesDocument.load(TEMPLATE);
+    const doc = load(BASES[1]!);
     const index = doc.appendParagraph("styled line");
     const title = doc.paragraphStyles().find((s) => /title|heading/i.test(s.name ?? ""));
     expect(title !== undefined).toBe(true);

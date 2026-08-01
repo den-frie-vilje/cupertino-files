@@ -304,21 +304,17 @@ export class TextStorage {
       const oldPos = s <= start ? s : s >= start + replacement.length ? s - delta : start;
       return Math.min(Math.max(oldPos, 0), oldText.length);
     });
-    // Which paragraphs already carried an entry, so the rebuild can put the
-    // table back the shape it was in. See writeParagraphTable.
-    const paraExisting = new Map<number, boolean[]>();
+    // Whether each table ended with an entry past the last paragraph — a
+    // terminator at the old text length, which the rebuild must reproduce
+    // at the new one. See writeParagraphTable.
+    const paraTerminator = new Map<number, boolean>();
     for (const f of PARA_ALIGNED_OBJECT_TABLES) {
       if (!this.msg.has(f)) continue;
       paraRebuilds.set(f, this.effectiveObjectsAt(f, oldPositions));
-      const present = new Set(
-        (this.msg.getMessage(f)?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map(
-          (e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
-        ),
+      const indexes = (this.msg.getMessage(f)?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map(
+        (e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
       );
-      paraExisting.set(
-        f,
-        oldPositions.map((pos) => present.has(pos)),
-      );
+      paraTerminator.set(f, indexes[indexes.length - 1] === oldText.length);
     }
 
     // 1. The text itself.
@@ -338,7 +334,7 @@ export class TextStorage {
 
     // 3. Paragraph-aligned tables: rebuild one entry per paragraph.
     for (const [f, values] of paraRebuilds) {
-      this.writeParagraphTable(f, newStarts, values, paraExisting.get(f));
+      this.writeParagraphTable(f, newStarts, values, paraTerminator.get(f));
     }
   }
 
@@ -416,42 +412,52 @@ export class TextStorage {
   /**
    * Rewrite a paragraph-aligned run table.
    *
-   * **Do not densify.** An earlier version wrote one entry per paragraph,
-   * leaving the reference off where the value was unchanged, on the reading
-   * that an empty entry carries the previous one forward. Our own reader
-   * agrees with that (see {@link effectiveObjectsAt}), so it round-tripped
-   * perfectly — and appending a single paragraph to a real document stripped
-   * the layout and list styling from every paragraph but the first. Pages
-   * treats an empty entry in these tables as *clear*, not as carry-forward.
+   * **The density rule is per table, not per document.** Measured over the
+   * Pages fixtures, for 2060 paragraphs:
    *
-   * The shapes are not uniform even within one file. In the sample used by
-   * the Pages ladder, Apple writes `table_para_style` densely — an entry per
-   * paragraph, several of them empty — while `table_list_style` and
-   * `table_layout_style` each hold exactly one entry covering the whole
-   * text. So there is no single convention to copy, and inventing entries is
-   * what does the damage.
+   * | table | entries | every paragraph covered |
+   * | --- | ---: | --- |
+   * | `table_para_style` | 2067 | 19 of 19 documents |
+   * | `table_list_style` | 216 | 3 of 19 (all single-paragraph) |
+   * | `table_layout_style` | 20 | 3 of 19 (all single-paragraph) |
    *
-   * `existing` therefore says which paragraphs already had an entry before
-   * the edit. One is written where the value genuinely changes, or where
-   * there was one before; anywhere else the table is left sparse. A table
-   * that arrived with one entry leaves with one entry.
+   * So `table_para_style` is dense — one entry per paragraph, without
+   * exception — while the list and layout tables are sparse, carrying an
+   * entry only where the value changes. An entry whose object reference is
+   * omitted carries the previous value forward, which is why Apple's dense
+   * table still contains entries that look empty.
+   *
+   * A paragraph with no entry at all is what breaks. Appending a line and
+   * leaving it undeclared makes Pages drop the styling for the whole body;
+   * the same document with an explicit entry — what `setParagraphStyle`
+   * writes — renders correctly. That contrast is the evidence, and it is
+   * also how this was found: the rung that set a style worked while the two
+   * that only appended did not.
+   *
+   * Both earlier attempts applied one rule to all three tables. Writing them
+   * all dense inflates a single-run list table to one entry per paragraph;
+   * writing them all sparse leaves an appended paragraph with no style entry
+   * at all. Each is wrong for two of the three.
+   *
+   * `terminator` keeps a trailing entry at the end of the text when the
+   * table arrived with one — about half of Apple's do, and it is not a
+   * paragraph, so the loop below cannot produce it.
    */
   private writeParagraphTable(
     tableField: number,
     starts: number[],
     values: (bigint | undefined)[],
-    existing?: readonly boolean[],
+    terminator?: boolean,
   ): void {
     const table = this.msg.getMessage(tableField);
     if (!table) return;
+    const dense = tableField === Storage.TABLE_PARA_STYLE;
     const entries: RawMessage[] = [];
     let carried: bigint | undefined;
     for (let i = 0; i < starts.length; i++) {
       const v = values[i];
       const changed = v !== undefined && v !== carried;
-      // No `existing` means a caller that is deliberately setting one
-      // paragraph's style, where the dense form is what it asked for.
-      if (!changed && existing && !existing[i]) continue;
+      if (!dense && !changed) continue;
       const entry = RawMessage.create();
       entry.setVarint(ENTRY_CHARACTER_INDEX, starts[i]!);
       if (changed) {
@@ -459,6 +465,11 @@ export class TextStorage {
         carried = v;
       }
       entries.push(entry);
+    }
+    if (terminator) {
+      const end = RawMessage.create();
+      end.setVarint(ENTRY_CHARACTER_INDEX, this.text.length);
+      entries.push(end);
     }
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
   }
