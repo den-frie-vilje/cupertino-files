@@ -286,23 +286,29 @@ const ITEM_FORMAT_TYPE = { STRING: 260, NUMBER: 256 } as const;
 export type PopupItem = string | number;
 
 /**
- * What, if anything, precedes the choices in a menu model.
+ * The reserved slot every menu model begins with.
  *
- * **An open question, being measured.** A model written as a plain list of
- * choices comes back one short in Numbers: `[Apple, Pear, Quince]` offers
- * only Pear and Quince, and `[10, 20, 50]` only 20 and 50. The first entry
- * is consumed rather than rejected — the document opens clean and the menu
- * works — so `tsce_item[0]` evidently means something other than "the first
- * choice", and this selects which candidate meaning to write while that is
- * settled in the app.
+ * `tsce_item[0]` is **not a choice** — it is the menu's "None" entry, and it
+ * holds a `NIL_TYPE` value. This was measured, and the measurement is worth
+ * keeping because the symptom is so quiet: a model written as a plain list
+ * of choices opens cleanly, draws a working menu, and silently offers one
+ * fewer item than it was given. `[Apple, Pear, Quince]` yields Pear and
+ * Quince.
  *
- *  - `"none"` — the plain list, which is known to lose its first item.
- *  - `"nil"` — a leading `NIL_TYPE` value, on the theory that slot 0 is the
- *    blank option a Numbers menu can start on.
- *  - a value — a leading copy of the selected item, on the theory that slot
- *    0 holds the current selection and the choices follow it.
+ * Three readings fit that evidence and one document each separated them:
+ *
+ *  - Turning `chooser_control_start_w_first` off did not restore the item.
+ *    It added a visible "none" row above Pear and Quince — so that flag
+ *    governs whether the None entry is *offered*, not whether it exists.
+ *  - A leading `NIL_TYPE` restored all three choices with the right one
+ *    selected. This is the answer.
+ *  - A leading *copy of the selected value* also restored all three
+ *    choices, but the menu then marked none of them as current — Pear was
+ *    listed without its checkmark. Occupying slot 0 with a real value fixes
+ *    the count and breaks the selection, which is what rules out "slot 0
+ *    holds the selection" and leaves only "slot 0 is the None entry".
  */
-export type PopupLeading = "none" | "nil" | { value: PopupItem };
+const NONE_SLOT_IS_NIL = true;
 
 /**
  * Build a `TST.PopUpMenuModel` from a list of choices.
@@ -331,15 +337,12 @@ export type PopupLeading = "none" | "nil" | { value: PopupItem };
  * no format was flawless on paper and invisible in the app. Treat a menu
  * as unproven until someone opens one.
  */
-export function buildPopupMenuModel(
-  items: readonly PopupItem[],
-  leading: PopupLeading = "none",
-): RawMessage {
+export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
   if (items.length === 0) throw new RangeError("a pop-up menu needs at least one item");
   const model = RawMessage.create();
-  const entries: (PopupItem | "nil")[] = [...items];
-  if (leading === "nil") entries.unshift("nil");
-  else if (leading !== "none") entries.unshift(leading.value);
+  // Slot 0 first, always — see NONE_SLOT_IS_NIL. Without it the menu loses
+  // whichever choice happens to be written first.
+  const entries: (PopupItem | "nil")[] = NONE_SLOT_IS_NIL ? ["nil", ...items] : [...items];
   model.setMessages(
     PopUpMenuModelFields.ITEM,
     entries.map((item) => {

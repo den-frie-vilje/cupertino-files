@@ -1298,6 +1298,45 @@ which rows a filter hides is stored separately, in
 `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
+#### 14.7.2 A pop-up menu's first item is not a choice
+
+A menu is the only control needing a second archive: `TST.PopUpMenuModel`,
+holding the list of choices as `repeated TSCE.CellValueArchive tsce_item`.
+
+`tsce_item[0]` is the menu's **None entry**, not its first choice. It holds
+a bare `NIL_TYPE` value — `cell_value_type` and nothing else — and the real
+choices begin at index 1.
+
+Get this wrong and nothing complains. The document opens, the widget draws,
+the menu works, and it offers one fewer item than it was given: a model
+written as `[Apple, Pear, Quince]` shows Pear and Quince. There is no
+warning, because from the file's point of view nothing is malformed.
+
+Three readings fit that symptom, and one document each separated them:
+
+| written into slot 0 | what Numbers showed |
+| --- | --- |
+| nothing (plain list, `start_w_first` off) | a "none" row, then Pear, Quince — item still lost |
+| `NIL_TYPE` | Apple, Pear, Quince, Pear selected ✅ |
+| a copy of the selected value | Apple, Pear, Quince, but **no checkmark** on Pear |
+
+The third row is what settles it. With `Pear` in slot 0 the choices all came
+back, but the menu no longer marked which one was current — Pear appeared in
+the list with no checkmark against it. So slot 0 is not a selection holder:
+occupying it with a real value restores the count and breaks the match
+instead. It is the None entry, and it wants nil.
+
+The first row separately fixes `chooser_control_start_w_first`: that flag
+decides whether the None entry is *offered as a row*, not whether it
+exists. Off, the menu lists None above the choices; on, it lists only the
+choices. The slot is present either way.
+
+Each item also carries a `required` format — `TSK.FormatStructArchive`, at
+field 2 on a string value and field **3** on a number value. Omitting it is
+the ordinary kind of broken: a malformed message, and the document is
+refused.
+
+
 ### 14.8 Row and column identities
 
 Most of a table addresses cells by position, but anything that must survive

@@ -51,10 +51,27 @@ describe("pop-up menu model", () => {
     // which is exactly how a conditional rule broke a file once.
     const model = RawMessage.parse(buildPopupMenuModel(["a", 2]).toBytes());
     const items = model.getMessages(2);
-    expect(items.length).toBe(2);
+    // Three, not two: the None slot precedes the choices.
+    expect(items.length).toBe(3);
     // field 2 on a string value, field 3 on a number value — not the same
-    expect(items[0]!.getMessage(5)?.getMessage(2)?.getUint(1)).toBe(260);
-    expect(items[1]!.getMessage(4)?.getMessage(3)?.getUint(1)).toBe(256);
+    expect(items[1]!.getMessage(5)?.getMessage(2)?.getUint(1)).toBe(260);
+    expect(items[2]!.getMessage(4)?.getMessage(3)?.getUint(1)).toBe(256);
+  });
+
+  it("reserves slot 0 for the None entry, as a bare NIL_TYPE", () => {
+    // Measured in Numbers, and the reason to pin it: without this slot the
+    // menu opens fine, works fine, and quietly offers one fewer choice than
+    // it was given — the first one. Nothing offline notices.
+    const items = RawMessage.parse(
+      buildPopupMenuModel(["Apple", "Pear", "Quince"]).toBytes(),
+    ).getMessages(2);
+    expect(items.length).toBe(4);
+    expect(items[0]!.getUint(1)).toBe(1); // NIL_TYPE
+    // Bare: a real value here restores the choice count but breaks the
+    // selection — the menu marks nothing as current.
+    expect(items[0]!.fields.length).toBe(1);
+    // The choices follow, in order and unshifted.
+    expect(items[1]!.getMessage(5)?.getString(1)).toBe("Apple");
   });
 
   it("refuses an empty menu", () => {

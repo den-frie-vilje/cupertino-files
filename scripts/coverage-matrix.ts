@@ -938,7 +938,7 @@ const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Pop-up menu creation (TST.PopUpMenuModel)",
     apps: ["numbers"],
-    status: "experimental",
+    status: "read+write",
     note:
       "The one widget built from the schema rather than measured. A menu is the only control " +
       "needing a second archive — the model holding its choices — and no document available " +
@@ -959,6 +959,15 @@ const CAPABILITIES: Capability[] = [
         "in Numbers: the cell should show a disclosure chevron and clicking it should list the " +
         "three items. A cell showing the bare text with no chevron means the model was ignored; " +
         "a repair warning means it was rejected.",
+      settled:
+        "**Confirmed in Numbers, after the first attempt was quietly wrong.** The model was " +
+        "accepted and the menu drew, but offered one fewer choice than it was given — the " +
+        "first. Three candidate readings of `tsce_item[0]` were written as three documents, " +
+        "and the decisive one was putting a copy of the selected value there: all choices came " +
+        "back, but the menu marked none of them current, so slot 0 is the None entry rather " +
+        "than a selection. It takes a bare NIL_TYPE, the choices start at index 1, and " +
+        "`chooser_control_start_w_first` governs only whether that entry is offered as a row " +
+        "(FORMAT.md §14.7.2). Text and numeric menus both verified.",
       risk: "medium",
     },
   },

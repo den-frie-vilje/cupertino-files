@@ -54,7 +54,6 @@ import {
   InteractionType,
   type CellControl,
   type PopupItem,
-  type PopupLeading,
 } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
@@ -2122,8 +2121,8 @@ export class TableModel {
    * model with the list that points at it means there is no cross-component
    * reference to declare in the first place.
    */
-  private internPopupModel(items: readonly PopupItem[], leading: PopupLeading): bigint {
-    const encoded = buildPopupMenuModel(items, leading).toBytes();
+  private internPopupModel(items: readonly PopupItem[]): bigint {
+    const encoded = buildPopupMenuModel(items).toBytes();
     const dataStore = this.dataStore();
     if (!dataStore) throw new RangeError("table has no data store; cannot store a menu");
     const list = this.store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
@@ -2345,13 +2344,14 @@ export class TableModel {
           widget: "popupMenu";
           items: readonly PopupItem[];
           value?: string | number;
-          startsWithFirstItem?: boolean;
           /**
-           * What occupies slot 0 of the model. **Under measurement** — a
-           * plain list loses its first choice in Numbers, so this selects
-           * which candidate explanation to write. See {@link PopupLeading}.
+           * Whether the menu starts on its first choice rather than blank.
+           *
+           * Measured: with this off, Numbers offers the model's None entry
+           * as a selectable row above the real choices. With it on — the
+           * default — the menu shows only the items given here.
            */
-          leading?: PopupLeading;
+          startsWithFirstItem?: boolean;
         },
     options: WriteOptions = {},
   ): number {
@@ -2372,7 +2372,7 @@ export class TableModel {
         spec.setVarint(CellSpecFields.INTERACTION_TYPE, InteractionType.POPUP_MENU);
         spec.setMessage(
           CellSpecFields.CHOOSER_POPUP_MODEL,
-          makeRef(this.internPopupModel(control.items, control.leading ?? "none")),
+          makeRef(this.internPopupModel(control.items)),
         );
         spec.setVarint(
           CellSpecFields.CHOOSER_START_WITH_FIRST,
