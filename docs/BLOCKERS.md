@@ -74,28 +74,42 @@ mechanically enforce.
 slider and stepper all draw, which also settles the 4/5 stepper/slider
 pairing that used to rest on elimination.
 
-### Pages has its own ladder now, and none of it has been run
-
-Everything above is Numbers. Every rung of `npm run bisect:docs` writes a
-`.numbers` file, so **no document this library authored has ever been opened
-in Pages** — despite Pages having the most fixtures here (20 of 38) and the
-largest write surface. Thirteen unverified claims touch it, three of them
-high risk, including the most basic one there is: that Pages opens a file we
-saved at all.
+### Pages: the text path is verified, the rest of the ladder is not
 
 ```sh
-npm run pages:docs ~/Desktop/pages-rungs    # P00 … P11
+npm run pages:docs ~/Desktop/pages-rungs    # v26-P00 … v26-P11, v14-P00 … v14-P11
 ```
 
-P00 is the load-and-save-with-no-edit case, which isolates the container
-layer from every feature above it. P01 up each add one thing: a paragraph,
-character formatting, a paragraph style, a hyperlink, header and footer
-text, a page-number field, a section break, a comment, a footnote, page
-setup, an inline image.
+Every rung is built twice: on `patrickomatic-termpaper-footers-masks`
+(file format **26.1.0**, what a current Pages writes) and on
+`iwork-mcp-v14.5-sample` (14.4.1, the upgrade path). Check the v26 set
+first.
 
-All twelve pass `npm run required:check` and read back their own change, so
-what remains is exactly the class of fault that check cannot see — the one
-that cost three round trips on the Numbers side.
+**Confirmed:** P00 through P03 on the current format — load and save,
+append a paragraph, character formatting, and a named paragraph style — all
+open with the document's own formatting intact.
+
+Getting there took four defects, and the shape of each is worth knowing
+because none of them was visible offline:
+
+1. **Text colour lives in `tsd_fill`, not `font_color`.** Bold applied, red
+   did not.
+2. **A storage must not declare its stylesheet in `object_references`.**
+   Every edit produced an unstyled body. This one also explains why
+   load-and-save looked clean for six rounds: unmodified components are
+   passed through verbatim, so P00 never exercised the writer at all.
+3. **Paragraphs end at U+0004, U+0005 and U+000C as well as U+000A** — and
+   not at U+2028. One page break was enough to drop a style entry.
+4. **`table_para_style` is dense; the list and layout tables are sparse.**
+   An appended paragraph with no entry cost the whole body its styling.
+
+Each is now guarded by a test that measures the rule from the corpus rather
+than restating a conclusion, so a future Pages that changes one fails the
+suite instead of a document.
+
+**Not yet checked:** P04 through P11 — hyperlink, header/footer, page
+number, section break, comment, footnote, page setup, inline image. Nothing
+above them is known to be wrong; nothing about them is known to be right.
 
 ### Still to answer
 

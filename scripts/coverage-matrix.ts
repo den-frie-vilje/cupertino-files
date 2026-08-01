@@ -156,6 +156,16 @@ export const CAPABILITIES: Capability[] = [
         "can say whether they accept it.",
       how: "npm run test:e2e on a Mac opens each edited document in its app.",
       e2e: true,
+      settled:
+        "**Confirmed for Pages and Numbers; Keynote untested.** A current-format Pages document " +
+        "(file format 26.1.0) was edited, saved and opened with its formatting intact — appending " +
+        "a paragraph, applying character formatting, and applying a named paragraph style. " +
+        "Getting there took four separate defects, none of which any offline check could see, " +
+        "and each is now guarded: text colour must go in `tsd_fill` as well as `font_color`; a " +
+        "storage must not declare its stylesheet in `object_references`; paragraphs end at " +
+        "U+0004/U+0005/U+000C as well as U+000A but not at U+2028; and `table_para_style` is " +
+        "dense while the list and layout tables are sparse. Numbers is covered separately by the " +
+        "widget and regrouping checks. Keynote has never been opened at all",
       risk: "high",
     },
   },
@@ -274,7 +284,8 @@ export const CAPABILITIES: Capability[] = [
         "character style applying its `bold` and ignoring its `font_color` — the word rendered " +
         "black. Text colour comes from `tsd_fill` (field 46), not `font_color` (7); a style with " +
         "only the latter is valid, round-trips, and does nothing visible (FORMAT.md). Both are " +
-        "now written, **the fix is confirmed in Pages** — the word renders bold and red — and " +
+        "now written, **the fix is confirmed in Pages on a current-format document** — the word " +
+        "renders bold and red — and " +
         "`test/pages-authored-shape.test.ts` guards the pairing against the fixture corpus. The " +
         "*_null question in the claim above is still open; what is settled is that an authored " +
         "colour reaches the page",
