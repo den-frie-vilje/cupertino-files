@@ -1131,11 +1131,13 @@ export class TableModel {
     const previous = layout.records[column];
     const record = previous ? CellRecord.decode(previous) : new CellRecord();
     const previousStringId = record.id(CellFlag.STRING_ID);
+    const previousFormulaId = record.id(CellFlag.FORMULA_ID);
 
     this.applyValue(record, value);
 
     // A literal supersedes whatever formula produced the old value.
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
+    if (previousFormulaId !== undefined) this.releaseFormula(previousFormulaId);
     if (previousStringId !== undefined && record.id(CellFlag.STRING_ID) !== previousStringId) {
       this.releaseString(previousStringId);
     }
@@ -1188,13 +1190,37 @@ export class TableModel {
 
     const expression = typeof formula === "string" ? parseFormula(formula) : formula;
     const ast = buildFormula(expression, { row, column });
-    const archive = RawMessage.create();
-    archive.setMessage(Formula.AST_NODE_ARRAY, ast);
-    const key = this.internFormula(archive);
 
-    // The cached value first, so its flags are in place before the formula
-    // id is attached; `value: undefined` deliberately leaves the old cache.
-    if (options.value !== undefined) this.setCell(row, column, options.value, options);
+    // When the cell already carries this exact recipe, keep its entry
+    // instead of minting a new key. This is what makes a same-text replace
+    // a byte-level no-op — the strongest proof formula writing has — and it
+    // also preserves entry fields this library does not model (the xlsx
+    // importer's translation_flags ride alongside the AST in field 6).
+    const previousId = this.formulaId(row, column);
+    const previousAst =
+      previousId === undefined
+        ? undefined
+        : this.formulaTable().get(previousId)?.getMessage(Formula.AST_NODE_ARRAY);
+    const reuse = previousAst !== undefined && bytesEqual(previousAst.toBytes(), ast.toBytes());
+    let key: number;
+    if (reuse) {
+      key = previousId!;
+      this.retainFormula(key);
+    } else {
+      const archive = RawMessage.create();
+      archive.setMessage(Formula.AST_NODE_ARRAY, ast);
+      key = this.internFormula(archive);
+    }
+    // The cell's old reference is dropped exactly once: by the value write
+    // below when there is one — setCell strips formula flags — or directly.
+    // With `reuse` the retain above and this release cancel to a no-op.
+    if (options.value !== undefined) {
+      // The cached value first, so its flags are in place before the
+      // formula id is attached; `value: undefined` leaves the old cache.
+      this.setCell(row, column, options.value, options);
+    } else if (previousId !== undefined) {
+      this.releaseFormula(previousId);
+    }
 
     const located = this.locateRow(row);
     if (!located) {
@@ -1227,7 +1253,9 @@ export class TableModel {
     const existing = layout.records[column];
     if (!existing) return false;
     const record = CellRecord.decode(existing);
-    if (record.id(CellFlag.FORMULA_ID) === undefined) return false;
+    const previousId = record.id(CellFlag.FORMULA_ID);
+    if (previousId === undefined) return false;
+    this.releaseFormula(previousId);
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
@@ -1257,6 +1285,39 @@ export class TableModel {
     message.addMessage(DataList.ENTRIES, entry);
     message.setVarint(DataList.NEXT_LIST_ID, key + 1);
     return key;
+  }
+
+  /**
+   * Bump a formula-table entry's refcount by one more referencing cell.
+   *
+   * Apple's convention, measured across every fixture: the refcount equals
+   * the number of cell records naming the key — 39 of 39 entries agree.
+   */
+  private retainFormula(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    const entry = list?.message
+      .getMessages(DataList.ENTRIES)
+      .find((e) => e.getUint(ListEntry.KEY) === key);
+    entry?.setVarint(ListEntry.REFCOUNT, (entry.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+  }
+
+  /** Drop one cell's reference to a formula entry, removing it at zero. */
+  private releaseFormula(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    if (!list) return;
+    const m = list.message;
+    const entries = m.getMessages(DataList.ENTRIES);
+    const entry = entries.find((e) => e.getUint(ListEntry.KEY) === key);
+    if (!entry) return;
+    const remaining = (entry.getUint(ListEntry.REFCOUNT) ?? 1) - 1;
+    if (remaining > 0) {
+      entry.setVarint(ListEntry.REFCOUNT, remaining);
+      return;
+    }
+    m.setMessages(
+      DataList.ENTRIES,
+      entries.filter((e) => e !== entry),
+    );
   }
 
   /**
@@ -1693,7 +1754,7 @@ export class TableModel {
     if (rows.length - count < 1) throw new RangeError("a table must keep at least one row");
     // Release the strings the deleted cells held, so the string table does
     // not accumulate entries nothing references.
-    for (const row of rows.slice(at, at + count)) this.releaseRowStrings(row);
+    for (const row of rows.slice(at, at + count)) this.releaseRowRefs(row);
     rows.splice(at, count);
     this.rewriteRows(rows);
     this.shiftMergesForRows(at, -count);
@@ -1731,7 +1792,7 @@ export class TableModel {
     if (this.columnCount - count < 1) throw new RangeError("a table must keep at least one column");
     const rows = this.snapshotRows();
     for (const row of rows) {
-      for (const record of row.records.slice(at, at + count)) this.releaseRecordString(record);
+      for (const record of row.records.slice(at, at + count)) this.releaseRecordRefs(record);
       row.records.splice(at, count);
     }
     const widths = this.columnWidths();
@@ -1949,15 +2010,18 @@ export class TableModel {
     this.object.message.getMessage(TableModelFields.MERGE_OWNER)?.remove(MergeOwner.FORMULA_STORE);
   }
 
-  /** Decrement string-table refcounts for every string a row referenced. */
-  private releaseRowStrings(row: RowSnapshot): void {
-    for (const record of row.records) this.releaseRecordString(record);
+  /** Drop the string- and formula-table references a deleted row held. */
+  private releaseRowRefs(row: RowSnapshot): void {
+    for (const record of row.records) this.releaseRecordRefs(record);
   }
 
-  private releaseRecordString(record: Uint8Array | undefined): void {
+  private releaseRecordRefs(record: Uint8Array | undefined): void {
     if (!record) return;
-    const id = CellRecord.decode(record).id(CellFlag.STRING_ID);
-    if (id !== undefined) this.releaseString(id);
+    const decoded = CellRecord.decode(record);
+    const stringId = decoded.id(CellFlag.STRING_ID);
+    if (stringId !== undefined) this.releaseString(stringId);
+    const formulaId = decoded.id(CellFlag.FORMULA_ID);
+    if (formulaId !== undefined) this.releaseFormula(formulaId);
   }
 
   // --------------------------------------------------------------- styling

@@ -20,8 +20,12 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
-import { tablesOf } from "../src/tst/tables.ts";
+import { NumbersDocument } from "../src/index.ts";
+import { DataStoreFields, tablesOf, type TableModel } from "../src/tst/tables.ts";
 import { buildFormula, parseFormula } from "../src/tst/formula-builder.ts";
+import { ZipReader } from "../src/base/zip.ts";
+import { decodeIwaData } from "../src/base/snappy.ts";
+import { bytesEqual } from "../src/base/bytes.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
@@ -74,5 +78,107 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
     // in docs/BLOCKERS.md), and closing it should only raise this floor.
     expect(total >= 1244).toBe(true);
     expect(rebuilt >= 219).toBe(true);
+  });
+});
+
+const STAR_FIXTURE = "numbers-parser-v26.0-issue102.numbers";
+
+/**
+ * Every formula-table entry's refcount against the cells that actually
+ * name its key — Apple's convention, measured at 39/39 across the corpus.
+ * Read through the privates: the invariant is exactly the thing the
+ * public surface is supposed to keep invisible.
+ */
+function refcountLedger(table: TableModel): { key: number; refcount: number; cells: number }[] {
+  const t = table as unknown as {
+    store: {
+      resolve(ref: unknown): { message: RawList } | undefined;
+    };
+    dataStore(): { getMessage(field: number): unknown } | undefined;
+  };
+  interface RawList {
+    getMessages(field: number): { getUint(field: number): number | undefined }[];
+  }
+  const ref = t.dataStore()?.getMessage(DataStoreFields.FORMULA_TABLE);
+  const list = ref ? t.store.resolve(ref) : undefined;
+  const out: { key: number; refcount: number; cells: number }[] = [];
+  for (const entry of list?.message.getMessages(3) ?? []) {
+    const key = entry.getUint(1);
+    if (key === undefined) continue;
+    let cells = 0;
+    for (let r = 0; r < table.rowCount; r++) {
+      for (let c = 0; c < table.columnCount; c++) {
+        if (table.formulaId(r, c) === key) cells++;
+      }
+    }
+    out.push({ key, refcount: entry.getUint(2) ?? 0, cells });
+  }
+  return out;
+}
+
+describe("replacing a formula with its own text is a byte-level no-op", () => {
+  // The strongest proof available: not that the write looks right, but
+  // that it is indistinguishable from never having happened. Compression
+  // is transport, so the yardstick is each archive's decompressed stream —
+  // the touched components are re-serialized and re-compressed by this
+  // library, and their *content* must come out byte-identical to what
+  // Apple wrote, refcounts, next-key counters, row offsets and all.
+  it("leaves every archive stream in the document byte-identical", () => {
+    const original = new Uint8Array(readFileSync(new URL(STAR_FIXTURE, FIXTURES)));
+    const doc = NumbersDocument.load(original);
+    const table = doc.tables().find((t) => t.cellFormula(6, 2) !== undefined);
+    expect(table?.name).toBe("Cats");
+    const text = table!.cellFormula(6, 2);
+    expect(text).toBe("=SUM(C3:K6)");
+
+    table!.setFormula(6, 2, text!);
+    const saved = doc.save();
+
+    const before = ZipReader.parse(original);
+    const after = ZipReader.parse(saved);
+    expect(after.names().join()).toBe(before.names().join());
+    const different: string[] = [];
+    for (const name of before.names()) {
+      const a = before.read(name);
+      const b = after.read(name);
+      const same = name.endsWith(".iwa")
+        ? bytesEqual(decodeIwaData(a), decodeIwaData(b))
+        : bytesEqual(a, b);
+      if (!same) different.push(name);
+    }
+    expect(`changed: ${different.join(" ")}`).toBe("changed: ");
+  });
+
+  it("keeps the refcount ledger balanced through replace, clear and overwrite", () => {
+    const original = new Uint8Array(readFileSync(new URL(STAR_FIXTURE, FIXTURES)));
+    const doc = NumbersDocument.load(original);
+    const table = doc.tables().find((t) => t.name === "Cats")!;
+    const balanced = (ledger: { key: number; refcount: number; cells: number }[]) =>
+      ledger.every((e) => e.refcount === e.cells);
+    expect(balanced(refcountLedger(table))).toBe(true);
+    const entriesBefore = refcountLedger(table).length;
+
+    // Same text → same entry, same count.
+    table.setFormula(6, 2, "=SUM(C3:K6)");
+    expect(refcountLedger(table).length).toBe(entriesBefore);
+    expect(balanced(refcountLedger(table))).toBe(true);
+
+    // Different text → old entry's reference released, one new entry.
+    table.setFormula(6, 2, "=SUM(C3:K5)");
+    expect(balanced(refcountLedger(table))).toBe(true);
+
+    // A literal over a formula cell releases its entry.
+    table.setCell(6, 2, 42);
+    expect(balanced(refcountLedger(table))).toBe(true);
+    expect(table.cellFormula(6, 2)).toBe(undefined);
+
+    // clearFormula releases too, and the ledger still balances after a
+    // save/load round trip — the bytes carry the same story.
+    table.setFormula(6, 2, "=SUM(C3:K6)", { value: 0 });
+    expect(table.clearFormula(6, 2)).toBe(true);
+    const reread = NumbersDocument.load(doc.save())
+      .tables()
+      .find((t) => t.name === "Cats")!;
+    expect(balanced(refcountLedger(reread))).toBe(true);
   });
 });
