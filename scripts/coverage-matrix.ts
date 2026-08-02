@@ -763,20 +763,21 @@ export const CAPABILITIES: Capability[] = [
     note: "validation counts multi-section documents only",
     manualProof: {
       claim: "a section break this library inserts starts a new section on a new page",
+      settled:
+        "**Confirmed in Pages — \"P07 passed\" — on the second round.** The first check " +
+        "failed (\"not on a new page\") and taught the rule: all 28 section boundaries " +
+        "across the five multi-section fixtures put U+0004 where the previous paragraph's " +
+        "newline was, and we wrote only the `table_section` entry — Pages listed the " +
+        "section and kept the text flowing, because the table names a section and the " +
+        "character breaks the page. With `insertSectionBreak` swapping the terminator " +
+        "(same length, so every attribute-table index survives) and keeping the clone's " +
+        "name, the second paragraph renders on its own page.",
       why:
-        "The first in-app check failed — \"P07 fails, not on a new page\" — and measuring " +
-        "the corpus explained it: all 28 section boundaries across the five multi-section " +
-        "fixtures put U+0004 where the previous paragraph's newline was, and we wrote only " +
-        "the `table_section` entry. Pages listed the section and kept the text flowing: the " +
-        "table names a section, the character breaks the page. `insertSectionBreak` now " +
-        "swaps the terminator (same length, so every attribute-table index survives), and " +
-        "the clone's `name` is kept rather than stripped — but the rebuilt rung has not " +
-        "been reopened.",
+        "pagination is the app's; the table entry alone was well-formed, listed in the " +
+        "sidebar, and paginated nothing",
       how:
-        "`npm run pages:docs` emits P07-section-break: two paragraphs with a break between " +
-        "them. The second paragraph on its own page is a pass; check the section is named in " +
-        "the page-thumbnail sidebar rather than blank. Flowing on the same page again means " +
-        "the U+0004 swap is still not what paginates.",
+        "`npm run pages:docs` emits P07-section-break; the page states its own expected " +
+        "result",
       risk: "medium",
     },
   },

@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 26 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 25 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -41,14 +41,13 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 16 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
 | 17 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 18 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 19 | 🟠 medium | Pages → Sections (read + insert) | a section break this library inserts starts a new section on a new page | manual |
-| 20 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates is readable and attributed in the app | manual |
-| 21 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 22 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 23 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 24 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 25 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 26 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 19 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates is readable and attributed in the app | manual |
+| 20 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 21 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 22 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 23 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 24 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 25 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Builds (animations): read and retime
 
@@ -270,19 +269,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 19. Sections (read + insert)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Pages  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a section break this library inserts starts a new section on a new page
-
-**Why the suite cannot settle it.** The first in-app check failed — "P07 fails, not on a new page" — and measuring the corpus explained it: all 28 section boundaries across the five multi-section fixtures put U+0004 where the previous paragraph's newline was, and we wrote only the `table_section` entry. Pages listed the section and kept the text flowing: the table names a section, the character breaks the page. `insertSectionBreak` now swaps the terminator (same length, so every attribute-table index survives), and the clone's `name` is kept rather than stripped — but the rebuilt rung has not been reopened.
-
-**How to settle it.** `npm run pages:docs` emits P07-section-break: two paragraphs with a break between them. The second paragraph on its own page is a pass; check the section is named in the page-thumbnail sidebar rather than blank. Flowing on the same page again means the U+0004 swap is still not what paginates.
-
-### 20. Comment creation and removal
+### 19. Comment creation and removal
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -294,7 +281,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** `npm run pages:docs` emits P08-comment; the phrase names itself and the comment text says who wrote it. Readable and attributed is the pass; a third distinct failure would point at the highlight's UUID linkage.
 
-### 21. Paragraph background & borders (rule stroke + positions)
+### 20. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -306,7 +293,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 22. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 21. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -318,7 +305,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 23. Categories: enable or disable grouping
+### 22. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -330,7 +317,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 24. Conditional formatting rules
+### 23. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -342,7 +329,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 25. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 24. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -354,7 +341,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 26. Table of contents (rules read + write, cached entries read)
+### 25. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -368,7 +355,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-15 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+16 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -490,6 +477,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** every other control was measured against a real one before being written. This one could not be, and the failure mode just demonstrated by cell controls is precisely a structure that is valid in every offline respect and still does not render — required fields present, reader agrees, app shows nothing. A menu has more surface for that than the others: it is two archives and a cross-object reference rather than one flag.
 
 **Outcome.** **Confirmed in Numbers, after the first attempt was quietly wrong.** The model was accepted and the menu drew, but offered one fewer choice than it was given — the first. Three candidate readings of `tsce_item[0]` were written as three documents, and the decisive one was putting a copy of the selected value there: all choices came back, but the menu marked none of them current, so slot 0 is the None entry rather than a selection. It takes a bare NIL_TYPE, the choices start at index 1, and `chooser_control_start_w_first` governs only whether that entry is offered as a row (FORMAT.md §14.7.2). Text and numeric menus both verified.
+
+### ✅ Sections (read + insert)
+
+**Was claimed.** a section break this library inserts starts a new section on a new page
+
+**Why it needed an app.** pagination is the app's; the table entry alone was well-formed, listed in the sidebar, and paginated nothing
+
+**Outcome.** **Confirmed in Pages — "P07 passed" — on the second round.** The first check failed ("not on a new page") and taught the rule: all 28 section boundaries across the five multi-section fixtures put U+0004 where the previous paragraph's newline was, and we wrote only the `table_section` entry — Pages listed the section and kept the text flowing, because the table names a section and the character breaks the page. With `insertSectionBreak` swapping the terminator (same length, so every attribute-table index survives) and keeping the clone's name, the second paragraph renders on its own page.
 
 ## Recording an outcome
 

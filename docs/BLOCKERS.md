@@ -152,12 +152,12 @@ Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
-**Not yet checked:** P07 (section break — rebuilt with the U+0004 fix
-after its first check failed), P08 (comment — two rounds so far: an
+**Not yet checked:** P08 alone (comment — two failed rounds so far: an
 authorless comment was unreadable on iOS, then a name-only author crashed
-Pages; the author now carries Apple's exact comment-yellow colour and
-explicit `is_public_author=false`, and the roster no longer declares the
-reference both corpus rosters leave undeclared). Nothing about them is known to be wrong;
+Pages; the third build's author carries Apple's exact comment-yellow
+colour and explicit `is_public_author=false`, and the roster no longer
+declares the reference both corpus rosters leave undeclared). Every other
+rung of the ladder is app-confirmed. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 
