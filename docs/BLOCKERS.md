@@ -147,9 +147,7 @@ suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
 number), P07 (section break — rebuilt with the U+0004 fix after its first
-check failed), P08 (comment), P09 (footnote — two defects found by two checks: the
-crash-causing objectless seed entry, then the missing superscript run on
-the marks; both fixed, rung rebuilt), P10 (page setup).
+check failed), P08 (comment), P10 (page setup).
 P07 and P09 are the highest-value opens: each carries a fix for a defect
 its own first check found. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,

@@ -506,17 +506,18 @@ export const CAPABILITIES: Capability[] = [
     note: "the reference is a U+000E in its own table; the note is a separate storage of footnote kind",
     manualProof: {
       claim: "a footnote this library creates is numbered and laid out by Pages",
-      why:
-        "Two rounds in the app so far. Round one crashed Pages on open: every newly created " +
-        "attribute table was seeded with an objectless entry at index 0, fatal in the " +
-        "point-anchored `table_footnote`/`table_attachment` where an entry is an object at a " +
-        "position — 107 such tables in the corpus, zero objectless entries; the seed is now " +
-        "shape-aware. Round two — \"P09 footnote worked but the note ref wasn't " +
-        "superscript\" — the note rendered and numbered, but the reference sat on the " +
-        "baseline: the corpus covers every mark, body U+000E and note U+FFFC alike, with " +
-        "one shared anonymous character style whose whole bag is `superscript = 1`, and we " +
-        "wrote none. Both marks now carry it, shared like Apple's; the rebuilt rung is " +
-        "unverified.",
+      settled:
+        "**Confirmed in Pages — \"P09 pass\" — after three rounds, each of which found a " +
+        "distinct defect class.** Round one crashed the app: every newly created attribute " +
+        "table was seeded with an objectless entry at index 0, fatal in the point-anchored " +
+        "`table_footnote`/`table_attachment` where an entry is an object at a position (107 " +
+        "such tables in the corpus, zero objectless entries — the seed is now shape-aware). " +
+        "Round two rendered and numbered the note but drew the reference on the baseline: " +
+        "every corpus mark, body U+000E and note U+FFFC alike, is covered by one shared " +
+        "anonymous character style whose whole bag is `superscript = 1`, and we wrote none. " +
+        "Round three: the note renders small in Footnote style, the mark is a raised " +
+        "number, and the note storage carries the six attribute tables all 2676 corpus " +
+        "storages have.",
       how:
         "add footnotes at two positions, open in Pages, and confirm they number in document " +
         "order, render at the page foot, and are set in the document's Footnote style rather " +
