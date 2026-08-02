@@ -266,8 +266,15 @@ export function cellSpecObjects(store: ObjectStore, typeId: number): IwaObject[]
 export const PopUpMenuModelFields = {
   /** `repeated CellValue item` — Apple marks this deprecated. */
   LEGACY_ITEM: 1,
-  /** `repeated TSCE.CellValueArchive tsce_item` — the live one. */
-  ITEM: 2,
+  /**
+   * `repeated TSCE.CellValueArchive tsce_item` — the live one.
+   *
+   * Named for the proto field rather than for what it holds, because
+   * `proto:check` matches constants to schema fields *by name*: called
+   * `ITEM` it matched `item = 1` and reported permanent drift against a
+   * field number three verified menus in Numbers say is right.
+   */
+  TSCE_ITEM: 2,
 } as const;
 
 /** `TSCE.CellValueArchive`. */
@@ -344,7 +351,7 @@ export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
   // whichever choice happens to be written first.
   const entries: (PopupItem | "nil")[] = NONE_SLOT_IS_NIL ? ["nil", ...items] : [...items];
   model.setMessages(
-    PopUpMenuModelFields.ITEM,
+    PopUpMenuModelFields.TSCE_ITEM,
     entries.map((item) => {
       const value = RawMessage.create();
       if (item === "nil") {
@@ -386,7 +393,7 @@ export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
 export function readPopupMenuModel(model: RawMessage | undefined): PopupItem[] {
   if (!model) return [];
   const out: PopupItem[] = [];
-  for (const value of model.getMessages(PopUpMenuModelFields.ITEM)) {
+  for (const value of model.getMessages(PopUpMenuModelFields.TSCE_ITEM)) {
     switch (value.getUint(CellValueFields.TYPE)) {
       case CellValueType.STRING: {
         const s = value.getMessage(CellValueFields.STRING)?.getString(1);

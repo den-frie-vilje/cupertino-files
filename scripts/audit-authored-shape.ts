@@ -114,12 +114,19 @@ const describeSignature = (sig: string): string =>
 function fieldNamer(): (type: number, field: number) => string {
   let schema: ProtoSchema | undefined;
   try {
-    const dir = new URL("../proto/current/", import.meta.url);
-    schema = parseProtoSchema(
-      readdirSync(dir)
-        .filter((name) => name.endsWith(".proto"))
-        .map((name) => readFileSync(new URL(name, dir), "utf8")),
-    );
+    // Every vendored dump, not just `current/`. The Pages-specific `TP*`
+    // schemas live in `pages-2013/` — the only public Pages dump there is —
+    // and reading only `current/` reported `TP.SectionArchive.name` as a
+    // bare "field 26", which is the one finding in the first run that
+    // nobody could act on without going to the corpus by hand.
+    const sources: string[] = [];
+    for (const family of ["current", "pages-2013", "numbers-14.4", "keynote-14.4"]) {
+      const dir = new URL(`../proto/${family}/`, import.meta.url);
+      for (const name of readdirSync(dir)) {
+        if (name.endsWith(".proto")) sources.push(readFileSync(new URL(name, dir), "utf8"));
+      }
+    }
+    schema = parseProtoSchema(sources);
   } catch {
     schema = undefined;
   }

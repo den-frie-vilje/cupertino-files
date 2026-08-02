@@ -217,7 +217,27 @@ interface Finding {
   detail: string;
 }
 
-function main(argv: string[]): number {
+export interface DriftReport {
+  /** Messages found across the vendored dumps. */
+  messages: number;
+  /** Constant groups whose docblock named an archive we could resolve. */
+  matchedConstants: number;
+  totalConstants: number;
+  /** Individual field numbers compared against the schema. */
+  checkedFields: number;
+  findings: Finding[];
+}
+
+/**
+ * The whole check, as data.
+ *
+ * Exported so the test suite can assert on it. `npm run proto:check` was
+ * red for an unknown length of time — one constant named `ITEM` matching
+ * `item = 1` when it meant `tsce_item = 2` — and nothing noticed, because
+ * the one check that compares our field numbers against Apple's schema was
+ * the only one not wired into `npm test`.
+ */
+export function driftReport(): DriftReport {
   const protos = loadProtos();
   const constants = collectConstants();
   const findings: Finding[] = [];
@@ -281,11 +301,23 @@ function main(argv: string[]): number {
     }
   }
 
+  return {
+    messages: protos.size,
+    matchedConstants: checkedConstants,
+    totalConstants: constants.length,
+    checkedFields,
+    findings,
+  };
+}
+
+function main(argv: string[]): number {
+  const report = driftReport();
+  const { findings } = report;
   const drift = findings.filter((f) => f.kind === "mismatch");
   console.log(
-    `${protos.size} messages across the vendored schemas; ` +
-      `${checkedConstants}/${constants.length} constants matched to one; ` +
-      `${checkedFields} field numbers verified.`,
+    `${report.messages} messages across the vendored schemas; ` +
+      `${report.matchedConstants}/${report.totalConstants} constants matched to one; ` +
+      `${report.checkedFields} field numbers verified.`,
   );
 
   const groups: Finding["kind"][] = ["mismatch", "unknown-field", "unknown-archive", "unverifiable"];
@@ -309,4 +341,5 @@ function main(argv: string[]): number {
   return argv.includes("--check") && drift.length > 0 ? 1 : 0;
 }
 
-process.exitCode = main(process.argv.slice(2));
+// Importable: `test/proto-drift.test.ts` asserts on {@link driftReport}.
+if (import.meta.filename === process.argv[1]) process.exitCode = main(process.argv.slice(2));
