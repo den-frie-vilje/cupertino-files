@@ -837,3 +837,72 @@ describe("point-anchored tables never hold an objectless entry", () => {
     expect(`objectless: ${objectless(saved).join(" ")}`).toBe("objectless: ");
   });
 });
+
+describe("a footnote mark is superscripted, in the body and in the note", () => {
+  // "P09 footnote worked but the note ref wasn't superscript." The corpus
+  // recipe, measured on the footnote fixture's 8 body marks and their
+  // notes: one
+  // shared anonymous character style whose entire property bag is
+  // superscript=1, run over exactly the mark character — the body's U+000E
+  // and the note's U+FFFC alike. Without it everything works and the
+  // reference sits on the baseline at body size.
+  const SUPERSCRIPT = 10;
+
+  const bagOf = (doc: PagesDocument, id: bigint | undefined): string => {
+    if (id === undefined) return "(none)";
+    const bag = doc.store.resolve(id)?.message.getMessage(11);
+    return bag ? bag.fields.map((f) => `${f.no}=${f.value}`).join(",") : "(no bag)";
+  };
+
+  it("matches the corpus: every U+000E is covered by a superscript-only style", () => {
+    let marks = 0;
+    const bad: string[] = [];
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      const text = doc.body.text;
+      for (let i = 0; i < text.length; i++) {
+        if (text.charCodeAt(i) !== 0x0e) continue;
+        marks++;
+        const bag = bagOf(doc, doc.body.effectiveObjectAt(8, i));
+        if (bag !== `${SUPERSCRIPT}=1`) bad.push(`${name}@${i}:${bag}`);
+      }
+    }
+    expect(marks >= 8).toBe(true);
+    expect(`marks not superscript-covered: ${bad.join(" ")}`).toBe("marks not superscript-covered: ");
+  });
+
+  it("authors both marks with one shared style, like Apple's", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("first sentence with a note.");
+    doc.body.addFootnote(doc.body.text.length - 1, "note one");
+    doc.appendParagraph("second sentence with a note.");
+    doc.body.addFootnote(doc.body.text.length - 1, "note two");
+
+    const saved = PagesDocument.load(doc.save());
+    const text = saved.body.text;
+    const styles: string[] = [];
+    for (let i = 0; i < text.length; i++) {
+      if (text.charCodeAt(i) !== 0x0e) continue;
+      const id = saved.body.effectiveObjectAt(8, i);
+      styles.push(String(id));
+      expect(`body mark bag: ${bagOf(saved, id)}`).toBe(`body mark bag: ${SUPERSCRIPT}=1`);
+      // The run ends after the mark — the sentence's own styling resumes.
+      expect(saved.body.effectiveObjectAt(8, i + 1)).toBe(undefined);
+    }
+    expect(styles.length).toBe(2);
+    // One style object for the whole document, not one per footnote.
+    expect(new Set(styles).size).toBe(1);
+
+    for (const note of saved.body.footnotes()) {
+      const runs = note.storage.object.message.getMessage(8)?.getMessages(1) ?? [];
+      expect(runs.length).toBe(2);
+      expect(String(runs[0]!.getMessage(2)?.getVarint(1))).toBe(styles[0]!);
+    }
+  });
+});

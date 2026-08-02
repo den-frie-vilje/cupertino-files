@@ -303,7 +303,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** a footnote this library creates is numbered and laid out by Pages
 
-**Why the suite cannot settle it.** The first in-app check crashed Pages on open. Cause, measured: every newly created attribute table was seeded with an objectless entry at index 0 — harmless in run-shaped tables, where it means "nothing in effect", fatal in the point-anchored `table_footnote`/`table_attachment`, where an entry is an object at a position and the numbering walk dereferences it. 107 point-anchored tables in the corpus carry zero objectless entries. The seed is now shape-aware, and the earlier shape-audit fix (the six attribute tables all 2676 corpus storages carry) still stands.
+**Why the suite cannot settle it.** Two rounds in the app so far. Round one crashed Pages on open: every newly created attribute table was seeded with an objectless entry at index 0, fatal in the point-anchored `table_footnote`/`table_attachment` where an entry is an object at a position — 107 such tables in the corpus, zero objectless entries; the seed is now shape-aware. Round two — "P09 footnote worked but the note ref wasn't superscript" — the note rendered and numbered, but the reference sat on the baseline: the corpus covers every mark, body U+000E and note U+FFFC alike, with one shared anonymous character style whose whole bag is `superscript = 1`, and we wrote none. Both marks now carry it, shared like Apple's; the rebuilt rung is unverified.
 
 **How to settle it.** add footnotes at two positions, open in Pages, and confirm they number in document order, render at the page foot, and are set in the document's Footnote style rather than in the body face
 

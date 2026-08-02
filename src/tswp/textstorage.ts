@@ -23,6 +23,7 @@ import type { ObjectStore } from "../tsp/store.ts";
 import {
   ATTR_TABLE_ENTRIES,
   BookmarkField,
+  CharProps,
   DrawableAttachment,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
@@ -40,6 +41,7 @@ import {
   POINT_ANCHORED_OBJECT_TABLES,
   Storage,
   STRING_TABLE_FIELDS,
+  StyleArchive,
   TSWP_TYPE,
 } from "./schema.ts";
 import { makeRef, RANGE_LENGTH, RANGE_LOCATION, refId } from "../tsp/schema.ts";
@@ -1014,6 +1016,15 @@ export class TextStorage {
     const mark = this.store.createObject(ATTACHMENT_TYPE.TEXTUAL, component);
     mark.setMessageBytes(markMessage.toBytes());
     note.insertAttachment(0, mark.identifier);
+    // Both marks — the U+000E in this storage and the U+FFFC in the note —
+    // are covered by one shared anonymous character style whose entire
+    // property bag is `superscript = 1`. Measured on all 16 footnotes in
+    // the corpus's footnote fixture: one style object, no name, no
+    // identifier, a run over exactly the mark character. Without it the
+    // footnote works and its reference sits on the baseline at body size —
+    // which is precisely what the app showed.
+    const markStyle = this.footnoteMarkStyle();
+    note.setCharacterStyleRange(0, 1, markStyle);
     note.object.setObjectReferences([
       ...new Set([
         ...note.object.getObjectReferences(),
@@ -1035,7 +1046,39 @@ export class TextStorage {
     reference.setObjectReferences([noteObject.identifier]);
 
     this.anchorObject(pos, reference.identifier, Storage.TABLE_FOOTNOTE, FOOTNOTE_MARK_CHARACTER);
+    // The U+000E just inserted gets the same superscript run the note's
+    // mark has — after the anchor, so the range covers the real character.
+    this.setCharacterStyleRange(pos, pos + 1, markStyle);
     return note;
+  }
+
+  /**
+   * The one character style every footnote mark shares.
+   *
+   * Anonymous, and its whole property bag is `superscript = 1` — that is
+   * the complete corpus recipe, identical on the body's 8 U+000E marks
+   * and their notes' U+FFFC in the footnote fixture, all pointing at a
+   * single style object. Found by matching that exact shape
+   * so a second footnote reuses the first one's style rather than minting
+   * a twin; created through the stylesheet when the document has none.
+   */
+  private footnoteMarkStyle(): bigint {
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== TSWP_TYPE.CHARACTER_STYLE) continue;
+      let bag: RawMessage | undefined;
+      try {
+        bag = obj.message.getMessage(StyleArchive.CHAR_PROPERTIES);
+      } catch {
+        continue;
+      }
+      if (!bag || bag.fields.length !== 1) continue;
+      if (bag.fields[0]!.no === CharProps.SUPERSCRIPT && bag.getUint(CharProps.SUPERSCRIPT) === 1) {
+        return obj.identifier;
+      }
+    }
+    const sheet = this.sheet();
+    if (!sheet) throw new RangeError("storage has no stylesheet to create the mark style in");
+    return sheet.createCharacterStyle({ character: { superscript: 1 } });
   }
 
   /**

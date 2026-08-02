@@ -135,6 +135,11 @@ because none of them was visible offline:
    position: Pages crashed on open walking the footnote table ("P09 pages
    crashed on open"). 107 such tables in the corpus; zero objectless
    entries.
+11. **Every footnote mark is superscripted by one shared anonymous
+   character style** whose entire property bag is `superscript = 1` — a
+   run over exactly the mark, the body's U+000E and the note's U+FFFC
+   alike. Without it the footnote works and the reference sits on the
+   baseline at body size ("the note ref wasn't superscript").
 
 Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
@@ -142,8 +147,9 @@ suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
 number), P07 (section break — rebuilt with the U+0004 fix after its first
-check failed), P08 (comment), P09 (footnote — rebuilt after its first
-check crashed Pages; the objectless seed entry is gone), P10 (page setup).
+check failed), P08 (comment), P09 (footnote — two defects found by two checks: the
+crash-causing objectless seed entry, then the missing superscript run on
+the marks; both fixed, rung rebuilt), P10 (page setup).
 P07 and P09 are the highest-value opens: each carries a fix for a defect
 its own first check found. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,

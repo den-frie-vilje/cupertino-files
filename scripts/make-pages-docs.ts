@@ -212,6 +212,9 @@ export const RUNGS: {
       doc.appendParagraph(
         "At the foot of the page the note should be small — the document's Footnote style — not body-sized.",
       );
+      doc.appendParagraph(
+        "The mark at the end of the first sentence should be a small raised number, not a full-size character.",
+      );
       const starts = doc.body.paragraphStarts();
       const at = doc.body.text.indexOf("\n", starts[starts.length - 2]!);
       doc.body.addFootnote(at, "This footnote was written by iwork-files.");
