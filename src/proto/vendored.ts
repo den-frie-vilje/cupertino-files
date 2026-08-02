@@ -371,6 +371,13 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "range_begin": 1,
     "range_end": 2,
   },
+  "TSCE.ASTNodeArrayArchive.ASTCrossTableReferenceExtraInfoArchive": {
+    "table_id": 1,
+    "AST_reference_whitespace_after_sheet_name": 2,
+    "AST_reference_whitespace_before_table_name": 3,
+    "AST_reference_whitespace_after_table_name": 4,
+    "AST_reference_whitespace_before_cell_address": 5,
+  },
   "TSCE.ASTNodeArrayArchive.ASTNodeArchive": {
     "AST_node_type": 1,
     "AST_function_node_index": 2,
@@ -797,6 +804,13 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "bool_false_string": 45,
     "prefix": 10000,
     "suffix": 10001,
+  },
+  "TSP.CFUUIDArchive": {
+    "uuid_bytes": 1,
+    "uuid_w0": 2,
+    "uuid_w1": 3,
+    "uuid_w2": 4,
+    "uuid_w3": 5,
   },
   "TSP.Color": {
     "model": 1,

@@ -1171,12 +1171,12 @@ export const CAPABILITIES: Capability[] = [
     status: "experimental",
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
-      "anchored references, ranges, nested calls, omitted arguments, and any of the 271 " +
-      "harvested functions. Every parseable corpus formula rebuilds byte-identical to Apple's " +
-      "AST (219 of 219), and replacing a formula with its own text saves the whole document " +
+      "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 271 harvested " +
+      "functions. Every parseable corpus formula rebuilds byte-identical to Apple's AST " +
+      "(1239 of 1239), and replacing a formula with its own text saves the whole document " +
       "byte-identical to the original. Nothing evaluates — pass the cached result as `value`. " +
-      "Cross-table references and arrays are refused: both need a calc-engine identity " +
-      "registered elsewhere",
+      "Arrays, whole-column tracts and #REF! are refused: no corpus specimen proves them",
     manualProof: {
       claim:
         "Numbers recalculates a formula this library wrote — replaced or fresh — rather than " +

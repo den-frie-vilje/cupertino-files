@@ -37,13 +37,23 @@
  * endpoint has no corpus specimen and falls back to absolute, the
  * encoding that cannot silently shift.
  *
+ * ## Cross-table references need a resolver
+ *
+ * `Other::A1` compiles to a reference node carrying the *target table's
+ * calc-engine identity* — the kind-1 owner UUID, unanimous across every
+ * cross-table node in the corpus — and a table name only means something
+ * inside a document. Pass {@link BuildFormulaOptions.tableUid} (which
+ * `TableModel.setFormula` does for you); without one, compiling a
+ * cross-table reference refuses rather than writing an identity the
+ * engine has never heard of.
+ *
  * ## What is deliberately missing
  *
- * Cross-table references (`Other::A1`), arrays, and the `#REF!` error are
- * not authored. Each needs a calc-engine identity — a table UUID, an owner
- * — that must be registered elsewhere in the document, and a formula
+ * Arrays, the `#REF!` error, whole-column tracts (`SUM(D)`) and
+ * sheet-qualified references are not authored: each is either absent from
+ * the corpus or needs structure no fixture demonstrates, and a formula
  * pointing at an identity the engine does not know is worse than no
- * formula. Reading all three works.
+ * formula. Reading them all works.
  */
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
@@ -58,6 +68,8 @@ export type FormulaExpression =
   | { kind: "boolean"; value: boolean }
   /** A cell, as an offset or an absolute index; `undefined` means "same". */
   | { kind: "ref"; column: Coordinate; row: Coordinate }
+  /** A cell on another table: `Other::A1`. Compiling needs a resolver. */
+  | { kind: "crossRef"; table: string; column: Coordinate; row: Coordinate }
   /**
    * A rectangle, stored as a colon tract. Each axis keeps its `$` flag:
    * `C3:K6` stores *relative* ranges (offsets from the using cell) and
@@ -122,6 +134,17 @@ export function authorableFunctions(): string[] {
 
 /** Coordinate fields: zigzag index, then the absolute flag. */
 const CoordinateFields = { INDEX: 1, ABSOLUTE: 2 } as const;
+const CrossTableInfoFields = protoFields(
+  "TSCE.ASTNodeArrayArchive.ASTCrossTableReferenceExtraInfoArchive",
+  { TABLE_ID: "table_id" },
+);
+/** TSP.CFUUIDArchive's four-uint32 encoding, the one these nodes use. */
+const CfUuidWordFields = protoFields("TSP.CFUUIDArchive", {
+  LOWER_LOW: "uuid_w0",
+  LOWER_HIGH: "uuid_w1",
+  UPPER_LOW: "uuid_w2",
+  UPPER_HIGH: "uuid_w3",
+});
 const ColonTractFields = protoFields("TSCE.ASTNodeArrayArchive.ASTColonTractArchive", {
   RELATIVE_COLUMN: "relative_column",
   RELATIVE_ROW: "relative_row",
@@ -159,6 +182,18 @@ function coordinate(axis: Coordinate): RawMessage {
   return message;
 }
 
+/** Document context a pure expression cannot carry itself. */
+export interface BuildFormulaOptions {
+  /**
+   * Resolve a table name to its calc-engine identity — the kind-1 owner
+   * UUID, which is what every cross-table node in the corpus carries.
+   * `TableModel.setFormula` supplies this from the document's owner
+   * registry; without it, a cross-table reference is refused rather than
+   * compiled against an identity the engine has never heard of.
+   */
+  tableUid?: (name: string) => { lo: bigint; hi: bigint } | undefined;
+}
+
 /**
  * Compile an expression to a `TSCE.ASTNodeArrayArchive`.
  *
@@ -168,9 +203,10 @@ function coordinate(axis: Coordinate): RawMessage {
 export function buildFormula(
   expression: FormulaExpression,
   origin: { row: number; column: number },
+  options: BuildFormulaOptions = {},
 ): RawMessage {
   const nodes = RawMessage.create();
-  emit(expression, origin, (node) => nodes.addMessage(AstNodeArrayFields.NODES, node));
+  emit(expression, origin, (node) => nodes.addMessage(AstNodeArrayFields.NODES, node), options);
   return nodes;
 }
 
@@ -179,6 +215,7 @@ function emit(
   expression: FormulaExpression,
   origin: { row: number; column: number },
   push: (node: RawMessage) => void,
+  options: BuildFormulaOptions,
 ): void {
   const node = RawMessage.create();
   switch (expression.kind) {
@@ -221,6 +258,41 @@ function emit(
       node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
       node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
       break;
+    case "crossRef": {
+      const resolve = options.tableUid;
+      if (!resolve) {
+        throw new RangeError(
+          `cross-table reference ${JSON.stringify(expression.table)}::… needs a document to ` +
+            "resolve the table's calc-engine identity; write it through TableModel.setFormula",
+        );
+      }
+      const uid = resolve(expression.table);
+      if (!uid) {
+        throw new RangeError(
+          `no table named ${JSON.stringify(expression.table)} in this document — a cross-table ` +
+            "reference stores the target's owner UUID, and there is none to store",
+        );
+      }
+      // Same node type and coordinates as a local reference — offsets
+      // unless `$`-pinned — plus the target table's identity. Apple does
+      // NOT use the dedicated CROSS_TABLE_CELL_REFERENCE node type here:
+      // all 1020 cross-table nodes in the corpus are ordinary
+      // CELL_REFERENCE nodes whose extra-info field carries the kind-1
+      // owner UUID as four uint32 words, and the byte proof caught the
+      // difference on the first run.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
+      node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
+      node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
+      const cf = RawMessage.create();
+      cf.setVarint(CfUuidWordFields.LOWER_LOW, uid.lo & 0xffffffffn);
+      cf.setVarint(CfUuidWordFields.LOWER_HIGH, uid.lo >> 32n);
+      cf.setVarint(CfUuidWordFields.UPPER_LOW, uid.hi & 0xffffffffn);
+      cf.setVarint(CfUuidWordFields.UPPER_HIGH, uid.hi >> 32n);
+      const info = RawMessage.create();
+      info.setMessage(CrossTableInfoFields.TABLE_ID, cf);
+      node.setMessage(AstNodeFields.CROSS_TABLE_INFO, info);
+      break;
+    }
     case "range": {
       // A rectangle is a colon tract. Per axis, `$` decides the encoding:
       // an unpinned axis stores a *relative* range — begin/end as signed
@@ -271,12 +343,12 @@ function emit(
       break;
     }
     case "unary":
-      emit(expression.operand, origin, push);
+      emit(expression.operand, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, UNARY_NODE[expression.op]);
       break;
     case "binary":
-      emit(expression.left, origin, push);
-      emit(expression.right, origin, push);
+      emit(expression.left, origin, push, options);
+      emit(expression.right, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, BINARY_NODE[expression.op]);
       break;
     case "call": {
@@ -287,7 +359,7 @@ function emit(
             "run `npm run harvest` against a document that uses it, or see docs/BLOCKERS.md",
         );
       }
-      for (const arg of expression.args) emit(arg, origin, push);
+      for (const arg of expression.args) emit(arg, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, AstNodeType.FUNCTION);
       node.setVarint(AstNodeFields.FUNCTION_INDEX, index);
       node.setVarint(AstNodeFields.FUNCTION_NUM_ARGS, expression.args.length);
@@ -425,6 +497,19 @@ class Parser {
       return inner;
     }
     if (this.text.startsWith('"', this.at)) return this.parseString();
+
+    // A cross-table reference: a table name, `::`, then a cell. The
+    // renderer emits names unquoted — spaces, dots and all — so a name is
+    // recognised only by the `::` that follows it, matched lazily so the
+    // name cannot swallow the address.
+    const cross = /^([A-Za-z_][A-Za-z0-9_ .]*?) *:: *(\$?[A-Za-z]+\$?\d+)/.exec(
+      this.text.slice(this.at),
+    );
+    if (cross) {
+      const target = parseReference(cross[2]!)!;
+      this.at += cross[0].length;
+      return { kind: "crossRef", table: cross[1]!, column: target.column, row: target.row };
+    }
 
     const identifier = /^[A-Za-z_][A-Za-z0-9_.]*/.exec(this.text.slice(this.at));
     if (identifier) {

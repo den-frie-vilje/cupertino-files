@@ -274,6 +274,29 @@ export class FormulaOwnerRegistry {
     return this.lookup(uid)?.tableName;
   }
 
+  /**
+   * The other direction: the identity `Revenue::A2` must *store*.
+   *
+   * Every cross-table node in the corpus — 1020 of 1020 — carries the
+   * target table's kind-1 owner UUID, so that is the only kind consulted.
+   * Two tables sharing a name is refused rather than guessed: Numbers
+   * scopes names per sheet, and a reference that silently picked one
+   * would compute the wrong number somewhere far from the mistake.
+   */
+  tableUid(name: string): OwnerUid | undefined {
+    let found: FormulaOwner | undefined;
+    for (const owner of this.byUid.values()) {
+      if (owner.kind !== OwnerKind.TABLE || owner.tableName !== name) continue;
+      if (found && ownerKey(found.uid) !== ownerKey(owner.uid)) {
+        throw new RangeError(
+          `two tables are named ${JSON.stringify(name)}; a cross-table reference cannot choose between them`,
+        );
+      }
+      found = owner;
+    }
+    return found?.uid;
+  }
+
   /** Every owner, for diagnostics. */
   all(): FormulaOwner[] {
     return [...this.byUid.values()];

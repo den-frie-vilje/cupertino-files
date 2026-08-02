@@ -1199,7 +1199,9 @@ export class TableModel {
     this.requireVisible(row, column, options);
 
     const expression = typeof formula === "string" ? parseFormula(formula) : formula;
-    const ast = buildFormula(expression, { row, column });
+    const ast = buildFormula(expression, { row, column }, {
+      tableUid: (name) => this.owners().tableUid(name),
+    });
 
     // When the cell already carries this exact recipe, keep its entry
     // instead of minting a new key. This is what makes a same-text replace

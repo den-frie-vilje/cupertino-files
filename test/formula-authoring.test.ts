@@ -23,6 +23,7 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { NumbersDocument } from "../src/index.ts";
 import { DataStoreFields, tablesOf, type TableModel } from "../src/tst/tables.ts";
 import { buildFormula, parseFormula } from "../src/tst/formula-builder.ts";
+import { FormulaOwnerRegistry } from "../src/tsce/owners.ts";
 import { bytesEqual } from "../src/base/bytes.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -42,6 +43,8 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
       } catch {
         continue;
       }
+      const registry = new FormulaOwnerRegistry(doc.store);
+      const options = { tableUid: (name: string) => registry.tableUid(name) };
       for (const table of tablesOf(doc.store)) {
         for (const { row, column } of table.formulas()) {
           total++;
@@ -51,9 +54,9 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
           if (!apple) continue;
           let ours: Uint8Array;
           try {
-            ours = buildFormula(parseFormula(detail.text), { row, column }).toBytes();
+            ours = buildFormula(parseFormula(detail.text), { row, column }, options).toBytes();
           } catch {
-            continue; // parser gaps (cross-table, whole-column) are tracked below
+            continue; // parser gaps (whole-column tracts, #REF!) are tracked below
           }
           rebuilt++;
           const theirs = apple.toBytes();
@@ -71,11 +74,12 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
     expect(`mismatches: ${mismatches.join(" | ")}`).toBe("mismatches: ");
     expect(identical).toBe(rebuilt);
     // Floors guard the guard: coverage must not silently shrink. 1244
-    // formulas and 219 rebuilds measured 2026-08-02; the gap is the
-    // parser's (cross-table references and whole-column tracts, tracked
-    // in docs/BLOCKERS.md), and closing it should only raise this floor.
+    // formulas and 1239 rebuilds measured 2026-08-02 (219 before
+    // cross-table references landed); the remaining gap is three
+    // whole-column tracts and two #REF! errors, tracked in
+    // docs/BLOCKERS.md, and closing it should only raise this floor.
     expect(total >= 1244).toBe(true);
-    expect(rebuilt >= 219).toBe(true);
+    expect(rebuilt >= 1239).toBe(true);
   });
 });
 
