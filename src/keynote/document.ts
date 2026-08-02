@@ -671,6 +671,19 @@ export class KeynoteDocument extends IWorkDocument {
     // Cloning the note and drawables and then unlinking them left the
     // copies in the package as orphans — objects no corpus document holds,
     // which the shape audit found on this rung's first offline run.
+    // A placeholder can sit in owned_drawables AND behind its own slide
+    // field. The placeholder fields are kept, so anything they reach must be
+    // cloned — excluding it would leave the copy's field pointing at the
+    // source's placeholder, and typing into one slide would edit both.
+    const kept: bigint[] = [];
+    for (const field of [
+      Slide.TITLE_PLACEHOLDER,
+      Slide.BODY_PLACEHOLDER,
+      Slide.OBJECT_PLACEHOLDER,
+      Slide.SLIDE_NUMBER_PLACEHOLDER,
+    ]) {
+      pushRef(kept, source.object.message, field);
+    }
     const excluded = new Set<bigint>();
     if (!options.withContent) {
       const stripped: bigint[] = [];
@@ -684,22 +697,9 @@ export class KeynoteDocument extends IWorkDocument {
         pushRef(stripped, source.object.message, field);
       }
       for (const id of stripped) excluded.add(id);
-      // A placeholder can sit in owned_drawables AND behind its own slide
-      // field. The placeholder fields are kept, so anything they reach must
-      // be cloned — excluding it would leave the copy's field pointing at
-      // the source's placeholder, and typing into one slide would edit both.
-      const kept: bigint[] = [];
-      for (const field of [
-        Slide.TITLE_PLACEHOLDER,
-        Slide.BODY_PLACEHOLDER,
-        Slide.OBJECT_PLACEHOLDER,
-        Slide.SLIDE_NUMBER_PLACEHOLDER,
-      ]) {
-        pushRef(kept, source.object.message, field);
-      }
       for (const id of kept) excluded.delete(id);
     }
-    const { clone: slide } = deepCloneObject(this.store, source.object, {
+    const { clone: slide, map } = deepCloneObject(this.store, source.object, {
       follow: (object, depth) =>
         // Never follow the master: a copied slide is *based on* the same
         // layout, and cloning it would fork the layout for one slide.
@@ -710,8 +710,26 @@ export class KeynoteDocument extends IWorkDocument {
     });
 
     if (!options.withContent) {
-      slide.message.remove(Slide.OWNED_DRAWABLES);
-      slide.message.remove(Slide.DRAWABLES_Z_ORDER);
+      // The paint order keeps the placeholders and loses everything else.
+      // Whether a placeholder appears in owned_drawables/z-order varies by
+      // deck (8 of 12 in one corpus deck, 0 of 33 in another), so the copy
+      // follows its own source's convention: an entry that pointed at a kept
+      // placeholder survives as its clone, and the rest go. Removing the
+      // lists wholesale unlisted the placeholders on decks that paint from
+      // them — Keynote showed the added slide entirely empty, our written
+      // title and all.
+      const keptClones = new Set(kept.map((id) => map.get(id)).filter((id) => id !== undefined));
+      for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+        const survivors = slide.message
+          .getMessages(field)
+          .map((ref) => ref.getVarint(1))
+          .filter((id): id is bigint => id !== undefined && keptClones.has(id));
+        if (survivors.length > 0) {
+          slide.message.setMessages(field, survivors.map((id) => makeRef(id)));
+        } else {
+          slide.message.remove(field);
+        }
+      }
       slide.message.remove(Slide.BUILDS);
       slide.message.remove(Slide.BUILD_CHUNKS);
       slide.message.remove(Slide.NOTE);

@@ -400,7 +400,15 @@ export class TextStorage {
       const indexes = (this.msg.getMessage(f)?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map(
         (e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
       );
-      paraTerminator.set(f, indexes[indexes.length - 1] === oldText.length);
+      // On empty text the `0 === 0` comparison would misread the table's one
+      // paragraph entry at 0 as a trailing terminator, and the rebuild would
+      // then manufacture an end-of-text entry Apple never wrote. Keynote's
+      // ladder caught it: filling an empty subtitle placeholder produced
+      // `@0→Subtitle @54 @111(end)`, and the app dropped the styling.
+      paraTerminator.set(
+        f,
+        oldText.length > 0 && indexes[indexes.length - 1] === oldText.length,
+      );
     }
 
     // 1. The text itself.

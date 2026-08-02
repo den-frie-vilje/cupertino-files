@@ -158,9 +158,18 @@ describe("slide management", () => {
 
       expect(doc.slideCount()).toBe(before + 1);
       expect(added.index).toBe(1);
-      // Same layout, no inherited content.
+      // Same layout, no inherited content. The paint order is allowed to
+      // list the copy's own placeholders — on decks that paint from it,
+      // unlisting them showed an entirely empty slide in Keynote — but
+      // nothing else may survive.
       expect(added.masterId).toBe(source.masterId);
-      expect(added.drawables().length).toBe(0);
+      const phIds = new Set(
+        [5, 6, 30, 20]
+          .map((f) => added.object.message.getMessage(f)?.getVarint(1))
+          .filter((id) => id !== undefined),
+      );
+      const strangers = added.drawables().filter((d) => !phIds.has(d.object.identifier));
+      expect(strangers.length).toBe(0);
       expect((added.title ?? "").trim()).toBe("");
 
       const reloaded = KeynoteDocument.load(doc.save());
@@ -293,6 +302,56 @@ describe("slide management", () => {
     expect(`placeholders declaring the added slide: ${offenders.join(" ")}`).toBe(
       "placeholders declaring the added slide: ",
     );
+  });
+
+  it("keeps a cloned placeholder in the paint order its source used", () => {
+    // In this deck the source slide lists its placeholders in
+    // owned_drawables and drawables_z_order. The add-without-content path
+    // once removed both lists wholesale, and Keynote — which paints from
+    // them here — showed the added slide entirely empty, written title and
+    // all. The copy must keep the kept placeholders' clones listed, and
+    // nothing else.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const source = doc.slides()[0]!;
+    const sourceListed = new Set(
+      source.object.message.getMessages(7).map((r) => r.getVarint(1)),
+    );
+    expect(sourceListed.size).toBeGreaterThan(0);
+
+    const added = doc.addSlide({ copyOf: 0 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides().find((s) => s.id === added.id)!;
+    const phIds = new Set(
+      [5, 6, 30, 20]
+        .map((f) => slide.object.message.getMessage(f)?.getVarint(1))
+        .filter((id) => id !== undefined),
+    );
+    for (const field of [7, 42]) {
+      const listed = slide.object.message.getMessages(field).map((r) => r.getVarint(1));
+      expect(`field ${field} listed: ${listed.length > 0}`).toBe(`field ${field} listed: true`);
+      const strangers = listed.filter((id) => id === undefined || !phIds.has(id));
+      expect(`field ${field} non-placeholder entries: ${strangers.length}`).toBe(
+        `field ${field} non-placeholder entries: 0`,
+      );
+    }
+  });
+
+  it("fills an empty placeholder without inventing an end-of-text entry", () => {
+    // The base's empty subtitle storage carries one paragraph entry at 0,
+    // and `0 === 0` once misread it as a trailing terminator — so filling
+    // the placeholder produced `@0→Subtitle @54 @111(end)` and Keynote
+    // dropped the subtitle styling for the whole box. The entries must be
+    // exactly the paragraph starts, styled from the first entry onward.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const storage = doc.slides()[0]!.placeholder("body")!;
+    const styleBefore = storage.paragraphs()[0]!.styleId;
+    storage.setText("one\ntwo");
+    const table = storage.object.message.getMessage(5)!;
+    const entries = table.getMessages(1).map((e) => Number(e.getVarint(1) ?? 0n));
+    expect(entries.join(",")).toBe("0,4");
+    for (const p of storage.paragraphs()) {
+      expect(p.styleId).toBe(styleBefore);
+    }
   });
 
   it("round-trips a skipped slide and keeps the node's hasNote hint", () => {

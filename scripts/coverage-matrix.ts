@@ -1430,14 +1430,18 @@ export const CAPABILITIES: Capability[] = [
       claim: "Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order.",
       why:
         "A slide is only as valid as the graph around it — placeholders, builds, the master reference. " +
-        "Our copies reload through this library and keep the package round-trippable, but whether " +
-        "Keynote considers the result a well-formed slide is its call, not ours. The first offline " +
-        "audit of these rungs already found four defects (an undeclared slide node, orphaned clones, " +
-        "undeclared guide storage, placeholders declaring their slide) — what remains is the app's verdict.",
+        "The offline audit removed four defects before any Mac (an undeclared slide node, orphaned " +
+        "clones, undeclared guide storage, placeholders declaring their slide). The app then found a " +
+        "fifth the audit could not see: \"K04 added an empty slide\" — the add-without-content path " +
+        "stripped owned_drawables and drawables_z_order wholesale, and on decks that list their " +
+        "placeholders there (8 of 12 on the ladder base; 0 of 33 on another — which is why no " +
+        "ubiquity threshold fired), Keynote painted nothing, our written title included. The copy now " +
+        "keeps its cloned placeholders in whichever lists its source used.",
       how:
         "`npm run keynote:docs -- <dir>` and open the K04 (add), K05 (duplicate), K06 (remove) and " +
-        "K07 (reorder) files — each slide states on its face what the deck should look like. A refusal " +
-        "or a wrong navigator order names the rung; K00 failing instead means the container layer.",
+        "K07 (reorder) files — each slide states on its face what the deck should look like. K04's " +
+        "last slide must now SHOW its stated title (an empty slide is the old defect); a refusal or " +
+        "wrong navigator order names its rung.",
       risk: "high",
     },
   },
@@ -1464,6 +1468,11 @@ export const CAPABILITIES: Capability[] = [
         "title states the exact text the notes pane should show. Notes missing or stale means the note " +
         "storage write does not take; the title changing but notes not narrows it to the KN.NoteArchive chain.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote — \"K00 - 03 passed\"** on the first decks this library ever put in " +
+        "front of the app (current 26.1.0 base; K03 is the presenter-notes rung). The container " +
+        "layer, title and body placeholder writes, and the KN.NoteArchive chain all held on first " +
+        "contact — after the offline shape audit had already removed four defects no app ever saw.",
     },
   },
   {
@@ -1513,11 +1522,18 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "Keynote shows placeholder text this library wrote, styled by the layout.",
       why:
-        "Placeholder text goes through the shared storage writer into a shape the layout styles. Pages " +
-        "confirmed the writer; whether Keynote accepts it inside a KN.PlaceholderArchive is untested.",
+        "Placeholder text goes through the shared storage writer into a shape the layout styles. " +
+        "First round: the text half passed — \"K00 - 03 passed\", K01's title and K02's body both " +
+        "rendered — but K02's subtitle styling did not: \"the textareas default style of subtitle " +
+        "was replaced by normal\". Measured cause: the base's empty storage carries one paragraph " +
+        "entry at 0, the rebuild misread it (`0 === 0`) as a trailing terminator, and the refilled " +
+        "table gained an end-of-text entry Apple never writes — the app dropped the style run. " +
+        "Fixed; the paragraph entries are now exactly the paragraph starts.",
       how:
-        "`npm run keynote:docs -- <dir>`, open K01 (title) and K02 (body): each slide's text states " +
-        "what it should read. Text missing, unstyled, or on the wrong slide names the placeholder path.",
+        "`npm run keynote:docs -- <dir>`, open the K02 file: the body text should render in the " +
+        "layout's subtitle style — same size and weight the placeholder's ghost text had — not as " +
+        "plain body text. Still-normal text means the terminator was not the (whole) cause, and the " +
+        "next suspect is a character-level convention the app writes on placeholder text.",
       risk: "medium",
     },
   },
