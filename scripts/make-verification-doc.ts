@@ -122,7 +122,7 @@ function main(argv: string[]): number {
     row += 2; // a blank row between cases, so a failure is easy to point at
   }
 
-  const path = `${outDir.replace(/\/$/, "")}/iwork-files-verification.numbers`;
+  const path = `${outDir.replace(/\/$/, "")}/cupertino-files-verification.numbers`;
   writeFileSync(path, doc.save());
   console.log(`wrote ${path}`);
   console.log("");

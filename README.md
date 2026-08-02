@@ -1,4 +1,4 @@
-# iwork-files
+# cupertino-files
 
 **Read, inspect, and edit Apple iWork documents — Pages, Numbers, Keynote —
 in pure TypeScript. Zero runtime dependencies, no Apple software required.**
@@ -11,7 +11,7 @@ do this anywhere Node ≥ 18 or a modern browser runs:
 
 ```ts
 import { readFileSync, writeFileSync } from "node:fs";
-import { PagesDocument } from "iwork-files";
+import { PagesDocument } from "cupertino-files";
 
 const doc = PagesDocument.load(new Uint8Array(readFileSync("report.pages")));
 
@@ -50,7 +50,7 @@ and a **full reverse-engineering of the format**:
 ## Install
 
 ```sh
-npm install iwork-files
+npm install cupertino-files
 ```
 
 No runtime dependencies. No native modules. No shelling out. ESM, typed.
@@ -115,7 +115,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 | Creating Keynote builds or cell controls | roadmap — withheld until a real one confirms the read model |
 | Byte-identical round-trip of untouched content | ✅ |
 | Version-aware loading (never hard-fails on newer files) | ✅ |
-| Object-graph inspection (`iwork-dump` CLI, RawMessage layer) | ✅ |
+| Object-graph inspection (`cupertino-dump` CLI, RawMessage layer) | ✅ |
 | Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
 | iWork '09 XML documents | detected, rejected |
 | Password-protected documents | detected, rejected |
@@ -126,7 +126,7 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 ### Documents
 
 ```ts
-import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "iwork-files";
+import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
 
 PagesDocument.load(bytes);    // typed loaders …
 NumbersDocument.load(bytes);
@@ -187,7 +187,7 @@ Fills, gradients, strokes and shadows are one shared vocabulary — the same
 values style text, table cells and shapes:
 
 ```ts
-import { colorFill, linearGradient, solidStroke, hexColor } from "iwork-files";
+import { colorFill, linearGradient, solidStroke, hexColor } from "cupertino-files";
 
 colorFill(1, 0.9, 0.2);                                    // flat colour
 linearGradient(hexColor("#fff"), hexColor("#0066ff"));     // two-stop gradient
@@ -357,7 +357,7 @@ Pre-BNC (iWork '13-era) storage is refused rather than corrupted.
 ### Low level
 
 ```ts
-import { IWorkContainer, parseIwaFile, RawMessage, typeName } from "iwork-files";
+import { IWorkContainer, parseIwaFile, RawMessage, typeName } from "cupertino-files";
 
 const container = IWorkContainer.fromBytes(bytes);   // zip layouts, encryption check
 const objects = parseIwaFile(container.iwaFiles.get("Index/Document.iwa")!);
@@ -374,13 +374,13 @@ future files safe.
 ### CLI
 
 ```sh
-npx iwork-dump info     file.pages     # versions, components, object counts
-npx iwork-dump ls       file.pages     # every object with type names + references
-npx iwork-dump text     file.pages     # extract text
-npx iwork-dump styles   file.pages     # named styles
-npx iwork-dump sections file.pages     # sections, headers, footers
-npx iwork-dump object   file.pages 42  # pretty-print one object's protobuf
-npx iwork-dump extract  file.pages out/  # decompressed .iwa streams
+npx cupertino-dump info     file.pages     # versions, components, object counts
+npx cupertino-dump ls       file.pages     # every object with type names + references
+npx cupertino-dump text     file.pages     # extract text
+npx cupertino-dump styles   file.pages     # named styles
+npx cupertino-dump sections file.pages     # sections, headers, footers
+npx cupertino-dump object   file.pages 42  # pretty-print one object's protobuf
+npx cupertino-dump extract  file.pages out/  # decompressed .iwa streams
 ```
 
 ## API design
@@ -442,8 +442,8 @@ are packaged separately:
 
 ## Claude skill
 
-The package ships a [Claude skill](skills/iwork-files/SKILL.md)
-(`skills/iwork-files/SKILL.md`) that teaches AI agents the API and its
+The package ships a [Claude skill](skills/cupertino-files/SKILL.md)
+(`skills/cupertino-files/SKILL.md`) that teaches AI agents the API and its
 guardrails. Point a Claude Code session at an installed copy (or this repo)
 and ask it to work with `.pages` files.
 

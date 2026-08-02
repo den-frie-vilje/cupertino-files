@@ -3,7 +3,7 @@
 Verbatim message definitions for hand-coding a TypeScript reader/writer for
 Apple Pages `.pages` files (IWA format). Nothing below is paraphrased: every
 fenced block is copied exactly from the source `.proto` files vendored in
-`/home/user/iwork-files/proto/`.
+`/home/user/cupertino-files/proto/`.
 
 Sources:
 

@@ -120,7 +120,7 @@ export const RUNGS: {
     name: "P01-one-paragraph",
     note: "a single appended paragraph",
     build: (doc) => {
-      doc.appendParagraph("P01: this paragraph was appended by iwork-files.");
+      doc.appendParagraph("P01: this paragraph was appended by cupertino-files.");
     },
   },
   {
@@ -203,7 +203,7 @@ export const RUNGS: {
     build: (doc) => {
       doc.appendParagraph("P08: the words COMMENT HERE should carry a comment.");
       const at = doc.body.text.lastIndexOf("COMMENT HERE");
-      doc.body.addComment(at, at + "COMMENT HERE".length, "This comment was written by iwork-files.");
+      doc.body.addComment(at, at + "COMMENT HERE".length, "This comment was written by cupertino-files.");
     },
   },
   {
@@ -219,7 +219,7 @@ export const RUNGS: {
       );
       const starts = doc.body.paragraphStarts();
       const at = doc.body.text.indexOf("\n", starts[starts.length - 2]);
-      doc.body.addFootnote(at, "This footnote was written by iwork-files.");
+      doc.body.addFootnote(at, "This footnote was written by cupertino-files.");
     },
   },
   {

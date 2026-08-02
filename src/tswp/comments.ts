@@ -145,7 +145,7 @@ export function resolveAuthor(
   // placeholder — the bubble exists, the text never displays. The ladder
   // base was exactly this case: a roster wired to the document root with
   // zero authors in it.
-  return existing[0] ?? createAuthor(store, component, "iwork-files");
+  return existing[0] ?? createAuthor(store, component, "cupertino-files");
 }
 
 /** Create an author and add them to the document's roster. */

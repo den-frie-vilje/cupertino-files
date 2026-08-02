@@ -985,7 +985,7 @@ describe("a comment always names an author", () => {
       if (obj.type !== COMMENT) continue;
       const author = saved.store.resolve(obj.message.getMessage(3)?.getVarint(1));
       expect(`author resolves: ${author !== undefined}`).toBe("author resolves: true");
-      expect(author!.message.getString(1)).toBe("iwork-files");
+      expect(author!.message.getString(1)).toBe("cupertino-files");
       expect(obj.getObjectReferences().includes(author!.identifier)).toBe(true);
       // And the roster the base already carries now lists them.
       for (const { obj: roster } of saved.store.allObjects()) {

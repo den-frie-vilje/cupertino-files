@@ -156,7 +156,7 @@ Source: The Document Foundation Bugzilla
 [bug 166298](https://bugs.documentfoundation.org/show_bug.cgi?id=166298),
 attachment 200502 (`Test LibreOffice.pages.zip`, 114,997 bytes, uploaded 2025-04-24). The
 reporter's finding: LibreOffice opens their Pages documents fine *until* they switch on Pages'
-**Collaboration / share** mode, after which import fails. `iwork-files` fails on it too.
+**Collaboration / share** mode, after which import fails. `cupertino-files` fails on it too.
 
 What the package actually is:
 

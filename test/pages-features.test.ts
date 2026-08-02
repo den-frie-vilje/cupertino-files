@@ -129,13 +129,13 @@ describe("Pages features on real documents", () => {
     expect(doc.sections()[0]!.headerText()).toContain("nDPI");
 
     // An append must not disturb the change-tracking tables.
-    doc.appendParagraph("Appended by iwork-files.");
+    doc.appendParagraph("Appended by cupertino-files.");
     const reloaded = PagesDocument.load(doc.save());
     const reloadedBody = reloaded.body.object.message;
     expect(reloadedBody.getMessage(21)!.getMessages(1).length).toBe(insertionsBefore);
     // The document ends with a paragraph terminator, and appendParagraph
     // preserves that convention rather than dropping the trailing newline.
-    expect(reloaded.paragraphs().at(-1)!.text).toBe("Appended by iwork-files.");
+    expect(reloaded.paragraphs().at(-1)!.text).toBe("Appended by cupertino-files.");
   });
 
   it("handles page-layout documents", () => {

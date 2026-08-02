@@ -1,5 +1,5 @@
 /**
- * iwork-files — read, inspect and edit Apple iWork documents (Pages, Numbers,
+ * cupertino-files — read, inspect and edit Apple iWork documents (Pages, Numbers,
  * Keynote) in pure TypeScript with zero runtime dependencies.
  *
  * Layering (each importable on its own):

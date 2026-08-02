@@ -162,7 +162,7 @@ export class E2ESession {
   }
 
   static create(): E2ESession {
-    return new E2ESession(mkdtempSync(join(tmpdir(), "iwork-files-e2e-")));
+    return new E2ESession(mkdtempSync(join(tmpdir(), "cupertino-files-e2e-")));
   }
 
   /** Record the app's run state so {@link cleanup} can restore it. */

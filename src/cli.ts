@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * iwork-dump — inspect modern iWork files from the command line.
+ * cupertino-dump — inspect modern iWork files from the command line.
  *
- *   iwork-dump info <file>              format versions, app, components
- *   iwork-dump compat <file>            version era + compatibility report
- *   iwork-dump ls <file>                objects per component with type names
- *   iwork-dump text <file>              extract all text
- *   iwork-dump styles <file>            named styles (Pages)
- *   iwork-dump sections <file>          sections + headers/footers (Pages)
- *   iwork-dump object <file> <id>       pretty-print one object's protobuf
- *   iwork-dump extract <file> <outdir>  write decompressed .iwa streams
+ *   cupertino-dump info <file>              format versions, app, components
+ *   cupertino-dump compat <file>            version era + compatibility report
+ *   cupertino-dump ls <file>                objects per component with type names
+ *   cupertino-dump text <file>              extract all text
+ *   cupertino-dump styles <file>            named styles (Pages)
+ *   cupertino-dump sections <file>          sections + headers/footers (Pages)
+ *   cupertino-dump object <file> <id>       pretty-print one object's protobuf
+ *   cupertino-dump extract <file> <outdir>  write decompressed .iwa streams
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -23,7 +23,7 @@ import { utf8Decode } from "./base/bytes.ts";
 
 function usage(): never {
   console.error(
-    "usage: iwork-dump <info|compat|ls|text|styles|sections|object|extract> <file.pages|.numbers|.key> [args]",
+    "usage: cupertino-dump <info|compat|ls|text|styles|sections|object|extract> <file.pages|.numbers|.key> [args]",
   );
   process.exit(2);
 }

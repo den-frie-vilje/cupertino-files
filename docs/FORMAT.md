@@ -3,7 +3,7 @@
 This document specifies the file format used by Apple Pages, Numbers and
 Keynote since 2013 ("iWork '13" through the current 2025/26 releases), at the
 level of detail needed to **read and write** documents that the apps accept.
-It is the specification behind the `iwork-files` TypeScript implementation in
+It is the specification behind the `cupertino-files` TypeScript implementation in
 this repository.
 
 Sources: black-box analysis of real files (see `fixtures/`), the proto-dump

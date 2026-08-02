@@ -59,7 +59,7 @@ describe("e2e: Pages", () => {
     () => {
       session!.remember("Pages");
       const path = session!.path("our-edit.pages");
-      const marker = `iwork-files e2e ${Date.now()}`;
+      const marker = `cupertino-files e2e ${Date.now()}`;
 
       // 1. Edit with the library and write the package ourselves.
       const doc = PagesDocument.load(readFileSync(session!.stageFixture(PAGES_FIXTURE)));

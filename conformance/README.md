@@ -2,14 +2,14 @@
 
 Language-neutral expectations for implementing iWork (Pages, Numbers,
 Keynote) import and export — generated from real Apple-written documents by
-[iwork-files](../README.md), for consumption by *any* implementation:
+[cupertino-files](../README.md), for consumption by *any* implementation:
 a C++ filter (libetonyek / Document Liberation), a Java extractor (Tika),
 a Rust port, or this library itself.
 
 Everything here is machine-generated and CI-checked against the fixtures
 (`npm run conformance` / `--check`), so it cannot drift from the reference
 implementation without a test failing. The honest contract that implies:
-these files encode **what iwork-files reads**, verified against Apple's
+these files encode **what cupertino-files reads**, verified against Apple's
 applications wherever `docs/VERIFICATION.md` says so — not a specification
 blessed by Apple.
 

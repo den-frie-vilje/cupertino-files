@@ -1,8 +1,8 @@
 ---
-name: iwork-files
+name: cupertino-files
 description: >-
   Read, inspect, and edit Apple iWork documents (.pages, .numbers, .key —
-  modern IWA format, 2013+) using the zero-dependency `iwork-files`
+  modern IWA format, 2013+) using the zero-dependency `cupertino-files`
   TypeScript library. Use when a task involves extracting text from, editing
   text/styles/sections/margins in, or inspecting the internals of Apple
   Pages, Numbers, or Keynote files without Apple software. Do NOT use for
@@ -12,12 +12,12 @@ description: >-
 
 # Working with Apple iWork files
 
-The `iwork-files` package manipulates iWork documents entirely in
+The `cupertino-files` package manipulates iWork documents entirely in
 TypeScript/JavaScript — no Apple apps, no external binaries, no native
 modules. It works in Node ≥ 18 and browsers (bytes in → bytes out).
 
 ```ts
-import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "iwork-files";
+import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
 ```
 
 ## Loading and saving
@@ -184,7 +184,7 @@ Fills, gradients, strokes and shadows are one vocabulary used by text,
 table cells and shapes alike:
 
 ```ts
-import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "iwork-files";
+import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "cupertino-files";
 
 colorFill(1, 0.9, 0.2);                                 // flat colour
 linearGradient(hexColor("#fff"), hexColor("#0066ff"));  // two-stop gradient
@@ -664,7 +664,7 @@ for (const storage of doc.textStorages()) {
 ## Low-level inspection (reverse-engineering tasks)
 
 ```ts
-import { IWorkContainer, parseIwaFile, RawMessage, typeName } from "iwork-files";
+import { IWorkContainer, parseIwaFile, RawMessage, typeName } from "cupertino-files";
 
 const container = IWorkContainer.fromBytes(bytes);      // .iwaFiles: Map<name, bytes>
 const objects = parseIwaFile(container.iwaFiles.get("Index/Document.iwa")!);
@@ -675,8 +675,8 @@ for (const obj of objects) {
 }
 ```
 
-CLI equivalents (after `npm i -g iwork-files` or via npx):
-`iwork-dump info|ls|text|styles|sections|object|extract <file>`.
+CLI equivalents (after `npm i -g cupertino-files` or via npx):
+`cupertino-dump info|ls|text|styles|sections|object|extract <file>`.
 
 ## Rules of thumb
 

@@ -55,18 +55,22 @@ notice in THIRD-PARTY-NOTICES.md; the fallback, should it ever be
 needed, is regenerating schema text from this project's own measured
 tables and shipping only that — the SheetJS/libetonyek pattern.
 
-**2. The name.** `iwork-files` uses a (now retired — Creator Studio
-replaced the iWork brand in 2026) Apple mark descriptively, inside a
-twelve-year peer convention (`iWorkFileFormat` 2013, `keynote-parser`
-2019, `numbers-parser` 2021) that has never drawn enforcement. Apple has
-C&D'd open-source *names* before (iPodder → Juice, 2005), and npm's
-dispute policy sides with trademark holders (kik, 2016), so the realistic
-worst case is a compelled rename — cheapest to absorb now, at v0.1.0.
-Names leading with Apple's house mark or the live Creator Studio brand
-would be strictly worse under the nominative-use factors (*New Kids*,
-*Toyota v. Tabari*) and Apple's own trademark guidelines; the only
-zero-surface option is a coined name (the libetonyek pattern).
-**Decision:** recorded in the repo history alongside this memo.
+**2. The name — resolved by renaming.** The project began as
+`iwork-files`, which used a (now retired — Creator Studio replaced the
+iWork brand in 2026) Apple mark descriptively, inside a twelve-year peer
+convention (`iWorkFileFormat` 2013, `keynote-parser` 2019,
+`numbers-parser` 2021) that never drew enforcement. That was defensible;
+but Apple has C&D'd open-source *names* before (iPodder → Juice, 2005),
+npm's dispute policy sides with trademark holders (kik, 2016), and
+pre-publication was the one moment a rename cost nothing.
+**Decision (August 2026, before any release or merge to main):** renamed
+to **`cupertino-files`** — a city name, not an Apple mark, with a strong
+precedent in Flutter's `cupertino` package (Apple-design widgets shipped
+by Google, unchallenged for years). Apple's marks (iWork, Pages, Numbers,
+Keynote, Creator Studio) remain only in prose and metadata describing
+what the library interoperates with — the squarely protected nominative
+use (*New Kids*, *Toyota v. Tabari*). Names leading with Apple's house
+mark or the live Creator Studio brand were rejected as strictly worse.
 
 ## Apple's observed enforcement line
 

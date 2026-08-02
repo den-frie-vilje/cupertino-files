@@ -53,7 +53,7 @@ function main(): number {
 Measured documentation of Apple's iWork file format (Pages, Numbers,
 Keynote — the 2013+ IWA/protobuf era), packaged for implementers in any
 language. Generated and CI-checked by
-https://github.com/olekristensen/iwork-files — see that repository for
+https://github.com/olekristensen/cupertino-files — see that repository for
 the reference implementation, the verification methodology, and issues.
 
 - \`proto/\` — protobuf schema dumps per app version, with provenance

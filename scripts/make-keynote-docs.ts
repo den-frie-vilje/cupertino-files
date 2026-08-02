@@ -85,7 +85,7 @@ export const RUNGS: {
     name: "K01-title",
     note: "one slide title rewritten through the title placeholder",
     build: (doc) => {
-      doc.slides()[0]!.title = "K01: this title was written by iwork-files.";
+      doc.slides()[0]!.title = "K01: this title was written by cupertino-files.";
     },
   },
   {
@@ -93,7 +93,7 @@ export const RUNGS: {
     note: "one slide body rewritten through the body placeholder",
     build: (doc) => {
       const slide = doc.slides()[0]!;
-      slide.title = "K02: the body below was written by iwork-files.";
+      slide.title = "K02: the body below was written by cupertino-files.";
       slide.body =
         "This body text replaced the slide's original content.\n" +
         "It should read as normal body text on the slide's layout.";
@@ -113,7 +113,7 @@ export const RUNGS: {
     note: "a new slide appended (fresh placeholders on the same layout)",
     build: (doc) => {
       const added = doc.addSlide({ copyOf: 0, after: doc.slideCount() - 1 });
-      added.title = `K04: this LAST slide was added by iwork-files — the deck should have ${doc.slideCount()} slides.`;
+      added.title = `K04: this LAST slide was added by cupertino-files — the deck should have ${doc.slideCount()} slides.`;
     },
   },
   {

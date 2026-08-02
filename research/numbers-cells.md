@@ -6,7 +6,7 @@ files (Numbers 10.x-14.x/26.x, "BNC" v5 cell storage). Sources for all citations
 - `numbers-parser` @ commit `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` (2026-07-30),
   cloned at `scratchpad/numbers-parser`; paths cited as `src/numbers_parser/...` or
   `src/protos/...` relative to that clone.
-- `/home/user/iwork-files/proto/current/TSTArchives.proto` (cited as `TSTArchives.proto:line`),
+- `/home/user/cupertino-files/proto/current/TSTArchives.proto` (cited as `TSTArchives.proto:line`),
   plus `TSDArchives.proto`, `TSCEArchives.proto`, `TSWPArchives.proto` from the same directory.
 
 Prerequisite (assumed available): an ObjectStore mapping `objectId -> decoded archive`,
