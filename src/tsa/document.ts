@@ -123,6 +123,9 @@ export class IWorkDocument {
     const store = new ObjectStore(container, {
       app,
       referenceExtractors: SHARED_REFERENCE_EXTRACTORS,
+      // Same rule the app subclasses inject via loadStore — open() must not
+      // scan references differently from PagesDocument.load and friends.
+      containerParentOf: drawableParent,
     });
     return new IWorkDocument(container, store);
   }

@@ -30,7 +30,13 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import {
+  IWorkDocument,
+  KeynoteDocument,
+  NumbersDocument,
+  PagesDocument,
+  deepCloneObject,
+} from "../src/index.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { drawableParent } from "../src/tsd/schema.ts";
 
@@ -222,5 +228,46 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     );
     // Guards the guard: an empty map would pass trivially.
     expect(tally.size).toBe(EXPECTED.size);
+  });
+
+  it("holds through IWorkDocument.open, not only the app loaders", () => {
+    // `open()` builds its ObjectStore at a different call site from the
+    // subclasses' `loadStore`, and for a while that site simply omitted the
+    // `containerParentOf` injection. Nothing failed: the rule only acts when
+    // a *clone* of a parented drawable is re-declared at save time, and no
+    // test exercised that path through `open()`. This one does, so the two
+    // construction sites cannot drift again.
+    //
+    // The clone must be of a type with no extractor (mask, group, shape,
+    // shape-info) — an extractor never emits the parent in the first place,
+    // so cloning an image would pass even with the injection missing.
+    const EXTRACTORLESS_PARENTED = new Set([2011, 3004, 3006, 3007, 3008]);
+    let exercised = 0;
+    for (const name of readdirSync(FIXTURES)) {
+      if (!/\.(pages|numbers|key)$/.test(name)) continue;
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      const source = [...doc.store.allObjects()].find(
+        ({ obj }) =>
+          EXTRACTORLESS_PARENTED.has(obj.type) &&
+          drawableParent(obj.type, obj.message) !== undefined,
+      );
+      if (!source) continue;
+      const { clone } = deepCloneObject(doc.store, source.obj, { follow: () => false });
+      doc.save();
+      const parent = drawableParent(clone.type, clone.message)!;
+      const refs = clone.getObjectReferences();
+      // Guards the guard: a clone whose scan produced nothing at all would
+      // "exclude" its parent trivially.
+      expect(refs.length > 0).toBe(true);
+      expect(refs.includes(parent)).toBe(false);
+      exercised++;
+      if (exercised >= 3) break;
+    }
+    expect(exercised > 0).toBe(true);
   });
 });
