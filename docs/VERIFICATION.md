@@ -292,9 +292,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** a section break this library inserts starts a new section on a new page
 
-**Why the suite cannot settle it.** An inserted section is a clone of the one enclosing it, and the clone's `name` was being explicitly removed — all 47 sections in these fixtures carry one, the page master's. What an unnamed section does in the sections list is not something any offline check can say.
+**Why the suite cannot settle it.** The first in-app check failed — "P07 fails, not on a new page" — and measuring the corpus explained it: all 28 section boundaries across the five multi-section fixtures put U+0004 where the previous paragraph's newline was, and we wrote only the `table_section` entry. Pages listed the section and kept the text flowing: the table names a section, the character breaks the page. `insertSectionBreak` now swaps the terminator (same length, so every attribute-table index survives), and the clone's `name` is kept rather than stripped — but the rebuilt rung has not been reopened.
 
-**How to settle it.** `npm run pages:docs` emits P07-section-break: two paragraphs with a break between them. The second paragraph on its own page is a pass; check the section is named in the page-thumbnail sidebar rather than blank.
+**How to settle it.** `npm run pages:docs` emits P07-section-break: two paragraphs with a break between them. The second paragraph on its own page is a pass; check the section is named in the page-thumbnail sidebar rather than blank. Flowing on the same page again means the U+0004 swap is still not what paginates.
 
 ### 21. Comment creation and removal
 

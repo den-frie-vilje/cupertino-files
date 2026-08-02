@@ -694,3 +694,65 @@ describe("a bookmark's ranged flag matches its run", () => {
     expect(saved.store.object(phrase)!.type).toBe(BOOKMARK_TYPE);
   });
 });
+
+describe("a section break is a character as well as a table entry", () => {
+  // P07 opened fine and did not paginate: the sidebar knew the new section,
+  // the text kept flowing on the same page. The table entry names a section;
+  // the U+0004 terminator is what breaks the page, and insertSectionBreak
+  // wrote only the former.
+  const TABLE_SECTION = 17;
+
+  it("matches the corpus: every boundary's previous character is U+0004", () => {
+    // 28 boundaries across five multi-section fixtures, no exception — and
+    // U+0004 replaces the newline (the character before it is ordinary
+    // text), so swapping the terminator is the whole edit.
+    let boundaries = 0;
+    const wrong: string[] = [];
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      const table = doc.store.resolve(doc.body.id)?.message.getMessage(TABLE_SECTION);
+      for (const entry of table?.getMessages(1) ?? []) {
+        const at = entry.getUint(1) ?? 0;
+        if (at === 0) continue;
+        boundaries++;
+        const prev = doc.body.text.charCodeAt(at - 1);
+        if (prev !== 0x04) wrong.push(`${name}@${at}=U+${prev.toString(16)}`);
+      }
+    }
+    expect(boundaries >= 28).toBe(true);
+    expect(`boundaries not after U+0004: ${wrong.join(" ")}`).toBe("boundaries not after U+0004: ");
+  });
+
+  it("rewrites the previous terminator when inserting a break", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("section one ends here");
+    const second = doc.appendParagraph("section two starts here");
+    doc.insertSectionBreak(second);
+
+    const saved = PagesDocument.load(doc.save());
+    const table = saved.store.resolve(saved.body.id)!.message.getMessage(TABLE_SECTION)!;
+    const boundary = table
+      .getMessages(1)
+      .map((e) => e.getUint(1) ?? 0)
+      .find((at) => at > 0)!;
+    expect(`prev=U+${saved.body.text.charCodeAt(boundary - 1).toString(16).padStart(4, "0")}`).toBe(
+      "prev=U+0004",
+    );
+    expect(saved.sections().length).toBe(2);
+    // The swap must not cost any paragraph its style entry — the same
+    // dense-table rule every other text edit is held to.
+    const para = new Set(
+      (saved.store.resolve(saved.body.id)!.message.getMessage(5)?.getMessages(1) ?? []).map(
+        (e) => e.getUint(1) ?? 0,
+      ),
+    );
+    const uncovered = saved.body.paragraphStarts().filter((s) => !para.has(s));
+    expect(`uncovered: ${uncovered.join(",")}`).toBe("uncovered: ");
+  });
+});

@@ -713,6 +713,17 @@ export class PagesDocument extends IWorkDocument {
     const at = starts[paragraphIndex];
     if (at === undefined) throw new RangeError(`paragraph ${paragraphIndex} out of range`);
     if (at === 0) throw new RangeError("cannot insert a section break before the first paragraph");
+    // A section boundary is a *character* as well as a table entry: in all
+    // 28 boundaries across the five multi-section fixtures, the previous
+    // paragraph's terminator is U+0004 — replacing its U+000A, not
+    // following it — and `section_start_kind` is always 0. The table entry
+    // alone produced a document Pages opened and did not paginate: the
+    // sidebar knew the section, the layout kept flowing on the same page,
+    // because pagination reads the text. Same length either way, so every
+    // attribute-table index survives the swap.
+    if (body.text.charCodeAt(at - 1) !== 0x04) {
+      body.replaceRange(at - 1, at, "\u0004");
+    }
     const sections = this.sections();
     const enclosing =
       sections.filter((s) => s.start <= at).at(-1) ?? sections[sections.length - 1];

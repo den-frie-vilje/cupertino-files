@@ -88,8 +88,10 @@ first.
 **Confirmed:** P00-P03 (load/save, append, character formatting, applying a
 named style), P12 (bulleted list), P13 (in-place replacement), P14 (range
 deletion), P15 (creating a paragraph style that lists in the panel), P16
-(date field), P17 (page count), P18 (bookmark — with a range bug found and
-fixed, below), and P19a/b (drawable copies, same page and new page). All on
+(date field), P17 (page count), P18 (bookmark — with a range bug found,
+fixed, and the fix confirmed), and P19a/b (drawable copies, same page and
+new page). P07 failed its first check — section listed, page not broken —
+which found defect 9 below; the rebuilt rung is unverified. All on
 the current format, each opening with the document's own formatting intact.
 
 Getting there took eight defects, and the shape of each is worth knowing
@@ -118,17 +120,22 @@ because none of them was visible offline:
    character; the corpus ties the flag to run length exactly.
 8. **A new storage needs the six attribute tables all 2676 corpus storages
    carry** — found by `npm run shape:audit` together with an image's
-   missing style/sizes/offsets and a section's stripped name; those three
-   fixes are in the still-unchecked rungs below.
+   missing style/sizes/offsets and a section's stripped name; those fixes
+   are in the still-unchecked rungs below.
+9. **A section break is a character, not just a table entry.** All 28
+   corpus boundaries put U+0004 where the previous paragraph's newline
+   was; ours wrote only the `table_section` entry, and Pages knew the
+   section without paginating it ("P07 fails, not on a new page").
 
 Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
-number), P07 (section break), P08 (comment), P09 (footnote), P10 (page
-setup), P11 (inline image). P07, P09 and P11 carry fresh shape-audit fixes
-and are the highest-value opens. Nothing about them is known to be wrong;
+number), P07 (section break — rebuilt with the U+0004 fix after its first
+check failed), P08 (comment), P09 (footnote), P10 (page setup), P11
+(inline image). P07, P09 and P11 carry fresh fixes and are the
+highest-value opens. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 

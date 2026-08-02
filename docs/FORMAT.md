@@ -1565,6 +1565,14 @@ Counting that across the Pages fixtures gives the terminator set:
 | `U+000C` | 1 | page break |
 | `U+2028` | **0** (205 present) | soft line break — *not* a terminator |
 
+The section breaks run the other way too: **writing** a section needs the
+character, not just the bookkeeping. All 28 boundaries in the corpus's
+multi-section documents place U+0004 where the previous paragraph's newline
+was (replacing it — the character before is ordinary text). A
+`table_section` entry without it produces a document Pages opens, lists the
+new section in the sidebar, and does not paginate: the table names a
+section, the character breaks the page.
+
 `U+2028` is the one that stops this being "any control character". It is
 what a shift-return inserts, it appears throughout the corpus, and it never
 starts a paragraph.
