@@ -628,8 +628,13 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /** Make a body range a hyperlink. */
-  insertLink(start: number, end: number, url: string): bigint {
-    return this.body.insertLink(start, end, url);
+  insertLink(
+    start: number,
+    end: number,
+    url: string,
+    options: { characterStyle?: bigint | string | false } = {},
+  ): bigint {
+    return this.body.insertLink(start, end, url, options);
   }
 
   /** Footnotes/endnotes anchored in the body (edit via `.storage`). */

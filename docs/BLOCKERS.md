@@ -140,6 +140,13 @@ because none of them was visible offline:
    run over exactly the mark, the body's U+000E and the note's U+FFFC
    alike. Without it the footnote works and the reference sits on the
    baseline at body size ("the note ref wasn't superscript").
+12. **Every native hyperlink run is covered by the document's Link
+   character style** — identifier `character-style-hyperlink`, name
+   "Link", bag exactly `{underline: 1}`, shipped by every corpus
+   template. The field makes the link live; the style makes it look
+   live; `insertLink` wrote only the field. The same measurement says
+   comments and date fields carry no styling convention, so those APIs
+   deliberately add none.
 
 Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the

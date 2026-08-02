@@ -970,3 +970,73 @@ describe("a comment always names an author", () => {
     }
   });
 });
+
+describe("a hyperlink carries the document's Link character style", () => {
+  // "For hyperlinks there were no hyperlink character style applied." The
+  // link *worked* — P04's click passed — and did not look like one. The
+  // native convention, measured: name "Link", identifier
+  // "character-style-hyperlink", property bag exactly {underline: 1},
+  // shipped by every template in the corpus and covering every native link
+  // run. The Word imports carry their own styles, which is why the rule
+  // pinned here is about what we author, plus the convention's existence.
+  const HYPERLINK = 2032;
+
+  it("finds the Link style shipped by both ladder bases", () => {
+    for (const base of [
+      "patrickomatic-termpaper-footers-masks.pages",
+      "iwork-mcp-v14.5-sample.pages",
+    ]) {
+      const doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(base, FIXTURES))));
+      const link = doc.stylesheet.findByIdentifier("character-style-hyperlink");
+      expect(`${base} Link style: ${link?.name}`).toBe(`${base} Link style: Link`);
+    }
+  });
+
+  it("styles an authored link with it by default", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("visit the apple site today");
+    const at = doc.body.text.lastIndexOf("apple site");
+    doc.insertLink(at, at + 10, "https://www.apple.com/");
+
+    const saved = PagesDocument.load(doc.save());
+    const expected = saved.stylesheet.findByIdentifier("character-style-hyperlink")!;
+    const covering = saved.body.effectiveObjectAt(8, at);
+    expect(`link styled by: ${covering}`).toBe(`link styled by: ${expected.id}`);
+    // The run is the link, not the paragraph.
+    expect(saved.body.effectiveObjectAt(8, at + 10)).toBe(undefined);
+    // And the field itself is still there and live.
+    expect(saved.body.links().some((l) => l.start === at && l.end === at + 10)).toBe(true);
+  });
+
+  it("lets the style be skipped or overridden", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("plain link and styled link here");
+    const a = doc.body.text.lastIndexOf("plain link");
+    doc.insertLink(a, a + 10, "https://example.org/", { characterStyle: false });
+    expect(doc.body.effectiveObjectAt(8, a)).toBe(undefined);
+
+    const custom = doc.stylesheet.createCharacterStyle({ character: { bold: true } });
+    const b = doc.body.text.lastIndexOf("styled link");
+    doc.insertLink(b, b + 11, "https://example.org/", { characterStyle: custom });
+    expect(doc.body.effectiveObjectAt(8, b)).toBe(custom);
+
+    // The field is live in both cases — styling is presentation only.
+    const links = PagesDocument.load(doc.save()).body.links();
+    expect(links.length >= 2).toBe(true);
+  });
+
+  it("footnote marks accept the same skip and override", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("a sentence with an unstyled note.");
+    doc.body.addFootnote(doc.body.text.length - 1, "note", { markStyle: false });
+    const saved = PagesDocument.load(doc.save());
+    const text = saved.body.text;
+    for (let i = 0; i < text.length; i++) {
+      if (text.charCodeAt(i) !== 0x0e) continue;
+      expect(`skipped mark style: ${saved.body.effectiveObjectAt(8, i)}`).toBe(
+        "skipped mark style: undefined",
+      );
+    }
+    expect(saved.body.footnotes().length).toBe(1);
+  });
+});

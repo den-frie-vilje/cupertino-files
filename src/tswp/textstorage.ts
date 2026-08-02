@@ -783,8 +783,24 @@ export class TextStorage {
   /**
    * Make [start, end) a hyperlink. Creates a TSWP.HyperlinkFieldArchive in
    * this storage's component and spans it in the smart-field table.
+   *
+   * The link also gets the document's **Link character style** — identifier
+   * `character-style-hyperlink`, name "Link", property bag `{underline: 1}`
+   * in every native Pages fixture that carries links, and shipped by every
+   * template in the corpus. The hyperlink *works* without it (the first
+   * in-app check clicked through fine) and does not *look* like one: the
+   * field makes it live, the style makes it underlined.
+   *
+   * `characterStyle` overrides the convention: a style id or identifier
+   * applies that style instead; `false` leaves the run unstyled — the text
+   * keeps whatever formatting it had.
    */
-  insertLink(start: number, end: number, url: string): bigint {
+  insertLink(
+    start: number,
+    end: number,
+    url: string,
+    options: { characterStyle?: bigint | string | false } = {},
+  ): bigint {
     const text = this.text;
     if (start < 0 || end <= start || end > text.length) {
       throw new RangeError(`insertLink: invalid range ${start}..${end}`);
@@ -795,7 +811,45 @@ export class TextStorage {
     field.message.setMessage(HyperlinkField.SUPER, RawMessage.create());
     field.message.setString(HyperlinkField.URL_REF, url);
     this.spanObject(Storage.TABLE_SMARTFIELD, start, end, field.identifier);
+    const style = this.conventionStyle(options.characterStyle, () => this.linkCharacterStyle());
+    if (style !== undefined) this.setCharacterStyleRange(start, end, style);
     return field.identifier;
+  }
+
+  /**
+   * Resolve a convention-style option: `false` skips, an id or identifier
+   * overrides, undefined takes the measured default.
+   */
+  private conventionStyle(
+    option: bigint | string | false | undefined,
+    fallback: () => bigint,
+  ): bigint | undefined {
+    if (option === false) return undefined;
+    if (typeof option === "bigint") return option;
+    if (typeof option === "string") {
+      const sheet = this.sheet();
+      const found = sheet?.findByIdentifier(option) ?? sheet?.findByName(option, TSWP_TYPE.CHARACTER_STYLE);
+      if (!found) throw new RangeError(`character style ${JSON.stringify(option)} not found`);
+      return found.id;
+    }
+    return fallback();
+  }
+
+  /**
+   * The document's Link character style, created if a template ever lacks
+   * one — none in the corpus does, so creation is the untrodden path and
+   * says so by matching the measured shape exactly.
+   */
+  private linkCharacterStyle(): bigint {
+    const sheet = this.sheet();
+    const existing = sheet?.findByIdentifier("character-style-hyperlink");
+    if (existing) return existing.id;
+    if (!sheet) throw new RangeError("storage has no stylesheet to create the Link style in");
+    return sheet.createCharacterStyle({
+      name: "Link",
+      identifier: "character-style-hyperlink",
+      character: { underline: 1 },
+    });
   }
 
   /** Remove any hyperlink overlapping [start, end); the text is untouched. */
@@ -987,7 +1041,11 @@ export class TextStorage {
    * Returns the new footnote storage, so its text can be styled or edited
    * like any other.
    */
-  addFootnote(pos: number, text: string): TextStorage {
+  addFootnote(
+    pos: number,
+    text: string,
+    options: { markStyle?: bigint | false } = {},
+  ): TextStorage {
     const component = this.store.componentOf(this.id);
     if (!component) throw new RangeError("storage component not found");
 
@@ -1023,8 +1081,12 @@ export class TextStorage {
     // identifier, a run over exactly the mark character. Without it the
     // footnote works and its reference sits on the baseline at body size —
     // which is precisely what the app showed.
-    const markStyle = this.footnoteMarkStyle();
-    note.setCharacterStyleRange(0, 1, markStyle);
+    // `markStyle: false` skips the superscript convention; an id overrides
+    // it. Both marks always share whatever is chosen, like Apple's.
+    const markStyle = options.markStyle === false
+      ? undefined
+      : options.markStyle ?? this.footnoteMarkStyle();
+    if (markStyle !== undefined) note.setCharacterStyleRange(0, 1, markStyle);
     note.object.setObjectReferences([
       ...new Set([
         ...note.object.getObjectReferences(),
@@ -1048,7 +1110,7 @@ export class TextStorage {
     this.anchorObject(pos, reference.identifier, Storage.TABLE_FOOTNOTE, FOOTNOTE_MARK_CHARACTER);
     // The U+000E just inserted gets the same superscript run the note's
     // mark has — after the anchor, so the range covers the real character.
-    this.setCharacterStyleRange(pos, pos + 1, markStyle);
+    if (markStyle !== undefined) this.setCharacterStyleRange(pos, pos + 1, markStyle);
     return note;
   }
 

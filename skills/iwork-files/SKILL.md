@@ -566,6 +566,16 @@ worse than a blank the app fills in.
 storage.insertDateField(0, "November 2, 2024", { date: new Date("2024-11-02"), format: "MMMM d, y" });
 storage.dateFields();          // [{ start, end, fieldId, date, format }]
 
+// Field-like constructs follow the app's measured styling conventions by
+// default: a link gets the template's Link style (underlined), a footnote
+// mark gets the shared superscript style. Pass `false` to skip, or a style
+// id/identifier to override:
+doc.insertLink(at, at + 5, "https://example.org/");
+doc.insertLink(at, at + 5, "https://example.org/", { characterStyle: false });
+body.addFootnote(pos, "the note", { markStyle: false });
+// Comments and date fields carry no styling convention in Apple's own
+// files, so those APIs add none.
+
 const id = body.addBookmark(10, 20, "Introduction");  // named, spans [10,20)
 body.addBookmark(30, 31);                             // single-character anchor
 body.removeBookmark(id);

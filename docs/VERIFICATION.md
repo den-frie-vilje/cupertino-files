@@ -439,9 +439,9 @@ result mean something; what changed is that it is no longer a request.
 
 **Was claimed.** a hyperlink this library inserts is live in the app
 
-**Why it needed an app.** a link is a smartfield run plus a URL ref; only the app proves it is clickable
+**Why it needed an app.** a link is a smartfield run plus a URL ref; the field makes it live, the Link style makes it look live, and only the app proves either
 
-**Outcome.** **Confirmed in Pages — "P04 pass".** The linked words are a live hyperlink to the URL given, on the current-format ladder base.
+**Outcome.** **Click confirmed — "P04 pass" — appearance was not, and is now written.** The linked words were a live hyperlink and did not look like one: every native link run in the corpus is covered by the document's Link character style (identifier `character-style-hyperlink`, name "Link", bag exactly `{underline: 1}`), which every corpus template ships and `insertLink` never applied. It now applies it by default, with `characterStyle: false` to skip and an id or identifier to override; the underlined form is unverified in the app
 
 ### ✅ Inline image insertion
 

@@ -153,7 +153,9 @@ export const RUNGS: {
     name: "P04-hyperlink",
     note: "a live hyperlink on part of a paragraph",
     build: (doc) => {
-      doc.appendParagraph("P04: the words APPLE SITE should be a link to apple.com.");
+      doc.appendParagraph(
+        "P04: the words APPLE SITE should be a link to apple.com, and should look like one — underlined, in the document's Link style.",
+      );
       const at = doc.body.text.lastIndexOf("APPLE SITE");
       doc.insertLink(at, at + "APPLE SITE".length, "https://www.apple.com/");
     },
