@@ -550,6 +550,24 @@ Built on the shoulders of [obriensp/iWorkFileFormat](https://github.com/obriensp
 [FORMAT.md §13](docs/FORMAT.md) for what each contributed. Schema dumps
 originate from Apple's applications, extracted for interoperability.
 
+## Legal
+
+This is an independent open-source project, not affiliated with, endorsed
+by, or supported by Apple Inc. Apple, iWork, Pages, Numbers, Keynote and
+Creator Studio are trademarks of Apple Inc., used here only to name the
+file formats this library interoperates with.
+
+The library contains no Apple code. Format knowledge comes from
+measuring real documents and from protocol-buffer schema definitions
+recovered from the application binaries by long-standing third-party
+open-source projects, redistributed with full provenance and no
+copyright claim — see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+Password-protected (encrypted) documents are refused by design
+(`EncryptedDocumentError`): this library circumvents no technological
+protection measure, and the interoperability it enables is with the
+user's own documents. The reasoning and its sources are recorded in
+[docs/LEGAL.md](docs/LEGAL.md).
+
 ## License
 
 [MIT](LICENSE) © Ole Kristensen
