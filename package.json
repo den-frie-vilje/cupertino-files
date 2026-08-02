@@ -41,7 +41,8 @@
     "skills",
     "README.md",
     "LICENSE",
-    "THIRD-PARTY-NOTICES.md"
+    "THIRD-PARTY-NOTICES.md",
+    "LICENSES"
   ],
   "engines": {
     "node": ">=18"
@@ -76,7 +77,8 @@
     "conformance": "node scripts/make-conformance.ts",
     "conformance:check": "node scripts/make-conformance.ts --check",
     "bundle:format": "node scripts/make-release-bundle.ts",
-    "keynote:docs": "node scripts/make-keynote-docs.ts"
+    "keynote:docs": "node scripts/make-keynote-docs.ts",
+    "prepublishOnly": "npm run build && npm run lint && npm test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
