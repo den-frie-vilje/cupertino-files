@@ -62,7 +62,9 @@
     "privacy:check": "node scripts/scan-fixture-privacy.ts",
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
     "test:all": "npm run test && npm run test:e2e",
-    "pages:docs": "node scripts/make-pages-docs.ts"
+    "pages:docs": "node scripts/make-pages-docs.ts",
+    "shape:audit": "node scripts/audit-authored-shape.ts",
+    "shape:check": "node scripts/audit-authored-shape.ts --check"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

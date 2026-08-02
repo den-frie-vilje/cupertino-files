@@ -32,6 +32,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
 import { typeName } from "../src/tsp/registry.ts";
+import { drawableParent } from "../src/tsd/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
@@ -161,5 +162,65 @@ describe("reference extractors agree with Apple", () => {
     // above would pass trivially.
     expect(TALLY.covered > 10_000).toBe(true);
     expect(TALLY.agree > 10_000).toBe(true);
+  });
+});
+
+describe("a drawable declares what it resolves through, not what holds it", () => {
+  // The container rule, measured per type rather than assumed uniform.
+  // Assuming it was uniform would have dropped the 36 references a
+  // connection line legitimately makes to its parent — the omission
+  // direction, which is what makes an app call a document damaged.
+  const EXPECTED = new Map([
+    ["TSWP.ShapeInfoArchive", 0],
+    ["TSD.ImageArchive", 0],
+    ["TSD.MaskArchive", 0],
+    ["TSD.GroupArchive", 0],
+    ["TSD.MovieArchive", 0],
+  ]);
+
+  it("matches the corpus for every drawable type the store subtracts", () => {
+    const tally = new Map<number, { carry: number; declare: number }>();
+    for (const name of readdirSync(FIXTURES)) {
+      const Doc = name.endsWith(".pages")
+        ? PagesDocument
+        : name.endsWith(".numbers")
+          ? NumbersDocument
+          : name.endsWith(".key")
+            ? KeynoteDocument
+            : undefined;
+      if (!Doc) continue;
+      let doc: PagesDocument | NumbersDocument | KeynoteDocument;
+      try {
+        doc = (Doc as typeof PagesDocument).load(
+          new Uint8Array(readFileSync(new URL(name, FIXTURES))),
+        );
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        const parent = drawableParent(obj.type, obj.message);
+        if (parent === undefined) continue;
+        let t = tally.get(obj.type);
+        if (!t) tally.set(obj.type, (t = { carry: 0, declare: 0 }));
+        t.carry++;
+        if (obj.getObjectReferences().includes(parent)) t.declare++;
+      }
+    }
+
+    const wrong: string[] = [];
+    for (const [type, t] of tally) {
+      const name = typeName(type) ?? String(type);
+      const expected = EXPECTED.get(name);
+      // A type in the store's subtraction map but not in the table above is
+      // as much a failure as a wrong count: it means the rule was extended
+      // to a type nobody measured.
+      if (expected === undefined) wrong.push(`${name} unmeasured (${t.carry})`);
+      else if (t.declare !== expected) wrong.push(`${name} declares ${t.declare}/${t.carry}`);
+    }
+    expect(`disagreeing with the measured rule: ${wrong.join(" ")}`).toBe(
+      "disagreeing with the measured rule: ",
+    );
+    // Guards the guard: an empty map would pass trivially.
+    expect(tally.size).toBe(EXPECTED.size);
   });
 });

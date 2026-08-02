@@ -361,7 +361,22 @@ export const HyperlinkField = { SUPER: 1, URL_REF: 2 } as const;
 /** TSWP.BookmarkFieldArchive: super = 1, name = 2, ranged = 3, hidden = 4. */
 export const BookmarkField = { SUPER: 1, NAME: 2, RANGED: 3, HIDDEN: 4 } as const;
 /** TSWP.DrawableAttachmentArchive: drawable = 1. */
-export const DrawableAttachment = { DRAWABLE: 1 } as const;
+/**
+ * TSWP.DrawableAttachmentArchive — an inline drawable's anchor.
+ *
+ * All four offset fields are present on 101 of 101 corpus attachments, and
+ * zero is the common value (`h_offset` 0 in 50, `v_offset_type` 0 in 92).
+ * They are `optional`, so omitting them is well-formed; whether Pages reads
+ * an absent offset as zero or as "no placement" is the question the inline
+ * image rung asks.
+ */
+export const DrawableAttachment = {
+  DRAWABLE: 1,
+  H_OFFSET_TYPE: 2,
+  H_OFFSET: 3,
+  V_OFFSET_TYPE: 4,
+  V_OFFSET: 5,
+} as const;
 /** TSWP.FootnoteReferenceAttachmentArchive: super = 1, contained_storage = 2, custom_mark_string = 3. */
 export const FootnoteRefAttachment = { SUPER: 1, CONTAINED_STORAGE: 2, CUSTOM_MARK: 3 } as const;
 /** TSWP.HighlightArchive (comment anchor): commentStorage = 1. */

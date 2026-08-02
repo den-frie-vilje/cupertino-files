@@ -4,7 +4,8 @@
  * numbers from proto/current/TSDArchives.proto.
  */
 import type { ReferenceExtractor } from "../tsp/store.ts";
-import { pushRef } from "../tsp/schema.ts";
+import type { RawMessage } from "../base/protobuf.ts";
+import { pushRef, refId } from "../tsp/schema.ts";
 
 export const TSD_TYPE = {
   IMAGE: 3005,
@@ -43,9 +44,13 @@ export const Image = {
   STYLE: 3,
   ORIGINAL_SIZE: 4,
   MASK: 5,
+  /** 0 in 75 of 83 corpus images; the other values are crop/adjust states. */
+  FLAGS: 7,
   NATURAL_SIZE: 9,
   DATA: 11,
   ORIGINAL_DATA: 13,
+  /** `interpretsUntaggedImageDataAsGeneric` — false in 82 of 83. */
+  UNTAGGED_AS_GENERIC: 18,
 } as const;
 
 /**
@@ -80,3 +85,62 @@ export const imageExtractor: ReferenceExtractor = (m) => {
 export const TSD_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
   [TSD_TYPE.IMAGE, imageExtractor],
 ]);
+
+/**
+ * How deep `TSD.DrawableArchive` sits in each drawable type's super chain.
+ *
+ * The container rule — a drawable never declares its `parent` — was fixed
+ * in {@link imageExtractor} and applies to every drawable, not just images.
+ * The others have no extractor, so a copy of one falls through to the
+ * generic scan in `ObjectStore.save`, which finds the parent reference and
+ * declares it. Copying a grouped image produced exactly that: the mask
+ * declaring the image it masks, and three shapes declaring the group they
+ * are in — four back-edges Apple writes in no document here.
+ *
+ * A depth rather than a predicate because the chain is fixed per type and
+ * guessing from shape is how a `TSD.ShapeArchive.style` (also field 2, also
+ * a bare reference, and one Apple *does* declare) would get dropped.
+ */
+export const DRAWABLE_SUPER_DEPTH: ReadonlyMap<number, number> = new Map([
+  [3004, 1], // TSD.ShapeArchive
+  [3005, 1], // TSD.ImageArchive
+  [3006, 1], // TSD.MaskArchive
+  [3007, 1], // TSD.MovieArchive
+  [3008, 1], // TSD.GroupArchive
+  [2011, 2], // TSWP.ShapeInfoArchive → TSD.ShapeArchive → TSD.DrawableArchive
+]);
+
+/**
+ * Measured, per type: does Apple declare the parent it carries?
+ *
+ * | archive | carries `parent` | declares it |
+ * | --- | ---: | ---: |
+ * | `TSWP.ShapeInfoArchive` | 285 | 0 |
+ * | `TSD.ImageArchive` | 151 | 0 |
+ * | `TSD.MaskArchive` | 79 | 0 |
+ * | `TSD.GroupArchive` | 13 | 0 |
+ * | `TSD.MovieArchive` | 8 | 0 |
+ * | `TSD.ConnectionLineArchive` | 36 | **36** |
+ *
+ * The connection line is the exception and is deliberately absent from the
+ * map above: it is the one drawable whose parent is not merely the box it
+ * sits in — a line joins two shapes, and its parent is part of what it
+ * means. Assuming the rule was uniform would have dropped 36 references
+ * Apple writes, which is the direction that makes an app call a document
+ * damaged.
+ */
+
+/** The `parent` a drawable of this type points at, if it has one. */
+export function drawableParent(type: number, message: RawMessage): bigint | undefined {
+  const depth = DRAWABLE_SUPER_DEPTH.get(type);
+  if (depth === undefined) return undefined;
+  let node: RawMessage | undefined = message;
+  for (let i = 0; i < depth && node; i++) {
+    try {
+      node = node.getMessage(1);
+    } catch {
+      return undefined;
+    }
+  }
+  return refId(node, Drawable.PARENT);
+}

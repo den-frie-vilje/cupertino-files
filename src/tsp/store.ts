@@ -23,6 +23,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
 import { typeName, type IWorkApp } from "./registry.ts";
+import { drawableParent } from "../tsd/schema.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -502,10 +503,24 @@ export class ObjectStore {
         // reference into another component makes Numbers refuse the whole
         // document as damaged, because external_references is how it
         // decides which components to load.
+        //
+        // The scan does have one blind spot, and it is the container rule.
+        // A *clone* is not an object this library composed — it arrived
+        // whole, carrying whatever the original carried, including the
+        // `parent` back-edge that Apple writes into every drawable and
+        // declares in none. Copying a grouped image gave the mask a
+        // declaration of the image it masks and each shape a declaration of
+        // its group. Subtracted here rather than by teaching the scan about
+        // supers, because the scan is deliberately shape-blind.
+        const container = drawableParent(obj.type, obj.message);
         const refs = extractor
           ? dedupe(extractor(obj.message))
           : this.created.has(obj.identifier)
-            ? dedupe(referencedIds(obj.message).filter((id) => this.index.has(id)))
+            ? dedupe(
+                referencedIds(obj.message).filter(
+                  (id) => this.index.has(id) && id !== container,
+                ),
+              )
             : undefined;
         if (!refs) continue;
         obj.setObjectReferences(refs);

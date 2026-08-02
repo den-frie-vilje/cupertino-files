@@ -29,12 +29,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { NumbersDocument } from "../src/numbers/document.ts";
 import { chartsOf } from "../src/tsch/charts.ts";
 
-const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", import.meta.url);
+export const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", import.meta.url);
 /** A rung needing something the main template has not got: here, a chart. */
-const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", import.meta.url);
+export const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", import.meta.url);
 
 /** Each rung: a name, and what it does to a freshly loaded fixture. */
-const RUNGS: {
+export const RUNGS: {
   name: string;
   note: string;
   build: (doc: NumbersDocument) => void;
@@ -269,4 +269,6 @@ function main(argv: string[]): number {
   return 0;
 }
 
-process.exitCode = main(process.argv.slice(2));
+// Importable: the shape audit runs these same rungs and inspects what each
+// one wrote, so a rung added here is audited without being listed twice.
+if (import.meta.filename === process.argv[1]) process.exitCode = main(process.argv.slice(2));

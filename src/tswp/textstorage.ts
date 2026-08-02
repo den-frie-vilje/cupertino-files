@@ -25,6 +25,8 @@ import {
   DrawableAttachment,
   ENTRY_CHARACTER_INDEX,
   ENTRY_OBJECT,
+  ENTRY_PARA_FIRST,
+  ENTRY_PARA_SECOND,
   FootnoteRefAttachment,
   Highlight,
   HyperlinkField,
@@ -124,6 +126,63 @@ function isParagraphTerminator(code: number): boolean {
   return code === 0x0a || code === 0x04 || code === 0x05 || code === 0x0c;
 }
 
+/**
+ * The six fields every storage in the corpus carries, and a new one did not.
+ *
+ * `table_para_style`, `table_para_data`, `table_list_style`,
+ * `table_para_starts`, `table_para_bidi` and `in_document` are present on
+ * **2676 of 2676** storages across these fixtures — all nine kinds, all
+ * three apps, every era of writer. A storage created here had none of them:
+ * just a kind, a stylesheet and a string.
+ *
+ * Nothing offline objects to that. Every one of the six is `optional`, the
+ * archive round-trips, `required:check` passes, and the reader gives the
+ * text back unchanged. But `table_para_style` is where a paragraph's style
+ * *lives* — a storage without it has no styled paragraph at all — and the
+ * same omission in the body was what rendered a whole document unstyled
+ * once already. This is that bug, in the one place a storage gets made from
+ * scratch rather than edited.
+ *
+ * The values are Apple's, measured on footnote storages: one entry at
+ * character 0 in each table, `{0, 0, 0}` for the para-data triples, and
+ * `in_document` true.
+ */
+function fillStorageShape(
+  m: RawMessage,
+  styles: { paragraphStyle?: bigint; listStyle?: bigint },
+): void {
+  // `ObjectAttribute.object` is optional, so an entry with no style is
+  // well-formed — but it is also the shape that has already proved to mean
+  // "unstyled", so the table is only written when there is a style to name.
+  const objectTable = (styleId: bigint | undefined): RawMessage | undefined => {
+    if (styleId === undefined) return undefined;
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, 0);
+    entry.setMessage(ENTRY_OBJECT, makeRef(styleId));
+    const table = RawMessage.create();
+    table.addMessage(ATTR_TABLE_ENTRIES, entry);
+    return table;
+  };
+  const paraData = (): RawMessage => {
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, 0);
+    entry.setVarint(ENTRY_PARA_FIRST, 0);
+    entry.setVarint(ENTRY_PARA_SECOND, 0);
+    const table = RawMessage.create();
+    table.addMessage(ATTR_TABLE_ENTRIES, entry);
+    return table;
+  };
+
+  const para = objectTable(styles.paragraphStyle);
+  if (para) m.setMessage(Storage.TABLE_PARA_STYLE, para);
+  const list = objectTable(styles.listStyle);
+  if (list) m.setMessage(Storage.TABLE_LIST_STYLE, list);
+  m.setMessage(Storage.TABLE_PARA_DATA, paraData());
+  m.setMessage(Storage.TABLE_PARA_STARTS, paraData());
+  m.setMessage(Storage.TABLE_PARA_BIDI, paraData());
+  m.setBool(Storage.IN_DOCUMENT, true);
+}
+
 export interface ParagraphInfo {
   index: number;
   /** UTF-16 offset of the first character. */
@@ -166,6 +225,30 @@ export class TextStorage {
   /** Identifier of the TSS.StylesheetArchive governing this storage. */
   get stylesheetId(): bigint | undefined {
     return refId(this.msg, Storage.STYLE_SHEET);
+  }
+
+  /**
+   * A style of `type` named `name`, from this storage's stylesheet chain.
+   *
+   * Not a general style lookup — `StylesheetModel` is that — but the small
+   * amount of it needed here, without `tswp` having to depend on `tss`. A
+   * new storage has to name a paragraph style and a list style, and the
+   * ones it wants ("Footnote", "None") are already in the document.
+   */
+  private styleNamed(name: string, type: number): bigint | undefined {
+    const seen = new Set<bigint>();
+    for (let sheet = this.stylesheetId; sheet !== undefined && !seen.has(sheet); ) {
+      seen.add(sheet);
+      const obj = this.store.resolve(sheet);
+      if (!obj) return undefined;
+      for (const ref of obj.message.getMessages(1)) {
+        const style = this.store.resolve(ref.getVarint(1));
+        if (style?.type !== type) continue;
+        if (style.message.getMessage(1)?.getString(1) === name) return style.identifier;
+      }
+      sheet = refId(obj.message, 3); // TSS.StylesheetArchive.parent
+    }
+    return undefined;
   }
 
   get text(): string {
@@ -906,6 +989,10 @@ export class TextStorage {
     // A leading space so the mark and the text do not run together, which
     // is what the corpus notes contain.
     noteMessage.setString(Storage.TEXT, ` ${text}`);
+    fillStorageShape(noteMessage, {
+      paragraphStyle: this.styleNamed("Footnote", TSWP_TYPE.PARAGRAPH_STYLE),
+      listStyle: this.styleNamed("None", TSWP_TYPE.LIST_STYLE),
+    });
     const noteObject = this.store.createObject(TSWP_TYPE.STORAGE, component);
     noteObject.setMessageBytes(noteMessage.toBytes());
     const note = new TextStorage(this.store, noteObject);

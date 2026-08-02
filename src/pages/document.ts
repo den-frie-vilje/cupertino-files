@@ -730,8 +730,11 @@ export class PagesDocument extends IWorkDocument {
     });
     const m = section.message;
     m.setBool(Section.INHERIT_PREVIOUS_HEADER_FOOTER, true);
+    // The clone brings the enclosing section's name, and keeping it is the
+    // point: all 47 sections in these fixtures carry one — the page
+    // master's, "Blank" in a stock template — and none carries none.
+    // Stripping it was inventing a shape Apple never writes.
     if (options.name !== undefined) m.setString(Section.NAME, options.name);
-    else m.remove(Section.NAME);
     if (options.pageNumberStart !== undefined) {
       m.setVarint(Section.PAGE_NUMBER_START, options.pageNumberStart);
     }
@@ -870,12 +873,30 @@ export class PagesDocument extends IWorkDocument {
       natural.setFloat(SizeFields.WIDTH, dims.width);
       natural.setFloat(SizeFields.HEIGHT, dims.height);
       image.message.setMessage(Image.ORIGINAL_SIZE, natural);
+      // `naturalSize` as well as `originalSize`: both are on 83 of 83
+      // corpus images, and they are different questions — what the file
+      // holds against what the layout should treat as unscaled.
+      image.message.setMessage(Image.NATURAL_SIZE, RawMessage.parse(natural.toBytes()));
     }
     image.message.setMessage(Image.DATA, makeDataRef(dataId));
+    // An image with no style is the same shape as a cell control with no
+    // format: valid, complete by the schema, and never drawn. Every corpus
+    // image points at a TSD.MediaStyleArchive, and the one it points at is
+    // the theme's own `image-0-imageStyle`.
+    const style = mediaStyleIdOf(this);
+    if (style !== undefined) image.message.setMessage(Image.STYLE, makeRef(style));
+    image.message.setVarint(Image.FLAGS, 0);
+    image.message.setBool(Image.UNTAGGED_AS_GENERIC, false);
     image.setDataReferences([dataId]);
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(image.identifier));
+    // Zero offsets, explicitly. All four fields are on 101 of 101 corpus
+    // attachments; absent is not a value Pages has been observed to write.
+    attachment.message.setVarint(DrawableAttachment.H_OFFSET_TYPE, 0);
+    attachment.message.setFloat(DrawableAttachment.H_OFFSET, 0);
+    attachment.message.setVarint(DrawableAttachment.V_OFFSET_TYPE, 0);
+    attachment.message.setFloat(DrawableAttachment.V_OFFSET, 0);
 
     body.insertText(pos, ATTACHMENT_CHAR);
     // Attachment entries are point-anchored at the U+FFFC character.
@@ -895,6 +916,27 @@ export class PagesDocument extends IWorkDocument {
 
     return { imageId: image.identifier, dataId };
   }
+}
+
+/**
+ * The theme's image style, which every image in the corpus points at.
+ *
+ * Identified rather than searched by type, because a document holds several
+ * `TSD.MediaStyleArchive`s and only one is the one images use: 59 of the 83
+ * corpus images name `image-0-imageStyle`, and the rest name a variation of
+ * it. Falls back to whatever an image already in the document uses, and
+ * then to nothing — an unstyled image is worth writing anyway, since the
+ * alternative is refusing to insert one.
+ */
+function mediaStyleIdOf(doc: PagesDocument): bigint | undefined {
+  const byIdentifier = doc.stylesheet.findByIdentifier("image-0-imageStyle");
+  if (byIdentifier) return byIdentifier.id;
+  for (const { obj } of doc.store.allObjects()) {
+    if (obj.type !== TSD_TYPE.IMAGE) continue;
+    const style = refId(obj.message, Image.STYLE);
+    if (style !== undefined) return style;
+  }
+  return undefined;
 }
 
 function nameOfStyle(store: ObjectStore, id: bigint): string | undefined {

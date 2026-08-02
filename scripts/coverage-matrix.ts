@@ -456,6 +456,18 @@ export const CAPABILITIES: Capability[] = [
         c.doc.textStorages().some((s) => s.bookmarks().length > 0 || s.dateFields().length > 0),
       ),
     note: "a date field spans real text the app rewrites, so the display text is supplied rather than formatted here",
+    manualProof: {
+      claim: "a date field and a bookmark this library inserts are live in Pages, not literal text",
+      settled:
+        "**Confirmed in Pages.** A date field renders and is editable as a date, set to " +
+        "1 January. A bookmark over a single character is a bookmark Pages recognises. Both " +
+        "on a current-format document",
+      why:
+        "both are attachments whose meaning comes from the app resolving them; the suite " +
+        "proves the archive and the anchor round-trip, not that the app treats them as fields",
+      how: "insert each, open in Pages, and check the date is editable and the bookmark listed",
+      risk: "medium",
+    },
   },
   {
     group: "Text & styles",
@@ -487,8 +499,17 @@ export const CAPABILITIES: Capability[] = [
     note: "the reference is a U+000E in its own table; the note is a separate storage of footnote kind",
     manualProof: {
       claim: "a footnote this library creates is numbered and laid out by Pages",
-      why: "numbering depends on how many footnotes precede it and on the document's footnote settings, both resolved during layout",
-      how: "add footnotes at two positions, open in Pages, and confirm they number in document order and render at the page foot",
+      why:
+        "numbering depends on how many footnotes precede it and on the document's footnote " +
+        "settings, both resolved during layout. The note's storage was also, until the shape " +
+        "audit ran, missing all six attribute tables that 2676 of 2676 corpus storages carry " +
+        "— `table_para_style` among them, which is where a paragraph's style lives. The same " +
+        "omission in the body rendered a whole document unstyled, so a footnote written before " +
+        "that fix would most likely have appeared with no style at all.",
+      how:
+        "add footnotes at two positions, open in Pages, and confirm they number in document " +
+        "order, render at the page foot, and are set in the document's Footnote style rather " +
+        "than in the body face",
       risk: "medium",
     },
   },
@@ -642,6 +663,20 @@ export const CAPABILITIES: Capability[] = [
     apps: ["pages"],
     status: "experimental",
     note: "Data/ plumbing with SHA-1 dedupe; not verified in the app",
+    manualProof: {
+      claim: "an image this library inserts inline appears on the page at the size asked for",
+      why:
+        "The shape audit found the archive incomplete in exactly the way a cell control with " +
+        "no format was: no `style`, where all 83 corpus images point at the theme's " +
+        "`image-0-imageStyle`; no `naturalSize`; and an attachment carrying only `drawable` " +
+        "where all 101 corpus attachments carry four offset fields. All four are optional, so " +
+        "nothing offline objected. All four are now written and none has been opened.",
+      how:
+        "`npm run pages:docs` emits P11-inline-image: a 1x1 red PNG scaled up. A red square " +
+        "on the page is a pass; a gap, a blank box, or an image at the wrong size each say " +
+        "something different about which of the four mattered.",
+      risk: "high",
+    },
   },
   {
     group: "Drawables & media",
@@ -666,6 +701,19 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => (c.pages?.sections().length ?? 0) > 1),
     note: "validation counts multi-section documents only",
+    manualProof: {
+      claim: "a section break this library inserts starts a new section on a new page",
+      why:
+        "An inserted section is a clone of the one enclosing it, and the clone's `name` was " +
+        "being explicitly removed — all 47 sections in these fixtures carry one, the page " +
+        "master's. What an unnamed section does in the sections list is not something any " +
+        "offline check can say.",
+      how:
+        "`npm run pages:docs` emits P07-section-break: two paragraphs with a break between " +
+        "them. The second paragraph on its own page is a pass; check the section is named in " +
+        "the page-thumbnail sidebar rather than blank.",
+      risk: "medium",
+    },
   },
   {
     group: "Pages",

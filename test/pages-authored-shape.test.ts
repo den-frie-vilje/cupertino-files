@@ -25,6 +25,7 @@ import { PagesDocument } from "../src/index.ts";
 import { CharProps } from "../src/tswp/schema.ts";
 import { readCharacterProperties } from "../src/tss/stylesheet.ts";
 import type { RawMessage } from "../src/base/protobuf.ts";
+import { drawableParent } from "../src/tsd/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 // The base the Pages ladder uses: fourteen paragraphs of plain notes, with
@@ -503,5 +504,145 @@ describe("a character style we author has what Apple's has", () => {
     expect(`paired=${both} colour-only=${colorOnly} → ${both > colorOnly}`).toBe(
       `paired=${both} colour-only=${colorOnly} → true`,
     );
+  });
+});
+
+/**
+ * The rest of what `npm run shape:audit` found, pinned one fix at a time.
+ *
+ * The audit compares every archive a ladder rung writes against the shape
+ * the corpus gives that type, and its first run named four omissions at
+ * once. A budget check keeps the count from growing; these keep each
+ * individual fix from quietly coming undone, because a budget that goes
+ * 2 → 2 while one defect returns and another is fixed says nothing.
+ */
+describe("archives we create carry the shape Apple's carry", () => {
+  const STORAGE_TYPE = 2001;
+  const IMAGE_TYPE = 3005;
+  const ATTACHMENT_TYPE = 2003;
+  const SECTION_TYPE = 10011;
+  const LADDER_BASE = new Uint8Array(
+    readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),
+  );
+
+  /** Distinct top-level field numbers, sorted — the audit's own comparison. */
+  const shape = (m: RawMessage): string =>
+    [...new Set(m.fields.map((f) => f.no))].sort((a, b) => a - b).join(",");
+
+  it("gives a new footnote storage every table a real storage has", () => {
+    // 2676 of 2676 corpus storages carry table_para_style (5),
+    // table_para_data (6), table_list_style (7), in_document (10),
+    // table_para_starts (14) and table_para_bidi (24). A created one had
+    // none: a kind, a stylesheet and a string. table_para_style is where a
+    // paragraph's style lives, and a storage without it has no styled
+    // paragraph at all.
+    const doc = PagesDocument.load(LADDER_BASE);
+    doc.appendParagraph("A sentence that wants a note.");
+    doc.body.addFootnote(doc.body.text.length - 1, "the note");
+
+    const saved = PagesDocument.load(doc.save());
+    const notes = [...saved.store.allObjects()]
+      .map(({ obj }) => obj)
+      .filter((obj) => obj.type === STORAGE_TYPE && obj.message.getUint(1) === 2);
+    expect(notes.length).toBe(1);
+    const missing = [5, 6, 7, 10, 14, 24].filter((f) => !notes[0]!.message.has(f));
+    expect(`footnote storage missing: ${missing.join(",")}`).toBe("footnote storage missing: ");
+
+    // And the paragraph table names the document's Footnote style rather
+    // than sitting there empty, which is the shape that means "unstyled".
+    const entry = notes[0]!.message.getMessage(5)?.getMessages(1)[0];
+    const styleId = entry?.getMessage(2)?.getVarint(1);
+    const style = styleId !== undefined ? saved.store.resolve(styleId) : undefined;
+    expect(style?.message.getMessage(1)?.getString(1)).toBe("Footnote");
+  });
+
+  it("gives an inserted image a style, both sizes, and an anchored attachment", () => {
+    // An image with no style is the cell-control-with-no-format shape: all
+    // 83 corpus images point at a TSD.MediaStyleArchive, and all 101
+    // attachments carry four offset fields we wrote none of.
+    const doc = PagesDocument.load(LADDER_BASE);
+    const red = Uint8Array.from(
+      atob(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      ),
+      (c) => c.charCodeAt(0),
+    );
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, red, {
+      fileName: "dot.png",
+      width: 60,
+      height: 60,
+    });
+
+    const saved = PagesDocument.load(doc.save());
+    const image = saved.store.resolve(imageId)!;
+    expect(image.type).toBe(IMAGE_TYPE);
+    for (const [field, what] of [
+      [3, "style"],
+      [4, "originalSize"],
+      [7, "flags"],
+      [9, "naturalSize"],
+      [11, "data"],
+      [18, "interpretsUntaggedImageDataAsGeneric"],
+    ] as const) {
+      expect(`${what}: ${image.message.has(field)}`).toBe(`${what}: true`);
+    }
+    // The style is the theme's, not one invented for this image.
+    const style = saved.store.resolve(image.message.getMessage(3)?.getVarint(1));
+    expect(style?.message.getMessage(1)?.getString(2)).toBe("image-0-imageStyle");
+
+    const attachment = [...saved.store.allObjects()]
+      .map(({ obj }) => obj)
+      .find((obj) => obj.type === ATTACHMENT_TYPE && obj.message.getMessage(1)?.getVarint(1) === imageId);
+    expect(shape(attachment!.message)).toBe("1,2,3,4,5");
+  });
+
+  it("leaves an inserted section its name", () => {
+    // All 47 corpus sections carry one — the page master's, "Blank" in a
+    // stock template — and insertSectionBreak explicitly removed the name
+    // the clone brought with it.
+    const doc = PagesDocument.load(LADDER_BASE);
+    doc.appendParagraph("first");
+    const at = doc.appendParagraph("second");
+    doc.insertSectionBreak(at);
+
+    const saved = PagesDocument.load(doc.save());
+    const unnamed = [...saved.store.allObjects()]
+      .map(({ obj }) => obj)
+      .filter((obj) => obj.type === SECTION_TYPE && !obj.message.has(26));
+    expect(`sections with no name: ${unnamed.length}`).toBe("sections with no name: 0");
+  });
+
+  it("does not let a copied drawable declare what contains it", () => {
+    // The container rule, one type over from the image extractor that
+    // already knows it. A clone arrives carrying the `parent` Apple writes
+    // and never declares, and a copy of a grouped image reaches
+    // ObjectStore.save's generic scan — which declared it: the mask
+    // pointing at the image it masks, each shape at its group.
+    const source = new Uint8Array(
+      readFileSync(new URL("compphysics-poster-images-masks.pages", FIXTURES)),
+    );
+    const doc = PagesDocument.load(source);
+    const page = doc.floatingDrawablePages()[0]!;
+    const group = doc.floatingDrawables(page)!;
+    const first = group.drawables()[0]!;
+    const copy = group.addCopyOf(first);
+
+    const saved = PagesDocument.load(doc.save());
+    const offenders: string[] = [];
+    // Via the library's own per-type depth, not by guessing: field 2 one
+    // level down is `TSD.ShapeArchive.style` for a shape info, a reference
+    // Apple does declare, and a search that took the first field-2 it found
+    // would report every styled shape as an offender.
+    for (const { obj } of saved.store.allObjects()) {
+      const parent = drawableParent(obj.type, obj.message);
+      if (parent === undefined) continue;
+      if (obj.getObjectReferences().includes(parent)) {
+        offenders.push(`${obj.type}#${obj.identifier}→${parent}`);
+      }
+    }
+    expect(`declaring their container: ${offenders.slice(0, 4).join(" ")}`).toBe(
+      "declaring their container: ",
+    );
+    expect(copy.id > 0n).toBe(true);
   });
 });

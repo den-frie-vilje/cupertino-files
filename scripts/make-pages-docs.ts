@@ -54,7 +54,7 @@ import { PagesDocument } from "../src/index.ts";
  * which stay low when a document uses no newer feature. The 26.1.0 base below
  * is genuinely current and happens to also be plain.
  */
-const BASES: { tag: string; url: URL; note: string }[] = [
+export const BASES: { tag: string; url: URL; note: string }[] = [
   {
     tag: "v26",
     url: new URL("../fixtures/patrickomatic-termpaper-footers-masks.pages", import.meta.url),
@@ -105,7 +105,7 @@ const RED_DOT = Uint8Array.from(
  * than make the bases busier and every other rung harder to read, the one
  * rung that needs a drawable brings its own document.
  */
-const RUNGS: {
+export const RUNGS: {
   name: string;
   note: string;
   base?: URL;
@@ -453,4 +453,6 @@ function main(argv: string[]): number {
   return 0;
 }
 
-process.exit(main(process.argv.slice(2)));
+// Importable: the shape audit runs these same rungs and inspects what each
+// one wrote, so a rung added here is audited without being listed twice.
+if (import.meta.filename === process.argv[1]) process.exit(main(process.argv.slice(2)));

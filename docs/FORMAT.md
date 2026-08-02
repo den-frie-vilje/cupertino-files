@@ -1329,6 +1329,60 @@ Both halves matter, and each is visible only in the app:
 
 A writer that picks one rule for all three gets two of them wrong.
 
+#### The container rule is per type, not per family
+
+A drawable carries a `parent` — the group or canvas holding it — and Apple
+does not declare it in `object_references`. Measured across the corpus:
+
+| archive | carries `parent` | declares it |
+| --- | ---: | ---: |
+| `TSWP.ShapeInfoArchive` | 285 | 0 |
+| `TSD.ImageArchive` | 151 | 0 |
+| `TSD.MaskArchive` | 79 | 0 |
+| `TSD.GroupArchive` | 13 | 0 |
+| `TSD.MovieArchive` | 8 | 0 |
+| `TSD.ConnectionLineArchive` | 36 | **36** |
+
+The connection line is the exception, and it is not an accident: a line
+joins two shapes, so its parent is part of what the line *is* rather than
+just where it sits. Generalising from the first five would drop 36
+references Apple writes — the omission direction, which is what makes an app
+call a document damaged.
+
+This matters for copies specifically. A clone arrives whole, `parent` and
+all, and an object this library created has its references recomputed by a
+generic scan rather than by an extractor — so copying a grouped image gave
+the mask a declaration of the image it masks and each shape a declaration of
+its group. The scan subtracts the parent edge for the five types above and
+leaves the connection line alone.
+
+#### Well-formed is not complete: what a new archive has to carry
+
+Four defects in this project have had the identical shape — an archive that
+satisfies the schema, round-trips, and does nothing. That is a shape a
+script can look for, and `npm run shape:audit` does: it runs every rung of
+both ladders, then compares each archive they write against what the corpus
+gives that type. Its first run named four omissions nothing else had seen.
+
+| what was written | what Apple writes | consequence |
+| --- | --- | --- |
+| a footnote storage with a kind, a stylesheet and a string | 2676 of 2676 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
+| an image with no `style` and no `naturalSize` | 83 of 83 point at the theme's `image-0-imageStyle`; 83 of 83 set both sizes | the cell-control-with-no-format shape |
+| an attachment with only `drawable` | 101 of 101 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
+| a section with its `name` removed | 47 of 47 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
+
+None of these is malformed. Every field is `optional`, `required:check`
+passes on all four, and the reader gives back exactly what was written.
+
+The audit's third question is the one no archive can answer about itself:
+**who points at this?** For each type it records the whole set of referrer
+types per instance, and reports an object whose set has no precedent in the
+corpus. Asking for the whole set rather than "is referrer X missing" is what
+keeps it usable: every one of the 1360 chart series styles in these fixtures
+is pointed at by a `TSCH.ChartStylePreset`, which reads like a rule until
+you notice the 18 that are *also* pointed at by a `TSCH.ChartDrawableArchive`
+are the only ones belonging to a chart rather than a theme.
+
 #### A floating drawable needs the paint order, not just a page group
 
 Pages keeps floating objects in per-page groups, and separately keeps one
