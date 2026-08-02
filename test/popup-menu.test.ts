@@ -44,6 +44,15 @@ describe("pop-up menu model", () => {
     expect(readPopupMenuModel(numeric).join("|")).toBe("1|2.5|100");
   });
 
+  it('keeps a choice literally named "nil"', () => {
+    // The None slot used to be marked by the in-band string "nil", so a menu
+    // whose first choice was the word itself lost that choice — encoded as a
+    // second bare NIL slot instead of a string. The marker is a symbol now;
+    // this pins the only input that could tell the difference.
+    const model = buildPopupMenuModel(["nil", "other"]);
+    expect(readPopupMenuModel(model).join("|")).toBe("nil|other");
+  });
+
   it("gives every item the format its schema requires", () => {
     // `StringCellValueArchive.format` and `NumberCellValueArchive.format`
     // are both `required`. Omitting either makes the message malformed,

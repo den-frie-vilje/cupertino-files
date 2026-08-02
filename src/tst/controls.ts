@@ -203,7 +203,7 @@ const ListEntry = { KEY: 1, CELL_SPEC: 12 } as const;
  */
 export function controlsOf(store: ObjectStore, dataStore: RawMessage | undefined): Map<number, CellControl> {
   const list = store.resolve(refId(dataStore, CONTROL_CELL_SPEC_TABLE));
-  return list ? readControlList(list.message) : new Map();
+  return list ? readControlList(list.message) : new Map<number, CellControl>();
 }
 
 /**
@@ -352,17 +352,24 @@ const NONE_SLOT_IS_NIL = true;
  * no format was flawless on paper and invisible in the app. Treat a menu
  * as unproven until someone opens one.
  */
+/**
+ * The reserved-slot marker. A symbol, not a string sentinel: menu items are
+ * strings, so an in-band marker like `"nil"` would silently turn a
+ * legitimate choice with that exact text into the None slot.
+ */
+const NIL_SLOT: unique symbol = Symbol("popup none slot");
+
 export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
   if (items.length === 0) throw new RangeError("a pop-up menu needs at least one item");
   const model = RawMessage.create();
   // Slot 0 first, always — see NONE_SLOT_IS_NIL. Without it the menu loses
   // whichever choice happens to be written first.
-  const entries: (PopupItem | "nil")[] = NONE_SLOT_IS_NIL ? ["nil", ...items] : [...items];
+  const entries: (PopupItem | typeof NIL_SLOT)[] = NONE_SLOT_IS_NIL ? [NIL_SLOT, ...items] : [...items];
   model.setMessages(
     PopUpMenuModelFields.TSCE_ITEM,
     entries.map((item) => {
       const value = RawMessage.create();
-      if (item === "nil") {
+      if (item === NIL_SLOT) {
         // A NIL_TYPE value carries no body at all — the type is the whole
         // message, and every value field is optional.
         value.setVarint(CellValueFields.TYPE, CellValueType.NIL);
