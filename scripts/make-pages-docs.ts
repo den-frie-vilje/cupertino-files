@@ -186,7 +186,13 @@ export const RUNGS: {
       doc.appendParagraph("P07: this is section one.");
       const second = doc.appendParagraph("P07: this should be section two, on a new page.");
       // Takes a paragraph index, not a character offset, and refuses index 0.
-      doc.insertSectionBreak(second);
+      const section = doc.insertSectionBreak(second);
+      // The name is the half a reader would otherwise have to know to look
+      // for: it was being stripped, and a blank entry in the page-thumbnail
+      // sidebar looks like a section that was simply never named.
+      doc.appendParagraph(
+        `In the page-thumbnail sidebar, this new section should be named "${section.name ?? ""}" — not blank.`,
+      );
     },
   },
   {
@@ -203,7 +209,12 @@ export const RUNGS: {
     note: "a footnote anchored at the end of a sentence",
     build: (doc) => {
       doc.appendParagraph("P09: this sentence should carry a footnote.");
-      doc.body.addFootnote(doc.body.text.length, "This footnote was written by iwork-files.");
+      doc.appendParagraph(
+        "At the foot of the page the note should be small — the document's Footnote style — not body-sized.",
+      );
+      const starts = doc.body.paragraphStarts();
+      const at = doc.body.text.indexOf("\n", starts[starts.length - 2]!);
+      doc.body.addFootnote(at, "This footnote was written by iwork-files.");
     },
   },
   {
@@ -409,7 +420,10 @@ export const RUNGS: {
     name: "P11-inline-image",
     note: "a 1x1 red PNG inserted inline and scaled up — the experimental one",
     build: (doc) => {
-      doc.appendParagraph("P11: a small red square should appear after this text: ");
+      doc.appendParagraph(
+        "P11: a red square one inch across should appear at the end of the next line.",
+      );
+      doc.appendParagraph("Here it comes: ");
       doc.insertInlineImage(doc.body.text.length, RED_DOT, {
         fileName: "red-dot.png",
         width: 72,
