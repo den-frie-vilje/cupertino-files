@@ -825,6 +825,18 @@ export class TableModel {
     return registry;
   }
 
+  /**
+   * The raw `TSCE.FormulaArchive` behind a cell, if it has one.
+   *
+   * The unrendered truth — what {@link cellFormulaDetail} renders, and the
+   * yardstick formula *writing* is measured against: a rebuilt formula is
+   * proven by comparing bytes with what Apple stored here.
+   */
+  formulaArchiveAt(row: number, column: number): RawMessage | undefined {
+    const id = this.formulaId(row, column);
+    return id === undefined ? undefined : this.formulaTable().get(id);
+  }
+
   /** `formula_id` of a cell, if its record carries one. */
   formulaId(row: number, column: number): number | undefined {
     const located = this.locateRow(row);
