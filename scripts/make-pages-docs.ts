@@ -297,29 +297,43 @@ const RUNGS: {
     },
   },
   {
-    name: "P19-copy-drawable",
-    // The plain bases have no drawable to copy, so this one supplies a
-    // document that does: current format, six sections, a group on page 1.
+    name: "P19a-copy-same-page",
     base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
-    note: "a floating drawable copied onto a later page — the placement claim",
+    note: "a drawable copied into the page group it already belongs to — no new group",
     build: (doc) => {
-      // Say so in the text too: a drawable that fails to appear leaves a
-      // blank page, which is indistinguishable from a page that was always
-      // blank unless the document tells you what to expect.
+      // Half of the placement question. This one reuses an existing page
+      // group, so a failure here is about copying a drawable; a failure only
+      // in P19b is about creating the group.
       doc.appendParagraph(
-        "P19: the graphic from page 1 should also appear on page 3, lower and to the left.",
+        "P19a: the page-1 graphic should appear TWICE on page 1, the copy shifted right.",
       );
-      const pages = doc.floatingDrawablePages();
-      const from = pages[0];
-      if (from === undefined) throw new Error("base has no floating drawables");
-      const source = doc.floatingDrawables(from)?.drawables()[0];
+      const page = doc.floatingDrawablePages()[0];
+      if (page === undefined) throw new Error("base has no floating drawables");
+      const container = doc.floatingDrawables(page)!;
+      const source = container.drawables()[0];
       if (!source) throw new Error("no drawable to copy");
-      // Onto a page that has none, offset so it cannot be confused with the
-      // original if both happen to land on screen together.
-      // The target page has no drawables, so it has no page group either.
-      const target = doc.floatingDrawables(from + 2, { create: true });
+      // Shifted sideways only: the group is 396x612 on a 792-tall page, so
+      // any vertical offset pushes most of it off the bottom.
+      container.addCopyOf(source, { x: 150, y: 0 });
+    },
+  },
+  {
+    name: "P19b-copy-new-page-group",
+    base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
+    note: "the same copy onto the next page, which needs a page group created",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P19b: the page-1 graphic should also appear on page 2, in the same position.",
+      );
+      const page = doc.floatingDrawablePages()[0];
+      if (page === undefined) throw new Error("base has no floating drawables");
+      const source = doc.floatingDrawables(page)!.drawables()[0];
+      if (!source) throw new Error("no drawable to copy");
+      // The adjacent page, and the same geometry as the original, so the
+      // only variable is which page it is on.
+      const target = doc.floatingDrawables(page + 1, { create: true });
       if (!target) throw new Error("no container for the target page");
-      target.addCopyOf(source, { x: 100, y: 300 });
+      target.addCopyOf(source, { x: 0, y: 0 });
     },
   },
   {
