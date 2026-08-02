@@ -1438,10 +1438,10 @@ export const CAPABILITIES: Capability[] = [
         "ubiquity threshold fired), Keynote painted nothing, our written title included. The copy now " +
         "keeps its cloned placeholders in whichever lists its source used.",
       how:
-        "`npm run keynote:docs -- <dir>` and open the K04 (add), K05 (duplicate), K06 (remove) and " +
-        "K07 (reorder) files — each slide states on its face what the deck should look like. K04's " +
-        "last slide must now SHOW its stated title (an empty slide is the old defect); a refusal or " +
-        "wrong navigator order names its rung.",
+        "`npm run keynote:docs -- <dir>` and open the K04 file: its last slide must SHOW its stated " +
+        "title on the right layout (an entirely empty slide is the old paint-order defect, and would " +
+        "mean the lists were not the whole story). Duplicate, remove and reorder are already " +
+        "confirmed — \"K05 passed / K06 passed / K07 passed\" — so only the add path is in question.",
       risk: "high",
     },
   },
@@ -1492,6 +1492,11 @@ export const CAPABILITIES: Capability[] = [
         "`npm run keynote:docs -- <dir>`, open the K08 file and press Play: the first slide states it " +
         "should advance by itself after ~2 seconds. Having to click means the write did not take.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote — \"K08 passed\".** The deck advanced by itself after ~2 seconds on " +
+        "the current-format base, which also proves the animationAttributes chain accepts our " +
+        "writes — the prerequisite for named effects, which stay blocked on measuring a real effect " +
+        "string (the corpus knows only \"none\"; the animated.key ask in docs/BLOCKERS.md settles it).",
     },
   },
   {
@@ -1510,6 +1515,10 @@ export const CAPABILITIES: Capability[] = [
         "`npm run keynote:docs -- <dir>`, open the K10 file: the title says the deck should be 4:3 " +
         "(1024×768), visibly squarer than the base's 16:9. A still-widescreen canvas is the failure.",
       risk: "medium",
+      settled:
+        "**Confirmed — \"K10 size was 4:3 on iPhone\".** The resized canvas renders 4:3 in Keynote " +
+        "for iOS, the second platform this ladder has been checked on (the Pages comment rung was " +
+        "the first). One TSP.Size on the show is all it takes, and the app re-lays out for it.",
     },
   },
   {
@@ -1553,6 +1562,10 @@ export const CAPABILITIES: Capability[] = [
         "`npm run keynote:docs -- <dir>`, open the K09 file: slide 1 states that the next slide is " +
         "skipped — collapsed in the navigator, absent when playing. It presenting anyway is the failure.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote — \"K09 passed\".** One bool on the slide node, and the app honours " +
+        "it: the marked slide stayed out of the presentation. First evidence in either direction for " +
+        "this flag — no corpus deck carries it true.",
     },
   },
   {
