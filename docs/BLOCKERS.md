@@ -89,9 +89,11 @@ first.
 named style), P12 (bulleted list), P13 (in-place replacement), P14 (range
 deletion), P15 (creating a paragraph style that lists in the panel), P16
 (date field), P17 (page count), P18 (bookmark — with a range bug found,
-fixed, and the fix confirmed), and P19a/b (drawable copies, same page and
-new page). P07 failed its first check — section listed, page not broken —
-which found defect 9 below; the rebuilt rung is unverified. All on
+fixed, and the fix confirmed), P19a/b (drawable copies, same page and new
+page), and P11 (inline image — the rung that had never been opened at all,
+carrying the four shape-audit fixes). P07 failed its first check — section
+listed, page not broken — which found defect 9 below; P09 crashed Pages,
+which found defect 10; both rebuilt rungs are unverified. All on
 the current format, each opening with the document's own formatting intact.
 
 Getting there took eight defects, and the shape of each is worth knowing
@@ -140,12 +142,10 @@ suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
 number), P07 (section break — rebuilt with the U+0004 fix after its first
-check failed), P08 (comment), P09 (footnote — rebuilt after its
-first check crashed Pages; the objectless seed entry is gone), P10 (page
-setup), P11 (inline image — rebuilt for the same reason: its attachment
-rode on an already-present table, but rebuilt files are the ones to
-trust). P07, P09 and P11 carry fresh fixes and are the highest-value
-opens. Nothing about them is known to be wrong;
+check failed), P08 (comment), P09 (footnote — rebuilt after its first
+check crashed Pages; the objectless seed entry is gone), P10 (page setup).
+P07 and P09 are the highest-value opens: each carries a fix for a defect
+its own first check found. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 

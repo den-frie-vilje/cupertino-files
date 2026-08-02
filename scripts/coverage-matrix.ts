@@ -678,20 +678,26 @@ export const CAPABILITIES: Capability[] = [
     group: "Drawables & media",
     name: "Inline image insertion",
     apps: ["pages"],
-    status: "experimental",
-    note: "Data/ plumbing with SHA-1 dedupe; not verified in the app",
+    status: "read+write",
+    note: "Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment",
     manualProof: {
       claim: "an image this library inserts inline appears on the page at the size asked for",
+      settled:
+        "**Confirmed in Pages — \"P11 pass\".** A 1x1 red PNG inserted inline and scaled to " +
+        "72pt renders as a red square at the size asked, on the current-format base. This " +
+        "was the rung that had never been opened at all, and it shipped with four " +
+        "shape-audit fixes applied together: the theme's `image-0-imageStyle` reference " +
+        "(all 83 corpus images carry one), `naturalSize` alongside `originalSize`, " +
+        "`flags`/`interpretsUntaggedImageDataAsGeneric`, and the four attachment offset " +
+        "fields (101 of 101 corpus attachments). All four rode in one file, so which were " +
+        "necessary rather than merely corpus-true is not isolated — they are cheap, " +
+        "measured, and stay",
       why:
-        "The shape audit found the archive incomplete in exactly the way a cell control with " +
-        "no format was: no `style`, where all 83 corpus images point at the theme's " +
-        "`image-0-imageStyle`; no `naturalSize`; and an attachment carrying only `drawable` " +
-        "where all 101 corpus attachments carry four offset fields. All four are optional, so " +
-        "nothing offline objected. All four are now written and none has been opened.",
+        "The shape audit found the archive incomplete in exactly the way a cell control " +
+        "with no format was — every omission optional, nothing offline objecting.",
       how:
         "`npm run pages:docs` emits P11-inline-image: a 1x1 red PNG scaled up. A red square " +
-        "on the page is a pass; a gap, a blank box, or an image at the wrong size each say " +
-        "something different about which of the four mattered.",
+        "on the page is a pass.",
       risk: "high",
     },
   },

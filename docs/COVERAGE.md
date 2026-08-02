@@ -82,7 +82,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Image cropping (set, move, remove a mask) | all | ✅ read + write | 14 | iwork16→current |
 | Image masks | all | 🔍 read only | 14 | iwork16→current |
 | Media variant resolution (unmaterialized originals) | all | 🔍 read only | 9 | iwork16→current |
-| Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; not verified in the app</sub> | Pages | ⚠️ experimental | n/a | — |
+| Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
 
 ### Pages
