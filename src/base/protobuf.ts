@@ -13,6 +13,30 @@
  * so that editing one value deep inside a document cannot corrupt anything we
  * don't understand. Typed accessors for the iWork messages we manipulate are
  * layered on top (see pages/*.ts).
+ *
+ * ## Why not protobufjs
+ *
+ * The `.proto` schemas are read by `protobufjs` — see
+ * `scripts/proto-schema.ts` — and the obvious next question is why the wire
+ * codec is not. It was asked and answered by measurement, not preference:
+ *
+ * **A typed decoder discards what it does not model.** Encoding field 1 and
+ * an unmodelled field 7 gives `082a3a066b6565706d65`; decoding and
+ * re-encoding through a `protobuf.Type` gives back `082a`. The unknown field
+ * is gone. This library models a few dozen of 1468 messages and promises
+ * every untouched archive comes back byte-identical, so that single
+ * behaviour rules the typed API out — not as a preference, as a
+ * contradiction.
+ *
+ * **The low-level `Reader`/`Writer` would not help either.** They are the
+ * right shape, but they speak `Long`: `reader.uint64()` returns a
+ * `protobufjs.Long`, where every accessor here returns a native `bigint`.
+ * Adapting would add a conversion on every 64-bit field, keep the whole
+ * {@link RawMessage} model above it, and turn a zero-runtime-dependency
+ * package into one with a dependency — three costs and no removed code.
+ *
+ * So: canonical library for the schemas, where it is strictly better; raw
+ * bytes here, where preserving the unknown is the entire job.
  */
 import { ByteWriter, utf8Decode, utf8Encode } from "./bytes.ts";
 import { readUvarint, uvarintLength, writeUvarint } from "./varint.ts";

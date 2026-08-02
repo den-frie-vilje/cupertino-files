@@ -29,12 +29,8 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { NumbersDocument } from "../src/numbers/document.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { chartsOf } from "../src/tsch/charts.ts";
-import {
-  missingRequired,
-  parseProtoSchema,
-  type MissingRequired,
-  type ProtoSchema,
-} from "../src/tsp/required.ts";
+import { missingRequired, type MissingRequired, type ProtoSchema } from "../src/tsp/required.ts";
+import { loadVendoredSchema } from "./proto-schema.ts";
 
 const PROTO_DIR = new URL("../proto/current/", import.meta.url);
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -44,11 +40,7 @@ const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", impor
 const RED = { fill: { kind: "color", color: { r: 1, g: 0.2, b: 0.2, space: "srgb" } } } as const;
 
 export function loadSchema(): ProtoSchema {
-  const dir = PROTO_DIR.pathname;
-  const sources = readdirSync(dir)
-    .filter((name) => name.endsWith(".proto"))
-    .map((name) => readFileSync(join(dir, name), "utf8"));
-  return parseProtoSchema(sources);
+  return loadVendoredSchema().detailed;
 }
 
 /** Check every archive in a document. */

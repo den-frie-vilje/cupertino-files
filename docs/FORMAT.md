@@ -1343,14 +1343,38 @@ export const Storage = protoFields("TSWP.StorageArchive", {
 
 Three things are worth knowing about doing it this way.
 
+**The schemas are read by `protobufjs`, not by a parser of ours.** They
+were, twice — two regex parsers tracking brace depth, one in `src/` and one
+in a script — and they agreed with the real thing on 1468 of 1469 messages
+and all 163 enums. Not wrong, then, but only on the inputs at hand: they
+also silently missed five fields, the members of the two `oneof` blocks in
+`TSWP.ContainedObjectsCommandArchive`, because a `oneof` member carries no
+`required`/`optional`/`repeated` label and the field regex demanded one.
+Swapping to the canonical parser regenerated the embedded table
+byte-identically, so nothing the library relies on changed.
+
 **Merging 41 files is safe, and that is measured rather than assumed.**
 Across every vendored file, no field *number* maps to two different names,
 and exactly one field *name* maps to two different numbers: `extension`, the
 name protobuf convention gives every extension field. `TSA`, `TSCH`, `TSD`,
 `TST` and `TSWP` each extend `TSS.ThemeArchive` with a field called
-`extension`, at 210, 120, 100, 200 and 110. The name carries nothing and the
-type carries everything, so an extension is addressed by its message type —
-`TSWP.ThemePresetsArchive` is the paragraph-style preset list.
+`extension`, at 210, 120, 100, 200 and 110. protobufjs disambiguates them by
+declaring scope (`.TSWP.ThemePresetsArchive.extension`); this library keys
+them by the message type they carry, which is what a caller means by "the
+paragraph-style preset list". Scalar-typed extensions keep their own names —
+`TSCH.ChartArchive` is extended by half a dozen `bool`s, and filing those
+under `bool` would be worse than the collision it fixed.
+
+**The wire codec stays hand-written, and that is not inconsistency.** A
+typed protobuf decoder discards fields it does not model: encode field 1
+plus an unmodelled field 7 as `082a3a066b6565706d65`, decode and re-encode
+through `protobuf.Type`, and you get back `082a`. This library models a few
+dozen of 1468 messages and promises untouched archives come back
+byte-identical, so the typed API is not a preference to weigh — it
+contradicts the guarantee. The low-level `Reader`/`Writer` are the right
+shape but speak `Long` where everything here speaks `bigint`, which would
+add a conversion per 64-bit field, keep the whole raw-message model above
+it, and cost the zero-runtime-dependency property.
 
 **Enums cannot be checked against messages.** An enum's values live in the
 same small integer range as its parent message's field numbers, so

@@ -37,7 +37,7 @@
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parseProtoEnums, parseProtoSchema, type ProtoField } from "../src/tsp/required.ts";
+import { loadVendoredSchema, type VendoredFile } from "./proto-schema.ts";
 import { sha1 } from "../src/base/sha1.ts";
 import { utf8Encode } from "../src/base/bytes.ts";
 
@@ -48,60 +48,6 @@ const ROOT = new URL("../", import.meta.url);
 const PROTO_DIR = new URL("proto/", ROOT);
 const SRC_DIR = new URL("src/", ROOT);
 const OUTPUT = new URL("src/proto/vendored.ts", ROOT);
-
-/** Every vendored `.proto`, repo-relative, in a stable order. */
-function protoFiles(): { path: string; text: string }[] {
-  const out: { path: string; text: string }[] = [];
-  const walk = (dir: URL, prefix: string): void => {
-    for (const name of readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    )) {
-      if (name.isDirectory()) walk(new URL(`${name.name}/`, dir), `${prefix}${name.name}/`);
-      else if (name.name.endsWith(".proto")) {
-        out.push({
-          path: `proto/${prefix}${name.name}`,
-          text: readFileSync(new URL(name.name, dir), "utf8"),
-        });
-      }
-    }
-  };
-  walk(PROTO_DIR, "");
-  return out;
-}
-
-/** The key a field is addressed by: its name, or its type when an extension. */
-function keyOf(field: ProtoField): string {
-  return field.name === "extension" ? field.type.replace(/^\./, "") : field.name;
-}
-
-/** Merge every file's messages, refusing any genuine disagreement. */
-function mergeSchemas(files: { path: string; text: string }[]): {
-  messages: Map<string, Map<string, number>>;
-  conflicts: string[];
-} {
-  const messages = new Map<string, Map<string, number>>();
-  const source = new Map<string, string>();
-  const conflicts: string[] = [];
-
-  for (const file of files) {
-    for (const [archive, fields] of parseProtoSchema([file.text])) {
-      let merged = messages.get(archive);
-      if (!merged) messages.set(archive, (merged = new Map()));
-      for (const [number, field] of fields) {
-        const key = keyOf(field);
-        const existing = merged.get(key);
-        const where = `${archive}.${key}`;
-        if (existing !== undefined && existing !== number) {
-          conflicts.push(`${where} = ${existing} in ${source.get(where)}, ${number} in ${file.path}`);
-          continue;
-        }
-        merged.set(key, number);
-        source.set(where, file.path);
-      }
-    }
-  }
-  return { messages, conflicts };
-}
 
 /** Names given to any of the four declaration helpers, anywhere in src. */
 function referencedArchives(): Set<string> {
@@ -128,7 +74,7 @@ function referencedArchives(): Set<string> {
 }
 
 function render(
-  files: { path: string; text: string }[],
+  files: readonly VendoredFile[],
   messages: Map<string, Map<string, number>>,
   enums: Map<string, Map<string, number>>,
   referenced: Set<string>,
@@ -188,9 +134,7 @@ function render(
 }
 
 export function generate(): { text: string; conflicts: string[]; archives: number } {
-  const files = protoFiles();
-  const { messages, conflicts } = mergeSchemas(files);
-  const enums = parseProtoEnums(files.map((f) => f.text));
+  const { files, messages, enums, conflicts } = loadVendoredSchema();
   const referenced = referencedArchives();
   return {
     text: render(files, messages, enums, referenced),

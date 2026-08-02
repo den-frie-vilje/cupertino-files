@@ -28,14 +28,15 @@ import {
   checkDocument,
   loadSchema,
 } from "../scripts/check-required-fields.ts";
-import { parseProtoSchema, missingRequired } from "../src/tsp/required.ts";
+import { missingRequired } from "../src/tsp/required.ts";
+import { parseProtoText } from "../scripts/proto-schema.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 
 const schema = loadSchema();
 
 describe("the schema parser", () => {
   it("reads required, optional and repeated, and qualifies nested names", () => {
-    const parsed = parseProtoSchema([
+    const parsed = parseProtoText(
       `syntax = "proto2";
        package TST;
        message Outer {
@@ -46,7 +47,7 @@ describe("the schema parser", () => {
          required uint32 ruleCount = 1;
          repeated .TST.Outer.Inner rule = 4;
        }`,
-    ]);
+    );
     expect([...parsed.keys()].sort().join(",")).toBe("TST.Outer,TST.Outer.Inner");
     expect(parsed.get("TST.Outer")!.get(1)!.label).toBe("required");
     expect(parsed.get("TST.Outer")!.get(4)!.type).toBe("TST.Outer.Inner");
@@ -56,13 +57,13 @@ describe("the schema parser", () => {
   it("does not mistake enum members for fields", () => {
     // `Value = 0;` inside an enum looks exactly like a field to a careless
     // parser, and would invent required fields that do not exist.
-    const parsed = parseProtoSchema([
+    const parsed = parseProtoText(
       `package TSP;
        message FieldInfo {
          enum Type { Value = 0; ObjectReference = 1; }
          required .TSP.FieldPath path = 1;
        }`,
-    ]);
+    );
     const fields = parsed.get("TSP.FieldInfo")!;
     expect(fields.size).toBe(1);
     expect(fields.get(1)!.name).toBe("path");
@@ -70,15 +71,24 @@ describe("the schema parser", () => {
 
   it("attributes extension fields to the type being extended", () => {
     // How a ChartArchive ends up inside a ChartDrawableArchive at 10000.
-    const parsed = parseProtoSchema([
+    //
+    // The extended type has to be declared here. A real parser attaches an
+    // extension to a type that exists and drops one that does not; the
+    // regex parser it replaced invented the target, which is why this
+    // snippet used to omit it. In the vendored set every target exists —
+    // all 41 files are parsed into one root precisely so they do.
+    const parsed = parseProtoText(
       `package TSCH;
+       message ChartDrawableArchive {
+         optional uint32 super = 1;
+       }
        message ChartArchive {
          optional uint32 chart_type = 1;
          extend .TSCH.ChartDrawableArchive {
            optional .TSCH.ChartArchive unity = 10000;
          }
        }`,
-    ]);
+    );
     expect(parsed.get("TSCH.ChartDrawableArchive")?.get(10000)?.name).toBe("unity");
     expect(parsed.get("TSCH.ChartArchive")?.has(10000)).toBe(false);
   });
@@ -99,11 +109,11 @@ describe("the schema parser", () => {
 
 describe("the validator", () => {
   it("reports a missing required field, with the path to it", () => {
-    const parsed = parseProtoSchema([
+    const parsed = parseProtoText(
       `package T;
        message Rule { required .TSP.Reference style = 2; }
        message Set { repeated .T.Rule rule = 1; }`,
-    ]);
+    );
     const set = RawMessage.create();
     set.addMessage(1, RawMessage.create());
     const problems = missingRequired(set, "T.Set", parsed);
@@ -113,11 +123,11 @@ describe("the validator", () => {
   });
 
   it("says nothing about an absent optional submessage", () => {
-    const parsed = parseProtoSchema([
+    const parsed = parseProtoText(
       `package T;
        message Rule { required uint32 x = 1; }
        message Set { optional .T.Rule rule = 1; }`,
-    ]);
+    );
     expect(missingRequired(RawMessage.create(), "T.Set", parsed).length).toBe(0);
   });
 });

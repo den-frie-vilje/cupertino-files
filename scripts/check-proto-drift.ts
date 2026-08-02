@@ -27,8 +27,8 @@
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { loadVendoredSchema } from "./proto-schema.ts";
 
-const PROTO_DIR = fileURLToPath(new URL("../proto/", import.meta.url));
 const SRC_DIR = fileURLToPath(new URL("../src/", import.meta.url));
 
 /** message name (unqualified) → field name → number, across every schema. */
@@ -37,82 +37,29 @@ type ProtoIndex = Map<string, Map<string, number>>;
 
 
 /**
- * Parse the field numbers out of a `.proto`.
+ * Index the vendored schemas by message name — bare *and* qualified.
  *
- * A regex parser rather than a real one, and that is proportionate: the
- * only thing needed is `name = number` inside `message Name { … }`. Nested
- * messages are indexed under both their bare name and `Outer.Inner`,
- * because the docblocks in `src/` use whichever reads better.
+ * The docblocks in `src/` name an archive whichever way reads better
+ * (`TileRowInfo` in one place, `TST.TileStorage.Tile` in another), so both
+ * spellings resolve. Where two dumps define a message the union of their
+ * fields is what a constant should be checked against.
  */
-function parseProto(text: string): ProtoIndex {
-  const index: ProtoIndex = new Map();
-  const stack: string[] = [];
-  let current: Map<string, number> | undefined;
-  // Qualifying by package is not optional: `DocumentArchive` is defined in
-  // five of these families, and matching on the bare name made
-  // TP.DocumentArchive answer with TSK's fields — three confident,
-  // completely wrong "drift" reports.
-  const pkg = /^package\s+([A-Za-z0-9_.]+)\s*;/m.exec(text)?.[1] ?? "";
-
-  for (const raw of text.split("\n")) {
-    const line = raw.replace(/\/\/.*$/, "").trim();
-    if (line.length === 0) continue;
-
-    const message = /^message\s+([A-Za-z0-9_]+)/.exec(line);
-    if (message) {
-      stack.push(message[1]!);
-      current = new Map();
-      const qualified = pkg ? `${pkg}.${stack.join(".")}` : stack.join(".");
-      index.set(qualified, current);
-      continue;
-    }
-    if (/^enum\s+/.test(line)) {
-      stack.push("<enum>");
-      continue;
-    }
-    if (line.startsWith("}")) {
-      stack.pop();
-      const enclosing = stack.join(".");
-      current = enclosing.length > 0 ? index.get(pkg ? `${pkg}.${enclosing}` : enclosing) : undefined;
-      continue;
-    }
-    if (!current) continue;
-
-    const field = /^(?:optional|required|repeated)\s+[.A-Za-z0-9_]+\s+([A-Za-z0-9_]+)\s*=\s*(\d+)/.exec(
-      line,
-    );
-    if (field) current.set(field[1]!, Number(field[2]));
-  }
-  return index;
-}
-
-function loadProtos(): ProtoIndex {
+function loadProtos(): { index: ProtoIndex; messages: number } {
   const merged: ProtoIndex = new Map();
-  const walk = (dir: string): void => {
-    for (const name of readdirSync(dir)) {
-      const path = `${dir}/${name}`;
-      if (statSync(path).isDirectory()) {
-        walk(path);
-        continue;
-      }
-      if (!name.endsWith(".proto")) continue;
-      for (const [message, fields] of parseProto(readFileSync(path, "utf8"))) {
-        const existing = merged.get(message);
-        if (!existing) {
-          merged.set(message, fields);
-          continue;
-        }
-        // Several dumps define the same message; they agree, and where a
-        // newer dump adds a field the union is what we want to check
-        // against.
-        for (const [field, number] of fields) {
-          if (!existing.has(field)) existing.set(field, number);
-        }
-      }
-    }
+  const add = (name: string, fields: Map<string, number>): void => {
+    let existing = merged.get(name);
+    if (!existing) merged.set(name, (existing = new Map()));
+    for (const [field, number] of fields) if (!existing.has(field)) existing.set(field, number);
   };
-  walk(PROTO_DIR);
-  return merged;
+  const schema = loadVendoredSchema().messages;
+  for (const [qualified, fields] of schema) {
+    add(qualified, fields);
+    add(qualified.slice(qualified.lastIndexOf(".") + 1), fields);
+    // `Outer.Inner` as well as `TSP.Outer.Inner`, for the same reason.
+    const parts = qualified.split(".");
+    if (parts.length > 2) add(parts.slice(-2).join("."), fields);
+  }
+  return { index: merged, messages: schema.size };
 }
 
 interface Constant {
@@ -221,7 +168,7 @@ export interface DriftReport {
  * the only one not wired into `npm test`.
  */
 export function driftReport(): DriftReport {
-  const protos = loadProtos();
+  const { index: protos, messages } = loadProtos();
   const constants = collectConstants();
   const findings: Finding[] = [];
   let checkedFields = 0;
@@ -285,7 +232,7 @@ export function driftReport(): DriftReport {
   }
 
   return {
-    messages: protos.size,
+    messages,
     matchedConstants: checkedConstants,
     totalConstants: constants.length,
     checkedFields,

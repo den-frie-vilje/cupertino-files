@@ -405,7 +405,8 @@ in [FORMAT.md §10](docs/FORMAT.md).
 
 **Field numbers come from Apple's schema.** The 41 vendored `.proto` dumps
 in [`proto/`](proto/README.md) are not documentation — the library reads
-them. A declaration names *fields*, and `npm run proto:embed` resolves the
+them, through `protobufjs` (a devDependency; nothing under `src/` imports
+it). A declaration names *fields*, and `npm run proto:embed` resolves the
 numbers into a generated table the runtime imports:
 
 ```ts
@@ -419,6 +420,13 @@ A misspelled or invented field throws at import rather than reading the
 wrong bytes, and the suite fails if the generated table and `proto/` drift
 apart. The schemas ship in the package, so an installed copy carries the
 authority for every number in it.
+
+The wire codec is deliberately *not* protobufjs. A typed decoder discards
+fields it does not model — encode field 1 plus an unmodelled field 7, decode
+and re-encode, and field 7 is gone — and this library models a few dozen of
+1468 messages while promising untouched archives come back byte-identical.
+`src/base/protobuf.ts` keeps every field as raw bytes for exactly that
+reason.
 
 Not everything can be looked up: the dumps are Numbers 14.4 and Pages 5.0,
 so fields added since are declared with `measuredFields`, which requires a

@@ -1,8 +1,9 @@
 # Apple iWork protobuf schemas (.proto)
 
 > **These files are load-bearing.** `src/proto/vendored.ts` is generated
-> from them by `npm run proto:embed`, and the library resolves every field
-> number and enum value it can through that table. Change anything here and
+> from them by `npm run proto:embed` — via `protobufjs`, not a parser of
+> ours — and the library resolves every field number and enum value it can
+> through that table. Change anything here and
 > re-run `proto:embed`, or the test suite fails. They are also published
 > with the package, so an installed copy carries the authority for its own
 > field numbers.

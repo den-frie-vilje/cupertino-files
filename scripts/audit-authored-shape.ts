@@ -53,7 +53,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
 import type { IWorkDocument } from "../src/tsa/document.ts";
 import { typeName } from "../src/tsp/registry.ts";
-import { parseProtoSchema, type ProtoSchema } from "../src/tsp/required.ts";
+import type { ProtoSchema } from "../src/tsp/required.ts";
+import { loadVendoredSchema } from "./proto-schema.ts";
 import { RUNGS as PAGES_RUNGS, BASES as PAGES_BASES } from "./make-pages-docs.ts";
 import {
   RUNGS as NUMBERS_RUNGS,
@@ -112,21 +113,13 @@ const describeSignature = (sig: string): string =>
  * interpret is a finding nobody acts on.
  */
 function fieldNamer(): (type: number, field: number) => string {
+  // Every vendored dump, not just the shared families. The Pages-specific
+  // `TP*` schemas live in `pages-2013/`, and reading only `current/`
+  // reported `TP.SectionArchive.name` as a bare "field 26" — the one
+  // finding nobody could act on without going to the corpus by hand.
   let schema: ProtoSchema | undefined;
   try {
-    // Every vendored dump, not just `current/`. The Pages-specific `TP*`
-    // schemas live in `pages-2013/` — the only public Pages dump there is —
-    // and reading only `current/` reported `TP.SectionArchive.name` as a
-    // bare "field 26", which is the one finding in the first run that
-    // nobody could act on without going to the corpus by hand.
-    const sources: string[] = [];
-    for (const family of ["current", "pages-2013", "numbers-14.4", "keynote-14.4"]) {
-      const dir = new URL(`../proto/${family}/`, import.meta.url);
-      for (const name of readdirSync(dir)) {
-        if (name.endsWith(".proto")) sources.push(readFileSync(new URL(name, dir), "utf8"));
-      }
-    }
-    schema = parseProtoSchema(sources);
+    schema = loadVendoredSchema().detailed;
   } catch {
     schema = undefined;
   }
