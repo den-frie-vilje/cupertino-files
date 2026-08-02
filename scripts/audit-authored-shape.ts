@@ -60,6 +60,7 @@ import {
   RUNGS as NUMBERS_RUNGS,
   TEMPLATE as NUMBERS_TEMPLATE,
 } from "./make-bisect-docs.ts";
+import { RUNGS as KEYNOTE_RUNGS, BASES as KEYNOTE_BASES } from "./make-keynote-docs.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
@@ -232,7 +233,7 @@ const key = (f: Pick<Finding, "kind" | "type" | "what">) => `${f.kind}:${f.type}
 function authoredObjects(
   before: Uint8Array,
   build: (doc: never) => void,
-  Doc: typeof PagesDocument | typeof NumbersDocument,
+  Doc: typeof PagesDocument | typeof NumbersDocument | typeof KeynoteDocument,
 ): { saved: IWorkDocument; touched: Set<bigint> } | undefined {
   const original = Doc.load(before);
   const originalBytes = new Map<bigint, string>();
@@ -345,6 +346,16 @@ export function audit(): Finding[] {
     if (run) inspect(`numbers/${rung.name}`, run.saved, run.touched, corpus, findings);
   }
 
+  // Both Keynote bases, not just the first: the ladder emits against both
+  // eras, and an absence only the upgrade-path base shows is still real.
+  for (const base of KEYNOTE_BASES) {
+    const bytes = new Uint8Array(readFileSync(base.url));
+    for (const rung of KEYNOTE_RUNGS) {
+      const run = authoredObjects(bytes, rung.build, KeynoteDocument);
+      if (run) inspect(`keynote/${base.tag}-${rung.name}`, run.saved, run.touched, corpus, findings);
+    }
+  }
+
   return [...findings.values()].sort(
     (a, b) => b.share - a.share || b.instances - a.instances || a.type - b.type,
   );
@@ -414,8 +425,27 @@ function report(findings: Finding[]): void {
  * open question `reference-extractors.test.ts` tracks as 36 stylesheet
  * disagreements, and guessing at a fourth stylesheet rule to close them is
  * how the last four rounds of the style-panel bug went.
+ *
+ * The Keynote ladder's first offline run added eight findings and named
+ * four more real defects before any deck reached the app: an inserted
+ * slide node referenced by the show's inline tree and declared by nothing
+ * (the damaged-document class — `KN.ShowArchive` had no extractor at all);
+ * clone-then-unlink leaving the source's note, drawables and guide
+ * storages as orphans no corpus document holds; `slideExtractor` missing
+ * `userDefinedGuideStorage`, so a duplicated deck's guides were declared
+ * by nothing; and cloned placeholders declaring their slide — the
+ * container rule at Keynote-local type ids (546/546 corpus placeholders
+ * carry the parent, 0 declare it). All four fixed offline.
+ *
+ * What that run left is the pair below: `KN.SlideNodeArchive.thumbnails`
+ * (16) and `.thumbnailSizes` (10), absent only when the skip rung touches
+ * the **v14-era** base's node. Those are slide thumbnails — bitmaps
+ * Keynote renders and regenerates on open. The old writer never stored
+ * them on this node, this library cannot render a slide, and fabricating
+ * a DataReference to nothing is worse than the absence. Characterized,
+ * not fixed.
  */
-export const BUDGET = 2;
+export const BUDGET = 4;
 
 function main(argv: string[]): number {
   const findings = audit();

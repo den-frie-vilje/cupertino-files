@@ -11,7 +11,7 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
-import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
+import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -156,6 +156,10 @@ export class KeynoteSlide {
   /** Skipped slides are retained in the file but not shown when presenting. */
   get isSkipped(): boolean {
     return this.node.message.getBool(SlideNode.IS_SKIPPED) ?? false;
+  }
+
+  set isSkipped(value: boolean) {
+    this.node.message.setBool(SlideNode.IS_SKIPPED, value);
   }
 
   /** Master/layout slides carry a name; content slides normally do not. */
@@ -662,11 +666,45 @@ export class KeynoteDocument extends IWorkDocument {
     // either would change both. Deep-clone the content and share the
     // presentation (styles, master, theme), which is what the default
     // policy in tsp/clone.ts encodes.
+    //
+    // Content the new slide will not keep must not be *cloned* either.
+    // Cloning the note and drawables and then unlinking them left the
+    // copies in the package as orphans — objects no corpus document holds,
+    // which the shape audit found on this rung's first offline run.
+    const excluded = new Set<bigint>();
+    if (!options.withContent) {
+      const stripped: bigint[] = [];
+      for (const field of [
+        Slide.NOTE,
+        Slide.OWNED_DRAWABLES,
+        Slide.BUILDS,
+        Slide.BUILD_CHUNKS,
+        Slide.DRAWABLES_Z_ORDER,
+      ]) {
+        pushRef(stripped, source.object.message, field);
+      }
+      for (const id of stripped) excluded.add(id);
+      // A placeholder can sit in owned_drawables AND behind its own slide
+      // field. The placeholder fields are kept, so anything they reach must
+      // be cloned — excluding it would leave the copy's field pointing at
+      // the source's placeholder, and typing into one slide would edit both.
+      const kept: bigint[] = [];
+      for (const field of [
+        Slide.TITLE_PLACEHOLDER,
+        Slide.BODY_PLACEHOLDER,
+        Slide.OBJECT_PLACEHOLDER,
+        Slide.SLIDE_NUMBER_PLACEHOLDER,
+      ]) {
+        pushRef(kept, source.object.message, field);
+      }
+      for (const id of kept) excluded.delete(id);
+    }
     const { clone: slide } = deepCloneObject(this.store, source.object, {
       follow: (object, depth) =>
         // Never follow the master: a copied slide is *based on* the same
         // layout, and cloning it would fork the layout for one slide.
         object.identifier !== source.masterId &&
+        !excluded.has(object.identifier) &&
         defaultFollow(object, this.store.typeNameOf(object)) &&
         depth <= 8,
     });
@@ -697,7 +735,10 @@ export class KeynoteDocument extends IWorkDocument {
     // source's children would silently indent a copy of its whole subtree.
     node.message.remove(SlideNode.CHILDREN);
     node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
-    if (!options.withContent) node.message.remove(SlideNode.HAS_NOTE);
+    // The hint stays present as an explicit false: every corpus node
+    // carries `hasNote`, and removing a field every writer sets is the
+    // absent-field defect class, not a cleanup.
+    if (!options.withContent) node.message.setBool(SlideNode.HAS_NOTE, false);
 
     this.insertSlideNode(node.identifier, options.after ?? sourceIndex);
     const created = this.slides().find((s) => s.id === slide.identifier);
@@ -735,9 +776,11 @@ export class KeynoteDocument extends IWorkDocument {
     if (from === to) return;
     const nodeId = slide.node.identifier;
     this.removeSlideNode(nodeId);
-    // After removal the target index refers to the shortened list, so a
-    // forward move lands one place earlier than the caller's index.
-    this.insertSlideNode(nodeId, to > from ? to - 1 : to - 1);
+    // Insert after the element that precedes the target position. In the
+    // shortened list that predecessor sits at `to - 1` for a move in either
+    // direction: backward moves leave it untouched, forward moves shift it
+    // down by exactly the slot the removal freed.
+    this.insertSlideNode(nodeId, to - 1);
   }
 
   /**

@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 24 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 29 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -31,22 +31,27 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 6 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
 | 7 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
 | 8 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does | manual |
-| 9 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
-| 10 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
-| 11 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
-| 12 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 13 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
-| 14 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 15 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 16 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
-| 17 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 18 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 19 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 20 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 21 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 22 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 23 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 24 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 9 | 🟠 medium | Keynote → Presentation settings (mode, loop, autoplay delays, slide size) | Keynote renders a deck whose canvas this library resized. | manual |
+| 10 | 🟠 medium | Keynote → Skipped slides | Keynote treats a slide this library marked skipped as skipped. | manual |
+| 11 | 🟠 medium | Keynote → Slide placeholders (title, body, slide number) — read and fill | Keynote shows placeholder text this library wrote, styled by the layout. | manual |
+| 12 | 🟠 medium | Keynote → Speaker notes | Keynote shows presenter notes this library wrote. | manual |
+| 13 | 🟠 medium | Keynote → Transitions | Keynote honours automatic advance written into the transition attributes. | manual |
+| 14 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 15 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
+| 16 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
+| 17 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 18 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
+| 19 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 20 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 21 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
+| 22 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 23 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 24 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 25 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 26 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 27 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 28 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 29 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Builds (animations): read and retime
 
@@ -68,9 +73,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** Keynote opens a deck we added, duplicated, moved or removed slides in, and shows them in order.
 
-**Why the suite cannot settle it.** A slide is only as valid as the graph around it — placeholders, builds, the master reference. Our copies reload through this library and keep the package round-trippable, but whether Keynote considers the result a well-formed slide is its call, not ours.
+**Why the suite cannot settle it.** A slide is only as valid as the graph around it — placeholders, builds, the master reference. Our copies reload through this library and keep the package round-trippable, but whether Keynote considers the result a well-formed slide is its call, not ours. The first offline audit of these rungs already found four defects (an undeclared slide node, orphaned clones, undeclared guide storage, placeholders declaring their slide) — what remains is the app's verdict.
 
-**How to settle it.** Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.
+**How to settle it.** `npm run keynote:docs -- <dir>` and open the K04 (add), K05 (duplicate), K06 (remove) and K07 (reorder) files — each slide states on its face what the deck should look like. A refusal or a wrong navigator order names the rung; K00 failing instead means the container layer.
 
 ### 3. Cell styling (fill, four borders, padding, alignment, wrap)
 
@@ -146,7 +151,67 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says
 
-### 9. Add and remove tables on a sheet
+### 9. Presentation settings (mode, loop, autoplay delays, slide size)
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote renders a deck whose canvas this library resized.
+
+**Why the suite cannot settle it.** slideSize is one TSP.Size on the show; nothing else references it, so nothing offline can prove the app re-lays content out rather than ignoring or refusing the change.
+
+**How to settle it.** `npm run keynote:docs -- <dir>`, open the K10 file: the title says the deck should be 4:3 (1024×768), visibly squarer than the base's 16:9. A still-widescreen canvas is the failure.
+
+### 10. Skipped slides
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote treats a slide this library marked skipped as skipped.
+
+**Why the suite cannot settle it.** The write is one bool on the slide node. No corpus deck carries it true, so even the read side rests on the schema alone — this rung is the first evidence in either direction.
+
+**How to settle it.** `npm run keynote:docs -- <dir>`, open the K09 file: slide 1 states that the next slide is skipped — collapsed in the navigator, absent when playing. It presenting anyway is the failure.
+
+### 11. Slide placeholders (title, body, slide number) — read and fill
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote shows placeholder text this library wrote, styled by the layout.
+
+**Why the suite cannot settle it.** Placeholder text goes through the shared storage writer into a shape the layout styles. Pages confirmed the writer; whether Keynote accepts it inside a KN.PlaceholderArchive is untested.
+
+**How to settle it.** `npm run keynote:docs -- <dir>`, open K01 (title) and K02 (body): each slide's text states what it should read. Text missing, unstyled, or on the wrong slide names the placeholder path.
+
+### 12. Speaker notes
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote shows presenter notes this library wrote.
+
+**Why the suite cannot settle it.** Notes reuse the shared text-storage writer, which is app-confirmed in Pages — but a NOTE-kind storage hangs off a KN.NoteArchive no Pages document has, and only Keynote can say the chain holds.
+
+**How to settle it.** `npm run keynote:docs -- <dir>`, open the K03 file, View ▸ Show Presenter Notes: the slide's title states the exact text the notes pane should show. Notes missing or stale means the note storage write does not take; the title changing but notes not narrows it to the KN.NoteArchive chain.
+
+### 13. Transitions
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote honours automatic advance written into the transition attributes.
+
+**Why the suite cannot settle it.** The animationAttributes chain is where both auto-advance and named effects live. Auto-advance uses only corpus-verified fields (is_automatic, delay), so it is the half we can claim; a pass also proves the chain itself accepts our writes, which is the prerequisite for effects later.
+
+**How to settle it.** `npm run keynote:docs -- <dir>`, open the K08 file and press Play: the first slide states it should advance by itself after ~2 seconds. Having to click means the write did not take.
+
+### 14. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -158,7 +223,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
 
-### 10. Cell display formats (number, currency, percentage, date, duration, text, boolean)
+### 15. Cell display formats (number, currency, percentage, date, duration, text, boolean)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -170,7 +235,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a currency, percentage and date format, open in Numbers, and compare each cell against the same format applied through the Cell inspector on an untouched copy.
 
-### 11. Chart data editing (values, names, series, categories)
+### 16. Chart data editing (values, names, series, categories)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -182,7 +247,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a chart with distinctly coloured series, remove the middle one, open in the app and confirm the remaining series keep their own colours rather than shifting
 
-### 12. Conditional formatting: apply an existing rule set to more cells
+### 17. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -194,7 +259,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 13. Filters: enable, disable, combining mode
+### 18. Filters: enable, disable, combining mode
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -206,7 +271,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** build a Numbers table with a filter rule, save, flip is_enabled with this library, reopen and confirm the row visibility changes
 
-### 14. Formula function names
+### 19. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -220,7 +285,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 15. Formula reading (AST rendered to text)
+### 20. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -232,7 +297,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 16. Merged cell ranges
+### 21. Merged cell ranges
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -244,7 +309,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
 
-### 17. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 22. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -256,7 +321,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 18. Table styling (banded rows, grid strokes, visibility)
+### 23. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -268,7 +333,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 19. Paragraph background & borders (rule stroke + positions)
+### 24. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -280,7 +345,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 20. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 25. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -292,7 +357,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 21. Categories: enable or disable grouping
+### 26. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -304,7 +369,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 22. Conditional formatting rules
+### 27. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -316,7 +381,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 23. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 28. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -328,7 +393,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 24. Table of contents (rules read + write, cached entries read)
+### 29. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  

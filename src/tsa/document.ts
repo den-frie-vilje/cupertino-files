@@ -12,8 +12,13 @@
  * (forward-compatible readers, additive schema evolution).
  */
 import { drawableParent } from "../tsd/schema.ts";
+import { keynoteContainerParent } from "../keynote/schema.ts";
 import { IWorkContainer } from "../tsp/package.ts";
-import { ObjectStore, type ReferenceExtractor } from "../tsp/store.ts";
+import {
+  ObjectStore,
+  type ContainerParentResolver,
+  type ReferenceExtractor,
+} from "../tsp/store.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import {
@@ -43,6 +48,20 @@ import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
+
+/**
+ * The container-parent rule, composed per app.
+ *
+ * The shared map in `tsd/schema.ts` covers the shared-range drawable type
+ * ids, which mean the same thing in every app. Keynote's placeholders sit
+ * at app-local ids (7 and 12 are other archives entirely in Pages and
+ * Numbers), so their rule joins only when the store is a Keynote store —
+ * for `load` and `open` alike.
+ */
+function containerParentFor(app: IWorkApp): ContainerParentResolver {
+  if (app !== "keynote") return drawableParent;
+  return (type, message) => keynoteContainerParent(type, message) ?? drawableParent(type, message);
+}
 
 // TSP.PackageMetadata version fields.
 const PKG_READ_VERSION = 5;
@@ -125,7 +144,7 @@ export class IWorkDocument {
       referenceExtractors: SHARED_REFERENCE_EXTRACTORS,
       // Same rule the app subclasses inject via loadStore — open() must not
       // scan references differently from PagesDocument.load and friends.
-      containerParentOf: drawableParent,
+      containerParentOf: containerParentFor(app),
     });
     return new IWorkDocument(container, store);
   }
@@ -140,7 +159,7 @@ export class IWorkDocument {
       app,
       referenceExtractors: extractors,
       // The drawable parent rule, injected so tsp never imports a family.
-      containerParentOf: drawableParent,
+      containerParentOf: containerParentFor(app),
     });
     return { container, store };
   }

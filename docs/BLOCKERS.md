@@ -178,9 +178,31 @@ exactly one thing more than the one below, so whatever breaks names itself.
 A failure is worth more than a pass. `npm run test:e2e` covers "does it
 open" automatically.
 
+### Keynote: the ladder exists; nothing is app-checked yet
+
+```sh
+npm run keynote:docs ~/Desktop/keynote-rungs   # v26-K00 … v26-K10, v14-K00 … v14-K10
+```
+
+Eleven rungs, emitted against a current 26.1.0 deck and a 14.4.1
+upgrade-path deck: container round-trip, title, body, presenter notes,
+add/duplicate/remove/reorder slides, automatic advance, skipped slide,
+slide size. Every slide states its own pass criterion in its visible text.
+
+**No Keynote-authored document has ever been opened in the app.** The
+first offline `shape:audit` of these rungs found and fixed four defects
+before any Mac was involved — an inserted slide node the show never
+declared, orphaned clones of the source's note and drawables, an
+undeclared guide storage, and cloned placeholders declaring their slide —
+which is reason for confidence in the method, not in the result.
+
+A named transition effect is deliberately not a rung: the corpus is
+unanimous that "none" is the only measured value, and the effect
+vocabulary is Keynote-internal. The `animated.key` ask below settles it.
+
 ---
 
-## What still needs a Mac — about 12 minutes
+## What still needs a Mac — about 12 minutes, plus the Keynote ladder
 
 Most of this page has been settled without one. Three documents remain, and
 none of them takes long.

@@ -1431,10 +1431,13 @@ export const CAPABILITIES: Capability[] = [
       why:
         "A slide is only as valid as the graph around it — placeholders, builds, the master reference. " +
         "Our copies reload through this library and keep the package round-trippable, but whether " +
-        "Keynote considers the result a well-formed slide is its call, not ours.",
+        "Keynote considers the result a well-formed slide is its call, not ours. The first offline " +
+        "audit of these rungs already found four defects (an undeclared slide node, orphaned clones, " +
+        "undeclared guide storage, placeholders declaring their slide) — what remains is the app's verdict.",
       how:
-        "Add and duplicate a slide, reorder, save, and open in Keynote: check the navigator order, that " +
-        "the new slide is blank on the right layout, and that editing the duplicate leaves the original alone.",
+        "`npm run keynote:docs -- <dir>` and open the K04 (add), K05 (duplicate), K06 (remove) and " +
+        "K07 (reorder) files — each slide states on its face what the deck should look like. A refusal " +
+        "or a wrong navigator order names the rung; K00 failing instead means the container layer.",
       risk: "high",
     },
   },
@@ -1451,6 +1454,17 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slides().some((s) => s.notes.trim().length > 0) ?? false),
+    manualProof: {
+      claim: "Keynote shows presenter notes this library wrote.",
+      why:
+        "Notes reuse the shared text-storage writer, which is app-confirmed in Pages — but a NOTE-kind " +
+        "storage hangs off a KN.NoteArchive no Pages document has, and only Keynote can say the chain holds.",
+      how:
+        "`npm run keynote:docs -- <dir>`, open the K03 file, View ▸ Show Presenter Notes: the slide's " +
+        "title states the exact text the notes pane should show. Notes missing or stale means the note " +
+        "storage write does not take; the title changing but notes not narrows it to the KN.NoteArchive chain.",
+      risk: "medium",
+    },
   },
   {
     group: "Keynote",
@@ -1458,7 +1472,18 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slides().some((s) => s.transition()?.enabled) ?? false),
-    note: "validation requires a deck with a non-'none' effect",
+    note: "named effects blocked on evidence: every corpus slide says effect \"none\", and the effect vocabulary is Keynote-internal — writing an unmeasured string is the well-formed-but-wrong class",
+    manualProof: {
+      claim: "Keynote honours automatic advance written into the transition attributes.",
+      why:
+        "The animationAttributes chain is where both auto-advance and named effects live. Auto-advance " +
+        "uses only corpus-verified fields (is_automatic, delay), so it is the half we can claim; a pass " +
+        "also proves the chain itself accepts our writes, which is the prerequisite for effects later.",
+      how:
+        "`npm run keynote:docs -- <dir>`, open the K08 file and press Play: the first slide states it " +
+        "should advance by itself after ~2 seconds. Having to click means the write did not take.",
+      risk: "medium",
+    },
   },
   {
     group: "Keynote",
@@ -1467,6 +1492,16 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slideSize() !== undefined),
     note: "defaults come from the schema, not from zero — every corpus deck omits several and relies on them",
+    manualProof: {
+      claim: "Keynote renders a deck whose canvas this library resized.",
+      why:
+        "slideSize is one TSP.Size on the show; nothing else references it, so nothing offline can " +
+        "prove the app re-lays content out rather than ignoring or refusing the change.",
+      how:
+        "`npm run keynote:docs -- <dir>`, open the K10 file: the title says the deck should be 4:3 " +
+        "(1024×768), visibly squarer than the base's 16:9. A still-widescreen canvas is the failure.",
+      risk: "medium",
+    },
   },
   {
     group: "Keynote",
@@ -1475,6 +1510,34 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.placeholders().length > 0)),
     note: "fills a placeholder the slide already carries; creating one needs the theme's geometry for that role",
+    manualProof: {
+      claim: "Keynote shows placeholder text this library wrote, styled by the layout.",
+      why:
+        "Placeholder text goes through the shared storage writer into a shape the layout styles. Pages " +
+        "confirmed the writer; whether Keynote accepts it inside a KN.PlaceholderArchive is untested.",
+      how:
+        "`npm run keynote:docs -- <dir>`, open K01 (title) and K02 (body): each slide's text states " +
+        "what it should read. Text missing, unstyled, or on the wrong slide names the placeholder path.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Skipped slides",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.isSkipped)),
+    note: "NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node",
+    manualProof: {
+      claim: "Keynote treats a slide this library marked skipped as skipped.",
+      why:
+        "The write is one bool on the slide node. No corpus deck carries it true, so even the read " +
+        "side rests on the schema alone — this rung is the first evidence in either direction.",
+      how:
+        "`npm run keynote:docs -- <dir>`, open the K09 file: slide 1 states that the next slide is " +
+        "skipped — collapsed in the navigator, absent when playing. It presenting anyway is the failure.",
+      risk: "medium",
+    },
   },
   {
     group: "Keynote",

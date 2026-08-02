@@ -140,9 +140,10 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 8 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 2 | iwork16→iwork16 |
-| Transitions<br><sub>validation requires a deck with a non-'none' effect</sub> | Keynote | ✅ read + write | **0** | — |
+| Transitions<br><sub>named effects blocked on evidence: every corpus slide says effect "none", and the effect vocabulary is Keynote-internal — writing an unmeasured string is the well-formed-but-wrong class</sub> | Keynote | ✅ read + write | **0** | — |
 | Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
+| Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
 | Builds (animations): read and retime<br><sub>NO FIXTURE: schema-derived. Reads and retimes existing builds; will not create one — see docs/BLOCKERS.md priority 4</sub> | Keynote | 🔍 read only | **0** | — |
 | Builds: creating an animation<br><sub>withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written</sub> | Keynote | ○ roadmap | n/a | — |
@@ -156,7 +157,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-41 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+46 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -200,6 +201,11 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
+- 🟠 medium — Keynote → **Speaker notes**
+- 🟠 medium — Keynote → **Transitions**
+- 🟠 medium — Keynote → **Presentation settings (mode, loop, autoplay delays, slide size)**
+- 🟠 medium — Keynote → **Slide placeholders (title, body, slide number) — read and fill**
+- 🟠 medium — Keynote → **Skipped slides**
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 
 ## Validation gaps
@@ -210,6 +216,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Container → **Mixed-codec packages (LZFSE component beside Snappy)**
 - Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - Keynote → **Transitions**
+- Keynote → **Skipped slides**
 - Keynote → **Builds (animations): read and retime**
 
 **Thinly validated** (1–2 fixtures — no cross-check if an encoding varies):

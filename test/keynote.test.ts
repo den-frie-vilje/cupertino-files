@@ -239,6 +239,75 @@ describe("slide management", () => {
     }
     expect(threw).toBe(true);
   });
+
+  it("declares an added slide's node from the show", () => {
+    // The slide list is INLINE on KN.ShowArchive, so inserting a node
+    // dirties the show — and until the show had an extractor, its stale
+    // object_references left the new node referenced by the payload and
+    // declared by nothing. An undeclared reference into another component
+    // is how an app decides a document is damaged; the Keynote ladder's
+    // first offline audit caught exactly this.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const added = doc.addSlide({ copyOf: 0 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const show = [...reloaded.store.allObjects()].find(({ obj }) => obj.type === 2)!.obj;
+    expect(show.getObjectReferences().includes(added.node.identifier)).toBe(true);
+  });
+
+  it("orphans nothing when adding a slide, with or without content", () => {
+    // addSlide once cloned the source's note and drawables and then
+    // unlinked them: perfectly well-formed orphans no corpus document
+    // holds. Content the copy will not keep must never be cloned at all.
+    for (const withContent of [false, true]) {
+      const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+      const before = new Set([...doc.store.allObjects()].map(({ obj }) => obj.identifier));
+      doc.addSlide({ copyOf: 0, withContent });
+      const reloaded = KeynoteDocument.load(doc.save());
+      const referenced = new Set<bigint>();
+      for (const { obj } of reloaded.store.allObjects()) {
+        for (const id of obj.getObjectReferences()) referenced.add(id);
+      }
+      const orphans = [...reloaded.store.allObjects()]
+        .filter(({ obj }) => !before.has(obj.identifier) && !referenced.has(obj.identifier))
+        .map(({ obj }) => `${obj.type}:${obj.identifier}`);
+      expect(`new orphans (withContent=${withContent}): ${orphans.join(" ")}`).toBe(
+        `new orphans (withContent=${withContent}): `,
+      );
+    }
+  });
+
+  it("keeps a cloned placeholder from declaring the slide that holds it", () => {
+    // The container rule at Keynote-local type ids: 546/546 corpus
+    // placeholders carry their slide as the drawable parent three supers
+    // down, and none declare it. A cloned placeholder reaches the generic
+    // scan as a created object, so without the subtraction the copy
+    // declared its slide — a referrer set no corpus instance has.
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const added = doc.addSlide({ copyOf: 0, withContent: true });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const offenders: string[] = [];
+    for (const { obj } of reloaded.store.allObjects()) {
+      if (obj.type !== 7 && obj.type !== 12) continue;
+      if (obj.getObjectReferences().includes(added.id)) offenders.push(String(obj.identifier));
+    }
+    expect(`placeholders declaring the added slide: ${offenders.join(" ")}`).toBe(
+      "placeholders declaring the added slide: ",
+    );
+  });
+
+  it("round-trips a skipped slide and keeps the node's hasNote hint", () => {
+    const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    doc.slides()[1]!.isSkipped = true;
+    const reloaded = KeynoteDocument.load(doc.save());
+    expect(reloaded.slides()[1]!.isSkipped).toBe(true);
+    expect(reloaded.presentedSlides().length).toBe(reloaded.slideCount() - 1);
+
+    // The denormalized hint every corpus node carries must survive an
+    // add-without-content as an explicit false, not a removed field.
+    const bare = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const added = bare.addSlide({ copyOf: 0 });
+    expect(added.node.message.getBool(8)).toBe(false);
+  });
 });
 
 describe("slide placeholders", () => {

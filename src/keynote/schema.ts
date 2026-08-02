@@ -9,7 +9,9 @@
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
-import { pushRef } from "../tsp/schema.ts";
+import type { RawMessage } from "../base/protobuf.ts";
+import { pushRef, refId } from "../tsp/schema.ts";
+import { Drawable } from "../tsd/schema.ts";
 
 export const KN_TYPE = {
   DOCUMENT: 1,
@@ -48,6 +50,7 @@ export const Show = protoFields("KN.ShowArchive", {
   AUTOPLAY_BUILD_DELAY: "autoplay_build_delay",
   IDLE_TIMER_ACTIVE: "idle_timer_active",
   IDLE_TIMER_DELAY: "idle_timer_delay",
+  RECORDING: "recording",
   SOUNDTRACK: "soundtrack",
   AUTOMATICALLY_PLAYS_UPON_OPEN: "automatically_plays_upon_open",
   SLIDE_LIST: "slideList",
@@ -84,6 +87,8 @@ export const Slide = protoFields("KN.SlideArchive", {
   OBJECT_PLACEHOLDER: "objectPlaceholder",
   DRAWABLES_Z_ORDER: "drawables_z_order",
   BUILD_CHUNKS: "buildChunks",
+  /** TSD.GuideStorageArchive — alignment guides; carried by 148 corpus slides. */
+  GUIDE_STORAGE: "userDefinedGuideStorage",
 });
 
 /** KN.NoteArchive. */
@@ -160,6 +165,38 @@ const slideExtractor: ReferenceExtractor = (m) => {
   pushRef(out, m, Slide.OBJECT_PLACEHOLDER);
   pushRef(out, m, Slide.DRAWABLES_Z_ORDER);
   pushRef(out, m, Slide.BUILD_CHUNKS);
+  // Omitting this dropped the declaration of every cloned deck's guide
+  // storage: 148 corpus slides carry one, and the duplicate-slide audit
+  // found ours orphaned — declared by nothing, the paint-order class.
+  pushRef(out, m, Slide.GUIDE_STORAGE);
+  return out;
+};
+
+/**
+ * The show's declarations, measured off the corpus: theme, stylesheet,
+ * soundtrack, and — through the **inline** slide tree — the root node and
+ * every content slide node.
+ *
+ * The inline tree is why this extractor exists at all. Inserting a slide
+ * writes a reference into `slideTree.slides`, which dirties the Show; a
+ * dirty Apple-written archive with no extractor keeps its *stale*
+ * `object_references`, so the new node was referenced by the payload and
+ * declared by nothing — the exact undeclared-reference shape that makes an
+ * app refuse a document as damaged.
+ */
+const showExtractor: ReferenceExtractor = (m) => {
+  const out: bigint[] = [];
+  pushRef(out, m, Show.UI_STATE);
+  pushRef(out, m, Show.THEME);
+  pushRef(out, m, Show.STYLESHEET);
+  pushRef(out, m, Show.RECORDING);
+  pushRef(out, m, Show.SOUNDTRACK);
+  pushRef(out, m, Show.SLIDE_LIST);
+  const tree = m.getMessage(Show.SLIDE_TREE);
+  if (tree) {
+    pushRef(out, tree, SlideTree.ROOT_SLIDE_NODE);
+    pushRef(out, tree, SlideTree.SLIDES);
+  }
   return out;
 };
 
@@ -184,8 +221,31 @@ const noteExtractor: ReferenceExtractor = (m) => {
  * shared families' own leaf maps.
  */
 export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
+  [KN_TYPE.SHOW, showExtractor],
   [KN_TYPE.SLIDE, slideExtractor],
   [KN_TYPE.SLIDE_LEGACY_MASTER, slideExtractor],
   [KN_TYPE.SLIDE_NODE, slideNodeExtractor],
   [KN_TYPE.NOTE, noteExtractor],
 ]);
+
+/**
+ * The container rule, for the one Keynote drawable the shared map cannot
+ * name: `KN.PlaceholderArchive` (types 7 and 12) reaches
+ * `TSD.DrawableArchive` three supers down, and its `parent` is the slide.
+ * Measured: 546 of 546 corpus placeholders carry the parent, zero declare
+ * it. The type ids are Keynote-local (7 means something else in every
+ * other app), so the rule lives here and is composed per app in
+ * `tsa/document.ts` rather than added to the shared, app-blind map.
+ */
+export function keynoteContainerParent(type: number, m: RawMessage): bigint | undefined {
+  if (type !== KN_TYPE.PLACEHOLDER && type !== KN_TYPE.PLACEHOLDER_ALT) return undefined;
+  let node: RawMessage | undefined = m;
+  for (let i = 0; i < 3 && node; i++) {
+    try {
+      node = node.getMessage(1);
+    } catch {
+      return undefined;
+    }
+  }
+  return refId(node, Drawable.PARENT);
+}
