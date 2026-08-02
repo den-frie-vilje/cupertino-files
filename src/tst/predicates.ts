@@ -179,7 +179,7 @@ export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
  * it and reports agreements and contradictions, so one document with a
  * "greater than" rule settles the rest instead of merely collecting rows.
  *
- * See `docs/MANUAL-WORK.md` protocol 4.
+ * See `docs/BLOCKERS.md` (the rules.numbers ask).
  */
 export const PREDICATE_TYPE_HYPOTHESIS: ReadonlyMap<number, PredicateOperator> = new Map([
   [5, "="],

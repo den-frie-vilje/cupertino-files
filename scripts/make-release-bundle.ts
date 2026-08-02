@@ -41,7 +41,7 @@ function main(): number {
   copy("proto");
   copy("conformance");
   mkdirSync(`${stage}/docs`);
-  for (const doc of ["FORMAT.md", "VERIFICATION.md", "MANUAL-WORK.md", "BLOCKERS.md"]) {
+  for (const doc of ["FORMAT.md", "VERIFICATION.md", "BLOCKERS.md"]) {
     copy(`docs/${doc}`, `docs/${doc}`);
   }
   copy("fixtures/ATTRIBUTION.md", "FIXTURES.md");

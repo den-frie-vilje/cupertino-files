@@ -28,7 +28,7 @@ describe("repository guards", () => {
 
   it("the generated function table matches the recorded harvest", () => {
     // The function-index table is produced by a manual protocol (see
-    // docs/MANUAL-WORK.md). Both halves are checked in, so a hand-edit to
+    // docs/BLOCKERS.md). Both halves are checked in, so a hand-edit to
     // either one would silently diverge from the measurement that produced
     // it — this catches that.
     let ok = true;

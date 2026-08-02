@@ -5,7 +5,7 @@
  *   node scripts/harvest-functions.ts --ingest <doc.numbers>
  *
  * This mapping exists in no schema; it can only be measured by having
- * Numbers author the formulas. See docs/MANUAL-WORK.md for the protocol
+ * Numbers author the formulas. See docs/BLOCKERS.md for the procedure
  * and the ledger of who ran it against which version.
  *
  * Harvested: 2026-07-31 from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)

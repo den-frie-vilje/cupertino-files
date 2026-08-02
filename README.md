@@ -57,69 +57,32 @@ No runtime dependencies. No native modules. No shelling out. ESM, typed.
 
 ## Feature matrix
 
-> **[`docs/COVERAGE.md`](docs/COVERAGE.md) is the authoritative, generated matrix** — version
-> coverage per app, every capability with its support status, and how many real fixtures
-> actually exercise it. Regenerate with `npm run coverage`; a test fails if it goes stale.
-> The table below is the short version.
->
-> **[`docs/VERIFICATION.md`](docs/VERIFICATION.md) lists what the test suite structurally
-> cannot prove** — the claims where the only authority is Apple's own app, each with why
-> and a repro. Also generated, also gated against staleness.
->
-> **[`docs/BLOCKERS.md`](docs/BLOCKERS.md) is the priority-ordered list of what is still
-> unknown** — each item with the one fact it is blocked on, what that unblocks, and the
-> shortest path to settling it. `npm run probe -- <file>` reports every remaining unknown
-> in a document in one pass, so a well-chosen file closes several at once.
->
-> **[`docs/MANUAL-WORK.md`](docs/MANUAL-WORK.md) holds the repeatable procedures** for
-> facts that live inside the apps rather than in files, plus a ledger of what has been run
-> against which app version. Each protocol ends in a checked-in artifact, so a finding is
-> made once and never rediscovered.
+> Four documents, one job each — the first two generated and staleness-gated:
+> [`docs/COVERAGE.md`](docs/COVERAGE.md) is the authoritative capability matrix
+> (the table below is the short version); [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
+> lists what only Apple's apps can prove, with the evidence where they already have;
+> [`docs/BLOCKERS.md`](docs/BLOCKERS.md) is every open question with the one fact it
+> is blocked on and the shortest path to it, plus the ledger of measured findings;
+> [`docs/FORMAT.md`](docs/FORMAT.md) is the format itself.
 
 | Capability | Status |
 |---|---|
-| Parse all three container layouts (flat zip, nested `Index.zip`, wrapper dir) | ✅ |
-| Pages: body text read/edit with full attribute-table fixup | ✅ |
-| Pages: paragraph styles (by name), character formatting, style creation + editing | ✅ |
-| Pages: sections (read + insert), page masters, header/footer text, master-page drawables | ✅ |
-| Pages: page-layout (body-less) documents | ✅ |
-| Pages: hyperlinks, bookmarks, date fields, page numbers/counts — read and create | ✅ |
-| Pages: list styles by name, text boxes, document settings, table of contents | ✅ |
-| Pages: comments and footnotes — read *and* create, reusing the document's author | ✅ |
-| Pages: page setup — size, margins, header/footer margins, orientation | ✅ |
-| Drawables (shapes, images, text boxes, tables): enumerate, move, resize | ✅ |
-| Fluent API: `find()` → `TextRange` → `.bold().link()`, `ParagraphHandle` | ✅ |
-| Tables: read cells (numbers, text, rich text, dates, booleans, durations, merges) | ✅ modern storage |
-| Tables: **write** cells (text, number, date, bool, duration) | ✅ modern storage |
-| Tables: cell styling (fill, four borders, padding, alignment, wrap) and table styling (banding, grid strokes) | ✅ |
-| Tables: name, header/footer bands, freeze + repeating headers, row heights, column widths | ✅ |
-| Tables: insert and delete rows and columns; number/date/currency display formats | ✅ |
-| Tables: merged cell ranges (decoded from the calc engine, not the empty region map) | ✅ read |
-| Tables: formulas read and rendered to text — in Pages and Keynote too, not just Numbers | ✅ read |
-| Tables: cross-table references resolved to real table names (`Revenue::A2`) | ✅ read |
-| Numbers: conditional formatting rules and filters (one shared predicate model) | ✅ read |
-| Numbers: categories — row grouping, nesting, every date bucketing, staleness check | ✅ read |
-| Drawables: shadows, opacity, reflection, fill, stroke on shapes and images | ✅ |
-| Styling values: colours (incl. Display P3), gradients, strokes, dashes, shadows, tabs | ✅ |
-| Charts: read the grid; edit values, names, series and categories | ✅ data only |
-| Images: filters/adjustments, media variants; **crop** — set, move and remove a mask | ✅ |
-| Drawables: copy, place, reorder and remove across pages, slides and sheets | ✅ |
-| Keynote: slides (add/duplicate/move/remove), speaker notes, transitions, masters | ✅ |
-| Keynote: slide placeholders — read and fill title, body, slide number | ✅ |
-| Keynote: presentation settings (mode, loop, autoplay delays) and slide size | ✅ |
-| Numbers: sheets — add, remove, rename, reorder | ✅ |
-| Numbers: add and remove tables on a sheet, with per-sheet name uniquing | ✅ |
-| Inline image insertion (`Data/` plumbing, SHA-1 dedupe) | ⚠️ experimental |
-| Formula authoring; chart *appearance*; authoring conditional/filter rules | roadmap |
-| Keynote builds: read and retime; Numbers cell controls: read | 🔍 schema-derived — **no fixture contains one** ([blockers](docs/BLOCKERS.md)) |
-| Creating Keynote builds or cell controls | roadmap — withheld until a real one confirms the read model |
-| Byte-identical round-trip of untouched content | ✅ |
-| Version-aware loading (never hard-fails on newer files) | ✅ |
-| Object-graph inspection (`cupertino-dump` CLI, RawMessage layer) | ✅ |
-| Editing a document open in an app; live iCloud collaboration | ✗ out of scope ([§13](docs/FORMAT.md)) |
-| iWork '09 XML documents | detected, rejected |
-| Password-protected documents | detected, rejected |
-| Pre-BNC (iWork '13-era) table cell storage | ✗ reports explicitly, never guesses |
+| All three container layouts; byte-identical round-trip of untouched content | ✅ |
+| Pages text, styles, sections, page setup, headers/footers, page-layout docs | ✅ app-confirmed |
+| Pages links, bookmarks, date/page-number fields, lists, TOC, text boxes, comments, footnotes | ✅ app-confirmed |
+| Tables: read + write cells, styling, bands, row/column ops, display formats | ✅ (modern storage) |
+| Tables: formulas, merges, cross-table names (`Revenue::A2`) | ✅ read |
+| Numbers: sheets and tables (add/remove/rename/reorder); conditional formatting, filters, categories | ✅ write / ✅ read |
+| Keynote: slides, placeholders, notes, skip, auto-advance, slide size | ✅ app-confirmed (v26) |
+| Drawables: enumerate, move, resize, copy, style (shadow, fill, stroke, opacity); image crops + filters | ✅ |
+| Charts | ✅ data only — appearance is roadmap |
+| Inline image insertion | ⚠️ experimental |
+| Keynote builds (read/retime), Numbers cell controls (read) | 🔍 schema-derived — no fixture contains one |
+| Formula/conditional-rule authoring; creating builds or controls | roadmap — [what each waits on](docs/BLOCKERS.md) |
+| Version-aware loading (warns, never hard-fails, preserves unknown fields) | ✅ |
+| iWork '09 XML; password-protected documents | detected, **rejected** — never mis-parsed |
+| Pre-BNC (iWork '13-era) cell storage | read-only, refuses unmeasured shapes |
+| Editing a document an app has open; live iCloud collaboration | ✗ out of scope |
 
 ## API tour
 
@@ -173,14 +136,8 @@ sheet.createCharacterStyle({ character: { bold: true } });  // anonymous (direct
 
 // Editing a named style reaches every run that uses it.
 const heading = sheet.style("Heading 1")!;
-heading.character();                     // what this style overrides
-heading.resolved().character;            // …with the parent chain folded in
-heading.setParagraph({
-  border: solidStroke({ r: 0, g: 0, b: 0 }, 1),   // paragraph rule
-  borderPositions: BorderPosition.BOTTOM,
-  backgroundColor: hexColor("#f5f5f0"),
-  tabs: [{ position: 216, alignment: TabAlignment.DECIMAL, leader: "." }],
-});
+heading.resolved().character;            // overrides with the parent chain folded in
+heading.setParagraph({ backgroundColor: hexColor("#f5f5f0"), spaceBefore: 6 });
 ```
 
 Fills, gradients, strokes and shadows are one shared vocabulary — the same
@@ -224,35 +181,14 @@ table.cellFormula(1, 3);                 // "=B2*C2"
 table.formulas();                        // [{ row, column, formula }]
 ```
 
-Merges are decoded from the calc engine, where the apps actually keep them —
-the documented `merge_region_map` is empty in every real document. Writing a
-value into a covered cell throws rather than storing something the app will
-never display.
-
-**Formulas are a table feature, not a Numbers feature** — Pages documents in
-the corpus contain them too. References are stored as offsets from the cell
-using them, so one stored formula renders differently in every cell that
-shares it, which is why rendering takes a position. Function *names* are not
-in the file format at all: `AST_function_node_index` indexes an
-Apple-internal list, so only ids proven by arithmetic are named and the rest
-render as `FUNCTION_<id>` rather than a guess.
-
-The whole table can be *measured* rather than guessed. On a Mac:
-
-```sh
-npm run harvest -- --drive        # ~300 candidates through Numbers, one pass
-```
-
-Without a Mac to hand, `npm run harvest -- --emit-sheet probe.tsv` writes a
-file you open in Numbers and save — about two minutes — then
-`npm run harvest -- --ingest probe.numbers` records the result. Either way
-the output is a checked-in table, not a note. Protocol 1 in
-[`docs/MANUAL-WORK.md`](docs/MANUAL-WORK.md).
-
-The ingest never guesses: a name is accepted only when every argument shape
-agreed, an index claimed by two names is rejected, and rows that are not
-genuine probe rows are ignored — a guard added after an early run happily
-recorded the SUM index as a function named `TOTAL:`.
+Three caveats worth knowing. Merges are decoded from the calc engine,
+where the apps actually keep them (the documented `merge_region_map` is
+empty in every real document), and writing into a covered cell throws.
+Formulas are a *table* feature — Pages has them too — and render
+per-position because references are stored as offsets. Function names are
+not in the file format at all: only measured indexes are named (271 so
+far; `npm run harvest` widens the table), the rest render as
+`FUNCTION_<id>` rather than a guess.
 
 ### Numbers: conditional formatting, filters and categories
 
@@ -266,25 +202,13 @@ categories?.groups();              // tree: [{ value, label, rows, children }]
 table.staleCategoryGroups();       // groups whose rows no longer match the data
 ```
 
-Conditional formatting and filters are the **same archive** underneath, so
-they share one predicate model. The condition is read from the rule's
-*formula*, whose comparison node is the documented TSCE enum — not from
-Apple's unpublished `predicate_type`, of which the corpus contains two
-members. So a condition reads correctly even for a type code never seen, and
-`operator` is `undefined` rather than a guess when the rule is richer than a
-comparison.
-
-Categories decode completely — nesting to four levels, and every date
-bucketing the UI offers, each code confirmed by the *shape* of the dates it
-produces rather than by a fixture's name: year groups are all 1 January, week
-groups every land on the same weekday. Group membership is cross-checked
-against cell contents, and in every categorised table in the corpus it agrees
-for every group.
-
-Nothing here evaluates. `conditionalRules()` says what the rules *are*, not
-which currently matches; enabling a filter changes the rule, not the visible
-rows. Both need the calc engine, and a wrong answer would be
-indistinguishable from a right one.
+Conditions are read from each rule's *formula* (the documented TSCE enum),
+not from Apple's unpublished `predicate_type`, so they read correctly even
+for type codes never seen; `operator` is `undefined` rather than a guess
+when a rule is richer than a comparison. And **nothing here evaluates**:
+`conditionalRules()` says what the rules are, not which currently matches —
+that needs the calc engine, and a wrong answer would look exactly like a
+right one.
 
 ### Comments, footnotes and page numbers
 
@@ -297,18 +221,11 @@ storage.insertDateField(0, "November 2, 2024", { date, format: "MMMM d, y" });
 body.addBookmark(10, 20, "Introduction");
 ```
 
-Three details that decide the API. A **page number is not text** — no digits
-exist in the storage, because the value comes from pagination — so it is a
-placeholder plus an archive, and `string_value`, the app's cache of the last
-rendered number, is deliberately left unwritten. A **date field is** text,
-spanning characters the app rewrites, so the display text is supplied rather
-than formatted here. And a **footnote reference is a U+000E**, not the U+FFFC
-every other attachment uses; the U+FFFC belongs to the note, marking where
-the number is drawn.
-
-`addComment` reuses the document's existing annotation author unless told
-otherwise — a document where the same person appears once per comment looks
-right in the pane and wrong the moment anyone filters by commenter.
+The details that decide this API: a page number is **not text** (the value
+comes from pagination — it is a placeholder plus an archive), a date field
+**is** text (spanning characters the app rewrites), a footnote reference is
+a **U+000E**, and `addComment` reuses the document's existing annotation
+author rather than minting one per comment.
 
 ### Charts and image crops
 
@@ -325,34 +242,12 @@ image.setVisibleFrame({ x: 72, y: 90, width: 200, height: 150 }); // place the r
 image.removeCrop();
 ```
 
-Chart *data* is editable; appearance is not. Changing numbers is safe because
-nothing in the archive is indexed by a value — but changing the grid's shape
-moves three position-indexed structures together, or the chart's colours slide
-onto the wrong series.
-
-Cropping never touches the media. The image keeps its full extent and a mask
-defines the window; the mask's frame is in the **image's** coordinate space,
-so the visible rectangle is the sum of the two positions — a reading measured
-across the corpus rather than assumed.
-
-### Shadows and other drawable styling
-
-Cell and table styles have no shadow field: in iWork a shadow belongs to the
-*drawable*, so it applies to a shape, text box, image or the table as a whole.
-
-```ts
-const style = doc.images()[0]!.style()!;   // ImageModel extends DrawableModel
-style.read();                            // { fill?, stroke?, opacity?, shadow?, reflection? }
-style.set({
-  shadow: { angle: 90, offset: 10, radius: 20, opacity: 0.7, enabled: true },
-  opacity: 0.9,
-});
-style.setShadowEnabled(false);           // keeps the parameters, unticks the box
-```
-
-Writing a cell preserves everything else the record carries — style ids,
-number formats, comments — and reference-counts the table's string pool.
-Pre-BNC (iWork '13-era) storage is refused rather than corrupted.
+Chart *data* is editable; appearance is not yet. Cropping never touches the
+media: a mask defines the window, and its frame is in the **image's**
+coordinate space (measured across the corpus, not assumed). Drawable styling
+— shadow, fill, stroke, opacity, reflection — lives on
+`drawable.style().set({...})`; cell and table styles have no shadow field,
+because in iWork a shadow belongs to the drawable.
 
 ### Low level
 
@@ -385,44 +280,18 @@ npx cupertino-dump extract  file.pages out/  # decompressed .iwa streams
 
 ## API design
 
-The public shape follows the conventions that pdf-lib, exceljs, docx and
-SheetJS converge on, so it reads like the libraries it will sit beside in a
-`package.json`:
-
-- **Static `load(bytes)` on each app class; instance `save(): Uint8Array`.**
-  Bytes in, bytes out, no filesystem coupling — pdf-lib's shape
-  (`PDFDocument.load` / `doc.save()`), and the only one that behaves
-  identically in Node, browsers and workers. `IWorkDocument.open(bytes)` is
-  the auto-detecting variant for when the app is not known up front.
-- **`add*` creates, attaches and returns the created child** (`addSheet`,
-  `addSlide`, `addFootnote`, `addComment` …). `insert*` is the positional
-  variant (`insertRows(at)`, `insertText(pos)`, `insertLink(start, end)`),
-  `remove*`/`delete*` mirror them, and `create*` mints detached named
-  things (`createParagraphStyle`). The same verb grammar as exceljs and
-  pdf-lib.
-- **Primary payload positional, the rest in a trailing options object**
-  with corpus-measured defaults; where Apple has a convention the option
-  accepts `false` to opt out and an id to override
-  (`insertLink(start, end, url, { characterStyle })`,
-  `addFootnote(pos, text, { markStyle })`).
-- **A "the" accessor throws with guidance; the soft twin says so in its
-  name** — `doc.body` explains page-layout documents in its error,
-  `doc.bodyOrUndefined` never throws (pdf-lib's `getField` /
-  `getFieldMaybe` split). Collection methods (`sheets()`, `slides()`,
-  `tables()`) return plain, possibly-empty arrays.
-- **A mutable object graph**, because every surveyed library that
-  round-trips existing files exposes one; the build-a-tree-then-serialize
-  model (docx) only works when you never read.
-
-Two deliberate divergences, both consequences of this being pure compute:
-
-- **Everything is synchronous.** pdf-lib and exceljs are async because
-  their internals await; nothing here does — no I/O, no workers — so
-  `load`/`save` returning promises would be ceremony.
-- **Cells are edited through the table (`table.setCell(r, c, v)`), not by
-  assignment on a live cell object** (exceljs' `cell.value = 5`). Numbers
-  cells are records inside compressed tiles; a handle cheap enough to
-  assign through would be lying about what a write costs.
+The shape follows the conventions pdf-lib, exceljs, docx and SheetJS
+converge on: static `load(bytes)` per app class and instance
+`save(): Uint8Array` (no filesystem coupling; `IWorkDocument.open` for
+auto-detect); `add*` creates-and-returns, `insert*` is positional,
+`create*` mints detached things; primary payload positional with a
+trailing options object whose defaults are corpus-measured (`false` opts
+out of a convention, an id overrides it); throwing accessors with
+`…OrUndefined` twins; a mutable object graph. Two deliberate divergences:
+**everything is synchronous** (pure compute — promises would be ceremony),
+and **cells are edited through the table**, not by assignment on a live
+cell object, because Numbers cells are records inside compressed tiles
+and a cheap-looking handle would lie about what a write costs.
 
 ## For other implementations
 

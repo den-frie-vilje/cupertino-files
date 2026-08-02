@@ -1072,7 +1072,7 @@ export const CAPABILITIES: Capability[] = [
         "Run `node scripts/harvest-functions.ts --drive` on a Mac — it writes ~300 candidate functions " +
         "through Numbers and reads every index back in one pass, producing data/function-index.json " +
         "and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save " +
-        "in Numbers by hand, then `--ingest`. Protocol 1 in docs/MANUAL-WORK.md.",
+        "in Numbers by hand, then `--ingest`. Procedure in docs/BLOCKERS.md.",
       e2e: true,
       risk: "medium",
     },
@@ -1928,7 +1928,7 @@ function renderVerification(): string {
     "`scripts/coverage-matrix.ts`; run `npm run coverage` to regenerate. A test fails if it goes stale.",
     "",
     "Where a claim can be settled by a *repeatable procedure* rather than a one-off look, that",
-    "procedure lives in [`docs/MANUAL-WORK.md`](MANUAL-WORK.md) along with a ledger of what has",
+    "procedure lives in [`docs/BLOCKERS.md`](BLOCKERS.md) along with a ledger of what has",
     "actually been run and against which app version.",
     "",
   );

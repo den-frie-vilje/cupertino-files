@@ -296,7 +296,7 @@ function main(argv: string[]): number {
     console.error("usage: node scripts/probe-unknowns.ts <file...> [--json]");
     console.error("");
     console.error("Reports everything this library still cannot name, in one pass.");
-    console.error("See docs/MANUAL-WORK.md for the documents that close each gap.");
+    console.error("See docs/BLOCKERS.md for the documents that close each gap.");
     return 2;
   }
   const all = files.map(probe);
@@ -313,7 +313,7 @@ function main(argv: string[]): number {
     all.some((f) => f.borderPositions.some((b) => b.used));
   console.log(
     open
-      ? "\nSomething here is new. Record it in docs/MANUAL-WORK.md and turn it into a test."
+      ? "\nSomething here is new. Record it in the docs/BLOCKERS.md ledger and turn it into a test."
       : "\nNothing unknown in these documents.",
   );
   return 0;

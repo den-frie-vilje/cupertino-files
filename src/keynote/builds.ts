@@ -37,7 +37,7 @@
  * `scripts/probe-builds.ts` prints everything a deck's builds contain, so
  * one deck with animations — made in five minutes on any Mac — either
  * confirms this reading or shows exactly where it is wrong. See
- * `docs/MANUAL-WORK.md` protocol 5.
+ * `docs/BLOCKERS.md` (the animated.key ask).
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";

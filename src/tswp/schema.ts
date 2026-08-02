@@ -314,7 +314,7 @@ export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
  * shape.
  *
  * Read the raw integer, not this enum, if the distinction matters to you.
- * Protocol 2 in `docs/MANUAL-WORK.md` settles it in about ten minutes.
+ * The borders.pages ask in `docs/BLOCKERS.md` settles it in about ten minutes.
  */
 export const BorderPosition = {
   NONE: 0,

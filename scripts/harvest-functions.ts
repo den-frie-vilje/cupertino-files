@@ -30,7 +30,7 @@
  * automation refused, a Numbers version whose scripting dictionary will not
  * set a formula — `--emit-sheet` produces a file Numbers can *open directly*,
  * turning the manual step into "open, save, run one command". The full
- * protocol is in docs/MANUAL-WORK.md.
+ * procedure is in docs/BLOCKERS.md.
  *
  * Wrong candidate names cost nothing: Numbers stores them as an
  * UNKNOWN_FUNCTION node carrying the literal text, and the ingest lists
@@ -359,7 +359,7 @@ function generateTypeScript(harvested: Harvested): string {
   lines.push(" *   node scripts/harvest-functions.ts --ingest <doc.numbers>");
   lines.push(" *");
   lines.push(" * This mapping exists in no schema; it can only be measured by having");
-  lines.push(" * Numbers author the formulas. See docs/MANUAL-WORK.md for the protocol");
+  lines.push(" * Numbers author the formulas. See docs/BLOCKERS.md for the procedure");
   lines.push(" * and the ledger of who ran it against which version.");
   lines.push(" *");
   if (entries.length === 0) {
@@ -407,7 +407,7 @@ function drive(): void {
   if (process.platform !== "darwin") {
     console.error(
       `--drive requires macOS (running on ${process.platform}).\n` +
-        "Use --emit-sheet and follow docs/MANUAL-WORK.md instead.",
+        "Use --emit-sheet and follow docs/BLOCKERS.md instead.",
     );
     process.exit(1);
   }
@@ -468,7 +468,7 @@ function main(): void {
         `= ${names.length * VARIANTS.length} probe rows`,
     );
     console.log(
-      "Next: open it in Numbers, save as .numbers, then run --ingest. See docs/MANUAL-WORK.md.",
+      "Next: open it in Numbers, save as .numbers, then run --ingest. See docs/BLOCKERS.md.",
     );
     return;
   }
@@ -550,7 +550,7 @@ function main(): void {
       "  --check                verify the generated table matches the recorded harvest",
       "  --regenerate           rewrite the generated table from the recorded harvest",
       "",
-      "See docs/MANUAL-WORK.md for the manual protocol.",
+      "See docs/BLOCKERS.md for the manual procedure.",
     ].join("\n"),
   );
 }

@@ -13,7 +13,7 @@
  *
  * This does not guess. It reports each pairing it finds and marks the ones
  * already recorded in `PREDICATE_TYPE_OPERATORS`, so a run against a
- * purpose-built document (docs/MANUAL-WORK.md, protocol 4) shows exactly
+ * purpose-built document (the rules.numbers ask in docs/BLOCKERS.md) shows exactly
  * which rows are new. Conditions with no simple operator — "text contains",
  * "between" — compile to function calls and are reported with their
  * operator blank rather than forced into the map.

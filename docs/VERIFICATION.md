@@ -11,7 +11,7 @@ what is being claimed, why the offline suite structurally cannot settle it, and 
 `scripts/coverage-matrix.ts`; run `npm run coverage` to regenerate. A test fails if it goes stale.
 
 Where a claim can be settled by a *repeatable procedure* rather than a one-off look, that
-procedure lives in [`docs/MANUAL-WORK.md`](MANUAL-WORK.md) along with a ledger of what has
+procedure lives in [`docs/BLOCKERS.md`](BLOCKERS.md) along with a ledger of what has
 actually been run and against which app version.
 
 ## How much is already automated
@@ -203,7 +203,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** AST_function_node_index is an index into an Apple-internal list that appears in no public schema. The corpus proves exactly one entry (168 = SUM, by arithmetic). Shipping a table of plausible-looking guesses would turn a visible gap into silent wrong answers.
 
-**How to settle it.** Run `node scripts/harvest-functions.ts --drive` on a Mac — it writes ~300 candidate functions through Numbers and reads every index back in one pass, producing data/function-index.json and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save in Numbers by hand, then `--ingest`. Protocol 1 in docs/MANUAL-WORK.md.
+**How to settle it.** Run `node scripts/harvest-functions.ts --drive` on a Mac — it writes ~300 candidate functions through Numbers and reads every index back in one pass, producing data/function-index.json and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save in Numbers by hand, then `--ingest`. Procedure in docs/BLOCKERS.md.
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
