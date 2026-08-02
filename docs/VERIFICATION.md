@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 25 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 24 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -41,13 +41,12 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 16 | 🟠 medium | Numbers & tables → Merged cell ranges | Numbers accepts a merge this library wrote, and shows it where we put it. | manual |
 | 17 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 18 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 19 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates is readable and attributed in the app | manual |
-| 20 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 21 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 22 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 23 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 24 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 25 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 19 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 20 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 21 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 22 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 23 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 24 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Builds (animations): read and retime
 
@@ -269,19 +268,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 19. Comment creation and removal
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a comment this library creates is readable and attributed in the app
-
-**Why the suite cannot settle it.** Three app rounds so far, each narrowing the shape. Round one (Pages for iOS): unreadable placeholder — the comment carried no author where every corpus comment references one. Round two: with a name-only author, Pages crashed on open — both corpus authors carry the identical comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, and ours had started declaring the author — the container rule reintroduced by our own fix. The author now matches Apple's byte-for-byte (writeColor reproduces the colour exactly) and the roster edit declares nothing.
-
-**How to settle it.** `npm run pages:docs` emits P08-comment; the phrase names itself and the comment text says who wrote it. Readable and attributed is the pass; a third distinct failure would point at the highlight's UUID linkage.
-
-### 20. Paragraph background & borders (rule stroke + positions)
+### 19. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -293,7 +280,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 21. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 20. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -305,7 +292,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 22. Categories: enable or disable grouping
+### 21. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -317,7 +304,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 23. Conditional formatting rules
+### 22. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -329,7 +316,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 24. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 23. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -341,7 +328,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 25. Table of contents (rules read + write, cached entries read)
+### 24. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -355,7 +342,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-16 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+17 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -389,6 +376,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the suite proves the archives and declarations are right, not that Numbers draws them
 
 **Outcome.** **Half confirmed in Numbers.** The recoloured series drew red and the chart was otherwise correct — so the clone-and-repoint worked where it is observable: five other series kept their colours despite the shared archive. The cross-chart half is still unobserved, because the only chart fixture here has a single chart, and a copy-on-write that leaks would need a second chart to leak into. Same mechanism, so the risk stays low
+
+### ✅ Comment creation and removal
+
+**Was claimed.** a comment this library creates is readable and attributed in the app
+
+**Why it needed an app.** the suite proves the three archives and the highlight run round-trip; what an author must carry before the comment UI will draw at all took three app rounds
+
+**Outcome.** **Confirmed — "P08 Comment works" — on the third round, each round a distinct finding.** Round one (Pages for iOS): unreadable placeholder — the comment carried no author where every corpus comment references one. Round two: with a name-only author, Pages crashed on open — both corpus authors carry the identical comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, and the round-one fix had made ours declare the author — the container rule reintroduced by our own repair. Round three, with the author byte-for-byte Apple's shape and the roster declaring nothing: readable and attributed.
 
 ### ✅ Date fields and bookmarks (read + create)
 

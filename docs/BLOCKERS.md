@@ -74,7 +74,7 @@ mechanically enforce.
 slider and stepper all draw, which also settles the 4/5 stepper/slider
 pairing that used to rest on elimination.
 
-### Pages: the text path is verified, the rest of the ladder is not
+### Pages: the ladder is fully app-confirmed
 
 ```sh
 npm run pages:docs ~/Desktop/pages-rungs    # v26-P00 … v26-P11, v14-P00 … v14-P11
@@ -152,12 +152,12 @@ Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
-**Not yet checked:** P08 alone (comment — two failed rounds so far: an
-authorless comment was unreadable on iOS, then a name-only author crashed
-Pages; the third build's author carries Apple's exact comment-yellow
-colour and explicit `is_public_author=false`, and the roster no longer
-declares the reference both corpus rosters leave undeclared). Every other
-rung of the ladder is app-confirmed. Nothing about them is known to be wrong;
+**Nothing left unchecked.** Every rung, P00 through P19 with both
+placement variants, is app-confirmed — fourteen well-formed-but-wrong
+defects were found and fixed along the way, each measured from the corpus
+before the fix and pinned as a test after. What Pages still lacks is not
+verification but features the ladder does not exercise: formula authoring,
+conditional-rule authoring, and the borrowed-corpora asks below. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 

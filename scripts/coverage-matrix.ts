@@ -507,20 +507,20 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     manualProof: {
       claim: "a comment this library creates is readable and attributed in the app",
+      settled:
+        "**Confirmed — \"P08 Comment works\" — on the third round, each round a distinct " +
+        "finding.** Round one (Pages for iOS): unreadable placeholder — the comment " +
+        "carried no author where every corpus comment references one. Round two: with a " +
+        "name-only author, Pages crashed on open — both corpus authors carry the identical " +
+        "comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the " +
+        "comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, " +
+        "and the round-one fix had made ours declare the author — the container rule " +
+        "reintroduced by our own repair. Round three, with the author byte-for-byte " +
+        "Apple's shape and the roster declaring nothing: readable and attributed.",
       why:
-        "Three app rounds so far, each narrowing the shape. Round one (Pages for iOS): " +
-        "unreadable placeholder — the comment carried no author where every corpus comment " +
-        "references one. Round two: with a name-only author, Pages crashed on open — both " +
-        "corpus authors carry the identical comment-yellow `TSP.Color` and explicit " +
-        "`is_public_author = false`, and the comment UI draws the author's tint; the " +
-        "corpus rosters also declare `refs=[]`, and ours had started declaring the author " +
-        "— the container rule reintroduced by our own fix. The author now matches Apple's " +
-        "byte-for-byte (writeColor reproduces the colour exactly) and the roster edit " +
-        "declares nothing.",
-      how:
-        "`npm run pages:docs` emits P08-comment; the phrase names itself and the comment " +
-        "text says who wrote it. Readable and attributed is the pass; a third distinct " +
-        "failure would point at the highlight's UUID linkage.",
+        "the suite proves the three archives and the highlight run round-trip; what an " +
+        "author must carry before the comment UI will draw at all took three app rounds",
+      how: "`npm run pages:docs` emits P08-comment; the phrase and the comment name themselves",
       risk: "medium",
     },
     status: "read+write",
