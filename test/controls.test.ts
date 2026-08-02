@@ -336,9 +336,16 @@ describe("controls carry the format that draws them", () => {
       new Uint8Array(readFileSync(new URL("numbers-parser-v26.0-categories.numbers", FIXTURES))),
     );
 
+  // recordAt is private; the structural cast names exactly what the probe
+  // touches instead of opening the whole object up as `any`.
   const formatOf = (table: ReturnType<NumbersDocument["tables"]>[number], row: number, flag: number) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (table as any).recordAt(row, 0)?.id(flag);
+    (
+      table as unknown as {
+        recordAt(r: number, c: number): { id(flag: number): number | undefined } | undefined;
+      }
+    )
+      .recordAt(row, 0)
+      ?.id(flag);
 
   it("gives a checkbox a boolean format, not just a spec", () => {
     const doc = load();
@@ -386,8 +393,7 @@ describe("controls carry the format that draws them", () => {
 
     const saved = NumbersDocument.load(doc.save());
     const seen = new Map<number, string>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const { obj } of (saved as any).store.index.values()) {
+    for (const { obj } of saved.store.allObjects()) {
       if (obj.type !== 6005 || obj.message.getUint(1) !== 2) continue;
       for (const entry of obj.message.getMessages(3)) {
         const format = entry.getMessage(6);

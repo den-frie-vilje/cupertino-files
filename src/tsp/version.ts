@@ -312,8 +312,9 @@ export function buildCompatibilityReport(inputs: CompatibilityInputs): Compatibi
   const probe = inputs.probe;
 
   if (era === "future") {
+    const declared = (inputs.formatVersion ?? inputs.packageFormatVersion)?.toString() ?? "unknown";
     warnings.push(
-      `document declares format version ${inputs.formatVersion ?? inputs.packageFormatVersion} — ` +
+      `document declares format version ${declared} — ` +
         `newer than any surveyed release (highest known major ${HIGHEST_KNOWN_FORMAT_MAJOR}). ` +
         `Reading and round-tripping still apply; unrecognized content is preserved verbatim.`,
     );

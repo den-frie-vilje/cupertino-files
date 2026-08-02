@@ -470,7 +470,7 @@ export function normalizeCellInput(value: CellInput | undefined): TaggedCellInpu
     tag === "date" ||
     tag === "duration"
   ) {
-    return value as TaggedCellInput;
+    return value;
   }
   // The case that used to erase the cell.
   throw new RangeError(

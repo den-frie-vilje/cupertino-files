@@ -1386,7 +1386,7 @@ export const CAPABILITIES: Capability[] = [
         "TST.ColumnAggregateArchive entries, so its group headings show no counts or totals at " +
         "all, and there is nothing for a regroup to get wrong. regroupCategories does not touch " +
         "aggregates, which is correct only if Numbers recomputes them; on a table that does " +
-        "declare a summary, moving a row between groups would change both groups\' totals, and " +
+        "declare a summary, moving a row between groups would change both groups' totals, and " +
         "nothing here establishes whether ours would go stale. Needs a categorised fixture with " +
         "a per-column summary, which this repository does not have",
       risk: "medium",
@@ -1642,7 +1642,7 @@ function render(facts: FixtureFacts[]): string {
     out.push("|---|---|---|---:|---|");
     for (const capability of CAPABILITIES.filter((c) => c.group === group)) {
       const applicable =
-        capability.apps === "all" ? APPS : (capability.apps as IWorkApp[]);
+        capability.apps === "all" ? APPS : (capability.apps);
       const matching = facts.filter((f) => f.exercises.has(key(capability)));
       const eras = [...new Set(matching.map((f) => f.era))].sort(
         (a, b) => IWORK_ERAS.indexOf(a) - IWORK_ERAS.indexOf(b),

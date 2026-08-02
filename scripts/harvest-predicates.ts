@@ -23,7 +23,6 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { tablesOf } from "../src/tst/tables.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import {
-  readPredicate,
   PREDICATE_TYPE_OPERATORS,
   PREDICATE_TYPE_HYPOTHESIS,
   type Predicate,

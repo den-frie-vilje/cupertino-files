@@ -136,7 +136,7 @@ export class CellRecord {
     if (record[0] !== STORAGE_VERSION) {
       throw new RangeError(`cell storage version ${record[0]} not supported (expected 5)`);
     }
-    const out = new CellRecord(record[1]!);
+    const out = new CellRecord(record[1]);
     out.reserved = record.slice(2, 6);
     out.extras = record[6]! | (record[7]! << 8);
     const view = new DataView(record.buffer, record.byteOffset, record.byteLength);

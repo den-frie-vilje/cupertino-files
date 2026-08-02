@@ -32,7 +32,6 @@ import { chartsOf } from "../src/tsch/charts.ts";
 import { missingRequired, type MissingRequired, type ProtoSchema } from "../src/tsp/required.ts";
 import { loadVendoredSchema } from "./proto-schema.ts";
 
-const PROTO_DIR = new URL("../proto/current/", import.meta.url);
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", import.meta.url);
 const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", import.meta.url);

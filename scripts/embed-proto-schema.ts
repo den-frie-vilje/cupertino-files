@@ -45,7 +45,6 @@ const hex = (bytes: Uint8Array): string =>
   [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 const ROOT = new URL("../", import.meta.url);
-const PROTO_DIR = new URL("proto/", ROOT);
 const SRC_DIR = new URL("src/", ROOT);
 const OUTPUT = new URL("src/proto/vendored.ts", ROOT);
 
@@ -152,7 +151,7 @@ function main(argv: string[]): number {
   }
 
   const path = fileURLToPath(OUTPUT);
-  let current = "";
+  let current: string;
   try {
     current = readFileSync(path, "utf8");
   } catch {

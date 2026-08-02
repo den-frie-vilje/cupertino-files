@@ -28,7 +28,6 @@ import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts
 import { Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
-import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { imageDimensions } from "../base/imagesize.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -535,7 +534,7 @@ export class PagesDocument extends IWorkDocument {
           i + 1 < entries.length
             ? (entries[i + 1]!.getUint(ENTRY_CHARACTER_INDEX) ?? text.length)
             : text.length;
-        const id = refId(entries[i]!, ENTRY_OBJECT);
+        const id = refId(entries[i], ENTRY_OBJECT);
         const obj = id !== undefined ? this.store.object(id) : undefined;
         if (obj) out.push(new PagesSection(this, obj, out.length, start, end));
       }

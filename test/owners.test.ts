@@ -174,7 +174,7 @@ describe("owner kinds", () => {
         note("merge", registry.lookup(readCfUid(model.getMessage(47)?.getMessage(1)))?.kind);
       }
     }
-    const only = (label: string): number[] => [...(usage.get(label) ?? new Map()).keys()];
+    const only = (label: string): number[] => [...(usage.get(label) ?? new Map<number, number>()).keys()];
     expect(only("conditionalStyle")).toEqual([OwnerKind.CONDITIONAL_STYLE]);
     expect(only("haunted")).toEqual([OwnerKind.HAUNTED]);
     expect(only("merge")).toEqual([OwnerKind.MERGE]);

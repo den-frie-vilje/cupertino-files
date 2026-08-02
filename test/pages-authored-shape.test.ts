@@ -851,7 +851,7 @@ describe("a footnote mark is superscripted, in the body and in the note", () => 
   const bagOf = (doc: PagesDocument, id: bigint | undefined): string => {
     if (id === undefined) return "(none)";
     const bag = doc.store.resolve(id)?.message.getMessage(11);
-    return bag ? bag.fields.map((f) => `${f.no}=${f.value}`).join(",") : "(no bag)";
+    return bag ? bag.fields.map((f) => `${f.no}=${f.value as bigint}`).join(",") : "(no bag)";
   };
 
   it("matches the corpus: every U+000E is covered by a superscript-only style", () => {
@@ -1007,7 +1007,6 @@ describe("a hyperlink carries the document's Link character style", () => {
   // shipped by every template in the corpus and covering every native link
   // run. The Word imports carry their own styles, which is why the rule
   // pinned here is about what we author, plus the convention's existence.
-  const HYPERLINK = 2032;
 
   it("finds the Link style shipped by both ladder bases", () => {
     for (const base of [

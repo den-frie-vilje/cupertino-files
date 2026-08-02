@@ -28,6 +28,10 @@ const ARCHIVE_SHOULD_MERGE = 3;
 const MSG_TYPE = 1;
 const MSG_VERSION = 2;
 const MSG_LENGTH = 3;
+// Read by Apple, deliberately never rewritten by this library — stale
+// field_infos are accepted by every app (settled by measurement; see
+// docs/FORMAT.md). Named here to keep the MessageInfo table complete.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MSG_FIELD_INFOS = 4;
 const MSG_OBJECT_REFERENCES = 5;
 const MSG_DATA_REFERENCES = 6;
@@ -153,7 +157,7 @@ export class IwaObject {
     const info = this.messageInfos[0];
     if (!info) throw new RangeError(`object ${this.identifier}: no MessageInfo`);
     if (ids.length === 0) info.remove(MSG_OBJECT_REFERENCES);
-    else info.setPackedVarints(MSG_OBJECT_REFERENCES, ids as (bigint | number)[]);
+    else info.setPackedVarints(MSG_OBJECT_REFERENCES, ids);
   }
 
   getDataReferences(): bigint[] {
@@ -165,7 +169,7 @@ export class IwaObject {
     const info = this.messageInfos[0];
     if (!info) throw new RangeError(`object ${this.identifier}: no MessageInfo`);
     if (ids.length === 0) info.remove(MSG_DATA_REFERENCES);
-    else info.setPackedVarints(MSG_DATA_REFERENCES, ids as (bigint | number)[]);
+    else info.setPackedVarints(MSG_DATA_REFERENCES, ids);
   }
 
   /** Replace the primary payload with a parsed copy of the given bytes. */
@@ -200,7 +204,7 @@ export class IwaObject {
   static create(identifier: bigint, type: number, versions: readonly number[] = [1]): IwaObject {
     const info = RawMessage.create();
     info.setVarint(MSG_TYPE, type);
-    info.setPackedVarints(MSG_VERSION, versions as number[]);
+    info.setPackedVarints(MSG_VERSION, versions);
     info.setVarint(MSG_LENGTH, 0);
     const archive = RawMessage.create();
     archive.setVarint(ARCHIVE_IDENTIFIER, identifier);

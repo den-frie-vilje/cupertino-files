@@ -11,7 +11,7 @@ import {
   snappyUncompressBlock,
 } from "../src/base/snappy.ts";
 import { buildZip, ZipReader } from "../src/base/zip.ts";
-import { RawMessage, WireType } from "../src/base/protobuf.ts";
+import { RawMessage } from "../src/base/protobuf.ts";
 
 function rng(seed: number): () => number {
   let s = seed >>> 0;

@@ -67,11 +67,15 @@
     "proto:embed": "node scripts/embed-proto-schema.ts",
     "proto:embed:check": "node scripts/embed-proto-schema.ts --check",
     "shape:audit": "node scripts/audit-authored-shape.ts",
-    "shape:check": "node scripts/audit-authored-shape.ts --check"
+    "shape:check": "node scripts/audit-authored-shape.ts --check",
+    "lint": "eslint src test scripts"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.10.0",
+    "eslint": "^10.8.0",
     "protobufjs": "^8.7.1",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.65.0"
   }
 }

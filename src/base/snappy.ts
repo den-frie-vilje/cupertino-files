@@ -98,7 +98,7 @@ function load32(b: Uint8Array, i: number): number {
 }
 
 function emitLiteral(w: ByteWriter, src: Uint8Array, from: number, to: number): void {
-  let len = to - from;
+  const len = to - from;
   if (len <= 0) return;
   const n = len - 1;
   if (n < 60) {
@@ -167,7 +167,7 @@ export function snappyCompressBlock(input: Uint8Array): Uint8Array {
 
   while (ip <= ipLimit) {
     let skip = 32;
-    let candidate = -1;
+    let candidate: number;
     let cur = load32(input, ip);
     // Find a match, skipping faster through incompressible regions.
     for (;;) {

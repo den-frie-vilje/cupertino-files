@@ -113,7 +113,12 @@ export function parseBinaryPlist(data: Uint8Array): PlistValue {
             readBEUint(data, pos + (count + i) * objectRefSize, objectRefSize),
           );
           const key = parseAt(keyRef, depth + 1);
-          obj[String(key)] = parseAt(valRef, depth + 1);
+          // A dictionary key that is not a string would coerce to garbage
+          // like "[object Object]" — better to name the malformation.
+          if (typeof key !== "string") {
+            throw new RangeError(`plist: non-string dictionary key (0x${keyRef.toString(16)})`);
+          }
+          obj[key] = parseAt(valRef, depth + 1);
         }
         return obj;
       }

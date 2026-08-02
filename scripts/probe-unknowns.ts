@@ -42,7 +42,7 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { KeynoteDocument } from "../src/keynote/document.ts";
 import { tablesOf } from "../src/tst/tables.ts";
 import { typeName } from "../src/tsp/registry.ts";
-import { FormulaOwnerRegistry, OwnerKind } from "../src/tsce/owners.ts";
+import { FormulaOwnerRegistry } from "../src/tsce/owners.ts";
 import { readPredicate } from "../src/tst/predicates.ts";
 import { BuildFields } from "../src/keynote/builds.ts";
 import { ParaProps, StyleArchive } from "../src/tswp/schema.ts";

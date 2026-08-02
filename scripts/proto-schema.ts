@@ -225,9 +225,9 @@ export function loadVendoredSchema(): VendoredSchema {
   for (const root of roots(files)) {
     for (const [archive, fields] of messagesOf(root)) {
       let merged = messages.get(archive);
-      if (!merged) messages.set(archive, (merged = new Map()));
+      if (!merged) messages.set(archive, (merged = new Map<string, number>()));
       let mergedDetail = detailed.get(archive);
-      if (!mergedDetail) detailed.set(archive, (mergedDetail = new Map()));
+      if (!mergedDetail) detailed.set(archive, (mergedDetail = new Map<number, ProtoField>()));
       for (const [number, field] of fields) {
         const existing = merged.get(field.name);
         if (existing !== undefined && existing !== number) {
@@ -240,7 +240,7 @@ export function loadVendoredSchema(): VendoredSchema {
     }
     for (const [name, values] of enumsOf(root)) {
       let merged = enums.get(name);
-      if (!merged) enums.set(name, (merged = new Map()));
+      if (!merged) enums.set(name, (merged = new Map<string, number>()));
       for (const [value, number] of values) merged.set(value, number);
     }
   }

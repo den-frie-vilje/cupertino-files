@@ -1,6 +1,23 @@
 /** Minimal vitest-compatible assertion shim over node:test / node:assert. */
 import assert from "node:assert/strict";
-export { describe, it } from "node:test";
+import { describe as nodeDescribe, it as nodeIt } from "node:test";
+
+/**
+ * node:test's `describe`/`it` return promises, but they are the runner's to
+ * track — a test file has nothing to do with them, and leaving the return
+ * type as `Promise` makes every test in the suite a `no-floating-promises`
+ * finding. Re-typed to `void` here so the lint rule guards real promises.
+ */
+type TestOptions = { skip?: boolean | string; timeout?: number };
+type TestFn = {
+  (name: string, fn: () => void | Promise<void>): void;
+  (name: string, options: TestOptions, fn: () => void | Promise<void>): void;
+};
+// The `unknown` hop is deliberate: a direct assignment trips
+// `no-misused-promises` (promise-returning assigned where void is declared),
+// and that promise being dropped is exactly the point.
+export const describe = nodeDescribe as unknown as TestFn;
+export const it = nodeIt as unknown as TestFn;
 
 export function expect(actual: unknown): {
   toBe(expected: unknown): void;

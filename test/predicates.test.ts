@@ -257,7 +257,7 @@ describe("filters", () => {
         return [rows, columns].filter((set) => set !== undefined);
       });
       expect(reached.length).toBeGreaterThan(0);
-      for (const set of reached) expect(set!.consistent).toBe(true);
+      for (const set of reached) expect(set.consistent).toBe(true);
     }
   });
 

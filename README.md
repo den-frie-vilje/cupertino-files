@@ -383,6 +383,47 @@ npx iwork-dump object   file.pages 42  # pretty-print one object's protobuf
 npx iwork-dump extract  file.pages out/  # decompressed .iwa streams
 ```
 
+## API design
+
+The public shape follows the conventions that pdf-lib, exceljs, docx and
+SheetJS converge on, so it reads like the libraries it will sit beside in a
+`package.json`:
+
+- **Static `load(bytes)` on each app class; instance `save(): Uint8Array`.**
+  Bytes in, bytes out, no filesystem coupling — pdf-lib's shape
+  (`PDFDocument.load` / `doc.save()`), and the only one that behaves
+  identically in Node, browsers and workers. `IWorkDocument.open(bytes)` is
+  the auto-detecting variant for when the app is not known up front.
+- **`add*` creates, attaches and returns the created child** (`addSheet`,
+  `addSlide`, `addFootnote`, `addComment` …). `insert*` is the positional
+  variant (`insertRows(at)`, `insertText(pos)`, `insertLink(start, end)`),
+  `remove*`/`delete*` mirror them, and `create*` mints detached named
+  things (`createParagraphStyle`). The same verb grammar as exceljs and
+  pdf-lib.
+- **Primary payload positional, the rest in a trailing options object**
+  with corpus-measured defaults; where Apple has a convention the option
+  accepts `false` to opt out and an id to override
+  (`insertLink(start, end, url, { characterStyle })`,
+  `addFootnote(pos, text, { markStyle })`).
+- **A "the" accessor throws with guidance; the soft twin says so in its
+  name** — `doc.body` explains page-layout documents in its error,
+  `doc.bodyOrUndefined` never throws (pdf-lib's `getField` /
+  `getFieldMaybe` split). Collection methods (`sheets()`, `slides()`,
+  `tables()`) return plain, possibly-empty arrays.
+- **A mutable object graph**, because every surveyed library that
+  round-trips existing files exposes one; the build-a-tree-then-serialize
+  model (docx) only works when you never read.
+
+Two deliberate divergences, both consequences of this being pure compute:
+
+- **Everything is synchronous.** pdf-lib and exceljs are async because
+  their internals await; nothing here does — no I/O, no workers — so
+  `load`/`save` returning promises would be ceremony.
+- **Cells are edited through the table (`table.setCell(r, c, v)`), not by
+  assignment on a live cell object** (exceljs' `cell.value = 5`). Numbers
+  cells are records inside compressed tiles; a handle cheap enough to
+  assign through would be lying about what a write costs.
+
 ## Claude skill
 
 The package ships a [Claude skill](skills/iwork-files/SKILL.md)
@@ -455,6 +496,7 @@ npm test           # unit + fixture suite (never launches an app)
 npm run test:e2e   # macOS only: drives Pages/Numbers/Keynote via osascript
 npm run coverage   # regenerate docs/COVERAGE.md
 npm run typecheck
+npm run lint       # eslint (typescript-eslint, type-checked) over src/test/scripts
 npm run build      # tsc → dist/
 
 npm run proto:embed  # after changing anything under proto/

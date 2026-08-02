@@ -331,7 +331,7 @@ export function audit(): Finding[] {
   const pagesBase = new Uint8Array(readFileSync(PAGES_BASES[0]!.url));
   for (const rung of PAGES_RUNGS) {
     const bytes = rung.base ? new Uint8Array(readFileSync(rung.base)) : pagesBase;
-    const run = authoredObjects(bytes, rung.build as (doc: never) => void, PagesDocument);
+    const run = authoredObjects(bytes, rung.build, PagesDocument);
     if (run) inspect(`pages/${rung.name}`, run.saved, run.touched, corpus, findings);
   }
 
@@ -340,7 +340,7 @@ export function audit(): Finding[] {
     const url = rung.template ?? NUMBERS_TEMPLATE;
     let bytes = numbersCache.get(url.href);
     if (!bytes) numbersCache.set(url.href, (bytes = new Uint8Array(readFileSync(url))));
-    const run = authoredObjects(bytes, rung.build as (doc: never) => void, NumbersDocument);
+    const run = authoredObjects(bytes, rung.build, NumbersDocument);
     if (run) inspect(`numbers/${rung.name}`, run.saved, run.touched, corpus, findings);
   }
 

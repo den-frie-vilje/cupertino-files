@@ -240,7 +240,7 @@ export class StylesheetModel {
     const source =
       options.copyOf === undefined
         ? undefined
-        : this.store.resolve(this.resolveBase(options.copyOf, TSWP_TYPE.PARAGRAPH_STYLE)!);
+        : this.store.resolve(this.resolveBase(options.copyOf, TSWP_TYPE.PARAGRAPH_STYLE));
     // Derived once and used twice: Apple's listed styles carry the same
     // string in `super.identifier` and as the map key, and the panel wants
     // both. Writing only the map entry leaves the style listed but with no
@@ -427,9 +427,9 @@ export class StyleHandle {
    * should not hang a reader.
    */
   resolved(): { character: CharacterFormatting; paragraph: ParagraphFormatting } {
-    const chain: StyleHandle[] = [];
-    const seen = new Set<bigint>();
-    for (let node: StyleHandle | undefined = this; node && !seen.has(node.id); node = node.parent()) {
+    const chain: StyleHandle[] = [this];
+    const seen = new Set<bigint>([this.id]);
+    for (let node = this.parent(); node && !seen.has(node.id); node = node.parent()) {
       seen.add(node.id);
       chain.push(node);
     }
@@ -759,7 +759,7 @@ export function readParagraphProperties(m: RawMessage | undefined): ParagraphFor
   const f: ParagraphFormatting = {};
   if (!m) return f;
   const alignment = m.getUint(ParaProps.ALIGNMENT);
-  if (alignment !== undefined) f.alignment = alignment as TextAlignment;
+  if (alignment !== undefined) f.alignment = alignment;
   for (const [key, field] of [
     ["spaceBefore", ParaProps.SPACE_BEFORE],
     ["spaceAfter", ParaProps.SPACE_AFTER],

@@ -45,7 +45,7 @@ import {
   TSWP_TYPE,
 } from "./schema.ts";
 import { makeRef, RANGE_LENGTH, RANGE_LOCATION, refId } from "../tsp/schema.ts";
-import { CommentStorage, TSD_TYPE } from "../tsd/schema.ts";
+import { TSD_TYPE } from "../tsd/schema.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { ParagraphHandle, TextRange } from "./range.ts";
 import { typeName } from "../tsp/registry.ts";
@@ -313,7 +313,7 @@ export class TextStorage {
         i + 1 < entries.length
           ? (entries[i + 1]!.getUint(ENTRY_CHARACTER_INDEX) ?? textLength)
           : textLength;
-      runs.push({ start, end, objectId: refId(entries[i]!, ENTRY_OBJECT) });
+      runs.push({ start, end, objectId: refId(entries[i], ENTRY_OBJECT) });
     }
     return runs;
   }
@@ -725,8 +725,8 @@ export class TextStorage {
     }
     const re = pattern.global ? pattern : new RegExp(pattern.source, pattern.flags + "g");
     for (const m of text.matchAll(re)) {
-      if (m.index !== undefined && m[0]!.length > 0) {
-        out.push(new TextRange(this, m.index, m.index + m[0]!.length));
+      if (m.index !== undefined && m[0].length > 0) {
+        out.push(new TextRange(this, m.index, m.index + m[0].length));
       }
     }
     return out;

@@ -343,7 +343,7 @@ class Parser {
 
     const identifier = /^[A-Za-z_][A-Za-z0-9_.]*/.exec(this.text.slice(this.at));
     if (identifier) {
-      const word = identifier[0]!;
+      const word = identifier[0];
       const after = this.at + word.length;
       // A function call: an identifier immediately followed by "(".
       if (this.text[after] === "(") {
@@ -362,7 +362,7 @@ class Parser {
 
     const number = /^\d+(\.\d+)?([eE][-+]?\d+)?/.exec(this.text.slice(this.at));
     if (number) {
-      this.at += number[0]!.length;
+      this.at += number[0].length;
       return { kind: "number", value: Number(number[0]) };
     }
     this.fail("expression expected");
@@ -372,14 +372,14 @@ class Parser {
   private tryReference(): FormulaExpression | undefined {
     const cell = /^\$?[A-Za-z]+\$?\d+/.exec(this.text.slice(this.at));
     if (!cell) return undefined;
-    const from = parseReference(cell[0]!);
+    const from = parseReference(cell[0]);
     if (!from) return undefined;
-    const after = this.at + cell[0]!.length;
+    const after = this.at + cell[0].length;
     if (this.text[after] === ":") {
       const second = /^\$?[A-Za-z]+\$?\d+/.exec(this.text.slice(after + 1));
-      const to = second ? parseReference(second[0]!) : undefined;
+      const to = second ? parseReference(second[0]) : undefined;
       if (!to) this.fail("range end expected after ':'");
-      this.at = after + 1 + second![0]!.length;
+      this.at = after + 1 + second![0].length;
       // A range is stored with absolute bounds, so a relative endpoint is
       // resolved here rather than silently written as an absolute one.
       // Every range in the corpus has absolute bounds, and a colon tract

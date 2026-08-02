@@ -38,7 +38,6 @@
  * which is what lets an AST's `table_id` be looked up in this map at all.
  */
 import { protoFields } from "../proto/fields.ts";
-import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { refId } from "../tsp/schema.ts";

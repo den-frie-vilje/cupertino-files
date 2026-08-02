@@ -599,7 +599,7 @@ function referencedIds(message: RawMessage): bigint[] {
     for (const field of fields) {
       if (field.wire !== 2 || seen.has(field.no)) continue;
       seen.add(field.no);
-      let subs: RawMessage[] = [];
+      let subs: RawMessage[];
       try {
         subs = node.getMessages(field.no);
       } catch {

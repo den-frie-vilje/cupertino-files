@@ -15,7 +15,7 @@ import { PagesDocument } from "../src/pages/document.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { tablesOf } from "../src/tst/tables.ts";
 import { Storage, TSWP_TYPE } from "../src/tswp/schema.ts";
-import { Image, TSD_TYPE } from "../src/tsd/schema.ts";
+import { TSD_TYPE } from "../src/tsd/schema.ts";
 
 /** TSD.ImageArchive.imageAdjustments = 14 — the "image filters" payload. */
 const IMAGE_ADJUSTMENTS = 14;

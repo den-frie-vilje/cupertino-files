@@ -41,7 +41,7 @@ export class ZipReader {
     const eocdPos = findEocd(data);
     let count = readU16le(data, eocdPos + 10);
     let cdOffset = readU32le(data, eocdPos + 16);
-    let cdSize = readU32le(data, eocdPos + 12);
+    const cdSize = readU32le(data, eocdPos + 12);
 
     if (count === 0xffff || cdOffset === 0xffffffff || cdSize === 0xffffffff) {
       // ZIP64: locate the EOCD64 record via its locator.
@@ -52,7 +52,8 @@ export class ZipReader {
           throw new RangeError("zip: bad ZIP64 end-of-central-directory record");
         }
         count = Number(readU64le(data, eocd64Pos + 32));
-        cdSize = Number(readU64le(data, eocd64Pos + 40));
+        // +40 holds the 64-bit central-directory size; entries are walked by
+        // per-entry signature below, so only count and offset are needed.
         cdOffset = Number(readU64le(data, eocd64Pos + 48));
       }
     }
@@ -93,8 +94,9 @@ export class ZipReader {
             p += 8;
           }
           if (localHeaderOffset === 0xffffffff) {
+            // Last of the fixed-order ZIP64 extra fields; p is not advanced
+            // because extraPos, not p, carries the cursor to the next block.
             localHeaderOffset = Number(readU64le(data, p));
-            p += 8;
           }
         }
         extraPos += 4 + size;
@@ -127,7 +129,7 @@ export class ZipReader {
   /** Extract and (if needed) inflate one entry's bytes. */
   read(entry: ZipEntryMeta | string): Uint8Array {
     const meta = typeof entry === "string" ? this.find(entry) : entry;
-    if (!meta) throw new RangeError(`zip: no such entry: ${String(entry)}`);
+    if (!meta) throw new RangeError(`zip: no such entry: ${typeof entry === "string" ? entry : entry.name}`);
     const d = this.data;
     const p = meta.localHeaderOffset;
     if (readU32le(d, p) !== SIG_LOCAL) {

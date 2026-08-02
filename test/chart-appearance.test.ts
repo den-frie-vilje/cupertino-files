@@ -302,7 +302,7 @@ describe("axis and legend styles", () => {
     const { chart } = firstChart(UNSTYLED);
     let message = "";
     try {
-      chart.axisStyle("category")!.bool("SHOW_SOMETHING" as never);
+      chart.axisStyle("category")!.bool("SHOW_SOMETHING");
     } catch (error) {
       message = (error as Error).message;
     }

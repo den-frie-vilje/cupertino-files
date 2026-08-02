@@ -81,12 +81,11 @@ describe("Keynote slide model", () => {
     for (const name of ["iwork-mcp-v14.5-sample.key", "tika-testKeynote2018.key"]) {
       const original = fixture(name);
       const doc = KeynoteDocument.load(original);
-      doc.slides().forEach((s) => {
-        s.title;
-        s.notes;
-        s.transition();
-        s.drawables();
-      });
+      for (const s of doc.slides()) {
+        // Reading every accessor must not throw or dirty the document.
+        const touched = [s.title, s.notes, s.transition(), s.drawables()];
+        expect(touched.length).toBe(4);
+      }
       expect(bytesEqual(doc.save(), original)).toBe(false); // zip re-encoded
       // …but every component's content is preserved; verified in versions.test.ts
       expect(KeynoteDocument.load(doc.save()).slideCount()).toBe(doc.slideCount());

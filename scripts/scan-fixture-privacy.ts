@@ -47,7 +47,7 @@ function scan(): PrivacyFinding[] {
   const findings: PrivacyFinding[] = [];
   for (const name of readdirSync(dir).sort()) {
     if (!/\.(pages|numbers|key)$/.test(name)) continue;
-    let text = "";
+    let text: string;
     try {
       const doc = IWorkDocument.open(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
       text = doc

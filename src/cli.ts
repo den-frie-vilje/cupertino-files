@@ -13,7 +13,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { IWorkDocument, detectApp } from "./tsa/document.ts";
+import { IWorkDocument } from "./tsa/document.ts";
 import { PagesDocument } from "./pages/document.ts";
 import { IWorkContainer } from "./tsp/package.ts";
 import { decodeIwaData } from "./base/snappy.ts";
@@ -37,7 +37,7 @@ function printMessage(m: RawMessage, indent: string, depth: number): void {
 function printField(f: RawField, indent: string, depth: number): void {
   const head = `${indent}${f.no}`;
   if (f.wire === WireType.Varint) {
-    console.log(`${head}: ${f.value}`);
+    console.log(`${head}: ${f.value as bigint}`);
     return;
   }
   if (f.wire === WireType.Fixed32) {
@@ -113,8 +113,12 @@ function main(): void {
       const r = doc.compatibility();
       console.log(doc.compatibilitySummary());
       console.log(`era: ${r.era} (${r.eraLabel})`);
-      if (r.formatVersion) console.log(`fileFormatVersion: ${r.formatVersion}`);
-      if (r.readVersion) console.log(`read/write version: ${r.readVersion} / ${r.writeVersion ?? "-"}`);
+      if (r.formatVersion) console.log(`fileFormatVersion: ${r.formatVersion.toString()}`);
+      if (r.readVersion) {
+        console.log(
+          `read/write version: ${r.readVersion.toString()} / ${r.writeVersion?.toString() ?? "-"}`,
+        );
+      }
       if (r.appBuilds.length) console.log(`app builds: ${r.appBuilds.join(" | ")}`);
       console.log(`container layout: ${r.probe.containerLayout}`);
       console.log(`cell storage: ${r.probe.cellStorage}`);

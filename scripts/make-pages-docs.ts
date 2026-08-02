@@ -218,7 +218,7 @@ export const RUNGS: {
         "The mark at the end of the first sentence should be a small raised number, not a full-size character.",
       );
       const starts = doc.body.paragraphStarts();
-      const at = doc.body.text.indexOf("\n", starts[starts.length - 2]!);
+      const at = doc.body.text.indexOf("\n", starts[starts.length - 2]);
       doc.body.addFootnote(at, "This footnote was written by iwork-files.");
     },
   },
@@ -281,7 +281,7 @@ export const RUNGS: {
       doc.appendParagraph("P14: the line below should read exactly — alpha gamma");
       const target = doc.appendParagraph("alpha beta gamma");
       const starts = doc.body.paragraphStarts();
-      const at = doc.body.text.indexOf(" beta", starts[target]!);
+      const at = doc.body.text.indexOf(" beta", starts[target]);
       if (at < 0) throw new Error("target line not found");
       doc.deleteRange(at, at + " beta".length);
     },

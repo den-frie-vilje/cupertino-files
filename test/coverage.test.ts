@@ -15,7 +15,7 @@ describe("repository guards", () => {
     // VERIFICATION.md especially: a hand-kept list of "things to check some
     // day" rots the moment someone ships a feature and forgets a line.
     let ok = true;
-    let output = "";
+    let output: string;
     try {
       output = execFileSync(process.execPath, [script, "--check"], { encoding: "utf8" });
     } catch (e) {
@@ -31,7 +31,7 @@ describe("repository guards", () => {
     // either one would silently diverge from the measurement that produced
     // it — this catches that.
     let ok = true;
-    let output = "";
+    let output: string;
     try {
       output = execFileSync(process.execPath, [harvest, "--check"], { encoding: "utf8" });
     } catch (e) {

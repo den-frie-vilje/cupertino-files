@@ -48,7 +48,7 @@ function loadProtos(): { index: ProtoIndex; messages: number } {
   const merged: ProtoIndex = new Map();
   const add = (name: string, fields: Map<string, number>): void => {
     let existing = merged.get(name);
-    if (!existing) merged.set(name, (existing = new Map()));
+    if (!existing) merged.set(name, (existing = new Map<string, number>()));
     for (const [field, number] of fields) if (!existing.has(field)) existing.set(field, number);
   };
   const schema = loadVendoredSchema().messages;

@@ -202,7 +202,7 @@ class Inflator {
   }
 
   run(): Uint8Array {
-    let final = 0;
+    let final: number;
     do {
       final = this.bits(1);
       const type = this.bits(2);

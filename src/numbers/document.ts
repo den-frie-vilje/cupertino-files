@@ -10,7 +10,7 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
-import { makeRef, refId } from "../tsp/schema.ts";
+import { makeRef } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 

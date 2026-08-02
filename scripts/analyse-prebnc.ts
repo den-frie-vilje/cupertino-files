@@ -154,7 +154,7 @@ function main(argv: string[]): number {
   const pads = new Set(
     records.map((r) => new DataView(r.bytes.buffer, r.bytes.byteOffset, r.bytes.byteLength).getUint16(2, true)),
   );
-  console.log(`  header: version={${[...versions]}} pad={${[...pads]}}`);
+  console.log(`  header: version={${[...versions].join(",")}} pad={${[...pads].join(",")}}`);
   if (versions.size !== 1 || !versions.has(STORAGE_VERSION)) {
     console.log("  !! version byte is not a constant 4 — the header model is wrong");
   }
@@ -177,8 +177,8 @@ function main(argv: string[]): number {
     const lengths = [...entry.lengths].sort((a, b) => a - b);
     const payloads = lengths.map((l) => l - HEADER_SIZE);
     console.log(
-      `    0x${flags.toString(16).padStart(4, "0")} bits[${setBits(flags)}]` +
-        ` → ${payloads.join("/")} bytes  types={${[...entry.types]}} ×${entry.count}` +
+      `    0x${flags.toString(16).padStart(4, "0")} bits[${setBits(flags).join(",")}]` +
+        ` → ${payloads.join("/")} bytes  types={${[...entry.types].join(",")}} ×${entry.count}` +
         (lengths.length > 1 ? "   !! not a single length — the size model is incomplete" : ""),
     );
   }
