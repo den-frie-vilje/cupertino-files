@@ -1,0 +1,50 @@
+name: App rejection or misrender
+description: "The most valuable report there is: a document this library wrote that Pages, Numbers or Keynote refuses or renders wrongly."
+labels: [well-formed-but-wrong]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every serious defect in this project's history was **well-formed
+        but wrong**: the file passed every offline check and the app still
+        refused it or silently dropped the feature. If you are holding one
+        of those, this report is how it becomes a measured rule and a
+        regression test. Failures here are more informative than passes —
+        do not soften the details.
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What the app did
+      description: >-
+        Refused to open ("can't be opened"), opened but the feature is
+        missing/invisible, crashed, or rendered differently than expected —
+        and which app and version (macOS/iOS/iPadOS).
+      placeholder: |
+        Keynote 15.3 (macOS 26.1) opened the deck but the added slide is
+        entirely empty.
+    validations:
+      required: true
+  - type: textarea
+    id: authored
+    attributes:
+      label: How the document was authored
+      description: The library calls that produced the file (or the ladder rung name, e.g. v26-K04-add-slide).
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have appeared
+      description: >-
+        If the document states its own expectation in its visible content
+        (the ladder convention), quote it; otherwise describe it.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots / the file itself
+      description: >-
+        A screenshot of the misbehavior, and the file if it is shareable
+        (mind personal data). If you also have the same document
+        after the app "fixes" it (open, change one thing, save), attach
+        both — the byte diff is often the whole answer.

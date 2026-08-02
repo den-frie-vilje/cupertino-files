@@ -1,0 +1,53 @@
+name: Bug report
+description: The library misreads, miswrites, or crashes on a document.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before attaching any document:** files can carry personal data
+        (names in comments and change tracking, text content, embedded
+        images). Only attach documents you may share publicly, and say
+        which app version wrote them. A minimal document that reproduces
+        the problem is worth more than a description of a large one.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did the library do, and what should it have done?
+      placeholder: |
+        PagesDocument.load() threw / returned wrong text / the saved file
+        misbehaved in Pages…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The smallest code that shows it.
+      render: ts
+      placeholder: |
+        import { PagesDocument } from "cupertino-files";
+        const doc = PagesDocument.load(bytes);
+        // …
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Document provenance
+      description: >-
+        Which app and version wrote the document (`npx cupertino-dump info
+        file.pages` prints it), and whether you can share the file.
+      placeholder: |
+        fileFormatVersion: 15.3 (Pages, macOS)
+        Can share: yes, attached / no, but I can run diagnostics on it
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: cupertino-files version and Node version
+      placeholder: cupertino-files 0.1.0, Node 22.18
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Format documentation
+    url: https://github.com/olekristensen/cupertino-files/blob/main/docs/FORMAT.md
+    about: The measured specification — container, object graph, text, styles, tables, and the well-formed-but-wrong catalog.
+  - name: Known gaps and what they are blocked on
+    url: https://github.com/olekristensen/cupertino-files/blob/main/docs/BLOCKERS.md
+    about: Check here before filing a feature request — it may already be listed with the one fact it needs.
