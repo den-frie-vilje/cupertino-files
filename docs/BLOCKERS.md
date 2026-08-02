@@ -85,11 +85,14 @@ Every rung is built twice: on `patrickomatic-termpaper-footers-masks`
 `iwork-mcp-v14.5-sample` (14.4.1, the upgrade path). Check the v26 set
 first.
 
-**Confirmed:** P00 through P03 on the current format — load and save,
-append a paragraph, character formatting, and a named paragraph style — all
-open with the document's own formatting intact.
+**Confirmed:** P00-P03 (load/save, append, character formatting, applying a
+named style), P12 (bulleted list), P13 (in-place replacement), P14 (range
+deletion), P15 (creating a paragraph style that lists in the panel), P16
+(date field), P17 (page count), P18 (bookmark — with a range bug found and
+fixed, below), and P19a/b (drawable copies, same page and new page). All on
+the current format, each opening with the document's own formatting intact.
 
-Getting there took four defects, and the shape of each is worth knowing
+Getting there took eight defects, and the shape of each is worth knowing
 because none of them was visible offline:
 
 1. **Text colour lives in `tsd_fill`, not `font_color`.** Bold applied, red
@@ -102,21 +105,32 @@ because none of them was visible offline:
    not at U+2028. One page break was enough to drop a style entry.
 4. **`table_para_style` is dense; the list and layout tables are sparse.**
    An appended paragraph with no entry cost the whole body its styling.
+5. **A floating drawable must join `TP.DrawablesZOrderArchive`**, the
+   document-level paint order, as well as its page group — or it does not
+   draw at all. Pages only; Keynote and Numbers keep paint order
+   in-container.
+6. **A created paragraph style needs four things to appear in the panel** —
+   name, identifier + map entry, both property bags, and an entry in the
+   theme's `paragraph_style_presets`. The first three make it apply and
+   still not list.
+7. **A bookmark's `ranged` flag tracks the run, not the name.** A named
+   bookmark written `ranged=false` over a 13-character run bookmarked one
+   character; the corpus ties the flag to run length exactly.
+8. **A new storage needs the six attribute tables all 2676 corpus storages
+   carry** — found by `npm run shape:audit` together with an image's
+   missing style/sizes/offsets and a section's stripped name; those three
+   fixes are in the still-unchecked rungs below.
 
 Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
-**Not yet checked:** P04 through P18 — hyperlink, header/footer, page
-number, section break, comment, footnote, page setup, inline image, bulleted
-list, in-place text replacement, range deletion, a newly created paragraph
-style, date field, page count, bookmark. Nothing above them is known to be
-wrong; nothing about them is known to be right.
-
-P13 is worth checking early for a reason the others are not: every rung
-before it appends at the end of the document, and P13 changes the
-document's own existing words. That is the edit shape a real caller performs
-most often and the ladder had no coverage of it at all.
+**Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
+number), P07 (section break), P08 (comment), P09 (footnote), P10 (page
+setup), P11 (inline image) — and the re-emitted P18, whose bookmark now
+spans its phrase. P07, P09 and P11 carry fresh shape-audit fixes and are
+the highest-value opens. Nothing about them is known to be wrong; nothing
+is known to be right.
 
 ### Still to answer
 
@@ -510,6 +524,10 @@ unnamed.
 ---
 
 ## Running the probes
+
+`npm run survey:fieldinfos` belongs to this family too: it measures whether
+`field_infos` must be recomputed on save (settled: no) and stays runnable so
+the answer can be re-checked against a future format revision.
 
 ```sh
 npm run probe -- <file...>              # every unknown, one pass

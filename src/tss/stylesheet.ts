@@ -254,11 +254,10 @@ export class StylesheetModel {
     // super, override_count, char_properties, para_properties — without a
     // single exception, empty bags included. Matching that costs nothing.
     //
-    // It was also once claimed here to be what puts a style in the app's
-    // style panel. It is not: a style with both bags, an identifier, a map
-    // entry and a preset-list entry still does not appear. Whatever the
-    // panel wants is not yet known, and the note stays as a record of an
-    // inference that did not survive the app.
+    // The bags are also one of four requirements for the app's style panel
+    // to list a created style (with the name, the identifier map entry, and
+    // the theme's preset-list reference) — confirmed in Pages after four
+    // rounds in which each alone changed nothing visible.
     //
     // Character styles are the counter-case, and the reason this is not a
     // blanket rule: theirs is [1,10,11] in 214 of 233, with no paragraph

@@ -431,7 +431,9 @@ reason.
 Not everything can be looked up: the dumps are Numbers 14.4 and Pages 5.0,
 so fields added since are declared with `measuredFields`, which requires a
 sentence saying how the number was established and refuses one the schema
-already defines. Archive **type ids** (`TSWP_TYPE.STORAGE = 2001`) are the
+already defines; `protoEnum`/`measuredEnum` are the same pair for enum
+values, kept separate because an enum's small integers collide with its
+parent message's field numbers. Archive **type ids** (`TSWP_TYPE.STORAGE = 2001`) are the
 app's object registry and appear in no `.proto` at all.
 
 **Version awareness.** Apple evolves the format additively (verified
@@ -458,7 +460,12 @@ npm run build      # tsc → dist/
 npm run proto:embed  # after changing anything under proto/
 npm run proto:check  # what is still hand-typed vs the schema
 npm run shape:audit  # what Apple writes into an archive that we do not
+npm run privacy:check # screen fixtures for personal data before committing
 ```
+
+`required:check`, `harvest:check`, `coverage:check`, `proto:embed:check` and
+`shape:check` are the CI forms — same work, nonzero exit on regression; the
+suite runs the important ones itself.
 
 Refreshing the schemas is `proto:embed` plus `npm test`: a field that has
 appeared in a newer dump makes its `measuredFields` declaration throw, which

@@ -158,6 +158,26 @@ heading.setParagraph({ border: solidStroke({ r: 0, g: 0, b: 0 }, 1),
 
 Setters **merge**: properties the library does not model are preserved.
 
+Creating a style that a person can then pick from the paragraph styles
+panel (Pages):
+
+```ts
+const id = doc.createParagraphStyle({
+  name: "Callout",
+  copyOf: "Body",                  // start from Body's full property bags
+  character: { fontSize: 24, fontColor: hexColor("#0044cc") },
+});
+doc.setParagraphStyle(paragraphIndex, id);
+doc.listedParagraphStyles();       // the panel's entries, in panel order
+doc.unlistParagraphStyle(id);      // take it out of the panel, keep the style
+```
+
+Listing is confirmed in Pages and takes four things, all handled for you:
+a name, an identifier plus its `identifier_to_style_map` entry, both
+property bags, and an entry in the theme's preset list. `copyOf` starts
+the bags as a full copy of an existing style's — the dense shape every
+listed Apple style has; without it the style sets only what you asked for.
+
 ## Shared style values
 
 Fills, gradients, strokes and shadows are one vocabulary used by text,
@@ -546,8 +566,8 @@ worse than a blank the app fills in.
 storage.insertDateField(0, "November 2, 2024", { date: new Date("2024-11-02"), format: "MMMM d, y" });
 storage.dateFields();          // [{ start, end, fieldId, date, format }]
 
-const id = body.addBookmark(10, 20, "Introduction");  // a link destination
-body.addBookmark(10, 20);                             // unnamed, marks a range
+const id = body.addBookmark(10, 20, "Introduction");  // named, spans [10,20)
+body.addBookmark(30, 31);                             // single-character anchor
 body.removeBookmark(id);
 ```
 
@@ -557,6 +577,11 @@ show — formatting a date the way a locale and pattern would is Foundation's
 job, and approximating it here would put subtly wrong text in the document.
 The field is marked as needing an update, so the app replaces it with its
 own rendering when it next opens the file.
+
+A bookmark's `ranged` flag is derived from the span you give: `true` for
+more than one character, `false` for a point anchor. Do not set out to
+fight this — Pages trusts the flag over the run, and a mismatch (seen in
+the app) collapses a 13-character bookmark to its first character.
 
 ## Cropping images
 

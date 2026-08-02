@@ -1516,7 +1516,8 @@ And registration in the stylesheet is still not the panel. The paragraph
 style list the app shows lives on the **theme**:
 `TP.ThemeArchive.super.110.7` — `TSWP.ThemePresetsArchive` extension 110,
 `paragraph_style_presets` — holding one reference per listed style. Present
-in all 19 Pages fixtures, always field 7, and its contents are exactly the
+in all 19 IWA-format Pages fixtures (the corpus's 20th `.pages` file is
+iWork '09 XML, a different format entirely), always field 7, and its contents are exactly the
 panel's entries, localised with the document so a German template lists
 Titel and Überschrift. Its length tracks what the user sees: twelve in a
 stock document, 35 and 61 in the two imported from Word with their own
@@ -1524,34 +1525,28 @@ styles. Sibling lists in the same archive hold list styles (`110.1`),
 character styles (`110.6`) and drop caps (`110.8`); object titles and
 captions live at `210.1`.
 
-##### What is not known: how a *new* style gets into that panel
+##### What a *new* style needs to appear in that panel — confirmed
 
-Four things about a listed style have been measured, written, and checked in
-Pages, and the panel is unchanged by all four:
+Four requirements, each measured from the corpus, each individually
+insufficient, together confirmed in Pages ("P15 works now"):
 
 1. `super.name`
 2. `super.identifier`, matched by an `identifier_to_style_map` entry
 3. both property bags, `[1, 10, 11, 12]`
 4. a reference in the theme's `paragraph_style_presets`
 
-With all four, a created style **applies** correctly — the text renders as
-asked, on a current-format document and on an upgraded one — and Pages knows
-it well enough to prefill its name when you go to add the style by hand. It
-is simply not in the list.
+The first three make the style *apply* correctly and give Pages its name —
+the app will prefill it when you go to add the style by hand — and the
+style still does not list until the fourth is written. It took four rounds
+in the app to find that, because an addition that changes nothing cannot
+say whether the list is wrong or the entry is; the eventual ladder paired
+the addition with its control, a rung that *removes* a built-in name from
+the same list.
 
-Each of the four was inferred from a correlation in the corpus, and each
-turned out to be necessary at best. The remaining measured difference is
-density: every style the panel lists sets **27-28 paragraph properties and
-30-31 character ones**, in the Word-imported fixture as much as in Apple's
-own, while a style created from an API call sets only what was asked for.
-Whether that is the cause or another correlation is open; `copyOf` exists to
-find out.
-
-The one thing that has never been tested is the *reading* direction —
-removing a name Pages certainly shows. Adding an entry and seeing nothing
-change cannot distinguish "the list is not what the panel reads" from "the
-entry is wrong", and four rounds were spent on the second reading without
-ever checking the first.
+One fine point is unrecorded: the confirming report did not distinguish the
+dense-bag rung (property bags copied from Body) from the sparse one (three
+properties), so whether density is also required is not established.
+`createParagraphStyle({ copyOf })` produces the dense form either way.
 
 #### A paragraph does not end only at `\n`
 

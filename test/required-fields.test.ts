@@ -15,7 +15,8 @@
  *    ever wrote has both styles. Comparing against a case the app produces
  *    proves that case; it says nothing about a case the app never produces.
  *
- * Only the schema knows, and the schema is vendored. So this reads it.
+ * Only the schema knows, and the schema is vendored — parsed by
+ * `protobufjs` via `scripts/proto-schema.ts`, walked by `missingRequired`.
  *
  * Running it over the fixtures too is deliberate: a violation there is
  * evidence about the *vendored protos*, not about Apple's file, since

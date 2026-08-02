@@ -38,7 +38,10 @@ The first two are now caught by `npm run required:check`, which reads the
 vendored schema rather than trusting the writer. Nothing static catches the
 third, because nothing about it is wrong; it is wrong only by omission
 against what Apple writes. That is what `test/authored-shape.test.ts` is
-for — it asks what a real cell has that ours does not.
+for — it asks what a real cell has that ours does not — and `npm run
+shape:audit` generalises the question: it runs every ladder rung and
+compares each archive we write against the corpus profile for its type,
+in fields and in referrers both.
 
 So: **well-formed is not working.** When a feature has never been opened in
 the app, say so plainly, and put it in a `manualProof` block in

@@ -266,16 +266,16 @@ export const CAPABILITIES: Capability[] = [
         "a paragraph style this library creates appears in the app's paragraph styles panel, " +
         "so a person can reapply it",
       settled:
-        "**Applying is confirmed in Pages; listing is not, after four attempts.** A created " +
-        "style renders exactly as asked wherever it is used, on both a current-format and an " +
-        "upgraded document. It never appears in the styles panel. Pages does know it — going " +
-        "to add the style by hand prefills its name — so the style is named, identified and " +
-        "mapped; only the listing fails. Tried and shipped, each inferred from what a listed " +
-        "style has and ours did not: a `super.name`; a `super.identifier` plus an " +
+        "**Confirmed in Pages — \"P15 works now\".** A created style applies as asked and " +
+        "appears in the paragraph styles panel, on the current-format ladder base. What it " +
+        "took, cumulatively: a `super.name`; a `super.identifier` plus a matching " +
         "`identifier_to_style_map` entry; both property bags; and an entry in " +
-        "`TSWP.ThemePresetsArchive.paragraph_style_presets`, which in all 19 Pages fixtures " +
-        "holds exactly the names the app shows. All four are written and the panel is " +
-        "unchanged, so at least one inference is about the wrong object",
+        "`TSWP.ThemePresetsArchive.paragraph_style_presets` — the theme list the panel " +
+        "reads. The earlier failures were real: the first three alone left the style " +
+        "applying but unlisted. One fine point went unrecorded: the confirming report did " +
+        "not itemise the density pair (P15b, bags copied from Body, against P15c, three " +
+        "properties), so whether a sparse property bag alone lists is not established — " +
+        "`copyOf` exists either way",
       why:
         "Nothing offline distinguishes a listed style from an unlisted one except by " +
         "correlation with the corpus, and every correlation found so far has been necessary " +
@@ -459,9 +459,14 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "a date field and a bookmark this library inserts are live in Pages, not literal text",
       settled:
-        "**Confirmed in Pages.** A date field renders and is editable as a date, set to " +
-        "1 January. A bookmark over a single character is a bookmark Pages recognises. Both " +
-        "on a current-format document",
+        "**Confirmed, and the bookmark half found a bug.** The date field renders set to " +
+        "1 January and is editable. The bookmark rung marked a 13-character phrase and " +
+        "Pages bookmarked one character — \"the B character is a bookmark\" — because the " +
+        "writer derived `ranged` from the *name* and wrote `ranged=false` over a " +
+        "13-character run, a combination no corpus bookmark has. The corpus ties the flag " +
+        "to run length (true at 13 and 46 characters, false at exactly 1) with the name " +
+        "orthogonal, and Pages resolved our contradiction in the flag's favour. `ranged` " +
+        "now derives from the run; the re-emitted phrase-length bookmark is unverified",
       why:
         "both are attachments whose meaning comes from the app resolving them; the suite " +
         "proves the archive and the anchor round-trip, not that the app treats them as fields",
@@ -580,6 +585,15 @@ export const CAPABILITIES: Capability[] = [
       "list, inserted in page order",
     manualProof: {
       claim: "A drawable we copied onto another page/slide/sheet appears there, at the geometry we set.",
+      settled:
+        "**Confirmed in Pages for both placement shapes — \"Both p19 work now\".** A " +
+        "drawable copied onto the page it already lived on, and onto a fresh page needing a " +
+        "new page group, both render. What it took beyond the page group: the copy must " +
+        "join the document-level `TP.DrawablesZOrderArchive`, the paint order — a drawable " +
+        "in a page group but absent from it does not draw at all, with no warning. Pages " +
+        "keeps paint order per document where Keynote and Numbers keep it in-container, so " +
+        "this is the one app where attach() alone was never enough. Keynote and Numbers " +
+        "placement is still unverified in-app",
       why:
         "The three apps store the list differently — two lists in Keynote, one in Numbers, per-page " +
         "wrapped entries in Pages — and each app decides for itself whether an object it owns is " +

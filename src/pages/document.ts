@@ -369,15 +369,11 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * Create a paragraph style, and try to list it in the app's style panel.
+   * Create a paragraph style and list it in the app's style panel.
    *
-   * **Applying works; listing does not, and is not understood.** A style
-   * created here renders exactly as asked wherever it is used, and Pages
-   * knows it well enough to prefill its name when you go to add the style
-   * by hand. The paragraph styles panel does not show it.
-   *
-   * Four things have been tried, each inferred from what a listed style has
-   * and ours did not, each shipped and each checked in Pages:
+   * **Confirmed in Pages.** A style created here applies as asked and
+   * appears in the paragraph styles panel. Four requirements, found one
+   * failed round in the app at a time, each necessary and none sufficient:
    *
    *   1. a `super.name`;
    *   2. a `super.identifier` and a matching `identifier_to_style_map`
@@ -391,17 +387,16 @@ export class PagesDocument extends IWorkDocument {
    *      user sees — twelve in a stock document, 35 and 61 in the two
    *      imported from Word.
    *
-   * All four are written and the panel is unchanged. The list in (4) is
-   * still the best candidate for what the panel reads, because nothing else
-   * in the document matches it that closely; what is not known is why an
-   * entry appended to it is ignored. {@link unlistParagraphStyle} exists to
-   * settle that half — removing a name Pages certainly shows is a test the
-   * addition cannot be, since an addition that changes nothing looks the
-   * same whether the list is wrong or the entry is.
+   * The first three produce a style that renders correctly and whose name
+   * Pages prefills when adding a style by hand — and still does not list.
+   * {@link unlistParagraphStyle} was built as the control (removal proves
+   * which list the panel reads in a way addition cannot), and
+   * {@link listedParagraphStyles} reads the panel's own order back.
    *
-   * `copyOf` is the other half: it makes the new style's property bags a
-   * full copy of an existing one's, since every listed style in the corpus
-   * is dense (27-28 paragraph properties, 30-31 character) and ours is not.
+   * `copyOf` starts the new style's property bags as a full copy of an
+   * existing style's — the dense shape every listed corpus style has.
+   * Whether density is *also* required went unrecorded in the confirming
+   * report, so sparse styles list on faith; dense ones on evidence.
    */
   createParagraphStyle(options: {
     name: string;

@@ -318,13 +318,13 @@ describe("a named paragraph style is one the app will list", () => {
     }
   });
 
-  it("joins the theme's style list, the closest thing to the panel's source", () => {
+  it("joins the theme's style list, which the panel reads", () => {
     // TP.ThemeArchive.super.110.7 is present in all 19 Pages fixtures and
-    // holds exactly the names the app shows, so it is the best candidate
-    // for what the panel reads. It is not yet proven to be: a style with a
-    // name, an identifier, a map entry, both property bags *and* an entry
-    // here is still absent from the panel. What this test pins is that the
-    // entry is written and the existing ones survive — no more.
+    // holds exactly the names the app shows. Confirmed in Pages: with this
+    // entry (plus name, identifier map entry, and both property bags) a
+    // created style appears in the paragraph styles panel; without it, the
+    // same style applies correctly and never lists. This test pins that
+    // the entry is written and the existing ones survive.
     const THEME = 10001;
     const themeList = (doc: PagesDocument): string[] => {
       for (const { obj } of doc.store.allObjects()) {
@@ -644,5 +644,53 @@ describe("archives we create carry the shape Apple's carry", () => {
       "declaring their container: ",
     );
     expect(copy.id > 0n).toBe(true);
+  });
+});
+
+describe("a bookmark's ranged flag matches its run", () => {
+  // Found by a person, explained by the corpus. A named bookmark written
+  // ranged=false over a 13-character run made Pages bookmark one character
+  // — the flag won over the run. Apple's own files tie the flag to run
+  // length exactly (true at 13 and 46, false at exactly 1), with the name
+  // orthogonal, so that is the rule; deriving it from the name was an
+  // inference that survived every offline check and not the app.
+  const BOOKMARK_TYPE = 2035;
+  const RANGED = 3;
+
+  it("agrees with every corpus bookmark", () => {
+    const wrong: string[] = [];
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const storage of doc.textStorages()) {
+        for (const b of storage.bookmarks()) {
+          const ranged = doc.store.object(b.fieldId)?.message.getBool(RANGED) ?? false;
+          if (ranged !== b.end - b.start > 1) {
+            wrong.push(`${name}[${b.start},${b.end})=${ranged}`);
+          }
+        }
+      }
+    }
+    expect(`corpus disagreements: ${wrong.join(" ")}`).toBe("corpus disagreements: ");
+  });
+
+  it("derives the flag from the span we author, for both call shapes", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("a phrase to bookmark and a point to anchor");
+    const at = doc.body.text.lastIndexOf("phrase");
+    const phrase = doc.body.addBookmark(at, at + 6, "named range");
+    const point = doc.body.addBookmark(at + 10, at + 11, "destination");
+
+    const saved = PagesDocument.load(doc.save());
+    const flag = (id: bigint) => saved.store.object(id)!.message.getBool(RANGED);
+    expect(`phrase ranged=${flag(phrase)} point ranged=${flag(point)}`).toBe(
+      "phrase ranged=true point ranged=false",
+    );
+    expect(saved.store.object(phrase)!.type).toBe(BOOKMARK_TYPE);
   });
 });

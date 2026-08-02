@@ -266,15 +266,21 @@ export function buildBookmark(
   store: ObjectStore,
   component: Component,
   name?: string,
+  options: { ranged?: boolean } = {},
 ): IwaObject {
   const message = RawMessage.create();
   const smartField = RawMessage.create();
   smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
   message.setMessage(BookmarkFieldArchive.SUPER, smartField);
   if (name !== undefined) message.setString(BookmarkFieldArchive.NAME, name);
-  // A named bookmark is a destination; an unnamed one marks a range. Every
-  // corpus bookmark sets both flags explicitly.
-  message.setVarint(BookmarkFieldArchive.RANGED, name === undefined ? 1 : 0);
+  // `ranged` tracks the RUN, not the name. This used to be derived from the
+  // name — "a named bookmark is a destination" — and that inference survived
+  // until someone opened a document carrying a named bookmark over a
+  // 13-character run with ranged=false: Pages resolved the contradiction in
+  // the flag's favour and bookmarked one character. The corpus, re-read:
+  // ranged=true on runs of 13 and 46, ranged=false on runs of exactly 1,
+  // with the name orthogonal. The flag says whether the run is a span.
+  message.setVarint(BookmarkFieldArchive.RANGED, options.ranged ? 1 : 0);
   message.setVarint(BookmarkFieldArchive.HIDDEN, 0);
 
   const object = store.createObject(SMART_FIELD_TYPE.BOOKMARK, component);

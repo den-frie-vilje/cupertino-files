@@ -23,8 +23,10 @@
  * app was the first thing in the chain to object.
  *
  * Reading back what you wrote cannot find this class of bug, and neither
- * can comparing against a case the app does produce. Only the schema knows,
- * and the schema is vendored in `proto/current/`. So this reads it.
+ * can comparing against a case the app does produce. Only the schema knows.
+ * The schemas are vendored in `proto/` and read by `protobufjs` in
+ * `scripts/proto-schema.ts`; this module is the walker that checks a
+ * message against them, and deliberately has no parser of its own.
  *
  * ## What it checks
  *

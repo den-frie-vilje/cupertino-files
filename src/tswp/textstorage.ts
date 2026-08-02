@@ -1137,7 +1137,7 @@ export class TextStorage {
     }
     const component = this.store.componentOf(this.id);
     if (!component) throw new RangeError("storage component not found");
-    const field = buildBookmark(this.store, component, name);
+    const field = buildBookmark(this.store, component, name, { ranged: end - start > 1 });
     this.spanObject(Storage.TABLE_BOOKMARK, start, end, field.identifier);
     return field.identifier;
   }
