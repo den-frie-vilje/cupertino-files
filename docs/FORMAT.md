@@ -1359,6 +1359,24 @@ style and takes `text` with the next free index.
 The distinction matters both ways. An anonymous override that acquires an
 identifier becomes a stray entry in the user's style panel.
 
+Registration is necessary but not sufficient. A paragraph style also has to
+*look* like one:
+
+| archive | top-level fields | count |
+| --- | --- | ---: |
+| `TSWP.ParagraphStyleArchive` | `[1, 10, 11, 12]` | **3130 of 3130** |
+| `TSWP.CharacterStyleArchive` | `[1, 10, 11]` | 214 of 233 (rest are `[1]`) |
+
+Every paragraph style in the corpus carries `super`, `override_count` and
+**both** property bags — character *and* paragraph — with no exception, empty
+bags included. A paragraph style missing the paragraph bag applies correctly
+wherever it is used and stays out of the style list. Pages knows its name
+well enough to prefill it when you go to add the style by hand, and still
+does not list it.
+
+Character styles are the counter-case that stops this being a blanket rule:
+they carry no paragraph bag at all.
+
 #### A paragraph does not end only at `\n`
 
 `table_para_style` maps character offsets to paragraph styles, and an entry

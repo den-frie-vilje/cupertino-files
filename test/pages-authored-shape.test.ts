@@ -218,6 +218,47 @@ describe("a named paragraph style is one the app will list", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it("carries both property bags, as every Apple paragraph style does", () => {
+    // 3130 of 3130 paragraph styles across the fixtures have exactly
+    // [1,10,11,12] — super, override_count, char_properties,
+    // para_properties — with no exception and empty bags included. Ours
+    // omitted the paragraph bag when the caller set only character
+    // formatting, and the style then applied correctly while staying out of
+    // the app's style list.
+    const corpus = new Map<string, number>();
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        if (obj.type !== PARAGRAPH_STYLE) continue;
+        const key = [...new Set(obj.message.fields.map((f) => f.no))].sort((a, b) => a - b).join(",");
+        corpus.set(key, (corpus.get(key) ?? 0) + 1);
+      }
+    }
+    // The premise: Apple is uniform here. If a future fixture is not, this
+    // fails and the rule below needs revisiting rather than enforcing.
+    expect(`apple shapes: ${[...corpus.keys()].join(" | ")}`).toBe("apple shapes: 1,10,11,12");
+
+    for (const options of [
+      { name: "Char Only", character: { fontSize: 20 } },
+      { name: "Para Only", paragraph: {} },
+      { name: "Neither" },
+    ]) {
+      const doc = PagesDocument.load(BASE);
+      doc.createParagraphStyle(options);
+      const style = findByName(PagesDocument.load(doc.save()), options.name)!;
+      const shape = [...new Set(style.message.fields.map((f) => f.no))]
+        .sort((a, b) => a - b)
+        .join(",");
+      expect(`${options.name}: ${shape}`).toBe(`${options.name}: 1,10,11,12`);
+    }
+  });
+
   it("leaves an unnamed style anonymous", () => {
     // An override created for one range is not a style anyone should see in
     // the panel, so it must not acquire an identifier.

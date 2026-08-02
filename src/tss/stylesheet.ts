@@ -244,17 +244,24 @@ export class StylesheetModel {
     const obj = this.store.createObject(TSWP_TYPE.PARAGRAPH_STYLE, this.component);
     const m = obj.message;
     m.setMessage(StyleArchive.SUPER, buildStyleSuper(options.name, identifier, parentId, this.id));
+    // **Both property bags, always.** Every one of the 3130 paragraph
+    // styles across these fixtures has the identical top-level field set —
+    // super, override_count, char_properties, para_properties — without a
+    // single exception, empty bags included. A style missing the paragraph
+    // bag applies correctly wherever it is used and does not appear in the
+    // app's style list: Pages knows its name well enough to prefill it when
+    // you go to add the style by hand, and still will not list it.
+    //
+    // Character styles are the counter-case, and the reason this is not a
+    // blanket rule: theirs is [1,10,11] in 214 of 233, with no paragraph
+    // bag at all. Only the paragraph style carries both.
     let overrides = 0;
-    if (options.character) {
-      const props = buildCharacterProperties(options.character);
-      overrides += props.fields.length;
-      m.setMessage(StyleArchive.CHAR_PROPERTIES, props);
-    }
-    if (options.paragraph) {
-      const props = buildParagraphProperties(options.paragraph);
-      overrides += props.fields.length;
-      m.setMessage(StyleArchive.PARA_PROPERTIES, props);
-    }
+    const character = buildCharacterProperties(options.character ?? {});
+    overrides += character.fields.length;
+    m.setMessage(StyleArchive.CHAR_PROPERTIES, character);
+    const paragraph = buildParagraphProperties(options.paragraph ?? {});
+    overrides += paragraph.fields.length;
+    m.setMessage(StyleArchive.PARA_PROPERTIES, paragraph);
     m.setVarint(StyleArchive.OVERRIDE_COUNT, overrides);
     this.register(obj.identifier, identifier, parentId);
     return obj.identifier;
