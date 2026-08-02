@@ -127,10 +127,10 @@ suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
 number), P07 (section break), P08 (comment), P09 (footnote), P10 (page
-setup), P11 (inline image) — and the re-emitted P18, whose bookmark now
-spans its phrase. P07, P09 and P11 carry fresh shape-audit fixes and are
-the highest-value opens. Nothing about them is known to be wrong; nothing
-is known to be right.
+setup), P11 (inline image). P07, P09 and P11 carry fresh shape-audit fixes
+and are the highest-value opens. Nothing about them is known to be wrong;
+nothing is known to be right. (P18's corrected bookmark — named,
+`ranged=true`, spanning its phrase — is confirmed.)
 
 ### Still to answer
 

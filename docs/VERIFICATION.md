@@ -435,7 +435,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** both are attachments whose meaning comes from the app resolving them; the suite proves the archive and the anchor round-trip, not that the app treats them as fields
 
-**Outcome.** **Confirmed, and the bookmark half found a bug.** The date field renders set to 1 January and is editable. The bookmark rung marked a 13-character phrase and Pages bookmarked one character — "the B character is a bookmark" — because the writer derived `ranged` from the *name* and wrote `ranged=false` over a 13-character run, a combination no corpus bookmark has. The corpus ties the flag to run length (true at 13 and 46 characters, false at exactly 1) with the name orthogonal, and Pages resolved our contradiction in the flag's favour. `ranged` now derives from the run; the re-emitted phrase-length bookmark is unverified
+**Outcome.** **Confirmed, and the bookmark half found a bug.** The date field renders set to 1 January and is editable. The bookmark rung marked a 13-character phrase and Pages bookmarked one character — "the B character is a bookmark" — because the writer derived `ranged` from the *name* and wrote `ranged=false` over a 13-character run, a combination no corpus bookmark has. The corpus ties the flag to run length (true at 13 and 46 characters, false at exactly 1) with the name orthogonal, and Pages resolved our contradiction in the flag's favour. `ranged` now derives from the run, and the corrected form is confirmed: the re-emitted named bookmark with `ranged=true` spans its full 13-character phrase in Pages — a name-plus-range combination the corpus itself never shows, accepted by the app
 
 ### ✅ Edit cycle: open → edit → save → reopen
 
