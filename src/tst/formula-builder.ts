@@ -23,21 +23,19 @@
  * and why copying a formula between cells changes what it means, exactly
  * as it does in the app.
  *
- * ## Ranges are written absolute
+ * ## Ranges follow their `$` flags, per axis
  *
  * A colon tract can express its bounds two ways, and both occur in real
  * files: `absolute_column`/`absolute_row` hold indexes, `relative_column`/
  * `relative_row` hold offsets from the formula's cell. Apple writes the
  * relative form for a range typed as `C3:K6` — `=SUM(C3:K6)` in C7 stores
- * columns `0…8` and rows `-4…-1`, as **plain signed varints**, not the
- * zigzag encoding a single coordinate uses.
- *
- * This writer emits the absolute form, which merges also use and the reader
- * has always handled. The cells denoted are identical; what differs is what
- * happens when rows are inserted above the range, where a relative tract
- * moves and an absolute one does not. A range authored here therefore reads
- * back as `$A$1:$A$5` rather than `A1:A5` — the same cells, said the
- * anchored way.
+ * columns `0…8` and rows `-4…-1`, as **plain 64-bit two's-complement
+ * varints**, not the zigzag encoding a single coordinate uses — and the
+ * absolute form for `$`-pinned axes, which is also what merges use. This
+ * writer does the same, so what you type is what moves (or doesn't) when
+ * rows are inserted, exactly as in the app. An axis with only one pinned
+ * endpoint has no corpus specimen and falls back to absolute, the
+ * encoding that cannot silently shift.
  *
  * ## What is deliberately missing
  *
@@ -50,7 +48,8 @@
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
 import { HARVESTED_FUNCTIONS } from "./function-names.ts";
-import { encodeDecimal128 } from "./cellrecord.ts";
+import { packDecimal128 } from "./cellrecord.ts";
+import { protoFields } from "../proto/fields.ts";
 
 /** An expression to compile. Built by {@link parseFormula} or by hand. */
 export type FormulaExpression =
@@ -59,8 +58,13 @@ export type FormulaExpression =
   | { kind: "boolean"; value: boolean }
   /** A cell, as an offset or an absolute index; `undefined` means "same". */
   | { kind: "ref"; column: Coordinate; row: Coordinate }
-  /** A rectangle, stored as a colon tract with absolute bounds. */
-  | { kind: "range"; from: { column: number; row: number }; to: { column: number; row: number } }
+  /**
+   * A rectangle, stored as a colon tract. Each axis keeps its `$` flag:
+   * `C3:K6` stores *relative* ranges (offsets from the using cell) and
+   * `$C$3:$K$6` absolute ones — measured, not assumed; the corpus's
+   * `=SUM(C3:K6)` is relative on both axes.
+   */
+  | { kind: "range"; from: { column: Coordinate; row: Coordinate }; to: { column: Coordinate; row: Coordinate } }
   | { kind: "call"; name: string; args: FormulaExpression[] }
   | { kind: "binary"; op: BinaryOperator; left: FormulaExpression; right: FormulaExpression }
   | { kind: "unary"; op: UnaryOperator; operand: FormulaExpression }
@@ -118,10 +122,20 @@ export function authorableFunctions(): string[] {
 
 /** Coordinate fields: zigzag index, then the absolute flag. */
 const CoordinateFields = { INDEX: 1, ABSOLUTE: 2 } as const;
-const ColonTractFields = { ABSOLUTE_COLUMN: 3, ABSOLUTE_ROW: 4, PRESERVE_RECTANGULAR: 5 } as const;
-const TractRangeFields = { BEGIN: 1, END: 2 } as const;
-const StickyBitsField = 33;
-const ColonTractField = 40;
+const ColonTractFields = protoFields("TSCE.ASTNodeArrayArchive.ASTColonTractArchive", {
+  RELATIVE_COLUMN: "relative_column",
+  RELATIVE_ROW: "relative_row",
+  ABSOLUTE_COLUMN: "absolute_column",
+  ABSOLUTE_ROW: "absolute_row",
+  PRESERVE_RECTANGULAR: "preserve_rectangular",
+});
+// Same begin/end numbers in the relative and absolute range archives.
+const TractRangeFields = protoFields(
+  "TSCE.ASTNodeArrayArchive.ASTColonTractArchive.ASTColonTractAbsoluteRangeArchive",
+  { BEGIN: "range_begin", END: "range_end" },
+);
+const StickyBitsField = 33; // AST_sticky_bits
+const ColonTractField = 40; // AST_colon_tract
 
 function zigzag(value: number): number {
   return (value << 1) ^ (value >> 31);
@@ -172,11 +186,12 @@ function emit(
       node.setVarint(AstNodeFields.TYPE, AstNodeType.NUMBER);
       node.setDouble(AstNodeFields.NUMBER, expression.value);
       // Apple writes the same number twice: an IEEE double *and* a
-      // decimal128, in every one of the 140 number nodes in the corpus.
-      // The reader only needs the double, so omitting these round-trips
-      // fine here and would still be a file no app ever wrote — and the
-      // decimal is the one the calc engine trusts for money.
-      const decimal = encodeDecimal128(expression.value);
+      // decimal128. The decimal is the one the calc engine trusts for
+      // money — and unlike a cell record's decimal, it is *plain*: 30 is
+      // stored as 30·10⁰, never normalized to 3·10¹. Every corpus formula
+      // agrees (the `+30` and `DURATION(…,500,…)` nodes are the proof —
+      // normalizing them was a byte mismatch against every one).
+      const decimal = formulaDecimal(expression.value);
       const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
       node.setVarint(AstNodeFields.NUMBER_DECIMAL_LOW, view.getBigUint64(0, true));
       node.setVarint(AstNodeFields.NUMBER_DECIMAL_HIGH, view.getBigUint64(8, true));
@@ -191,7 +206,11 @@ function emit(
       node.setVarint(AstNodeFields.BOOLEAN, expression.value ? 1 : 0);
       break;
     case "empty":
-      node.setVarint(AstNodeFields.TYPE, AstNodeType.EMPTY_ARGUMENT);
+      // An omitted argument is a TOKEN node carrying
+      // `AST_token_node_boolean = 1` — measured on all 32 `DURATION(,,…)`
+      // omissions in the corpus, where EMPTY_ARGUMENT never appears.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.TOKEN);
+      node.setVarint(AstNodeFields.TOKEN_BOOLEAN, 1);
       break;
     case "ref":
       node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
@@ -203,21 +222,49 @@ function emit(
       node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
       break;
     case "range": {
-      // A rectangle is a colon tract with absolute bounds, the same shape a
-      // merge uses. Sticky bits are all zero here: unlike a merge, a range
-      // in a formula does move when rows are inserted around it.
+      // A rectangle is a colon tract. Per axis, `$` decides the encoding:
+      // an unpinned axis stores a *relative* range — begin/end as signed
+      // offsets from the using cell, inclusive — and a pinned one stores
+      // absolute indexes. Measured: `=SUM(C3:K6)` in the corpus stores
+      // relative {0..8} columns and {-4..-1} rows; the absolute form was
+      // a byte mismatch against it (and is what merges use, which is
+      // where the earlier "ranges are absolute" reading came from). An
+      // axis with one pinned endpoint has no corpus specimen; it falls
+      // back to absolute, the encoding that cannot silently shift.
       node.setVarint(AstNodeFields.TYPE, AstNodeType.COLON_TRACT);
       const sticky = RawMessage.create();
       for (const field of [1, 2, 3, 4]) sticky.setVarint(field, 0);
       node.setMessage(StickyBitsField, sticky);
       const tract = RawMessage.create();
-      tract.setMessage(
+      const axis = (
+        from: Coordinate,
+        to: Coordinate,
+        originIndex: number,
+        relativeField: number,
+        absoluteField: number,
+      ): void => {
+        if (!from.absolute && !to.absolute) {
+          tract.setMessage(
+            relativeField,
+            relativeTractRange(from.value - originIndex, to.value - originIndex),
+          );
+        } else {
+          tract.setMessage(absoluteField, tractRange(from.value, to.value));
+        }
+      };
+      axis(
+        expression.from.column,
+        expression.to.column,
+        origin.column,
+        ColonTractFields.RELATIVE_COLUMN,
         ColonTractFields.ABSOLUTE_COLUMN,
-        tractRange(expression.from.column, expression.to.column),
       );
-      tract.setMessage(
+      axis(
+        expression.from.row,
+        expression.to.row,
+        origin.row,
+        ColonTractFields.RELATIVE_ROW,
         ColonTractFields.ABSOLUTE_ROW,
-        tractRange(expression.from.row, expression.to.row),
       );
       tract.setVarint(ColonTractFields.PRESERVE_RECTANGULAR, 1);
       node.setMessage(ColonTractField, tract);
@@ -256,6 +303,44 @@ function tractRange(begin: number, end: number): RawMessage {
   // Apple omits the end when the range is one row or column wide.
   if (begin !== end) range.setVarint(TractRangeFields.END, Math.max(begin, end));
   return range;
+}
+
+/**
+ * A relative tract range: signed offsets from the using cell, inclusive,
+ * as 64-bit two's-complement varints — `C3:K6` used from C7 stores rows
+ * {-4..-1} exactly so. Begin is written even at zero (measured); the
+ * omit-when-equal rule mirrors {@link tractRange}, unexercised by the
+ * corpus on this form.
+ */
+function relativeTractRange(begin: number, end: number): RawMessage {
+  const range = RawMessage.create();
+  const lo = Math.min(begin, end);
+  const hi = Math.max(begin, end);
+  range.setVarint(TractRangeFields.BEGIN, BigInt.asUintN(64, BigInt(lo)));
+  if (lo !== hi) range.setVarint(TractRangeFields.END, BigInt.asUintN(64, BigInt(hi)));
+  return range;
+}
+
+/**
+ * The plain decimal a formula number node carries: the value's own digits
+ * with no normalization — trailing zeros stay in the mantissa.
+ */
+function formulaDecimal(value: number): Uint8Array {
+  if (!Number.isFinite(value)) return new Uint8Array(16);
+  const negative = value < 0 || Object.is(value, -0);
+  const text = Math.abs(value).toString();
+  if (text.includes("e") || text.includes("E")) {
+    // Magnitudes beyond plain notation: fall back to exponent form.
+    const [mantissaText, exponentText] = text.split(/[eE]/);
+    const [intPart, fracPart = ""] = mantissaText!.split(".");
+    return packDecimal128(
+      BigInt(`${intPart}${fracPart}`),
+      Number.parseInt(exponentText!, 10) - fracPart.length,
+      negative,
+    );
+  }
+  const [intPart, fracPart = ""] = text.split(".");
+  return packDecimal128(BigInt(`${intPart}${fracPart}`), -fracPart.length, negative);
 }
 
 // --------------------------------------------------------------- parsing
@@ -380,15 +465,14 @@ class Parser {
       const to = second ? parseReference(second[0]) : undefined;
       if (!to) this.fail("range end expected after ':'");
       this.at = after + 1 + second![0].length;
-      // A range is stored with absolute bounds, so a relative endpoint is
-      // resolved here rather than silently written as an absolute one.
-      // Every range in the corpus has absolute bounds, and a colon tract
-      // has no way to say otherwise, so `A1:B2` and `$A$1:$B$2` compile the
-      // same. Accepting both matches what the app displays.
+      // Each endpoint keeps its `$` flags: the tract encodes an unpinned
+      // axis relative to the using cell and a pinned one absolute, so
+      // `A1:B2` and `$A$1:$B$2` are different bytes — measured, where the
+      // earlier reading ("ranges are absolute") generalized from merges.
       return {
         kind: "range",
-        from: { column: from.column.value, row: from.row.value },
-        to: { column: to.column.value, row: to.row.value },
+        from: { column: from.column, row: from.row },
+        to: { column: to.column, row: to.row },
       };
     }
     this.at = after;

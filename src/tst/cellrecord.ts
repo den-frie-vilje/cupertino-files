@@ -272,6 +272,20 @@ export function encodeDecimal128(value: number): Uint8Array {
     mantissa /= 10n;
     exponent += 1;
   }
+  return packDecimal128(mantissa, exponent, negative);
+}
+
+/**
+ * Pack an exact (mantissa, exponent) pair as decimal128 bytes.
+ *
+ * Split from {@link encodeDecimal128} because the two writers that need it
+ * disagree about normalization, and both are measured: cell records shed
+ * trailing zeros into the exponent, while formula number nodes keep the
+ * plain integer mantissa (30 is 30·10⁰ in every corpus formula, never
+ * 3·10¹). The packing is the part they share.
+ */
+export function packDecimal128(mantissa: bigint, exponent: number, negative: boolean): Uint8Array {
+  const out = new Uint8Array(16);
   let biased = exponent + DECIMAL128_BIAS;
   while (biased > 0x2fff && mantissa > 0n) {
     mantissa *= 10n;

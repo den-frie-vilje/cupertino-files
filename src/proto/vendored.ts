@@ -367,6 +367,10 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "absolute_row": 4,
     "preserve_rectangular": 5,
   },
+  "TSCE.ASTNodeArrayArchive.ASTColonTractArchive.ASTColonTractAbsoluteRangeArchive": {
+    "range_begin": 1,
+    "range_end": 2,
+  },
   "TSCE.ASTNodeArrayArchive.ASTNodeArchive": {
     "AST_node_type": 1,
     "AST_function_node_index": 2,

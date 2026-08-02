@@ -77,7 +77,8 @@ describe("compiling formulas", () => {
   });
 
   it("writes function calls, including nested ones", () => {
-    expect(roundTrip("=SUM(A1:A5)")).toBe("=SUM($A$1:$A$5)");
+    expect(roundTrip("=SUM(A1:A5)")).toBe("=SUM(A1:A5)"); // as typed — relative tract
+    expect(roundTrip("=SUM($A$1:$A$5)")).toBe("=SUM($A$1:$A$5)"); // pinned stays pinned
     expect(roundTrip("=ABS(-3)")).toBe("=ABS(-3)");
     expect(roundTrip("=MAX(MIN(1,2),3)")).toBe("=MAX(MIN(1,2),3)");
     expect(roundTrip("=COUNT()")).toBe("=COUNT()");

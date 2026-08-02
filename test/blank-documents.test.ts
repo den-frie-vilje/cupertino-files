@@ -80,7 +80,10 @@ describe("blank documents", () => {
     expect(after.cellText(1, 0)).toBe("Widget");
     expect(after.cellText(1, 1)).toBe("9.99");
     expect(after.cellText(2, 1)).toBe("24.5");
-    expect(after.cellFormulaDetail(3, 1)?.text).toBe("=SUM($B$2:$B$3)");
+    // Reads back as typed: an unpinned range is a relative tract, the
+    // encoding Apple uses — the old $-anchored readback was the writer
+    // emitting absolute bounds for everything, fixed by measurement.
+    expect(after.cellFormulaDetail(3, 1)?.text).toBe("=SUM(B2:B3)");
     expect(after.cellText(3, 1)).toBe("34.49");
   });
 
