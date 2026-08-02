@@ -28,6 +28,29 @@ export interface ZipEntryMeta {
   isDirectory: boolean;
 }
 
+/**
+ * Whether an entry's *local* header carries a ZIP64 extended-info extra.
+ *
+ * Apple's writer emits one — id 0x0001, both sizes as 64-bit values even
+ * when they fit 32 bits — on `Metadata/*` and the root preview images, and
+ * never on `Index/*.iwa` or `Data/*` (measured across every fixture:
+ * 1751 of 1751 IWA entries bare, every modern Metadata entry marked).
+ * Reproducing a package byte-for-byte means carrying this quirk through.
+ */
+export function localHeaderHasZip64(data: Uint8Array, entry: ZipEntryMeta): boolean {
+  const p = entry.localHeaderOffset;
+  if (readU32le(data, p) !== SIG_LOCAL) return false;
+  const nameLen = readU16le(data, p + 26);
+  const extraLen = readU16le(data, p + 28);
+  let extraPos = p + 30 + nameLen;
+  const extraEnd = extraPos + extraLen;
+  while (extraPos + 4 <= extraEnd) {
+    if (readU16le(data, extraPos) === 0x0001) return true;
+    extraPos += 4 + readU16le(data, extraPos + 2);
+  }
+  return false;
+}
+
 export class ZipReader {
   private readonly data: Uint8Array;
   public readonly entries: ZipEntryMeta[];
@@ -153,6 +176,20 @@ export interface ZipWriteEntry {
   /** DOS timestamp to store; defaults to a fixed date for determinism. */
   dosTime?: number;
   dosDate?: number;
+  /**
+   * Write a ZIP64 extended-info extra (both sizes as u64) in the local
+   * header, the way Apple's writer marks `Metadata/*` and preview entries.
+   * See {@link localHeaderHasZip64}.
+   */
+  zip64Local?: boolean;
+  /**
+   * Position of this entry's *local* record in the file, when it differs
+   * from central-directory order. Incrementally saved documents have the
+   * two orders disagree — the app appends data but rewrites the directory
+   * — and reproducing the file byte-for-byte means honouring both.
+   * Entries without a rank keep array order, after all ranked entries.
+   */
+  localRank?: number;
 }
 
 // 2024-01-01 00:00:00 — fixed default so builds are reproducible.
@@ -162,16 +199,19 @@ const DEFAULT_DOS_TIME = 0;
 /** Build a ZIP file with all entries stored (method 0). */
 export function buildZip(entries: readonly ZipWriteEntry[]): Uint8Array {
   const w = new ByteWriter(1024);
-  const centralRecords: {
-    nameBytes: Uint8Array;
-    crc: number;
-    size: number;
-    offset: number;
-    dosTime: number;
-    dosDate: number;
-  }[] = [];
+  const centralByEntry = new Map<
+    ZipWriteEntry,
+    { nameBytes: Uint8Array; crc: number; size: number; offset: number; dosTime: number; dosDate: number }
+  >();
 
-  for (const e of entries) {
+  // Local records go down in physical order, the central directory in
+  // array order; the two differ in incrementally saved documents.
+  const localOrder = entries
+    .map((e, index) => ({ e, key: e.localRank ?? Number.MAX_SAFE_INTEGER, index }))
+    .sort((a, b) => a.key - b.key || a.index - b.index)
+    .map(({ e }) => e);
+
+  for (const e of localOrder) {
     const nameBytes = utf8Encode(e.name);
     const crc = crc32(e.data);
     const offset = w.length;
@@ -179,7 +219,7 @@ export function buildZip(entries: readonly ZipWriteEntry[]): Uint8Array {
     const dosDate = e.dosDate ?? DEFAULT_DOS_DATE;
     w.u32le(SIG_LOCAL);
     w.u16le(20); // version needed
-    w.u16le(0x0800); // general purpose flags: UTF-8 names
+    w.u16le(0); // general purpose flags — none; Apple's writer sets none
     w.u16le(0); // method: store
     w.u16le(dosTime);
     w.u16le(dosDate);
@@ -187,18 +227,29 @@ export function buildZip(entries: readonly ZipWriteEntry[]): Uint8Array {
     w.u32le(e.data.length);
     w.u32le(e.data.length);
     w.u16le(nameBytes.length);
-    w.u16le(0); // extra length
+    w.u16le(e.zip64Local ? 20 : 0); // extra length
     w.bytes(nameBytes);
+    if (e.zip64Local) {
+      // ZIP64 extended info: real sizes ride in the 32-bit fields above
+      // too — Apple writes the extra redundantly, so we do as well.
+      w.u16le(0x0001);
+      w.u16le(16);
+      w.u32le(e.data.length);
+      w.u32le(0);
+      w.u32le(e.data.length);
+      w.u32le(0);
+    }
     w.bytes(e.data);
-    centralRecords.push({ nameBytes, crc, size: e.data.length, offset, dosTime, dosDate });
+    centralByEntry.set(e, { nameBytes, crc, size: e.data.length, offset, dosTime, dosDate });
   }
 
+  const centralRecords = entries.map((e) => centralByEntry.get(e)!);
   const cdStart = w.length;
   for (const r of centralRecords) {
     w.u32le(SIG_CENTRAL);
-    w.u16le(20); // version made by
+    w.u16le(62); // version made by: what Apple's writer stamps (6.2, MS-DOS)
     w.u16le(20); // version needed
-    w.u16le(0x0800);
+    w.u16le(0); // flags, as above
     w.u16le(0);
     w.u16le(r.dosTime);
     w.u16le(r.dosDate);

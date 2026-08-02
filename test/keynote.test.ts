@@ -78,18 +78,24 @@ describe("Keynote slide model", () => {
   });
 
   it("round-trips untouched decks byte-identically", () => {
-    for (const name of ["iwork-mcp-v14.5-sample.key", "tika-testKeynote2018.key"]) {
+    // Reading must not dirty: after touching every accessor, an app-written
+    // deck still saves to Apple's exact bytes (the corpus-wide version of
+    // this claim lives in byte-identity.test.ts). The tika deck is the
+    // exception that proves the rule — a re-zipped wrapper bundle whose
+    // deflate this library does not clone, so its content survives but its
+    // container bytes differ.
+    const identicalAfterReading = (name: string): boolean => {
       const original = fixture(name);
       const doc = KeynoteDocument.load(original);
       for (const s of doc.slides()) {
-        // Reading every accessor must not throw or dirty the document.
         const touched = [s.title, s.notes, s.transition(), s.drawables()];
         expect(touched.length).toBe(4);
       }
-      expect(bytesEqual(doc.save(), original)).toBe(false); // zip re-encoded
-      // …but every component's content is preserved; verified in versions.test.ts
       expect(KeynoteDocument.load(doc.save()).slideCount()).toBe(doc.slideCount());
-    }
+      return bytesEqual(doc.save(), original);
+    };
+    expect(identicalAfterReading("iwork-mcp-v14.5-sample.key")).toBe(true);
+    expect(identicalAfterReading("tika-testKeynote2018.key")).toBe(false);
   });
 });
 

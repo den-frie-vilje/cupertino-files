@@ -23,8 +23,6 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { NumbersDocument } from "../src/index.ts";
 import { DataStoreFields, tablesOf, type TableModel } from "../src/tst/tables.ts";
 import { buildFormula, parseFormula } from "../src/tst/formula-builder.ts";
-import { ZipReader } from "../src/base/zip.ts";
-import { decodeIwaData } from "../src/base/snappy.ts";
 import { bytesEqual } from "../src/base/bytes.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -118,12 +116,11 @@ function refcountLedger(table: TableModel): { key: number; refcount: number; cel
 
 describe("replacing a formula with its own text is a byte-level no-op", () => {
   // The strongest proof available: not that the write looks right, but
-  // that it is indistinguishable from never having happened. Compression
-  // is transport, so the yardstick is each archive's decompressed stream —
-  // the touched components are re-serialized and re-compressed by this
-  // library, and their *content* must come out byte-identical to what
-  // Apple wrote, refcounts, next-key counters, row offsets and all.
-  it("leaves every archive stream in the document byte-identical", () => {
+  // that it is indistinguishable from never having happened. The touched
+  // components are re-serialized by this library and re-compressed by its
+  // Snappy port, and the container is rebuilt around them — and the whole
+  // file must still equal Apple's original, byte for byte.
+  it("saves the whole document byte-identical to Apple's file", () => {
     const original = new Uint8Array(readFileSync(new URL(STAR_FIXTURE, FIXTURES)));
     const doc = NumbersDocument.load(original);
     const table = doc.tables().find((t) => t.cellFormula(6, 2) !== undefined);
@@ -133,20 +130,8 @@ describe("replacing a formula with its own text is a byte-level no-op", () => {
 
     table!.setFormula(6, 2, text!);
     const saved = doc.save();
-
-    const before = ZipReader.parse(original);
-    const after = ZipReader.parse(saved);
-    expect(after.names().join()).toBe(before.names().join());
-    const different: string[] = [];
-    for (const name of before.names()) {
-      const a = before.read(name);
-      const b = after.read(name);
-      const same = name.endsWith(".iwa")
-        ? bytesEqual(decodeIwaData(a), decodeIwaData(b))
-        : bytesEqual(a, b);
-      if (!same) different.push(name);
-    }
-    expect(`changed: ${different.join(" ")}`).toBe("changed: ");
+    expect(saved.length).toBe(original.length);
+    expect(bytesEqual(saved, original)).toBe(true);
   });
 
   it("keeps the refcount ledger balanced through replace, clear and overwrite", () => {
