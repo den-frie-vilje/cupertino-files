@@ -381,7 +381,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-7 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+8 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -431,6 +431,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page
 
 **Outcome.** **Confirmed in Pages.** A page number renders as a live field, and a page count updates when a page is inserted. A date field renders and is editable as a date. All three on a current-format document
+
+### ✅ Paragraph & character styles (by name, plus creation and editing)
+
+**Was claimed.** a paragraph style this library creates appears in the app's paragraph styles panel, so a person can reapply it
+
+**Why it needed an app.** Nothing offline distinguishes a listed style from an unlisted one except by correlation with the corpus, and every correlation found so far has been necessary at best. Four rounds of guess-and-check is where guessing stops paying.
+
+**Outcome.** **Applying is confirmed in Pages; listing is not, after four attempts.** A created style renders exactly as asked wherever it is used, on both a current-format and an upgraded document. It never appears in the styles panel. Pages does know it — going to add the style by hand prefills its name — so the style is named, identified and mapped; only the listing fails. Tried and shipped, each inferred from what a listed style has and ours did not: a `super.name`; a `super.identifier` plus an `identifier_to_style_map` entry; both property bags; and an entry in `TSWP.ThemePresetsArchive.paragraph_style_presets`, which in all 19 Pages fixtures holds exactly the names the app shows. All four are written and the panel is unchanged, so at least one inference is about the wrong object
 
 ### ✅ Pop-up menu creation (TST.PopUpMenuModel)
 

@@ -1391,34 +1391,49 @@ Registration is necessary but not sufficient. A paragraph style also has to
 
 Every paragraph style in the corpus carries `super`, `override_count` and
 **both** property bags — character *and* paragraph — with no exception, empty
-bags included. A paragraph style missing the paragraph bag applies correctly
-wherever it is used and stays out of the style list. Pages knows its name
-well enough to prefill it when you go to add the style by hand, and still
-does not list it.
-
-Character styles are the counter-case that stops this being a blanket rule:
-they carry no paragraph bag at all.
+bags included. Character styles are the counter-case that stops this being a
+blanket rule: they carry no paragraph bag at all.
 
 And registration in the stylesheet is still not the panel. The paragraph
 style list the app shows lives on the **theme**:
-`TP.ThemeArchive.super.110.7`, an extension field holding one reference per
-listed style. Present in all 19 Pages fixtures, always field 7, and its
-contents are exactly the panel's entries — localised with the document, so a
-German template lists Titel and Überschrift. Its length tracks what the user
-sees: twelve in a stock document, 35 and 61 in the two imported from Word
-with their own styles. Object titles and captions have their own list at
-`210.1`.
+`TP.ThemeArchive.super.110.7` — `TSWP.ThemePresetsArchive` extension 110,
+`paragraph_style_presets` — holding one reference per listed style. Present
+in all 19 Pages fixtures, always field 7, and its contents are exactly the
+panel's entries, localised with the document so a German template lists
+Titel and Überschrift. Its length tracks what the user sees: twelve in a
+stock document, 35 and 61 in the two imported from Word with their own
+styles. Sibling lists in the same archive hold list styles (`110.1`),
+character styles (`110.6`) and drop caps (`110.8`); object titles and
+captions live at `210.1`.
 
-So four things are needed before a created style is a style anyone can pick:
+##### What is not known: how a *new* style gets into that panel
+
+Four things about a listed style have been measured, written, and checked in
+Pages, and the panel is unchanged by all four:
 
 1. `super.name`
 2. `super.identifier`, matched by an `identifier_to_style_map` entry
 3. both property bags, `[1, 10, 11, 12]`
-4. a reference in the theme's list
+4. a reference in the theme's `paragraph_style_presets`
 
-The first three are enough to make it apply correctly and report its name —
-Pages will prefill that name when you go to add the style by hand — and
-without the fourth it never appears in the list.
+With all four, a created style **applies** correctly — the text renders as
+asked, on a current-format document and on an upgraded one — and Pages knows
+it well enough to prefill its name when you go to add the style by hand. It
+is simply not in the list.
+
+Each of the four was inferred from a correlation in the corpus, and each
+turned out to be necessary at best. The remaining measured difference is
+density: every style the panel lists sets **27-28 paragraph properties and
+30-31 character ones**, in the Word-imported fixture as much as in Apple's
+own, while a style created from an API call sets only what was asked for.
+Whether that is the cause or another correlation is open; `copyOf` exists to
+find out.
+
+The one thing that has never been tested is the *reading* direction —
+removing a name Pages certainly shows. Adding an entry and seeing nothing
+change cannot distinguish "the list is not what the panel reads" from "the
+entry is wrong", and four rounds were spent on the second reading without
+ever checking the first.
 
 #### A paragraph does not end only at `\n`
 

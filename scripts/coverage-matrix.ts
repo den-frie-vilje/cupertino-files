@@ -261,6 +261,34 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => c.doc.stylesheets().length > 0),
+    manualProof: {
+      claim:
+        "a paragraph style this library creates appears in the app's paragraph styles panel, " +
+        "so a person can reapply it",
+      settled:
+        "**Applying is confirmed in Pages; listing is not, after four attempts.** A created " +
+        "style renders exactly as asked wherever it is used, on both a current-format and an " +
+        "upgraded document. It never appears in the styles panel. Pages does know it — going " +
+        "to add the style by hand prefills its name — so the style is named, identified and " +
+        "mapped; only the listing fails. Tried and shipped, each inferred from what a listed " +
+        "style has and ours did not: a `super.name`; a `super.identifier` plus an " +
+        "`identifier_to_style_map` entry; both property bags; and an entry in " +
+        "`TSWP.ThemePresetsArchive.paragraph_style_presets`, which in all 19 Pages fixtures " +
+        "holds exactly the names the app shows. All four are written and the panel is " +
+        "unchanged, so at least one inference is about the wrong object",
+      why:
+        "Nothing offline distinguishes a listed style from an unlisted one except by " +
+        "correlation with the corpus, and every correlation found so far has been necessary " +
+        "at best. Four rounds of guess-and-check is where guessing stops paying.",
+      how:
+        "`npm run pages:docs` emits P15a/P15b/P15c. P15a removes a name Pages certainly shows " +
+        "and changes nothing else: if it vanishes, the preset list is the panel's source and " +
+        "the fault is in the entry we append; if it stays, the panel reads something else " +
+        "entirely and four fixes were aimed at the wrong archive. P15b adds a style whose " +
+        "property bags are a full copy of Body's, P15c the sparse one shipped today — the " +
+        "pair says whether density is the disqualifier.",
+      risk: "medium",
+    },
   },
   {
     group: "Text & styles",

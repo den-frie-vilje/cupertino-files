@@ -257,11 +257,80 @@ const RUNGS: {
       doc.deleteRange(at, at + " beta".length);
     },
   },
+  // ---------------------------------------------------------------- P15
+  //
+  // Three rungs, because three attempts at one rung have failed.
+  //
+  // A created style applies correctly — the line is large and blue — and
+  // does not appear in the paragraph styles panel. Pages knows its name,
+  // and prefills it when you go to add the style by hand, so the style is
+  // named, identified and mapped; it is only the *listing* that fails.
+  //
+  // Each fix so far was inferred from what listed styles have and ours did
+  // not: an identifier and a map entry, then both property bags, then an
+  // entry in `TSWP.ThemePresetsArchive.paragraph_style_presets`. All three
+  // are now written and the panel is unchanged, which means one of the
+  // inferences is about the wrong object. These rungs stop inferring:
+  //
+  //   P15a removes a style Pages certainly does list, and nothing else.
+  //   P15b adds one that is a full copy of a listed style.
+  //   P15c is what the library ships today, for contrast.
+  //
+  // a alone says whether the list is even the panel's source. b against c
+  // says whether a sparse property bag is what disqualifies ours.
   {
-    name: "P15-new-paragraph-style",
-    note: "a paragraph style created from scratch, not reused from the sheet",
+    name: "P15a-unlist-a-listed-style",
+    note: "removes one built-in style from the panel list — the control for whether that list is what the panel reads",
     build: (doc) => {
-      const index = doc.appendParagraph("P15: this line should be large and blue.");
+      const listed = doc.listedParagraphStyles();
+      // Any of these is present in both bases; the first that is gets used,
+      // and the document says which so the file carries its own answer.
+      const victim = listed.find((s) => ["Footnote", "Caption", "Header & Footer"].includes(s.name ?? ""));
+      if (!victim) throw new Error(`no removable style among: ${listed.map((s) => s.name).join(", ")}`);
+      const rest = listed.filter((s) => s.id !== victim.id).map((s) => s.name);
+      doc.appendParagraph(
+        `P15a: open the paragraph styles panel. "${victim.name}" should NOT be in it.`,
+      );
+      doc.appendParagraph(`These ${rest.length} should still be, and nothing else: ${rest.join(", ")}.`);
+      doc.appendParagraph(
+        `If "${victim.name}" is still listed, the panel does not read the list this rung edited.`,
+      );
+      if (!doc.unlistParagraphStyle(victim.id)) throw new Error("unlist did nothing");
+    },
+  },
+  {
+    name: "P15b-style-copied-from-a-listed-one",
+    note: "a new style whose property bags are a full copy of Body's — dense, the way Apple writes them",
+    build: (doc) => {
+      const index = doc.appendParagraph("P15b: this line should be large and blue.");
+      doc.appendParagraph(
+        'Open the paragraph styles panel: "P15 Copied" should be listed, below the built-in styles.',
+      );
+      doc.appendParagraph(
+        "If the line is styled but the panel has no such entry, a complete property bag is not what the panel wants.",
+      );
+      const base = doc.listedParagraphStyles().find((s) => s.name === "Body") ??
+        doc.listedParagraphStyles()[0];
+      if (!base) throw new Error("no listed style to copy");
+      const id = doc.createParagraphStyle({
+        name: "P15 Copied",
+        copyOf: base.id,
+        character: { fontSize: 24, fontColor: { r: 0, g: 0.3, b: 0.9, space: "srgb" } },
+      });
+      doc.setParagraphStyle(index, id);
+    },
+  },
+  {
+    name: "P15c-style-built-from-nothing",
+    note: "the same style with only the properties asked for — what the library writes today",
+    build: (doc) => {
+      const index = doc.appendParagraph("P15c: this line should be large and blue.");
+      doc.appendParagraph(
+        'Open the paragraph styles panel: "P15 Custom" should be listed, below the built-in styles.',
+      );
+      doc.appendParagraph(
+        "This rung differs from P15b in one way only: its style sets three properties instead of copying all of Body's.",
+      );
       const id = doc.createParagraphStyle({
         name: "P15 Custom",
         character: { fontSize: 24, fontColor: { r: 0, g: 0.3, b: 0.9, space: "srgb" } },

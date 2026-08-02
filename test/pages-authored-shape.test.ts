@@ -215,6 +215,8 @@ describe("a named paragraph style is one the app will list", () => {
   const PARAGRAPH_STYLE = 2022;
   const IDENTIFIER_TO_STYLE_MAP = 2; // TSS.StylesheetArchive.identifier_to_style_map
   const SUPER = 1;
+  const CHAR_PROPERTIES = 11;
+  const PARA_PROPERTIES = 12;
 
   /** identifier-map entries, keyed by the style they point at. */
   const identifierMap = (doc: PagesDocument): Map<string, string> => {
@@ -315,13 +317,13 @@ describe("a named paragraph style is one the app will list", () => {
     }
   });
 
-  it("joins the theme's style list, which is what the panel reads", () => {
-    // The stylesheet is not the panel. The panel reads
-    // TP.ThemeArchive.super.110.7, present in all 19 Pages fixtures and
-    // holding exactly the names the app shows. A style can have a name, an
-    // identifier, a map entry and both property bags — enough that Pages
-    // prefills its name when you add the style by hand — and still not be
-    // listed until it is in here.
+  it("joins the theme's style list, the closest thing to the panel's source", () => {
+    // TP.ThemeArchive.super.110.7 is present in all 19 Pages fixtures and
+    // holds exactly the names the app shows, so it is the best candidate
+    // for what the panel reads. It is not yet proven to be: a style with a
+    // name, an identifier, a map entry, both property bags *and* an entry
+    // here is still absent from the panel. What this test pins is that the
+    // entry is written and the existing ones survive — no more.
     const THEME = 10001;
     const themeList = (doc: PagesDocument): string[] => {
       for (const { obj } of doc.store.allObjects()) {
@@ -366,6 +368,65 @@ describe("a named paragraph style is one the app will list", () => {
       );
     }
     expect(id > 0n).toBe(true);
+  });
+
+  it("reads the list back, and can take a style out of it", () => {
+    // The control for the rung above. Adding an entry and seeing nothing
+    // change in the app is ambiguous — it says either the list is not what
+    // the panel reads or the entry is malformed. Removing a name the app
+    // certainly shows separates the two, so removal has to work as exactly
+    // as addition does.
+    const doc = PagesDocument.load(BASE);
+    const before = doc.listedParagraphStyles();
+    expect(before.length > 0).toBe(true);
+    // The panel list is a strict subset of the stylesheet's styles: 12
+    // against 146 in this base. A reader that conflated them would show
+    // every anonymous override.
+    expect(before.length < doc.paragraphStyles().length).toBe(true);
+
+    const victim = before.find((s) => s.name === "Caption") ?? before[0]!;
+    expect(doc.unlistParagraphStyle(victim.id)).toBe(true);
+    // Idempotent: a second removal is a no-op, not a corruption.
+    expect(doc.unlistParagraphStyle(victim.id)).toBe(false);
+
+    const after = PagesDocument.load(doc.save()).listedParagraphStyles();
+    expect(`${after.length} without ${victim.name}: ${!after.some((s) => s.id === victim.id)}`).toBe(
+      `${before.length - 1} without ${victim.name}: true`,
+    );
+    // Every other entry survives, in order — a rebuilt list that reorders
+    // the panel would be a worse bug than the one being chased.
+    expect(after.map((s) => s.name).join(",")).toBe(
+      before.filter((s) => s.id !== victim.id).map((s) => s.name).join(","),
+    );
+  });
+
+  it("can copy a listed style's property bags instead of starting empty", () => {
+    // Every style the panel lists is dense — 27-28 paragraph properties and
+    // 30-31 character ones, in the Word-imported fixture as much as in
+    // Apple's own — and a style this library creates sets only what it was
+    // asked for. `copyOf` closes that gap so the two can be compared in the
+    // app; whether density is what the panel wants is still open.
+    const doc = PagesDocument.load(BASE);
+    const body = doc.listedParagraphStyles().find((s) => s.name === "Body")!;
+    const source = doc.store.resolve(body.id)!;
+    const dense = (obj: { message: RawMessage }, field: number) =>
+      obj.message.getMessage(field)?.fields.length ?? 0;
+
+    const id = doc.createParagraphStyle({
+      name: "Copied",
+      copyOf: body.id,
+      character: { fontSize: 24 },
+    });
+    const copy = doc.store.resolve(id)!;
+    expect(dense(copy, CHAR_PROPERTIES) >= dense(source, CHAR_PROPERTIES)).toBe(true);
+    expect(dense(copy, PARA_PROPERTIES)).toBe(dense(source, PARA_PROPERTIES));
+    // The overlay wins over the copy: 24pt, not Body's size.
+    expect(copy.message.getMessage(CHAR_PROPERTIES)?.getFloat(CharProps.FONT_SIZE)).toBe(24);
+    // And the style it copied is untouched — a shared message would have
+    // resized every Body paragraph in the document.
+    expect(source.message.getMessage(CHAR_PROPERTIES)?.getFloat(CharProps.FONT_SIZE) !== 24).toBe(
+      true,
+    );
   });
 
   it("leaves an unnamed style anonymous", () => {

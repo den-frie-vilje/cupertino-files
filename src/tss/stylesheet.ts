@@ -232,10 +232,15 @@ export class StylesheetModel {
     name?: string;
     identifier?: string;
     basedOn?: bigint | string;
+    copyOf?: bigint | string;
     character?: CharacterFormatting;
     paragraph?: ParagraphFormatting;
   }): bigint {
     const parentId = this.resolveBase(options.basedOn, TSWP_TYPE.PARAGRAPH_STYLE);
+    const source =
+      options.copyOf === undefined
+        ? undefined
+        : this.store.resolve(this.resolveBase(options.copyOf, TSWP_TYPE.PARAGRAPH_STYLE)!);
     // Derived once and used twice: Apple's listed styles carry the same
     // string in `super.identifier` and as the map key, and the panel wants
     // both. Writing only the map entry leaves the style listed but with no
@@ -247,19 +252,32 @@ export class StylesheetModel {
     // **Both property bags, always.** Every one of the 3130 paragraph
     // styles across these fixtures has the identical top-level field set —
     // super, override_count, char_properties, para_properties — without a
-    // single exception, empty bags included. A style missing the paragraph
-    // bag applies correctly wherever it is used and does not appear in the
-    // app's style list: Pages knows its name well enough to prefill it when
-    // you go to add the style by hand, and still will not list it.
+    // single exception, empty bags included. Matching that costs nothing.
+    //
+    // It was also once claimed here to be what puts a style in the app's
+    // style panel. It is not: a style with both bags, an identifier, a map
+    // entry and a preset-list entry still does not appear. Whatever the
+    // panel wants is not yet known, and the note stays as a record of an
+    // inference that did not survive the app.
     //
     // Character styles are the counter-case, and the reason this is not a
     // blanket rule: theirs is [1,10,11] in 214 of 233, with no paragraph
     // bag at all. Only the paragraph style carries both.
+    //
+    // `copyOf` starts each bag from an existing style's instead of from
+    // nothing. Every one of the 35 styles the panel lists in
+    // `picodocs-v14.4-headers-tables.pages` sets 27-28 paragraph properties
+    // and 30-31 character ones — none is sparse, whether Apple authored it
+    // or Word did — while ours sets three and none. Whether that density is
+    // what the panel requires or merely what Apple happens to write is the
+    // open question; `copyOf` exists so the two can be told apart.
     let overrides = 0;
-    const character = buildCharacterProperties(options.character ?? {});
+    const character = cloneBag(source?.message.getMessage(StyleArchive.CHAR_PROPERTIES));
+    applyCharacterProperties(character, options.character ?? {});
     overrides += character.fields.length;
     m.setMessage(StyleArchive.CHAR_PROPERTIES, character);
-    const paragraph = buildParagraphProperties(options.paragraph ?? {});
+    const paragraph = cloneBag(source?.message.getMessage(StyleArchive.PARA_PROPERTIES));
+    applyParagraphProperties(paragraph, options.paragraph ?? {});
     overrides += paragraph.fields.length;
     m.setMessage(StyleArchive.PARA_PROPERTIES, paragraph);
     m.setVarint(StyleArchive.OVERRIDE_COUNT, overrides);
@@ -578,6 +596,17 @@ export function applyCharacterProperties(m: RawMessage, f: CharacterFormatting):
   }
   if (f.wordUnderline !== undefined) m.setBool(CharProps.WORD_UNDERLINE, f.wordUnderline);
   if (f.wordStrikethru !== undefined) m.setBool(CharProps.WORD_STRIKETHRU, f.wordStrikethru);
+}
+
+/**
+ * A detached copy of a property bag, or an empty one.
+ *
+ * Round-tripping through bytes rather than sharing the message: a style
+ * created from another must not mutate the one it copied when the caller
+ * overlays their own formatting on top.
+ */
+function cloneBag(source: RawMessage | undefined): RawMessage {
+  return source ? RawMessage.parse(source.toBytes()) : RawMessage.create();
 }
 
 export function buildCharacterProperties(f: CharacterFormatting): RawMessage {

@@ -8,6 +8,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
+  describeStyle,
   StylesheetModel,
   type CharacterFormatting,
   type ParagraphFormatting,
@@ -368,31 +369,100 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * Create a paragraph style and list it in the document's style panel.
+   * Create a paragraph style, and try to list it in the app's style panel.
    *
-   * Being in the stylesheet is not what puts a style in the panel. The
-   * panel reads the **theme's** own list: `TP.ThemeArchive.super.110.7`,
-   * present in all 19 Pages fixtures here and holding exactly the names the
-   * app shows — Title, Subtitle, Heading, Body, Caption and the rest,
-   * localised where the document is. Its length tracks what the user sees:
-   * twelve in a stock document, 35 and 61 in the two that were imported
-   * from Word with their own styles.
+   * **Applying works; listing does not, and is not understood.** A style
+   * created here renders exactly as asked wherever it is used, and Pages
+   * knows it well enough to prefill its name when you go to add the style
+   * by hand. The paragraph styles panel does not show it.
    *
-   * Everything else was necessary and not sufficient. A style needs a name,
-   * an identifier, an `identifier_to_style_map` entry and both property
-   * bags before it will apply correctly and report its own name — Pages
-   * will even prefill that name when you go to add the style by hand — and
-   * with all four it still does not appear in the list until it is in here.
+   * Four things have been tried, each inferred from what a listed style has
+   * and ours did not, each shipped and each checked in Pages:
+   *
+   *   1. a `super.name`;
+   *   2. a `super.identifier` and a matching `identifier_to_style_map`
+   *      entry — of the 146 paragraph styles in the ladder's base, the 21
+   *      that are listed all carry both;
+   *   3. both property bags, the field set all 3130 paragraph styles in
+   *      these fixtures share;
+   *   4. an entry in `TSWP.ThemePresetsArchive.paragraph_style_presets`
+   *      (`TP.ThemeArchive.super.110.7`), which in every fixture holds
+   *      exactly the names the app shows and whose length tracks what the
+   *      user sees — twelve in a stock document, 35 and 61 in the two
+   *      imported from Word.
+   *
+   * All four are written and the panel is unchanged. The list in (4) is
+   * still the best candidate for what the panel reads, because nothing else
+   * in the document matches it that closely; what is not known is why an
+   * entry appended to it is ignored. {@link unlistParagraphStyle} exists to
+   * settle that half — removing a name Pages certainly shows is a test the
+   * addition cannot be, since an addition that changes nothing looks the
+   * same whether the list is wrong or the entry is.
+   *
+   * `copyOf` is the other half: it makes the new style's property bags a
+   * full copy of an existing one's, since every listed style in the corpus
+   * is dense (27-28 paragraph properties, 30-31 character) and ours is not.
    */
   createParagraphStyle(options: {
     name: string;
     basedOn?: string | bigint;
+    copyOf?: string | bigint;
     character?: CharacterFormatting;
     paragraph?: ParagraphFormatting;
   }): bigint {
     const id = this.stylesheet.createParagraphStyle(options);
     if (options.name !== undefined) this.listInThemeStyles(id);
     return id;
+  }
+
+  /**
+   * The paragraph styles the app lists in its style panel, in panel order.
+   *
+   * Distinct from {@link paragraphStyles}, which is every style the
+   * stylesheet chain holds — 146 of them in the ladder's base document
+   * against the twelve the panel shows. The rest are overrides and
+   * variations the app deliberately hides.
+   */
+  listedParagraphStyles(): StyleInfo[] {
+    const out: StyleInfo[] = [];
+    for (const entry of this.themeStyleList()?.getMessages(ThemeArchive.LIST_ENTRIES) ?? []) {
+      // Each entry *is* a `TSP.Reference`, not a wrapper holding one.
+      const id = entry.getVarint(1);
+      const obj = id !== undefined ? this.store.resolve(id) : undefined;
+      if (obj) out.push(describeStyle(obj));
+    }
+    return out;
+  }
+
+  /**
+   * Take a paragraph style out of the panel list, leaving the style itself
+   * in place and still applied wherever it is used.
+   *
+   * Returns whether it was listed. The inverse of what
+   * {@link createParagraphStyle} does, and the control for it: adding an
+   * entry and seeing nothing appear says only that the addition did not
+   * work, while removing an entry and seeing an entry vanish says the list
+   * is the thing the panel reads.
+   */
+  unlistParagraphStyle(id: bigint): boolean {
+    const list = this.themeStyleList();
+    const theme = this.store.resolve(refId(this.docObject.message, TPDocument.THEME));
+    if (!list || !theme) return false;
+    const kept = list
+      .getMessages(ThemeArchive.LIST_ENTRIES)
+      .filter((entry) => entry.getVarint(1) !== id);
+    if (kept.length === list.getMessages(ThemeArchive.LIST_ENTRIES).length) return false;
+    list.remove(ThemeArchive.LIST_ENTRIES);
+    for (const entry of kept) list.addMessage(ThemeArchive.LIST_ENTRIES, entry);
+    theme.message.markDirty();
+    return true;
+  }
+
+  /** `TSWP.ThemePresetsArchive.paragraph_style_presets`, if this theme has one. */
+  private themeStyleList(): RawMessage | undefined {
+    const theme = this.store.resolve(refId(this.docObject.message, TPDocument.THEME));
+    const sup = theme?.message.getMessage(ThemeArchive.SUPER);
+    return sup?.getMessage(ThemeArchive.PARAGRAPH_STYLE_LIST);
   }
 
   /**
