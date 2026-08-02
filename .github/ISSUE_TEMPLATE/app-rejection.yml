@@ -5,12 +5,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        Every serious defect in this project's history was **well-formed
-        but wrong**: the file passed every offline check and the app still
-        refused it or silently dropped the feature. If you are holding one
-        of those, this report is how it becomes a measured rule and a
-        regression test. Failures here are more informative than passes —
-        do not soften the details.
+        Thank you — this is the most valuable kind of report this project
+        gets. Every serious defect in its history was found exactly this
+        way: a file that passed every automated check, and a person who
+        noticed the app disagreeing. The messy details are the treasure
+        here, so please include everything you saw, even (especially!)
+        the parts that seem odd or embarrassing to describe.
   - type: textarea
     id: symptom
     attributes:

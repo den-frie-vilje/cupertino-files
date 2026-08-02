@@ -1769,7 +1769,11 @@ function render(facts: FixtureFacts[]): string {
         : "—";
       const apps =
         capability.apps === "all" ? "all" : applicable.map((a) => APP_LABEL[a]).join(", ");
-      const note = capability.note ? `<br><sub>${capability.note}</sub>` : "";
+      // Notes land inside literal <sub> HTML, where a bare "<" in prose
+      // (FUNCTION_<id>, <file>) reads as an unclosed tag — Vue-based
+      // renderers refuse the whole page over it. Escape, always.
+      const escaped = capability.note?.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const note = escaped ? `<br><sub>${escaped}</sub>` : "";
       out.push(
         `| ${capability.name}${note} | ${apps} | ${STATUS_LABEL[capability.status]} | ${count} | ${eraText} |`,
       );

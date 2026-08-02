@@ -78,7 +78,10 @@
     "conformance:check": "node scripts/make-conformance.ts --check",
     "bundle:format": "node scripts/make-release-bundle.ts",
     "keynote:docs": "node scripts/make-keynote-docs.ts",
-    "prepublishOnly": "npm run build && npm run lint && npm test"
+    "prepublishOnly": "npm run build && npm run lint && npm test",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -86,6 +89,8 @@
     "eslint": "^10.8.0",
     "protobufjs": "^8.7.1",
     "typescript": "^5.9.0",
-    "typescript-eslint": "^8.65.0"
-  }
+    "typescript-eslint": "^8.65.0",
+    "vitepress": "^1.6.4"
+  },
+  "homepage": "https://olekristensen.github.io/cupertino-files/"
 }

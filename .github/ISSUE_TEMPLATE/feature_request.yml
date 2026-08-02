@@ -5,10 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        Check [docs/BLOCKERS.md](https://github.com/olekristensen/cupertino-files/blob/main/docs/BLOCKERS.md)
-        first — several missing features are already listed there together
-        with the one piece of evidence they are blocked on, and providing
-        that evidence is faster than a request.
+        Thanks for taking the time! A quick look at
+        [docs/BLOCKERS.md](https://github.com/olekristensen/cupertino-files/blob/main/docs/BLOCKERS.md)
+        may be worth it first — some features are already listed there
+        waiting on one small example document, and if you can make that
+        document, you might close the gap yourself on the spot.
   - type: textarea
     id: feature
     attributes:
@@ -20,17 +21,18 @@ body:
   - type: textarea
     id: evidence
     attributes:
-      label: Do you have a document that uses it?
+      label: Do you happen to have a document that uses it?
       description: >-
-        This project only ships writes it can measure from real documents
-        and verify in the apps. A shareable document exercising the
-        feature (with its writing app version) shortcuts everything; one
-        you can run probes against locally is second best.
+        Entirely optional — a request is welcome either way. But if you
+        can attach a small example made in the app (noting which version
+        wrote it), that's the fastest possible path: this project builds
+        features by measuring real documents, so an example often does
+        most of the work.
       placeholder: |
         Yes — attached, written by Numbers 15.3 / I can run npm run probe
-        against one locally / no document available
+        against one locally / no document to hand
     validations:
-      required: true
+      required: false
   - type: textarea
     id: context
     attributes:

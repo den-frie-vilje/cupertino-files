@@ -1,30 +1,36 @@
-## What changed
+<!-- Thank you for contributing! A couple of sentences on each point is
+     plenty — and if anything below doesn't apply or you're not sure,
+     just say so. We're glad you're here. -->
 
-<!-- One paragraph. If it changes what the library writes into documents,
-     say which archive types. -->
+## What does this change?
 
-## Evidence
+## Example documents
 
-<!-- This project's rule: measured, not guessed. Where does the change's
-     shape come from — corpus measurement, a schema field, an app check?
-     Cite the numbers the way the codebase does ("28 of 28 sections…"). -->
+<!-- If this touches how documents are read or written, a small example
+     file made in Pages, Numbers or Keynote is the most helpful thing you
+     can attach — often more helpful than the code itself. Made-by-you is
+     perfect; please avoid files with personal data in them.
 
-## App verification
+     Can't make one (no Mac, no time)? Totally fine — say so here and
+     we'll produce one together during review. -->
 
-<!-- Well-formed is not working. Pick one: -->
+## If this changes what documents contain
 
-- [ ] Does not change what gets written into documents
-- [ ] Changes writes, **confirmed in the app** — say which app/version and what was checked
-- [ ] Changes writes, not yet app-checked — a `manualProof` block is added in
-      `scripts/coverage-matrix.ts` (and `docs/VERIFICATION.md` regenerated), or a
-      ladder rung exercises it
+The apps are the final judges of anything we write, and checking is a
+shared job — no Mac required to contribute:
 
-## Checklist
+- [ ] I opened the result in Pages / Numbers / Keynote — here's what I saw:
+- [ ] I couldn't check in an app — no problem; we'll note it in
+      `scripts/coverage-matrix.ts` so it's tracked, and help verify it
+- [ ] This doesn't change what gets written into documents
 
-- [ ] `npm test` — 549+ green, including the built-in guards
-- [ ] `npm run lint` and `npm run typecheck` clean
-- [ ] Generated docs regenerated if touched (`npm run coverage`, `npm run conformance`)
-- [ ] New fixtures (if any) are redistributable, listed in `fixtures/ATTRIBUTION.md`
-      with source/commit/license/md5, and pass `npm run privacy:check`
-- [ ] No verbatim Apple-derived material added outside `proto/`
-      (see `THIRD-PARTY-NOTICES.md`)
+## Checks
+
+<!-- CI runs all of these too, so don't worry about getting it perfect
+     before opening the PR — opening early is welcome. -->
+
+- [ ] `npm test`
+- [ ] `npm run lint` and `npm run typecheck`
+- [ ] Regenerated docs if the capability matrix changed (`npm run coverage`)
+- [ ] Any new sample documents are shareable and listed in
+      `fixtures/ATTRIBUTION.md` (we're happy to help with this part)
