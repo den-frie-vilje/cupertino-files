@@ -56,7 +56,7 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
           try {
             ours = buildFormula(parseFormula(detail.text), { row, column }, options).toBytes();
           } catch {
-            continue; // parser gaps (whole-column tracts, #REF!) are tracked below
+            continue; // the two deliberate #REF! refusals, pinned below
           }
           rebuilt++;
           const theirs = apple.toBytes();
@@ -74,12 +74,12 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
     expect(`mismatches: ${mismatches.join(" | ")}`).toBe("mismatches: ");
     expect(identical).toBe(rebuilt);
     // Floors guard the guard: coverage must not silently shrink. 1244
-    // formulas and 1239 rebuilds measured 2026-08-02 (219 before
-    // cross-table references landed); the remaining gap is three
-    // whole-column tracts and two #REF! errors, tracked in
-    // docs/BLOCKERS.md, and closing it should only raise this floor.
+    // formulas and 1242 rebuilds measured 2026-08-02 (219 before
+    // cross-table references and whole-column spans landed); the entire
+    // remaining gap is two #REF! errors, which stay unauthorable on
+    // purpose — writing a lost reference is not a feature.
     expect(total >= 1244).toBe(true);
-    expect(rebuilt >= 1239).toBe(true);
+    expect(rebuilt >= 1242).toBe(true);
   });
 });
 

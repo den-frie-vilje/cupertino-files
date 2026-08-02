@@ -49,11 +49,9 @@
  *
  * ## What is deliberately missing
  *
- * Arrays, the `#REF!` error, whole-column tracts (`SUM(D)`) and
- * sheet-qualified references are not authored: each is either absent from
- * the corpus or needs structure no fixture demonstrates, and a formula
- * pointing at an identity the engine does not know is worse than no
- * formula. Reading them all works.
+ * Arrays, the `#REF!` error and sheet-qualified references are not
+ * authored: each is either absent from the corpus or — for `#REF!` — a
+ * lost reference nobody should write on purpose. Reading them all works.
  */
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
@@ -70,6 +68,8 @@ export type FormulaExpression =
   | { kind: "ref"; column: Coordinate; row: Coordinate }
   /** A cell on another table: `Other::A1`. Compiling needs a resolver. */
   | { kind: "crossRef"; table: string; column: Coordinate; row: Coordinate }
+  /** A whole column, as in `SUM(D)`: a reference with no row at all. */
+  | { kind: "columnRef"; column: Coordinate }
   /**
    * A rectangle, stored as a colon tract. Each axis keeps its `$` flag:
    * `C3:K6` stores *relative* ranges (offsets from the using cell) and
@@ -257,6 +257,14 @@ function emit(
       // plausible, which is exactly what makes the mistake expensive.
       node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
       node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
+      break;
+    case "columnRef":
+      // `SUM(D)` spans the column: the same reference node with the row
+      // simply absent. All three corpus specimens agree, and `SUM(C)`
+      // written *in* column C proves the offset is relative — an absolute
+      // index would have stored 2, not 0.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
+      node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
       break;
     case "crossRef": {
       const resolve = options.tableUid;
@@ -541,7 +549,22 @@ class Parser {
   /** A reference or a range; both start the same way. */
   private tryReference(): FormulaExpression | undefined {
     const cell = /^\$?[A-Za-z]+\$?\d+/.exec(this.text.slice(this.at));
-    if (!cell) return undefined;
+    if (!cell) {
+      // A bare column: `SUM(D)`. Up to three letters, no digits after —
+      // anything longer or followed by more word characters is a name,
+      // and names are not references.
+      const column = /^(\$?)([A-Za-z]{1,3})(?![A-Za-z0-9_.(])/.exec(this.text.slice(this.at));
+      if (!column) return undefined;
+      let index = 0;
+      for (const character of column[2]!.toUpperCase()) {
+        index = index * 26 + (character.charCodeAt(0) - 64);
+      }
+      this.at += column[0].length;
+      return {
+        kind: "columnRef",
+        column: { value: index - 1, absolute: column[1] === "$" },
+      };
+    }
     const from = parseReference(cell[0]);
     if (!from) return undefined;
     const after = this.at + cell[0].length;

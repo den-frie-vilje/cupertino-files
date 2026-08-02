@@ -88,8 +88,10 @@ that rebuild the structures from them.
 
 - **Formula authoring: the dependency ledger.** Authoring itself is
   shipped and proven by bytes — every parseable corpus formula rebuilds
-  byte-identical to Apple's AST (219 of 219), and a same-text replace
-  saves the whole document byte-identical to the original. What remains
+  byte-identical to Apple's AST (1242 of 1242, cross-table references
+  and whole-column spans included; only the two #REF! specimens stay
+  unauthorable, on purpose), and a same-text replace saves the whole
+  document byte-identical to the original. What remains
   app-blocked is the calc engine's per-cell dependency ledger, which
   `setFormula` leaves stale (bisect rungs 19–21 above are the probe), and
   the function table's edge: any function outside the harvested 271 has
