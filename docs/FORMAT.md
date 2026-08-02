@@ -1329,6 +1329,36 @@ Both halves matter, and each is visible only in the app:
 
 A writer that picks one rule for all three gets two of them wrong.
 
+#### A named style is not a listed style
+
+`TSS.StyleArchive.super` carries both a `name` and an `identifier`, and the
+stylesheet separately holds `identifier_to_style_map`. Setting only the name
+produces a style that renders correctly everywhere it is applied and never
+appears in the app's style list.
+
+Measured in `patrickomatic-termpaper-footers-masks.pages`: 146 paragraph
+styles, all of them in `stylesheet.styles`, of which **23** carry a
+`super.name` and **21** of those also sit in `identifier_to_style_map` under
+a key equal to their own `super.identifier`. The remaining 123 are anonymous
+overrides — a style created for one range, which is not something a user
+should see listed.
+
+So a listed style needs three things that agree:
+
+| | |
+| --- | --- |
+| `super.name` | the display name |
+| `super.identifier` | a stable string |
+| `identifier_to_style_map` | an entry keyed by that identifier |
+
+Apple's identifiers are `<origin>-<n>-paragraphstyle-<Name>`, the origin
+saying where the style came from — `text` for the document's own, alongside
+`captions`, `chart` and others. A style created by a library is a document
+style and takes `text` with the next free index.
+
+The distinction matters both ways. An anonymous override that acquires an
+identifier becomes a stray entry in the user's style panel.
+
 #### A paragraph does not end only at `\n`
 
 `table_para_style` maps character offsets to paragraph styles, and an entry

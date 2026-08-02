@@ -236,12 +236,14 @@ export class StylesheetModel {
     paragraph?: ParagraphFormatting;
   }): bigint {
     const parentId = this.resolveBase(options.basedOn, TSWP_TYPE.PARAGRAPH_STYLE);
+    // Derived once and used twice: Apple's listed styles carry the same
+    // string in `super.identifier` and as the map key, and the panel wants
+    // both. Writing only the map entry leaves the style listed but with no
+    // identity of its own.
+    const identifier = options.identifier ?? this.deriveIdentifier(options.name);
     const obj = this.store.createObject(TSWP_TYPE.PARAGRAPH_STYLE, this.component);
     const m = obj.message;
-    m.setMessage(
-      StyleArchive.SUPER,
-      buildStyleSuper(options.name, options.identifier, parentId, this.id),
-    );
+    m.setMessage(StyleArchive.SUPER, buildStyleSuper(options.name, identifier, parentId, this.id));
     let overrides = 0;
     if (options.character) {
       const props = buildCharacterProperties(options.character);
@@ -254,8 +256,40 @@ export class StylesheetModel {
       m.setMessage(StyleArchive.PARA_PROPERTIES, props);
     }
     m.setVarint(StyleArchive.OVERRIDE_COUNT, overrides);
-    this.register(obj.identifier, options.identifier, parentId);
+    this.register(obj.identifier, identifier, parentId);
     return obj.identifier;
+  }
+
+  /**
+   * A stable identifier for a style the caller has named.
+   *
+   * Naming a style and having it appear in the app's style list are two
+   * different things, and only the second is what anyone means. Of the 146
+   * paragraph styles in the ladder's base document, 23 carry a
+   * `super.name` and 21 of those also sit in `identifier_to_style_map`,
+   * keyed by a `super.identifier` that matches the map entry exactly. A
+   * style with a name and no identifier renders correctly wherever it is
+   * applied and never appears in the panel — which is precisely what
+   * `createParagraphStyle({ name })` used to produce.
+   *
+   * Apple's identifiers are `<origin>-<n>-paragraphstyle-<Name>`, the
+   * origin naming where the style came from — `text` for the document's
+   * own, `captions`, `chart`. A style this library creates is a document
+   * style, so it takes `text` and the next free index.
+   *
+   * Returns undefined for an unnamed style: an anonymous override is not
+   * supposed to be listed, and giving it an identifier would put it in the
+   * panel as a stray entry.
+   */
+  private deriveIdentifier(name: string | undefined): string | undefined {
+    if (name === undefined) return undefined;
+    let next = 0;
+    for (const entry of this.msg.getMessages(StylesheetFields.IDENTIFIER_TO_STYLE_MAP)) {
+      const key = entry.getString(IdentifiedStyleEntry.IDENTIFIER);
+      const match = key?.match(/^text-(\d+)-paragraphstyle-/);
+      if (match) next = Math.max(next, Number(match[1]) + 1);
+    }
+    return `text-${next}-paragraphstyle-${name}`;
   }
 
   /** Create a character style (anonymous unless a name/identifier is given). */

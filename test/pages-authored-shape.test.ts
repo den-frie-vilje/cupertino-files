@@ -151,6 +151,84 @@ describe("editing text keeps the run tables in Apple's shape", () => {
   });
 });
 
+describe("a named paragraph style is one the app will list", () => {
+  const BASE = new Uint8Array(
+    readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),
+  );
+  const STYLESHEET = 401;
+  const PARAGRAPH_STYLE = 2022;
+  const IDENTIFIER_TO_STYLE_MAP = 2; // TSS.StylesheetArchive.identifier_to_style_map
+  const SUPER = 1;
+
+  /** identifier-map entries, keyed by the style they point at. */
+  const identifierMap = (doc: PagesDocument): Map<string, string> => {
+    const out = new Map<string, string>();
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== STYLESHEET) continue;
+      for (const e of obj.message.getMessages(IDENTIFIER_TO_STYLE_MAP)) {
+        const id = e.getMessage(2)?.getUint(1);
+        if (id !== undefined) out.set(String(id), e.getString(1) ?? "");
+      }
+    }
+    return out;
+  };
+  const findByName = (doc: PagesDocument, name: string) => {
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== PARAGRAPH_STYLE) continue;
+      if (obj.message.getMessage(SUPER)?.getString(1) === name) return obj;
+    }
+    return undefined;
+  };
+
+  it("registers a name with a matching identifier, as Apple does", () => {
+    // Measured: of 146 paragraph styles in this base, 23 carry a name and
+    // 21 of those are in identifier_to_style_map under a key equal to their
+    // own super.identifier. A style with a name and neither renders fine
+    // wherever it is applied and never appears in the style list — which is
+    // what naming a style is for.
+    const doc = PagesDocument.load(BASE);
+    const at = doc.appendParagraph("styled");
+    doc.setParagraphStyle(at, doc.createParagraphStyle({ name: "Test Style" }));
+    const saved = PagesDocument.load(doc.save());
+
+    const style = findByName(saved, "Test Style");
+    expect(style !== undefined).toBe(true);
+    const identifier = style!.message.getMessage(SUPER)?.getString(2);
+    const key = identifierMap(saved).get(String(style!.identifier));
+    expect(`identifier=${identifier}`).toBe(`identifier=${key}`);
+    expect(identifier !== undefined && identifier.length > 0).toBe(true);
+  });
+
+  it("follows Apple's identifier shape", () => {
+    const doc = PagesDocument.load(BASE);
+    doc.createParagraphStyle({ name: "Shape Check" });
+    const saved = PagesDocument.load(doc.save());
+    const style = findByName(saved, "Shape Check")!;
+    const identifier = style.message.getMessage(SUPER)?.getString(2) ?? "";
+    // <origin>-<n>-paragraphstyle-<Name>; a document's own styles use "text".
+    expect(/^text-\d+-paragraphstyle-Shape Check$/.test(identifier)).toBe(true);
+  });
+
+  it("does not collide with an identifier the document already uses", () => {
+    const doc = PagesDocument.load(BASE);
+    doc.createParagraphStyle({ name: "One" });
+    doc.createParagraphStyle({ name: "Two" });
+    const saved = PagesDocument.load(doc.save());
+    const keys = [...identifierMap(saved).values()];
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("leaves an unnamed style anonymous", () => {
+    // An override created for one range is not a style anyone should see in
+    // the panel, so it must not acquire an identifier.
+    const doc = PagesDocument.load(BASE);
+    const before = identifierMap(PagesDocument.load(BASE)).size;
+    doc.createParagraphStyle({ name: undefined as unknown as string });
+    const after = identifierMap(PagesDocument.load(doc.save())).size;
+    expect(`identifier entries: ${after}`).toBe(`identifier entries: ${before}`);
+  });
+});
+
 describe("a character style we author has what Apple's has", () => {
   it("writes the fill as well as font_color, because only the fill renders", () => {
     const { bytes, at } = authorRedWord();
