@@ -943,6 +943,34 @@ describe("a comment always names an author", () => {
     expect(`authorless corpus comments: ${bad.join(" ")}`).toBe("authorless corpus comments: ");
   });
 
+  it("gives every author the corpus shape: name, colour, is_public_author", () => {
+    // The colour is what stood between "renders" and "crashes on open" —
+    // both corpus authors carry the identical comment-yellow TSP.Color and
+    // the comment UI draws the author's tint. Both also write
+    // is_public_author=false explicitly, and both rosters list their
+    // author while declaring refs=[]; declaring the reference is a shape
+    // no real document has.
+    const base = new Uint8Array(
+      readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),
+    );
+    const doc = PagesDocument.load(base);
+    doc.appendParagraph("a phrase carrying a comment.");
+    const at = doc.body.text.lastIndexOf("phrase");
+    doc.body.addComment(at, at + 6, "the comment text");
+    const saved = PagesDocument.load(doc.save());
+    for (const { obj } of saved.store.allObjects()) {
+      if (obj.type !== 212) continue;
+      const shape = [...new Set(obj.message.fields.map((f) => f.no))].sort((a, b) => a - b);
+      expect(`author fields: ${shape.join(",")}`).toBe("author fields: 1,2,4");
+      const CORPUS_COLOR = "8,1,29,251,250,122,63,37,240,239,111,63,45,181,180,180,62,53,0,0,128,63,96,1";
+      expect(Array.from(obj.message.getMessage(2)!.toBytes()).join(",")).toBe(CORPUS_COLOR);
+    }
+    for (const { obj } of saved.store.allObjects()) {
+      if (obj.type !== 213) continue;
+      expect(`roster declares: ${obj.getObjectReferences().join(",")}`).toBe("roster declares: ");
+    }
+  });
+
   it("creates and registers a default author when the document has none", () => {
     const base = new Uint8Array(
       readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),

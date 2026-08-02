@@ -153,13 +153,11 @@ than restating a conclusion, so a future Pages that changes one fails the
 suite instead of a document.
 
 **Not yet checked:** P07 (section break — rebuilt with the U+0004 fix
-after its first check failed), P08 (comment — first check on Pages for iOS
-showed an unreadable comment; measured cause: ours carried no author where
-every corpus comment references a named, rostered
-`TSK.AnnotationAuthorArchive`; a default author is now always created),
-P10 (page setup — first check was unjudgeable because only the orientation
-flag and margins were set; the corpus stores real geometry in the
-width/height fields, so the rung is now explicitly A4 landscape). Nothing about them is known to be wrong;
+after its first check failed), P08 (comment — two rounds so far: an
+authorless comment was unreadable on iOS, then a name-only author crashed
+Pages; the author now carries Apple's exact comment-yellow colour and
+explicit `is_public_author=false`, and the roster no longer declares the
+reference both corpus rosters leave undeclared). Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 

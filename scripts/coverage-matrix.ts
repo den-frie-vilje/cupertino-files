@@ -505,15 +505,27 @@ export const CAPABILITIES: Capability[] = [
     group: "Text & styles",
     name: "Comment creation and removal",
     apps: "all",
+    manualProof: {
+      claim: "a comment this library creates is readable and attributed in the app",
+      why:
+        "Three app rounds so far, each narrowing the shape. Round one (Pages for iOS): " +
+        "unreadable placeholder — the comment carried no author where every corpus comment " +
+        "references one. Round two: with a name-only author, Pages crashed on open — both " +
+        "corpus authors carry the identical comment-yellow `TSP.Color` and explicit " +
+        "`is_public_author = false`, and the comment UI draws the author's tint; the " +
+        "corpus rosters also declare `refs=[]`, and ours had started declaring the author " +
+        "— the container rule reintroduced by our own fix. The author now matches Apple's " +
+        "byte-for-byte (writeColor reproduces the colour exactly) and the roster edit " +
+        "declares nothing.",
+      how:
+        "`npm run pages:docs` emits P08-comment; the phrase names itself and the comment " +
+        "text says who wrote it. Readable and attributed is the pass; a third distinct " +
+        "failure would point at the highlight's UUID linkage.",
+      risk: "medium",
+    },
     status: "read+write",
     probe: (c) => safe(() => c.doc.textStorages().some((s) => s.comments().length > 0)),
     note: "reuses the document's existing annotation author rather than duplicating them",
-    manualProof: {
-      claim: "a comment this library creates appears in the app's comment pane, attributed correctly",
-      why: "the suite proves the three archives and the highlight run round-trip, not that the app renders them as a comment",
-      how: "add a comment, open in Pages, and confirm it shows in the sidebar with the right author, date and highlighted range",
-      risk: "medium",
-    },
   },
   {
     group: "Text & styles",
@@ -806,6 +818,19 @@ export const CAPABILITIES: Capability[] = [
     name: "Page setup (size, margins, orientation)",
     apps: ["pages"],
     status: "read+write",
+    manualProof: {
+      claim: "page size and orientation this library writes are what Pages lays out",
+      settled:
+        "**Confirmed in Pages — \"P10 pass\".** A rung written as corpus-exact A4 " +
+        "landscape (841.89 x 595.28 pt, orientation 1) renders as a page noticeably wider " +
+        "than tall. The first round was unjudgeable and taught the encoding: every corpus " +
+        "document stores its real geometry in the width/height fields — the one wide " +
+        "document is 2880x2304 with orientation 1 — so the flag is metadata and swapping " +
+        "the dimensions is what makes landscape",
+      why: "layout geometry is the app's; the fields could have been advisory",
+      how: "`npm run pages:docs` emits P10-page-setup, which states its own shape on the page",
+      risk: "low",
+    },
     probe: (c) => safe(() => c.pages?.pageSetup().pageWidth !== undefined),
   },
   {

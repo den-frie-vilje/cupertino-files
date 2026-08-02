@@ -21,6 +21,7 @@
  *
  * Dates are `TSP.Date { seconds }` counted from Apple's 2001-01-01 epoch.
  */
+import { writeColor } from "../tsd/style.ts";
 import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
@@ -155,18 +156,31 @@ export function createAuthor(
 ): IwaObject {
   const message = RawMessage.create();
   message.setString(AuthorFields.NAME, name);
+  // The colour is not decoration. Both corpus authors carry the identical
+  // TSP.Color — the comment yellow, r 0.980 g 0.937 b 0.353 — and a
+  // name-only author was the difference between "comment renders" and
+  // "Pages crashes on open": the comment UI draws the author's tint.
+  // writeColor reproduces Apple's bytes for it exactly.
+  message.setMessage(
+    AuthorFields.COLOR,
+    writeColor({ r: 0.9803921580314636, g: 0.9372549057006836, b: 0.3529411852359772, space: "srgb" }),
+  );
+  // Explicit false, as both corpus authors write it.
+  message.setBool(AuthorFields.IS_PUBLIC_AUTHOR, false);
   // Left unset deliberately: `public_id` identifies an iCloud account, and
   // inventing one would attribute the comment to an account that is not
-  // this person's. Documents in the corpus carry authors without it.
+  // this person's. One corpus author carries it, the other does not.
   const object = store.createObject(COMMENT_TYPE.AUTHOR, component);
   object.setMessageBytes(message.toBytes());
 
   const roster = authorStorage(store);
   if (roster) {
     roster.message.addMessage(AuthorStorageFields.AUTHORS, makeRef(object.identifier));
-    roster.setObjectReferences([
-      ...new Set([...roster.getObjectReferences(), object.identifier]),
-    ]);
+    roster.message.markDirty();
+    // No setObjectReferences: both corpus rosters list their author and
+    // declare refs=[]. The container rule, in the direction this project
+    // keeps relearning — declaring what Apple leaves undeclared is not
+    // extra safety, it is a shape no real document has.
   }
   return object;
 }

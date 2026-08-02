@@ -42,7 +42,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 18 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
 | 19 | 🟠 medium | Pages → Sections (read + insert) | a section break this library inserts starts a new section on a new page | manual |
-| 20 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates appears in the app's comment pane, attributed correctly | manual |
+| 20 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates is readable and attributed in the app | manual |
 | 21 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
 | 22 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 23 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
@@ -288,11 +288,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Text & styles  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** a comment this library creates appears in the app's comment pane, attributed correctly
+**Claim.** a comment this library creates is readable and attributed in the app
 
-**Why the suite cannot settle it.** the suite proves the three archives and the highlight run round-trip, not that the app renders them as a comment
+**Why the suite cannot settle it.** Three app rounds so far, each narrowing the shape. Round one (Pages for iOS): unreadable placeholder — the comment carried no author where every corpus comment references one. Round two: with a name-only author, Pages crashed on open — both corpus authors carry the identical comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, and ours had started declaring the author — the container rule reintroduced by our own fix. The author now matches Apple's byte-for-byte (writeColor reproduces the colour exactly) and the roster edit declares nothing.
 
-**How to settle it.** add a comment, open in Pages, and confirm it shows in the sidebar with the right author, date and highlighted range
+**How to settle it.** `npm run pages:docs` emits P08-comment; the phrase names itself and the comment text says who wrote it. Readable and attributed is the pass; a third distinct failure would point at the highlight's UUID linkage.
 
 ### 21. Paragraph background & borders (rule stroke + positions)
 
@@ -368,7 +368,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-14 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+15 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -458,6 +458,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page
 
 **Outcome.** **Confirmed in Pages.** A page number inserted into the body renders as a live number ("P06 pass"), a page count updates when a page is inserted, and a date field renders and is editable as a date. All on current-format documents
+
+### ✅ Page setup (size, margins, orientation)
+
+**Was claimed.** page size and orientation this library writes are what Pages lays out
+
+**Why it needed an app.** layout geometry is the app's; the fields could have been advisory
+
+**Outcome.** **Confirmed in Pages — "P10 pass".** A rung written as corpus-exact A4 landscape (841.89 x 595.28 pt, orientation 1) renders as a page noticeably wider than tall. The first round was unjudgeable and taught the encoding: every corpus document stores its real geometry in the width/height fields — the one wide document is 2880x2304 with orientation 1 — so the flag is metadata and swapping the dimensions is what makes landscape
 
 ### ✅ Paragraph & character styles (by name, plus creation and editing)
 

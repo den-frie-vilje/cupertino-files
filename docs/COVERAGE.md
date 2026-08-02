@@ -156,7 +156,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-40 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+41 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -178,6 +178,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
 - 🟠 medium — Pages → **Sections (read + insert)**
 - 🟡 low — Pages → **Headers & footers (3 columns × first/even/odd)**
+- 🟡 low — Pages → **Page setup (size, margins, orientation)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
