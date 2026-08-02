@@ -1,0 +1,139 @@
+{
+  "file": "iwork-mcp-v14.5-sample.pages",
+  "sha1": "3f4135f076357624728a001bafb5973d7f9e8837",
+  "app": "pages",
+  "fileFormatVersion": "14.4.1",
+  "objects": 575,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 54
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 7
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 496
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 471,
+      "text": "Team Standup Notes\nFebruary 10, 2026  |  Engineering Team  |  Room 4B\n \nAttendees\nAlice Chen, Bob Martinez, Carol Kim, Dave Patel, Eve Johnson\n \nAction Items\n•  Alice: Finalize API schema for v2 endpoints by Wednesday\n•  Bob: Investigate CI pipeline timeout on integration tests\n•  Carol: Ship onboarding flow redesign to staging\n•  Dave: Review and merge pull requests #142, #145\n \nNext Meeting\nWednesday, February 12 at 10:00 AM. Carol to demo the new onboarding flow.\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 14
+  }
+}

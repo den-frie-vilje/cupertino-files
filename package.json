@@ -1,0 +1,96 @@
+{
+  "name": "cupertino-files",
+  "version": "0.1.0",
+  "description": "Read, inspect, and edit Apple Pages, Numbers and Keynote documents (iWork / Creator Studio, modern IWA format) in pure TypeScript with zero runtime dependencies.",
+  "keywords": [
+    "iwork",
+    "pages",
+    "numbers",
+    "keynote",
+    "apple",
+    "iwa",
+    "snappy",
+    "protobuf",
+    "document",
+    "parser",
+    "key",
+    "creator-studio",
+    "cupertino"
+  ],
+  "license": "MIT",
+  "author": "Ole Kristensen <ole@kristensen.name>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olekristensen/cupertino-files.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "cupertino-dump": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "proto",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "LICENSES"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "coverage": "node scripts/coverage-matrix.ts",
+    "coverage:check": "node scripts/coverage-matrix.ts --check",
+    "harvest": "node scripts/harvest-functions.ts",
+    "harvest:check": "node scripts/harvest-functions.ts --check",
+    "harvest:predicates": "node scripts/harvest-predicates.ts",
+    "prebnc": "node scripts/analyse-prebnc.ts",
+    "stress": "node scripts/stress-readers.ts",
+    "proto:check": "node scripts/check-proto-drift.ts --check",
+    "required:check": "node scripts/check-required-fields.ts",
+    "survey:fieldinfos": "node scripts/survey-field-infos.ts",
+    "probe": "node scripts/probe-unknowns.ts",
+    "verify:doc": "node scripts/make-verification-doc.ts",
+    "bisect:docs": "node scripts/make-bisect-docs.ts",
+    "privacy:check": "node scripts/scan-fixture-privacy.ts",
+    "test:e2e": "node --test test/e2e/*.e2e.test.ts",
+    "test:all": "npm run test && npm run test:e2e",
+    "pages:docs": "node scripts/make-pages-docs.ts",
+    "proto:embed": "node scripts/embed-proto-schema.ts",
+    "proto:embed:check": "node scripts/embed-proto-schema.ts --check",
+    "shape:audit": "node scripts/audit-authored-shape.ts",
+    "shape:check": "node scripts/audit-authored-shape.ts --check",
+    "lint": "eslint src test scripts",
+    "conformance": "node scripts/make-conformance.ts",
+    "conformance:check": "node scripts/make-conformance.ts --check",
+    "bundle:format": "node scripts/make-release-bundle.ts",
+    "keynote:docs": "node scripts/make-keynote-docs.ts",
+    "prepublishOnly": "npm run build && npm run lint && npm test",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.10.0",
+    "eslint": "^10.8.0",
+    "protobufjs": "^8.7.1",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.65.0",
+    "vitepress": "^1.6.4"
+  },
+  "homepage": "https://olekristensen.github.io/cupertino-files/"
+}

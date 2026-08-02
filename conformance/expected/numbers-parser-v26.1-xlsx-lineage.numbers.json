@@ -1,0 +1,355 @@
+{
+  "file": "numbers-parser-v26.1-xlsx-lineage.numbers",
+  "sha1": "f9ab0433c9dcc44cc765f3df5296061abcd0e7ef",
+  "app": "numbers",
+  "fileFormatVersion": "26.1.0",
+  "objects": 522,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 78
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876202-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876203-2.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/Tables/DataList-7876204-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876205-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876206-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876207-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876208-2.iwa",
+      "objects": 5
+    },
+    {
+      "name": "Index/Tables/DataList-7876209-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876210-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-7876265-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876266-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876267-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876268-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876269-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876270-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876271-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876272-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876273-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876274-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876275-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876276-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-7876471.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-7876472.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-7876483.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-7876484.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7876485-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-8199853.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-8199894.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet-2494.iwa",
+      "objects": 343
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 7
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "CELL",
+      "characters": 11,
+      "text": "Transaction"
+    },
+    {
+      "kind": "CELL",
+      "characters": 11,
+      "text": "Transaction"
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 41,
+            "columns": 49,
+            "truncated": true,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Month"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "2026-01-01T00:00:00.000Z"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "2026-02-01T00:00:00.000Z"
+              },
+              {
+                "r": 0,
+                "c": 9,
+                "v": "2026-03-04T00:00:00.000Z"
+              },
+              {
+                "r": 0,
+                "c": 13,
+                "v": "2026-04-04T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Transaction"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "#ERROR"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "Savings"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "Savings"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "Transaction"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "#ERROR"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "Savings"
+              },
+              {
+                "r": 1,
+                "c": 9,
+                "v": "Transaction"
+              },
+              {
+                "r": 1,
+                "c": 12,
+                "v": "Savings"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "325"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "#ERROR"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "0"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "0"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "200"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "#ERROR"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "0"
+              },
+              {
+                "r": 2,
+                "c": 9,
+                "v": "100"
+              },
+              {
+                "r": 2,
+                "c": 12,
+                "v": "0"
+              },
+              {
+                "r": 20,
+                "c": 0,
+                "v": "Account 1"
+              },
+              {
+                "r": 23,
+                "c": 0,
+                "v": "Account 2"
+              },
+              {
+                "r": 26,
+                "c": 0,
+                "v": "Account 3"
+              },
+              {
+                "r": 29,
+                "c": 0,
+                "v": "Account 4"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

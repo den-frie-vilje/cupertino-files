@@ -1,0 +1,762 @@
+{
+  "file": "tika-testNumbers2013.numbers",
+  "sha1": "997001eebacda3ad21eaba7e4909cac7d0d74a53",
+  "app": "numbers",
+  "fileFormatVersion": "2.0.24",
+  "objects": 433,
+  "components": [
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-5.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-16.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Document.iwa",
+      "objects": 44
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 12
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 35
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-4.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-12.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-21.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-25.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-9.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-29.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 11
+    },
+    {
+      "name": "Index/Tables/DataList-19.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-15.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-6.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-11.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 287
+    },
+    {
+      "name": "Index/Tables/DataList-28.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-24.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-18.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-14.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-10.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-3.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-7.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-5.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-23.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-27.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-17.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-13.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-26.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-22.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-8.iwa",
+      "objects": 1
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 27,
+      "text": "Checking Account: 300545668"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 208,
+      "text": "Try adding your own account transactions to this table. To automatically add data to a table, drag an OFX file to the table. Most banking and credit card websites let you download OFX files for your accounts."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Checking",
+        "tables": [
+          {
+            "name": "Transactions",
+            "rows": 14,
+            "columns": 6,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 4,
+                "v": "Beginning Balance"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "4650"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Type"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Date"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "Description"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "Category"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "Amount"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "Balance"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "101"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2009-10-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "Rent"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "2"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "-775"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3875"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "102"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "2009-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "Utilities"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "-97.4"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "3777.6"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Debit Card"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "2009-10-16T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "Fill up SUV for camping trip"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "4"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "-75"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "3702.6"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Debit Card"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "2009-10-22T00:00:00.000Z"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "Groceries"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 5,
+                "c": 4,
+                "v": "-101"
+              },
+              {
+                "r": 5,
+                "c": 5,
+                "v": "3601.6"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "104"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2009-10-24T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "Dinner with Paul and Jane"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "-125"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "3476.6"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "Debit Card"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "2009-10-25T00:00:00.000Z"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "Movies"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "6"
+              },
+              {
+                "r": 7,
+                "c": 4,
+                "v": "-35"
+              },
+              {
+                "r": 7,
+                "c": 5,
+                "v": "3441.6"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "DEP"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "2009-10-29T00:00:00.000Z"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "Insurance refund"
+              },
+              {
+                "r": 8,
+                "c": 3,
+                "v": "1"
+              },
+              {
+                "r": 8,
+                "c": 4,
+                "v": "135"
+              },
+              {
+                "r": 8,
+                "c": 5,
+                "v": "3576.6"
+              },
+              {
+                "r": 9,
+                "c": 0,
+                "v": "DEP"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "2009-10-30T00:00:00.000Z"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "Paycheck"
+              },
+              {
+                "r": 9,
+                "c": 3,
+                "v": "1"
+              },
+              {
+                "r": 9,
+                "c": 4,
+                "v": "1525"
+              },
+              {
+                "r": 9,
+                "c": 5,
+                "v": "5101.6"
+              },
+              {
+                "r": 10,
+                "c": 0,
+                "v": "Debit Card"
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "2009-10-31T00:00:00.000Z"
+              },
+              {
+                "r": 10,
+                "c": 2,
+                "v": "Fill up SUV again"
+              },
+              {
+                "r": 10,
+                "c": 3,
+                "v": "4"
+              },
+              {
+                "r": 10,
+                "c": 4,
+                "v": "-62.5"
+              },
+              {
+                "r": 10,
+                "c": 5,
+                "v": "5039.1"
+              },
+              {
+                "r": 11,
+                "c": 0,
+                "v": "105"
+              },
+              {
+                "r": 11,
+                "c": 1,
+                "v": "2009-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 11,
+                "c": 2,
+                "v": "Credit card payment"
+              },
+              {
+                "r": 11,
+                "c": 3,
+                "v": "5"
+              },
+              {
+                "r": 11,
+                "c": 4,
+                "v": "-850"
+              },
+              {
+                "r": 11,
+                "c": 5,
+                "v": "4189.1"
+              },
+              {
+                "r": 12,
+                "c": 0,
+                "v": "DEP"
+              },
+              {
+                "r": 12,
+                "c": 1,
+                "v": "2009-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 12,
+                "c": 2,
+                "v": "Security deposit return"
+              },
+              {
+                "r": 12,
+                "c": 3,
+                "v": "1"
+              },
+              {
+                "r": 12,
+                "c": 4,
+                "v": "300"
+              },
+              {
+                "r": 12,
+                "c": 5,
+                "v": "4489.1"
+              },
+              {
+                "r": 13,
+                "c": 0,
+                "v": "Debit Card"
+              },
+              {
+                "r": 13,
+                "c": 1,
+                "v": "2009-11-02T00:00:00.000Z"
+              },
+              {
+                "r": 13,
+                "c": 2,
+                "v": "Night on the town"
+              },
+              {
+                "r": 13,
+                "c": 3,
+                "v": "6"
+              },
+              {
+                "r": 13,
+                "c": 4,
+                "v": "-210"
+              },
+              {
+                "r": 13,
+                "c": 5,
+                "v": "4279.1"
+              }
+            ]
+          },
+          {
+            "name": "Account Categories",
+            "rows": 7,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Category"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Amount"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Home"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "-872.4"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Food"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "-226"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Gas"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "-137.5"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Credit Card"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "-1095"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Entertainment"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "-245"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Total"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "-2575.9"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Second sheet",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 10,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Test"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "0.5"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "0.1"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "0.6"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

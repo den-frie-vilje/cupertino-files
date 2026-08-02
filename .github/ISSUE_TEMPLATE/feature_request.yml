@@ -1,0 +1,39 @@
+name: Feature request
+description: Something the library should read or write that it does not yet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! A quick look at
+        [docs/BLOCKERS.md](https://github.com/olekristensen/cupertino-files/blob/main/docs/BLOCKERS.md)
+        may be worth it first — some features are already listed there
+        waiting on one small example document, and if you can make that
+        document, you might close the gap yourself on the spot.
+  - type: textarea
+    id: feature
+    attributes:
+      label: The feature
+      description: Which app(s), and is it reading, editing, or creating?
+      placeholder: "Numbers: write conditional-formatting rules"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Do you happen to have a document that uses it?
+      description: >-
+        Entirely optional — a request is welcome either way. But if you
+        can attach a small example made in the app (noting which version
+        wrote it), that's the fastest possible path: this project builds
+        features by measuring real documents, so an example often does
+        most of the work.
+      placeholder: |
+        Yes — attached, written by Numbers 15.3 / I can run npm run probe
+        against one locally / no document to hand
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: What it unblocks for you

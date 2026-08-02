@@ -1,0 +1,379 @@
+{
+  "file": "compphysics-poster-images-masks.pages",
+  "sha1": "a016541642c52c44e59a40372113ea20de0cfcc1",
+  "app": "pages",
+  "fileFormatVersion": "2.2.4",
+  "objects": 489,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 219
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/CalculationEngine-3240.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/DocumentStylesheet-3243.iwa",
+      "objects": 254
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-3239.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 42,
+      "text": "Benjamin Hall | Michigan State University\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 56,
+      "text": "Solving the Pairing Model with\nQuantum Phase Estimation "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 8,
+      "text": "Appendix"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 352,
+      "text": "The ultimate goal is to simulate this system both classically (implementing the quantum circuit with matrix multiplication and tensor products) and quantum mechanically (such as through the IMB Q experience). These results could then be compared to the analytical solution that one would obtain by solving for the eigenvalues of the Hamiltonian matrix."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 11,
+      "text": "Future Work"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "BODY",
+      "characters": 72,
+      "text": "￼￼￼￼￼ \n￼￼\n\n￼\n￼\n\n\n￼\n￼\n\n￼\n\n\n\n\n\n\n￼\n\n\n\n\n\n\n\n￼\n\n￼\n￼\n\n￼\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 288,
+      "text": "The energy eigenvalues of the pairing model Hamiltonian can be extracted using the quantum phase estimation algorithm. The second-quantized Hamiltonian is transformed into qubits and then into quantum gates. The entire quantum computation is outlined, from the Hamiltonian to measurement."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 712,
+      "text": "where U is a unitary matrix, which can be arbitrarily approximated by a universal set of gates such as CNOT, H, and T. To create the controlled-U gate shown above, one can decompose the unitary into\n                     where\n\n\n\n\nand\n\n\nis a rotation about the Q = X, Y, Z axis on the Bloch sphere. First we prepare an initial state     ,which can be expanded in terms of the eigenvectors of the Hamiltonian. By implementing the given quantum circuit and measuring the top n gates, one will obtain the phase as a binary fraction. The correct phases will be obtained with the highest probability. One must repeat this process several times in order to determine the probability distribution of the obtained phases."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "Introduction"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 6,
+      "text": "Theory"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "6"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "5"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "8"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "3"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 5,
+      "text": "i = 1"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "7"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "2"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "4"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 401,
+      "text": "The pairing model is a fermionic particle-hole model. We consider the case with four energy levels and 4 particles.\n\n\n\n\n\n\nThe pairing Hamiltonian in second quantization\n\n\n\nmoves one pair of fermions up or down energy levels. Using the Jordan-Wigner transformation\n\n\n\n\nwe can write the pairing model Hamiltonian in terms of qubits\n\n\n\nwhere\n\n\nand\n\n\n\n\n\n\n\n\n\nand                            . \n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 6,
+      "text": "Theory"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 819,
+      "text": "The phase estimation algorithm finds the phase\n                     of the eigenvalues of the time evolution operator\n\n\nwhich are related to the energy eigenvalues        as seen above. They are measured using the following quantum circuit\n\n\n\n\n\n\n\n\nwhere                        and  IFT is the inverse Fourier transform. Since the terms in the Hamiltonian do not in general commute, we must approximate the time evolution operator though a Trotter formula\n\n\n\nThe first set of terms can be exponentiated as\n\nwhere\n\n\nAdditionally, the second set of terms consists of tensor products of raising and lowering qubits. These can also be exponentiated. For example\n\nSince each of these terms is idempotent, we have\n\nwhere I and J are X or Y. These can be decomposed into the product of two-level matrices such as\n  \n\n\n\n\n\n\n\nNote"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 18,
+      "text": "Quantum Simulation"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 54
+  }
+}

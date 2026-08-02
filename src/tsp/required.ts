@@ -1,0 +1,123 @@
+/**
+ * Proto2 `required` fields — the validator that would have caught the
+ * conditional-rule bug.
+ *
+ * ## Why this exists
+ *
+ * A schema-light writer can produce a message that is *structurally* fine
+ * and *semantically* invalid: proto2 lets a field be `required`, and a
+ * message missing one is not a message with less in it — it is a message no
+ * conforming parser will accept. Numbers refuses the whole document.
+ *
+ * That is exactly what happened. `TST.ConditionalStyleRule` declares
+ *
+ * ```proto
+ * required .TSP.Reference cell_style = 2;
+ * required .TSP.Reference text_style = 3;
+ * ```
+ *
+ * and rules were being written with neither. Every reader in this library
+ * read them back perfectly, five tests passed, and the byte-comparison
+ * against Apple's own rule passed too — because Apple has never written an
+ * unstyled rule, so the comparison only ever covered the styled case. The
+ * app was the first thing in the chain to object.
+ *
+ * Reading back what you wrote cannot find this class of bug, and neither
+ * can comparing against a case the app does produce. Only the schema knows.
+ * The schemas are vendored in `proto/` and read by `protobufjs` in
+ * `scripts/proto-schema.ts`; this module is the walker that checks a
+ * message against them, and deliberately has no parser of its own.
+ *
+ * ## What it checks
+ *
+ * Every `required` field of every message it can resolve, recursively:
+ * start from an archive whose type id names a message, check the required
+ * fields are present, then follow each message-typed field that *is*
+ * present and check that too. Fields whose type cannot be resolved are
+ * skipped rather than guessed at — an unresolved type is a gap in the
+ * vendored protos, not a fault in the document.
+ *
+ * It deliberately does **not** check anything else the schema says. Wire
+ * types, enum ranges and value constraints are all checkable in principle;
+ * `required` is the one whose violation makes a file unopenable.
+ */
+import type { RawMessage } from "../base/protobuf.ts";
+import { WireType } from "../base/protobuf.ts";
+
+/** One field, as the proto declares it. */
+export interface ProtoField {
+  name: string;
+  number: number;
+  label: "required" | "optional" | "repeated";
+  /** Fully-qualified type name, or a scalar like `uint32`. */
+  type: string;
+}
+
+/** A message's fields, by field number. */
+export type ProtoMessage = Map<number, ProtoField>;
+
+/** Every message in the vendored schema, by fully-qualified name. */
+export type ProtoSchema = Map<string, ProtoMessage>;
+
+/** One missing `required` field. */
+export interface MissingRequired {
+  /** Dotted path from the archive down to the message that is short a field. */
+  path: string;
+  message: string;
+  field: string;
+  number: number;
+}
+
+/**
+ * Check a message against its schema, recursively.
+ *
+ * `messageName` is the fully-qualified name the message is expected to
+ * conform to. Submessages are followed only where the field's declared type
+ * resolves, and only where the field is actually present — an absent
+ * *optional* submessage cannot be missing anything.
+ */
+export function missingRequired(
+  message: RawMessage,
+  messageName: string,
+  schema: ProtoSchema,
+  path = messageName,
+  depth = 0,
+): MissingRequired[] {
+  const definition = schema.get(messageName);
+  if (!definition || depth > 12) return [];
+  const out: MissingRequired[] = [];
+
+  for (const field of definition.values()) {
+    const present = message.has(field.number);
+    if (field.label === "required" && !present) {
+      out.push({ path, message: messageName, field: field.name, number: field.number });
+      continue;
+    }
+    if (!present || !schema.has(field.type)) continue;
+    // Only walk fields actually encoded as submessages: a field declared as
+    // a message but written with another wire type is a different problem,
+    // and getMessages would throw on it.
+    if (!message.fields.some((f) => f.no === field.number && f.wire === WireType.Bytes)) {
+      continue;
+    }
+    let children: RawMessage[] = [];
+    try {
+      children = message.getMessages(field.number);
+    } catch {
+      continue;
+    }
+    children.forEach((child, index) => {
+      const suffix = children.length > 1 ? `[${index}]` : "";
+      out.push(
+        ...missingRequired(
+          child,
+          field.type,
+          schema,
+          `${path}.${field.name}${suffix}`,
+          depth + 1,
+        ),
+      );
+    });
+  }
+  return out;
+}

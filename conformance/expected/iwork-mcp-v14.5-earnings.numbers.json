@@ -1,0 +1,1959 @@
+{
+  "file": "iwork-mcp-v14.5-earnings.numbers",
+  "sha1": "af2fed7892ab775bf166753d25943ad510d92f18",
+  "app": "numbers",
+  "fileFormatVersion": "14.4.1",
+  "objects": 1137,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 70
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 80
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 244
+    },
+    {
+      "name": "Index/Tables/Tile-905303.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905304.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905305.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905306.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905307.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905308.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905309.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905310.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905311.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905312.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905313.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905314.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905333.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905334.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905335.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905336.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905337.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905338.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905339.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905340.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905341.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905342.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905343.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905344.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905527.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905528.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905529.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905530.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905531.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905532.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905533.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905534.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905535.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905536.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905537.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905538.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905557.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905558.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905559.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905560.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905561.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905562.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905563.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905564.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905565.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905566.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905567.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905568.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906456.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906457.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906458.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906467.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906468.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906469.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906475.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906476.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906477.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906486.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-906487.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906488.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-909728.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909729.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909730.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909731.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909732.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909733.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909734.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909735.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909736.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909737.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909738.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909739.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-909758.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909759.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909760.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909761.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909762.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909763.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909764.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909765.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909766.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909767.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909768.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-909769.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-910959.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910960.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910961.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910962.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910963.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910964.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910965.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910966.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910967.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910968.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910969.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910970.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-910989.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910990.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910991.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910992.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910993.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910994.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910995.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910996.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910997.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910998.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-910999.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-911000.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912143.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912144.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-912145.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912154.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912155.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-912156.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912162.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912163.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-912164.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912173.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-912174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-912175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921773-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921774-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921775-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921776-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921777-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921778-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921779-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921780-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921781-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921782-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-921801-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921802-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921803-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921804-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921805-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921806-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921807-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921808-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921809-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921810-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921811-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-921812-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-922264-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-922265-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-922274-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-922275-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-922276-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-930080.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930081.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930082.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930083.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930084.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930085.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930086.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930087.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930088.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930089.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930090.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930091.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-930110.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930111.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930112.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930113.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930117.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930118.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930119.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930120.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930121.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-930144.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930145.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930146.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930147.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930148.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930149.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930150.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930151.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930152.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930153.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930154.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930155.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-930174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930176.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930177.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930178.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930179.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930180.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930181.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930182.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930183.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930184.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930185.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930328.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930329.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930330.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930339.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930340.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930341.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930347.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930348.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930349.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930358.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-930359.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-930360.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 526
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Executive Summary",
+        "tables": [
+          {
+            "name": "Key Metrics",
+            "rows": 10,
+            "columns": 4,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "APPLE INC. — Q1 FY2026 EARNINGS"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Fiscal Quarter Ended December 27, 2025"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "REVENUE"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "NET INCOME"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "EPS (Diluted)"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "GROSS MARGIN"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "$143.8B"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "$42.1B"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "2.84"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "0.482"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "+15.7% YoY"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "+15.9% YoY"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "+18.3% YoY"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "+130 bps YoY"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "OPERATING CASH FLOW"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "SHAREHOLDER RETURNS"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "INSTALLED BASE"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "DIVIDEND/SHARE"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "$53.9B"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "$32.0B"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "2.5B+ devices"
+              },
+              {
+                "r": 8,
+                "c": 3,
+                "v": "0.26"
+              },
+              {
+                "r": 9,
+                "c": 0,
+                "v": "All-Time Record"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "All-Time Record"
+              }
+            ]
+          },
+          {
+            "name": "Revenue Mix",
+            "rows": 8,
+            "columns": 12,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "REVENUE MIX — Q1 FY2026 ($143.8B)"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "iPhone"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "$85.3B"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "0.59"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Services"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "$30.0B"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "0.21"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Wearables"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "$11.5B"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "0.08"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "iPad"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "$8.6B"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "0.06"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Mac"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "$8.4B"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "0.06"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Revenue by Product",
+        "tables": [
+          {
+            "name": "Product Revenue",
+            "rows": 8,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Product Segment"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Q1 FY2026"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Q1 FY2025"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "YoY Change"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "% of Total"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "iPhone"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "85.3"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "69.3"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "0.233"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "0.593"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Services"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "30"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "26.3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "0.139"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "0.209"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Wearables, Home & Acc."
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "11.5"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "11.8"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "-0.022"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "0.08"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "iPad"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "8.6"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "8.1"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "0.063"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "0.06"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Mac"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "8.4"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "9"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "-0.067"
+              },
+              {
+                "r": 5,
+                "c": 4,
+                "v": "0.058"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "Total Revenue"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "143.79999999999998"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "124.3"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "0.157"
+              },
+              {
+                "r": 7,
+                "c": 4,
+                "v": "1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Geographic Revenue",
+        "tables": [
+          {
+            "name": "Revenue by Region",
+            "rows": 8,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Geographic Region"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Q1 FY2026 ($B)"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Q1 FY2025 ($B)"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "YoY Change"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "% of Total"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Americas"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "59.800000000000004"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "53.800000000000004"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "0.112"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "0.41600000000000004"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Europe"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "35.800000000000004"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "31.7"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "0.127"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "0.249"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Greater China"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "25.5"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "18.5"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "0.379"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "0.177"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Rest of Asia Pacific"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "14.700000000000001"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "12.6"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "0.18"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "0.10200000000000001"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Japan"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "8"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "7.7"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "0.047"
+              },
+              {
+                "r": 5,
+                "c": 4,
+                "v": "0.056"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "Total"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "143.79999999999998"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "124.3"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "0.157"
+              },
+              {
+                "r": 7,
+                "c": 4,
+                "v": "1"
+              }
+            ]
+          },
+          {
+            "name": "Regional Bar Chart",
+            "rows": 8,
+            "columns": 12,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "REGIONAL GROWTH — YoY %"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Americas"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "0.112"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Europe"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "0.127"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Greater China"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "0.379"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Asia Pacific"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "0.18"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Japan"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "0.047"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Profitability",
+        "tables": [
+          {
+            "name": "Margin Analysis",
+            "rows": 11,
+            "columns": 4,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Metric"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Q1 FY2026"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Q1 FY2025"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "Change"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Total Revenue ($B)"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "143.79999999999998"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "124.3"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "0.157"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Gross Margin %"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "0.482"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "0.46900000000000003"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "+130 bps"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Products Gross Margin %"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "0.40700000000000003"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "0.393"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "+140 bps"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Services Gross Margin %"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "0.765"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "0.75"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "+150 bps"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Operating Expenses ($B)"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "18.400000000000002"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "15.5"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "0.19"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Net Income ($B)"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "42.1"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "36.300000000000004"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "0.159"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "Diluted EPS"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "2.84"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "2.4"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "0.183"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "Operating Cash Flow ($B)"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "53.9"
+              },
+              {
+                "r": 8,
+                "c": 3,
+                "v": "Record"
+              },
+              {
+                "r": 9,
+                "c": 0,
+                "v": "Shareholder Returns ($B)"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "32"
+              },
+              {
+                "r": 10,
+                "c": 0,
+                "v": "Active Installed Base"
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "2.5B+"
+              }
+            ]
+          },
+          {
+            "name": "Margin Comparison",
+            "rows": 8,
+            "columns": 12,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "GROSS MARGIN BREAKDOWN"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Overall"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "0.482"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "Q1'26"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "0.46900000000000003"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "Q1'25"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Products"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "0.40700000000000003"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "Q1'26"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "0.393"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "Q1'25"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Services"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "0.765"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "Q1'26"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "0.75"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "Q1'25"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

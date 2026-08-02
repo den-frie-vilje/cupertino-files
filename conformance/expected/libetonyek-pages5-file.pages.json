@@ -1,0 +1,143 @@
+{
+  "file": "libetonyek-pages5-file.pages",
+  "sha1": "a3c71a81f09898f0e3238bb08279437407312950",
+  "app": "pages",
+  "fileFormatVersion": "1.5.0",
+  "objects": 299,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 51
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 5
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/ThemeStylesheet.iwa",
+      "objects": 235
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 1
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 95,
+      "text": "My hovercraft is full of eels.\nMé vznášedlo je plné úhořů.\nMój poduszkowiec jest pełen węgorzy."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 3
+  }
+}

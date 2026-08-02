@@ -1,0 +1,744 @@
+{
+  "file": "rougier-v13.1-image-filters-masks.pages",
+  "sha1": "9ed6c6f42e3ebb83877539660e6ed766704b1327",
+  "app": "pages",
+  "fileFormatVersion": "13.1.2",
+  "objects": 1260,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 675
+    },
+    {
+      "name": "Index/ViewState-1927260.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1686617.iwa",
+      "objects": 7
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1686616.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 560
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 284,
+      "text": " \nSpatial-Temporal Graph Convolutional Networks, which moves beyond the limitations of previous methods by automatically learning both the spatial and temporal patterns from data. This formulation not only leads to greater expressive power but also stronger generalization capability."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 925,
+      "text": "\nThe estimated annotation time varies according to the level of (ethological) expertise, especially when labeling LIDs. Count around 45min for 10 000 frames, between 2h and 3h for a 10min video at 60fps.\nChoosing the correct list of behaviors is critical for the quality of your analysis and will directly determine the results you get.\nFor normal behavior we use this list : body scratch, hind paw bite, supported/unsupported rear, turn left/right, walk, grooming, micromovement\nFor LIDs, after discussion with experts, we recommend to use the conventional 4 types categorization.\nLabeling behavior is difficult because ambiguous sequences occur, especially during LIDs.\nBootstraping annotations is possible by using temporary results for a first approximation of behavior.\nAnnotating Tools: DeepEthogram, SimBA\n\nAcknowldegments to the annotating experts: Gregory Porras, Lorena Delgado-Zabalza & Cristina Miguelez Palomo. \n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 296,
+      "text": " \nB-SOiD - an open-source, unsupervised algorithm that identifies behavior without user bias. By training a machine classifier on pose pattern statistics clustered using new methods, B-SOiD approach achieves greatly improved processing speed and the ability to generalize across subjects or labs."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 605,
+      "text": "\nB-SOiD (qualitative evaluation)\nFor unsupervised methods there is no ground truth because the behaviors are not known a priori. The first and easiest way to assess the performances is thus to directly look at the videos. Example of behavioral segmentation with B-SOID trained on 19 videos of 6 dyskinetic mice:\n￼\n\nDeepEthogram (quantitative evaluation)\nPerformances of deepethogram (frame-wise F1 score) on the test set for 5 behaviors. Each dot represents the F1 score on one video (only if the behavior is occurring  during the recording time). The model was trained on 19 videos of 8 dyskinetic mice.\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 910,
+      "text": "\nTransparent box allows to record from below. Be careful, the shape of the box induces different behaviors.\nOne GoPro or Smartphone cameras are good but depth camera or event camera might be better. If you have two synchronized cameras, it is even better.\nCalibrate your cameras by setting the position, framerate, aperture, zoom level, etc. We used a GoPro with 120 fps (recommended for LIDs), 1/240s shutter speed, 1080p resolution, 3200k white balance.\nSynchronize camera and any experimental setup you might use such as optogenetics (e.g. an always visible on/off light in the box).\nSplit your dataset in training (60%), validation (20%) and test (20%).\nCheck your dataset to make sure to not have an over-represented behavior or else, learning will overfit. Check also each beahvior is present in both training, validation and test.\nParameterize your model hyperparameters (e.g. using HyperOpt or Optuna) "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 66,
+      "text": "Automatic quantification of normal & pathological behavior in mice"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1238,
+      "text": "\nAbstract. The intake of the precursor levodopa in Parkinson's disease patients triggers abnormal and involuntary movements known as levodopa-induced dyskinesias (LIDs). To date, the main technique for assessing and quantifying LIDs is based on human experts that score them based on observations of patients (live or video). This method presents several drawbacks: it is both time consuming and tedious, but it is also prone to errors and inter-examiner variability. In this work, we explored a machine learning / computer vision approach in order to detect and quantify LIDs on video recordings of Parksionian mice treated with levodopa. \n\nTo do so, we tested three methods: (i) an unsupervised method, based on mouse pose estimation [1] and clustering of pertinent behavioural features [5] (ii) a supervised method which learns the segmentation from the videos [2] using convolutional neural networks and (iii) a second supervised learning model [3] based on the keypoints and originally designed to recognize human actions. We proceeded by investigating how reliable are these three approaches for LIDs quantification from a practical point of view (learning sets, parameters tuning, analysis of results, estimation of ground truth). "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 884,
+      "text": "The unsupervised method successfully recognizes global dyskinetic patterns, (namely, contralateral rotations and axial dyskinesia) but can hardly detect subtler dyskinesias such as forelimbs tremors. Only in a few specific cases the method was able to properly characterize them. For the other cases, the supervised methods, that are especially tuned to recognize difficult behaviors, can provide the missing information. \n\nHowever, this method requires the manual labelling of videos in order to train the model and suffers consequently from the same drawbacks as for the traditional methods. Such drawbacks can be largely mitigated using a standard training set (that is yet to be build). From our early results, this automated approach seems to be a viable alternative even though more tests are needed to assess the quality of the quantification when  compared to human expertise."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "2"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "3"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "5"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "4"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 267,
+      "text": " \nDeepEthogram uses supervised machine learning to convert raw video pixels into an ethogram, the behaviors of interest present in each video frame. DeepEthogram is designed to be general-purpose and applicable across species, behaviors, and video-recording hardware."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "6"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "7"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "8"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 266,
+      "text": "ST-GCN (quantitative evaluation) \nPerformances of ST-GCN: clip-wise confusion matrix and F1 score on the test set for five behaviors. Same dataset as deepethogram.\n\nF1 Scores: Background: 0.48, Turn left: 0.86, Walk: 0.51, Micro-movement: 0.73, Limb Dyskinesia. 0.69"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 5,
+      "text": "START"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 769,
+      "text": "\n[1] Mathis, A., Mamidanna, P., Cury, K.M. et al. DeepLabCut: markerless pose estimation of user-defined body parts with deep learning. Nat Neurosci 21, 1281–1289 (2018)\n[2] Bohnslav J.M., Wimalasena, N.K., Clausing, K. J. et al. DeepEthogram, a machine learning pipeline for supervised behavior classification from raw pixels. eLife 10:e63377 (2021)\n[3] Yan, S., Xiong, Y. and Lin, D. Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action Recognition. AAAI (2018).\n[4] Wiltschko A.B., Johnson M.J., Iurilli G. et al. Mapping Sub-Second Structure in Mouse Behavior. Neuron, 88(6),1121-1135 (2015).\n[5] Hsu, A.I., Yttri, E.A. B-SOiD, an open-source unsupervised algorithm for identification and fast prediction of behaviors. Nat Commun 12, 5188 (2021)."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1,
+      "text": "1"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 130,
+      "text": "Institute of Neurodegenerative Diseases\n Bordeaux Université - CNRS - INRIA\nNICOLAS.MALLET@U-BORDEAUX.FR\nTL;DR: It works (somehow)"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 14,
+      "text": "nicolas mallet"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 15,
+      "text": "nicolas rougier"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "victor leroy"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 16,
+      "text": "lise guilhemsang"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 3,
+      "text": "k=3"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 21,
+      "text": "Unsupervised learning"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 19,
+      "text": "Supervised learning"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 11,
+      "text": "Annotations"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 18,
+      "text": "Material & Methods"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 4,
+      "text": "TURN"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "SCRATCH"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 4,
+      "text": "WALK"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 4,
+      "text": "TURN"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 6,
+      "text": "TURN ?"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 6,
+      "text": "B-SOiD"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "DeepEthogram"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 6,
+      "text": "ST-GCN"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "Results"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 10,
+      "text": "References"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "#162186"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 24,
+      "text": "A Practical\nGuide to the"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 33,
+      "text": "Behavior labels assigned a priori"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 37,
+      "text": "Behavior labels assigned a posteriori"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 26,
+      "text": "For Hire vleroy005@ensc.fr"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": true,
+    "sections": 1,
+    "paragraphs": 1
+  }
+}

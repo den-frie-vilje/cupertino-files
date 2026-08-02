@@ -1,0 +1,479 @@
+{
+  "file": "tudortmund-v14.1-footers-table.pages",
+  "sha1": "1b8ddf327fcfa97ad561a8bc50a580e9cd3b0817",
+  "app": "pages",
+  "fileFormatVersion": "14.1.1",
+  "objects": 621,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 59
+    },
+    {
+      "name": "Index/ViewState-212171.iwa",
+      "objects": 15
+    },
+    {
+      "name": "Index/CalculationEngine-20358.iwa",
+      "objects": 38
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20959-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20960-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20961-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20962-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20963-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20964-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20965-2.iwa",
+      "objects": 89
+    },
+    {
+      "name": "Index/Tables/DataList-20966-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20967-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-20982-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20983-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20984-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20985-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20986-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20987-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20988-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20989-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20990-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20991-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20992-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20993-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21167-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21174-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21175-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-21176-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-212156.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-212282.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-20357.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 384
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 100,
+      "text": "A Summary of Telemann’s Advice from his \nExercises in Singing, Keyboard-Playing, and Thoroughbass\n\n￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 21,
+      "text": "Edited by Derek Remeš"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 6,
+      "text": "￼ of ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 14,
+      "text": "derekremes.com"
+    },
+    {
+      "kind": "CELL",
+      "characters": 144,
+      "text": "The dim. 5 is useful and may be added at times to a 6/3 chord, even though it is not indicated.\nThe bass of a 6/4+/2 chord may enter unprepared."
+    },
+    {
+      "kind": "CELL",
+      "characters": 333,
+      "text": "The figure 9/4 requires the 5.\nThe figure 9/7 requires the 3.\nThe figure 4 takes 5 and 8.\nThe figure 9 takes 5 and 3.\nOrgans need not re-articulate repeated chords, as is necessary on other keyboard instruments.\nThe right hand may occasionally move away from its starting position.\nDissonance need not be prepared over a pedal point."
+    },
+    {
+      "kind": "CELL",
+      "characters": 350,
+      "text": "One must avoid parallel fifths and octaves.\nHidden (also called direct) fifths or octaves occur in similar motion. They are prohibited because parallel motion would result if the gap were filled in by step.\nIf the right hand gets too low, one may play two chords over the same bass note so that the right hand may leap higher within the same harmony."
+    },
+    {
+      "kind": "CELL",
+      "characters": 336,
+      "text": "Certain direct fifths are allowed (either when the top voice moves by step or in a change of position in the same harmony).\nAll rules only apply as far as circumstances allow them.\nContrary motion is the best means of avoiding parallel and hidden fifths and octaves.\nThe bass doubling in the 6/3 chord is more permissible as a pick-up. "
+    },
+    {
+      "kind": "CELL",
+      "characters": 557,
+      "text": "Contrary motion is when the hands move towards or away from each other.\nContrary motion is especially good when the bass ascends by fourth between 5/3 chords or when a 5/3 chord follows after a 6/3 chord.\nFor continuity the right hand may play during a rest in the bass voice.\nThe diminished fifth may enter unprepared.\nOrnaments in the vocal part do not necessarily affect the harmony of the accompaniment, although they can.\nThe French do not use a dash to indicate a passing note in the bass; with time, one learns to recognize such notes without a dash."
+    },
+    {
+      "kind": "CELL",
+      "characters": 261,
+      "text": "Doubling the bass of a 6/3 chord in the soprano drowns out the third of the chord.\nFor many consecutive 6/3 chords one plays in three voices; if a tenor is singing, one plays this passage an octave lower to avoid parallel fifths between voice and accompaniment."
+    },
+    {
+      "kind": "CELL",
+      "characters": 239,
+      "text": "2, 4, dim. 5, 7 and 9 are dissonances.\n1, 3, perfect 5, 6, 8 are consonances.\nGenerally dissonances are prepared and resolved down by step in a suspension, even though there are many exceptions.\nAny consonance may serve as the preparation."
+    },
+    {
+      "kind": "CELL",
+      "characters": 265,
+      "text": "In a suspended dissonance, the tied voice resolves by descending step to a consonance.\nThe resolution must be in the same voice, regardless of whether it is in the bass, a middle voice, or the top voice.\nResolutions to a unison are not good because a voice is lost."
+    },
+    {
+      "kind": "CELL",
+      "characters": 186,
+      "text": "In certain sequences with 7th chords, the 5 must be omitted, unless you play with 5 voices.\nOne re-articulates the right hand as needed depending on the circumstances of the performance."
+    },
+    {
+      "kind": "CELL",
+      "characters": 316,
+      "text": "Accidentals over a bass note indicate a change of harmony.\nThe right hand may ascend higher than f2 if the bass ascends unusually high or modern clefs are used.\nThe dim. 5 is not always indicated in a 6/3 chord, although it should be.\nThe dim. 5 requires the 3 and 6.\nThe aug. 5 resolves up in a non-standard manner."
+    },
+    {
+      "kind": "CELL",
+      "characters": 159,
+      "text": "The right hand may be more active when the solo voice rests.\nCross relations (i.e., augmented relationships), though prohibited, are popular, yet best avoided."
+    },
+    {
+      "kind": "CELL",
+      "characters": 157,
+      "text": "The 6/3 chord on the second bass degree often takes a 4, even if not indicated.\nOne should be cautious about doubling the bass of a 6/3 in the highest voice."
+    },
+    {
+      "kind": "CELL",
+      "characters": 173,
+      "text": "Chords over a pedal point are often unfigured.\nLong pedal points in the bass may be rearticulated.\nThe right hand may rest in order to make a low pitch in the voice audible."
+    },
+    {
+      "kind": "CELL",
+      "characters": 244,
+      "text": "Parallel fifths are allows as long as one or both of the fifths are diminished.\nSome prefer not to end with the fifth on top, but this is fine.\nAn aug. 2nd takes a 6 and aug. 4th.\nBass resolutions can be rationalized via an inversion of voices."
+    },
+    {
+      "kind": "CELL",
+      "characters": 85,
+      "text": "Accompanists would do well to listen more.\nThe 4 may enter unprepared in a 6/4 chord."
+    },
+    {
+      "kind": "CELL",
+      "characters": 103,
+      "text": "Parallel fifths arising between ornamental pitches in the voice part and the accompaniment are allowed."
+    },
+    {
+      "kind": "CELL",
+      "characters": 250,
+      "text": "Dissonant pitches in the bass of an Alberti-bass figuration should not be doubled in the right hand, except in a middle voice; otherwise parallel octaves occur.\nIf the hands come too close together, either drop a voice or leap up with the right hand."
+    },
+    {
+      "kind": "CELL",
+      "characters": 83,
+      "text": "The right hand may sustain over bass arpeggios.\nGenerally, the simpler, the better."
+    },
+    {
+      "kind": "CELL",
+      "characters": 84,
+      "text": "The right hand may play with the bass or may play a chord during a rest in the bass."
+    },
+    {
+      "kind": "CELL",
+      "characters": 137,
+      "text": "Necessity may require a five-voice chord.\nParallel fifths with the vocal part are excusable if the accompanist cannot see the vocal part."
+    },
+    {
+      "kind": "CELL",
+      "characters": 79,
+      "text": "Comfort of the right hand has priority over a rule of only moderate importance."
+    },
+    {
+      "kind": "CELL",
+      "characters": 60,
+      "text": "With multiple dim. 5ths, each one must be resolved properly."
+    },
+    {
+      "kind": "CELL",
+      "characters": 100,
+      "text": "The progression p5 to dim. 5 is allowed in the outer parts. \nDim. 5 may not proceed to an aug. 5th. "
+    },
+    {
+      "kind": "CELL",
+      "characters": 217,
+      "text": "Parallel octaves and fifths between the right hand and the solo voice can be tolerated.\nA passing seventh may be played when the bass ascends by fourth or descends by fifth, even if it is not indicated in the figures."
+    },
+    {
+      "kind": "CELL",
+      "characters": 225,
+      "text": "An augmented unison is rare, and is usually indicated as an augmented octave, rather than a unison.\nOne must distinguish between intervals that are enharmonically equivalent, such as the augmented unison and the minor second."
+    },
+    {
+      "kind": "CELL",
+      "characters": 196,
+      "text": "If playing from a score containing the solo voice, the accompanist may play additional figures not indicated in the score in order to better harmonize passing and neighbor notes in the solo voice."
+    },
+    {
+      "kind": "CELL",
+      "characters": 191,
+      "text": "If 2 occurs over a bass pedal, add 7/4.\nAn augmented 4 takes 6/2, but a perfect 4 takes 8/5.\nA 6/4 chord takes the 8.\n7/4/2 occurs often in recitatives. Take care that the 7 resolves upwards."
+    },
+    {
+      "kind": "CELL",
+      "characters": 134,
+      "text": "An augmented second is enharmonically equivalent to a minor third. \nA diminished fourth is enharmonically equivalent to a major third."
+    },
+    {
+      "kind": "CELL",
+      "characters": 264,
+      "text": "A diminished fourth is generally placed between two middle voices.\nAn augmented third is enharmonically equivalent with a perfect fourth.\nWhether or not augmented and diminished intervals are indeed allowed, the reality is that one needs to know how to treat them."
+    },
+    {
+      "kind": "CELL",
+      "characters": 143,
+      "text": "A diminished fifth is enharmonically equivalent with an augmented fourth.\nA perfect fifth is enharmonically equivalent with a diminished sixth."
+    },
+    {
+      "kind": "CELL",
+      "characters": 137,
+      "text": "A minor sixth is enharmonically equivalent with an augmented fifth.\nA major sixth is enharmonically equivalent with a diminished seventh."
+    },
+    {
+      "kind": "CELL",
+      "characters": 140,
+      "text": "A minor seventh is enharmonically equivalent with an augmented sixth.\nA major seventh is enharmonically equivalent with a diminished octave."
+    },
+    {
+      "kind": "CELL",
+      "characters": 68,
+      "text": "An augmented octave is enharmonically equivalent with a minor ninth."
+    },
+    {
+      "kind": "CELL",
+      "characters": 252,
+      "text": "A second and a ninth indicate the same note, but differ in that the second is used when the bass resolves, and the ninth is used when the upper voice resolves.\nThe major ninth is enharmonically equivalent to a diminished third, which some call a tenth."
+    },
+    {
+      "kind": "CELL",
+      "characters": 51,
+      "text": "Many diminished intervals make a strong impression."
+    },
+    {
+      "kind": "CELL",
+      "characters": 309,
+      "text": "In an aria, the left hand does not re-strike a held bass pitch if the harmony is dissonant, but may do so if the harmony is consonant. \nIn opera, one plays the cadence with the singer; in cantatas, one plays it afterwards.\nOne may accompany in the full-voiced style with many three or four notes in each hand."
+    },
+    {
+      "kind": "CELL",
+      "characters": 261,
+      "text": "It is doubtful whether thoroughbass may be played without any figures at all.\nIf the bass descends a minor third, followed by an ascending half step, then one plays a 6/3 on the first note.\nOften a 6/3 chord allows for the addition of a diminished or perfect 5."
+    },
+    {
+      "kind": "CELL",
+      "characters": 213,
+      "text": "Passagework should be avoided in recitatives.\nOne should only arpeggiate on the harpsichord; on the organ one strikes all notes simultaneously.\nThe faster and shorter the arpeggio, the better it is for the singer."
+    },
+    {
+      "kind": "CELL",
+      "characters": 90,
+      "text": "When the bass descends by half step to a 5/3 chord, the first bass note takes a 6/3 chord."
+    },
+    {
+      "kind": "CELL",
+      "characters": 225,
+      "text": "A falling fifth in the bass at the cadence requires a major third on the first note. Alternatively, it may be figured with 6/4-5/3.\n6/3 may substitute for 6/5.\nIf the bass descends by step and is figured with 2, then add 6/4."
+    },
+    {
+      "kind": "CELL",
+      "characters": 311,
+      "text": "4/3 takes the 6. Whether this 6 is major or minor requires a good ear.\nSometimes a figure is necessary as the preparation of the following dissonance.\nThe diminished 5 requires the 6.\n9 requires 5/3, but 9/6 requires only 3.\n9/4 takes 5.\nSometimes accidentals are unfigured and must be assumed based on the key."
+    },
+    {
+      "kind": "CELL",
+      "characters": 274,
+      "text": "The right hand moves as little as possible.\nThe range of the right hand is about b-e2 (in Aria 11 he says f2, however).\nA slash indicates that the upper voices remain held. \nIn a 6/3 chord one most often doubles the 6 or 3; if this is uncomfortable, one may double the bass."
+    },
+    {
+      "kind": "CELL",
+      "characters": 172,
+      "text": "The accompaniment need not have an interesting soprano line.\nThe accompaniment may double the vocal line at the unison.\nThe accompaniment may go higher than the vocal line."
+    },
+    {
+      "kind": "CELL",
+      "characters": 351,
+      "text": "Sometimes a 6 must be added to a diminished 5th, even though the 6 is not figured. This is the case if the bass ascends by step.\nWhen playing a chord over a rest in the bass, be sure to determine whether the previous or following bass note determines the harmony.\nWith unfigured or sparsely figured basses, the best rule is to listen to the solo part."
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 4
+  }
+}

@@ -1,0 +1,30 @@
+# REUSE (reuse.software) per-directory licensing declarations.
+# The dumps under proto/ and the documents under fixtures/ must not be
+# edited (byte-fidelity is load-bearing), so their licensing is declared
+# here instead of via in-file headers. See THIRD-PARTY-NOTICES.md for
+# the full story of each block.
+version = 1
+
+[[annotations]]
+path = "proto/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Recovered iWork schema descriptors — no copyright claimed by this project; redistributed from MIT-licensed publications by Sean Patrick O'Brien (2013) and Jon Connell (2021). See THIRD-PARTY-NOTICES.md."
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "fixtures/tika-*"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Apache Tika test documents — see fixtures/ATTRIBUTION.md"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "fixtures/libetonyek-*"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "libetonyek test documents — see fixtures/ATTRIBUTION.md"
+SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
+path = "fixtures/**"
+precedence = "closest"
+SPDX-FileCopyrightText = "Redistributed test documents — per-file provenance in fixtures/ATTRIBUTION.md"
+SPDX-License-Identifier = "Apache-2.0 OR MPL-2.0"

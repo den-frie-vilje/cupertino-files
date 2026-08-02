@@ -1,0 +1,71 @@
+# The same guards a local `npm test` enforces, run where nobody can forget
+# them. The suite executes TypeScript directly via Node's type stripping, so
+# CI needs Node ≥ 22.18 even though the *built* package supports ≥ 18 — the
+# engines field describes consumers of dist/, this matrix describes
+# developers of src/.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.x", "24.x"]
+    name: node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      # 549 tests, including the repository guards: coverage:check,
+      # conformance:check, harvest:check and privacy:check run inside the
+      # suite, so generated docs and fixtures cannot drift silently.
+      - run: npm test
+
+  guards:
+    # The measured-honesty ratchets that live outside the test runner:
+    # schemas in sync with their vendored table, required fields present,
+    # authored archives shaped like Apple's within the recorded budget.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: npm
+      - run: npm ci
+      - run: npm run proto:check
+      - run: npm run proto:embed:check
+      - run: npm run required:check
+      - run: npm run shape:check
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The artifact a publish would ship, checked on every change: the
+      # files whitelist, the bin entry, and the notices all resolve.
+      - run: npm pack --dry-run

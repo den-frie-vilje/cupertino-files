@@ -1,0 +1,829 @@
+{
+  "file": "picodocs-v14.4-headers-tables.pages",
+  "sha1": "e6312278470581b558749aaf031f8b30360a25df",
+  "app": "pages",
+  "fileFormatVersion": "14.4.1",
+  "objects": 1095,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 85
+    },
+    {
+      "name": "Index/ViewState-1739486.iwa",
+      "objects": 12
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 162
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732820-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732821-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732822-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732823-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732824-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732825-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732826-2.iwa",
+      "objects": 37
+    },
+    {
+      "name": "Index/Tables/DataList-1732827-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732828-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732829-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1732910-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732911-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732912-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732913-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732915-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732916-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732917-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732918-2.iwa",
+      "objects": 49
+    },
+    {
+      "name": "Index/Tables/DataList-1732919-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732920-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732921-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1732965-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732966-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732967-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732968-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732969-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732970-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732971-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732972-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732973-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732974-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732975-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732976-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1732977-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732978-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732979-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732980-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732981-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732982-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732983-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732984-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732985-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732986-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732987-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1732988-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733045-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733046-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733055-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733056-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733057-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733081-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733082-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733083-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733092-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733093-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733094-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737200.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737201.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737202.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737203.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1737205.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737206.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737208.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737210.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737215.iwa",
+      "objects": 13
+    },
+    {
+      "name": "Index/Tables/DataList-1737217.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737221.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737222.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737231.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737253.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737284.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737288.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737332.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1737409.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737410.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737411.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737412.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737413.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737414.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737415.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737416.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737417.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737418.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737419.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737420.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1738480.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 644
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 4
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 1430,
+      "text": "Representative Import Fixture for Apple Pages\nThis document is intentionally ordinary: it is meant to be opened in Apple Pages and saved as a native .pages file for importer tests.\n1. Body text and inline formatting\nPurpose. Use this fixture to validate basic text extraction, paragraph ordering, character runs, and style preservation. It includes bold, italic, underlined, and code-like text: let importer = PagesImporter().\nUnicode coverage: café, naïve, coöperate, emojis 🚀 ✅, smart quotes “like this”, em dash —, non-breaking spaces, and CJK text: 日本語・中文・한국어.\n2. Lists\nPlain paragraph before list should remain separate.\nFirst unordered item with a longer line that wraps naturally.\nSecond unordered item with punctuation: a/b, 10–20%, $1,234.56.\nFirst ordered item\nSecond ordered item\nThird ordered item with nested-looking text: 1.1 not actually nested\n3. Table\nThe table has a header row, mixed alignment, empty cells, currency-like text, and multiline text.\n￼\n4. Link and image\nExternal link: Apple Developer Documentation — useful for checking URL extraction.\n￼\nFigure 1. Embedded chart image generated for this fixture.\n\u00045. Landscape section and wider table\nThis page checks section handling, orientation, headers/footers, and wide tables after Pages conversion.\n￼\n6. Dates and formula\nThis page checks dates and formula\n￼\n7. End marker\nEND_OF_PAGES_IMPORT_FIXTURE — use this marker to verify full-document extraction."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 50,
+      "text": "Apple Pages Import Fixture • generated source DOCX"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 90,
+      "text": "Fixture coverage: headings, styles, lists, table, image, link, section break, unicode text"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 17,
+      "text": "Landscape section"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 14,
+      "text": "End of fixture"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "CELL",
+      "characters": 7,
+      "text": "Feature"
+    },
+    {
+      "kind": "CELL",
+      "characters": 15,
+      "text": "Expected import"
+    },
+    {
+      "kind": "CELL",
+      "characters": 12,
+      "text": "Sample value"
+    },
+    {
+      "kind": "CELL",
+      "characters": 5,
+      "text": "Notes"
+    },
+    {
+      "kind": "CELL",
+      "characters": 9,
+      "text": "Paragraph"
+    },
+    {
+      "kind": "CELL",
+      "characters": 12,
+      "text": "Text + style"
+    },
+    {
+      "kind": "CELL",
+      "characters": 9,
+      "text": "Heading 1"
+    },
+    {
+      "kind": "CELL",
+      "characters": 22,
+      "text": "Preserve reading order"
+    },
+    {
+      "kind": "CELL",
+      "characters": 5,
+      "text": "Image"
+    },
+    {
+      "kind": "CELL",
+      "characters": 12,
+      "text": "Binary asset"
+    },
+    {
+      "kind": "CELL",
+      "characters": 12,
+      "text": "PNG 1000×520"
+    },
+    {
+      "kind": "CELL",
+      "characters": 42,
+      "text": "Alt text may or may not survive conversion"
+    },
+    {
+      "kind": "CELL",
+      "characters": 9,
+      "text": "Hyperlink"
+    },
+    {
+      "kind": "CELL",
+      "characters": 10,
+      "text": "URL target"
+    },
+    {
+      "kind": "CELL",
+      "characters": 27,
+      "text": "https://developer.apple.com"
+    },
+    {
+      "kind": "CELL",
+      "characters": 26,
+      "text": "External link relationship"
+    },
+    {
+      "kind": "CELL",
+      "characters": 10,
+      "text": "Empty cell"
+    },
+    {
+      "kind": "CELL",
+      "characters": 25,
+      "text": "Importer should not crash"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column A"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column B"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column C"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column D"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column E"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column F"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C1"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C2"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C3"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C4"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C5"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R1C6"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C1"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C2"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C3"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C4"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C5"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R2C6"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C1"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C2"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C3"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C4"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C5"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "R3C6"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column B"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column C"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column D"
+    },
+    {
+      "kind": "CELL",
+      "characters": 7,
+      "text": "Items 2"
+    },
+    {
+      "kind": "CELL",
+      "characters": 5,
+      "text": "Total"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Column A"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 2,
+    "paragraphs": 28
+  }
+}

@@ -1,0 +1,366 @@
+{
+  "file": "numbers-parser-v14.4-issue102.numbers",
+  "sha1": "87c4927e2305d02d8badcb30dd172a08f81a9b16",
+  "app": "numbers",
+  "fileFormatVersion": "14.4.1",
+  "objects": 667,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine-905088.iwa",
+      "objects": 55
+    },
+    {
+      "name": "Index/Tables/Tile-1123820.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123821.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123822.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123823.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123824.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123825.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123826.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123827.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123828.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123829.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123830.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123831.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1123911.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123912.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123913.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123914.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123915.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123916.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123917.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123918.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123919.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123920.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123921.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123922.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1123983.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1123984.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123985.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1123995.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1123996.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1123997.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 513
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-905087.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Cats",
+        "tables": [
+          {
+            "name": "Cats",
+            "rows": 7,
+            "columns": 11,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Cats"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "2001-11-15T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "2002-02-13T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "2002-05-14T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "2002-08-12T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "2002-11-10T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "2003-02-08T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "2003-05-09T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 9,
+                "v": "2003-08-07T00:00:00.000Z"
+              },
+              {
+                "r": 1,
+                "c": 10,
+                "v": "2003-11-05T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Test"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Cheetah"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Lion"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "100"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Leopard"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 9,
+                "v": "100"
+              },
+              {
+                "r": 4,
+                "c": 10,
+                "v": "100"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "Tabby"
+              },
+              {
+                "r": 5,
+                "c": 9,
+                "v": "100"
+              },
+              {
+                "r": 5,
+                "c": 10,
+                "v": "100"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "TOTAL:"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "1500"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
