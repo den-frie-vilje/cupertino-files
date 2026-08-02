@@ -23,7 +23,6 @@ import { RawMessage } from "../base/protobuf.ts";
 import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
 import { typeName, type IWorkApp } from "./registry.ts";
-import { drawableParent } from "../tsd/schema.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -49,6 +48,19 @@ const PACKAGE_METADATA_TYPE = 11006;
 
 /** Extracts the object identifiers referenced by a message of a known type. */
 export type ReferenceExtractor = (message: RawMessage) => bigint[];
+
+/**
+ * The container an archive points back at, if its type has one — the
+ * drawable `parent` rule, injected from the layer that knows drawables.
+ *
+ * The store needs the *concept* (a created object's generic reference scan
+ * must subtract the back-edge Apple never declares) without knowing any
+ * family's types; `tsa` wires in the TSD implementation the same way it
+ * wires reference extractors. The persistence layer importing upward into
+ * `tsd` is how this was first shipped, and the layering test now forbids
+ * exactly that.
+ */
+export type ContainerParentResolver = (type: number, message: RawMessage) => bigint | undefined;
 
 export class Component {
   /** Canonical zip path, e.g. "Index/Document.iwa". */
@@ -114,6 +126,7 @@ export class ObjectStore {
   readonly app: IWorkApp;
   private readonly index = new Map<bigint, { obj: IwaObject; component: Component }>();
   private readonly refExtractors: ReadonlyMap<number, ReferenceExtractor>;
+  private readonly containerParentOf: ContainerParentResolver;
   private nextId: bigint | undefined;
   /**
    * Objects this library created, as opposed to ones Apple wrote.
@@ -126,11 +139,16 @@ export class ObjectStore {
 
   constructor(
     container: IWorkContainer,
-    options: { app?: IWorkApp; referenceExtractors?: ReadonlyMap<number, ReferenceExtractor> } = {},
+    options: {
+      app?: IWorkApp;
+      referenceExtractors?: ReadonlyMap<number, ReferenceExtractor>;
+      containerParentOf?: ContainerParentResolver;
+    } = {},
   ) {
     this.container = container;
     this.app = options.app ?? "pages";
     this.refExtractors = options.referenceExtractors ?? new Map();
+    this.containerParentOf = options.containerParentOf ?? (() => undefined);
     for (const [name, bytes] of container.iwaFiles) {
       const component = new Component(name, bytes);
       this.components.push(component);
@@ -512,7 +530,7 @@ export class ObjectStore {
         // declaration of the image it masks and each shape a declaration of
         // its group. Subtracted here rather than by teaching the scan about
         // supers, because the scan is deliberately shape-blind.
-        const container = drawableParent(obj.type, obj.message);
+        const container = this.containerParentOf(obj.type, obj.message);
         const refs = extractor
           ? dedupe(extractor(obj.message))
           : this.created.has(obj.identifier)

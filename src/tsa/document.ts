@@ -11,6 +11,7 @@
  * round-trip untouched. This is the same posture the apps themselves take
  * (forward-compatible readers, additive schema evolution).
  */
+import { drawableParent } from "../tsd/schema.ts";
 import { IWorkContainer } from "../tsp/package.ts";
 import { ObjectStore, type ReferenceExtractor } from "../tsp/store.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -33,7 +34,7 @@ import {
   type CompatibilityReport,
   type IWorkEra,
 } from "../tsp/version.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "./extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
@@ -132,7 +133,12 @@ export class IWorkDocument {
     extractors: ReadonlyMap<number, ReferenceExtractor>,
   ): { container: IWorkContainer; store: ObjectStore } {
     const container = IWorkContainer.fromBytes(bytes);
-    const store = new ObjectStore(container, { app, referenceExtractors: extractors });
+    const store = new ObjectStore(container, {
+      app,
+      referenceExtractors: extractors,
+      // The drawable parent rule, injected so tsp never imports a family.
+      containerParentOf: drawableParent,
+    });
     return { container, store };
   }
 

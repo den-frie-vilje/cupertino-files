@@ -5,7 +5,7 @@
  * text/stylesheet/drawable machinery, sheet enumeration and round-trip save.
  */
 import { IWorkDocument } from "../tsa/document.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";

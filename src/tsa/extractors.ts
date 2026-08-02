@@ -2,8 +2,14 @@
  * Composition of the per-family reference extractors — the registry the
  * ObjectStore consults to recompute MessageInfo.object_references for dirty
  * objects. App layers extend this with their own types.
+ *
+ * Lives in `tsa`, not `tsp`, on purpose: the store knows *that* extractors
+ * exist and is handed a map of them; which families contribute is
+ * application-level wiring. Keeping the composition here is what lets the
+ * persistence layer stay ignorant of every family above it — the layering
+ * test holds `tsp` to that.
  */
-import type { ReferenceExtractor } from "./store.ts";
+import type { ReferenceExtractor } from "../tsp/store.ts";
 import { TSWP_REFERENCE_EXTRACTORS } from "../tswp/schema.ts";
 import { TSS_REFERENCE_EXTRACTORS } from "../tss/schema.ts";
 import { TSD_REFERENCE_EXTRACTORS } from "../tsd/schema.ts";

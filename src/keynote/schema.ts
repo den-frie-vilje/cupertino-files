@@ -10,7 +10,6 @@
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 
 export const KN_TYPE = {
   DOCUMENT: 1,
@@ -177,9 +176,14 @@ const noteExtractor: ReferenceExtractor = (m) => {
   return out;
 };
 
-/** Shared extractors plus the KN types this library mutates. */
-export const KEYNOTE_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
-  ...SHARED_REFERENCE_EXTRACTORS,
+/**
+ * The KN types this library mutates. Family-local on purpose: schema leaves
+ * are importable from every layer, so this map must not pull in the shared
+ * composition — `keynote/document.ts` merges it with
+ * `SHARED_REFERENCE_EXTRACTORS`, exactly as `tsa/extractors.ts` merges the
+ * shared families' own leaf maps.
+ */
+export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
   [KN_TYPE.SLIDE, slideExtractor],
   [KN_TYPE.SLIDE_LEGACY_MASTER, slideExtractor],
   [KN_TYPE.SLIDE_NODE, slideNodeExtractor],

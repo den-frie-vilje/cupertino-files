@@ -33,9 +33,10 @@ import { RawMessage } from "../base/protobuf.ts";
 import { imageDimensions } from "../base/imagesize.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
-import type { ObjectStore } from "../tsp/store.ts";
+import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import {
-  PAGES_REFERENCE_EXTRACTORS,
+  TP_REFERENCE_EXTRACTORS,
   Section,
   SectionTemplate,
   SettingsFields,
@@ -47,6 +48,12 @@ import {
   DrawableEntry,
   DrawablesZOrder,
 } from "./schema.ts";
+
+/** Shared-family extractors plus the TP types this document mutates. */
+const PAGES_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
+  ...SHARED_REFERENCE_EXTRACTORS,
+  ...TP_REFERENCE_EXTRACTORS,
+]);
 
 export interface PageSetup {
   pageWidth: number | undefined;

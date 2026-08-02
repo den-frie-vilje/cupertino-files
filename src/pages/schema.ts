@@ -10,7 +10,6 @@
 import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
-import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
 
 export const TP_TYPE = {
   DOCUMENT: 10000,
@@ -150,9 +149,14 @@ const sectionTemplateExtractor: ReferenceExtractor = (m) => {
   return out;
 };
 
-/** Shared extractors plus the TP types this library mutates. */
-export const PAGES_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
-  ...SHARED_REFERENCE_EXTRACTORS,
+/**
+ * The TP types this library mutates. Family-local on purpose: schema leaves
+ * are importable from every layer, so this map must not pull in the shared
+ * composition — `pages/document.ts` merges it with
+ * `SHARED_REFERENCE_EXTRACTORS`, exactly as `tsa/extractors.ts` merges the
+ * shared families' own leaf maps.
+ */
+export const TP_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
   [TP_TYPE.SECTION, sectionExtractor],
   [TP_TYPE.SECTION_TEMPLATE, sectionTemplateExtractor],
 ]);

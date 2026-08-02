@@ -18,10 +18,11 @@ import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
-import type { ObjectStore } from "../tsp/store.ts";
+import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
+import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import {
   AnimationAttributes,
-  KEYNOTE_REFERENCE_EXTRACTORS,
+  KN_REFERENCE_EXTRACTORS,
   KN_TYPE,
   KNDocument,
   NO_TRANSITION_EFFECT,
@@ -35,6 +36,12 @@ import {
   TransitionAttributes,
 } from "./schema.ts";
 import { buildsOfSlide, removeBuild, BuildModel } from "./builds.ts";
+
+/** Shared-family extractors plus the KN types this document mutates. */
+const KEYNOTE_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
+  ...SHARED_REFERENCE_EXTRACTORS,
+  ...KN_REFERENCE_EXTRACTORS,
+]);
 
 /** TSWP.ShapeInfoArchive.deprecated_storage, still present in older files. */
 const SHAPE_DEPRECATED_STORAGE = 2;
