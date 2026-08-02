@@ -24,6 +24,22 @@ export const TP_TYPE = {
 } as const;
 
 /** TP.DocumentArchive. */
+/**
+ * `TP.ThemeArchive`, and the list the paragraph-style panel reads.
+ *
+ * The style list is an extension on `TSS.ThemeArchive` at field 110, whose
+ * field 7 holds one reference per listed paragraph style. Measured in all
+ * 19 Pages fixtures: always present, always field 7, and the entries are
+ * exactly the names the app shows.
+ */
+export const ThemeArchive = {
+  SUPER: 1,
+  PARAGRAPH_STYLE_LIST: 110,
+  LIST_ENTRIES: 7,
+  /** Object titles and captions live in their own list. */
+  OBJECT_STYLE_LIST: 210,
+} as const;
+
 export const TPDocument = {
   STYLESHEET: 2,
   FLOATING_DRAWABLES: 3,

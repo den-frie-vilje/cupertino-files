@@ -259,6 +259,59 @@ describe("a named paragraph style is one the app will list", () => {
     }
   });
 
+  it("joins the theme's style list, which is what the panel reads", () => {
+    // The stylesheet is not the panel. The panel reads
+    // TP.ThemeArchive.super.110.7, present in all 19 Pages fixtures and
+    // holding exactly the names the app shows. A style can have a name, an
+    // identifier, a map entry and both property bags — enough that Pages
+    // prefills its name when you add the style by hand — and still not be
+    // listed until it is in here.
+    const THEME = 10001;
+    const themeList = (doc: PagesDocument): string[] => {
+      for (const { obj } of doc.store.allObjects()) {
+        if (obj.type !== THEME) continue;
+        const list = obj.message.getMessage(1)?.getMessage(110);
+        return (list?.getMessages(7) ?? []).map((r) => {
+          const id = r.getUint(1);
+          if (id === undefined) return "?";
+          return doc.store.resolve(BigInt(id))?.message.getMessage(SUPER)?.getString(1) ?? "?";
+        });
+      }
+      return [];
+    };
+
+    const before = themeList(PagesDocument.load(BASE));
+    expect(before.length > 0).toBe(true);
+
+    const doc = PagesDocument.load(BASE);
+    doc.createParagraphStyle({ name: "Panel Style" });
+    const after = themeList(PagesDocument.load(doc.save()));
+    expect(`${after.length}: ${after.includes("Panel Style")}`).toBe(
+      `${before.length + 1}: true`,
+    );
+    // Appended, not replacing: the document's own styles must survive.
+    expect(after.slice(0, before.length).join(",")).toBe(before.join(","));
+  });
+
+  it("declares the style so the theme's reference is not dangling", () => {
+    // The theme lives in Document.iwa and the style in
+    // DocumentStylesheet.iwa, so this is a cross-component reference and
+    // has to be declared. An undeclared one is how an app decides a
+    // document is damaged.
+    const doc = PagesDocument.load(BASE);
+    const id = doc.createParagraphStyle({ name: "Declared Style" });
+    const saved = PagesDocument.load(doc.save());
+    for (const { obj } of saved.store.allObjects()) {
+      if (obj.type !== 10001) continue;
+      const declared = obj.getObjectReferences().map(String);
+      const style = findByName(saved, "Declared Style")!;
+      expect(`theme declares the style: ${declared.includes(String(style.identifier))}`).toBe(
+        "theme declares the style: true",
+      );
+    }
+    expect(id > 0n).toBe(true);
+  });
+
   it("leaves an unnamed style anonymous", () => {
     // An override created for one range is not a style anyone should see in
     // the panel, so it must not acquire an identifier.

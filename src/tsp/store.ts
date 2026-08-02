@@ -461,6 +461,27 @@ export class ObjectStore {
   }
 
   /**
+   * Declare that `referrer` now points at `id`, adding the cross-component
+   * bookkeeping if the two live apart.
+   *
+   * {@link retargetReference} covers "this reference moved"; this covers
+   * "there is one more of them", which is what adding an entry to a list
+   * inside an existing archive needs. Both matter for the same reason: an
+   * undeclared reference into another component is how an app decides a
+   * document is damaged.
+   */
+  declareReference(referrer: IwaObject, id: bigint): void {
+    const declared = new Set(referrer.getObjectReferences());
+    if (!declared.has(id)) {
+      declared.add(id);
+      referrer.setObjectReferences([...declared]);
+    }
+    const from = this.componentOf(referrer.identifier);
+    const to = this.componentOf(id);
+    if (from && to && from !== to) this.ensureExternalReference(from, to, id);
+  }
+
+  /**
    * Serialize the document. Recomputes reference bookkeeping for dirty
    * objects, then rebuilds only the components that changed.
    */

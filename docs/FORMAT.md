@@ -1377,6 +1377,27 @@ does not list it.
 Character styles are the counter-case that stops this being a blanket rule:
 they carry no paragraph bag at all.
 
+And registration in the stylesheet is still not the panel. The paragraph
+style list the app shows lives on the **theme**:
+`TP.ThemeArchive.super.110.7`, an extension field holding one reference per
+listed style. Present in all 19 Pages fixtures, always field 7, and its
+contents are exactly the panel's entries — localised with the document, so a
+German template lists Titel and Überschrift. Its length tracks what the user
+sees: twelve in a stock document, 35 and 61 in the two imported from Word
+with their own styles. Object titles and captions have their own list at
+`210.1`.
+
+So four things are needed before a created style is a style anyone can pick:
+
+1. `super.name`
+2. `super.identifier`, matched by an `identifier_to_style_map` entry
+3. both property bags, `[1, 10, 11, 12]`
+4. a reference in the theme's list
+
+The first three are enough to make it apply correctly and report its name —
+Pages will prefill that name when you go to add the style by hand — and
+without the fourth it never appears in the list.
+
 #### A paragraph does not end only at `\n`
 
 `table_para_style` maps character offsets to paragraph styles, and an entry

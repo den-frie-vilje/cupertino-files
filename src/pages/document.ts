@@ -39,6 +39,7 @@ import {
   SectionTemplate,
   SettingsFields,
   TP_TYPE,
+  ThemeArchive,
   TPDocument,
   FloatingDrawables,
   PageGroup,
@@ -365,13 +366,49 @@ export class PagesDocument extends IWorkDocument {
     return out;
   }
 
+  /**
+   * Create a paragraph style and list it in the document's style panel.
+   *
+   * Being in the stylesheet is not what puts a style in the panel. The
+   * panel reads the **theme's** own list: `TP.ThemeArchive.super.110.7`,
+   * present in all 19 Pages fixtures here and holding exactly the names the
+   * app shows — Title, Subtitle, Heading, Body, Caption and the rest,
+   * localised where the document is. Its length tracks what the user sees:
+   * twelve in a stock document, 35 and 61 in the two that were imported
+   * from Word with their own styles.
+   *
+   * Everything else was necessary and not sufficient. A style needs a name,
+   * an identifier, an `identifier_to_style_map` entry and both property
+   * bags before it will apply correctly and report its own name — Pages
+   * will even prefill that name when you go to add the style by hand — and
+   * with all four it still does not appear in the list until it is in here.
+   */
   createParagraphStyle(options: {
     name: string;
     basedOn?: string | bigint;
     character?: CharacterFormatting;
     paragraph?: ParagraphFormatting;
   }): bigint {
-    return this.stylesheet.createParagraphStyle(options);
+    const id = this.stylesheet.createParagraphStyle(options);
+    if (options.name !== undefined) this.listInThemeStyles(id);
+    return id;
+  }
+
+  /** Append a paragraph style to the theme's panel list. */
+  private listInThemeStyles(styleId: bigint): void {
+    const theme = this.store.resolve(refId(this.docObject.message, TPDocument.THEME));
+    if (!theme) return;
+    const sup = theme.message.getMessage(ThemeArchive.SUPER);
+    const list = sup?.getMessage(ThemeArchive.PARAGRAPH_STYLE_LIST);
+    if (!sup || !list) return; // a theme without the list is not one we can extend
+    list.addMessage(ThemeArchive.LIST_ENTRIES, makeRef(styleId));
+    sup.setMessage(ThemeArchive.PARAGRAPH_STYLE_LIST, list);
+    theme.message.setMessage(ThemeArchive.SUPER, sup);
+    theme.message.markDirty();
+    // The style lives in the stylesheet component and the theme does not,
+    // so the reference has to be declared or the app has a pointer into a
+    // component it was never told to open.
+    this.store.declareReference(theme, styleId);
   }
 
   private resolveParagraphStyle(style: string | bigint): bigint {
