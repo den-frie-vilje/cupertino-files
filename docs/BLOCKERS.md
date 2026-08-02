@@ -178,23 +178,26 @@ exactly one thing more than the one below, so whatever breaks names itself.
 A failure is worth more than a pass. `npm run test:e2e` covers "does it
 open" automatically.
 
-### Keynote: the ladder exists; nothing is app-checked yet
+### Keynote: the current-format ladder is fully app-confirmed
 
 ```sh
 npm run keynote:docs ~/Desktop/keynote-rungs   # v26-K00 … v26-K10, v14-K00 … v14-K10
 ```
 
-Eleven rungs, emitted against a current 26.1.0 deck and a 14.4.1
-upgrade-path deck: container round-trip, title, body, presenter notes,
-add/duplicate/remove/reorder slides, automatic advance, skipped slide,
-slide size. Every slide states its own pass criterion in its visible text.
+All eleven v26 rungs — container round-trip, title, body, presenter
+notes, add/duplicate/remove/reorder slides, automatic advance, skipped
+slide, slide size — are confirmed in Keynote on the current 26.1.0 base
+(K10 on Keynote for iOS). Six defects were found and fixed on the way,
+four by the offline `shape:audit` before any Mac saw a file (an inserted
+slide node the show never declared, orphaned clones, an undeclared guide
+storage, cloned placeholders declaring their slide) and two by the app
+itself (an added slide rendered empty because the copy's placeholders
+left the paint-order lists; a filled subtitle placeholder lost its style
+to a manufactured end-of-text table entry). Each has a regression test.
 
-**No Keynote-authored document has ever been opened in the app.** The
-first offline `shape:audit` of these rungs found and fixed four defects
-before any Mac was involved — an inserted slide node the show never
-declared, orphaned clones of the source's note and drawables, an
-undeclared guide storage, and cloned placeholders declaring their slide —
-which is reason for confidence in the method, not in the result.
+**The v14 upgrade-path set is unchecked.** Keynote converts a 14.4.1
+deck on open — a different code path from loading a native current one —
+and no rung has been through it.
 
 A named transition effect is deliberately not a rung: the corpus is
 unanimous that "none" is the only measured value, and the effect

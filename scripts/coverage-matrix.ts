@@ -1443,6 +1443,14 @@ export const CAPABILITIES: Capability[] = [
         "mean the lists were not the whole story). Duplicate, remove and reorder are already " +
         "confirmed — \"K05 passed / K06 passed / K07 passed\" — so only the add path is in question.",
       risk: "high",
+      settled:
+        "**Confirmed in Keynote — \"K05 passed / K06 passed / K07 passed\", then \"K02 and K04 pass " +
+        "now\".** Add, duplicate, remove and reorder all hold on the current-format base. It took " +
+        "two rounds of measurement: the offline audit removed four graph defects before any Mac " +
+        "(undeclared slide node, orphaned clones, undeclared guide storage, placeholders declaring " +
+        "their slide), and the app then exposed the fifth no threshold could see — stripping the " +
+        "paint-order lists on a deck that lists its placeholders there rendered the added slide " +
+        "empty. The copy now follows its source's own listing convention, and the app draws it.",
     },
   },
   {
@@ -1544,6 +1552,14 @@ export const CAPABILITIES: Capability[] = [
         "plain body text. Still-normal text means the terminator was not the (whole) cause, and the " +
         "next suspect is a character-level convention the app writes on placeholder text.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote — \"K02 and K04 pass now\"**, after one round each way. K01's title " +
+        "passed first contact; K02's body text rendered but lost its subtitle styling, because " +
+        "filling the base's *empty* storage misread its one paragraph entry at 0 (`0 === 0`) as a " +
+        "trailing terminator and manufactured an end-of-text entry Apple never writes. With the " +
+        "entries restored to exactly the paragraph starts, the subtitle style survives the fill — " +
+        "the app confirmed it, and the corpus settled the bystander question on the way: " +
+        "object-less inherit entries are Apple's own majority convention (2379 of 3416).",
     },
   },
   {
