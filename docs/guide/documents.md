@@ -1,12 +1,14 @@
 # Working with documents
 
-The README keeps the short version; this page is the fuller tour. Every
-API below follows the same conventions — see [API design](/guide/api-design).
+The fuller tour. Everything here follows the same few conventions — once
+you've used one part of the API, you've used them all
+([API design](/guide/api-design) explains the grammar).
 
 ## Text
 
-Every piece of text — body, headers, footers, table cells, speaker notes,
-text boxes — is a `TextStorage` with one editing model:
+All text is the same kind of thing. Body, headers, footers, table cells,
+speaker notes, text boxes — each is a `TextStorage`, with one editing
+model:
 
 ```ts
 const storage = doc.textStorages()[0];
@@ -104,7 +106,7 @@ engine, and a wrong answer would look exactly like a right one.
 ## Fields, comments, footnotes, bookmarks
 
 ```ts
-body.addComment(10, 20, "Please double-check this.");
+body.addComment(10, 20, "Looks great. Ship it.");
 body.addFootnote(30, "See the appendix.");
 footer.insertPageNumber(footer.text.length);
 body.insertLink(5, 12, "https://example.com");

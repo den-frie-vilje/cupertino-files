@@ -65,7 +65,8 @@ export default defineConfig({
     search: { provider: "local" },
     outline: { level: [2, 3] },
     footer: {
-      message: "MIT licensed. Not affiliated with or endorsed by Apple Inc.",
+      message:
+        "MIT licensed. Independently made — not by Apple in California. Not affiliated with or endorsed by Apple Inc.",
     },
     editLink: {
       pattern: "https://github.com/olekristensen/cupertino-files/edit/main/docs/:path",

@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: cupertino-files
-  text: Pages, Numbers and Keynote files in pure TypeScript
-  tagline: Read, inspect and edit Apple's document formats anywhere Node or a browser runs — zero dependencies, byte-fidelity round trips, and a format spec measured from real documents.
+  text: Pages, Numbers, and Keynote. In TypeScript.
+  tagline: Open, edit, and save Apple's document formats anywhere JavaScript runs. No Mac required. Nothing to install but the package. Every byte you don't touch is preserved, exactly.
   actions:
     - theme: brand
       text: Get started
@@ -18,20 +18,20 @@ hero:
 
 features:
   - icon: 📄
-    title: The whole stack, from bytes up
-    details: Snappy codec, protobuf wire layer, ZIP container, IWA archives, object store — and a typed document model on top. No Apple software, no native modules.
+    title: The whole stack
+    details: Snappy, protobuf, ZIP, IWA archives, the object graph — implemented from the bytes up, with a typed document model on top. You work with paragraphs and slides. The bytes take care of themselves.
   - icon: 🔁
-    title: Byte-fidelity round trips
-    details: Everything you don't touch is preserved byte-for-byte, unknown fields included — so documents from future app versions survive editing intact.
+    title: Round trips you can trust
+    details: Documents come back byte-for-byte wherever you didn't edit — including parts of the format nobody has met yet. Files from future app versions survive.
   - icon: 📏
     title: Measured, not guessed
-    details: Defaults and format rules come from a corpus of real Apple-written documents, and claims the test suite can't prove are verified in the apps themselves — or honestly marked until they are.
+    details: Every default and every format rule comes from real documents the apps wrote. When something hasn't been confirmed in Pages, Numbers, or Keynote yet, the docs say so — plainly.
   - icon: 🌍
-    title: Useful beyond TypeScript
-    details: A language-neutral conformance suite, recovered schema definitions with provenance, and a written spec — for C++, Java or Rust implementers too.
+    title: Beyond TypeScript
+    details: The format specification, a language-neutral conformance suite, and recovered schemas with full provenance. Building an importer in C++, Java, or Rust? Start here.
 ---
 
-## Sixty seconds
+## Say hello
 
 ::: code-group
 
@@ -39,22 +39,31 @@ features:
 npm install cupertino-files
 ```
 
-```ts [edit a Pages document]
+```ts [your first edit]
 import { readFileSync, writeFileSync } from "node:fs";
 import { PagesDocument } from "cupertino-files";
 
-const doc = PagesDocument.load(new Uint8Array(readFileSync("report.pages")));
+const doc = PagesDocument.load(new Uint8Array(readFileSync("Report.pages")));
 
+doc.appendParagraph("hello");   // the traditional first word
 doc.replaceText("2024", "2025");
-doc.appendParagraph("Conclusion", "Heading 1");
 doc.sections()[0].setHeaderText("Confidential");
 
-writeFileSync("report-2025.pages", doc.save());
+writeFileSync("Report 2025.pages", doc.save());
 ```
 
 :::
 
-Documents saved this way open in current Pages, Numbers and Keynote —
-which is not an assumption: it is checked, per feature, in the apps, and
-the [verification ledger](/VERIFICATION) shows exactly what has been
-confirmed and what hasn't yet.
+Open the result in Pages. It opens. That's not an assumption — it's
+checked feature by feature in the apps themselves, and the
+[verification ledger](/VERIFICATION) shows exactly what has been
+confirmed, in whose words, and what hasn't yet.
+
+## one more thing …
+
+This isn't only a library. It's the format, written down: a
+[specification](/FORMAT) measured from real documents, a
+[conformance suite](/guide/conformance) any implementation can test
+against, and the recovered schemas with their provenance. If you're
+building iWork support in another language — or another decade — the
+knowledge is yours too.

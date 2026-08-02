@@ -1,18 +1,18 @@
 # CLI
 
-The package ships `cupertino-dump`, a small inspector for looking inside
-any document without writing code:
+Sometimes you just want to look inside a document. `cupertino-dump` ships
+with the package — no code required:
 
 ```sh
-npx cupertino-dump info     file.pages     # versions, components, object counts
-npx cupertino-dump ls       file.pages     # every object with type names + references
-npx cupertino-dump text     file.pages     # extract text
-npx cupertino-dump styles   file.pages     # named styles
-npx cupertino-dump sections file.pages     # sections, headers, footers
-npx cupertino-dump compat   file.pages     # format era + compatibility report
-npx cupertino-dump object   file.pages 42  # pretty-print one object's protobuf
-npx cupertino-dump extract  file.pages out/  # decompressed .iwa streams
+npx cupertino-dump info     Report.pages     # versions, components, object counts
+npx cupertino-dump text     Report.pages     # the text, extracted
+npx cupertino-dump styles   Report.pages     # named styles
+npx cupertino-dump sections Report.pages     # sections, headers, footers
+npx cupertino-dump compat   Report.pages     # format era + compatibility report
+npx cupertino-dump ls       Report.pages     # every object, typed, with references
+npx cupertino-dump object   Report.pages 42  # one object's protobuf, pretty
+npx cupertino-dump extract  Report.pages out/  # the raw .iwa streams, decompressed
 ```
 
-`info` is also the fastest way to answer "which app version wrote this?"
-when filing an issue.
+Filing an issue? `info` answers the first question we'll ask — which app
+version wrote the document.

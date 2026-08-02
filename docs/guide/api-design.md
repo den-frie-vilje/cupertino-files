@@ -1,8 +1,8 @@
 # API design
 
-The public shape follows the conventions that pdf-lib, exceljs, docx and
-SheetJS converge on, so it reads like the libraries it sits beside in a
-`package.json`:
+Good tools feel familiar. The public shape follows the conventions that
+pdf-lib, exceljs, docx and SheetJS converge on, so it reads like the
+libraries it sits beside in a `package.json`:
 
 - **Static `load(bytes)` on each app class; instance `save(): Uint8Array`.**
   Bytes in, bytes out, no filesystem coupling — the one shape that behaves
