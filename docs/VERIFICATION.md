@@ -25,7 +25,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 |---:|---|---|---|---|
 | 1 | 🔴 high | Keynote → Builds (animations): read and retime | the build model reads a real animation correctly | manual |
 | 2 | 🔴 high | Numbers & tables → Cell styling (fill, four borders, padding, alignment, wrap) | A cell style we create is picked up by the app and rendered, and the style table stays consistent. | manual |
-| 3 | 🔴 high | Numbers & tables → Formula writing (authoring an AST) | Numbers computes what a formula we authored says, and does not report it as damaged. | manual |
+| 3 | 🔴 high | Numbers & tables → Formula writing (authoring an AST) | Numbers recalculates a formula this library wrote — replaced or fresh — rather than trusting the stale dependency tracker beside it. | manual |
 | 4 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
 | 5 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
 | 6 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
@@ -77,11 +77,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Numbers & tables  
 **Status in the matrix:** ⚠️ experimental
 
-**Claim.** Numbers computes what a formula we authored says, and does not report it as damaged.
+**Claim.** Numbers recalculates a formula this library wrote — replaced or fresh — rather than trusting the stale dependency tracker beside it.
 
-**Why the suite cannot settle it.** Round-tripping proves the writer and the renderer agree, which is real evidence but not the engine's opinion. Nothing offline can say whether the engine wants dependency records beside the AST that we are not writing.
+**Why the suite cannot settle it.** The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive lists exactly the formula cells, with precedent edges — measured on the issue102 fixture), and setFormula does not update it: a replaced formula keeps stale edges, and a fresh formula cell is missing from the tracker entirely. A same-text replace is proven byte-identical and needs no app check; whether the engine rebuilds the tracker on open, or trusts it, only Numbers can say.
 
-**How to settle it.** setFormula a few shapes — an arithmetic expression, a range SUM, an anchored reference — save, open in Numbers, and check the values recompute rather than showing an error.
+**How to settle it.** npm run bisect:docs -- <outDir>, then open rungs 19-21 in Numbers. Each file states its own pass and fail in a cell beside the formula; 21 is the decisive one — a fresh formula whose precedent you edit, which only recalculates if the engine noticed the new cell.
 
 ### 4. Sheets (add, duplicate, rename, move, remove)
 
