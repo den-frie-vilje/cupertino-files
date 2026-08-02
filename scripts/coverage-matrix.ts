@@ -402,6 +402,10 @@ export const CAPABILITIES: Capability[] = [
     note: "an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented",
     manualProof: {
       claim: "a page-number attachment this library inserts renders as a live number",
+      settled:
+        "**Confirmed in Pages.** A page number renders as a live field, and a page count updates " +
+        "when a page is inserted. A date field renders and is editable as a date. All three on a " +
+        "current-format document",
       why: "the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page",
       how: "insert a page number into a footer, open in Pages across a multi-page document, and confirm it counts up rather than showing a literal or a blank",
       risk: "medium",

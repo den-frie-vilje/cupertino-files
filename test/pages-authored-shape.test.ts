@@ -151,6 +151,62 @@ describe("editing text keeps the run tables in Apple's shape", () => {
   });
 });
 
+describe("a floating drawable has to be in the paint order to be drawn", () => {
+  const BASE = new Uint8Array(
+    readFileSync(new URL("patrickomatic-pages26-sections-masks.pages", FIXTURES)),
+  );
+  const ZORDER = 10015; // TP.DrawablesZOrderArchive
+
+  const paintOrder = (doc: PagesDocument): string[] => {
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== ZORDER) continue;
+      return obj.message.getMessages(1).map((e) => String(e.getUint(1) ?? 0));
+    }
+    return [];
+  };
+  const placedIds = (doc: PagesDocument): string[] => {
+    const out: string[] = [];
+    for (const page of doc.floatingDrawablePages()) {
+      for (const d of doc.floatingDrawables(page)?.drawables() ?? []) {
+        out.push(String((d as unknown as { object: { identifier: bigint } }).object.identifier));
+      }
+    }
+    return out;
+  };
+
+  it("adds a copy to the z-order, on the same page and on a new one", () => {
+    // A page group says which page a drawable belongs to. It does not say
+    // the document draws it: that is TP.DrawablesZOrderArchive, one per
+    // document. A drawable placed but missing from it does not appear at
+    // all, which is why copying onto the drawable's own page failed exactly
+    // as completely as copying onto a fresh page.
+    for (const offset of [0, 1]) {
+      const doc = PagesDocument.load(BASE);
+      const page = doc.floatingDrawablePages()[0]!;
+      const source = doc.floatingDrawables(page)!.drawables()[0]!;
+      doc.floatingDrawables(page + offset, { create: true })!.addCopyOf(source, { x: 20, y: 0 });
+
+      const saved = PagesDocument.load(doc.save());
+      const order = paintOrder(saved);
+      const missing = placedIds(saved).filter((id) => !order.includes(id));
+      expect(`offset ${offset} placed-but-unpainted: ${missing.join(",")}`).toBe(
+        `offset ${offset} placed-but-unpainted: `,
+      );
+    }
+  });
+
+  it("keeps what was already in the paint order, and appends", () => {
+    const before = paintOrder(PagesDocument.load(BASE));
+    expect(before.length > 0).toBe(true);
+    const doc = PagesDocument.load(BASE);
+    const page = doc.floatingDrawablePages()[0]!;
+    doc.floatingDrawables(page)!.addCopyOf(doc.floatingDrawables(page)!.drawables()[0]!, {});
+    const after = paintOrder(PagesDocument.load(doc.save()));
+    expect(after.slice(0, before.length).join(",")).toBe(before.join(","));
+    expect(after.length).toBe(before.length + 1);
+  });
+});
+
 describe("a named paragraph style is one the app will list", () => {
   const BASE = new Uint8Array(
     readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),

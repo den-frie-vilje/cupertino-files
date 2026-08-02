@@ -66,6 +66,17 @@ export class DrawableContainer {
    */
   private readonly entryReferenceField: number | undefined;
 
+  /**
+   * Called whenever a drawable joins this container.
+   *
+   * Keynote and Numbers keep paint order inside the container, which
+   * {@link zOrderField} covers. Pages does not: it has one document-level
+   * `TP.DrawablesZOrderArchive`, and a floating drawable that is in a page
+   * group but not in that archive **does not render at all**. Placing it is
+   * only half the job, so the owner gets a hook to do the other half.
+   */
+  private readonly onAttach: ((id: bigint) => void) | undefined;
+
   constructor(
     store: ObjectStore,
     owner: IwaObject,
@@ -73,7 +84,9 @@ export class DrawableContainer {
     zOrderField?: number,
     host?: RawMessage,
     entryReferenceField?: number,
+    onAttach?: (id: bigint) => void,
   ) {
+    this.onAttach = onAttach;
     this.store = store;
     this.owner = owner;
     this.listField = listField;
@@ -153,6 +166,7 @@ export class DrawableContainer {
       if (!order.includes(id)) this.message.addMessage(this.zOrderField, this.makeEntry(id));
     }
     this.refreshOwnerReferences();
+    this.onAttach?.(id);
   }
 
   /**

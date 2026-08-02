@@ -44,6 +44,7 @@ import {
   FloatingDrawables,
   PageGroup,
   DrawableEntry,
+  DrawablesZOrder,
 } from "./schema.ts";
 
 export interface PageSetup {
@@ -394,6 +395,31 @@ export class PagesDocument extends IWorkDocument {
     return id;
   }
 
+  /**
+   * Put a floating drawable into the document's paint order.
+   *
+   * A page group says which page a drawable belongs to; it does not say
+   * that the document draws it. That is `TP.DrawablesZOrderArchive`, one
+   * per document, and a drawable in a page group but missing from it does
+   * not appear at all — no warning, no blank box, nothing. Copying onto the
+   * page the drawable already lived on failed exactly as completely as
+   * copying onto a fresh page, which is what showed the fault was here
+   * rather than in the page group.
+   */
+  private addToZOrder(id: bigint): void {
+    const zorder = this.store.resolve(refId(this.docObject.message, TPDocument.DRAWABLES_ZORDER));
+    if (!zorder) return;
+    const present = zorder.message
+      .getMessages(DrawablesZOrder.DRAWABLES)
+      .some((entry) => refId(entry, DrawablesZOrder.DRAWABLES) === id);
+    if (present) return;
+    // Appended, so a copy paints above what was already there — the same
+    // place the app puts a newly pasted object.
+    zorder.message.addMessage(DrawablesZOrder.DRAWABLES, makeRef(id));
+    zorder.message.markDirty();
+    this.store.declareReference(zorder, id);
+  }
+
   /** Append a paragraph style to the theme's panel list. */
   private listInThemeStyles(styleId: bigint): void {
     const theme = this.store.resolve(refId(this.docObject.message, TPDocument.THEME));
@@ -713,6 +739,7 @@ export class PagesDocument extends IWorkDocument {
       undefined,
       group,
       DrawableEntry.DRAWABLE,
+      (id) => this.addToZOrder(id),
     );
   }
 

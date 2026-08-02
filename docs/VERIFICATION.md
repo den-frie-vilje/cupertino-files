@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 28 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 27 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -44,13 +44,12 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 19 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
 | 20 | 🟠 medium | Text & styles → Comment creation and removal | a comment this library creates appears in the app's comment pane, attributed correctly | manual |
 | 21 | 🟠 medium | Text & styles → Footnote creation and removal | a footnote this library creates is numbered and laid out by Pages | manual |
-| 22 | 🟠 medium | Text & styles → Page numbers and page counts (insert, read, remove) | a page-number attachment this library inserts renders as a live number | manual |
-| 23 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 24 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 25 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 26 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 27 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 28 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 22 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
+| 23 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 24 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 25 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 26 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 27 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Placement (copy onto a page/slide/sheet, remove, reorder in z)
 
@@ -308,19 +307,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add footnotes at two positions, open in Pages, and confirm they number in document order and render at the page foot
 
-### 22. Page numbers and page counts (insert, read, remove)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a page-number attachment this library inserts renders as a live number
-
-**Why the suite cannot settle it.** the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page
-
-**How to settle it.** insert a page number into a footer, open in Pages across a multi-page document, and confirm it counts up rather than showing a literal or a blank
-
-### 23. Paragraph background & borders (rule stroke + positions)
+### 22. Paragraph background & borders (rule stroke + positions)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Text & styles  
@@ -332,7 +319,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
 
-### 24. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 23. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -344,7 +331,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 25. Categories: enable or disable grouping
+### 24. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -356,7 +343,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 26. Conditional formatting rules
+### 25. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -368,7 +355,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 27. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 26. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -380,7 +367,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 28. Table of contents (rules read + write, cached entries read)
+### 27. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -394,7 +381,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-6 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+7 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -436,6 +423,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The offline suite proves self-consistency: we read back what we wrote. Only the apps can say whether they accept it.
 
 **Outcome.** **Confirmed for Pages and Numbers; Keynote untested.** A current-format Pages document (file format 26.1.0) was edited, saved and opened with its formatting intact — appending a paragraph, applying character formatting, and applying a named paragraph style. Getting there took four separate defects, none of which any offline check could see, and each is now guarded: text colour must go in `tsd_fill` as well as `font_color`; a storage must not declare its stylesheet in `object_references`; paragraphs end at U+0004/U+0005/U+000C as well as U+000A but not at U+2028; and `table_para_style` is dense while the list and layout tables are sparse. Numbers is covered separately by the widget and regrouping checks. Keynote has never been opened at all
+
+### ✅ Page numbers and page counts (insert, read, remove)
+
+**Was claimed.** a page-number attachment this library inserts renders as a live number
+
+**Why it needed an app.** the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page
+
+**Outcome.** **Confirmed in Pages.** A page number renders as a live field, and a page count updates when a page is inserted. A date field renders and is editable as a date. All three on a current-format document
 
 ### ✅ Pop-up menu creation (TST.PopUpMenuModel)
 

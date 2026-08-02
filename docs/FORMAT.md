@@ -1329,6 +1329,28 @@ Both halves matter, and each is visible only in the app:
 
 A writer that picks one rule for all three gets two of them wrong.
 
+#### A floating drawable needs the paint order, not just a page group
+
+Pages keeps floating objects in per-page groups, and separately keeps one
+`TP.DrawablesZOrderArchive` per document listing every floating drawable in
+paint order. **Both are required.** A drawable placed in a page group but
+absent from the z-order archive does not render — no warning, no empty
+frame, nothing.
+
+The symptom is indistinguishable from the drawable not being placed at all,
+and it does not depend on which page: copying onto the page the drawable
+already lived on fails exactly as completely as copying onto a fresh page.
+That equality is the diagnostic — it rules out the page group, which is the
+only thing that differs between the two.
+
+`TSD.GroupArchive` is referenced from two places in a working document, and
+the pair is worth remembering: the page group, which says *where*, and the
+z-order archive, which says *whether*.
+
+Keynote and Numbers do not work this way. They keep paint order inside the
+container itself, which is why a single "add to container" operation is
+enough there and not here.
+
 #### A named style is not a listed style
 
 `TSS.StyleArchive.super` carries both a `name` and an `identifier`, and the
