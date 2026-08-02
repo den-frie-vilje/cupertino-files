@@ -7,6 +7,7 @@
  * they are safe to read *and* write: the apps re-render from the untouched
  * source bytes plus these parameters.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -22,22 +23,22 @@ const IMAGE_ENHANCED_DATA = 17;
 const IMAGE_THUMBNAIL_DATA = 12;
 
 /** TSD.ImageAdjustmentsArchive field numbers. */
-export const ImageAdjustments = {
-  EXPOSURE: 1,
-  SATURATION: 2,
-  CONTRAST: 3,
-  HIGHLIGHTS: 4,
-  SHADOWS: 5,
-  SHARPNESS: 6,
-  DENOISE: 7,
-  TEMPERATURE: 8,
-  TINT: 9,
-  BOTTOM_LEVEL: 10,
-  TOP_LEVEL: 11,
-  GAMMA: 12,
-  ENHANCE: 13,
-  REPRESENTS_SAGE_ADJUSTMENTS: 14,
-} as const;
+export const ImageAdjustments = protoFields("TSD.ImageAdjustmentsArchive", {
+  EXPOSURE: "exposure",
+  SATURATION: "saturation",
+  CONTRAST: "contrast",
+  HIGHLIGHTS: "highlights",
+  SHADOWS: "shadows",
+  SHARPNESS: "sharpness",
+  DENOISE: "denoise",
+  TEMPERATURE: "temperature",
+  TINT: "tint",
+  BOTTOM_LEVEL: "bottom_level",
+  TOP_LEVEL: "top_level",
+  GAMMA: "gamma",
+  ENHANCE: "enhance",
+  REPRESENTS_SAGE_ADJUSTMENTS: "represents_sage_adjustments",
+});
 
 /**
  * The image-filter parameters as shown in the apps' Adjust Image panel.

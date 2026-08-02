@@ -1,46 +1,29 @@
-#!/usr/bin/env node
 /**
- * Verify every hand-written field constant against the vendored `.proto`.
+ * What is still hand-typed, and does it contradict the schema?
  *
- *   node scripts/check-proto-drift.ts          # report
- *   node scripts/check-proto-drift.ts --check  # non-zero exit on any drift
+ * Most field numbers no longer live here to be checked: they are resolved
+ * from the vendored schemas at module load by `src/proto/fields.ts`, so
+ * they cannot disagree with Apple in the first place. This script covers
+ * the residue — the constants that could not move — and its output is
+ * mostly a to-do list rather than a verdict.
  *
- * ## Why the schemas are vendored but not compiled
+ * Two kinds remain, both legitimate:
  *
- * `proto/` holds 41 schema files — 1296 messages — dumped from the iWork
- * binaries by three independent projects, with provenance in
- * `proto/README.md`. They are the authority for every field number in
- * `src/`, and each schema module cites the message it came from.
+ *   * **Archive type ids.** `TSWP_TYPE.STORAGE = 2001` is the app's own
+ *     object-type registry and appears in no `.proto`. No schema will ever
+ *     supply it; the corpus is the only authority.
+ *   * **Numbers the dumps predate.** The shared families are Numbers 14.4
+ *     and the Pages-specific ones are Pages 5.0 from 2013.
  *
- * They are *not* compiled into generated classes, and that is deliberate.
- * This library's central guarantee is that a document round-trips byte for
- * byte, including fields no schema names and fields whose wire type
- * disagrees with the schema — both of which occur in real documents. A
- * generated decoder normalises: it re-encodes canonically, reorders, drops
- * or relocates what it does not recognise. `RawMessage` keeps bytes exactly
- * where Apple put them and re-serialises only along mutated paths, which is
- * what makes 37 of 37 fixtures come back identical.
+ * A `mismatch` finding is still a real bug and the suite fails on one. The
+ * other three categories are informational: they say how much is not being
+ * checked, which is the number to drive down.
  *
- * The cost of that choice is a hand-written field number beside every proto
- * field, and hand-written numbers drift. This script is the answer: the
- * constants are checked against the schemas rather than trusted.
+ * `test/proto-drift.test.ts` runs this, so it can no longer sit red
+ * unnoticed — which it did, over a constant named `ITEM` that matched a
+ * deprecated `item = 1` when it meant `tsce_item = 2`.
  *
- * ## The bug this script found first was its own
- *
- * `DocumentArchive` is defined in five of these families. Matching on the
- * bare message name made `TP.DocumentArchive` answer with `TSK`'s fields,
- * and the script confidently reported three drifts in Pages that did not
- * exist — the 2013 TP dump agrees with the code exactly. Messages are
- * therefore indexed by their `package`, and any future matching shortcut
- * should remember how convincing that wrong answer looked.
- *
- * ## How a constant is matched to a message
- *
- * By the docblock above it. Every schema constant in this repository is
- * introduced by a comment naming its archive — `/** TST.DataStore. *​/` —
- * so the mapping needs no separate registry to fall out of date. A constant
- * with no such comment is reported as unverifiable rather than skipped
- * silently: not being checked is worth knowing about.
+ * Usage: `npm run proto:check`.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";

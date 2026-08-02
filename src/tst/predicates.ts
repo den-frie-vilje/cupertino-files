@@ -30,6 +30,7 @@
  * with no coordinate. It renders as {@link SELF_CELL_MARKER} unless the
  * caller knows which cell they are asking about.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import type { FormulaOwnerRegistry } from "../tsce/owners.ts";
 import { decodeDecimal128 } from "./tables.ts";
@@ -42,19 +43,19 @@ import {
 } from "./formulas.ts";
 
 /** TST.FormulaPredicateArchive. */
-export const PredicateFields = {
-  PREDICATE_TYPE: 1,
-  QUALIFIER1: 2,
-  QUALIFIER2: 3,
-  PARAM_VALUE0: 4,
-  PARAM_VALUE1: 5,
-  PARAM_VALUE2: 6,
-  FORMULA: 7,
-  FOR_CONDITIONAL_STYLE: 8,
-  HOST_TABLE_UID: 9,
-  HOST_COLUMN_UID: 10,
-  HOST_ROW_UID: 11,
-} as const;
+export const PredicateFields = protoFields("TST.FormulaPredicateArchive", {
+  PREDICATE_TYPE: "predicate_type",
+  QUALIFIER1: "qualifier1",
+  QUALIFIER2: "qualifier2",
+  PARAM_VALUE0: "param_value0",
+  PARAM_VALUE1: "param_value1",
+  PARAM_VALUE2: "param_value2",
+  FORMULA: "formula",
+  FOR_CONDITIONAL_STYLE: "for_conditional_style",
+  HOST_TABLE_UID: "host_table_uid",
+  HOST_COLUMN_UID: "host_column_uid",
+  HOST_ROW_UID: "host_row_uid",
+});
 
 /**
  * TST.FormulaPredicatePrePivotArchive — the pre-2016 shape.
@@ -64,42 +65,42 @@ export const PredicateFields = {
  * Files written by current apps carry both forms; older ones carry only
  * this. A `param_index` of -1 means the slot is unused.
  */
-export const PrePivotPredicateFields = {
-  FORMULA: 1,
-  PREDICATE_TYPE: 2,
-  QUALIFIER1: 3,
-  QUALIFIER2: 4,
-  PARAM_INDEX1: 5,
-  PARAM_INDEX2: 6,
-  PARAM_INDEX0: 7,
-} as const;
+export const PrePivotPredicateFields = protoFields("TST.FormulaPredicatePrePivotArchive", {
+  FORMULA: "formula",
+  PREDICATE_TYPE: "predicate_type",
+  QUALIFIER1: "qualifier1",
+  QUALIFIER2: "qualifier2",
+  PARAM_INDEX1: "param_index1",
+  PARAM_INDEX2: "param_index2",
+  PARAM_INDEX0: "param_index0",
+});
 
 /** TST.FormulaPredArgArchive. */
-export const PredArgFields = {
-  ARG_TYPE: 1,
-  ARG_VALUE: 2,
-  BASE_CELL_REF: 3,
-  RELATIVE_CELL_REF: 4,
-  CATEGORY_REF: 5,
-  UID_TRACT_LIST: 6,
-  HOST_CELL_COORD: 7,
-  PRESERVE_ROW: 8,
-  PRESERVE_COLUMN: 9,
-  LIST_ENTRIES: 10,
-  VIEW_TRACT_REF: 11,
-} as const;
+export const PredArgFields = protoFields("TST.FormulaPredArgArchive", {
+  ARG_TYPE: "arg_type",
+  ARG_VALUE: "arg_value",
+  BASE_CELL_REF: "base_cell_ref",
+  RELATIVE_CELL_REF: "relative_cell_ref",
+  CATEGORY_REF: "category_ref",
+  UID_TRACT_LIST: "uid_tract_list",
+  HOST_CELL_COORD: "host_cell_coord",
+  PRESERVE_ROW: "preserve_row",
+  PRESERVE_COLUMN: "preserve_column",
+  LIST_ENTRIES: "list_entries",
+  VIEW_TRACT_REF: "view_tract_ref",
+});
 
 /** TST.FormulaPredArgDataArchive — one operand's value, by type. */
-export const PredArgDataFields = {
-  DOUBLE_VALUE: 1,
-  DECIMAL_LOW: 2,
-  DECIMAL_HIGH: 3,
-  STRING_VALUE: 4,
-  DATE_VALUE: 5,
-  DURATION_TIMEINTERVAL: 6,
-  DURATION_UNITS: 7,
-  BOOLEAN_VALUE: 8,
-} as const;
+export const PredArgDataFields = protoFields("TST.FormulaPredArgDataArchive", {
+  DOUBLE_VALUE: "double_value",
+  DECIMAL_LOW: "decimal_low",
+  DECIMAL_HIGH: "decimal_high",
+  STRING_VALUE: "string_value",
+  DATE_VALUE: "date_value",
+  DURATION_TIMEINTERVAL: "duration_timeinterval",
+  DURATION_UNITS: "duration_units",
+  BOOLEAN_VALUE: "boolean_value",
+});
 
 /**
  * Comparison operators, by the TSCE AST node that encodes them.

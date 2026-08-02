@@ -37,6 +37,7 @@
  * stores a UUID as two `uint64`s. `lo = w0 | w1<<32`, `hi = w2 | w3<<32`,
  * which is what lets an AST's `table_id` be looked up in this map at all.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
@@ -45,17 +46,17 @@ import { refId } from "../tsp/schema.ts";
 /** TSCE.FormulaOwnerDependenciesArchive. */
 export const FORMULA_OWNER_DEPENDENCIES = 4008;
 
-export const FormulaOwnerFields = {
-  FORMULA_OWNER_UID: 1,
-  INTERNAL_FORMULA_OWNER_ID: 2,
-  OWNER_KIND: 3,
-  FORMULA_OWNER: 11,
-  BASE_OWNER_UID: 12,
-} as const;
+export const FormulaOwnerFields = protoFields("TSCE.FormulaOwnerDependenciesArchive", {
+  FORMULA_OWNER_UID: "formula_owner_uid",
+  INTERNAL_FORMULA_OWNER_ID: "internal_formula_owner_id",
+  OWNER_KIND: "owner_kind",
+  FORMULA_OWNER: "formula_owner",
+  BASE_OWNER_UID: "base_owner_uid",
+});
 
 /** TSCE.HauntedOwnerArchive, on TST.TableModelArchive.haunted_owner = 84. */
 export const HAUNTED_OWNER = 84;
-export const HauntedOwnerFields = { OWNER_UID: 1 } as const;
+export const HauntedOwnerFields = protoFields("TSCE.HauntedOwnerArchive", { OWNER_UID: "owner_uid" });
 
 /** TST.TableInfoArchive.tableModel, for naming a resolved owner. */
 const TABLE_INFO_MODEL = 2;

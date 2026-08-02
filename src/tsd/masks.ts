@@ -39,6 +39,7 @@
  * appears in any corpus file — so a mask whose path is not one is refused
  * rather than flattened into a box.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -47,34 +48,34 @@ import { DrawableModel } from "./drawables.ts";
 import { Drawable, Geometry, TSD_TYPE } from "./schema.ts";
 
 /** TSD.MaskArchive: super = 1, pathsource = 2. */
-export const MaskFields = { SUPER: 1, PATH_SOURCE: 2 } as const;
+export const MaskFields = protoFields("TSD.MaskArchive", { SUPER: "super", PATH_SOURCE: "pathsource" });
 
 /** TSD.PathSourceArchive — the subset a mask uses. */
-export const PathSourceFields = {
-  HORIZONTAL_FLIP: 1,
-  VERTICAL_FLIP: 2,
-  BEZIER_PATH_SOURCE: 5,
-} as const;
+export const PathSourceFields = protoFields("TSD.PathSourceArchive", {
+  HORIZONTAL_FLIP: "horizontalFlip",
+  VERTICAL_FLIP: "verticalFlip",
+  BEZIER_PATH_SOURCE: "bezier_path_source",
+});
 
 /** TSD.BezierPathSourceArchive. */
-export const BezierPathSourceFields = {
-  PATH_STRING: 1,
-  NATURAL_SIZE: 2,
-  PATH: 3,
-} as const;
+export const BezierPathSourceFields = protoFields("TSD.BezierPathSourceArchive", {
+  PATH_STRING: "path_string",
+  NATURAL_SIZE: "naturalSize",
+  PATH: "path",
+});
 
 /** TSP.Path / TSP.Path.Element. */
 const PathFields = { ELEMENTS: 1 } as const;
 const PathElement = { TYPE: 1, POINTS: 2 } as const;
 
 /** TSP.Path.ElementType. */
-export const PathElementType = {
-  MOVE_TO: 1,
-  LINE_TO: 2,
-  QUAD_CURVE_TO: 3,
-  CURVE_TO: 4,
-  CLOSE_SUBPATH: 5,
-} as const;
+export const PathElementType = protoEnum("TSP.Path.ElementType", {
+  MOVE_TO: "moveTo",
+  LINE_TO: "lineTo",
+  QUAD_CURVE_TO: "quadCurveTo",
+  CURVE_TO: "curveTo",
+  CLOSE_SUBPATH: "closeSubpath",
+});
 
 /** A rectangle, in whichever space the reader documents. */
 export interface Rect {

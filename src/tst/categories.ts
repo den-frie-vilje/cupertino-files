@@ -33,6 +33,7 @@
  * the data determines, refuse what only the app knows — is the same one
  * drawn for conditional rules and filters.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
@@ -46,43 +47,43 @@ export const CATEGORY_OWNER = 86;
 const CategoryOwnerRef = { GROUP_BY: 1 } as const;
 
 /** TST.GroupByArchive. */
-export const GroupByFields = {
-  GROUP_BY_UID: 1,
-  GROUP_COLUMN: 2,
-  GROUP_NODE_ROOT: 3,
-  AGGREGATOR: 4,
-  COLUMN_AGG_TYPE: 5,
-  IS_ENABLED: 6,
-  GROUP_NODE_ROOT_REF: 18,
-} as const;
+export const GroupByFields = protoFields("TST.GroupByArchive", {
+  GROUP_BY_UID: "group_by_uid",
+  GROUP_COLUMN: "group_column",
+  GROUP_NODE_ROOT: "group_node_root",
+  AGGREGATOR: "aggregator",
+  COLUMN_AGG_TYPE: "column_agg_type",
+  IS_ENABLED: "is_enabled",
+  GROUP_NODE_ROOT_REF: "group_node_root_ref",
+});
 
 /** TST.GroupColumnArchive. */
-export const GroupColumnFields = {
-  COLUMN_UID: 1,
-  GROUPING_TYPE: 2,
-  GROUPING_FUNCTOR: 3,
-  GROUPING_COLUMN_UID: 4,
-} as const;
+export const GroupColumnFields = protoFields("TST.GroupColumnArchive", {
+  COLUMN_UID: "column_uid",
+  GROUPING_TYPE: "grouping_type",
+  GROUPING_FUNCTOR: "grouping_functor",
+  GROUPING_COLUMN_UID: "grouping_column_uid",
+});
 
 /** TST.GroupByArchive.GroupNodeArchive. */
-export const GroupNodeFields = {
-  GROUP_UID: 1,
-  CHILD: 3,
-  ROW_UID: 4,
-  FORMAT_MANAGER: 6,
-  GROUP_CELL_VALUE: 7,
-  ROW_INDEXES: 8,
-  ROW_LOOKUP_UIDS: 9,
-  CHILD_REF: 10,
-} as const;
+export const GroupNodeFields = protoFields("TST.GroupByArchive.GroupNodeArchive", {
+  GROUP_UID: "group_uid",
+  CHILD: "child",
+  ROW_UID: "row_uid",
+  FORMAT_MANAGER: "format_manager",
+  GROUP_CELL_VALUE: "group_cell_value",
+  ROW_INDEXES: "row_indexes",
+  ROW_LOOKUP_UIDS: "row_lookup_uids",
+  CHILD_REF: "child_ref",
+});
 
 /** TST.ColumnAggregateArchive — the per-group summary of one column. */
-export const ColumnAggregateFields = {
-  COLUMN_UID: 1,
-  LEVEL: 2,
-  AGG_TYPE: 3,
-  SHOW_AS_TYPE: 4,
-} as const;
+export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
+  COLUMN_UID: "column_uid",
+  LEVEL: "level",
+  AGG_TYPE: "agg_type",
+  SHOW_AS_TYPE: "show_as_type",
+});
 
 /** TSCE.CellValueArchive. */
 const CellValueFields = {

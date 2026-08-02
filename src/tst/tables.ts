@@ -8,6 +8,7 @@
  * Read-only by design for now: cell edits require formula-dependency
  * bookkeeping (see docs/FORMAT.md §14).
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -81,66 +82,66 @@ export const TST_TYPE = {
 /** TST.TableInfoArchive. */
 const TableInfo = { SUPER: 1, TABLE_MODEL: 2 } as const;
 /** TST.TableModelArchive (reader-relevant fields). */
-export const TableModelFields = {
-  BASE_DATA_STORE: 4,
-  NUMBER_OF_ROWS: 6,
-  NUMBER_OF_COLUMNS: 7,
-  TABLE_NAME: 8,
-  HEADER_ROWS: 9,
-  HEADER_COLUMNS: 10,
-  FOOTER_ROWS: 11,
-  TABLE_STYLE: 3,
-  HEADER_ROWS_FROZEN: 12,
-  HEADER_COLUMNS_FROZEN: 13,
-  DEFAULT_ROW_HEIGHT: 16,
-  DEFAULT_COLUMN_WIDTH: 17,
-  REPEATING_HEADER_ROWS: 29,
-  TABLE_NAME_STYLE: 30,
-  REPEATING_HEADER_COLUMNS: 32,
-  MERGE_OWNER: 47,
-  HIDDEN_STATES_OWNER: 70,
-} as const;
+export const TableModelFields = protoFields("TST.TableModelArchive", {
+  BASE_DATA_STORE: "base_data_store",
+  NUMBER_OF_ROWS: "number_of_rows",
+  NUMBER_OF_COLUMNS: "number_of_columns",
+  TABLE_NAME: "table_name",
+  HEADER_ROWS: "number_of_header_rows",
+  HEADER_COLUMNS: "number_of_header_columns",
+  FOOTER_ROWS: "number_of_footer_rows",
+  TABLE_STYLE: "table_style",
+  HEADER_ROWS_FROZEN: "header_rows_frozen",
+  HEADER_COLUMNS_FROZEN: "header_columns_frozen",
+  DEFAULT_ROW_HEIGHT: "default_row_height",
+  DEFAULT_COLUMN_WIDTH: "default_column_width",
+  REPEATING_HEADER_ROWS: "repeating_header_rows_enabled",
+  TABLE_NAME_STYLE: "table_name_style",
+  REPEATING_HEADER_COLUMNS: "repeating_header_columns_enabled",
+  MERGE_OWNER: "merge_owner",
+  HIDDEN_STATES_OWNER: "hidden_states_owner",
+});
 
 /** TST.HiddenStatesOwnerArchive / .HiddenStatesArchive / .HiddenStateExtentArchive. */
 const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
 const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
 const HiddenStateExtent = { FILTER_SET: 8 } as const;
 /** TST.DataStore. */
-export const DataStoreFields = {
-  ROW_HEADERS: 1,
-  COLUMN_HEADERS: 2,
-  TILES: 3,
-  STRING_TABLE: 4,
-  ROW_TILE_TREE: 9,
-  STYLE_TABLE: 5,
-  FORMULA_TABLE: 6,
-  MERGE_REGION_MAP: 13,
-  RICH_TEXT_TABLE: 17,
-  CONDITIONAL_STYLE_TABLE: 18,
-  FORMAT_TABLE: 22,
-} as const;
+export const DataStoreFields = protoFields("TST.DataStore", {
+  ROW_HEADERS: "rowHeaders",
+  COLUMN_HEADERS: "columnHeaders",
+  TILES: "tiles",
+  STRING_TABLE: "stringTable",
+  ROW_TILE_TREE: "rowTileTree",
+  STYLE_TABLE: "styleTable",
+  FORMULA_TABLE: "formula_table",
+  MERGE_REGION_MAP: "merge_region_map",
+  RICH_TEXT_TABLE: "rich_text_table",
+  CONDITIONAL_STYLE_TABLE: "conditionalstyletable",
+  FORMAT_TABLE: "format_table",
+});
 /** TST.TileStorage / .Tile / .TileRowInfo. */
-export const TileStorageFields = { TILES: 1, TILE_SIZE: 2 } as const;
-export const TileEntry = { TILEID: 1, TILE: 2 } as const;
-export const TileFields = {
-  MAX_COLUMN: 1,
-  MAX_ROW: 2,
-  NUM_CELLS: 3,
-  NUM_ROWS: 4,
-  ROW_INFOS: 5,
-  STORAGE_VERSION: 6,
-  LAST_SAVED_IN_BNC: 7,
-} as const;
-export const TileRowInfo = {
-  TILE_ROW_INDEX: 1,
-  CELL_COUNT: 2,
-  CELL_STORAGE_BUFFER_PRE_BNC: 3,
-  CELL_OFFSETS_PRE_BNC: 4,
-  STORAGE_VERSION: 5,
-  CELL_STORAGE_BUFFER: 6,
-  CELL_OFFSETS: 7,
-  HAS_WIDE_OFFSETS: 8,
-} as const;
+export const TileStorageFields = protoFields("TST.TileStorage", { TILES: "tiles", TILE_SIZE: "tile_size" });
+export const TileEntry = protoFields("TST.TileStorage", { TILEID: "tiles", TILE: "tile_size" });
+export const TileFields = protoFields("TST.Tile", {
+  MAX_COLUMN: "maxColumn",
+  MAX_ROW: "maxRow",
+  NUM_CELLS: "numCells",
+  NUM_ROWS: "numrows",
+  ROW_INFOS: "rowInfos",
+  STORAGE_VERSION: "storage_version",
+  LAST_SAVED_IN_BNC: "last_saved_in_BNC",
+});
+export const TileRowInfo = protoFields("TST.TileRowInfo", {
+  TILE_ROW_INDEX: "tile_row_index",
+  CELL_COUNT: "cell_count",
+  CELL_STORAGE_BUFFER_PRE_BNC: "cell_storage_buffer_pre_bnc",
+  CELL_OFFSETS_PRE_BNC: "cell_offsets_pre_bnc",
+  STORAGE_VERSION: "storage_version",
+  CELL_STORAGE_BUFFER: "cell_storage_buffer",
+  CELL_OFFSETS: "cell_offsets",
+  HAS_WIDE_OFFSETS: "has_wide_offsets",
+});
 /**
  * `TST.CellStyleArchive.super`, and the `TSS.StyleArchive` fields inside it.
  *

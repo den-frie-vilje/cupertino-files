@@ -9,98 +9,102 @@
  * it — `Cannot access 'AstNodeType' before initialization`, from a file
  * that never mentions it.
  *
- * Nothing here imports anything, which is what keeps that from recurring.
+ * The one import is `../proto/fields.ts`, which imports only its generated
+ * table, which imports nothing. That is deliberate: the field numbers have
+ * to come from Apple's schema like everywhere else, and the leaf property
+ * survives because the dependency is a leaf too.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 
 /** TSCE.FormulaArchive. */
-export const FormulaFields = {
-  AST_NODE_ARRAY: 1,
-  HOST_COLUMN: 2,
-  HOST_ROW: 3,
-  HOST_COLUMN_IS_NEGATIVE: 4,
-  HOST_ROW_IS_NEGATIVE: 5,
-} as const;
+export const FormulaFields = protoFields("TSCE.FormulaArchive", {
+  AST_NODE_ARRAY: "AST_node_array",
+  HOST_COLUMN: "host_column",
+  HOST_ROW: "host_row",
+  HOST_COLUMN_IS_NEGATIVE: "host_column_is_negative",
+  HOST_ROW_IS_NEGATIVE: "host_row_is_negative",
+});
 
 /** TSCE.ASTNodeArrayArchive: repeated AST_node = 1. */
-export const AstNodeArrayFields = { NODES: 1 } as const;
+export const AstNodeArrayFields = protoFields("TSCE.ASTNodeArrayArchive", { NODES: "AST_node" });
 
 /** TSCE.ASTNodeArrayArchive.ASTNodeArchive — the fields we render. */
-export const AstNodeFields = {
-  TYPE: 1,
-  FUNCTION_INDEX: 2,
-  FUNCTION_NUM_ARGS: 3,
-  NUMBER: 4,
-  BOOLEAN: 5,
-  STRING: 6,
-  TOKEN_BOOLEAN: 10,
-  WHITESPACE: 25,
-  COLUMN: 26,
-  ROW: 27,
-  CROSS_TABLE_INFO: 28,
-  TRACT_LIST: 38,
-  COLON_TRACT: 40,
-  NUMBER_DECIMAL_LOW: 42,
-  NUMBER_DECIMAL_HIGH: 43,
-} as const;
+export const AstNodeFields = protoFields("TSCE.ASTNodeArrayArchive.ASTNodeArchive", {
+  TYPE: "AST_node_type",
+  FUNCTION_INDEX: "AST_function_node_index",
+  FUNCTION_NUM_ARGS: "AST_function_node_numArgs",
+  NUMBER: "AST_number_node_number",
+  BOOLEAN: "AST_boolean_node_boolean",
+  STRING: "AST_string_node_string",
+  TOKEN_BOOLEAN: "AST_token_node_boolean",
+  WHITESPACE: "AST_whitespace",
+  COLUMN: "AST_column",
+  ROW: "AST_row",
+  CROSS_TABLE_INFO: "AST_cross_table_reference_extra_info",
+  TRACT_LIST: "AST_tract_list",
+  COLON_TRACT: "AST_colon_tract",
+  NUMBER_DECIMAL_LOW: "AST_number_node_decimal_low",
+  NUMBER_DECIMAL_HIGH: "AST_number_node_decimal_high",
+});
 
 /** ASTColumnCoordinateArchive / ASTRowCoordinateArchive. */
-export const CoordinateFields = { INDEX: 1, ABSOLUTE: 2 } as const;
+export const CoordinateFields = protoFields("TSCE.ASTNodeArrayArchive.ASTUidCoordinateArchive", { INDEX: "column_uid", ABSOLUTE: "row_uid" });
 
 /**
  * ASTColonTractArchive. Ranges come in two flavours and both occur: the
  * absolute pair holds real indexes, the relative pair holds offsets from
  * the using cell. A reader that only knows one renders the other as #REF!.
  */
-export const ColonTractFields = {
-  RELATIVE_COLUMN: 1,
-  RELATIVE_ROW: 2,
-  ABSOLUTE_COLUMN: 3,
-  ABSOLUTE_ROW: 4,
-} as const;
+export const ColonTractFields = protoFields("TSCE.ASTNodeArrayArchive.ASTColonTractArchive", {
+  RELATIVE_COLUMN: "relative_column",
+  RELATIVE_ROW: "relative_row",
+  ABSOLUTE_COLUMN: "absolute_column",
+  ABSOLUTE_ROW: "absolute_row",
+});
 
 /** TSCE.ASTNodeArrayArchive.ASTNodeArchive.ASTNodeType. */
-export const AstNodeType = {
-  ADDITION: 1,
-  SUBTRACTION: 2,
-  MULTIPLICATION: 3,
-  DIVISION: 4,
-  POWER: 5,
-  CONCATENATION: 6,
-  GREATER_THAN: 7,
-  GREATER_THAN_OR_EQUAL: 8,
-  LESS_THAN: 9,
-  LESS_THAN_OR_EQUAL: 10,
-  EQUAL_TO: 11,
-  NOT_EQUAL_TO: 12,
-  NEGATION: 13,
-  PLUS_SIGN: 14,
-  PERCENT: 15,
-  FUNCTION: 16,
-  NUMBER: 17,
-  BOOLEAN: 18,
-  STRING: 19,
-  DATE: 20,
-  DURATION: 21,
-  EMPTY_ARGUMENT: 22,
-  TOKEN: 23,
-  ARRAY: 24,
-  LIST: 25,
-  LOCAL_CELL_REFERENCE: 27,
-  CROSS_TABLE_CELL_REFERENCE: 28,
-  COLON: 29,
-  REFERENCE_ERROR: 30,
-  UNKNOWN_FUNCTION: 31,
-  APPEND_WHITESPACE: 32,
-  PREPEND_WHITESPACE: 33,
-  CELL_REFERENCE: 36,
-  COLON_WITH_UIDS: 45,
-  REFERENCE_ERROR_WITH_UIDS: 46,
-  LINKED_CELL_REFERENCE: 63,
-  LINKED_COLUMN_REFERENCE: 64,
-  LINKED_ROW_REFERENCE: 65,
-  COLON_TRACT: 67,
-  INTERSECTION: 69,
-} as const;
+export const AstNodeType = protoEnum("TSCE.ASTNodeArrayArchive.ASTNodeType", {
+  ADDITION: "ADDITION_NODE",
+  SUBTRACTION: "SUBTRACTION_NODE",
+  MULTIPLICATION: "MULTIPLICATION_NODE",
+  DIVISION: "DIVISION_NODE",
+  POWER: "POWER_NODE",
+  CONCATENATION: "CONCATENATION_NODE",
+  GREATER_THAN: "GREATER_THAN_NODE",
+  GREATER_THAN_OR_EQUAL: "GREATER_THAN_OR_EQUAL_TO_NODE",
+  LESS_THAN: "LESS_THAN_NODE",
+  LESS_THAN_OR_EQUAL: "LESS_THAN_OR_EQUAL_TO_NODE",
+  EQUAL_TO: "EQUAL_TO_NODE",
+  NOT_EQUAL_TO: "NOT_EQUAL_TO_NODE",
+  NEGATION: "NEGATION_NODE",
+  PLUS_SIGN: "PLUS_SIGN_NODE",
+  PERCENT: "PERCENT_NODE",
+  FUNCTION: "FUNCTION_NODE",
+  NUMBER: "NUMBER_NODE",
+  BOOLEAN: "BOOLEAN_NODE",
+  STRING: "STRING_NODE",
+  DATE: "DATE_NODE",
+  DURATION: "DURATION_NODE",
+  EMPTY_ARGUMENT: "EMPTY_ARGUMENT_NODE",
+  TOKEN: "TOKEN_NODE",
+  ARRAY: "ARRAY_NODE",
+  LIST: "LIST_NODE",
+  LOCAL_CELL_REFERENCE: "LOCAL_CELL_REFERENCE_NODE",
+  CROSS_TABLE_CELL_REFERENCE: "CROSS_TABLE_CELL_REFERENCE_NODE",
+  COLON: "COLON_NODE",
+  REFERENCE_ERROR: "REFERENCE_ERROR_NODE",
+  UNKNOWN_FUNCTION: "UNKNOWN_FUNCTION_NODE",
+  APPEND_WHITESPACE: "APPEND_WHITESPACE_NODE",
+  PREPEND_WHITESPACE: "PREPEND_WHITESPACE_NODE",
+  CELL_REFERENCE: "CELL_REFERENCE_NODE",
+  COLON_WITH_UIDS: "COLON_NODE_WITH_UIDS",
+  REFERENCE_ERROR_WITH_UIDS: "REFERENCE_ERROR_WITH_UIDS",
+  LINKED_CELL_REFERENCE: "LINKED_CELL_REF_NODE",
+  LINKED_COLUMN_REFERENCE: "LINKED_COLUMN_REF_NODE",
+  LINKED_ROW_REFERENCE: "LINKED_ROW_REF_NODE",
+  COLON_TRACT: "COLON_TRACT_NODE",
+  INTERSECTION: "INTERSECTION_NODE",
+});
 
 /**
  * Rendered in place of a table name we cannot resolve.

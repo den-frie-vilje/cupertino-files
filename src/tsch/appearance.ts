@@ -55,6 +55,7 @@
  * synthesise one, and no fixture that would show what a synthesised one
  * should contain.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
@@ -77,19 +78,19 @@ export const GENERATED_PROPERTIES = 10000;
  * properties in a real file and the rest are preserved untouched, which is
  * the whole point of the schema-light representation.
  */
-export const SeriesStyleProperty = {
+export const SeriesStyleProperty = protoFields("TSCH.Generated.ChartSeriesStyleArchive", {
   /** `TSD.FillArchive`, one per geometry — see the module note. */
-  AREA_FILL: 11,
-  BAR_FILL: 12,
-  COLUMN_FILL: 13,
+  AREA_FILL: "tschchartseriesareafill",
+  BAR_FILL: "tschchartseriesbarfill",
+  COLUMN_FILL: "tschchartseriescolumnfill",
   /** The template's fallback, *not* this series' colour. Left alone. */
-  DEFAULT_FILL: 14,
-  MIXED_AREA_FILL: 15,
-  MIXED_COLUMN_FILL: 16,
-  PIE_FILL: 17,
+  DEFAULT_FILL: "tschchartseriesdefaultfill",
+  MIXED_AREA_FILL: "tschchartseriesmixedareafill",
+  MIXED_COLUMN_FILL: "tschchartseriesmixedcolumnfill",
+  PIE_FILL: "tschchartseriespiefill",
   /** float */
-  DEFAULT_OPACITY: 24,
-} as const;
+  DEFAULT_OPACITY: "tschchartseriesdefaultopacity",
+});
 
 /**
  * The six fills that together mean "this series is this colour".
@@ -109,7 +110,7 @@ const SERIES_GEOMETRY_FILLS: readonly number[] = [
 /** `TSP.SparseReferenceArray`: entries carry an index and a reference. */
 const SparseArray = { COUNT: 1, ENTRIES: 2 } as const;
 /** `TSP.SparseReferenceArray.Entry`. */
-export const SparseEntry = { INDEX: 1, REFERENCE: 2 } as const;
+export const SparseEntry = protoFields("TSP.SparseReferenceArray.Entry", { INDEX: "index", REFERENCE: "reference" });
 /** `TSP.Reference.identifier`. */
 export const REFERENCE_IDENTIFIER = 1;
 
@@ -271,17 +272,17 @@ export class ChartSeriesStyle extends ChartStyleArchive {
  * The whole message is five fields, so this one is complete rather than a
  * selection.
  */
-export const LegendStyleProperty = {
+export const LegendStyleProperty = protoFields("TSCH.Generated.LegendStyleArchive", {
   /** `TSD.FillArchive` */
-  FILL: 1,
-  LABEL_PARAGRAPH_STYLE_INDEX: 2,
+  FILL: "tschlegendmodeldefaultfill",
+  LABEL_PARAGRAPH_STYLE_INDEX: "tschlegendmodeldefaultlabelparagraphstyleindex",
   /** float */
-  OPACITY: 3,
+  OPACITY: "tschlegendmodeldefaultopacity",
   /** `TSD.ShadowArchive` */
-  SHADOW: 4,
+  SHADOW: "tschlegendmodeldefaultshadow",
   /** `TSD.StrokeArchive` */
-  STROKE: 5,
-} as const;
+  STROKE: "tschlegendmodeldefaultstroke",
+});
 
 /** The legend's background, border and opacity. */
 export class ChartLegendStyle extends ChartStyleArchive {

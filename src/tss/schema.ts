@@ -3,6 +3,7 @@
  * archive embedded in every concrete style, and stylesheets. Field numbers
  * from proto/current/TSSArchives.proto.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
 
@@ -12,29 +13,29 @@ export const TSS_TYPE = {
 } as const;
 
 /** TSS.StyleArchive (embedded as `super` = field 1 of concrete styles). */
-export const StyleSuper = {
-  NAME: 1,
-  STYLE_IDENTIFIER: 2,
-  PARENT: 3,
-  IS_VARIATION: 4,
-  STYLESHEET: 5,
-} as const;
+export const StyleSuper = protoFields("TSS.StyleArchive", {
+  NAME: "name",
+  STYLE_IDENTIFIER: "style_identifier",
+  PARENT: "parent",
+  IS_VARIATION: "is_variation",
+  STYLESHEET: "stylesheet",
+});
 
 /** TSS.StylesheetArchive. */
-export const StylesheetFields = {
-  STYLES: 1,
-  IDENTIFIER_TO_STYLE_MAP: 2,
-  PARENT: 3,
-  IS_LOCKED: 4,
-  PARENT_TO_CHILDREN_STYLE_MAP: 5,
-  CAN_CULL_STYLES: 6,
+export const StylesheetFields = protoFields("TSS.StylesheetArchive", {
+  STYLES: "styles",
+  IDENTIFIER_TO_STYLE_MAP: "identifier_to_style_map",
+  PARENT: "parent",
+  IS_LOCKED: "is_locked",
+  PARENT_TO_CHILDREN_STYLE_MAP: "parent_to_children_style_map",
+  CAN_CULL_STYLES: "can_cull_styles",
   // styles_for_10_0 .. styles_for_14_4 compatibility snapshots.
-  VERSIONED_FIRST: 7,
-  VERSIONED_LAST: 22,
-} as const;
-export const IdentifiedStyleEntry = { IDENTIFIER: 1, STYLE: 2 } as const;
-export const StyleChildrenEntry = { PARENT: 1, CHILDREN: 2 } as const;
-export const VersionedStyles = { STYLES: 1, ID_MAP: 2, CHILDREN_MAP: 3 } as const;
+  VERSIONED_FIRST: "styles_for_10_0",
+  VERSIONED_LAST: "styles_for_14_4",
+});
+export const IdentifiedStyleEntry = protoFields("TSS.StylesheetArchive", { IDENTIFIER: "styles", STYLE: "identifier_to_style_map" });
+export const StyleChildrenEntry = protoFields("TSS.StylesheetArchive", { PARENT: "styles", CHILDREN: "identifier_to_style_map" });
+export const VersionedStyles = protoFields("TSS.StylesheetArchive", { STYLES: "styles", ID_MAP: "identifier_to_style_map", CHILDREN_MAP: "parent" });
 
 export const stylesheetExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];

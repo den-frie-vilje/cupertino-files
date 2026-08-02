@@ -10,6 +10,7 @@
  *
  * Field numbers from proto/current/TSDArchives.proto.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { ColorFields, RGB_SPACE, makeColor, makeDataRef } from "../tsp/schema.ts";
 
@@ -81,33 +82,33 @@ export function hexColor(hex: string): Color {
 // -------------------------------------------------------------------- fills
 
 /** TSD.FillArchive. */
-export const FillFields = { COLOR: 1, GRADIENT: 2, IMAGE: 3 } as const;
+export const FillFields = protoFields("TSD.FillArchive", { COLOR: "color", GRADIENT: "gradient", IMAGE: "image" });
 
 /** TSD.GradientArchive. */
-export const GradientFields = {
-  TYPE: 1,
-  STOPS: 2,
-  OPACITY: 3,
-  ADVANCED: 4,
-  ANGLE_GRADIENT: 5,
-} as const;
-export const GradientStopFields = { COLOR: 1, FRACTION: 2, INFLECTION: 3 } as const;
-export const GradientType = { LINEAR: 0, RADIAL: 1 } as const;
+export const GradientFields = protoFields("TSD.GradientArchive", {
+  TYPE: "type",
+  STOPS: "stops",
+  OPACITY: "opacity",
+  ADVANCED: "advancedGradient",
+  ANGLE_GRADIENT: "anglegradient",
+});
+export const GradientStopFields = protoFields("TSD.GradientArchive", { COLOR: "type", FRACTION: "stops", INFLECTION: "opacity" });
+export const GradientType = protoEnum("TSD.GradientArchive.GradientType", { LINEAR: "Linear", RADIAL: "Radial" });
 
 /** TSD.ImageFillArchive. */
-export const ImageFillFields = {
-  TECHNIQUE: 2,
-  TINT: 3,
-  FILL_SIZE: 4,
-  IMAGE_DATA: 6,
-} as const;
-export const ImageFillTechnique = {
-  NATURAL_SIZE: 0,
-  STRETCH: 1,
-  TILE: 2,
-  SCALE_TO_FILL: 3,
-  SCALE_TO_FIT: 4,
-} as const;
+export const ImageFillFields = protoFields("TSD.ImageFillArchive", {
+  TECHNIQUE: "technique",
+  TINT: "tint",
+  FILL_SIZE: "fillsize",
+  IMAGE_DATA: "imagedata",
+});
+export const ImageFillTechnique = protoEnum("TSD.ImageFillArchive.ImageFillTechnique", {
+  NATURAL_SIZE: "NaturalSize",
+  STRETCH: "Stretch",
+  TILE: "Tile",
+  SCALE_TO_FILL: "ScaleToFill",
+  SCALE_TO_FIT: "ScaleToFit",
+});
 
 export interface GradientStop {
   color: Color;
@@ -237,20 +238,20 @@ export function linearGradient(from: Color, to: Color, opacity?: number): Fill {
 // ------------------------------------------------------------------ strokes
 
 /** TSD.StrokeArchive — used for cell borders, paragraph rules and outlines. */
-export const StrokeFields = {
-  COLOR: 1,
-  WIDTH: 2,
-  CAP: 3,
-  JOIN: 4,
-  MITER_LIMIT: 5,
-  PATTERN: 6,
-} as const;
-export const LineCap = { BUTT: 0, ROUND: 1, SQUARE: 2 } as const;
-export const LineJoin = { MITER: 0, ROUND: 1, BEVEL: 2 } as const;
+export const StrokeFields = protoFields("TSD.StrokeArchive", {
+  COLOR: "color",
+  WIDTH: "width",
+  CAP: "cap",
+  JOIN: "join",
+  MITER_LIMIT: "miter_limit",
+  PATTERN: "pattern",
+});
+export const LineCap = protoEnum("TSD.StrokeArchive.LineCap", { BUTT: "ButtCap", ROUND: "RoundCap", SQUARE: "SquareCap" });
+export const LineJoin = protoEnum("TSD.LineJoin", { MITER: "MiterJoin", ROUND: "RoundJoin", BEVEL: "BevelJoin" });
 
 /** TSD.StrokePatternArchive. */
-export const StrokePatternFields = { TYPE: 1, PHASE: 2, COUNT: 3, PATTERN: 4 } as const;
-export const StrokePatternType = { PATTERN: 0, SOLID: 1, EMPTY: 2 } as const;
+export const StrokePatternFields = protoFields("TSD.StrokePatternArchive", { TYPE: "type", PHASE: "phase", COUNT: "count", PATTERN: "pattern" });
+export const StrokePatternType = protoEnum("TSD.StrokePatternArchive.StrokePatternType", { PATTERN: "TSDPattern", SOLID: "TSDSolidPattern", EMPTY: "TSDEmptyPattern" });
 
 export interface Stroke {
   color?: Color;
@@ -316,16 +317,16 @@ export function solidStroke(color: Color, width = 1): Stroke {
 // ------------------------------------------------------------------ shadows
 
 /** TSD.ShadowArchive. */
-export const ShadowFields = {
-  COLOR: 1,
-  ANGLE: 2,
-  OFFSET: 3,
-  RADIUS: 4,
-  OPACITY: 5,
-  IS_ENABLED: 6,
-  TYPE: 7,
-} as const;
-export const ShadowType = { DROP: 0, CONTACT: 1, CURVED: 2 } as const;
+export const ShadowFields = protoFields("TSD.ShadowArchive", {
+  COLOR: "color",
+  ANGLE: "angle",
+  OFFSET: "offset",
+  RADIUS: "radius",
+  OPACITY: "opacity",
+  IS_ENABLED: "is_enabled",
+  TYPE: "type",
+});
+export const ShadowType = protoEnum("TSD.ShadowArchive.ShadowType", { DROP: "TSDDropShadow", CONTACT: "TSDContactShadow", CURVED: "TSDCurvedShadow" });
 
 export interface Shadow {
   color?: Color;
@@ -377,7 +378,7 @@ export function writeShadow(shadow: Shadow): RawMessage {
 // ----------------------------------------------------------------- padding
 
 /** TSWP.PaddingArchive — reused by table cells and text insets. */
-export const PaddingFields = { LEFT: 1, TOP: 2, RIGHT: 3, BOTTOM: 4 } as const;
+export const PaddingFields = protoFields("TSWP.PaddingArchive", { LEFT: "left", TOP: "top", RIGHT: "right", BOTTOM: "bottom" });
 
 export interface Padding {
   left?: number;

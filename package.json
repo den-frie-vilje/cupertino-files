@@ -34,6 +34,7 @@
   },
   "files": [
     "dist",
+    "proto",
     "skills",
     "README.md",
     "LICENSE"
@@ -63,6 +64,8 @@
     "test:e2e": "node --test test/e2e/*.e2e.test.ts",
     "test:all": "npm run test && npm run test:e2e",
     "pages:docs": "node scripts/make-pages-docs.ts",
+    "proto:embed": "node scripts/embed-proto-schema.ts",
+    "proto:embed:check": "node scripts/embed-proto-schema.ts --check",
     "shape:audit": "node scripts/audit-authored-shape.ts",
     "shape:check": "node scripts/audit-authored-shape.ts --check"
   },

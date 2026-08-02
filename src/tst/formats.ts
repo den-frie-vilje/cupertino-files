@@ -26,34 +26,37 @@
  * | 266  | —        | pop-up menu (pre-BNC files only) |
  * | 270..274 | various | custom formats, identified by a UUID |
  */
+import { measuredEnum, protoFields } from "../proto/fields.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { CellFlag } from "./cellrecord.ts";
 
 /** TSK.FormatStructArchive — the fields this library models. */
-export const FormatFields = {
-  FORMAT_TYPE: 1,
-  DECIMAL_PLACES: 2,
-  CURRENCY_CODE: 3,
-  NEGATIVE_STYLE: 4,
-  SHOW_THOUSANDS_SEPARATOR: 5,
-  USE_ACCOUNTING_STYLE: 6,
-  DURATION_STYLE: 7,
-  BASE: 8,
-  BASE_PLACES: 9,
-  FRACTION_ACCURACY: 11,
-  SUPPRESS_DATE_FORMAT: 12,
-  SUPPRESS_TIME_FORMAT: 13,
-  DATE_TIME_FORMAT: 14,
-  DURATION_UNIT_LARGEST: 15,
-  DURATION_UNIT_SMALLEST: 16,
-  CUSTOM_FORMAT_STRING: 18,
-  SCALE_FACTOR: 19,
-  CUSTOM_UID: 41,
-  BOOL_TRUE_STRING: 44,
-  BOOL_FALSE_STRING: 45,
-} as const;
+export const FormatFields = protoFields("TSK.FormatStructArchive", {
+  FORMAT_TYPE: "format_type",
+  DECIMAL_PLACES: "decimal_places",
+  CURRENCY_CODE: "currency_code",
+  NEGATIVE_STYLE: "negative_style",
+  SHOW_THOUSANDS_SEPARATOR: "show_thousands_separator",
+  USE_ACCOUNTING_STYLE: "use_accounting_style",
+  DURATION_STYLE: "duration_style",
+  BASE: "base",
+  BASE_PLACES: "base_places",
+  FRACTION_ACCURACY: "fraction_accuracy",
+  SUPPRESS_DATE_FORMAT: "suppress_date_format",
+  SUPPRESS_TIME_FORMAT: "suppress_time_format",
+  DATE_TIME_FORMAT: "date_time_format",
+  DURATION_UNIT_LARGEST: "duration_unit_largest",
+  DURATION_UNIT_SMALLEST: "duration_unit_smallest",
+  CUSTOM_FORMAT_STRING: "custom_format_string",
+  SCALE_FACTOR: "scale_factor",
+  CUSTOM_UID: "custom_uid",
+  BOOL_TRUE_STRING: "bool_true_string",
+  BOOL_FALSE_STRING: "bool_false_string",
+});
 
-export const FormatType = {
+export const FormatType = measuredEnum(
+  "TSK.FormatStructArchive.format_type",
+  {
   BOOLEAN: 1,
   NUMBER: 256,
   CURRENCY: 257,
@@ -85,7 +88,11 @@ export const FormatType = {
   CUSTOM_DATE: 272,
   CUSTOM_DURATION: 273,
   CUSTOM_CURRENCY: 274,
-} as const;
+  },
+  "`format_type` is a uint32 with no enum in the 14.4 dump. These values " +
+    "are read back from the corpus's own formatted cells rather than " +
+    "invented, and every one of them round-trips through the format tests.",
+);
 
 /**
  * `decimal_places` is a count, except for this one value.

@@ -16,6 +16,7 @@
  * the text and adjusts ALL attribute tables so no index ever points past the
  * end of text (stale indexes are a known crash source in the apps).
  */
+import { protoEnum } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import type { ObjectStore } from "../tsp/store.ts";
@@ -84,17 +85,17 @@ export const OBJECT_REPLACEMENT_CHARACTER = "\uFFFC";
 export const FOOTNOTE_MARK_CHARACTER = "\u000E";
 
 /** TSWP.StorageArchive.KindType — which container a storage belongs to. */
-export const STORAGE_KIND = {
-  BODY: 0,
-  HEADER: 1,
-  FOOTNOTE: 2,
-  TEXTBOX: 3,
-  NOTE: 4,
-  CELL: 5,
-  UNCLASSIFIED: 6,
-  TABLE_OF_CONTENTS: 7,
-  UNDEFINED: 8,
-} as const;
+export const STORAGE_KIND = protoEnum("TSWP.StorageArchive.KindType", {
+  BODY: "BODY",
+  HEADER: "HEADER",
+  FOOTNOTE: "FOOTNOTE",
+  TEXTBOX: "TEXTBOX",
+  NOTE: "NOTE",
+  CELL: "CELL",
+  UNCLASSIFIED: "UNCLASSIFIED",
+  TABLE_OF_CONTENTS: "TABLEOFCONTENTS",
+  UNDEFINED: "UNDEFINED",
+});
 
 /**
  * Characters that end a paragraph.

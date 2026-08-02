@@ -39,6 +39,7 @@
  * confirms this reading or shows exactly where it is wrong. See
  * `docs/MANUAL-WORK.md` protocol 5.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
@@ -51,74 +52,74 @@ export const BUILD_TYPE = {
 } as const;
 
 /** KN.BuildArchive. */
-export const BuildFields = {
-  DRAWABLE: 1,
-  DELIVERY: 2,
-  DURATION_DEPRECATED: 3,
-  ATTRIBUTES: 4,
-  CHUNK_ID_SEED: 5,
-} as const;
+export const BuildFields = protoFields("KN.BuildArchive", {
+  DRAWABLE: "drawable",
+  DELIVERY: "delivery",
+  DURATION_DEPRECATED: "duration",
+  ATTRIBUTES: "attributes",
+  CHUNK_ID_SEED: "chunk_id_seed",
+});
 
 /** KN.BuildChunkArchive. */
-export const BuildChunkFields = {
-  BUILD: 1,
-  DELAY: 3,
-  DURATION: 4,
-  AUTOMATIC: 5,
-  REFERENT: 6,
-  BUILD_ID: 8,
-} as const;
+export const BuildChunkFields = protoFields("KN.BuildChunkArchive", {
+  BUILD: "build",
+  DELAY: "delay",
+  DURATION: "duration",
+  AUTOMATIC: "automatic",
+  REFERENT: "referent",
+  BUILD_ID: "build_id",
+});
 
 /** KN.BuildAttributesArchive — the subset that describes the effect. */
-export const BuildAttributesFields = {
-  DATABASE_ANIMATION_TYPE: 1,
-  DATABASE_EFFECT: 2,
-  DATABASE_DIRECTION: 3,
-  EVENT_TRIGGER: 4,
-  DATABASE_DELAY: 5,
-  DATABASE_DURATION: 8,
-  ACTION_ROTATION_ANGLE: 9,
-  ACTION_ROTATION_DIRECTION: 10,
-  ACTION_SCALE_SIZE: 11,
-  ACTION_COLOR_ALPHA: 12,
-  ACTION_ACCELERATION: 13,
-  CURVE_STYLE: 14,
-  ANIMATION_ATTRIBUTES: 18,
-  CUSTOM_BOUNCE: 19,
-  CUSTOM_TEXT_DELIVERY: 20,
-  CUSTOM_DELIVERY_OPTION: 21,
-  START_OFFSET: 27,
-  END_OFFSET: 28,
-  CUSTOM_MOTION_BLUR: 29,
-} as const;
+export const BuildAttributesFields = protoFields("KN.BuildAttributesArchive", {
+  DATABASE_ANIMATION_TYPE: "database_animationType",
+  DATABASE_EFFECT: "database_effect",
+  DATABASE_DIRECTION: "database_direction",
+  EVENT_TRIGGER: "eventTrigger",
+  DATABASE_DELAY: "database_delay",
+  DATABASE_DURATION: "database_duration",
+  ACTION_ROTATION_ANGLE: "action_rotationAngle",
+  ACTION_ROTATION_DIRECTION: "action_rotationDirection",
+  ACTION_SCALE_SIZE: "action_scaleSize",
+  ACTION_COLOR_ALPHA: "action_colorAlpha",
+  ACTION_ACCELERATION: "action_acceleration",
+  CURVE_STYLE: "curveStyle",
+  ANIMATION_ATTRIBUTES: "animationAttributes",
+  CUSTOM_BOUNCE: "custom_bounce",
+  CUSTOM_TEXT_DELIVERY: "custom_textDelivery",
+  CUSTOM_DELIVERY_OPTION: "custom_deliveryOption",
+  START_OFFSET: "startOffset",
+  END_OFFSET: "endOffset",
+  CUSTOM_MOTION_BLUR: "custom_motion_blur",
+});
 
 /** KN.BuildAttributesArchive.BuildAttributesTextDelivery. */
-export const TextDelivery = {
-  UNDEFINED: 0,
-  BY_OBJECT: 1,
-  BY_WORD: 2,
-  BY_CHARACTER: 3,
-  BY_LINE: 4,
-} as const;
+export const TextDelivery = protoEnum("KN.BuildAttributesArchive.BuildAttributesTextDelivery", {
+  UNDEFINED: "kTextDeliveryUndefined",
+  BY_OBJECT: "kTextDeliveryByObject",
+  BY_WORD: "kTextDeliveryByWord",
+  BY_CHARACTER: "kTextDeliveryByCharacter",
+  BY_LINE: "kTextDeliveryByLine",
+});
 
 /** KN.BuildAttributesArchive.BuildAttributesDeliveryOption. */
-export const DeliveryOption = {
-  UNDEFINED: 0,
-  FORWARD: 1,
-  BACKWARD: 2,
-  FROM_CENTER: 3,
-  FROM_EDGES: 4,
-  RANDOM: 5,
-} as const;
+export const DeliveryOption = protoEnum("KN.BuildAttributesArchive.BuildAttributesDeliveryOption", {
+  UNDEFINED: "kDeliveryOptionUndefined",
+  FORWARD: "kDeliveryOptionForward",
+  BACKWARD: "kDeliveryOptionBackward",
+  FROM_CENTER: "kDeliveryOptionFromCenter",
+  FROM_EDGES: "kDeliveryOptionFromEdges",
+  RANDOM: "kDeliveryOptionRandom",
+});
 
 /** KN.BuildAttributesArchive.BuildAttributesAcceleration. */
-export const Acceleration = {
-  NONE: 0,
-  EASE_IN: 1,
-  EASE_OUT: 2,
-  EASE_BOTH: 3,
-  CUSTOM: 4,
-} as const;
+export const Acceleration = protoEnum("KN.BuildAttributesArchive.BuildAttributesAcceleration", {
+  NONE: "kNone",
+  EASE_IN: "kEaseIn",
+  EASE_OUT: "kEaseOut",
+  EASE_BOTH: "kEaseBoth",
+  CUSTOM: "kCustom",
+});
 
 /** One stage of a multi-part build. */
 export interface BuildChunk {

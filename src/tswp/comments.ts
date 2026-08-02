@@ -21,6 +21,7 @@
  *
  * Dates are `TSP.Date { seconds }` counted from Apple's 2001-01-01 epoch.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -36,28 +37,28 @@ export const COMMENT_TYPE = {
 } as const;
 
 /** TSWP.HighlightArchive. */
-export const HighlightFields = {
-  COMMENT_STORAGE: 1,
-  TEXT_ATTRIBUTE_UUID: 2,
-} as const;
+export const HighlightFields = protoFields("TSWP.HighlightArchive", {
+  COMMENT_STORAGE: "commentStorage",
+  TEXT_ATTRIBUTE_UUID: "text_attribute_uuid_string",
+});
 
 /** TSD.CommentStorageArchive. */
-export const CommentStorageFields = {
-  TEXT: 1,
-  CREATION_DATE: 2,
-  AUTHOR: 3,
-  REPLIES: 4,
-  STORAGE_UUID: 5,
-} as const;
+export const CommentStorageFields = protoFields("TSD.CommentStorageArchive", {
+  TEXT: "text",
+  CREATION_DATE: "creation_date",
+  AUTHOR: "author",
+  REPLIES: "replies",
+  STORAGE_UUID: "storage_uuid",
+});
 
 /** TSK.AnnotationAuthorArchive. */
-export const AuthorFields = {
-  NAME: 1,
-  COLOR: 2,
-  PUBLIC_ID: 3,
-  IS_PUBLIC_AUTHOR: 4,
-  PUBLIC_IDS: 5,
-} as const;
+export const AuthorFields = protoFields("TSK.AnnotationAuthorArchive", {
+  NAME: "name",
+  COLOR: "color",
+  PUBLIC_ID: "public_id",
+  IS_PUBLIC_AUTHOR: "is_public_author",
+  PUBLIC_IDS: "public_ids",
+});
 
 /** TSK.AnnotationAuthorStorageArchive: annotation_author = 1. */
 const AuthorStorageFields = { AUTHORS: 1 } as const;

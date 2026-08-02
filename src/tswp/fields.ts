@@ -40,6 +40,7 @@
  * does not perform, and a stale digit shown in place of a live field is
  * worse than an empty one the app fills in.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -52,25 +53,25 @@ export const ATTACHMENT_TYPE = {
 } as const;
 
 /** TSWP.TextualAttachmentArchive. */
-export const TextualAttachment = {
-  STRING_EQUIVALENT: 1,
-  KIND: 2,
-} as const;
+export const TextualAttachment = protoFields("TSWP.TextualAttachmentArchive", {
+  STRING_EQUIVALENT: "string_equivalent",
+  KIND: "kind",
+});
 
 /** TSWP.NumberAttachmentArchive. */
-export const NumberAttachment = {
-  SUPER: 1,
-  NUMBER_FORMAT: 2,
-  STRING_VALUE: 3,
-  NUMBER_FORMAT_NAME: 4,
-} as const;
+export const NumberAttachment = protoFields("TSWP.NumberAttachmentArchive", {
+  SUPER: "super",
+  NUMBER_FORMAT: "number_format",
+  STRING_VALUE: "string_value",
+  NUMBER_FORMAT_NAME: "number_format_name",
+});
 
 /** TSWP.TextualAttachmentArchive.Kind. */
-export const AttachmentKind = {
-  PAGE_NUMBER: 0,
-  PAGE_COUNT: 1,
-  FOOTNOTE_MARK: 2,
-} as const;
+export const AttachmentKind = protoEnum("TSWP.TextualAttachmentArchive.Kind", {
+  PAGE_NUMBER: "kKindPageNumber",
+  PAGE_COUNT: "kKindPageCount",
+  FOOTNOTE_MARK: "kKindFootnoteMark",
+});
 
 /**
  * Page-number formats this library will write.
@@ -158,46 +159,46 @@ export const SMART_FIELD_TYPE = {
 } as const;
 
 /** TSWP.SmartFieldArchive — the base every span field embeds at field 1. */
-export const SmartField = { TEXT_ATTRIBUTE_UUID: 1 } as const;
+export const SmartField = protoFields("TSWP.SmartFieldArchive", { TEXT_ATTRIBUTE_UUID: "text_attribute_uuid_string" });
 
 /** TSWP.DateTimeSmartFieldArchive. */
-export const DateTimeField = {
-  SUPER: 1,
-  FORMAT: 2,
-  LOCALE_IDENTIFIER: 3,
-  DATE_STYLE: 4,
-  TIME_STYLE: 5,
-  UPDATE_PLAN: 6,
-  NEEDS_UPDATE: 7,
-  DATE: 8,
-} as const;
+export const DateTimeField = protoFields("TSWP.DateTimeSmartFieldArchive", {
+  SUPER: "super",
+  FORMAT: "format",
+  LOCALE_IDENTIFIER: "locale_identifier",
+  DATE_STYLE: "date_style",
+  TIME_STYLE: "time_style",
+  UPDATE_PLAN: "update_plan",
+  NEEDS_UPDATE: "needs_update",
+  DATE: "date",
+});
 
 /** TSWP.DateTimeSmartFieldArchive.DateTimeFormatterStyle. */
-export const DateTimeStyle = {
-  NONE: 0,
-  SHORT: 1,
-  MEDIUM: 2,
-  LONG: 3,
-  FULL: 4,
-} as const;
+export const DateTimeStyle = protoEnum("TSWP.DateTimeSmartFieldArchive.DateTimeFormatterStyle", {
+  NONE: "kDateTimeFormatterStyleNone",
+  SHORT: "kDateTimeFormatterStyleShort",
+  MEDIUM: "kDateTimeFormatterStyleMedium",
+  LONG: "kDateTimeFormatterStyleLong",
+  FULL: "kDateTimeFormatterStyleFull",
+});
 
 /** TSWP.DateTimeSmartFieldArchive.DateTimeUpdatePlan. */
-export const DateTimeUpdatePlan = {
+export const DateTimeUpdatePlan = protoEnum("TSWP.DateTimeSmartFieldArchive.DateTimeUpdatePlan", {
   /** Frozen: the text stays as written. */
-  NEVER: 0,
+  NEVER: "kDateTimeUpdatePlanNever",
   /** Refreshed whenever the app opens or prints the document. */
-  AUTO: 1,
+  AUTO: "kDateTimeUpdatePlanAuto",
   /** Refreshed once, then frozen. */
-  ONCE: 2,
-} as const;
+  ONCE: "kDateTimeUpdatePlanOnce",
+});
 
 /** TSWP.BookmarkFieldArchive. */
-export const BookmarkFieldArchive = {
-  SUPER: 1,
-  NAME: 2,
-  RANGED: 3,
-  HIDDEN: 4,
-} as const;
+export const BookmarkFieldArchive = protoFields("TSWP.BookmarkFieldArchive", {
+  SUPER: "super",
+  NAME: "name",
+  RANGED: "ranged",
+  HIDDEN: "hidden",
+});
 
 /** TSP.Date: seconds = 1, from 2001-01-01. */
 const DATE_SECONDS = 1;

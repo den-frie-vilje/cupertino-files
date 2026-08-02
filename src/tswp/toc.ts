@@ -17,6 +17,7 @@
  * repaginates; a TOC whose cached page numbers you invented is wrong until
  * someone notices.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -33,35 +34,35 @@ export const TOC_TYPE = {
 } as const;
 
 /** TSWP.TOCInfoArchive. */
-export const TocInfo = {
-  SUPER: 1,
-  SETTINGS: 2,
-  ENTRY_DATA: 3,
-  PAGE_NUMBER_RANGES: 4,
-  SYNC_WITH_NAVIGATOR: 5,
-} as const;
+export const TocInfo = protoFields("TSWP.TOCInfoArchive", {
+  SUPER: "super",
+  SETTINGS: "toc_settings",
+  ENTRY_DATA: "toc_entry_data",
+  PAGE_NUMBER_RANGES: "page_number_ranges",
+  SYNC_WITH_NAVIGATOR: "sync_toc_settings_with_toc_navigator",
+});
 
 /** TSWP.TOCSettingsArchive. */
-export const TocSettings = { NAME: 1, SCOPE: 2, ENTRIES: 3 } as const;
+export const TocSettings = protoFields("TSWP.TOCSettingsArchive", { NAME: "toc_name", SCOPE: "toc_scope", ENTRIES: "entries" });
 /** TSWP.TOCSettingsArchive.TOCEntryData. */
-export const TocEntryData = {
-  PARAGRAPH_STYLE: 1,
-  TOC_ENTRY_STYLE: 2,
-  SHOW_IN_TOC: 3,
-} as const;
+export const TocEntryData = protoFields("TSWP.TOCSettingsArchive.TOCEntryData", {
+  PARAGRAPH_STYLE: "paragraph_style",
+  TOC_ENTRY_STYLE: "toc_entry_style",
+  SHOW_IN_TOC: "show_in_toc",
+});
 
 /** TSWP.TOCEntryInstanceArchive — the cached result of a regeneration. */
-export const TocEntryInstance = {
-  PARAGRAPH_INDEX: 1,
-  PAGE_NUMBER: 2,
-  NUMBER_FORMAT: 3,
-  HEADING: 4,
-  INDEXED_STYLE: 5,
-  INDEXED_LIST_STYLE: 6,
-  INDEXED_LIST_START: 7,
-  INDEXED_PARAGRAPH_LEVEL: 8,
-  NUMBER_FORMAT_NAME: 9,
-} as const;
+export const TocEntryInstance = protoFields("TSWP.TOCEntryInstanceArchive", {
+  PARAGRAPH_INDEX: "paragraph_index",
+  PAGE_NUMBER: "page_number",
+  NUMBER_FORMAT: "number_format",
+  HEADING: "heading",
+  INDEXED_STYLE: "indexed_style",
+  INDEXED_LIST_STYLE: "indexed_list_style",
+  INDEXED_LIST_START: "indexed_list_start",
+  INDEXED_PARAGRAPH_LEVEL: "indexed_paragraph_level",
+  NUMBER_FORMAT_NAME: "number_format_name",
+});
 
 /** What a TOC collects from. */
 export const TocScope = {

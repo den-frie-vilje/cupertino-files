@@ -30,32 +30,33 @@
  * not recompute the latter, so toggling a filter set here changes the rule,
  * not the visible row set, until the app re-evaluates.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { readPredicate, type Predicate, type ReadPredicateOptions } from "./predicates.ts";
 import { columnName } from "./formulas.ts";
 
 /** TST.FilterSetArchive. */
-export const FilterSetFields = {
-  TYPE: 1,
-  IS_ENABLED: 2,
-  RULES_PRE_PIVOT: 3,
-  NEEDS_FORMULA_REWRITE_FOR_IMPORT: 4,
-  OFFSETS: 5,
-  ENABLED: 6,
-  RULES: 7,
-} as const;
+export const FilterSetFields = protoFields("TST.FilterSetArchive", {
+  TYPE: "type",
+  IS_ENABLED: "is_enabled",
+  RULES_PRE_PIVOT: "filter_rules_prepivot",
+  NEEDS_FORMULA_REWRITE_FOR_IMPORT: "needs_formula_rewrite_for_import",
+  OFFSETS: "filter_offsets",
+  ENABLED: "filter_enabled",
+  RULES: "filter_rules",
+});
 
 /** TST.FilterRuleArchive / TST.FilterRulePrePivotArchive. */
 const FilterRuleFields = { PREDICATE: 1, DISABLED: 2 } as const;
 
 /** How a set combines its rules. */
-export const FilterSetType = {
+export const FilterSetType = protoEnum("TST.FilterSetArchive.FilterSetType", {
   /** A row must match every enabled rule. */
-  ALL: 0,
+  ALL: "FilterSetArchiveTypeAll",
   /** A row matching any enabled rule is shown. */
-  ANY: 1,
-} as const;
+  ANY: "FilterSetArchiveTypeAny",
+});
 
 export type FilterMode = "all" | "any";
 

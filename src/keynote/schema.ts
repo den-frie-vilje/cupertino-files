@@ -7,6 +7,7 @@
  * NOT belong in the shared layer: they are inline on KN.SlideArchive and
  * have no counterpart in Pages or Numbers.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
@@ -32,65 +33,65 @@ export const KN_TYPE = {
 export const SLIDE_TYPES: readonly number[] = [KN_TYPE.SLIDE, KN_TYPE.SLIDE_LEGACY_MASTER];
 
 /** KN.DocumentArchive. */
-export const KNDocument = { SHOW: 2, SUPER: 3 } as const;
+export const KNDocument = protoFields("KN.DocumentArchive", { SHOW: "show", SUPER: "super" });
 
 /** KN.ShowArchive. */
-export const Show = {
-  UI_STATE: 1,
-  THEME: 2,
-  SLIDE_TREE: 3, // inline KN.SlideTreeArchive
-  SIZE: 4, // TSP.Size — the slide canvas size
-  STYLESHEET: 5,
-  SLIDE_NUMBERS_VISIBLE: 6,
-  LOOP_PRESENTATION: 8,
-  MODE: 9,
-  AUTOPLAY_TRANSITION_DELAY: 10,
-  AUTOPLAY_BUILD_DELAY: 11,
-  IDLE_TIMER_ACTIVE: 15,
-  IDLE_TIMER_DELAY: 16,
-  SOUNDTRACK: 17,
-  AUTOMATICALLY_PLAYS_UPON_OPEN: 18,
-  SLIDE_LIST: 19,
-} as const;
+export const Show = protoFields("KN.ShowArchive", {
+  UI_STATE: "uiState",
+  THEME: "theme",
+  SLIDE_TREE: "slideTree", // inline KN.SlideTreeArchive
+  SIZE: "size", // TSP.Size — the slide canvas size
+  STYLESHEET: "stylesheet",
+  SLIDE_NUMBERS_VISIBLE: "slideNumbersVisible",
+  LOOP_PRESENTATION: "loop_presentation",
+  MODE: "mode",
+  AUTOPLAY_TRANSITION_DELAY: "autoplay_transition_delay",
+  AUTOPLAY_BUILD_DELAY: "autoplay_build_delay",
+  IDLE_TIMER_ACTIVE: "idle_timer_active",
+  IDLE_TIMER_DELAY: "idle_timer_delay",
+  SOUNDTRACK: "soundtrack",
+  AUTOMATICALLY_PLAYS_UPON_OPEN: "automatically_plays_upon_open",
+  SLIDE_LIST: "slideList",
+});
 
 /** KN.SlideTreeArchive. */
-export const SlideTree = { ROOT_SLIDE_NODE: 1, SLIDES: 2 } as const;
+export const SlideTree = protoFields("KN.SlideTreeArchive", { ROOT_SLIDE_NODE: "rootSlideNode", SLIDES: "slides" });
 
 /** KN.SlideNodeArchive. */
-export const SlideNode = {
-  CHILDREN: 1,
-  SLIDE: 2,
-  IS_SKIPPED: 4,
-  HAS_TRANSITION: 7,
-  HAS_NOTE: 8,
-  DEPTH: 21,
-} as const;
+export const SlideNode = protoFields("KN.SlideNodeArchive", {
+  CHILDREN: "children",
+  SLIDE: "slide",
+  IS_SKIPPED: "isSkipped",
+  HAS_TRANSITION: "hasTransition",
+  HAS_NOTE: "hasNote",
+  DEPTH: "depth",
+});
 
 /** KN.SlideArchive. */
-export const Slide = {
-  STYLE: 1,
-  BUILDS: 2,
+export const Slide = protoFields("KN.SlideArchive", {
+  STYLE: "style",
+  BUILDS: "builds",
   /** Inline KN.TransitionArchive — always present, even for "no transition". */
-  TRANSITION: 4,
-  TITLE_PLACEHOLDER: 5,
-  BODY_PLACEHOLDER: 6,
-  OWNED_DRAWABLES: 7,
-  NAME: 10,
+  TRANSITION: "transition",
+  TITLE_PLACEHOLDER: "titlePlaceholder",
+  BODY_PLACEHOLDER: "bodyPlaceholder",
+  OWNED_DRAWABLES: "owned_drawables",
+  NAME: "name",
   /** Reference to the master slide this one is based on (absent on masters). */
-  TEMPLATE_SLIDE: 17,
-  IN_DOCUMENT: 19,
-  SLIDE_NUMBER_PLACEHOLDER: 20,
-  NOTE: 27,
-  OBJECT_PLACEHOLDER: 30,
-  DRAWABLES_Z_ORDER: 42,
-  BUILD_CHUNKS: 43,
-} as const;
+  TEMPLATE_SLIDE: "template_slide",
+  IN_DOCUMENT: "inDocument",
+  SLIDE_NUMBER_PLACEHOLDER: "slideNumberPlaceholder",
+  NOTE: "note",
+  OBJECT_PLACEHOLDER: "objectPlaceholder",
+  DRAWABLES_Z_ORDER: "drawables_z_order",
+  BUILD_CHUNKS: "buildChunks",
+});
 
 /** KN.NoteArchive. */
-export const Note = { CONTAINED_STORAGE: 1 } as const;
+export const Note = protoFields("KN.NoteArchive", { CONTAINED_STORAGE: "containedStorage" });
 
 /** KN.TransitionArchive → KN.TransitionAttributesArchive. */
-export const Transition = { ATTRIBUTES: 2 } as const;
+export const Transition = protoFields("KN.TransitionArchive", { ATTRIBUTES: "attributes" });
 export const TransitionAttributes = {
   ANIMATION_ATTRIBUTES: 8,
   CUSTOM_TWIST: 9,
@@ -105,28 +106,28 @@ export const TransitionAttributes = {
 } as const;
 
 /** KN.AnimationAttributesArchive — the actual transition parameters. */
-export const AnimationAttributes = {
-  ANIMATION_TYPE: 1,
-  EFFECT: 2,
-  DURATION: 3,
-  DIRECTION: 4,
-  DELAY: 5,
-  IS_AUTOMATIC: 6,
-  COLOR: 7,
-  RANDOM_NUMBER_SEED: 11,
-  CUSTOM_DETAIL: 12,
-} as const;
+export const AnimationAttributes = protoFields("KN.AnimationAttributesArchive", {
+  ANIMATION_TYPE: "animation_type",
+  EFFECT: "effect",
+  DURATION: "duration",
+  DIRECTION: "direction",
+  DELAY: "delay",
+  IS_AUTOMATIC: "is_automatic",
+  COLOR: "color",
+  RANDOM_NUMBER_SEED: "random_number_seed",
+  CUSTOM_DETAIL: "custom_detail",
+});
 
 /** `effect` value meaning "no transition" (an explicit encoding, not absence). */
 export const NO_TRANSITION_EFFECT = "none";
 
-export const TimingCurve = {
-  LINEAR: 1,
-  EASE_IN: 2,
-  EASE_OUT: 3,
-  EASE_IN_EASE_OUT: 4,
-  CUSTOM: 5,
-} as const;
+export const TimingCurve = protoEnum("KN.TransitionAttributesArchive.TransitionCustomAttributesTimingCurveType", {
+  LINEAR: "TransitionCustomAttributesTimingCurveTypeLinear",
+  EASE_IN: "TransitionCustomAttributesTimingCurveTypeEaseIn",
+  EASE_OUT: "TransitionCustomAttributesTimingCurveTypeEaseOut",
+  EASE_IN_EASE_OUT: "TransitionCustomAttributesTimingCurveTypeEaseInEaseOut",
+  CUSTOM: "TransitionCustomAttributesTimingCurveTypeCustom",
+});
 
 export const TextDelivery = {
   BY_OBJECT: 1,
@@ -145,7 +146,7 @@ export const PlaceholderKind = {
 } as const;
 
 /** KN.BuildArchive (animation builds) — brief. */
-export const Build = { DRAWABLE: 1, TYPE: 2, ANIMATION_ATTRIBUTES: 3 } as const;
+export const Build = protoFields("KN.BuildArchive", { DRAWABLE: "drawable", TYPE: "delivery", ANIMATION_ATTRIBUTES: "duration" });
 
 const slideExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];

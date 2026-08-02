@@ -403,6 +403,29 @@ external references, object-ID allocation recorded in `PackageMetadata`,
 stylesheet registration. The invariants and their provenance are documented
 in [FORMAT.md §10](docs/FORMAT.md).
 
+**Field numbers come from Apple's schema.** The 41 vendored `.proto` dumps
+in [`proto/`](proto/README.md) are not documentation — the library reads
+them. A declaration names *fields*, and `npm run proto:embed` resolves the
+numbers into a generated table the runtime imports:
+
+```ts
+export const Storage = protoFields("TSWP.StorageArchive", {
+  KIND: "kind",
+  TABLE_PARA_STYLE: "table_para_style",
+});
+```
+
+A misspelled or invented field throws at import rather than reading the
+wrong bytes, and the suite fails if the generated table and `proto/` drift
+apart. The schemas ship in the package, so an installed copy carries the
+authority for every number in it.
+
+Not everything can be looked up: the dumps are Numbers 14.4 and Pages 5.0,
+so fields added since are declared with `measuredFields`, which requires a
+sentence saying how the number was established and refuses one the schema
+already defines. Archive **type ids** (`TSWP_TYPE.STORAGE = 2001`) are the
+app's object registry and appear in no `.proto` at all.
+
 **Version awareness.** Apple evolves the format additively (verified
 2013 → 2026: no field renumbering, ever). This library addresses fields by
 number, preserves everything it doesn't model, treats the type registry as
@@ -423,7 +446,15 @@ npm run test:e2e   # macOS only: drives Pages/Numbers/Keynote via osascript
 npm run coverage   # regenerate docs/COVERAGE.md
 npm run typecheck
 npm run build      # tsc → dist/
+
+npm run proto:embed  # after changing anything under proto/
+npm run proto:check  # what is still hand-typed vs the schema
+npm run shape:audit  # what Apple writes into an archive that we do not
 ```
+
+Refreshing the schemas is `proto:embed` plus `npm test`: a field that has
+appeared in a newer dump makes its `measuredFields` declaration throw, which
+is how the measured list shrinks rather than being forgotten.
 
 On a Mac with the apps installed, [`npm run test:e2e`](docs/E2E.md) verifies
 what no offline test can: that the apps **open** what this library writes,

@@ -8,6 +8,7 @@
  * a cell border is the same `TSD.StrokeArchive` as a paragraph rule or a
  * shape outline, which is why they live in `tsd/style.ts` and not here.
  */
+import { protoFields } from "../proto/fields.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
@@ -29,45 +30,45 @@ export const TST_STYLE_TYPE = {
 } as const;
 
 /** TST.CellStylePropertiesArchive. */
-export const CellStyleProps = {
-  CELL_FILL: 1,
-  TEXT_WRAP: 3,
-  VERTICAL_ALIGNMENT: 8,
-  PADDING: 9,
-  TOP_STROKE: 10,
-  RIGHT_STROKE: 11,
-  BOTTOM_STROKE: 12,
-  LEFT_STROKE: 13,
-} as const;
+export const CellStyleProps = protoFields("TST.CellStylePropertiesArchive", {
+  CELL_FILL: "cell_fill",
+  TEXT_WRAP: "text_wrap",
+  VERTICAL_ALIGNMENT: "vertical_alignment",
+  PADDING: "padding",
+  TOP_STROKE: "top_stroke",
+  RIGHT_STROKE: "right_stroke",
+  BOTTOM_STROKE: "bottom_stroke",
+  LEFT_STROKE: "left_stroke",
+});
 
 export const VerticalAlignment = { TOP: 0, MIDDLE: 1, BOTTOM: 2 } as const;
 
 /** TST.TableStylePropertiesArchive (the fields worth modelling). */
-export const TableStyleProps = {
-  BANDED_ROWS: 1,
-  BANDED_FILL: 2,
-  BEHAVES_LIKE_SPREADSHEET: 21,
-  AUTO_RESIZE: 22,
-  VERTICAL_STROKES_VISIBLE: 33,
-  HORIZONTAL_STROKES_VISIBLE: 34,
-  HEADER_ROW_SEPARATOR_VISIBLE: 35,
-  HEADER_COLUMN_SEPARATOR_VISIBLE: 36,
-  FOOTER_SEPARATOR_VISIBLE: 37,
-  TABLE_BORDER_VISIBLE: 38,
-  TABLE_HEADER_BORDER_VISIBLE: 39,
-  MASTER_FONT_FAMILY: 41,
-  WRITING_DIRECTION: 45,
-  HEADER_ROW_SEPARATOR_STROKE: 46,
-  HEADER_ROW_BORDER_STROKE: 47,
-  HEADER_COLUMN_BORDER_STROKE: 50,
-  HEADER_COLUMN_SEPARATOR_STROKE: 51,
-  FOOTER_ROW_SEPARATOR_STROKE: 54,
-  FOOTER_ROW_BORDER_STROKE: 55,
-  BODY_HORIZONTAL_BORDER_STROKE: 58,
-  BODY_VERTICAL_BORDER_STROKE: 59,
-  BODY_HORIZONTAL_STROKE: 60,
-  BODY_VERTICAL_STROKE: 61,
-} as const;
+export const TableStyleProps = protoFields("TST.TableStylePropertiesArchive", {
+  BANDED_ROWS: "banded_rows",
+  BANDED_FILL: "banded_fill",
+  BEHAVES_LIKE_SPREADSHEET: "behaves_like_spreadsheet",
+  AUTO_RESIZE: "auto_resize",
+  VERTICAL_STROKES_VISIBLE: "v_strokes_visible",
+  HORIZONTAL_STROKES_VISIBLE: "h_strokes_visible",
+  HEADER_ROW_SEPARATOR_VISIBLE: "hr_separator_visible",
+  HEADER_COLUMN_SEPARATOR_VISIBLE: "hc_separator_visible",
+  FOOTER_SEPARATOR_VISIBLE: "footer_separator_visible",
+  TABLE_BORDER_VISIBLE: "table_border_visible",
+  TABLE_HEADER_BORDER_VISIBLE: "table_header_border_visible",
+  MASTER_FONT_FAMILY: "master_font_family",
+  WRITING_DIRECTION: "writing_direction",
+  HEADER_ROW_SEPARATOR_STROKE: "header_row_separator_stroke",
+  HEADER_ROW_BORDER_STROKE: "header_row_border_stroke",
+  HEADER_COLUMN_BORDER_STROKE: "header_column_border_stroke",
+  HEADER_COLUMN_SEPARATOR_STROKE: "header_column_separator_stroke",
+  FOOTER_ROW_SEPARATOR_STROKE: "footer_row_separator_stroke",
+  FOOTER_ROW_BORDER_STROKE: "footer_row_border_stroke",
+  BODY_HORIZONTAL_BORDER_STROKE: "table_body_horizontal_border_stroke",
+  BODY_VERTICAL_BORDER_STROKE: "table_body_vertical_border_stroke",
+  BODY_HORIZONTAL_STROKE: "table_body_horizontal_stroke",
+  BODY_VERTICAL_STROKE: "table_body_vertical_stroke",
+});
 
 /** The four sides of a cell, in the order Apple numbers them. */
 export const CELL_BORDER_FIELDS = [

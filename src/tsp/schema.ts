@@ -3,6 +3,7 @@
  * references, geometry value types, colors, ranges. Field numbers from
  * proto/current/TSPMessages.proto.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import { RawMessage, WireType } from "../base/protobuf.ts";
 
 export const TSP_TYPE = {
@@ -15,8 +16,8 @@ export const RANGE_LOCATION = 1;
 export const RANGE_LENGTH = 2;
 
 /** TSP.Point / TSP.Size. */
-export const Point = { X: 1, Y: 2 } as const;
-export const SizeFields = { WIDTH: 1, HEIGHT: 2 } as const;
+export const Point = protoFields("TSP.Point", { X: "x", Y: "y" });
+export const SizeFields = protoFields("TSP.Point", { WIDTH: "x", HEIGHT: "y" });
 
 /**
  * TSP.Color. CMYK channels (c/m/y/k = 7..10) and white (w = 11) exist too;
@@ -26,23 +27,23 @@ export const SizeFields = { WIDTH: 1, HEIGHT: 2 } as const;
  * with an explicit `rgbspace` and always 1.0 in every document examined.
  * Its meaning is unknown; it is preserved verbatim like any unknown field.
  */
-export const ColorFields = {
-  MODEL: 1,
-  R: 3,
-  G: 4,
-  B: 5,
-  A: 6,
-  C: 7,
-  M: 8,
-  Y: 9,
-  K: 10,
-  W: 11,
-  RGB_SPACE: 12,
-} as const;
+export const ColorFields = protoFields("TSP.Color", {
+  MODEL: "model",
+  R: "r",
+  G: "g",
+  B: "b",
+  A: "a",
+  C: "c",
+  M: "m",
+  Y: "y",
+  K: "k",
+  W: "w",
+  RGB_SPACE: "rgbspace",
+});
 export const COLOR_MODEL_RGB = 1;
 export const COLOR_MODEL_CMYK = 2;
 export const COLOR_MODEL_WHITE = 3;
-export const RGB_SPACE = { SRGB: 1, P3: 2 } as const;
+export const RGB_SPACE = protoEnum("TSP.Color.RGBColorSpace", { SRGB: "srgb", P3: "p3" });
 
 /** Build a TSP.Reference message. */
 export function makeRef(id: bigint): RawMessage {

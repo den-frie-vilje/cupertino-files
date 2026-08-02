@@ -19,6 +19,7 @@
  * as values). {@link ConditionalStyleSet.rules} reads the modern list and
  * falls back to the older one, so a file from either era decodes.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
@@ -43,11 +44,11 @@ import { cellAddress } from "./formulas.ts";
 import type { CellFormatting } from "./styles.ts";
 
 /** TST.ConditionalStyleSetArchive. */
-export const ConditionalStyleSetFields = {
-  RULE_COUNT: 1,
-  RULES_PRE_PIVOT: 2,
-  RULES: 3,
-} as const;
+export const ConditionalStyleSetFields = protoFields("TST.ConditionalStyleSetArchive", {
+  RULE_COUNT: "ruleCount",
+  RULES_PRE_PIVOT: "rules_prepivot",
+  RULES: "rules",
+});
 
 /** TST.ConditionalStyleSetArchive.ConditionalStyleRules: rule = 1. */
 const ConditionalStyleRules = { RULE: 1 } as const;

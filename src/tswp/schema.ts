@@ -4,6 +4,7 @@
  * bags, smart fields (links, bookmarks), and attachments. Field numbers
  * from proto/current/TSWPArchives.proto.
  */
+import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
 
@@ -23,47 +24,47 @@ export const TSWP_TYPE = {
 
 // ------------------------------------------------------------- StorageArchive
 
-export const Storage = {
-  KIND: 1,
-  STYLE_SHEET: 2,
-  TEXT: 3,
-  HAS_ITEXT: 4,
-  TABLE_PARA_STYLE: 5,
-  TABLE_PARA_DATA: 6,
-  TABLE_LIST_STYLE: 7,
-  TABLE_CHAR_STYLE: 8,
-  TABLE_ATTACHMENT: 9,
-  IN_DOCUMENT: 10,
-  TABLE_SMARTFIELD: 11,
-  TABLE_LAYOUT_STYLE: 12,
-  TABLE_PARA_STARTS: 14,
-  TABLE_BOOKMARK: 15,
-  TABLE_FOOTNOTE: 16,
-  TABLE_SECTION: 17,
-  TABLE_RUBYFIELD: 18,
-  TABLE_LANGUAGE: 19,
-  TABLE_DICTATION: 20,
-  TABLE_INSERTION: 21,
-  TABLE_DELETION: 22,
-  TABLE_HIGHLIGHT: 23,
-  TABLE_PARA_BIDI: 24,
-  TABLE_OVERLAPPING_HIGHLIGHT: 25,
-  TABLE_PENCIL_ANNOTATION: 26,
-  TABLE_TATECHUYOKO: 27,
-  TABLE_DROP_CAP_STYLE: 28,
-} as const;
+export const Storage = protoFields("TSWP.StorageArchive", {
+  KIND: "kind",
+  STYLE_SHEET: "style_sheet",
+  TEXT: "text",
+  HAS_ITEXT: "has_itext",
+  TABLE_PARA_STYLE: "table_para_style",
+  TABLE_PARA_DATA: "table_para_data",
+  TABLE_LIST_STYLE: "table_list_style",
+  TABLE_CHAR_STYLE: "table_char_style",
+  TABLE_ATTACHMENT: "table_attachment",
+  IN_DOCUMENT: "in_document",
+  TABLE_SMARTFIELD: "table_smartfield",
+  TABLE_LAYOUT_STYLE: "table_layout_style",
+  TABLE_PARA_STARTS: "table_para_starts",
+  TABLE_BOOKMARK: "table_bookmark",
+  TABLE_FOOTNOTE: "table_footnote",
+  TABLE_SECTION: "table_section",
+  TABLE_RUBYFIELD: "table_rubyfield",
+  TABLE_LANGUAGE: "table_language",
+  TABLE_DICTATION: "table_dictation",
+  TABLE_INSERTION: "table_insertion",
+  TABLE_DELETION: "table_deletion",
+  TABLE_HIGHLIGHT: "table_highlight",
+  TABLE_PARA_BIDI: "table_para_bidi",
+  TABLE_OVERLAPPING_HIGHLIGHT: "table_overlapping_highlight",
+  TABLE_PENCIL_ANNOTATION: "table_pencil_annotation",
+  TABLE_TATECHUYOKO: "table_tatechuyoko",
+  TABLE_DROP_CAP_STYLE: "table_drop_cap_style",
+});
 
-export const StorageKind = {
-  BODY: 0,
-  HEADER: 1,
-  FOOTNOTE: 2,
-  TEXTBOX: 3,
-  NOTE: 4,
-  CELL: 5,
-  UNCLASSIFIED: 6,
-  TABLEOFCONTENTS: 7,
-  UNDEFINED: 8,
-} as const;
+export const StorageKind = protoEnum("TSWP.StorageArchive.KindType", {
+  BODY: "BODY",
+  HEADER: "HEADER",
+  FOOTNOTE: "FOOTNOTE",
+  TEXTBOX: "TEXTBOX",
+  NOTE: "NOTE",
+  CELL: "CELL",
+  UNCLASSIFIED: "UNCLASSIFIED",
+  TABLEOFCONTENTS: "TABLEOFCONTENTS",
+  UNDEFINED: "UNDEFINED",
+});
 export type StorageKind = (typeof StorageKind)[keyof typeof StorageKind];
 
 /**
@@ -161,12 +162,12 @@ export const PARA_ALIGNED_OBJECT_TABLES: readonly number[] = [
 // ------------------------------------------------------------------- styles
 
 /** Concrete style archives (TSWP.*StyleArchive) embed TSS.StyleArchive at 1. */
-export const StyleArchive = {
-  SUPER: 1,
-  OVERRIDE_COUNT: 10,
-  CHAR_PROPERTIES: 11, // ParagraphStyleArchive + CharacterStyleArchive
-  PARA_PROPERTIES: 12, // ParagraphStyleArchive only
-} as const;
+export const StyleArchive = protoFields("TSWP.ParagraphStyleArchive", {
+  SUPER: "super",
+  OVERRIDE_COUNT: "override_count",
+  CHAR_PROPERTIES: "char_properties", // ParagraphStyleArchive + CharacterStyleArchive
+  PARA_PROPERTIES: "para_properties", // ParagraphStyleArchive only
+});
 
 /**
  * TSWP.CharacterStylePropertiesArchive.
@@ -176,13 +177,13 @@ export const StyleArchive = {
  * flag is true. Setting the value field and the null flag together is
  * contradictory, so writers must clear the flag whenever they set a value.
  */
-export const CharProps = {
-  BOLD: 1,
-  ITALIC: 2,
-  FONT_SIZE: 3,
-  FONT_NAME_NULL: 4,
-  FONT_NAME: 5,
-  FONT_COLOR_NULL: 6,
+export const CharProps = protoFields("TSWP.CharacterStylePropertiesArchive", {
+  BOLD: "bold",
+  ITALIC: "italic",
+  FONT_SIZE: "font_size",
+  FONT_NAME_NULL: "font_name_null",
+  FONT_NAME: "font_name",
+  FONT_COLOR_NULL: "font_color_null",
   /**
    * `tsd_fill` — where modern Pages actually reads text colour from.
    *
@@ -192,61 +193,61 @@ export const CharProps = {
    * written by a recent Pages — including the newest writer in the corpus
    * — carries both, the fill holding a plain `{ color }`.
    */
-  TSD_FILL: 46,
-  TSD_FILL_NULL: 45,
-  FONT_COLOR: 7,
-  LANGUAGE_NULL: 8,
-  LANGUAGE: 9,
-  SUPERSCRIPT: 10,
-  UNDERLINE: 11,
-  STRIKETHRU: 12,
-  CAPITALIZATION: 13,
-  BASELINE_SHIFT: 14,
-  KERNING: 15,
-  LIGATURES: 16,
-  OUTLINE_COLOR_NULL: 17,
-  OUTLINE_COLOR: 18,
-  OUTLINE: 19,
-  SHADOW_NULL: 20,
-  SHADOW: 21,
-  STRIKETHRU_COLOR_NULL: 22,
-  STRIKETHRU_COLOR: 23,
-  STRIKETHRU_WIDTH: 24,
-  BACKGROUND_COLOR_NULL: 25,
-  BACKGROUND_COLOR: 26,
-  TRACKING: 27,
-  UNDERLINE_COLOR_NULL: 28,
-  UNDERLINE_COLOR: 29,
-  UNDERLINE_WIDTH: 30,
-  WORD_STRIKETHRU: 31,
-  WORD_UNDERLINE: 32,
-} as const;
+  TSD_FILL: "tsd_fill",
+  TSD_FILL_NULL: "tsd_fill_null",
+  FONT_COLOR: "font_color",
+  LANGUAGE_NULL: "language_null",
+  LANGUAGE: "language",
+  SUPERSCRIPT: "superscript",
+  UNDERLINE: "underline",
+  STRIKETHRU: "strikethru",
+  CAPITALIZATION: "capitalization",
+  BASELINE_SHIFT: "baseline_shift",
+  KERNING: "kerning",
+  LIGATURES: "ligatures",
+  OUTLINE_COLOR_NULL: "outline_color_null",
+  OUTLINE_COLOR: "outline_color",
+  OUTLINE: "outline",
+  SHADOW_NULL: "shadow_null",
+  SHADOW: "shadow",
+  STRIKETHRU_COLOR_NULL: "strikethru_color_null",
+  STRIKETHRU_COLOR: "strikethru_color",
+  STRIKETHRU_WIDTH: "strikethru_width",
+  BACKGROUND_COLOR_NULL: "background_color_null",
+  BACKGROUND_COLOR: "background_color",
+  TRACKING: "tracking",
+  UNDERLINE_COLOR_NULL: "underline_color_null",
+  UNDERLINE_COLOR: "underline_color",
+  UNDERLINE_WIDTH: "underline_width",
+  WORD_STRIKETHRU: "word_strikethru",
+  WORD_UNDERLINE: "word_underline",
+});
 
-export const UnderlineType = {
-  NONE: 0,
-  SINGLE: 1,
-  DOUBLE: 2,
-  WAVY: 3,
-} as const;
+export const UnderlineType = protoEnum("TSWP.CharacterStylePropertiesArchive.UnderlineType", {
+  NONE: "kNoUnderline",
+  SINGLE: "kSingleUnderline",
+  DOUBLE: "kDoubleUnderline",
+  WAVY: "kWavyUnderline",
+});
 
-export const StrikethruType = {
-  NONE: 0,
-  SINGLE: 1,
-  DOUBLE: 2,
-  TRIPLE: 3,
-} as const;
+export const StrikethruType = protoEnum("TSWP.CharacterStylePropertiesArchive.StrikethruType", {
+  NONE: "kNoStrikethru",
+  SINGLE: "kSingleStrikethru",
+  DOUBLE: "kDoubleStrikethru",
+  TRIPLE: "kTripleStrikethru",
+});
 
 /** Capitalization is a rendering transform; the stored text is unchanged. */
-export const Capitalization = {
-  NONE: 0,
-  ALL_CAPS: 1,
-  SMALL_CAPS: 2,
-  TITLE_CASE: 3,
-} as const;
+export const Capitalization = protoEnum("TSWP.CharacterStylePropertiesArchive.CapitalizationType", {
+  NONE: "kNoCaps",
+  ALL_CAPS: "kAllCaps",
+  SMALL_CAPS: "kSmallCaps",
+  TITLE_CASE: "kTitled",
+});
 
-export const Ligatures = { REQUIRED: 0, STANDARD: 1, ALL: 2 } as const;
+export const Ligatures = protoEnum("TSWP.CharacterStylePropertiesArchive.LigaturesType", { REQUIRED: "kRequiredLigatures", STANDARD: "kStandardLigatures", ALL: "kAllLigatures" });
 
-export const ScriptPosition = { NORMAL: 0, SUPERSCRIPT: 1, SUBSCRIPT: 2 } as const;
+export const ScriptPosition = protoEnum("TSWP.CharacterStylePropertiesArchive.SuperscriptType", { NORMAL: "kNoScript", SUPERSCRIPT: "kSuperscript", SUBSCRIPT: "kSubscript" });
 
 /**
  * TSWP.ParagraphStylePropertiesArchive.
@@ -256,42 +257,42 @@ export const ScriptPosition = { NORMAL: 0, SUPERSCRIPT: 1, SUBSCRIPT: 2 } as con
  * paragraph rule/border is a `TSD.StrokeArchive` at `STROKE`, positioned by
  * `BORDER_POSITIONS`.
  */
-export const ParaProps = {
-  ALIGNMENT: 1,
-  DECIMAL_TAB_NULL: 2,
-  DECIMAL_TAB: 3,
-  DEFAULT_TAB_STOPS: 4,
-  FILL_NULL: 5,
-  FILL: 6,
-  FIRST_LINE_INDENT: 7,
-  HYPHENATE: 8,
-  KEEP_LINES_TOGETHER: 9,
-  KEEP_WITH_NEXT: 10,
-  LEFT_INDENT: 11,
-  LINE_SPACING_NULL: 12,
-  LINE_SPACING: 13,
-  PAGE_BREAK_BEFORE: 14,
-  RULE_WIDTH: 18,
-  RIGHT_INDENT: 19,
-  SPACE_AFTER: 20,
-  SPACE_BEFORE: 21,
-  TABS_NULL: 24,
-  TABS: 25,
-  WIDOW_CONTROL: 26,
-  OUTLINE_LEVEL: 27,
-  STROKE_NULL: 31,
-  STROKE: 32,
-  SHOW_IN_TOC: 33,
-  WRITING_DIRECTION: 38,
-  LIST_STYLE_NULL: 39,
-  LIST_STYLE: 40,
-  FOLLOWING_STYLE_NULL: 41,
-  FOLLOWING_STYLE: 42,
-  SHOW_IN_BOOKMARKS_LIST: 43,
-  SHOW_IN_TOC_NAVIGATOR: 44,
-  BORDER_POSITIONS: 45,
-  ROUNDED_CORNERS: 46,
-} as const;
+export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
+  ALIGNMENT: "alignment",
+  DECIMAL_TAB_NULL: "decimal_tab_null",
+  DECIMAL_TAB: "decimal_tab",
+  DEFAULT_TAB_STOPS: "default_tab_stops",
+  FILL_NULL: "fill_null",
+  FILL: "fill",
+  FIRST_LINE_INDENT: "first_line_indent",
+  HYPHENATE: "hyphenate",
+  KEEP_LINES_TOGETHER: "keep_lines_together",
+  KEEP_WITH_NEXT: "keep_with_next",
+  LEFT_INDENT: "left_indent",
+  LINE_SPACING_NULL: "line_spacing_null",
+  LINE_SPACING: "line_spacing",
+  PAGE_BREAK_BEFORE: "page_break_before",
+  RULE_WIDTH: "rule_width",
+  RIGHT_INDENT: "right_indent",
+  SPACE_AFTER: "space_after",
+  SPACE_BEFORE: "space_before",
+  TABS_NULL: "tabs_null",
+  TABS: "tabs",
+  WIDOW_CONTROL: "widow_control",
+  OUTLINE_LEVEL: "outline_level",
+  STROKE_NULL: "stroke_null",
+  STROKE: "stroke",
+  SHOW_IN_TOC: "show_in_toc",
+  WRITING_DIRECTION: "writing_direction",
+  LIST_STYLE_NULL: "list_style_null",
+  LIST_STYLE: "list_style",
+  FOLLOWING_STYLE_NULL: "following_style_null",
+  FOLLOWING_STYLE: "following_style",
+  SHOW_IN_BOOKMARKS_LIST: "show_in_bookmarks_list",
+  SHOW_IN_TOC_NAVIGATOR: "show_in_toc_navigator",
+  BORDER_POSITIONS: "border_positions",
+  ROUNDED_CORNERS: "rounded_corners",
+});
 
 /**
  * `ParagraphStylePropertiesArchive.border_positions` — which edges draw.
@@ -324,42 +325,42 @@ export const BorderPosition = {
 } as const;
 
 /** TSWP.TabsArchive: repeated TabArchive at 1. */
-export const TabsArchive = { TABS: 1 } as const;
+export const TabsArchive = protoFields("TSWP.TabsArchive", { TABS: "tabs" });
 /** TSWP.TabArchive. */
-export const TabArchive = { POSITION: 1, ALIGNMENT: 2, LEADER: 3 } as const;
-export const TabAlignment = { LEFT: 0, CENTER: 1, RIGHT: 2, DECIMAL: 3 } as const;
+export const TabArchive = protoFields("TSWP.TabArchive", { POSITION: "position", ALIGNMENT: "alignment", LEADER: "leader" });
+export const TabAlignment = protoEnum("TSWP.TabArchive.TabAlignmentType", { LEFT: "kTabAlignmentLeft", CENTER: "kTabAlignmentCenter", RIGHT: "kTabAlignmentRight", DECIMAL: "kTabAlignmentDecimal" });
 
-export const TextAlignment = {
-  LEFT: 0,
-  RIGHT: 1,
-  CENTER: 2,
-  JUSTIFIED: 3,
-  NATURAL: 4,
-} as const;
+export const TextAlignment = protoEnum("TSWP.ParagraphStylePropertiesArchive.TextAlignmentType", {
+  LEFT: "TATvalue0",
+  RIGHT: "TATvalue1",
+  CENTER: "TATvalue2",
+  JUSTIFIED: "TATvalue3",
+  NATURAL: "TATvalue4",
+});
 export type TextAlignment = (typeof TextAlignment)[keyof typeof TextAlignment];
 
 /** TSWP.LineSpacingArchive. */
-export const LineSpacing = { MODE: 1, AMOUNT: 2 } as const;
+export const LineSpacing = protoFields("TSWP.LineSpacingArchive", { MODE: "mode", AMOUNT: "amount" });
 
 /** TSWP.ListStyleArchive value fields (beyond the StyleArchive shell). */
-export const ListStyleFields = {
-  LABEL_TYPES: 11, // repeated LabelType: 0 none, 1 image, 2 string, 3 number
-  TEXT_INDENTS: 12, // repeated float
-  INDENTS: 13, // repeated float
-  GEOMETRIES: 14,
-  NUMBER_TYPES: 15, // repeated NumberType: 0 = "1." decimal…
-  STRINGS: 16, // repeated string (bullet characters)
-} as const;
-export const ListLabelType = { NONE: 0, IMAGE: 1, STRING: 2, NUMBER: 3 } as const;
+export const ListStyleFields = protoFields("TSWP.ListStyleArchive", {
+  LABEL_TYPES: "label_types", // repeated LabelType: 0 none, 1 image, 2 string, 3 number
+  TEXT_INDENTS: "text_indents", // repeated float
+  INDENTS: "indents", // repeated float
+  GEOMETRIES: "geometries",
+  NUMBER_TYPES: "number_types", // repeated NumberType: 0 = "1." decimal…
+  STRINGS: "strings", // repeated string (bullet characters)
+});
+export const ListLabelType = protoEnum("TSWP.ListStyleArchive.LabelType", { NONE: "kNone", IMAGE: "kImage", STRING: "kString", NUMBER: "kNumber" });
 
 // ------------------------------------------------------- fields & attachments
 
 /** TSWP.SmartFieldArchive (embedded as super=1 of concrete fields). */
-export const SmartField = { UUID_STRING: 1 } as const;
+export const SmartField = protoFields("TSWP.SmartFieldArchive", { UUID_STRING: "text_attribute_uuid_string" });
 /** TSWP.HyperlinkFieldArchive: super = 1, url_ref = 2. */
-export const HyperlinkField = { SUPER: 1, URL_REF: 2 } as const;
+export const HyperlinkField = protoFields("TSWP.HyperlinkFieldArchive", { SUPER: "super", URL_REF: "url_ref" });
 /** TSWP.BookmarkFieldArchive: super = 1, name = 2, ranged = 3, hidden = 4. */
-export const BookmarkField = { SUPER: 1, NAME: 2, RANGED: 3, HIDDEN: 4 } as const;
+export const BookmarkField = protoFields("TSWP.BookmarkFieldArchive", { SUPER: "super", NAME: "name", RANGED: "ranged", HIDDEN: "hidden" });
 /** TSWP.DrawableAttachmentArchive: drawable = 1. */
 /**
  * TSWP.DrawableAttachmentArchive — an inline drawable's anchor.
@@ -370,23 +371,23 @@ export const BookmarkField = { SUPER: 1, NAME: 2, RANGED: 3, HIDDEN: 4 } as cons
  * an absent offset as zero or as "no placement" is the question the inline
  * image rung asks.
  */
-export const DrawableAttachment = {
-  DRAWABLE: 1,
-  H_OFFSET_TYPE: 2,
-  H_OFFSET: 3,
-  V_OFFSET_TYPE: 4,
-  V_OFFSET: 5,
-} as const;
+export const DrawableAttachment = protoFields("TSWP.DrawableAttachmentArchive", {
+  DRAWABLE: "drawable",
+  H_OFFSET_TYPE: "h_offset_type",
+  H_OFFSET: "h_offset",
+  V_OFFSET_TYPE: "v_offset_type",
+  V_OFFSET: "v_offset",
+});
 /** TSWP.FootnoteReferenceAttachmentArchive: super = 1, contained_storage = 2, custom_mark_string = 3. */
-export const FootnoteRefAttachment = { SUPER: 1, CONTAINED_STORAGE: 2, CUSTOM_MARK: 3 } as const;
+export const FootnoteRefAttachment = protoFields("TSWP.FootnoteReferenceAttachmentArchive", { SUPER: "super", CONTAINED_STORAGE: "contained_storage", CUSTOM_MARK: "custom_mark_string" });
 /** TSWP.HighlightArchive (comment anchor): commentStorage = 1. */
-export const Highlight = { COMMENT_STORAGE: 1 } as const;
+export const Highlight = protoFields("TSWP.HighlightArchive", { COMMENT_STORAGE: "commentStorage" });
 /**
  * TSWP.ShapeInfoArchive (text boxes & shapes with text): super = 1
  * (TSD.ShapeArchive), text_flow = 3, owned_storage = 4 (→ StorageArchive),
  * is_text_box = 6.
  */
-export const ShapeInfo = { SUPER: 1, TEXT_FLOW: 3, OWNED_STORAGE: 4, IS_TEXT_BOX: 6 } as const;
+export const ShapeInfo = protoFields("TSWP.ShapeInfoArchive", { SUPER: "super", TEXT_FLOW: "text_flow", OWNED_STORAGE: "owned_storage", IS_TEXT_BOX: "is_text_box" });
 
 // ------------------------------------------------------- reference extractors
 

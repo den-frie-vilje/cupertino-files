@@ -7,6 +7,7 @@
  * they are a Keynote-only concept (inline on KN.SlideArchive), unlike
  * geometry, text and styles which every app shares.
  */
+import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
@@ -48,13 +49,13 @@ const PLACEHOLDER_KIND = 2;
  * agree in every corpus deck, and both are exposed so a disagreement is
  * visible rather than resolved silently.
  */
-export const PlaceholderKind = {
-  GENERIC: 0,
-  SLIDE_NUMBER: 1,
-  TITLE: 2,
-  BODY: 3,
-  OBJECT: 4,
-} as const;
+export const PlaceholderKind = protoEnum("KN.PlaceholderArchive.Kind", {
+  GENERIC: "kKindPlaceholder",
+  SLIDE_NUMBER: "kKindSlideNumberPlaceholder",
+  TITLE: "kKindTitlePlaceholder",
+  BODY: "kKindBodyPlaceholder",
+  OBJECT: "kKindObjectPlaceholder",
+});
 
 /** The placeholder roles a slide can carry, and the field each occupies. */
 export type PlaceholderRole = "title" | "body" | "object" | "slideNumber";
@@ -67,14 +68,14 @@ const PLACEHOLDER_FIELDS: readonly (readonly [PlaceholderRole, number])[] = [
 ];
 
 /** KN.ShowArchive.KNShowMode — how the deck advances. */
-export const ShowMode = {
+export const ShowMode = protoEnum("KN.ShowArchive.KNShowMode", {
   /** Advances on click. */
-  NORMAL: 0,
+  NORMAL: "kKNShowModeNormal",
   /** Self-playing, using the autoplay delays. */
-  AUTOPLAY: 1,
+  AUTOPLAY: "kKNShowModeAutoPlay",
   /** Advances only through hyperlinks — a kiosk deck. */
-  HYPERLINKS_ONLY: 2,
-} as const;
+  HYPERLINKS_ONLY: "kKNShowModeHyperlinksOnly",
+});
 
 /** The settings behind Keynote's Document inspector. */
 export interface PresentationSettings {

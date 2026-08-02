@@ -7,6 +7,7 @@
  * (2026 registry dump + fixture evidence). Unknown newer fields are
  * preserved untouched by the RawMessage layer.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import { pushRef } from "../tsp/schema.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsp/extractors.ts";
@@ -33,97 +34,102 @@ export const TP_TYPE = {
  * exactly the names the app shows.
  */
 export const ThemeArchive = {
-  SUPER: 1,
-  PARAGRAPH_STYLE_LIST: 110,
-  LIST_ENTRIES: 7,
-  /** Object titles and captions live in their own list. */
-  OBJECT_STYLE_LIST: 210,
+  ...protoFields("TP.ThemeArchive", { SUPER: "super" }),
+  // Both lists are extensions on `TSS.ThemeArchive`, so they are addressed
+  // by the type they carry rather than by name — every one of the five
+  // families that extends a theme calls its field `extension`.
+  ...protoFields("TSS.ThemeArchive", {
+    PARAGRAPH_STYLE_LIST: "TSWP.ThemePresetsArchive",
+    /** Object titles and captions live in their own list. */
+    OBJECT_STYLE_LIST: "TSA.ThemePresetsArchive",
+  }),
+  ...protoFields("TSWP.ThemePresetsArchive", { LIST_ENTRIES: "paragraph_style_presets" }),
 } as const;
 
-export const TPDocument = {
-  STYLESHEET: 2,
-  FLOATING_DRAWABLES: 3,
-  BODY_STORAGE: 4,
-  SECTION: 5,
-  THEME: 6,
-  SETTINGS: 7,
-  DEPRECATED_LAYOUT_STATE: 11,
-  DEPRECATED_VIEW_STATE: 12,
-  CITATION_RECORDS: 13,
-  TOC_STYLES: 14,
-  SUPER: 15, // TSA.DocumentArchive
-  CHANGE_SESSIONS: 16,
-  DRAWABLES_ZORDER: 20,
-  USES_SINGLE_HEADER_FOOTER: 21,
-  PAGE_WIDTH: 30,
-  PAGE_HEIGHT: 31,
-  LEFT_MARGIN: 32,
-  RIGHT_MARGIN: 33,
-  TOP_MARGIN: 34,
-  BOTTOM_MARGIN: 35,
-  HEADER_MARGIN: 36,
-  FOOTER_MARGIN: 37,
-  PAGE_SCALE: 38,
-  TABLES_CUSTOM_FORMAT_LIST: 41,
-  ORIENTATION: 42,
-} as const;
+export const TPDocument = protoFields("TP.DocumentArchive", {
+  STYLESHEET: "stylesheet",
+  FLOATING_DRAWABLES: "floating_drawables",
+  BODY_STORAGE: "body_storage",
+  SECTION: "section",
+  THEME: "theme",
+  SETTINGS: "settings",
+  DEPRECATED_LAYOUT_STATE: "deprecated_layout_state",
+  DEPRECATED_VIEW_STATE: "deprecated_view_state",
+  CITATION_RECORDS: "citation_records",
+  TOC_STYLES: "toc_styles",
+  SUPER: "super", // TSA.DocumentArchive
+  CHANGE_SESSIONS: "change_sessions",
+  DRAWABLES_ZORDER: "drawables_zorder",
+  USES_SINGLE_HEADER_FOOTER: "uses_single_header_footer",
+  PAGE_WIDTH: "page_width",
+  PAGE_HEIGHT: "page_height",
+  LEFT_MARGIN: "left_margin",
+  RIGHT_MARGIN: "right_margin",
+  TOP_MARGIN: "top_margin",
+  BOTTOM_MARGIN: "bottom_margin",
+  HEADER_MARGIN: "header_margin",
+  FOOTER_MARGIN: "footer_margin",
+  PAGE_SCALE: "page_scale",
+  TABLES_CUSTOM_FORMAT_LIST: "tables_custom_format_list",
+  ORIENTATION: "orientation",
+});
 
 /** TP.SectionArchive (post-5.0 fields; never write the OBSOLETE_* ones). */
-export const Section = {
-  OBSOLETE_HEADERS: 3,
-  OBSOLETE_FOOTERS: 4,
-  OBSOLETE_MASTER_DRAWABLES: 14,
-  INHERIT_PREVIOUS_HEADER_FOOTER: 17,
-  FIRST_PAGE_DIFFERENT: 18,
-  EVEN_ODD_DIFFERENT: 19,
-  START_KIND: 20,
-  PAGE_NUMBER_KIND: 21,
-  PAGE_NUMBER_START: 22,
-  FIRST_PAGE_MASTER: 23,
-  EVEN_PAGE_MASTER: 24,
-  ODD_PAGE_MASTER: 25,
-  NAME: 26,
-  FIRST_PAGE_HIDES_HEADER_FOOTER: 28,
-} as const;
+export const Section = protoFields("TP.SectionArchive", {
+  OBSOLETE_HEADERS: "OBSOLETE_headers",
+  OBSOLETE_FOOTERS: "OBSOLETE_footers",
+  OBSOLETE_MASTER_DRAWABLES: "OBSOLETE_master_drawables",
+  INHERIT_PREVIOUS_HEADER_FOOTER: "inherit_previous_header_footer",
+  FIRST_PAGE_DIFFERENT: "page_master_first_page_different",
+  EVEN_ODD_DIFFERENT: "page_master_even_odd_pages_different",
+  START_KIND: "section_start_kind",
+  PAGE_NUMBER_KIND: "section_page_number_kind",
+  PAGE_NUMBER_START: "section_page_number_start",
+  FIRST_PAGE_MASTER: "first_page_master",
+  EVEN_PAGE_MASTER: "even_page_master",
+  ODD_PAGE_MASTER: "odd_page_master",
+  NAME: "name",
+  FIRST_PAGE_HIDES_HEADER_FOOTER: "page_master_first_page_hides_header_footer",
+});
 
 /** TP.PageMasterArchive / TP.SectionTemplateArchive. */
-export const SectionTemplate = {
-  HEADERS: 1,
-  FOOTERS: 2,
-  MASTER_DRAWABLES: 3,
-} as const;
+export const SectionTemplate = protoFields("TP.PageMasterArchive", {
+  HEADERS: "headers",
+  FOOTERS: "footers",
+  MASTER_DRAWABLES: "master_drawables",
+});
 
 /** TP.SettingsArchive. */
-export const SettingsFields = {
+export const SettingsFields = protoFields("TP.SettingsArchive", {
   /** false ⇒ page-layout document (no body text flow). */
-  BODY: 1,
-  HEADERS: 2,
-  FOOTERS: 3,
-  HYPHENATION: 9,
-  USE_LIGATURES: 10,
-  DOCUMENT_IS_RTL: 18,
-  DECIMAL_TAB: 20,
-  LANGUAGE: 21,
-  ORIG_TEMPLATE: 25,
-  CREATION_DATE: 26,
-  FOOTNOTE_KIND: 30,
-  FOOTNOTE_FORMAT: 31,
-  FOOTNOTE_NUMBERING: 32,
-  FOOTNOTE_GAP: 33,
-} as const;
+  BODY: "body",
+  HEADERS: "headers",
+  FOOTERS: "footers",
+  HYPHENATION: "hyphenation",
+  USE_LIGATURES: "use_ligatures",
+  DOCUMENT_IS_RTL: "document_is_rtl",
+  DECIMAL_TAB: "decimal_tab",
+  LANGUAGE: "language",
+  ORIG_TEMPLATE: "orig_template",
+  CREATION_DATE: "creation_date",
+  FOOTNOTE_KIND: "footnote_kind",
+  FOOTNOTE_FORMAT: "footnote_format",
+  FOOTNOTE_NUMBERING: "footnote_numbering",
+  FOOTNOTE_GAP: "footnote_gap",
+});
 
 /** TP.FloatingDrawablesArchive. */
-export const FloatingDrawables = { PAGE_GROUPS: 1 } as const;
-export const PageGroup = {
-  PAGE_INDEX: 1,
-  BACKGROUND_DRAWABLES: 2,
-  FOREGROUND_DRAWABLES: 3,
-  DRAWABLES: 4,
-} as const;
-export const DrawableEntry = { DRAWABLE: 1 } as const;
+export const FloatingDrawables = protoFields("TP.FloatingDrawablesArchive", { PAGE_GROUPS: "page_groups" });
+export const PageGroup = protoFields("TP.FloatingDrawablesArchive.PageGroup", {
+  PAGE_INDEX: "page_index",
+  BACKGROUND_DRAWABLES: "background_drawables",
+  FOREGROUND_DRAWABLES: "foreground_drawables",
+  DRAWABLES: "drawables",
+});
+export const DrawableEntry = protoFields("TP.FloatingDrawablesArchive", { DRAWABLE: "page_groups" });
 
 /** TP.DrawablesZOrderArchive. */
-export const DrawablesZOrder = { DRAWABLES: 1 } as const;
+export const DrawablesZOrder = protoFields("TP.DrawablesZOrderArchive", { DRAWABLES: "drawables" });
 
 const sectionExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];

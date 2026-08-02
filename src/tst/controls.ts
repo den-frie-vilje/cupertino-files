@@ -30,6 +30,7 @@
  * sixth widget will still classify as a range or a chooser, which is a
  * better answer than an unrecognised number.
  */
+import { measuredEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -39,15 +40,15 @@ import { refId } from "../tsp/schema.ts";
 export const CONTROL_CELL_SPEC_TABLE = 21;
 
 /** TST.CellSpecArchive. */
-export const CellSpecFields = {
-  INTERACTION_TYPE: 1,
-  FORMULA: 2,
-  RANGE_MIN: 3,
-  RANGE_MAX: 4,
-  RANGE_INCREMENT: 5,
-  CHOOSER_POPUP_MODEL: 6,
-  CHOOSER_START_WITH_FIRST: 7,
-} as const;
+export const CellSpecFields = protoFields("TST.CellSpecArchive", {
+  INTERACTION_TYPE: "interaction_type",
+  FORMULA: "formula",
+  RANGE_MIN: "range_control_min",
+  RANGE_MAX: "range_control_max",
+  RANGE_INCREMENT: "range_control_inc",
+  CHOOSER_POPUP_MODEL: "chooser_control_popup_model",
+  CHOOSER_START_WITH_FIRST: "chooser_control_start_w_first",
+});
 
 /**
  * `TST.CellSpecArchive.interaction_type`.
@@ -74,13 +75,20 @@ export const CellSpecFields = {
  * Values outside this set are carried through untouched rather than
  * rejected — see {@link controlShape}, which classifies by contents.
  */
-export const InteractionType = {
-  STEPPER: 4,
-  SLIDER: 5,
-  STAR_RATING: 6,
-  POPUP_MENU: 7,
-  CHECKBOX: 8,
-} as const;
+export const InteractionType = measuredEnum(
+  "TST.CellSpecArchive.interaction_type",
+  {
+    STEPPER: 4,
+    SLIDER: 5,
+    STAR_RATING: 6,
+    POPUP_MENU: 7,
+    CHECKBOX: 8,
+  },
+  "There is no enum to look up: `interaction_type` is a plain uint32 in " +
+    "TSTArchives.proto. Every value here was established in the app — a " +
+    "document authoring one control of each kind was opened in Numbers and " +
+    "each drew as labelled, which is also what separated 4 from 5.",
+);
 
 /** Display names for {@link InteractionType}; `undefined` when unrecognised. */
 export const INTERACTION_TYPE_NAMES: ReadonlyMap<number, string> = new Map([
@@ -263,9 +271,9 @@ export function cellSpecObjects(store: ObjectStore, typeId: number): IwaObject[]
 }
 
 /** `TST.PopUpMenuModel`, the archive holding a menu's list of choices. */
-export const PopUpMenuModelFields = {
+export const PopUpMenuModelFields = protoFields("TST.PopUpMenuModel", {
   /** `repeated CellValue item` — Apple marks this deprecated. */
-  LEGACY_ITEM: 1,
+  LEGACY_ITEM: "item",
   /**
    * `repeated TSCE.CellValueArchive tsce_item` — the live one.
    *
@@ -274,8 +282,8 @@ export const PopUpMenuModelFields = {
    * `ITEM` it matched `item = 1` and reported permanent drift against a
    * field number three verified menus in Numbers say is right.
    */
-  TSCE_ITEM: 2,
-} as const;
+  TSCE_ITEM: "tsce_item",
+});
 
 /** `TSCE.CellValueArchive`. */
 const CellValueFields = { TYPE: 1, BOOLEAN: 2, DATE: 3, NUMBER: 4, STRING: 5 } as const;

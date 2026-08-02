@@ -1329,6 +1329,46 @@ Both halves matter, and each is visible only in the app:
 
 A writer that picks one rule for all three gets two of them wrong.
 
+#### Where the field numbers in this library come from
+
+Every number is looked up from the vendored schemas rather than typed. The
+declaration names fields; `proto/` supplies the integers:
+
+```ts
+export const Storage = protoFields("TSWP.StorageArchive", {
+  KIND: "kind",
+  TABLE_PARA_STYLE: "table_para_style",
+});
+```
+
+Three things are worth knowing about doing it this way.
+
+**Merging 41 files is safe, and that is measured rather than assumed.**
+Across every vendored file, no field *number* maps to two different names,
+and exactly one field *name* maps to two different numbers: `extension`, the
+name protobuf convention gives every extension field. `TSA`, `TSCH`, `TSD`,
+`TST` and `TSWP` each extend `TSS.ThemeArchive` with a field called
+`extension`, at 210, 120, 100, 200 and 110. The name carries nothing and the
+type carries everything, so an extension is addressed by its message type —
+`TSWP.ThemePresetsArchive` is the paragraph-style preset list.
+
+**Enums cannot be checked against messages.** An enum's values live in the
+same small integer range as its parent message's field numbers, so
+`LineCap = { BUTT: 0, ROUND: 1, SQUARE: 2 }` "matches" fields 1 and 2 of
+`TSD.StrokeArchive` — unrelated meanings, coinciding numbers. They get their
+own lookup, and a first attempt at conversion that ignored this would have
+written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
+enums, same arity, silently wrong.
+
+**What cannot be looked up is listed rather than hidden.** The shared dumps
+are Numbers 14.4 and the Pages-specific ones are Pages 5.0 from 2013, so
+fields added since are declared with `measuredFields`, which requires a
+sentence of evidence and refuses a number the schema already defines — when
+a refreshed dump contains it, the declaration throws until it moves. Archive
+type ids are not in any `.proto` and never will be: `TSWP_TYPE.STORAGE =
+2001` is the app's object registry, and the only authority for it is the
+corpus.
+
 #### The container rule is per type, not per family
 
 A drawable carries a `parent` — the group or canvas holding it — and Apple

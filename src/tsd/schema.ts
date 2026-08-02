@@ -3,6 +3,7 @@
  * geometry (shapes, images, movies, groups), comment storages. Field
  * numbers from proto/current/TSDArchives.proto.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { pushRef, refId } from "../tsp/schema.ts";
@@ -14,24 +15,24 @@ export const TSD_TYPE = {
 } as const;
 
 /** TSD.DrawableArchive. */
-export const Drawable = {
-  GEOMETRY: 1,
-  PARENT: 2,
-  EXTERIOR_TEXT_WRAP: 3,
-  HYPERLINK_URL: 4,
-  LOCKED: 5,
-  COMMENT: 6,
-  ASPECT_RATIO_LOCKED: 7,
-  ACCESSIBILITY_DESCRIPTION: 8,
-  TITLE: 10,
-  CAPTION: 11,
-} as const;
+export const Drawable = protoFields("TSD.DrawableArchive", {
+  GEOMETRY: "geometry",
+  PARENT: "parent",
+  EXTERIOR_TEXT_WRAP: "exterior_text_wrap",
+  HYPERLINK_URL: "hyperlink_url",
+  LOCKED: "locked",
+  COMMENT: "comment",
+  ASPECT_RATIO_LOCKED: "aspect_ratio_locked",
+  ACCESSIBILITY_DESCRIPTION: "accessibility_description",
+  TITLE: "title",
+  CAPTION: "caption",
+});
 
 /** TSD.GeometryArchive. */
-export const Geometry = { POSITION: 1, SIZE: 2, FLAGS: 3, ANGLE: 4 } as const;
+export const Geometry = protoFields("TSD.GeometryArchive", { POSITION: "position", SIZE: "size", FLAGS: "flags", ANGLE: "angle" });
 
 /** TSD.ShapeArchive. */
-export const Shape = { SUPER: 1, STYLE: 2, PATHSOURCE: 3 } as const;
+export const Shape = protoFields("TSD.ShapeArchive", { SUPER: "super", STYLE: "style", PATHSOURCE: "pathsource" });
 
 /**
  * TSD.ImageArchive: super = 1 (TSD.DrawableArchive, directly), style = 3
@@ -39,25 +40,25 @@ export const Shape = { SUPER: 1, STYLE: 2, PATHSOURCE: 3 } as const;
  * mask = 5, naturalSize = 9, data = 11 (TSP.DataReference),
  * originalData = 13.
  */
-export const Image = {
-  SUPER: 1,
-  STYLE: 3,
-  ORIGINAL_SIZE: 4,
-  MASK: 5,
+export const Image = protoFields("TSD.ImageArchive", {
+  SUPER: "super",
+  STYLE: "style",
+  ORIGINAL_SIZE: "originalSize",
+  MASK: "mask",
   /** 0 in 75 of 83 corpus images; the other values are crop/adjust states. */
-  FLAGS: 7,
-  NATURAL_SIZE: 9,
-  DATA: 11,
-  ORIGINAL_DATA: 13,
+  FLAGS: "flags",
+  NATURAL_SIZE: "naturalSize",
+  DATA: "data",
+  ORIGINAL_DATA: "originalData",
   /** `interpretsUntaggedImageDataAsGeneric` — false in 82 of 83. */
-  UNTAGGED_AS_GENERIC: 18,
-} as const;
+  UNTAGGED_AS_GENERIC: "interpretsUntaggedImageDataAsGeneric",
+});
 
 /**
  * TSD.CommentStorageArchive: text = 1 (string), creation_date = 2,
  * author = 3 (ref → TSK.AnnotationAuthorArchive), replies = 4.
  */
-export const CommentStorage = { TEXT: 1, CREATION_DATE: 2, AUTHOR: 3, REPLIES: 4 } as const;
+export const CommentStorage = protoFields("TSD.CommentStorageArchive", { TEXT: "text", CREATION_DATE: "creation_date", AUTHOR: "author", REPLIES: "replies" });
 
 export const imageExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];

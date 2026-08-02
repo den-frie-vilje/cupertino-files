@@ -24,19 +24,20 @@
  * directions O(1), which is worth it — a category tree resolves one UID per
  * group column and per row range.
  */
+import { protoFields } from "../proto/fields.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
 
 /** TST.ColumnRowUIDMapArchive. */
-export const UidMapFields = {
-  SORTED_COLUMN_UIDS: 1,
-  COLUMN_INDEX_FOR_UID: 2,
-  COLUMN_UID_FOR_INDEX: 3,
-  SORTED_ROW_UIDS: 4,
-  ROW_INDEX_FOR_UID: 5,
-  ROW_UID_FOR_INDEX: 6,
-} as const;
+export const UidMapFields = protoFields("TST.ColumnRowUIDMapArchive", {
+  SORTED_COLUMN_UIDS: "sorted_column_uids",
+  COLUMN_INDEX_FOR_UID: "column_index_for_uid",
+  COLUMN_UID_FOR_INDEX: "column_uid_for_index",
+  SORTED_ROW_UIDS: "sorted_row_uids",
+  ROW_INDEX_FOR_UID: "row_index_for_uid",
+  ROW_UID_FOR_INDEX: "row_uid_for_index",
+});
 
 /** TST.TableModelArchive.base_column_row_uids. */
 export const BASE_COLUMN_ROW_UIDS = 46;

@@ -1,5 +1,17 @@
 # Apple iWork protobuf schemas (.proto)
 
+> **These files are load-bearing.** `src/proto/vendored.ts` is generated
+> from them by `npm run proto:embed`, and the library resolves every field
+> number and enum value it can through that table. Change anything here and
+> re-run `proto:embed`, or the test suite fails. They are also published
+> with the package, so an installed copy carries the authority for its own
+> field numbers.
+>
+> Refreshing a dump: replace the files, update the provenance table below,
+> run `npm run proto:embed`, then `npm test`. A field that has appeared in
+> the newer dump makes its `measuredFields` declaration throw — that is
+> deliberate, and moving it to `protoFields` is the point.
+
 Curated set of protobuf schema definitions for the modern iWork IWA file format,
 collected to support a TypeScript library that reads/writes Apple Pages
 (`.pages`) documents. These schemas are **not published by Apple**; they were

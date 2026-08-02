@@ -143,6 +143,76 @@ export function parseProtoSchema(sources: Iterable<string>): ProtoSchema {
   return schema;
 }
 
+/** Every enum in the schema: fully-qualified name → value name → number. */
+export type ProtoEnums = Map<string, Map<string, number>>;
+
+const ENUM_VALUE = /^\s*([A-Za-z_]\w*)\s*=\s*(-?\d+)/;
+
+/**
+ * The enums, which {@link parseProtoSchema} deliberately skips.
+ *
+ * It skips them because an enum body's `NAME = 0;` lines look exactly like
+ * fields and reading them as such would invent required fields out of
+ * nothing. But the values themselves matter as much as any field number —
+ * `interaction_type` 4 is a stepper and 5 is a slider, and getting that
+ * backwards produces a document that opens fine and draws the wrong widget.
+ *
+ * Worth stating why this is a separate pass rather than a lenient version
+ * of the field parser: an enum's numbers live in the same integer space as
+ * its parent message's field numbers, so a constant like
+ * `LineCap = { BUTT: 0, ROUND: 1, SQUARE: 2 }` will happily "match" fields
+ * 1 and 2 of `TSD.StrokeArchive`. Checking an enum against a message is not
+ * a weaker check; it is a wrong one.
+ */
+export function parseProtoEnums(sources: Iterable<string>): ProtoEnums {
+  const enums: ProtoEnums = new Map();
+
+  for (const source of sources) {
+    let pkg = "";
+    const stack: string[] = [];
+    const depths: number[] = [];
+    let depth = 0;
+    /** The enum currently open, and the depth it was opened at. */
+    let current: { name: string; depth: number } | undefined;
+
+    for (const line of source.replace(/([{};])/g, "$1\n").split("\n")) {
+      const packageMatch = PACKAGE.exec(line);
+      if (packageMatch) pkg = packageMatch[1]!;
+
+      const enumMatch = ENUM.exec(line);
+      if (!current && enumMatch) {
+        const parent = stack[stack.length - 1];
+        const full = parent ? `${parent}.${enumMatch[1]}` : `${pkg}.${enumMatch[1]}`;
+        current = { name: full, depth };
+        if (!enums.has(full)) enums.set(full, new Map());
+      } else if (current) {
+        const value = ENUM_VALUE.exec(line);
+        if (value) enums.get(current.name)!.set(value[1]!, Number(value[2]));
+      } else {
+        const messageMatch = MESSAGE.exec(line);
+        if (messageMatch) {
+          const parent = stack[stack.length - 1];
+          stack.push(parent ? `${parent}.${messageMatch[1]}` : `${pkg}.${messageMatch[1]}`);
+          depths.push(depth);
+        }
+      }
+
+      for (const character of line) {
+        if (character === "{") depth++;
+        else if (character === "}") {
+          depth--;
+          if (current && depth <= current.depth) current = undefined;
+          while (depths.length && depths[depths.length - 1]! >= depth) {
+            depths.pop();
+            stack.pop();
+          }
+        }
+      }
+    }
+  }
+  return enums;
+}
+
 /** `.TSP.Reference` → `TSP.Reference`; a bare name gets the file's package. */
 function qualify(type: string, pkg: string): string {
   if (type.startsWith(".")) return type.slice(1);
