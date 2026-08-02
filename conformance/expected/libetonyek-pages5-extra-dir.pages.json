@@ -1,0 +1,320 @@
+{
+  "file": "libetonyek-pages5-extra-dir.pages",
+  "sha1": "164834c5a5374accb9716c53d36ff0d2bcbc8a4b",
+  "app": "pages",
+  "fileFormatVersion": "3.2.13",
+  "objects": 567,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 93
+    },
+    {
+      "name": "Index/CalculationEngine-4705.iwa",
+      "objects": 27
+    },
+    {
+      "name": "Index/Tables/Tile-4586.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4587.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4588.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4589.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4590.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4591.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4592.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4593.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4594.iwa",
+      "objects": 25
+    },
+    {
+      "name": "Index/Tables/DataList-4595.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4596.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4597.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-4598.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4599.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4600.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4601.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4602.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4603.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4604.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4605.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4606.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4607.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4608.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4609.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-4766.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-4767.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4768.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-4776.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-4777.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4778.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-4704.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet-4709.iwa",
+      "objects": 386
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 1787,
+      "text": "Project Proposal\nPrepared for: Trenz Pruca, Title\nPrepared by: Urna Semper, Job Title\nOctober 18, 2018\nProposal number: 123-4567\n\u0005EXECUTIVE SUMMARY\n\nObjective\nLorem ipsum dolor sit amet, ligula suspendisse nulla pretium, rhoncus tempor fermentum, enim integer ad vestibulum volutpat. Nisl rhoncus turpis est, vel elit, congue wisi enim nunc ultricies sit, magna tincidunt. Maecenas aliquam maecenas ligula nostra, accumsan taciti.\nGoals\nSociis mauris in integer, a dolor netus non dui aliquet, sagittis felis sodales, dolor sociis mauris, vel eu libero cras. Faucibus at. Arcu habitasse elementum est, ipsum purus pede porttitor class, ut adipiscing, aliquet sed auctor, imperdiet arcu per diam dapibus libero duis. Enim eros in vel, volutpat nec pellentesque leo, temporibus nec.\nSolution\nAc dolor ac adipiscing amet bibendum nullam, lacus molestie ut libero nec, diam et, pharetra sodales, feugiat ullamcorper id tempor id vitae. Mauris pretium aliquet, lectus tincidunt.\nProject Outline\nPorttitor mollis imperdiet libero senectus pulvinar. Etiam molestie mauris ligula laoreet, vehicula eleifend. Repellat orci erat et, sem cum, ultricies sollicitudin amet eleifend dolor nullam erat, malesuada est leo ac.\nVarius natoque turpis elementum est. Duis montes, tellus lobortis lacus amet arcu et. In vitae vel.\nWisi at id praesent bibendum libero faucibus porta egestas, quisque praesent ipsum fermentum tempor. Curabitur auctor, erat mollis sed.\nTurpis vivamus a dictumst congue magnis. Aliquam amet ullamcorper dignissim molestie, mollis. Tortor vitae tortor eros wisi facilisis.\n\u0005BUDGET\n\nUt vehicula nunc mattis pede\nCurabitur labore. Ac augue donec, sed a dolor luctus, congue arcu id diam praesent, pretium ac, ullamcorper non hac in quisque hac. Magna amet libero maecenas justo.\n\n￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "company name"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "company name"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "company name"
+    },
+    {
+      "kind": "CELL",
+      "characters": 5,
+      "text": "Total"
+    },
+    {
+      "kind": "CELL",
+      "characters": 6,
+      "text": "Item 3"
+    },
+    {
+      "kind": "CELL",
+      "characters": 6,
+      "text": "Item 2"
+    },
+    {
+      "kind": "CELL",
+      "characters": 6,
+      "text": "Item 1"
+    },
+    {
+      "kind": "CELL",
+      "characters": 4,
+      "text": "Cost"
+    },
+    {
+      "kind": "CELL",
+      "characters": 10,
+      "text": "Unit Price"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "Quantity"
+    },
+    {
+      "kind": "CELL",
+      "characters": 11,
+      "text": "Description"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 26
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "file": "draftjs-v2.3-comments.pages",
+  "sha1": "21ee58eba3cd3ca03bbf41d03d9bb8396c46afef",
+  "app": "pages",
+  "fileFormatVersion": "2.3.4",
+  "objects": 410,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 91
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/CalculationEngine-3540.iwa",
+      "objects": 11
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-19428.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-19429.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19430.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19431.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19432.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19433.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19434.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19435.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19436.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19437.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-19523.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19524.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-19525.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-3539.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet-3543.iwa",
+      "objects": 275
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 6
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 10,
+      "text": "Text block"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "BODY",
+      "characters": 1823,
+      "text": "Draft.js paste test document\n\nInline styles\n\nUnstyled, bold, italic, bold italic, strikethrough, monospace, unstyled, bold monospace\nUnstyled, underline, outline, bigger, smaller, superscript, subscript, small caps\nUnstyled, red, text background, shadow, emphasis\n\nInline entities\n\nUnstyled, link, email link, bookmark link, comment \nUnstyled, bold link comment\n\n\nText blocks\n\nUnstyled\nUnstyled centered\nUnstyled right-aligned\nUnstyled justify\n\nUnstyled indent Unstyled indent Unstyled indent Unstyled indent Unstyled indent Unstyled indent Unstyled indent\n\nh1 - Heading one\nh2 - Heading two\nh3 - Heading three bold\n\nBulleted list\nBulleted list\nNested bulleted list (1)\nNested bulleted list (2)\nBulleted list\nNumbered list\nNumbered list\nNested numbered list (1)\nNested numbered list (2)\nNumbered list\nDashed list\nDashed list\nNested dashed list (1)\nNested dashed list (2)\nDashed list\nImage list\nImage list\nNested image list (1)\nNested image list (2)\nImage list\nRich blocks\nImages\nImage￼ \n\n\nImage with styles￼\n\n\nTable\n￼\n\nLine￼\nCode block\n\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n  <!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\"\n           \"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">\n  <math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n    <mrow>\n      <mi>a</mi>\n      <mo>&InvisibleTimes;</mo>\n      <msup>\n        <mi>x</mi>\n        <mn>2</mn>\n      </msup>\n      <mo>+</mo>\n      <mi>b</mi>\n      <mo>&InvisibleTimes; </mo>\n      <mi>x</mi>\n      <mo>+</mo>\n      <mi>c</mi>\n    </mrow>\n  </math>\n\nMisc\nSoft line break\n\nCharacter replacements\n\nDouble quote \"test\" \nSingle quote 'test' \nEn dash -- \nEm dash --- \nCopyright (c) \nFractions 1/2 \nArrows --> <-- <--> \nEllipsis ... \n\nEmojis\n🙂, 😨, 😎\n\nMathML equation\n￼\n\nLaTeX equation\n￼\n\\[ x^n + y^n = z^n \\]\n\nChart\n￼￼￼\nShape￼\n\n\nAudio media\n\n\nVideo media￼\n\n\n\nHighlight"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 118
+  }
+}

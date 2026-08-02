@@ -1,0 +1,1894 @@
+{
+  "file": "picopalette-v3.2-multisection-footnotes.pages",
+  "sha1": "a2a9ef1a6cd799ade9fc5c75d2c7ad17dbfe9d27",
+  "app": "pages",
+  "fileFormatVersion": "3.2.13",
+  "objects": 1222,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 599
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 13
+    },
+    {
+      "name": "Index/CalculationEngine-3380.iwa",
+      "objects": 104
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-192692-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-313425.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-313516.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-361318.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-361351.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595085.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595086.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595087.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595088.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595089.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595090.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595091.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595092.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595093.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595094.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595095.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595096.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595097.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595098.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595099.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595100.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595101.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595102.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595103.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595104.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595105.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595106.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595107.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595108.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595109.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595110.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595111.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595112.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595113.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595117.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595118.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595119.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595120.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595158.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595159.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595160.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595161.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595162.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595163.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595164.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595165.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595166.iwa",
+      "objects": 9
+    },
+    {
+      "name": "Index/Tables/DataList-595167.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595168.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595169.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595170.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595171.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595172.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595173.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595176.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595177.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595178.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595179.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595180.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595181.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-595182.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595183.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595184.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595185.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595186.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595187.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595188.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595189.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595190.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595191.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595192.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595193.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595332.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595333.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595334.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595335.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595339.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595340.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595341.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595342.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595346.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595347.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-595348.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-595349.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622926-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622927-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622928-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622929-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622930-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622931-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622932-2.iwa",
+      "objects": 13
+    },
+    {
+      "name": "Index/Tables/DataList-622933-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622934-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622935-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-622936-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622937-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622938-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622939-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622940-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622941-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622942-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622943-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622944-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622945-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622946-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-622947-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-623074.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-623075.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-623076-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-623083.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-623084.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-623085-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-3379.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet-3383.iwa",
+      "objects": 359
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 34223,
+      "text": "PHISHTOR\nCHROME EXTENSION FOR \nPHISHING WEBSITE DETECTION\nby\nRAMKUMAR B\t  2015103042\nASWIN SUNDAR 2015103006\nA project report submitted to the \nFACULTY OF INFORMATION AND\n COMMUNICATION ENGINEERING \nin partial fulfilment of the requirements for the \naward of the degree of \nBACHELOR OF ENGINEERING \nin \nCOMPUTER SCIENCE AND ENGINEERING ￼\nDEPARTMENT OF COMPUTER SCIENCE AND \nENGINEERING ANNA UNIVERSITY, CHENNAI – 25 NOVEMBER 2018 \u0004BONAFIDE CERTIFICATE\n\nCertified that this project report titled PHISHTOR - CHROME EXTENSION FOR PHISHING WEBSITE DETECTION is the bonafide work of RAMKUMAR B (2015103042) and ASWIN SUNDAR (2015103006) who carried out the project work for Creative and Innovative Lab under my supervision, for the fulfillment of the requirements for the award of the degree of Bachelor of Engineering in Computer Science and Engineering. Certified further that to the best of my knowledge, the work reported herein does not form part of any other thesis on the basis of which a degree or an award was conferred on an earlier occasion on these or any other candidates.\n\n\n\n\n￼\u0004\n\nABSTRACT\n\n\tThis document proposes a phishing\u000e detection plugin for chrome browser that can detect and warn the user about phishing web sites in real-time using random forest classifier. Based on the IEEE paper, Intelligent phishing website detection using random forest classifier\u000e, the random forest classifier seems to outperform other techniques in detecting phishing websites.\n\tOne common approach is to make the classification in a server and then let the plugin to request the server for result. Unlike the old approach, this project aims to run the classification in the browser itself. The advantage of classifying in the client side browser has advantages like, better privacy (the user’s browsing data need not leave his machine), detection is independent of network latency. \n\tThis project is mainly of implementing the above mentioned paper in Javascript for it to run as a browser plugin. Since javascript doesn’t have much ML libraries support and considering the processing power of the client machines, the approach needs to be made lightweight. The random forest classifier needs to be trained on the phishing websites dataset\u000e using python scikit-learn and then the learned model parameters need to be exported into a portable format for using in javascript.\u0004TABLE OF CONTENTS\n\n￼\u0004LIST OF FIGURES\n\n￼\u0004LIST OF TABLES\n\n￼\u0004LIST OF ABBREVIATIONS\n\n\nURL\t\tUniform Resource Locator\nAPI\t\tApplication Programming Interface\nHTTP\tHyper Text Transfer Protocol\nSSL\t\tSecured Socket Layer\nDNS\t\tDomain Name System\nGDPR\tGeneral Data Privacy Regulation\nJSON\t\tJavaScript Object Notation\nDOM\t\tDocument Object Model\nUI\t\tUser Interface\nHTML\tHyper Text Markup Language\nCSS\t\tCascading Style Sheet\u0004\n\nCHAPTER 1\n\nINTRODUCTION\n\n1.1 \tPROBLEM DOMAIN\n\tPhishing is the fraudulent attempt to obtain sensitive information such as usernames, passwords, and credit card details (and money), often for malicious reason. It is typically carried out by email spoofing or instant messaging, and it often directs users to enter personal information at a fake website, the look and feel of which are identical to the legitimate site, the only difference being the URL of the website in concern. Communications purporting to be from social web sites, auction sites, banks, online payment processors are often used to lure victims. Phishing emails may contain links to websites that distribute malware.\n\tDetecting phishing websites often include lookup in a directory of malicious sites. Since most of the phishing websites are short lived, the directory cannot always keep track of all, including new phishing websites. So the problem of detecting phishing websites can be solved in a better way by machine learning techniques. Based on a comparison of different ML techniques, the random forest classifier seems to perform better.\n\tOnly way for an end user to benefit from this is to implement detection in a browser plugin. So that the user can be warned in real time as he browses a phishing site. However, browser extensions have restrictions such as they can be written only in javascript and they have limited access to page URLs and resources.\n\tExisting plugins send the URL to a server, so that the classification can be done in the server and the result is returned to the plugin. With this approach, user privacy is questioned and also the detection may be delayed due to network latency and the plugin may fail to warn the user in right time. As it is an important security problem and also considering the privacy aspects, we decided to implement this on a chrome browser plugin which can do the classification without an external server.\n1.2 \tPROBLEM DESCRIPTION\n\tTo develop a browser plugin which once installed, should warn the user on the event of he/she visiting a phishing website. The plugin should not contact any external web service for this which may leak the user’s browsing data. The detection should be instant so that the user will be warned before entering any sensitive information on the phishing website.\n1.3 \tSCOPE\n\tAccording to wikipedia, In 2017, 76% of organisations experienced phishing attacks. Nearly half of information security professionals surveyed said that the rate of attacks increased from 2016. In the first half of 2017 businesses and residents of Qatar were hit with more than 93,570 phishing events in a three-month span. With increasing number of internet users, there is a prominent need for security solutions again attacks such as phishing. Hence this plugin would be a good contribution for the chrome users.\n1.4 \tCONTRIBUTION\n\tThis is the first implementation of phishing website detection in browser plugin without use of an external web service. This makes use of existing works done on phishing detection and implements them in a manner that it will benefit end users. This involves porting the existing python classifier (random forest) to javascript. The plugin with an one time download of the learned model, will be able to classify websites in real time. This involves developing such a model (random forest) in javascript, as browser plugin supports only javascript. Thus this project contributes to better privacy and rapid detection of phishing.\n1.5 \tSWOT ANALYSIS\n￼\nTable 1.1 SWOT analysis\n1.6 \tPESTLE ANALYSIS\n1.6.1 Political \n\tThis project is rarely controlled by political factors. One such scenario is that the government may take any measure to prevent phishing and in such cases the plugin may lose its potential.\n1.6.2 Economical\n\tThe plugin is completely based on public dataset and open chrome plugin API. Thus it has no Economical factors controlling it.\n1.6.3 Social\n\tThe social factor that will have effect on this plugin is awareness of the user. Phishing detection systems aims to aid an user in finding a phishing sites. At least the users need to be aware about phishing to install this plugin.\n1.6.4 Technological\n\tTechnological advancements or improved techniques for phishing detection can make this plugin become outdated and are a major threat to this plugin.\n1.6.5 Legal\n\tLegal policies those in concern of user privacy such as GDPR will enhance the potential of this plugin as user will be moving to more privacy based products.\n1.6.6 Environmental \n\tThis plugin has no environmental factors affecting it.\n1.7 \tORGANISATION OF THESIS\n\tChapter 2 discusses the existing approaches to phishing detection in greater detail. Chapter 3 gives the requirements analysis of the system. It explains the functional and non-functional requirements, constraints and assumptions made in the implementation of the system and the various UML diagrams.  Chapter 4 explains the overall system architecture and the design of various modules along with their complexity. Chapter 5 gives the implementation details of each module. Chapter 6 elaborates on the results of the implementation. Chapter 7 concludes the thesis and gives an overview of its criticisms. \u0004\n\nCHAPTER 2\n\nRELATED WORKS\n\n\tThis chapter gives a survey of the possible approaches to phishing website detection. This survey helps to identify various existing approaches and to find the drawbacks in them. The difficulty in most of the approaches is that they are not implemented in real time so that an end user will benefit from it.\n￼\n\nFigure 2.1 Approaches to phishing detection\n\n2.1 \tDIRECTORY BASED APPROACHES\n\tMost popular one of this kind is PhishTank. According to PhishTank\u000e, it is a collaborative clearing house for data and information about phishing on the Internet. Also, PhishTank provides an open API for developers and researchers to integrate anti-phishing data into their applications at no charge. Thus PhishTank is a directory of all phishing websites that are found and reported by people across the web so that developers can use their API for detecting phishing websites.\n\tGoogle has a API called Google Safe Browsing API which also follows directory based approach and also provides open API similar to PhishTank.\n\tThis kind of approach clearly can’t be effective as new phishing web sites are continuously developed and the directory can’t be kept up to date always. This also leaks users browsing behaviour as the URLs are sent to the PhishTank API.\n2.2 \tRULE BASED APPROACHES\n\tAn existing chrome plugin named PhishDetector\u000e uses a rule based approach so that it can detect phishing without external web service. Although rule based approaches support easier implementation on client side, they can’t be accurate compared to Machine Learning based approaches. Similar work by Shreeram.V on detection of phishing attacks using genetic algorithm\u000e uses a rule that is generated by a genetic algorithm for detection. \n\tPhishNet is one such Predictive blacklisting approach. It used rules that can match with TLD, directory structure, IP address, HTTP header response and some other. \n\tSpoofGuard\u000e by Stanford is a chrome plugin which used similar rule based approach by considering DNS, URL, images and links.\n\tPhishwish: A Stateless Phishing Filter Using Minimal Rules by Debra L. Cook, Vijay K. Gurbani, Michael Daniluk worked on a phishing filter that offers advantages over existing filters: It does not need any training and does not consult centralized white or black lists. They used only 11 rules to determine the veracity of an website.\n2.3 \tML BASED APPROACHES\n\tIntelligent phishing website detection using random forest classifier (IEEE-2017)  by Abdulhamit Subasi, Esraa Molah, Fatin Almkallawi and Touseef J. Chaudhery discusses the use the random forest classifier for phishing detection. Random Forest has performed the best among the classification methods by achieving the highest accuracy 97.36%.\n\tPhishBox: An Approach for Phishing Validation and Detection (IEEE-2017) by Jhen-Hao Li, and Sheng-De Wang discusses ensemble models for phishing detection. As a result, The false-positive rate of phishing detection is dropped by 43.7% in average. \n\tReal time detection of phishing websites (IEEE-2016) by Abdulghani Ali Ahmed, and Nurul Amirah Abdullah discusses an approach based on features from only the URL of the website. They were able to come up with a detection mechanism that is capable of detecting various types of phishing attacks maintaining a low rate of false alarms. \n\tUsing Domain Top-page Similarity Feature in Machine Learning-Based Web Phishing Detection by Nuttapong Sanglerdsinlapachai, Arnon Rungsawang presents a study on using a concept feature to detect web phishing problem. They applied additional domain top-page similarity feature to a machine learning based phishing detection system. The evaluation result in terms of f-measure was up to 0.9250, with 7.50% of error rate.\n\tNetcraft\u000e is one popular phishing detection plugin for chrome that uses server side prediction.\n2.4 \tDRAWBACKS\n\tBased on the above mentioned related works, It can be seen that the plugins either use rule based approach or server side ML based approach. Rule based approach doesn’t seem to perform well compared to ML based approaches and on the other side ML based approaches need libraries support and so they are not implemented in client side plugin.  All the existing plugins send the target URL to an external web server for classification. This project aims to implement the same in browser plugin removing the need of external web service and improving user privacy.\u0004\n\nCHAPTER 3\n\nREQUIREMENTS ANALYSIS\n\n3.1 \tFUNCTIONAL REQUIREMENTS\n\tThe plugin warns the user when he/she visits a phishing website. The plugin should adhere to the following requirements:\nThe plugin should be fast enough to prevent the user from submitting any sensitive information to the phishing website.\nThe plugin should not use any external web service or API which can leak user’s browsing pattern.\nThe plugin should be able to detect newly created phishing websites.\nThe plugin should have a mechanism of updating itself to emerging phishing techniques.\n3.2 \tNON FUNCTIONAL REQUIREMENTS\n3.2.1 User Interface\n\tThere must be a simple and easy to use user interface where the user should be able to quickly identify the phishing website. The input should be automatically taken from the webpage in the current tab and the output should be clearly identifiable. Further the user should be interrupted on the event of phishing.\n3.2.2 Hardware\n\tNo special hardware interface is required for the successful implementation of the system. \n3.2.3 Software\nPython for training the model\nChrome browser\n3.2.4 Performance\n\tThe plugin should be always available and should make fast detection with low false negatives.\n3.3 \tCONSTRAINTS AND ASSUMPTIONS\n3.3.1 Constraints\nCertain techniques use features such as SSL, page rank etc. Such information cannot be obtained from client side plugin without external API. Thus those features can’t be used for prediction.\nHeavy techniques can’t used considering the processing power of client machines and the page load time of the website.\nOnly Javascript can be used to develop chrome plugins. Machine learning libraries support for javascript is far less compared to python and R.\n3.3.2 Assumptions\nThe plugin is provided with the needed permissions in the chrome environment. \nThe user has a basic knowledge about phishing and extensions.\n3.4 \tSYSTEM MODELS\n3.4.1 Use Case Diagram\n\tThe overall use case diagram of the entire system is shown in figure 3.1. The user can install the plugin and then can continue his normal browsing behaviour. This plugin will automatically check the browsing pages for phishing and warns the user of the same.\nPre condition: The user visits a website and have plugin installed.\nPost condition: The user is warned incase it’s a phishing website.￼\n\nFigure 3.1 Use case diagram of the system\n3.4.2 Sequence diagram\n\tThe sequence of interactions between the user and the plugin are shown in the figure 3.2\u0005Figure 3.2 System Sequence diagram￼\n\u0004\n\nCHAPTER 4\n\nSYSTEM DESIGN\n\n4.1 \tSYSTEM ARCHITECTURE\n\tThe block diagram of the entire system is shown in the figure 4.1. A Random Forest classifier is trained on phishing sites dataset using python scikit-learn. A JSON format to represent the random forest classifier has been devised and the learned classifier is exported to the same. A browser script has been implemented which uses the exported model JSON to classify the website being loaded in the active browser tab.\n\tThe system aims at warning the user in the event of phishing. Random Forest classifier on 17 features of a website is used to classify whether the site is phishing or legitimate. The dataset arff file is loaded using python arff library and 17 features are chosen from the existing 30 features. Features are selected on basis that they can be extracted completely offline on the client side without being dependent on a web service or third party. The dataset with chosen features are then separated for training and testing. Then the Random Forest is trained on the training data and exported to the above mentioned JSON format. The JSON file is hosted on a URL.\n\tThe client side chrome plugin is made to execute a script on each page load and it starts to extract and encode the above selected features. Once the features are encoded, the plugin then checks for the exported model JSON in cache and downloads it again incase it is not there in cache.\nFigure 4.1 System Architecture￼\n\u0005With the encoded feature vector and model JSON, the script can run the classification. Then a warning is displayed to the user, incase the website is classified as phishing. The entire system is designed lightweight so that the detection will be rapid.\n4.2 \tUI DESIGN\n\tA simple and easy to use User Interface has been designed for the plugin using HTML and CSS. The UI contains a large circle indicating the percentage of the legitimacy of the website in active tab. The circle also changes its colour with respect to the classification output (Green for legitimate website and Light Red for phishing). Below the circle, the analysis results containing the extracted features are displayed in the following colour code.\n\t\t\tGreen \t- \tLegitimate\n\t\t\tYellow \t- \tSuspicious\n\t\t\tLight Red \t- \tPhishing\n\tThe plugin also displays a alert warning incase of phishing to prevent the user from entering any sensitive information on the website. The test results such as precision, recall and accuracy are displayed in a separate screen. The UI is shown in figure 4.2\n4.3 \tCLASS DIAGRAM\n\tThe class diagram of the entire Machine Translation system is shown in figure 4.3. This diagram depicts the functions of various modules in the system clearly. It also shows the interaction between the modules of the system thereby providing a clear idea for implementation.\n\n\nFigure 4.2 UI Design￼￼\nFigure 4.3 Class Diagram\n4.4 \tMODULE DESIGN\n4.4.1 Preprocessing\n\tThe dataset is downloaded from UCI repository and loaded into a numpy array. The dataset consists of 30 features, which needs to be reduced so that they can be extracted on the browser. Each feature is experimented on the browser so that it will be feasible to extract it without using any external web service or third party. Based on the experiments, 17 features have been chosen out of 30 without much loss in the accuracy on the test data. More number of features increases the accuracy and on the other hand, reduces the ability to detect rapidly considering the feature extraction time. Thus a subset of features is chosen in a way that the tradeoff is balanced. \n\n￼\nTable 4.1 Webpage Features\n\n\tThen the dataset is split into training and testing set with 30% for testing. Both the training and testing data are saved to disk.\n4.4.2 Training\n\tThe training data from the preprocessing module is loaded from the disk. A random forest classifier is trained on the data using scikit-learn library. Random Forest is an ensemble learning technique and thus an ensemble of 10 decision tree estimators is used. Each decision tree follows CART algorithm and tries to reduce the gini impurity.\n ￼\n\tThe cross validation score is also calculated on the training data. The F1 score is calculated on the testing data. Then the trained model is exported to JSON using the next module.\n4.4.3 Exporting Model\n\tEvery machine learning algorithm learns its parameter values during the training phase. In Random Forest, each decision tree is an independent learner and each decision tree learns node threshold values and the leaf nodes learn class probabilities. Thus a format needs to be devised to represent the Random Forest in JSON. \n\tThe overall JSON structure consists of keys such as number of estimators, number of classes and etc. Further it contains an array in￼ \nFigure 4.4 Random Forest JSON structure\nwhich each value is an estimator represented in JSON. Each decision tree is encoded as a JSON tree with nested objects containing threshold for that node and left and right node objects recursively.\n4.4.4 Plugin Feature Extraction\n\tThe above mentioned 17 features needs to be extracted and encoded for each webpage in realtime while the page is being loaded. A content script is used so that it can access the DOM of the webpage. The content script is automatically injected into each page while it loads. The content script is responsible to collect the features and then send them to the plugin. The main objective of this work is not to use any external web service and the features needs to be independent of network latency and the extraction should be rapid. All these are made sure while developing techniques for extraction of features.\n\tOnce a feature is extracted it is encoded into values {-1, 0, 1} based on the following notation.\n\t\t\t-1 \t- \tLegitimate\n\t\t\t0 \t- \tSuspicious\n\t\t\t1 \t- \tPhishing\n\t\tThe feature vector containing 17 encoded values is passed on to the plugin from the content script.\n4.4.5 Classification\n\tThe feature vector obtained from the content script is ran through the Random Forest for classification. The Random Forest parameters JSON is downloaded and cached in disk. The script tries to load the JSON from disk and incase of cache miss, the JSON is downloaded again.\n\tA javascript library has been developed to mimic the Random Forest behaviour using the JSON by comparing feature vector against the threshold of the nodes. The output of the binary classification is based on the leaf node values and the user is warned if the webpage is classified as phishing.\n4.5 \tCOMPLEXITY ANALYSIS\n4.5.1 Time Complexity\n\tThe time complexity of each module of the system is shown in Table 4.2\n\n￼Table 4.2 Time Complexity of various modules\n‘n’ denotes number of data points.\n‘E’ denotes number of ensembles (decision trees).\n‘v’ denotes  number of features.\n4.5.2 Complexity of the project\nThe complexity of the project lies in balancing the tradeoff between accuracy and rapid detection. Choosing a subset of features that will make the detection fast and at the same time without much drop in accuracy.\nPorting of scikit-learn python object to javascript compatible format. For example, JSON.\nReproducing the Random Forest behaviour in javascript reduced the accuracy by a small margin.\nMany features are not feasible to extract without using a external web service. Use of an external web service will again affect the detection time. \nMaintaining rapid detection is important as the system should detect the phishing before the user submit any sensitive information.\u0004\n\nCHAPTER 5\n\nSYSTEM DEVELOPMENT\n\n\tThe system is overall split into backend and plugin. The backend consists of dataset preprocessing and training modules. The frontend which is the plugin consists of javascript files for content script and background script including the Random Forest script. The plugin also consists of HTML and CSS files for the user interface. The overall code overview showing the organisation of these various modules can be seen in figure 5.1￼\nFigure 5.1 Code Overview\n5.1 \tPROTOTYPE ACROSS THE MODULES\n\tThe input and output to each module of the system is described in this section. \nPreprocessing: This module takes the downloaded dataset in arff format and the creates four new files listed as training features, training class labels, testing features, testing class labels.\nTraining: This module takes the four output files from preprocessor and gives a trained Random Forest object along with the cross validation score on the training set.\nExporting model: This module takes the learned Random Forest classifier object and the recursively generates its JSON representation which is written to file in disk.\nPlugin Feature Extraction: This module takes a webpage as input and generates a feature vector with 17 encoded features.\nClassification: This module takes the feature vector from feature extraction module and the JSON format from the Exporting model module and then gives a boolean output which denotes whether the webpage is legitimate or phishing. \n5.2 \tEXPORTING ALGORITHM\n\tThe algorithm used to export Random Forest model as JSON is as follows.\n\nTREE_TO_JSON(NODE):\n tree_json ← {}\n if (node has threshold) then\n     tree_json[“type”] ← “split”\n     tree_json[“threshold”] ← node.threshold\n     tree_json[“left”] ← TREE_TO_JSON(node.left)\n    tree_json[“right”] ← TREE_TO_JSON(node.right)\n else\n     tree_json[“type”] ← “leaf”\n     tree_json[“values”] ← node.values\n return tree_json\n\nRANDOM_FOREST_TO_JSON(RF):\n forest_json ← {}\n forest_json['n_features'] ← rf.n_features_\n forest_json['n_classes'] ← rf.n_classes_\n forest_json['classes'] ← rf.classes_\n forest_json['n_outputs'] ← rf.n_outputs_\n forest_json['n_estimators'] ← rf.n_estimators\n forest_json['estimators'] ← []\n e ← rf.estimators\n for (i ← 0 to rf.n_estimators)\n     forest_json[‘estimators’][i] ← TREE_TO_JSON(e[i])\n return forest_json\n5.3\tDEPLOYMENT DETAILS\n\tThe backend requires Python 3 and the Classifier JSON and Test set are served over HTTP using Github. The plugin is distributed as single file and requires Chrome browser to run. The plugin (frontend) is packed into a  crx file for distribution.\u0004\n\nCHAPTER 6\n\nRESULTS AND DISCUSSION\n\n6.1\tDATASET FOR TESTING\n\tThe test set consists of data points separated from the dataset by ratio 70:30. Also the plugin is tested with websites that are listed in phishTank. New phishing sites are also added to PhishTank as soon as they are found. It should be noted that the plugin is able detect new phishing sites too. The results of this module testing as well as the testing of the entire system are summarised below. \n6.2\tOUTPUT OBTAINED IN VARIOUS STAGES\n\tThis section shows the results obtained during module testing.\n6.2.1 Preprocessing\n\tThe output the preprocessing module is shown in figure 6.1.￼\nFigure 6.1 Preprocessing output\n6.2.2 Training\n\tThe output the training module is shown in figure 6.2.\nFigure 6.2 Training output￼\n6.2.3 Exporting model\n\tThe output the export module is shown in figure 6.3. It outputs a JSON file representing the Random Forest parameters.￼\nFigure 6.3 Model JSON\n6.2.4 Plugin Feature Extraction \nThe 17 features extracted for the webpage at thetechcache.science are logged in to the console which is shown in figure 6.4. The features are stored as key value pairs and the values are encoded from -1 to 1 as discussed above.\n\n\nFigure 6.4 Webpage features￼\n6.2.5 Classification\n\tThe output of the classification is shown right in the Plugin UI. Green circle indicates legitimate site and Light red indicates phishing.￼\nFigure 6.5 Classification Output\n6.3\tSAMPLE SCREENSHOTS DURING TESTING\n\tThe output of the plugin while visiting a phishing site taken from PhishTank. This site has a low trust value and also the light red circle indicates phishing.￼\nFigure 6.6 Test Output\n6.4 \tPERFORMANCE EVALUATION \n\tThe performance of the entire system is evaluated using the standard parameters described below. \n6.4.1 Cross Validation score\n\tLearning the parameters of a prediction function and testing it on the same data is a methodological mistake: a model that would just repeat the labels of the samples that it has just seen would have a perfect score but would fail to predict anything useful on yet-unseen data. This situation is called overfitting.\t\n\tTo solve this problem, yet another part of the dataset can be held out as a so-called “validation set”: training proceeds on the training set, after which evaluation is done on the validation set, and when the experiment seems to be successful, final evaluation can be done on the test set.\nHowever, by partitioning the available data into three sets, we drastically reduce the number of samples which can be used for learning the model, and the results can depend on a particular random choice for the pair of (train, validation) sets.\n\tA solution to this problem is a procedure called cross-validation (CV for short). A test set should still be held out for final evaluation, but the validation set is no longer needed when doing CV. In the basic approach, called k-fold CV, the training set is split into k smaller sets (other approaches are described below, but generally follow the same principles). The following procedure is followed for each of the k “folds”:\nA model is trained using k of the folds as training data; the resulting model is validated on the remaining part of the data (i.e., it is used as a test set to compute a performance measure such as accuracy).\n\tThe score on 10 Fold cross validation is as below￼\nFigure 6.7 Cross Validation Output\t\n\t(calculated with cross_val_score of scikit-learn) \n6.4.2 F1 score\n\tF1 score is a measure of a test's accuracy. It considers both the precision and the recall of the test to compute the score: precision is the number of correct positive results divided by the number of all positive results returned by the classifier, and recall is the number of correct positive results divided by the number of all relevant samples (all samples that should have been identified as positive). The F1 score is the harmonic average of the precision and recall, where an F1 score reaches its best value at 1 (perfect precision and recall) and worst at 0.\n\tThe F1 score can be interpreted as a weighted average of the precision and recall, where an F1 score reaches its best value at 1 and worst score at 0. The relative contribution of precision and recall to the F1 score are equal. The formula for the F1 score is:\nF1 = 2 * (precision * recall) / (precision + recall)\n\n\tThe precision, recall and F1 score of the phishing classifier is calculated manually using javascript on the test data set. The results are shown in the figure 6.8\n￼\nFigure 6.8 Performance measure\u0004\n\n\nCHAPTER 7\n\nCONCLUSIONS\n\n7.1 \tSUMMARY\n\tThis is a phishing website detection system that focuses on client side implementation with rapid detection so that the users will be warned before getting phished. The main implementation is porting of Random Forest classifier to javascript. Similar works often use webpage features that are not feasible to extract on the client side and this results in the detection being dependent on the network. On the other side, this system uses only features that are possible to extract on the client side and thus it is able to provide rapid detection and better privacy. Although using lesser features results in mild drop in accuracy, it increases the usability of the system. This work has identified a subset of webpage feature that can be implemented on the client side without much effect in accuracy.\n\tThe port from python to javascript and own implementation of Random Forest in javascript further helped in rapid detection as the JSON representation of the model and the classification script is designed with time complexity in mind. The plugin is able to detect the phishing even before the page loads completely. The F1 score calculated on the test set on the client side is 0.886. \n7.2\tCRITICISMS\n\tThe system has a lower accuracy than the state-of-the art but it is more usable and the trade-off between accuracy and rapid detection is handled well enough. The chrome extension API restrictions has a small effect on the plugin. Since the features are extracted in content script which is injected on page load, this plugin can’t prevent a malicious javascript code from executing. Further the accuracy reduces from 0.94 to 0.886 while porting from python to javascript and this needs to be investigated. \n\tJavascript doesn’t support multithreading and browser execute only javascript. Thus the classification can’t be made faster by using parallel threads. Currently the results are not cached on the plugin and it’s computed repeatedly even for frequently visited sites.\n7.3\tFUTURE WORK\n\tThe classifier is currently trained on 17 features which can be increased provided that, they don’t make the detection slower or result in loss of privacy. The extension can made to cache results of frequently visited sites and hence reducing computation. But this may result in pharming attack being undetected. A solution needs to be devised for  caching of results without losing the ability to detect pharming.  The classification in javascript can be done using WorkerThreads which may result in better classification time. Thus a lot of improvements and enhancements are possible this system offers a more usable solution in the field of phishing detection. \u0005\n\nREFERENCES\n\n[1] \tA. Subasi, E. Molah, F. Almkallawi, and T. J. Chaudhery, “Intelligent phishing website detection using random forest classifier,” 2017 International Conference on Electrical and Computing Technologies and Applications (ICECTA), Nov. 2017. \n[2]\t“UCI Machine Learning Repository: Phishing Websites Data Set,” [Online]. Available: https://archive.ics.uci.edu/ml/datasets/phishing websites.\n[3]\tJ.-H. Li and S.-D. Wang, “PhishBox: An Approach for Phishing Validation and Detection,” 2017 IEEE 15th Intl Conf on Dependable, Autonomic and Secure Computing, 15th Intl Conf on Pervasive Intelligence and Computing, 3rd Intl Conf on Big Data Intelligence and Computing and Cyber Science and Technology Congress(DASC/PiCom/DataCom/CyberSciTech), 2017.\n[4]\tA. A. Ahmed and N. A. Abdullah, “Real time detection of phishing websites,” 2016 IEEE 7th Annual Information Technology, Electronics and Mobile Communication Conference (IEMCON), 2016.\n[5]\tR. Aravindhan, R. Shanmugalakshmi, K. Ramya, and S. C., “Certain investigation on web application security: Phishing detection and phishing target discovery,” 2016 3rd International Conference on Advanced Computing and Communication Systems (ICACCS), 2016.\n[6]\tS. B. K.p, “Phishing Detection in Websites Using Neural Networks and Firefly,” International Journal Of Engineering And Computer Science, 2016.\n[7]\t“An Efficient Approaches For Website Phishing Detection Using Supervised Machine Learning Technique,” International Journal of Advance Engineering and Research Development, vol. 2, no. 05, 2015.\n[8]\tS. Gupta and A. Singhal, “Phishing URL detection by using artificial neural network with PSO,” 2017 2nd International Conference on Telecommunication and Networks (TEL-NET), 2017.\n[9]\tAmmar ALmomani, G. B. B, Tat-Chee Wan, Altyeb Altaher, and Selvakumar Manickam, “Phishing Dynamic Evolving Neural Fuzzy Framework for ...,” Jan-2013. [Online]. Available: https://arxiv.org/pdf/1302.0629.\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TABLE_OF_CONTENTS",
+      "characters": 1013,
+      "text": "ABSTRACT\ti\nLIST OF FIGURES\tiv\nLIST OF TABLES\tv\nLIST OF ABBREVIATIONS\tvi\nINTRODUCTION\t1\n1.1 \tPROBLEM DOMAIN\t1\n1.2 \tPROBLEM DESCRIPTION\t2\n1.3 \tSCOPE\t2\n1.4 \tCONTRIBUTION\t2\n1.5 \tSWOT ANALYSIS\t3\n1.6 \tPESTLE ANALYSIS\t4\n1.7 \tORGANISATION OF THESIS\t5\nRELATED WORKS\t6\n2.1 \tDIRECTORY BASED APPROACHES\t7\n2.2 \tRULE BASED APPROACHES\t7\n2.3 \tML BASED APPROACHES\t8\n2.4 \tDRAWBACKS\t9\nREQUIREMENTS ANALYSIS\t10\n3.1 \tFUNCTIONAL REQUIREMENTS\t10\n3.2 \tNON FUNCTIONAL REQUIREMENTS\t10\n3.3 \tCONSTRAINTS AND ASSUMPTIONS\t11\n3.4 \tSYSTEM MODELS\t12\nSYSTEM DESIGN\t14\n4.1 \tSYSTEM ARCHITECTURE\t14\n4.2 \tUI DESIGN\t16\n4.3 \tCLASS DIAGRAM\t16\n4.4 \tMODULE DESIGN\t18\n4.5 \tCOMPLEXITY ANALYSIS\t21\nSYSTEM DEVELOPMENT\t23\n5.1 \tPROTOTYPE ACROSS THE MODULES\t24\n5.2 \tEXPORTING ALGORITHM\t24\n5.3\tDEPLOYMENT DETAILS\t25\nRESULTS AND DISCUSSION\t26\n6.1\tDATASET FOR TESTING\t26\n6.2\tOUTPUT OBTAINED IN VARIOUS STAGES\t26\n6.3\tSAMPLE SCREENSHOTS DURING TESTING\t29\n6.4 \tPERFORMANCE EVALUATION \t29\nCONCLUSIONS\t32\n7.1 \tSUMMARY\t32\n7.2\tCRITICISMS\t33\n7.3\tFUTURE WORK\t33\nREFERENCES\t34"
+    },
+    {
+      "kind": "TABLE_OF_CONTENTS",
+      "characters": 540,
+      "text": "Figure 2.1 Approaches to phishing detection\t6\nFigure 3.1 Use case diagram of the system\t12\nFigure 3.2 System Sequence diagram\t13\nFigure 4.1 System Architecture\t15\nFigure 4.2 UI Design\t17\nFigure 4.3 Class Diagram\t17\nFigure 4.4 Random Forest JSON structure\t19\nFigure 5.1 Code Overview\t23\nFigure 6.1 Preprocessing output\t26\nFigure 6.2 Training output\t27\nFigure 6.3 Model JSON\t27\nFigure 6.4 Webpage features\t28\nFigure 6.5 Classification Output\t28\nFigure 6.6 Test Output\t29\nFigure 6.7 Cross Validation Output\t30\nFigure 6.8 Performance measure\t31"
+    },
+    {
+      "kind": "TABLE_OF_CONTENTS",
+      "characters": 103,
+      "text": "Table 1.1 SWOT analysis\t3\nTable 4.1 Webpage Features\t18\nTable 4.2 Time Complexity of various modules\t21"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 94,
+      "text": "￼ Phishing is mimicking a creditable company’s website to take private information of a user. "
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 56,
+      "text": "￼ https://ieeexplore.ieee.org/abstract/document/8252051/"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 59,
+      "text": "￼ https://archive.ics.uci.edu/ml/datasets/phishing+websites"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 23,
+      "text": "￼ http://phishtank.com/"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 102,
+      "text": "￼ https://chrome.google.com/webstore/detail/phishdetector-true-phishi/kgecldbalfgmgelepbblodfoogmjdgmj"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 47,
+      "text": "￼ https://ieeexplore.ieee.org/document/5670593/"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 41,
+      "text": "￼ https://crypto.stanford.edu/SpoofGuard/"
+    },
+    {
+      "kind": "FOOTNOTE",
+      "characters": 30,
+      "text": "￼ https://toolbar.netcraft.com"
+    },
+    {
+      "kind": "CELL",
+      "characters": 164,
+      "text": "Server side classification plugins may perform better than this and users without privacy concerns may opt of those.\nChrome Plugin API will be continuously changed."
+    },
+    {
+      "kind": "CELL",
+      "characters": 183,
+      "text": "Everyone conscious of privacy and security can use this plugin.\nNon technical people who do business transactions are vulnerable to phishing and they are potential end users for this."
+    },
+    {
+      "kind": "CELL",
+      "characters": 132,
+      "text": "Javascript limits functionality.\nCannot use features that needs a external service such as SSL, DNS, page ranks.\nNo library support."
+    },
+    {
+      "kind": "CELL",
+      "characters": 128,
+      "text": "Enables user privacy.\nRapid detection of phishing.\nCan detect new phishing sites too.\nCan interrupt the user incase of phishing."
+    },
+    {
+      "kind": "CELL",
+      "characters": 15,
+      "text": "Bhuvaneshwari R"
+    },
+    {
+      "kind": "CELL",
+      "characters": 29,
+      "text": "Anna University, Chennai – 25"
+    },
+    {
+      "kind": "CELL",
+      "characters": 46,
+      "text": "Department of Computer Science and Engineering"
+    },
+    {
+      "kind": "CELL",
+      "characters": 15,
+      "text": "Teaching Fellow"
+    },
+    {
+      "kind": "CELL",
+      "characters": 5,
+      "text": "Date:"
+    },
+    {
+      "kind": "CELL",
+      "characters": 14,
+      "text": "Place: Chennai"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 14,
+    "paragraphs": 345
+  }
+}

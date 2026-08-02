@@ -75,7 +75,7 @@ const FIXTURES = new URL("../fixtures/", import.meta.url);
 const UBIQUITY = 0.98;
 const MIN_INSTANCES = 20;
 
-interface TypeProfile {
+export interface TypeProfile {
   count: number;
   /** field number → how many instances carry it */
   fields: Map<number, number>;
@@ -172,7 +172,8 @@ function profile(doc: IWorkDocument, into: Map<number, TypeProfile>): void {
   }
 }
 
-function corpusProfile(): Map<number, TypeProfile> {
+/** Exported for `make-conformance.ts`, which serializes the same measurement. */
+export function corpusProfile(): Map<number, TypeProfile> {
   const out = new Map<number, TypeProfile>();
   for (const name of readdirSync(FIXTURES)) {
     const Doc = name.endsWith(".pages")

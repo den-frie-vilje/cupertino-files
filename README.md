@@ -424,6 +424,22 @@ Two deliberate divergences, both consequences of this being pure compute:
   cells are records inside compressed tiles; a handle cheap enough to
   assign through would be lying about what a write costs.
 
+## For other implementations
+
+The TypeScript is one consumer of what this repository knows. The
+language-neutral parts — for a C++ filter, a Java extractor, a Rust port —
+are packaged separately:
+
+- [`conformance/`](conformance/README.md) — per-fixture import
+  expectations (text + structure as JSON) and per-archive-type **export
+  shape profiles**: what Apple always writes, so a writer in any language
+  can catch the well-formed-but-wrong class offline. CI-checked against
+  this library, so it cannot silently rot.
+- `npm run bundle:format` — assembles `release/iwork-format-<YYYY.MM>.tar.gz`:
+  the schema dumps with provenance, `docs/FORMAT.md`, the verification
+  ledger, and the conformance suite. Calendar-versioned, because it tracks
+  the format as measured, not this library's API.
+
 ## Claude skill
 
 The package ships a [Claude skill](skills/iwork-files/SKILL.md)
@@ -503,6 +519,8 @@ npm run proto:embed  # after changing anything under proto/
 npm run proto:check  # what is still hand-typed vs the schema
 npm run shape:audit  # what Apple writes into an archive that we do not
 npm run privacy:check # screen fixtures for personal data before committing
+npm run conformance   # regenerate conformance/ (import expectations + export profiles)
+npm run bundle:format # language-neutral release tarball for other implementations
 ```
 
 `required:check`, `harvest:check`, `coverage:check`, `proto:embed:check` and

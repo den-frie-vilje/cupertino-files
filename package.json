@@ -68,7 +68,10 @@
     "proto:embed:check": "node scripts/embed-proto-schema.ts --check",
     "shape:audit": "node scripts/audit-authored-shape.ts",
     "shape:check": "node scripts/audit-authored-shape.ts --check",
-    "lint": "eslint src test scripts"
+    "lint": "eslint src test scripts",
+    "conformance": "node scripts/make-conformance.ts",
+    "conformance:check": "node scripts/make-conformance.ts --check",
+    "bundle:format": "node scripts/make-release-bundle.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

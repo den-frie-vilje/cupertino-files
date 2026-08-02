@@ -1,0 +1,210 @@
+{
+  "file": "pypi-numbers-parser-v14.1.1-empty-template.numbers",
+  "sha1": "dcee92a652764ef25c51622262da713a9348cccf",
+  "app": "numbers",
+  "fileFormatVersion": "14.1.1",
+  "objects": 643,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState-906813.iwa",
+      "objects": 47
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 42
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904483-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904484-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904489-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904490-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904492-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904495-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904496-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904498-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904499-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904855-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904899-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904937-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-904963-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904964-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904965-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904966-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904967-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904968-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904969-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904970-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904971-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904972-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904973-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904974-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905008-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906373.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-906588.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 483
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 1,
+            "columns": 1,
+            "truncated": false,
+            "cells": []
+          }
+        ]
+      }
+    ]
+  }
+}

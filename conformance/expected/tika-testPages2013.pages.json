@@ -1,0 +1,196 @@
+{
+  "file": "tika-testPages2013.pages",
+  "sha1": "fd6efe426753523f25a7d3be41ce55e7dc650674",
+  "app": "pages",
+  "fileFormatVersion": "2.0.24",
+  "objects": 338,
+  "components": [
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 254
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 11
+    },
+    {
+      "name": "Index/Tables/DataList-5.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/Tables/DataList-7.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-9.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-4.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-6.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Document.iwa",
+      "objects": 53
+    },
+    {
+      "name": "Index/Tables/DataList-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-8.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3.iwa",
+      "objects": 1
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 21,
+      "text": "A text box with text."
+    },
+    {
+      "kind": "BODY",
+      "characters": 1900,
+      "text": "Sample pages document\n\nSome plain text to parse.\n\n\n\n￼\n\n\nBoth Pages 1.x and Keynote 2.x, which form the basis of Apple’s iWork package, are powerful, yet easy to use applications that have attracted large and ever-growing customer bases. The iWork package is part of a family of iApps productivity tools.\nBecause Keynote uses an open, easily accessible file format, developers can take advantage of its XML schema to enhance existing products or create new ones. Beginning with Keynote 1.x, it is possible to build applications that will create or change the contents of a Keynote presentation. For example, developers can use any of Keynote’s themes and build an entire presentation of their own design simply by filling out the<key:slide-list> element in a text editor of their choice.\nThe Keynote APXL file is the engine that drives every presentation, specifying every detail of the presentation’s appearance and behavior––from master slide and each individual slide to the transitions used between slides. The APXL file also defines the state of the presentation when the user first opens it. An understanding of how the elements in an APXL file combine to create a presentation is critical to developing applications that are robust and well-behaved.\nSimilarly, understanding the Pages document structure is important for Apple developers who want to customize their own page layouts or add value to their existing applications.\n\n\n\nA second page....\n\nExtensible Markup Language (XML) is a ubiquitous and flexible markup standard for processing and exchanging data. You can find XML in a wide range of categories, including property lists and file formats for various applications. XML is used extensively to specify the format of various sources of information on the Internet, including web-based services. XML is at the heart of both iWork applications, Keynote and Pages, developed by Apple.\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 19
+  }
+}

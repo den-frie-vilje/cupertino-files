@@ -1,0 +1,624 @@
+{
+  "file": "desmarais-notes-comments-tables.pages",
+  "sha1": "c29507ade9e74fe989695bff4e8df26e9e129ff3",
+  "app": "pages",
+  "fileFormatVersion": "4.1.7",
+  "objects": 669,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 84
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 13
+    },
+    {
+      "name": "Index/CalculationEngine-20083.iwa",
+      "objects": 92
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32904-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32905-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32906-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32907-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32908-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32909-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32910-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32911-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32912-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32913-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-32927-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32928-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32929-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32930-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32931-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32932-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32933-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32934-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32935-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32936-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32937-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-32938-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33175-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33176-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33182-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33183-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33184-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33358-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33361-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33363-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33364-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33365-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33371-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-33373-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33374-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33375-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33377-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33379-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33380-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33382-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33388-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33398-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33411-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-33438-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-33813-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33814-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33815-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33816-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33817-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33818-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33819-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33820-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33821-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33822-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33823-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33824-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-33852-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37470.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37471.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37472.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37474.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37475.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-37476.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37477.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37480.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37481.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37482.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37484.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37485.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-37491.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-37495.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-37500.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37518.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-37534.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-37896.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37897.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37898.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37899.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37900.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37901.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37902.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37903.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37904.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37905.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37906.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-37907.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-39025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41601.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41604.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41607.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41608.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41612.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41613.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41615.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-41617.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41620.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41621.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41623.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-41626.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-41630.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-41638.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-41648.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-41660.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-42030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42034.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42035.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42036.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42037.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42038.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42039.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42040.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42041.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-42081.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-20082.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 352
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 15612,
+      "text": "Review\nNotes app\n\n\nPlan\n\n￼\n\n\u0005Slides\n\nInitial situation\n\n￼\n\nPart One: Plan and design\n\n￼\n\nPart Two: Trying to keep it together and finish with fun\n\n￼\n\nFinal situation\n\n￼\n\n\u0005Outline #2\n\nParts:\n\nProblem and motivation\nPlanning and analysis\nDesign\nCode\nResolution and result (before-after)\nWhat’s next\n\nSummary\n\nIn April 2019, I started a personal project full-time. My goal: complete a Web application from sketch to production. While this goal has been achieved, the path hasn’t been easy. I struggled with motivation and working solo, spending too much time planning or just having a hard time facing the level of my skills. Learning about myself through the process of creating this app has been the most valuable.\n\nDraft #2\n\nIntroduction:\n\nIt’s the beginning of spring. There are still some surprise snowstorms in Montreal. My flight is delayed, on my way back from Chicago, to visit my friend Guillaume. Before leaving for the weekend, I had a plan. I’d finish the online course on business analysis and start a personal project. This time, I would finish it.\n\n[Sketch of me in the Toronto lounge]\n\nSince I’ve graduated, ideas for apps have populated my sketch books. I took notes whenever I thought of an app to help me track my personal finances, adapt an existing tool with how I train during the week, or enhance the product we’re working on at work. Studying software engineering, I really liked the class on Human-Computer Interaction, and I finally started a personal project following the process seen during that class.\n\n\nIt was to help me categorize my notes. From tasks to lists, I took notes using different tools, but mostly by hand. I wanted to channel this imagination into projects or objectives, or maybe references to avoid staying in the virtual, and eventually realize those ideas. While researching for existing tools, I never found one that provided the flexibility to have control over the structure of notes. The project was worked on during weekends for one summer, and then stopped. The main question causing that stop: why spend so much time building a tool to do other things?\n\n[From idea to sketching to … nothing]\n\nFast-forward four years later, and even more notes to categorize or process into reality, I had decided to take a break from work. I was inspired by a book about becoming an artist, by Austin Kleon. It told the story of an architect who took a break year every seven years. Those break years had been the most generative of ideas for him. I was prepared financially and I was ready to make the jump. I left work in February.\n\nHaving worked as a developer and a designer, I wanted to practice the skills learned in the past years, while pushing a few concepts, even new ones. The idea of making an app was still on my mind, and the project of a Web application for taking notes and categorize them seemed simple and interesting enough. I would complete the app this time, a simple version of it.\n\n[From idea to finish!]\n\nPart I: Planning and Analysis\n\nI revisited the idea explored a few years back, and I was ready to divide the project into steps. The initial plan included three months. It would be simple steps:\n\n - Design (1 week)\n - Architecture (1 week)\n - Code server (3 weeks)\n - Code interface (3 weeks)\n - Deploy (1 week)\n\nLearning from work experiences, observing our team managers, I also added 3 weeks of buffer. The aim was a simple note-taking app aimed to organize notes.\n\nDuring the analysis phase, I wrote down an opportunity to build a tool to help me with notes of various forms. However, I simplified the problem to textual notes only. It was still impressive to see the amount of features necessary to handle writing, listing, searching, editing and deleting, securing and synchronizing notes.\n\n[Image of the backlog]\n\nSeeing the amount of work to be done, doubt was installed. The same question came: “why spend so much time building a tool to do other things?” I remember writing about this in a cafe near the École de Technologie Supérieure before meeting with Andy Santana. He presented me the Notion app, as I had just completed the analysis of existing tools such as Notes by Apple and Keep by Google. It was the same realization when meeting with Anne-Marie about the app Aso.ko. These tools are so feature-rich, and they adopt note-taking from so different perspectives: folder-organized list, card-like board, wiki-like site, category-oriented pins. Their level of quality is professional. The comparison with my endeavour was ridiculous. There was no comparison really. People asked me if I would sell the app, as if I sought money-compensation from it. It wasn’t clear how I could be different from those tools. This is a cool realization from Kevin Clark, the co-founder of the MTL Design Club where I have been volunteering. Kevin Clark told me a really cool perspective on tools like note-taking or todo apps:\n\n > When people get frustrated with the tool they use, they start looking for a new tool. Maybe no tool will ever solve their problem with note-taking or productivity because the problem lies in the person, not in the tool they use.\n\nI agree so much. I still have doubts about the destiny for this tool; however, what made me continue working towards its completion was my will to finish and practice those design and programming skills. I had passed my first motivation bump, and I decided to continue.\n\nPart II: Design\n\nSince that Human-Computer Interaction class, since that summer on my first attempt at creating a notes app, the design phase has been my preferred step. It’s one of the reasons I had switched from developer to designer. I have taken online courses, subscribed to popular tools and try to bring my hand sketches one level up.\n\n[From developer (writing 0’s and 1’s) to designer (painting pixels), screen with an empty HTML tag and screen with a brush]\n\nHerve, my design team lead, has been the most inspiring designer. He shared his wisdom about always looking for the right balance between flexibility and constraints, the common sense, or taking user experience design as an activity to give developers a direction. Other designers in the team, André and Martin and Jason, were quite inspiring too. They brought their own touch and opinion on design aspects, and they showed their personality through their work with emotion. It was amazing to observe. Looking back, I see my leaving as an escape from many things in my life and at work. I think I could have learned much more.\n\n[Sketch of our initial spot in the old building]\n\nI started the design with the inspiration from those important people in my career. I sketched new mockups, aiming for simplicity first. I researched many apps, detailing the differences and the quality and strong points of each one: Notes, Evernote, Google Keep and even Todoist. However, this step took a bit more time than expected, and I still hadn’t touched upon digital designs or the other steps in the Human-Computer Interaction project that I had planned to follow. But it was okay, I thought, since there was this buffer, right?\n\n[Image of a few sketches and paper prototype]\n\nAs I was testing the paper prototype, I could see my original design falling into pieces. Not that I had too many moving parts in this paper prototype, which I did and made all the manipulation harder, the main categorization feature conflicted with the filtering and search features. The component that handled categorization was reused for filtering, but when selecting an item and choosing its category, the state of the list was inconsistent. This conflict really hit hard. The last three weeks spent on design seemed like lost time. I had spent one buffer week trying to finish the paper prototype.\n\n[Emoji with exploding head]\n\nStress started to rise at that point. My idea of design in one week was just not realistic with my skills or my idea. I hadn’t started the digital design that I had already found a flaw. This is good that the paper prototype showed this flaw right away, before implementation; however, it was demoralizing to see all this work not meet my expectations. My expectations were too high, again. I had to make to a hard decision.\n\n[Emoji with sad face]\n\nFriends. Those friends that you can share the real you, the one that’s sometimes demotivated like then. Rowena and Stephanie helped me get back so many times. They have supported me throughout this project, sharing with me encouraging words and inspiring quotes, sending positive vibes and cool stories that kept my morale up. I felt they have been part of my team all along. I missed working next to them, working on a project with them.\nAnd other friends helped me stay motivated too later on, such as Guillaume, Anjni, Preeti and my friends at the MTL Design Club or kickboxing class. These friendships form the most precious aspect of this project. I missed working with friends.\n\n[Sketch of me and my friends]\n\nSo I decided. I was going to cut the organization feature and aim to finish a simpler app. It would have fewer stories covered from the original twenty-plus ones, but it would take what works from the current design. I rapidly completed a moodboard, a minimal design system, and the digital sketch for the desktop interface. I was set to continue towards the coding part. I would finish earlier too, in June, since it was simpler (or so I thought…).\n\n[Design assets from review-assets.pages]\n\nPart III: Coding\n\nThe revised plan was quite aggressive:\n\n - Architecture (2 days)\n - Server (8 days)\n - Interface (8 days)\n - Deployment (2 days)\n\nThe buffer would only be one week. I was quite motivated to finish early. The architecture went well and I made a few diagrams completing my documentation early. However, as I considered which tools to use, I didn’t want to spend a lot for the server and infrastructure. After finding Google Cloud pricing interesting enough, I started reading on their support for technologies I knew. \n\nLooking back, I wished I had tried new technologies, but I’m also happy to have delved deeper into them to understand better the state of Node.js and JavaScript in the browser. I decided to use as few libraries as possible. I wanted to learn from a certain level of basics, to building upon this knowledge for future iterations and projects. Libraries can be nice, but they also come with many assumptions and constraints on how to do things. They also require vigilance and extra patience when they don’t work as expected. I was ready to learn the hard way.\n\n[A few hand-drawn logos from tools and technologies.]\n\nI finished the architecture, including the tools research, after one week, and then I started working on the server. François and Ian were my lead at my previous company, and I drew many lessons from how they worked. The first lesson to apply was setting up the deployment process and organize the structure of the project. I was happy to bring up a hello-world server. The project was starting to get ever more concrete now. Plus, the cost was quite low.\n\n[Rocket emoji]\n\nUnfortunately, I had already exhausted the time on coding the server, but I continued. I started working with a dependency injection approach, knowing it would be beneficial for the future improvements on the server, after the first version is released. I wanted to build something professional, or something with good potential to be enhanced, not thrown away to be restarted.\n\n[Architecture diagram]\n\nDiscussions with friends helped shape my project to be more efficient and better. Guillaume and I continued to have a call every week to talk about our projects and our life in general. Discussions about architecture and testing, as well as self-motivation and our search for simplicity, affected this project positively. Rowena shared with me tools to design and test my API. With Stephanie, we also touched upon planning and task management. Sharing with others brought new perspectives and engaged me to build a nice solution.\n\n[Screenshot of me and Guillaume on a phone call]\n\nFinally, the server was done. I started working on the interface as soon as possible. I wanted to be more effective, so I reviewed how I planned my days and used a template to save some time there. I experimented with different approaches to estimate the time left. My daily logs helped me review my performance and estimate the work left.\n\nStill, I was supposed to have completed the full project by the end the server was done, according to the second plan. This was hard to accept. I struggled to keep a good amount of hours per day on the project. It was also a time in the summer where many festivals occur. I tried a new balance with social activities to stay fresh. I volunteered at a few events. It brought light on the value of working as a team, in contrast to working solo on this project.\n\nI kept on working the interface. I used a layered architecture, as initially planned. This is inspired by Dominic’s and Ian’s work. I created a test framework. It wasn’t necessary, but I really wanted to experiment with defining an interface first using tests and then implement classes. While building components, I was inspired by a talk at the MTL Design Club mentioning design systems at the company Hopper. I thought it was a great idea to develop my components independently before integrating them in the app. I even applied simple animations inspired from my Web Animations Workshop with Val Head and Sarah Drasner. This was really cool!\n\n[Many logos and photos from events and workshops.]\n\nReaching a balance between life and work, reaching out to friends and family, I slowly came back to normal hours. I developed new routines, new ways to complete my work. Again, I was inspired with my discussions with friends, setting clear and concrete goals and small papers to divide my tasks.\n\nAugust 12th, 2019. This was a Monday. I successfully deployed version 0.1.2 to production. The end of the coding phase.\n\n[Screenshot of the app in this version.]\n\n\nSimple result but I’m quite proud of the code behind it.\n\nConclusion:\n\nStarting this project, I aimed to complete a personal project and practice design and programming skills. These objectives have been met, but what I didn’t expect is to learn so much about myself. My way to work alone, my energy shifts while working solo, my actual skill levels in design and programming. The importance of teamwork to give me energy and motivation, to gain feedback and get challenged. These latter aspects are much more valuable than the resulting app.\n\nThis personal project highlighted the importance of people and this life equilibrium that I miss when working solo. Working solo on this app, I missed the challenges of working with a team, the nice moments with people I meet everyday at work.\n\nWhile I could view my difficulties and strengths from a new angle, I believe the real, live connection with people is one of my most precious motivator. It keeps me in conversation with the forces in life, in conversation with who I am and what I want.\n\nWhether I help someone, or ask for help, as in the last volunteering events, I feel an exchange of emotion. My personal contribution along with others builds up to a life story. My life gains purpose by sharing it with people around me.\n\nAs for this app, what comes next include feedback from friends on the design aspect of it and its usability, and the addition of the missing features, documented in the initial backlog. Whether this app continues to show me ways to be a better designer, programmer or a happier person, the time invested part-time on it should be worth it."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TABLE_OF_CONTENTS",
+      "characters": 42,
+      "text": "Slides\t2\nOutline #2\t4\nSummary\t4\nDraft #2\t4"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 172
+  }
+}

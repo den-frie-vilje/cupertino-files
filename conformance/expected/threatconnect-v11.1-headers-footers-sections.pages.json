@@ -1,0 +1,574 @@
+{
+  "file": "threatconnect-v11.1-headers-footers-sections.pages",
+  "sha1": "2f40ea2211928152af37092a1e2f5eafb607b312",
+  "app": "pages",
+  "fileFormatVersion": "11.1.2",
+  "objects": 889,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 295
+    },
+    {
+      "name": "Index/ViewState-1919830.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1685571.iwa",
+      "objects": 36
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737652-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737653-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737654-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737655-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737656-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737657-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737658-2.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/Tables/DataList-1737659-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737660-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737661-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1737679-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737680-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737681-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737682-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737683-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737684-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737685-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737686-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737687-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737688-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737689-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737690-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737699-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737700-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737707-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1737708-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1737709-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1685570.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 507
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 29534,
+      "text": "Introduction\nThe Expressions application allows any ThreatConnect playbook author the ability to transform data in a single playbook application.  The actions provided are:\n\nEvaluate \tEvaluate a single expression.  The output of the expression is always named expression.result.0 and expression.result.array, for the first scalar result, and the array result, respectively.\n\nEvaluate Many\n\tEvaluates multiple expressions.  There is a group of variables that may be defined (which are not output), and a multitude of output expressions.  Each variable or output is named (as the key) and contains the expression to evaluate (as the value).  The Many form allows multiple different output types, depending on need.  The default outputs are String outputs.\n\nEvaluate in Loop\n\tEvaluates a single expression in a loop, with multiple loop variables, which are used to set up and iterate the loop.  Loops make processing parallel data very easy, since loop variables with the same length are incremented at the same time.  The output of the expression is always named expression.result.0 and expression.result.array, for the first scalar result, and the array result, respectively.  The prior iteration of the loop expression is available with the name _output, and is initialized to None.\n\nEvaluate Many With Loop\n\tEvaluates multiple loop expressions, with variables defined before the loops execute, loop variables which control the loops, loop expressions which calculate data in the loops, and additional outputs which allow outputs after the loops complete.  The prior iteration of each loop expression is available with the loop expression name prefixed with an underscore, and is initialized to None.\n\nLoop expressions which result in lists are used to extend the output array, rather than create nested lists, e.g. two successive outputs of [1, 2, 3] and [4, 5, 6] would result in [1, 2, 3, 4, 5, 6] not [[1, 2, 3], [4, 5, 6]].  Tuple outputs are nested, so (1, 2, 3) and (4, 5, 6) would result in [(1, 2, 3), (4, 5, 6)].\n\nMini-Programs\nExpressions applications are miniature programs, with initialization assignments, loop variables, loop outputs, and additional outputs.\n\nThe simplest program has one expression and one output; this is the Evaluate form of execution, and the output name is set as expression.result.0 for the scalar output, or expression.result.array for the array output.\n\n￼\n\nHere, the expression is {‘foo’: ‘bla’}.foo and the result is bla.  This is because the dot operator looks up the corresponding key in the origin dictionary. In most cases, the origin dictionary would not be directly in the expression, for example:\n\n￼\n\nThis is an example of the Evaluate Many form; two variables are defined, and the second refers to the first.  There are actually two outputs, but the one we care about is named result.\n\nMost programs loop or iterate over data in some way, sometimes with nested loops.  This is where the Evaluate in Loop form is used:\n\n￼\n\nEvaluate in Loop doesn’t have any extra setup expressions, but you may have nested loops.  This example sets a loop variable called name and the expression is a concatenation of a greeting with the name.  The output is an array; so the output variable is expression.result.array. \n\nA more complicated example uses multiple inputs and loop expressions, and then post-processes the loop data to get a scalar output back (rather than an array output).  This is Evaluate Many in Loop:\n\n￼\n\nIn the ThreatConnect interface, this would appear as:\n\n\t\t￼\n\nNote: the order of evaluation of loop variables is longest list to shortest list.  Variables of the same length step at the same time.  The order the variables are declared does not control how the loops are iterated.\nVariables\nBoth of the Many forms allow multiple expressions to set variables, or outputs.  Each variable or output is available to subsequent expressions.  However, loop expressions are only available to subsequent expressions after the looping is completed, not during the loop processing.  It is possible to redefine a variable during processing, although caution should be exercised in this case as inadvertent re-ordering, such as editing the list by deleting the old entry and re-adding a new one, can invalidate the predicate definition.\n\nThe prior iteration of a loop output is available with an underscore prefix, which will be initialized to None on the first iteration.  This previous iteration is available during loop processing.\nGrammar\nThe Expression grammar is very similar to Python grammar\n\nIdentifiers contain only alphanumeric characters and underscore, and must not start with a number.  An identifier followed by a parenthesis is a function, otherwise the identifier is a variable.\n\n\nLiterals\tare any values in single or double quotes.  The grammar does not support the Python triple-quote literals.  An enclosed quotation mark may be escaped, i.e. ‘foo\\’s compliment’.\n\nNumbers may be integer or floating point.  Numbers may be signed, but do not support scientific notation — 10E15 is not recognized as a valid number.\n\nOperations are +, -, *, /, %, ** for the standard add, subtract, multiply and divide, modulus, and raise to a power.  || and or, && and and represent logical and and or operations.  The result of a logical and will be the second operand if both are true, and the result of a logical or will be the first operand if both are true.  \n\tOperations also include comparison operators ==, !=, <, >, <=, >=, in, and not in.  Additionally, the not operator negates an expression, e.g. not a < 2. \n\n\tWhen used with strings, + will concatenate strings, I.e. ‘a’ + ‘b’ is ‘ab’.\n\n\tThe . operator is a dictionary dereference, e.g. {‘foo’: ‘bla’}.foo == ‘bla’.\n￼\n\nSubscripts are an array reference, which may be a key or index position, or a slice.  Array indexes start with 0, e.g. [1, 2, 3][0] == 1.  If negative, an index is an offset from the end of the array, e.g. [1, 2, 3][-1] == 3.  A slice contains both a start and a stop location in the array separated by a colon.  An unspecified start is the beginning of the array and an unspecified stop is the end.  A subscript key is a dictionary key lookup, similar to using the . operator on the dictionary.\n\nSubexpressions are expressions in parenthesis to control precedence, i.e. 5 * (1 + 2) is 15, whereas 5 * 1 + 2 is 7.\n\nLists\t are comma separated, and enclosed in square brackets, e.g. [1, 2, 3]. \n\nTuples\tare comma separated, and enclosed in parenthesis, e.g. (1, 2, 3).  A tuple is immutable, whereas a list is not, but in the simple expressions grammar, this not particularly relevant.\n\nDictionaries are enclosed in braces and contain comma separated key: value pairs, e.g. {‘id’: ‘Scott’, ‘type’: ‘Name’}. \n\nThreatConnect variables passed in from other applications or triggers.  These variables are speculatively evaluated to see if they are valid expressions, and the expression output is used if the evaluation succeeds, otherwise they are treated as literal values.\n\nFunction Calls are an identifier followed by a tuple, which represent the function name and parameters, respectively.\nBuilt-in Values\nBuilt-in values are case insensitive, i.e. True, true, TRUE are all the same value.\n\nE\t2.718281828459045\n\nFALSE\tFalse\n\nNULL\tNone\n\nNONE\tNone\n\nPI\t3.141592653589793\n\nTAU\t6.283185307179586\n\tWhich astute readers may recognize as 2 * pi\n\nTRUE\tTrue\n\nURLRE\tA regular expression to match a URL, for convenience.\nFunctions\nThere are a large number of built-in functions, including some standard Python functions.\n\nabs(x) Absolute value of X \nacos(x) Arc Cosine of X \nacosh(x) Inverse Hyperbolic Cosine\n\t\nalter(dictionary, key, value)\n\tSet a specific key in a dictionary. Returns the value.\n\nasin(x) Arc Sine of X \nasinh(x) Inverse Hyperbolic Sine \natan(x) Arc Tangent of X \natanh(x) Inverse Hyperbolic Tangent \nb64decode(s, altchars=None, validate=False, encoding='utf-8') Base 64 decode of string \nb64encode(s, altchars=None, encoding='utf-8') Base 64 encode of string \nbin(n, sign=True) Return the binary value of int \nbinary(s, encoding='utf-8', errors=None) Convert object to binary string (bytes)\n\nbuild(*lists, keys=())\n\tConstructs a sequence of dictionaries based on the lists, such that each dictionary contains the corresponding key for each list from the keys value, and value from each list, respectively. Columns without a key are ignored. Columns that are longer than the shortest column are truncated. \nbytes(s, encoding='utf-8', errors=None) Convert object to binary string (bytes) \nceil(x) Ceiling of X \ncenter(s, width, fillchar=' ') Center string in width columns \nchoice(condition, true_result=None, false_result=None) Choice of true_result or false_result based on condition\n\nchardet(byteseq)\n\tReturn a dictionary with the guessed character encoding of byteseq, the confidence of the encoding, and the estimated language \nchr(x) Return character value of x \nconform(object_list, missing_value=None) Conform objects in a list to have the same structure, using missing_value as the value of any missing key \ncopysign(x, y) Copy sign of X to Y \ncos(x) Cosine of X \ncosh(x) Hyperbolic Cosine \ncsvread(data, header=False, convert=True, delimiter=',', quote='\"', rows=0, columns=0) Process data as a CSV File. Return the data as a list of rows of columns, or if rows=1, return a list of columns). If header is true, the first record is discarded. If rows or columns is nonzero, the row or column count will be truncated to that number of rows or columns. If convert is True, numeric values will be returned as numbers, not strings \ncsvwrite(data, delimiter=',', quote='\"') Write data in CSV format. Returns a string \ndatetime(datetime, date_format=None, tz=None) Format a datetime object according to a format string \ndefang(s)\n\tReturn a defanged representation of string, ie, one with textual indicators of compromise converted to the defanged state \ndegrees(x) Convert X to degrees\n\ndict(**kwargs)\n\tReturn a dictionary of the arguments \nerf(x) Error Function of X \nerfc(x) Complimentary Error Function of X \nexp(x) Math Exp of X \nexpm1(x) Math Expm1 of X\n\nextract_indicators(data, ignore=None, dedup=True, fang=False, convert=True)\n\tExtract IOCs from data, which may be bytes or string. If fang is true, data is re-fanged before processing. This option is ignored if the input is binary. Any entity match on the ignore list will be ignored. If convert is true, bytes mode matches will be converted to utf-8, or the specified conversion e.g. convert='latin-1'. Returns a list of (indicator, value) tuples. If dedup is True, duplicate results are not returned. \nfactorial(x) Factorial of X\n\nfang(s)\n\tReturn a fanged representation of string, ie, one with textual indicators of compromise reverted from the defanged state\n\nfetch_indicators(*search_values, default_type=None)\n\tFetches available indicators from ThreatConnect based on search_values. Search values is a list of lists, the inner entries may consist of 1 or 2 items. If 1 item, the value is the search key, if two items, the value is the indicator name and the search key. Returns a list of [(indicator_type, indicator_value, api_entity, indicator), ...], but the api_entity, and result and will be None if that indicator was not found.\n\nfind(ob, value, start=None, stop=None) Find index value in ob or return -1 \nflatten(ob, prefix='') Flatten a possibly nested list of dictionaries to a list, prefixing keys with prefix \nfloat(s) Return floating point value of object \nformat(s, *args, default=__notfound__, **kwargs)\n\tFormat string S according to Python string formatting rules.  Compound structure elements may be accessed with dot or bracket notation and without quotes around key names, e.g. blob[0][events][0][source][device][ipAddress] or blob[0].events[0].source.device.ipAddress. If default is set, this value will be used for all undefined values in the format, otherwise a KeyError will be raised.\n\nfuzzydist(hash1, hash2) Return the edit distance between two fuzzy hashes \nfuzzyhash(data) Return the fuzzy hash of data \nfuzzymatch(input1, input2) Return a score from 0..100 representing a poor match (0) or a strong match(100) between the two inputs \ngamma(x) Return the gamma function at X \ngcd(a, b) Greatest Common Denominator of A and B \nhex(n, sign=True) Return the hexadecimal value of int \nhypot(x, y) Hypotenuse of X,Y \nindex(ob, value, start=None, stop=None) Index of value in ob \nindicator_patterns()\n\tReturns a dictionary of regular expression patterns for indicators of compromise, based on ThreatConnect Data.\n\nindicator_types()\n\tReturn the ThreatcConnect Indicator Types\n\nint(s, radix=None) Return integer value of object \nitems(ob) Items (key, value pairs) of dictionary \njmespath(path, ob) JMESPath search \njoin(separator, *elements) Join a list with separator \njson_dump(ob, sort_keys=True, indent=2) Dump an object to a JSON string \njson_load(ob) Load an object from a JSON string \nkeys(ob) Keys of dictionary \nlen(container) Length of an iterable \nlgamma(x) Return the natural logarithm of the absolute value of the gamma function at X \nlocale_currency(val, symbol=True, grouping=False, international=False, locale='EN_us') Format a currency value according to locale settings \nlocale_format(fmt, val, grouping=False, monetary=False, locale='EN_us') Format a number according to locale settings \nlog(x, base=None) Math Logarithm of X to base \nlog10(x) Math log base 10 of X \nlog1p(x) Math log1p of x \nlog2(x) Math log base 2 of X \nlower(s) Lowercase string \nlstrip(s, chars=None) Strip chars from left of string \nmax(*items) Return the greatest value of the list\n\nmerge(*iterables, replace=False)\n\tMerges a list of iterables into a single list. If the iterables are dictionaries, they are updated into a single dictionary per row. If replace is true, subsequent columns overwrite the original values. The result length is constrained to the shortest column.\n\nmd5(data) Return MD5 hash of data \nmin(*items) Return the least value of the list \nnamevallist(ob, namekey='name', valuekey='value') Return a dictionary formatted as a list of name=name, value=value dictionaries \nord(char) Return ordinal value of char \npad(iterable, length, padvalue=None) Pad iterable to length\n\npartitionedmerge(array1, array2)\n\tMerges two arrays of strings to a single array with ordering preserved between partitions in the arrays. Common lines are partitions subject to the ordering of the partitions being the same in each array.\n\n\tFor example partitionedmerge(['A', 'a1', 'a2', 'B', 'b1', 'b2', 'D'], ['A', 'a3', 'a4', 'B', 'b3', 'b4', 'C', 'c1', 'c2', 'D']) is \t['A', 'a1', 'a2', 'a3', 'a4', 'B', 'b1', 'b2', 'b3', 'b4', 'C', 'c1', 'c2', ‘D'].\n\n\tThe values 'A', 'B', and 'D' act as partition lines for the merge.\n\npformat(ob, indent=1, width=80, compact=False) Pretty formatter for displaying hierarchical data\n\npivot(list_of_lists, pad=None)\n\tPivots a list of lists, such that item[x][y] becomes item[y][x]. If the inner lists are not of even length, they will be padded with the pad value.\n\npow(x, y) Math X ** Y \nprintf(fmt, *args) Format arguments according to format \nprune(ob, depth=None, prune=(None, '', [], {}), keys=()) Recursively Prunes entries from the object, with an optional depth limit.  The pruned values, and optionally prune keys may be specified.  If any dictionary has a key in keys, that dictionary element will be removed. \nradians(x) Convert X to radians \nrange(start_or_stop, stop=None, step=None) Return range of values \nrefindall(pattern, string, flags='') Find all instances of the regular expression in source \nrematch(pattern, string, flags='') Regular expression match pattern to source \nreplace(s, source, target) Replace chars on S\n\nreport(data, columns=None, title=None, header=False, width=None, prolog=None, epilog=None, sort=None, filter=None)\n\tGenerates a text report of data in columnar format.  Data is either a list of dictionaries, or a list of lists of columnar data.  If a list of lists and header=True, then the first row is the header row of the data.\n    \n\tColumns is a list of row specifiers or a single row specifier, which is a list of column definitions.  If there are multiple row specifiers, each record takes up multiple output rows.\n    \n \tA row specifier is either an ordered dictionary of name=column specifier or a list of (name, column specifier) tuples.\n    \n\tA column specifier is width[:height][/option[=value]][/option[=value]]… If rows are lists of lists (e.g. CSV data) and no column specifiers are used, the widths will be automatically calculated.\n    \n    \tOptions:    \nalign=left|right|center\nvalue=format\tformat for values e.g. {lineno}. to add a . after lineno\nerror=string\tReplacement value if the value= format fails\nnotrim\t\tDon't trim leading/trailing space\nhang=n\tHanging paragraph by N spaces\nindent=n\tIndent paragraph by N spaces\nsplit=n\t\tsplit at n% through the column (default 80) if necessary\nlabel=string\theading label\ndoublenl\tDouble newlines (ie, add line after paragraph)\nnohyphenate\tDon't hyphenate value\n\n\tIf sort is specified, it is a column or list of columns to sort by, with the column name optionally prefixed with a '-' to do a descending sort.\n\n\tIf filter is specified, it is an expression that must be true for that record to appear in the result, e.g. filter=“salary>70000\". \nresearch(pattern, string, flags='') Regular expression search pattern to source\n\nrexxparse(source, template, strip=False, convert=False, **kwargs)\n\tREXX parse of source using template.  If strip is True, values are stripped, if convert is True, values are converted to float or int if possible.  Any other keyword arguments are made available for indirect pattern substitution, in addition to the standard variables.\n\nround(number, digits=0) Round number to digits decimal places\n\nrstrip(s, chars=None) Strip chars from right of string \nsha1(data) Return SHA1 hash of data \nsha256(data) Return SHA256 hash of data \nsin(x) Sine of X \nsinh(x) Hyperbolic Sine \nsort(*elements) Sort array \nsplit(string, separator=None, maxsplit=-1) Split a string into elements \nsqrt(x) Square root of X \nstr(s, encoding='utf-8') Return string representation of object \nstrip(s, chars=None) Strip chars from ends of string \nstructure(ob) Return a reduced structure of the object, useful for comparisons \nsum(*elements) Sum a list of elements \ntan(x) Tangent of X \ntanh(x) Hyperbolic Tangent \ntimedelta(datetime_1, datetime_2) Return the delta between time 1 and time 2 \ntitle(s) Title of string \ntrunc(x) Math Truncate X \ntwoscompliment(n, bits=32) Return the twos compliment of N with the desired word width \nunique(*args) Return the list of unique elements of arguments, which may be a list of arguments, or a single argument that is a list. Inputs are compared by converting them to sorted JSON objects, so dictionaries with the same keys and values but different order will count as duplicates. \nunnest(iterable) Reduces nested list to a single flattened list. [A, B, [C, D, [E, F]] turns into [A, B, C, D, E, F]. \nupdate(target, source, replace=True)\n\tUpdates one dictionary with keys from the other. If the target is a list of dictionaries, each dictionary will be updated. If replace is false, existing values will not be replaced.\n\nupper(s) Uppercase string\n\nurl(method, url=None, **kwargs)\n\n    \tA direct dispatch of requests.request with an external session.  See https://docs.python-requests.org/en/latest/api for full API details.  Returns a Response object, but callable methods on the response are not callable; retrieve the status via the .status_code attribute, or the content via the .content or .text attribute.\n    \n    \tIf the URL is not specified, the first argument is assumed to be the URL and the method will default to 'GET'.\n    \n    \tIf not specified, a timeout parameter of 30 seconds will be applied. The stream argument will always be set to False. The proxies argument will default to the system specified proxies.\n    \n    \tURL requests are throttled to one request every 3 seconds.\n    \n    \tIf there is a json result, the json method on the result will be replaced with a json attribute that is the result of the json method, otherwise the json attribute will be set to None. \nurlparse(urlstring, scheme='', allow_fragments=True) Parse a URL into a six component named tuple \nurlparse_qs(qs, keep_blank_values=False, strict_parsing=False, encoding='utf-8', errors='replace', max_num_fields=None) Parse a URL query string into a dictionary. Each value is a list.\n\nuuid3(namespace, name)\n\tGenerate a UUID based on the MD5 hash of a namespace and a name. The namespace may be a UUID or one of 'dns', 'url', 'oid', or 'x500'.\n\t\nuuid4()\n\tGenerate a random UUID\n\nuuid5(namespace, name)\n\tGenerate a UUID based on the MD5 hash of a namespace and a name. The namespace may be a UUID or one of 'dns', 'url', 'oid', or ‘x500'.\n\nvalues(ob) Values of dictionary\n\nxmlread(xmldata, namespace=False, strip=True, convert=True, compact=True)\n    \tConstructs an object from XML data.  The XML data should have a single root node.  If namespace is True, the resolved namespace will be prefixed to tag names in braces, i.e. {namespace}tag.  If strip is True, values will be stripped of leading and trailing whitespace.  If convert is True, numeric values will be converted to their numeric equivalents.  If compact is true, the object will be compacted to a more condensed form if possible.\n\nxmlwrite(obj, namespace=False, indent=0)\n    \tConverts an object to XML.  If namespace is True or a dictionary, namespace prefixed values will be converted to a derived or specified namespace value.  The namespace dictionary should be in the form {key: namespace} and will be used to turn the namespace back into the key.  If indent is nonzero, an indented XML tree with newlines will be generated.  The namespace option will not generate an xml tag with the namespace definition.\n\u0004Examples\nString Formatting￼\nArray Padding\nTo make loop variables the same length if they aren’t already, use the pad function.  Note: the consequences of dealing with the nulls added to the arrays are up to you!  You could also set up an initial variable which contained the results of the max expression to avoid repeating it.\n\n￼\n\nPro Tip: The pivot function will pad arrays to an equal length, so pivoting twice will return the original list of arrays, padded out, albeit as a single array of arrays, but you can use subscript notation to refer to each column.\n\n￼\n\nReconstructing Objects from Parallel Arrays\nLet’s assume that a prior app provided three StringArrays, #app.id, #app.type, and #app.value, each of the same length.  We could use a Loop to turn them back into dictionaries, but instead, let’s use build:\n\n￼\nAdding Values to a List of Objects\nSometimes, we have a list of objects (dictionaries, of course!) and we want to add a value or values to each object.  Lets assume #app.list is a list of objects, and we want to add a source key to each object if it doesn’t already exist.  The update function will let us do that:\n\n￼\n\nAs always, expressions return their result, so in the original list is not modified in place, but the updated list is returned.\nMerging Two Lists of Objects\nOccasionally we’ll get two or more lists of objects that we want to merge into one list of objects.  The merge function will merge multiple lists down to one list, and will allow control over whether or not subsequent column keys overwrite prior column keys.\n\n￼\n\nNo key matching is done to line up the lists, so beware; this is a simple row merge.  If the lists are not dictionaries, the result is equivalent to Python’s zip function; e.g. \n\n￼\nDate/Time Calculations￼\nStructural Analysis of Objects￼\nFlattening Objects￼\nREXX Parsing\nFor full details of REXX parsing, consult an IBM guide. This function introduces a subset of REXX parsing, equivalent to PARSE VAR source template.   In general, a template consists of:\n\nQuoted literals which match their exact string in the source\nVariables which assign a substring to a variable, or “.” when there is no need for assignment\nNumbers which may be signed to indicate a relative offset, or an absolute column position\nIndirect References in parenthesis to allow variable substitution into the template\n\nSubstrings are split on spaces if there is more than one variable to be assigned from the substring.\n\n￼\n\nA dot or variable will consume more than one word if there are no subsequent assignments before the next pattern or column position.\n\nColumn positions may be relative or absolute.  Column positions can move backwards, to re-parse the source with a different template portion.\n￼\n\n\nREXX style parsing is very easy to use as long as your data is not structured data, in which case regular expressions are more suitable.\n\u0005XML Parsing\nThe xmlread function will parse XML data, optionally compacting (in a non-reversible way) the resulting object structure.  XML attributes are added as keys with @ prefixes.\n\n￼￼\n\nThe compact=True option applies two transforms to the resulting output structures:\n\nIf a list of dictionaries each have only a single key, the list is collapsed to a single dictionary, i.e. [{'key1': 'value1'}, {'key2': 'value2'}] -> {'key1': 'value1', 'key2': 'value2'}\nIf a dictionary has exactly two keys, one of which has a key name containing “name” in any case, that dictionary is compacted to a single name=value dictionary, and compaction is reattempted, i.e. {'data': [{'name': 'Hamburgler'}, {'value': 'RobbleRobble'}]} -> {'data': {'Hamburgler': 'RobbleRobble'}}\n\nThe corresponding xmlwrite is the inverse of xmlread, although it cannot undo the compaction effects of compact=True.\n\nThe namevallist function can produce results similar to the inverse of compaction step 2.\n\n￼\nReports\nReports can largely be inferred entirely from the columnar data they are passed; however, if necessary column specifications can be used to control report formatting.\n\nA report is made up of a list of row values, each of which is a list of column values for data, e.g. \n￼\n\nReports can have titles, prologs and epilogs which are printed along with the report value.\n\nReport values may be formatted to replace the value displayed in the column using the value option.\n\nData may either be a list of lists (e.g.1 CSV format) or a list of dictionaries.  When data is a list of dictionaries, the key of the item is the column name, which when title cased is the row label.\n\nColumn specifications in the simple form are a list of headings for the column values, in the tuple form is a list of (heading, specification) values, and in the row dictionary form is a list of dictionaries of specifications.  There is also a multi-row form with lists of rows of column specifiers.  Multi-row reports never generate header rows for the supplemental rows.\n\nIf column specifiers are not provided a default column specification is generated using the values of the first row (or the first row’s keys).\n\n\n￼\n\nA column can be constrained to a specific width, and optionally a specific height.\n￼\n\nColumns with values too long for the column will be hyphenated unless the nohyphenate option is specified.\n\n￼\n\nUsing the indent or hang options the value can be indented on the first line, or on all successive lines, respectively.\n￼\n\nThe value specification option will allow python f-string style subexpressions to calculate values.  If an expression contains a slash, escape it with a backslash e.g. value={units\\/100:5.2f}%.   Note that the subexpressions can’t handle nested braces; escape inner braces with \\ as well.\n\nThe title, prolog, and epilog also have value substations performed on them.  The expression values (variables and outputs defined previously) are available for all formats and filters.\u0004Sample Recipes\nTurn a CSV file into a TCEntityArray\nLet’s assume that there is a CSV file that has contains multiple columns, and column 2 of the file is an IP address that we want to turn into an array of Address indicators.  To spice things up, column 3 contains what kind of thing it is, so we can selectively import.\n\nHere’s what the sample data looks like:\n\n￼\n\nUsing the app Get ThreatConnect Document by Name we load the document in the playbook:￼\nThen, we connect that to the Expressions application with the action Evaluate Many With Loop.\n\nStarting out, we want to import the data from the Document, so under Variables, add the key csvdata with the values csvread(#tc.document.file_data, header=True) and click the circled plus to add the key.  It has a header record we need to throw away, so header=True is specified for csvread.\n￼\n\nThen we want to loop through each record at a time, so under Loop Variables, add the key record with the value csvdata, and click the circled plus to add the key. We could have loaded the CSV document here with the csvread function directly, as well.\n\n￼\n\nWe want to create a TCEntity dictionary if the 3rd column is “C&C”, otherwise we will output a null element.  To add some complexity, column 1, the name column, isn’t always set, so we’ll use the name if specified, or the address if it isn’t.\n\nUnder Loop Expressions add the key entity with the value choice(record[2] == 'C&C', { 'id': record[0] or record[1], 'type': 'Address', 'value': record[1] }, None) and click the circled plus to add the key. \n\n￼\n\nThen finally under the TCEntity Array Outputs, we want to output the entity array we created earlier, but without any of the Null records in it, so we’ll add a key of indicators with a value of prune(entity) to output the pruned list of entities.\n\n￼\n\nVoila!  Let’s see what it output:\n\n￼\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 11,
+      "text": "Expressions"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 6,
+      "text": "Page ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 11,
+      "text": "Expressions"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 6,
+      "text": "Page ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 11,
+      "text": "Expressions"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 6,
+      "text": "Page ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 46,
+      "text": "\nexpression.result.0 = {‘foo’: ‘bla’}.foo\n\nbla"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 45,
+      "text": "\ndata = {‘foo’: ‘bla’}\nresult = data.foo\n\nbla"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 129,
+      "text": "\nfor name in (‘Matt’, ‘Chris’, ‘Jon’):\t\t\t\t\t\nexpression.result.array = ‘Hello ’ + name\n\n[‘Hello Matt’, ‘Hello Chris’, ‘Hello Jon’]"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 270,
+      "text": "\nnames = (‘Matt’, ‘Chris’, ‘Jon’)\ngreetings = (‘Hello’, ‘Goodbye’)\n\nfor name in names:\t\t\t\t\t\t\t\nfor greeting in greetings:\t\t\t\t\t\nsalutation = greeting + ‘ ’ + name\n\ntext = join(‘, ’, salutation)\n\nHello Matt, Goodbye Matt, Hello Chris, Goodbye Chris, Hello Jon, Goodbye Jon\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 262,
+      "text": "This expression is valid, but unusual:\n\n1 + (1 or 2)\n\nAs it happens, the result is 2.  It becomes much more interesting if you use logical expressions like this:\nname or “Stranger”\n\nWhich would be the value of name if it has a value, or “Stranger” if it doesn’t."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 553,
+      "text": "Formats can use variables that are already defined, or pass them as parameters to the format function.  Here, variable is a previously defined variable.\n\nformat(‘{variable}*5 = {value}’, value=variable*5)\n\nFormats can be any valid Python format string, but not an f-string format.\n\nformat(‘{pct:5.3f}%', pct=4.182964)\n4.183%\n\nWhen using formats, dictionary expressions must be resolved using the subscript notation, but quotations around the keys is not necessary.\n\nformat('>>{timedelta[total_days]}<<', timedelta=timedelta('now', ‘yesterday'))\n>>1<<\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 72,
+      "text": "\npad(variable1, max(len(variable1), len(variable2), len(variable3)))\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 51,
+      "text": "\npivot(pivot([array1, array2, array3], pad=‘’))\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 69,
+      "text": "\nbuild(#app.id, #app.type, #app.value, keys=(‘id’, ‘type’, ‘value’))\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 64,
+      "text": "\nupdate(#app.list, {‘source’: ‘Spaceman Spiff’}, replace=False)\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 57,
+      "text": "\nmerge(#app1.list, #app2.list, #app3.list, replace=True)\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 66,
+      "text": "\nmerge([‘a’, ‘b’, ‘c’], [1, 2, 3])\n[[‘a’, 1], [‘b’, 2], [‘c’, 3]]\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 490,
+      "text": "The timedelta function will calculate the time between two date time values.  Relative time expressions can be used.\n\ntimedelta('now', ‘yesterday')\n\n{'datetime_1': '2021-04-10T19:02:12', 'datetime_2': '2021-04-09T09:00:00', 'years': 0, 'months': 0, 'weeks': 0, 'days': 1, 'hours': 10, 'minutes': 2, 'seconds': 12, 'microseconds': 0, 'total_months': 0, 'total_weeks': 0, 'total_days': 1, 'total_hours': 34, 'total_minutes': 2042, 'total_seconds': 122532, 'total_microseconds': 122532000}\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 676,
+      "text": "The structure function will analyze the structure of an object.  Using the previous example’s data:\n\nstructure(timedelta(‘now', ‘yesterday’))\n\n{'datetime_1': 'iso8601', 'datetime_2': 'iso8601', 'years': 'int', 'months': 'int', 'weeks': 'int', 'days': 'int', 'hours': 'int', 'minutes': 'int', 'seconds': 'int', 'microseconds': 'int', 'total_months': 'int', 'total_weeks': 'int', 'total_days': 'int', 'total_hours': 'int', 'total_minutes': 'int', 'total_seconds': 'int', 'total_microseconds': ‘int’}\n\nStructure descriptions can include more than one component identified in the object.\n\nstructure('January 10, 2020 11:15 AM 4c9c0cab51196f093eb49672de64ff05’)\n\ndate time md5\n\n\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 1439,
+      "text": "The flatten function will turn nested dictionaries into a single dictionary, by creating new keys based on the key path. \n\nflatten({‘time': timedelta('now', 'yesterday'), 'time2': timedelta('now', 'January 1, 1970’)})\n\n{'time1.datetime_1': '2021-04-10T19:38:21',\n 'time1.datetime_2': '2021-04-09T09:00:00',\n 'time1.days': '1',\n 'time1.hours': '10',\n 'time1.microseconds': '0',\n 'time1.minutes': '38',\n 'time1.months': '0',\n 'time1.seconds': '21',\n 'time1.total_days': '1',\n 'time1.total_hours': '34',\n 'time1.total_microseconds': '124701000',\n 'time1.total_minutes': '2078',\n 'time1.total_months': '0',\n 'time1.total_seconds': '124701',\n 'time1.total_weeks': '0',\n 'time1.weeks': '0',\n 'time1.years': '0',\n 'time2.datetime_1': '2021-04-10T19:38:21',\n 'time2.datetime_2': '1970-01-01T00:00:00',\n 'time2.days': '9',\n 'time2.hours': '19',\n 'time2.microseconds': '0',\n 'time2.minutes': '38',\n 'time2.months': '3',\n 'time2.seconds': '21',\n 'time2.total_days': '18727',\n 'time2.total_hours': '449467',\n 'time2.total_microseconds': '1618083501000',\n 'time2.total_minutes': '26968058',\n 'time2.total_months': '615',\n 'time2.total_seconds': '1618083501',\n 'time2.total_weeks': '5113',\n 'time2.weeks': '1',\n 'time2.years': '51'}\n\nFor what its worth, the timedelta calculations of total months and total weeks for time2 look wrong on their face, but that’s coming out of the underlying library.  This example is to demonstrate the flatten function.\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 477,
+      "text": "\nrexxparse('Mary had a little lamb', 'name . \"had a \" size animal’)\n\n{'name': 'Mary', 'size': 'little', \n‘animal': ‘lamb’}\n\nrexxparse('127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] \"GET /apache_pb.gif HTTP/1.0\" 200 2326', \"ip id user ' [' date '] \\\"' method url protocol '\\\" ' status size”)\n\n{'ip': '127.0.0.1', 'id': '-', 'user': 'frank', 'date': '10/Oct/2000:13:55:36 -0700', 'method': 'GET', 'url': '/apache_pb.gif', 'protocol': 'HTTP/1.0', 'status': '200', 'size': '2326'}"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 307,
+      "text": "rexxparse('Mary had a little lamb', 'name . 1 song')\n{'name': 'Mary', 'song': 'Mary had a little lamb’}\n\nAfter a pattern match, relative position offsets can back up to data before the pattern!  Relative matches start at the pattern start.\n\nrexxparse(‘01234FFFFAB0C’, ‘\"FFFF\" -4 last4 +4’)\n{‘last4’: '1234'}"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 237,
+      "text": "Assume that xmldata is \n<people>\n    <person class=\"Peon\">\n        <name>Bob</name>\n        <job>Developer</job>\n    </person>\n    <person class=\"Pooh-Bah\">\n        <name>Alice</name>\n        <job>Manager</job>\n    </person>\n</people>\n\n\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 344,
+      "text": "xmlread(xmldata, compact=False)\n{'people': [{'person': [{'name': 'Bob'}, {'job': 'Developer'}], '@class': 'Peon'}, {'person': [{'name': 'Alice'}, {'job': 'Manager'}], '@class': 'Pooh-Bah'}]}\n\nxmlread(xmldata, compact=True)\n{'people': [{'person': {'Bob': 'Developer'}, '@class': 'Peon'}, {'person': {'Alice': 'Manager'}, '@class': 'Pooh-Bah'}]}\n"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 563,
+      "text": "xmlwrite({'people': {'person': namevallist({'name': 'Matt', 'job': ‘Developer’})}},indent=2)\n\n<people>\n  <person>\n      <name>name</name>\n      <value>Matt</value>\n      <name>job</name>\n      <value>Developer</value>\n  </person>\n</people>\n\nxmlwrite({'people': {'person': namevallist({'name': 'Matt', 'job': 'Developer'},namekey='@name')}}, indent=2)\n\n<people>\n  <person>\n      <value name=\"name\">Matt</value>\n      <value name=\"job\">Developer</value>\n  </person>\n</people>\n\nHere, the namekey being @name makes xmlwrite write out the values with a name attribute."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 189,
+      "text": "report(data=(\n\t('Column A', 'Column B', 'Column C'),\n\t(1, 2, 3),\n\t('a', 'b', 'c')))\n\nColumn A Column B Column C \n-------- -------- -------- \n1        2        3       \na        b        c  "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 274,
+      "text": "An example of a multi-row report with dictionary specifications.\n\nreport(({'A': 1, 'B': 2}, {'B': 3, 'A': 4}), columns=(({'A': 20}), {'B': ’20/indent=5'}))\n\nA                    \n-------------------- \n1                   \n     2              \n4                   \n     3    "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 314,
+      "text": "An example of a width and height constrained column:\n\nreport({'stanza': 'Mary had a little lamb'}, columns=({'stanza': '10:2'}))\n\nStanza     \n---------- \nMary had  \na little  \n     \nFor ease of use, data values that are not lists are turned into one, allowing a single dictionary instead of a list of dictionaries."
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 245,
+      "text": "An example of hyphenation in a column.\n\nreport(({'name': 'Rumplestiltskin'}), columns=(('name', '12'),('nohyname', '12/nohyphenate/value={name}')))\n\nName         Nohyname     \n------------ ------------ \nRumplestilt- Rumplestilts\nskin         kin"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 346,
+      "text": "An example of hanging paragraph indentation.\n\nreport([['This is a sample paragraph wrapped into multiple lines with hanging indentation.\\nNewlines reset the hang.']], header=False, columns=(('heading', ’50/hang=5')))\n\nThis is a sample paragraph wrapped into multiple  \n     lines with hanging indentation.              \nNewlines reset the hang.  "
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 65,
+      "text": "Expressions\nA Different Way To Process ThreatConnect™ Data\nv1.1.0"
+    },
+    {
+      "kind": "CELL",
+      "characters": 10,
+      "text": "google.com"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 3,
+    "paragraphs": 441
+  }
+}

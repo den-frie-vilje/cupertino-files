@@ -1,0 +1,769 @@
+{
+  "file": "desmarais-notes-sections-hyperlinks.pages",
+  "sha1": "0d517364fd2b08b76743222b231099a19cc36d45",
+  "app": "pages",
+  "fileFormatVersion": "4.1.7",
+  "objects": 629,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 257
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 9
+    },
+    {
+      "name": "Index/CalculationEngine-20083.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-20082.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 351
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 14589,
+      "text": "Story Behind This Project\nNotes app\n\nSummary\n\nNotes is a five-month-long project that covered design and software development, from sketch to release. Motivation storms and technical challenges tested my skills and opened my eyes to important lessons. The month-long efforts amounted to the Web application’s first release in August 2019.\n\nThe Story\n\nA snowstorm in April. That is the life in Montreal, sometimes. This weather was the reason my flight was delayed. I was on my way back from Chicago, where I visited my friend Guillaume. I sat in the Toronto airport lounge, with time to think. Before leaving for the city of architecture, the idea of moving on to a personal project had already formed. Except this time, I thought, I would finish this personal project, up to its release in production.\n\n[Picture of Montreal snowstorm (find back Ro’s picture).]\nApril snowstorm in Montreal\n\nI like sketching. Since I completed my degree in software engineering, many app ideas have populated my sketch books. I took notes whenever I thought of an app or concept to solve a problem with technology. It could be for helping me automate tracking my expenses, remind me when bills are due, or motivate me to follow healthy habits such as drinking water or training flexibility and mobility. My notebooks were full of ideas; however, my attempts to bring them to reality were not conclusive. In many cases, it required a lot of effort and the design wasn’t satisfactory. I continued to try, failing and learning. I accumulated enough experience and lessons to try one more time.\n\n[Picture of a man at the bottom of a mountain.]\n\nFrom Chicago to Montreal, the plan to complete a personal project became clearer. I chose the project of note-taking and categorization. A simple endeavour, I thought. Previous attempts often started with a complex solution from the start. It didn’t work. I wanted to start small in order to complete it. I also wanted to achieve objectives regarding design and programming. For example, here are two objectives for this project:\n\nDesign 🖌🎨 \nTest interface sketches using a paper prototype before starting code.\nHuman-computer interaction was a special class for me, where I learned a design process centred around the human. During the course project, we tested to confirm our hypothesis. One of those tests was a paper prototype, which I really wanted to revisit and practice.\n\nProgramming 👨‍💻\nBuild a system architecture using layers and design patterns.\nMany projects I’ve worked on already encompassed the structure when I joined the team. Hence, I really wanted to experience creating my own software architecture and test it out.\n\nFor each objective, I documented its own section in the project wiki.\n\n\nObjective I: Design\nPractice design was my first goal to tackle. My design background had grown a lot in the recent years.\n\nHuman-computer interaction class with its human-centred approach\nNumerous sketches of interfaces for app ideas\nDetails in the interaction of apps analyzed during development\nDiscussions with user experience and user interface designers about the rationale behind their design decisions\nTalks about the various forms of design at the MTL Design Club\nOnline courses about design theory and practice using design tools and graphic design terminology\nShort experience as user interface designer for musical experiences\n\nI learned that design gives a direction for the rest of development. Good design makes use of the common sense to build around usability and simplicity. It looks for a balance between flexibility and constraint to bring its users in flow with the app. Best practices aren’t always appropriate, and the best approach often depends on careful considerations. Good design gets out of the way and becomes invisible. I realized while sitting with professionals and scientists that personal work doesn’t get easier with experience but actually reaches a new level of abstraction. This level opens new discussions to share perspectives on quality and practices, to try on new experiments.\n\n[Backpack of tools and equipment]\n\nThis note-taking app was my new experiment. I divided a plan with the objective of a simple and elegant design.\n\nIdentify the problem (or opportunity to improve) following observations.\nSketch potential solutions.\nResearch existing solutions.\nAnalyze and re-define desired solution.\nBuild paper prototype and test.\nDesign interface and systems overview.\n\nOnce these steps completed, I would be ready for coding. Given I was the first user for this app, I rapidly moved through the first steps, inspired from sketches from previous years. The number of note-taking apps is huge, and many with impressive quality. The choice was difficult. Apps under which I looked on more closely, both on mobile and desktop, included Evernote, Google Keep, Apple’s Notes and Todoist. Todoist was a bit different, being first-and-foremost a task-management tool, yet quite novel in its approach to recording everything actionable through its Inbox feature. Once the analysis completed, I refined my solution and reached the paper prototype phase.\n\nThe paper prototype test revealed a big flaw. While on paper I thought I could cleverly reuse the categorization component to filter the list of notes, but it brought confusion during the test. It looked as a good choice, it was simpler than introducing a new component for filtering. However, when running the use cases with the paper prototype, I could see a source of confusion by mixing both edit and view actions of categorization and filtering in the same component. Complex questions about the intent started to pop, a new design iteration seemed necessary.\n\n[Directions, on the ledge, approaching storm]\n\nThe paper prototype proved really useful in revealing this flaw, but the idea of doing one more iteration after all time it took to complete the first one didn’t fit with the original schedule. I had already used half of three three-week buffer to finish the first part of design. I had a hard decision to make.\n\u0004At this point in the project, the motivation started to drop, the stress to rise. This design failure also revealed a flaw in my planning. It was no more realistic to build this simple application within the set time frame. My morale was low. Fortunately, keeping in touch with close friends, I found the support to continue, to come back stronger. From words of encouragement to quotes, from social events to positive stories, this support has been the most precious aspect of this project. Sharing what I was going through with them helped me gain back control over what I felt and find the courage to continue this project.\n\u0004I took the decision to reduce the scope, remove the feature of categorization and concentrate on note-taking only. I could still meet my objectives for design and programming. I finished the design moving on to the look-and-feel of the interface. I created a mood board, a design system and a digital mockup.\n\n[Picture of those three elements.]\n\nThe mood board grouped many visual inspirations for this project; an article by Frank Chimero (The Web’s Grain), the Learn UI design newsletters on fonts and colour contrast, and many images from my Pinterest boards with colourful quotes and scenes. The mood board set the tone for the design system and digital mockup, where I defined the style and components for the interface. Once the layout was arranged with a simple grid, I was ready to jump to the next software development step.\n\n[Someone jumping over the ledge, running, or diving deeper]\n\n\u0004Objective II: Programming\nPractice programming, I was ready for my second objective. Writing code for an application, whether it’s server or client, or both, this is where lies most of my work experience. I had the chance to be part of awesome teams over the years. I always found motivation in bringing quality to my work and participate in discussions about technology and architecture. I started a few projects with others after work too: a Web server deployment for e-learning experiments, a native mobile application for healthcare and a website for the Toyzilla startup.\n\nFrom internships to full-time experiences, I learned and experimented with my peers and mentors on software paradigms, code architecture and project methodologies. Finding the right amount of automated tests to make the code robust but also efficient to develop, lightening the architecture to make code adaptable for the long-term but also flexible for changes, estimating the right amount of time for building a new feature or debugging a problem. Over the years, I learned there is very seldom a general rule, as one of my mentor often replied during our weekly tech discussions: “n-oui”, which was followed by “it depends”.\n\nFor this project, the idea was to build a Web application,  with both server and client counterparts. Hence, I divided four development steps:\n\nArchitecture design\nDeployment\nServer coding\nClient coding\n\nThe architecture design was one I was most excited to work on. For many work projects, the architecture design was already set when I joined. This personal project was an opportunity to test what I learned, to bring theory and observation to practice. Hence, I designed a simple, future-oriented architecture with clear separation of concerns for the central application programming interface (API), the data repository and the client interface.\n\n[Diagram of system design]\nOverall system architecture\n\nFollowing research on the deployment infrastructure, the system architecture was adapted. Development time and efforts, as well as operating costs were factors considered in choosing Google Cloud as the infrastructure provider for this simple project.\n\n[In a tent, sleeping or with lights on]\n\nDuring API server implementation, I explored in more depth the topics of API design and dependency injection. I defined my API routes and worked on a documentation using the Swagger API online tool. I further defined the modules within the API server and used as few external libraries as possible. I wanted to keep code simple and elegant, to learn with practice and dive deeper into concepts of programming. This experience helped me understand various challenges solved by third-party libraries, libraries used in past projects at work.\n\n[Image assembly; screenshot of Swagger output and Postman results]\nAPI design and testing\n\nWhile the new interface concentrated only on note-taking, a lot of the foundation for the server took more time than expected to implement. However, the benefit on learning was still considerable, as the objective to grow my skills. I decided to go forward with the approach to build a foundation for the front-end application. I even used a new approach to develop interface components. Each component of the interface were built separately, to review their style under various states, to test their logic in isolation. I brought the design system to life. This development process was quite neat to follow.\n\n[Screenshot of the design system]\nDesign system [link]\n\u0004During development, every week, I had the chance to discuss my progress with friends. This was very motivating. With developers, we discussed testing approaches, architectural decisions, and exchanged tips on estimating work and defining clear goals. With designers, I had a preview of their current personal project and creative process. With many friends, we exchanged on personal growth, as I observed my evolution during this project. I enhanced practical skills, built more self-confidence, trained motivation and resilience to stress, learned to establish constraints for creativity, found a new equilibrium with expectations in reality. This personal project highlighted the importance of friends and family in my life, the building of a story with people I love as my friends and family, these people in my life.\n\n[A journal or diary with pictures, a composite image of all those friends]\n[Image of travellers together, drinking beer]\n\n\u0004It was already my last sprint. Once the design system up and running, I placed each component onto the app’s single page. I adjusted scripts for deployment to account for new files and folders. I tested the integration between the interface and the server. And voilà, version 0.1.3 was released in August.\n\n[Same image as in the about page.]\nReleased application [link]\n\n[Climber at the summit. Flag of colors at the summit.]\u0004This project marked my transition between two jobs. I achieved small victories throughout its realization, I checked my supporting objectives one-by-one, flying through design and programming. I tackled motivation storms with help and patience, technical difficulties with success: reaching project completion! This project changed me, and this wasn’t possible without the support of my friends. In this project, I explored with my own rhythm and took a step back to realize a small dream. Before I go back to the workplace with new skills and a new perspective to share. I’m ready to converse with new forces and share my experience with friends and family.\n\n[Picture of the Montreal city, a place I call home. Boarding flight. Flying back home. Airport. Airplane leaving or arriving.]\u0004Notes of this project\nFriends:\nRowena, Stephanie, Reema, Preeti\nGuillaume, Sarah, Anjni\nChristian, Lise, Pierre\nKevin, William-Alexandre, Derek, Tess, Kassandre, Ruby, Gaetan, MTL Design Club team\nAndy, Anne-Marie\nTariq, Sandeep, Umma\nEezu, Karely, Jason, Sylvia\n\nExcerpt from David Whyte’s Pilgrimage of Work\nIt’s our responsibility to stay in conversation with the forces at work, to keep on life.\n\nYou can do this Pat, we believe in you!\n\nTo learn to stand in a new equilibrium\n\nMaking the best of our day!\n\nExcerpt from Presentation Zen\nTo avoid any mistake stops you from being truly creative.\n\nWhen people get frustrated or dissatisfied of the tool they use, they start looking elsewhere for another app. They think this new app will help them solve their note-taking or task-management problem. Maybe no tool will ever solve their problem, as the problem may be deeper into the person, not in the tool they use.\n\nFrank Chimero article “The Web’s Grain” (2015)\nhttps://frankchimero.com/writing/the-webs-grain/\nLearn UI newsletter, online tool for text and colour contrast\n…\n\nFriends excited to see the result.\n\nProcess over result\n\nMovie 3 idiots\nApplying theory and observations into practice.\nSometimes, the heart is scared easily: “Aal Izz Well”\n\nMovie Mission Mangal\nIn strong opposition, we have to give our best.\n\nTools…\n\nGithub links\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 8,
+    "paragraphs": 163
+  }
+}

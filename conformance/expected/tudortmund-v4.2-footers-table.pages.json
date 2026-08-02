@@ -1,0 +1,479 @@
+{
+  "file": "tudortmund-v4.2-footers-table.pages",
+  "sha1": "96864a2523be3f71ac4be4efbd88eac7245d4b83",
+  "app": "pages",
+  "fileFormatVersion": "4.2.3",
+  "objects": 580,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 59
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 16
+    },
+    {
+      "name": "Index/CalculationEngine-20358.iwa",
+      "objects": 26
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20959-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20960-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20961-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20962-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20963-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20964-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20965-2.iwa",
+      "objects": 89
+    },
+    {
+      "name": "Index/Tables/DataList-20966-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20967-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20968-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-20982-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20983-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20984-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20985-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20986-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20987-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20988-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20989-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20990-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20991-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20992-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-20993-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21167-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-21168-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21174-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-21175-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-21176-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-20357.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 354
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 91,
+      "text": "Zusammenfassung von Telemanns Kommentaren aus den\nSinge-, Spiel- und Generalbass-Übungen\n\n￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 17,
+      "text": "Hrsg. Derek Remeš"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 6,
+      "text": "￼ of ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 14,
+      "text": "derekremes.com"
+    },
+    {
+      "kind": "CELL",
+      "characters": 212,
+      "text": "Akkorde über einem Orgelpunkt werden oft nicht beziffert.\nEin langer Orgelpunkt im Bass darf wieder angeschlagen werden.\nDie rechte Hand darf schweigen, sodass ein tiefer Ton in der Singstimme gehört werden kann."
+    },
+    {
+      "kind": "CELL",
+      "characters": 242,
+      "text": "In einer Synkopendissonanz (d.h. Vorhalt) löst sich die gebundene Stimme zur Konsonanz auf.\nDie Auflösung muss in der gleichen Stimme sein, ob Bass-, Mittel- oder Oberstimme.\nDie Auflösung zur Prime ist ungünstig, da eine Stimme verschwindet."
+    },
+    {
+      "kind": "CELL",
+      "characters": 344,
+      "text": "Quint- und Oktavparallelen müssen vermieden werden.\nVerdeckte Quinten und Oktaven entstehen durch die gleiche Bewegung. Diese sind verboten, da die Auffüllung des Sprungs per Schritt zu Quint- bzw. Oktavparalleln führen würde.\nWenn die rechte Hand zu tief kommt, darf man die Lage innerhalb der gleichen Harmonie wechseln, um höher zu springen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 370,
+      "text": "Verdeckte Quinten werden erlaubt wenn die Oberstimme sich schrittweise bewegt oder beim Lagewechsel innerhalb der gleichen Harmonie.\nAlle Regeln sind nur gültig solange es möglich ist, sie einzuhalten.\nGegenbewegung ist das beste Mittel Quinte- und Oktavparalleln sowie verdeckte Quinten und Oktaven zu vermeiden.\nDer Bass im 6-Akkord darf als Auftakt verdoppelt werden."
+    },
+    {
+      "kind": "CELL",
+      "characters": 276,
+      "text": "Die Verdoppelung des Basses im 6-Akkord übertönt die (bassbezogene) Terz des Akkords.\nMehrere 6-Akkord-Parallelen werden dreistimmig gespielt. Falls ein Tenor singt, sollten solche Passagen eine Oktav tiefer gespielt werden, um Quintparallelen mit der Singstimme zu vermeiden."
+    },
+    {
+      "kind": "CELL",
+      "characters": 262,
+      "text": "Die Dissonanzen sind die 2, 4, verm. 5, 7 und 9.\nDie Konsonanzen sind die 1, 3, reine 5, 6 und 8.\nIm Allgemeinen werden Dissonanzen vorbereitet und per Schritt nach unten aufgelöst, obwohl es viele Ausnahmen gibt.\nAlle Konsonanzen können als Vorbereitung dienen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 321,
+      "text": "Die Ziffer 9/4 nimmt die 5.\nDie Ziffer 9/7 nimmt die 3.\nDie Ziffer 4 nimmt 5 und 8.\nDie Ziffer 9 nimmt 5 und 3.\nOrgeln müssen Akkorde nicht wieder anschlagen, wie bei anderen Tasteninstrumenten.\nDie rechte Hand darf ab und zu ihre Anfangsposition verlassen.\nDissonanzen über einem Orgelpunkt benötigen keine Vorbereitung."
+    },
+    {
+      "kind": "CELL",
+      "characters": 151,
+      "text": "In bestimmten Sequenzen mit 7-Akkorden muss die Quinte fehlen, außer wenn man fünfstimmig spielt.\nDie rechte Hand wird falls nötig wieder angeschlagen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 408,
+      "text": "Versetzungszeichen über einem Basston deuten eine Änderung der Harmonie an.\nDie rechte Hand darf f’’ überschreiten falls der Bass ungewöhnlich hoch ist oder falls moderne Schlüssel im Bass eingesetzt werden.\nDie verminderte 5 wird im 6-Akkord nicht immer angegeben, obwohl sie es sein sollte.\nDie verminderte 5 nimmt die 3 und 6.\nThe übermäßige 5 löst sich per Schritt nach oben, gegen die gewöhnliche Regel."
+    },
+    {
+      "kind": "CELL",
+      "characters": 343,
+      "text": "Die rechte Hand bewegt sich so wenig wie möglich (d.h. keine unnötige Sprünge)\nDer Tonumfang der rechten Hand ist ungefähr h-e’’ (in Nr. 11 sagt er aber f’’).\nEin Strich heißt, dass die Oberstimmen liegen bleiben.\nBei einem 6-Akkord werden 3 oder 6 meistens verdoppelt; wenn dies nicht gut in der Hand liegt, kann man auch den Bass verdoppeln."
+    },
+    {
+      "kind": "CELL",
+      "characters": 170,
+      "text": "Die verminderte 5 ist hilfreich und darf manchmal bei einem 6-Akkord gespielt werden, auch wenn sie nicht angegeben wird.\nDer Bass im 6/4+/2 darf unvorbereitet eintreten."
+    },
+    {
+      "kind": "CELL",
+      "characters": 609,
+      "text": "Gegenbewegung entsteht wenn die Hände sich entweder zu- oder voneinander bewegen.\nGegenbewegung ist besonders passend wenn der Bass einen Quartsprung nach oben macht zwischen zwei Grundakkorden oder wenn ein Grundakkord nach einem 6-Akkord folgt.\nDer Kontinuität halber darf die rechte Hand während einer Pause im Bass spielen.\nDie verminderte Quinte darf unvorbereitet eintreten.\nVerzierung in der Singstimme haben nicht unbedingt einen Einfluss auf die Begleitung.\nIn Frankreich wird ein Strich bei Durchgängen im Bass eingesetzt. Mit der Zeit lernt man solche Durchgänge auch ohne einen Strich zu erkennen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 83,
+      "text": "Begleiter sollten besser zuhören.\nDie 4 im 6/4-Akkord darf unvorbereitet eintreten."
+    },
+    {
+      "kind": "CELL",
+      "characters": 104,
+      "text": "Quintparallelen, die durch Verzierungen in der Singstimme oder der Begleitung entstehen, werden erlaubt."
+    },
+    {
+      "kind": "CELL",
+      "characters": 296,
+      "text": "Quintparallelen werden erlaubt, solange eine der beiden Quinten vermindert ist.\nManche Autoren bevorzugen die Quintlage am Ende zu vermeiden, dies ist aber kein Thema.\nDie übermäßige 2 nimmt die 6 und übermäßige 4.\nAuflösungen im Bass können durch die Umkehrung der Stimmen rationalisiert werden."
+    },
+    {
+      "kind": "CELL",
+      "characters": 108,
+      "text": "Die rechte Hand darf über Arpeggien im Bass liegen bleiben.\nIm Allgemeinen gilt: je einfacher, desto besser."
+    },
+    {
+      "kind": "CELL",
+      "characters": 125,
+      "text": "Es ist wichtiger, dass die rechte Hand angenehm sein soll, als dass Regeln, die nicht allzu wichtig sind, eingehalten werden."
+    },
+    {
+      "kind": "CELL",
+      "characters": 163,
+      "text": "Die rechte Hand darf bei Pausen in der Singstimme aktiver sein.\nQuerstände waren früher verboten aber kommen heute öfters vor, sollten aber meist vermieden werden."
+    },
+    {
+      "kind": "CELL",
+      "characters": 159,
+      "text": "Dissonante Töne im Bass einer Alberti-Figur sollten in der rechten Hand nicht verdoppelt werden, außer in einer Mittelstimme – Sonst entstehen Oktavparallelen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 80,
+      "text": "Falls mehrere verminderte Quinten vorkommen, muss sich jedes Intervall auflösen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 106,
+      "text": "Die rechte Hand darf zur gleichen Zeit mit dem Bass eintreten, darf aber auch während der Pause eintreten."
+    },
+    {
+      "kind": "CELL",
+      "characters": 262,
+      "text": "Quint- und Oktavparallelen zwischen der rechten Hand und der Singstimme werden toleriert.\nEin Durchgangsseptime darf hinzugefügt werden wenn der Bass einen Quartsprung nach oben oder einen Quintsprung nach unten macht, auch wenn die Septime nicht angegeben wird."
+    },
+    {
+      "kind": "CELL",
+      "characters": 132,
+      "text": "Die reine 5 darf zur verminderten 5 in den Außenstimmen fortschreiten.\nDie verminderte 5 darf nicht zur übermäßigen 5 fortschreiten."
+    },
+    {
+      "kind": "CELL",
+      "characters": 227,
+      "text": "Falls man von einer Partitur spielt, die die Singstimme enthält, darf man zusätzliche Verzierungen hinzufügen, die nicht in der Partitur angegeben werden, um Durchgänge und Wechseltöne in der Singstimme besser zu harmonisieren."
+    },
+    {
+      "kind": "CELL",
+      "characters": 213,
+      "text": "Die übermäßige Prime kommt selten vor, sondern öfters als übermäßige Oktave.\nZwischen Intervallen, die enharmonisch äquivalent sind, muss man unterscheiden können, wie z.B. der übermäßigen Prime und der kleinen 2."
+    },
+    {
+      "kind": "CELL",
+      "characters": 151,
+      "text": "Manchmal muss man einen Akkord fünfstimmig spielen.\nQuintparallelen mit der Singstimme werden erlaubt wenn der Begleiter diese nicht vor den Augen hat."
+    },
+    {
+      "kind": "CELL",
+      "characters": 235,
+      "text": "Eine verminderte 4 wird am besten zwischen zwei Mittelstimmen platziert.\nDie übermäßige Terz ist enharmonisch äquivalent mit der reinen 4.\nEgal ob überm. oder verm. Intervalle erlaubt sein sollten, muss man wissen wie man damit umgeht."
+    },
+    {
+      "kind": "CELL",
+      "characters": 393,
+      "text": "Die Ziffer 4/3 wird als 6/4/3 gespielt. Ein gutes Ohr entscheidet ob die 6 groß oder klein sein soll.\nManchmal ist wird eine bestimmt Ziffer als Vorbereitung der darauf folgenden Dissonanz nötig.\nDie verminderte 5 benötigt die 6.\nDie Ziffer 9 nimmt 5/3, aber 9/6 nimmt nur 3.\nDie Ziffer 9/4 nimmt die 5.\nManchmal werden Akzidenzen nicht angegeben und müssen anhand der Tonart vermutet werden. "
+    },
+    {
+      "kind": "CELL",
+      "characters": 132,
+      "text": "Die verminderte 5 ist enharmonisch äquivalent mit der übermäßigen 4.\nDie reine 5 ist enharmonisch äquivalent mit der verminderten 6."
+    },
+    {
+      "kind": "CELL",
+      "characters": 127,
+      "text": "Die übermäßige 2 ist enharmonisch äquivalent mit der kleinen 3.\nDie verminderte 4 ist enharmonisch äquivalent mit der großen 3."
+    },
+    {
+      "kind": "CELL",
+      "characters": 127,
+      "text": "Die kleine 6 ist enharmonisch äquivalent mit der übermäßigen 5.\nDie große 6 ist enharmonisch äquivalent mit der verminderten 7."
+    },
+    {
+      "kind": "CELL",
+      "characters": 132,
+      "text": "Die kleine 7 ist enharmonisch äquivalent mit der übermäßigen 6.\nDie große 7 ist enharmonisch äquivalent mit der verminderten Oktave."
+    },
+    {
+      "kind": "CELL",
+      "characters": 68,
+      "text": "Die übermäßige Oktave ist enharmonisch äquivalent mit der kleinen 9."
+    },
+    {
+      "kind": "CELL",
+      "characters": 60,
+      "text": "Viele verminderten Intervalle machen einen starken Eindruck."
+    },
+    {
+      "kind": "CELL",
+      "characters": 166,
+      "text": "Die 2 und 9 deuten den gleichen Ton an – Der Unterschied ist, dass die 2 bei einer Auflösung im Bass benutzt wird, während die 9 bei einer Auflösung einer Oberstimme."
+    },
+    {
+      "kind": "CELL",
+      "characters": 331,
+      "text": "In einer Arie sollte die linke Hand einen Basston nicht wieder anschlagen wenn die Harmonie dissonant ist, darf aber dies tun wenn die Harmonie konsonant ist.\nIn einer Oper wird die Kadenz mit dem Singer gespielt; in Kantaten spielt man sie nachher.\nMan darf im vollstimmigen Still spielen, wo jede Hand drei oder vier Töne spielt."
+    },
+    {
+      "kind": "CELL",
+      "characters": 216,
+      "text": "Läufe sollen in Rezitativen vermieden werden.\nNur am Cembalo sollte man ein Arpeggio spielen; Auf der Orgel spielt man alle Töne gleichzeitig.\nJe schneller und kürzer das Arpeggio, desto besser ist es für den Singer."
+    },
+    {
+      "kind": "CELL",
+      "characters": 77,
+      "text": "Beim Halbton-Schritt nach unten im Bass hat der erste Basston einen 6-Akkord."
+    },
+    {
+      "kind": "CELL",
+      "characters": 283,
+      "text": "Es ist zweifelhaft ob der Generalbass ohne jegliche Bezifferung gespielt werden kann.\nWenn der Bass einen Terzfall spielt und danach einen Halbton nach oben fortschreitet, spielt man einen 6-Akkord beim ersten Ton.\nOft kann man beim 6-Akkord eine verminderte oder reine 5 hinzufügen."
+    },
+    {
+      "kind": "CELL",
+      "characters": 275,
+      "text": "Einen Quintfall im Bass bei einer Kadenz benötigt eine Durterz beim ersten Ton. Sonst kann man auch 6/4-5/3 spielen.\nEinen 6/5-Akkord kann durch einen 6-Akkord gewechselt werden.\nWenn der Bass einen Schritt nach unten fortschreitet und mit 2 beziffert wird, spielt man 6/4/2."
+    },
+    {
+      "kind": "CELL",
+      "characters": 275,
+      "text": "Bei der Ziffer 2 über einem Orgelpunkt spielt man 7/4/2.\nBei der übermässigem 4 spielt man 6/4/2, bei der reinen 4 spielt man aber 8/5/4.\nBei der Ziffer 6/4 spielt man 8/6/4.\nDie Ziffer 7/4/2 kommt in Rezitativen oft vor – Man achte darauf, dass die 7 sich nach oben auflöst."
+    },
+    {
+      "kind": "CELL",
+      "characters": 392,
+      "text": "Manchmal muss man die 6 bei einer verminderten 5 spielen, auch wenn die 6 nicht angegeben wird, z.B. wenn der Bass einen Schritt nach oben macht.\nWenn die rechte Hand während einer Pause im Bass spielt, muss man feststellen, ob die Harmonie vom vorherigen oder nachfolgenden Basston bestimmt wird.\nBei spärlich bezifferten oder unbezifferten Bässen ist die Solostimme von zentraler Bedeutung."
+    },
+    {
+      "kind": "CELL",
+      "characters": 213,
+      "text": "Bei einem 6-Akkord auf Bass-Stufe 2 kann man oft die 4 dazu greifen, auch wenn dies nicht in der Bezifferung vorhanden ist.\nMan hüte sich den Bass eines 6-Akkords im Sopran zu verdoppeln (ist aber nicht verboten)."
+    },
+    {
+      "kind": "CELL",
+      "characters": 169,
+      "text": "Die Begleitung benötigt keiner interessanten Oberstimme.\nDie Begleitung darf die Solostimme als Unisono verdoppeln.\nDie Begleitung darf höher als die Solostimme spielen."
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 4
+  }
+}

@@ -5,6 +5,7 @@ import { describe, expect, it } from "./harness.ts";
 const script = fileURLToPath(new URL("../scripts/coverage-matrix.ts", import.meta.url));
 const privacy = fileURLToPath(new URL("../scripts/scan-fixture-privacy.ts", import.meta.url));
 const harvest = fileURLToPath(new URL("../scripts/harvest-functions.ts", import.meta.url));
+const conformance = fileURLToPath(new URL("../scripts/make-conformance.ts", import.meta.url));
 
 describe("repository guards", () => {
   it("docs/COVERAGE.md and docs/VERIFICATION.md match the fixtures and capability table", () => {
@@ -39,6 +40,22 @@ describe("repository guards", () => {
       output = String((e as { stderr?: string }).stderr ?? e);
     }
     expect(ok ? "checked" : output).toBe("checked");
+  });
+
+  it("conformance/ matches what the library reads from the fixtures", () => {
+    // The conformance suite is the language-neutral export of this
+    // project's knowledge; other implementations pin against it. It must
+    // never say something the reference implementation no longer does —
+    // regenerate with `npm run conformance` when a reader improves.
+    let ok = true;
+    let output: string;
+    try {
+      output = execFileSync(process.execPath, [conformance, "--check"], { encoding: "utf8" });
+    } catch (e) {
+      ok = false;
+      output = String((e as { stderr?: string; stdout?: string }).stderr ?? e);
+    }
+    expect(ok ? "current" : output).toBe("current");
   });
 
   it("no fixture carries unreviewed personal data", () => {

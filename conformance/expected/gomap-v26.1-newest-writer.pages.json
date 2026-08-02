@@ -1,0 +1,289 @@
+{
+  "file": "gomap-v26.1-newest-writer.pages",
+  "sha1": "d972c7f1af2c4a5de742f748cd35dcac9dbd9d71",
+  "app": "pages",
+  "fileFormatVersion": "26.1.0",
+  "objects": 768,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 244
+    },
+    {
+      "name": "Index/ViewState-1747713.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1686595.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1686594.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 498
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 13,
+      "text": "OsmDownloader"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 17,
+      "text": "OsmDownloadParser"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 17,
+      "text": "MercatorTileLayer"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 14,
+      "text": "EditorMapLayer"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 8,
+      "text": "Database"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 10,
+      "text": "OsmMapData"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 10,
+      "text": "RenderInfo"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 13,
+      "text": "MyUndoManager"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 18,
+      "text": "MainViewController"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "Sqlite3"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 18,
+      "text": "DownloadThreadPool"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "QuadMap"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "QuadBox"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 14,
+      "text": "TileServerList"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 10,
+      "text": "TileServer"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 7,
+      "text": "MapView"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 14,
+      "text": "User Interface"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 5,
+      "text": "Model"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 11,
+      "text": "OSM \nServer"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 24,
+      "text": "POI\nCommon Tags\nAll Tags"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 24,
+      "text": "POI\nCommon Tags\nAll Tags"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 26,
+      "text": "POICommonTags\nPOIAllTags\n…"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 15,
+      "text": "PresetsDatabase"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 26,
+      "text": "PresetsDatabase\n+TableView"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 13,
+      "text": "MapLayersView"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 8,
+      "text": "GpxLayer"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 12,
+      "text": "DrawingLayer"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 1
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "file": "patrickomatic-termpaper-footers-masks.pages",
+  "sha1": "2e648b9a6109481b003b156427ae6cebb9d1b6e3",
+  "app": "pages",
+  "fileFormatVersion": "26.1.0",
+  "objects": 492,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 76
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/CalculationEngine-110945.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-110944.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 392
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 872,
+      "text": "\n\nGeology 101 Report\nSubheading￼\nAuthor Name\nFall 2023\n\n\n\fGeology 101 Report\nSubtitle\n\nHeading\nTo get started, just tap or click this placeholder text and begin typing. You can view and edit this document on your Mac, iPad, iPhone, or on iCloud.com.\n￼It’s easy to edit text, change fonts, and add beautiful graphics. Use paragraph styles to get a consistent look throughout your document. This paragraph uses Body style. You can change it in the Text tab of the Format controls.\n\nDrag your own photos onto any image placeholders in this template, then crop or resize them if you wish. To add an image caption, select the image and then tap or click the Style tab in the Format controls.\n\nThis Term Paper template is set up for word processing, so your text flows from one page to the next as you type, with new pages created automatically when you reach the end of a page."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 18,
+      "text": "Geology 101 Report"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 19
+  }
+}

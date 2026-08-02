@@ -1,0 +1,316 @@
+{
+  "file": "numbers-parser-v26.1-date-formats.numbers",
+  "sha1": "e5ea592c2221d851e7e31380e227ecd64d6fa9eb",
+  "app": "numbers",
+  "fileFormatVersion": "26.1.0",
+  "objects": 630,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState-909544.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 46
+    },
+    {
+      "name": "Index/Tables/DataList-904539.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904540.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904543.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904544.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904546.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904550.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904551.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904552.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904554.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904555.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905280-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 485
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 11,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Test"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Reference"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Sun5172026AD"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "SunMay1726AD"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "SundayMay172026AD"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "23451pm000"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "023451pm0000"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "023451pm00000"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "1372023"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "1372023"
+              },
+              {
+                "r": 9,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "1372023"
+              },
+              {
+                "r": 10,
+                "c": 0,
+                "v": "2026-05-17T14:35:12.000Z"
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "prefix2026suffix"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

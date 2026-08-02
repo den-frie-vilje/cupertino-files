@@ -1,0 +1,279 @@
+{
+  "file": "ndpi-v10.0-change-tracking.pages",
+  "sha1": "25448b017acd6bf394605c62604776d9860311c3",
+  "app": "pages",
+  "fileFormatVersion": "10.0.10",
+  "objects": 709,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 112
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 9
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 41
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-3246.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3248-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3249-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3250-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3251-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3252-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3253-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3254-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3255-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3256-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3257-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-3305.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3306-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3307-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3308-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3309-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3310-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3311-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3312-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3313-2.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/Tables/DataList-3314-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3315-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3316-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3592-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-3593.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-3594.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-3595-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet-2211.iwa",
+      "objects": 495
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 9
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 21281,
+      "text": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nnDPI - Quick Start Guide\nOpen and Extensible LGPLv3 Deep Packet Inspection Library\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nVersion 3.31.86\nJulyJulyOctober 2020165\n\n\n\n© 2011-20165\n\u0005\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n￼\n\u0005Table of Contents\n\n1. Introduction\t4\n1.1 \tDownload Source\t4\n2. nDPI Library\t5\n2.1 \tCompiling nDPI Source Code\t5\n2.2 \tCompiling the demo pcapReader Source Code\t5\n2.3 \tpcapReader Command Line Options\t5\n2.4 \tProtocol File\t6\n3. Examples\t8\n3.1 \tLive Capture Mode\t8\n3.2 \tpcap Capture Mode\t8\n3.3 \tProtocol File\t9\n4. API nDPI\t10\n5. Developing nDPI custom protocol\t13\n5.1 \tIntroduction\t13\n5.2 \tCreating new protocol\t13\n5.3 \tAdd your protocol to nDPI\t15\n\u00051. Introduction\n\nnDPI is a DPI library based on OpenDPI and currently maintained by ntop.\n\nIn order to provide you a cross-platform DPI experience, we also support Windows, in addition to Unix/Linux. Furthermore, we have modified nDPI to make it more suitable for traffic monitoring applications.We have achieved this by disabling specific features that are unnecessary for network traffic monitoring, thereby speeding up  the DPI engine. \n\nnDPI allows application-layer detection of protocols, regardless of the port being used. This means that it is possible to both detect known protocols on non-standard ports (e.g. detect HTTP on ports other than 80), and also the opposite (e.g. detect Skype traffic on port 80). This is because nowadays the concept of port = application no longer holds.\n\nOver the past few months we have added several features including:\nEnhancement of the demo ndpiReader application both in terms of speed/features and encapsulations supported (for instance you can now analyse GTP tunnelled traffic).\nAbility to compile nDPI inside the Linux kernel so that you can use it for developing efficient kernel-based modules.\nVarious speed enhancements so that nDPI is now faster than its predecessor.\nAdded many protocols (to date we support ~170200+ protocols) ranging from “business” protocols such as SAP and Citrix, as well as “desktop” protocols such as Dropbox and Spotify.\nAbility to define port (and port range)-based protocol detection, so that you can complement protocol detection with classic port-based detection.\nIn order to let nDPI support encrypted connections, we have added a decoder for SSL (both client and server) certificates, thus we can figure out the protocol using the encryption certificate. This allows us to identify protocols such as Citrix Online and Apple iCloud that otherwise would be undetected.\nAbility to support sub-protocols using string-based matching\n\n1.1 \tDownload Source\n\nnDPI is automatically downloaded when you build ntop and nProbe. However nothing prevents you from using it as a standalone DPI library. The source code can be downloaded from https://github.com/ntop/nDPI. A ndpi-dev package is also available from http://packages.ntop.org/ including binary libraries and header files.\n\n\u00052. nDPI Library\n\n2.1 \tCompiling nDPI Source Code\n\nStart using nDPI Library is very simple. In order to compile this library you must meet certain prerequisites such as:\n\n\tGNU autotools/libtool\n\tgawk\n\tgcc\n\nTo do this you need to install them using the following commands:\n\n\tFedora \t\tyum groupinstall Development tools\n\t\t\tyum install automake libpcap-devel gcc-c++ libtool\n\tDebian \t\tapt-get install build-essential libpcap-dev\n\tMac OSX\tport install XXX (Please install macports)\n\nOnce done that, you can compile the nDPI source code as follows: \n\ncd <nDPI source code directory>\n./autogen.sh\n./configure\nmake\n\n2.2 \tCompiling the demo ndpiReader Source Code\n\nStarting using ndpiReader demo is also simple. In order to compile this you must use the following command:\n\ncd <nDPI source code directory>/example\nmake\n\n2.3 \tndpiReader Command Line Options\n\nThe demo ndpiReader application can be used both in terms of speed/features analysis and encapsulations support. In particular, it is possible to specify a lot of command line options. \nThe available options and a minimal explanation of each option are listed below:\n\nndpiReader -i <file|device> [-f <filter>][-s <duration>]\n          [-p <protos>][-l <loops> [-q][-d][-h][-t][-v <level>]\n          [-n <threads>] [-w <file>] [-j <file>]\n\nUsage:\n  -i <file.pcap|device>     | Specify a pcap file/playlist to read packets from or a device for live capture (comma-separated list)\n  -f <BPF filter>           | Specify a BPF filter for filtering selected traffic\n  -s <duration>             | Maximum capture duration in seconds (live traffic capture only)\n  -p <file>.protos          | Specify a protocol file (eg. protos.txt)\n  -l <num loops>            | Number of detection loops (test only)\n  -n <num threads>          | Number of threads. Default: number of interfaces in -i. Ignored with pcap files.\n  -j <file.json>            | Specify a file to write the content of packets in .json format\n  -d                        | Disable protocol guess and use only DPI\n  -q                        | Quiet mode\n  -t                        | Dissect GTP tunnels\n  -r                        | Print nDPI version and git revision\n  -w <path>                 | Write test output on the specified file. This is useful for\n                            | testing purposes in order to compare results across runs\n  -h                        | This help\n  -v <1|2>                  | Verbose 'unknown protocol' packet print. 1=verbose, 2=very verbose\n\ni <file.pcap|device>\n\tThis specifies a pcap file to read packets from or a device for live capture. Only one \tof these two can be specified.\n\nf <BPF filter>\n\tIt specifies a BPF filter for filtering selected traffic. It allows nDPI to take only those \tpackets that match the filter (if specified). \n\ns <duration>\n\tIt defines the capture duration in seconds, only for live traffic capture.\n\np <file>.protos\n\tIt specifies a protocol file (e.g. protos.txt) to expand the support of sub-protocols \tand port-based protocol detection. Be careful, the protocol defined to protos file \toverwrites the existing protocol.\n\nl <num loops>\n\tNumber of detection loops (test only).\n\nd\n\tThis flag disables the nDPI protocol guess and uses only DPI.\n\nt\n\tIt dissects GTP tunnels \n\nh\n\tIt prints the ndpiReader help.\n\nv <1|2>\n\tUsing this flag, ndpiReader generates verbose output that can be used to tune its \tperformance. Number one is the lowest level that displays the packets with \t‘unknown protocol', number two is more verbose.\n\tUDP 62.101.93.101:53 > 192.168.1.132:56130 [proto: 5/DNS][2 pkts/260 bytes][chat.stackoverflow.com]\n\tTCP 192.168.1.132:59323 > 62.161.94.220:80 [proto: 7/HTTP][8 pkts/1925 bytes][]\n\tUDP 62.101.93.101:53 > 192.168.1.132:56682 [proto: 5/DNS][2 pkts/258 bytes][diy.stackexchange.com]\n\tUDP 62.101.93.101:53 > 192.168.1.132:56916 [proto: 5/DNS][2 pkts/524 bytes][conjugator.reverso.net]\n\t.....................................................................................\n\t.....................................................................................\n\tTCP 192.168.1.132:59323 > 62.161.94.220:80 [proto: 7/HTTP][8 pkts/1925 bytes][]\n\t\n\tUndetected flows:\n\t\n\tTCP 192.168.1.132:57995 > 157.55.133.142:12350 [proto: 0/Unknown][3 pkts/208 bytes][]\n\tTCP 65.55.223.47:33033 > 192.168.1.132:57997 [proto: 0/Unknown][8 pkts/547 bytes][]\n\tTCP 127.23.238.168:16384 > 240.199.103.219:0 [proto: 0/Unknown][11 pkts/1611 bytes][]\n\tTCP 127.23.238.168:0 > 240.199.103.219:16384 [proto: 0/Unknown][11 pkts/2734 bytes][]\n\n\n\n2.4 \tProtocol File\n\nnDPI has the ability to support sub-protocols using string-based matching. This is because many new sub-protocols such as Apple iCloud/iMessage, WhatsApp and many others use HTTP(S) that can be detected by decoding the SSL certificate host or the HTTP “Host:”. Thus we have decided to embed in nDPI an efficient string-matching library based on the popular Aho-Corasick algorithm for matching hundred of thousand sub-strings efficiently (i.e. fast enough to sustain 10 Gbit traffic on commodity hardware). \n\nYou can specify sub-protocols at runtime using a protocol file with the following format:\n\n\t\t# Subprotocols\n\t\t# Format:\n\t\t# host:\"<value>\",host:\"<value>\",.....@<subproto>\n\t\thost:\"googlesyndacation.com\"@Google\n\t\thost:\"venere.com\"@Veneer\n\nin addition you can specify a port-based protocol detection using the following format:\n\n\t\t#  Format:\n\t\t#  <tcp|udp>:,<tcp|udp>:,.....@\n\t\ttcp:81,tcp:8181@HTTP\n\t\tudp:5061-5062@SIP\n\t\ttcp:860,udp:860,tcp:3260,udp:3260@iSCSI\n\t\ttcp:3000@ntop\n\nYou can test your custom configuration using the ndpiReader (use -p option) application or enhance your application using the ndpi_load_protocols_file() nDPI API call.\n\u00053. Examples\n\nIn this section we show some ndpiReader use cases.\n \n3.1 \tLive Capture Mode\n\nThe following example shows the ndpiReader live capture mode by using the parameter -i to specify the device and the parameter -s to specify the live capture duration.\n\n$ ./ndpiReader -i eth0 -s 20\n\n-----------------------------------------------------------\n* NOTE: This is demo app to show *some* nDPI features.\n* In this demo we have implemented only some basic features\n* just to show you what you can do with the library. Feel \n* free to extend it and send us the patches for inclusion\n------------------------------------------------------------\n\nUsing nDPI nDPI ($Revision: #### $)\nCapturing live traffic from device eth0...\nCapturing traffic up to 20 seconds\n\npcap file contains\n\tIP packets:   2390          of 2391 packets total\n\tIP bytes:     1775743      \n\tUnique flows: 78           \n\tnDPI throughout: 122.30 pps / 709.92 Kb/sec\n\tGuessed flow protocols: 0            \n\n\nDetected protocols:\n\tDNS                  packets: 57            bytes: 7904          flows: 28           \n\tSSL_No_Cert          packets: 483           bytes: 229203        flows: 6            \n\tFaceBook             packets: 136           bytes: 74702         flows: 4            \n\tDropBox              packets: 9             bytes: 668           flows: 3            \n\tSkype                packets: 5             bytes: 339           flows: 3            \n\tGoogle               packets: 1700          bytes: 619135        flows: 34\n\n3.2 \tpcap Capture Mode\n\nThe most simple way to create a pcap file is to use tcpdump command as in the following example:\n\nntop$ tcpdump -ni eth0 -s0 -w /var/tmp/capture.pcap -v\ntcpdump: listening on en1, link-type EN10MB (Ethernet), capture size 65535 bytes\nGot 0\nGot 64\nGot 75\nGot 76\n^C122 packets captured\n122 packets received by filter\n0 packets dropped by kernel\n\nOnce the pcap file has been created you will be able to launch the demo ndpiReader with  the parameter -i:\n\n$ ./ndpiReader -i /var/tmp/capture.pcap  \n\n-----------------------------------------------------------\n* NOTE: This is demo app to show *some* nDPI features.\n* In this demo we have implemented only some basic features\n* just to show you what you can do with the library. Feel \n* free to extend it and send us the patches for inclusion\n------------------------------------------------------------\n\nUsing nDPI nDPI ($Revision: #### $)\nReading packets from pcap file /var/tmp/capture.pcap...\n\npcap file contains\n\tIP packets:   4911          of 4911 packets total\n\tIP bytes:     3321544      \n\tUnique flows: 145          \n\tnDPI throughout: 612.80 K pps / 3.09 Gb/sec\n\tGuessed flow protocols: 11           \n\n\nDetected protocols:\n\tUnknown              packets: 6             bytes: 764           flows: 1            \n\tDNS                  packets: 50            bytes: 6158          flows: 25           \n\tHTTP                 packets: 2537          bytes: 841638        flows: 73           \n\tSSL_No_Cert          packets: 1522          bytes: 303380        flows: 10           \n\tSSL                  packets: 24            bytes: 1648          flows: 8            \n\tFaceBook             packets: 644           bytes: 201216        flows: 17           \n\tSkype                packets: 11            bytes: 872           flows: 6            \n\n\n\n3.3 \tProtocol File\n\nIn order to clarify the features of the protocol file we are now going to explain how you can identify the flow of ntop.org. \n\nFor instance it is possible to do it by editing protos.txt.\n\n\tntop$ echo 'host:\"ntop.org\"@nTop'> protos.txt\n\nOnce the protocol file has been modified you will be able to launch the demo ndpiReader with  the parameter -p:\n\n$ ./ndpiReader -i en1 -s 30 -p protos.txt\n\n-----------------------------------------------------------\n* NOTE: This is demo app to show *some* nDPI features.\n* In this demo we have implemented only some basic features\n* just to show you what you can do with the library. Feel \n* free to extend it and send us the patches for inclusion\n------------------------------------------------------------\n\nUsing nDPI nDPI ($Revision: #### $)\nCapturing live traffic from device en1...\nCapturing traffic up to 30 seconds\n\n\nWARNING: only IPv4/IPv6 packets are supported in this demo (nDPI supports both IPv4 and IPv6), all other packets will be discarded\n\n\npcap file contains\n\tIP packets:   4755          of 4757 packets total\n\tIP bytes:     1766370      \n\tUnique flows: 245          \n\tGuessed flow protocols: 16           \n\nDetected protocols:\n\tUnknown              packets: 1             bytes: 94            flows: 1            \n\tDNS                  packets: 38            bytes: 5160          flows: 19           \n\tHTTP                 packets: 265           bytes: 59831         flows: 20           \n\tSSDP                 packets: 20            bytes: 9564          flows: 14           \n\tSSL                  packets: 33            bytes: 2572          flows: 13           \n\tDropBox              packets: 17            bytes: 2481          flows: 6            \n\tSkype                packets: 12            bytes: 944           flows: 2            \n\tGoogle               packets: 2544          bytes: 612765        flows: 94           \n\tnTop                 packets: 407           bytes: 66765         flows: 32          \n\u0005\n4. API nDPI\n \nIn this section the nDPI API is highlighted.\n\nThe demo ndpiReader will be now taken has a basic example to show how to initialize the library. It is required to have a compiled library and a properly configured Makefile (i.e the demo Makefile).\n\nTo start to using the API of nDPI within your application - in addition to your includes - you must also add the following include file:\n\n#include \"ndpi_main.h\"\n\n\nThe library can be initialized as follows:\n\n Declare the protocol bitmask and initialise the detection module\n\nNDPI_PROTOCOL_BITMASK all;\nndpi_struct = ndpi_init_detection_module(\n\tdetection_ticks_resolution,\n\tmalloc_wrapper,\n\tfree_wrapper,\n\tdebug_printf);\n\nThis function will allow you to initialise the detection module. The fields have the following meanings:\n u_int32_t ticks_per_second;   The timestamp resolution per second (like 1000 for millisecond resolution).\n void* (*__ndpi_malloc)(unsigned long size);   Function pointer to a memory allocator.\nvoid* (*__ndpi_free)(void* prt);   Function pointer to a debug output function, use NULL in productive environments.\n\n Enable all protocols (note that you can enable a subset of the protocols if you ) via the appropriate macro and set them within the detection module.\n\n// enable all protocols\nNDPI_BITMASK_SET_ALL(all);\nndpi_set_protocol_detection_bitmask2(ndpi_struct, &all);\n\nThis function will allow you to set the protocol bitmask  already defined within the detection module.\n\n In order to load an existing protocol file you must use the following function:\n\ndpi_load_protocols_file(ndpi_struct, _protoFilePath);\n\n Once captured the flows from your pcap file or ingress device, they can be analyzed by using the following function:\n\nprotocol = (const u_int32_t)ndpi_detection_process_packet(\n\tndpi_struct,\n\tndpi_flow,iph ? (uint8_t *)iph : (uint8_t *)if,\n\tipsize,\n\ttime,\n\tsrc,\n\tdst);\n\nThe fields have the following meanings:\n struct ndpi_detection_module_struct *ndpi_struct;   The detection module.\n struct ndpi_flow_struct *flow;   Flow void pointer to the connection state machine.\n const unsigned char *packet;   The packet as unsigned char pointer with the length of packetlen. The pointer    must point to the Layer 3 (IP header).\n const unsigned short packetlen;   Packetlen the length of the packet.\nconst u_int32_t current_tickt;   The current timestamp for the packet.\n struct ndpi_id_struct *src;   Void pointer to the source subscriber state machine.\n struct ndpi_id_struct *dst;   Void pointer to the destination subscriber state machine.\n\n Once the flows have been analysed, it is necessary to destroy the detection module via the use of the following function:\n\nndpi_exit_detection_module(ndpi_struct, free_wrapper);\n\nThe fields have the following meanings:\n struct ndpi_detection_module_struct* ndpi_struct;   The detection module to be cleared.\n void (*ndpi_free) (void *ptr);   Function pointer to a memory free function.\n\n\u0005\nFor further information we suggest to read the files \n\nnDPI/example/ndpiReader.c,\nnDPI/src/include/ndpi_structs.h,\nnDPI/src/include/ndpi_public_functions.h \nnDPI/src/ndpi_main.c.\n\nThe protocol dissector files are contained in the nDPI/src/protocols directory.\n\u00055. Developing nDPI custom protocol\n\nIn this section we show the way to include your protocol inside nDPI.\n \n5.1 \tIntroduction\n\nEach nDPI protocol is implemented as an entry function to be used at runtime by nDPI. The nDPI comes with several protocols that can be used as example for this activity. Below, we list the main concepts you need to know if you plan to develop an nDPI protocol.\n\n5.2 \tCreating new protocol\n\nEach protocol has to have a corresponding #define inside the following include file\n\n<nDPI source code directory>/src/include/ndpi_protocols_osdpi.h\n\nas follow\n\n#define NDPI_PROTOCOL_MY_PROTOCOL\t\t171\n\nwhere NDPI_PROTOCOL_MY_PROTOCOL is the protocol “name” and 171 is the protocol ID that must be unique.\n\nOnce the protocol has been defined, you must create a new protocol source file like \n\n<nDPI source code directory>/src/lib/protocols/my_protocol.c\n\nwith the following content\n\n#include \"ndpi_utils.h\"\n\n#ifdef NDPI_PROTOCOL_MY_PROTOCOLS\n\n.....\n\n#endif\n\nwhere it will be necessary to define an entry function as a follow\n\nvoid ndpi_search_my_protocol(\n\tstruct ndpi_detection_module_struct *ndpi_struct, \n\tstruct ndpi_flow_struct *flow)\n{\n  struct ndpi_packet_struct *packet = &flow->packet;\n\n  NDPI_LOG(NDPI_PROTOCOL_MY_PROTOCOL, ndpi_struct, NDPI_LOG_DEBUG, \"my protocol detection...\\n\");\n\n  /* skip marked packets by checking if the detection protocol stack */\n  if (packet->detected_protocol_stack[0] != NDPI_PROTOCOL_MY_PROTOCOL) {\n   \tndpi_check_my_protocol(ndpi_struct, flow);\n  }\n}\n\nand a  detection core function to process a packet of a flow with the following content\n\nstatic void ndpi_check_my_protocol(\nstruct ndpi_detection_module_struct *ndpi_struct, \nstruct ndpi_flow_struct *flow)\n{\n\tstruct ndpi_packet_struct *packet = &flow->packet;  \n\tu_int32_t payload_len = packet->payload_packet_len;\n\n  \t.....\n \t.....\n\t\n\tif(“Found Protocol”) {\n\t  \n\t\tNDPI_LOG(NDPI_PROTOCOL_MY_PROTOCOL, ndpi_struct, \t\t\tNDPI_LOG_DEBUG, \"Found \tmy protocol.\\n\");\n\t\n\t\tndpi_int_my_protocol_add_connection(ndpi_struct, flow);\n\n\t\treturn;\n\t}\n       \n\t/*Exclude Protocol*/\n\tNDPI_LOG(NDPI_PROTOCOL_MY_PROTOCOL, ndpi_struct, NDPI_LOG_DEBUG, \n\t         “exclude my protocol.\\n\");\n\n\tNDPI_ADD_PROTOCOL_TO_BITMASK(\n\t\tflow->excluded_protocol_bitmask, \n\t\tNDPI_PROTOCOL_MY_PROTOCOL);\n\t}\n\n}\n\nand a specific function to report the correct identification of the protocol as follow\n\nstatic void ndpi_int_my_protocol_add_connection(\n\tstruct ndpi_detection_module_struct *ndpi_struct,\n\tstruct ndpi_flow_struct *flow,\n\tu_int8_t due_to_correlation)\n{\n  ndpi_int_add_connection(ndpi_struct, flow,\n\t\t\tNDPI_PROTOCOL_MY_PROTOCOL,\n\t\t\t/*Choose the type of your protocol*/  \n\t\t\tNDPI_CORRELATED_PROTOCOL or NDPI_REAL_PROTOCOL);\n}\n\n\n\n\n\n\n\n\n\n\n\n\n5.3 \tAdd your protocol to nDPI\n\nOnce the protocol has been created, you must declare your entry function in the following include file\n\n<nDPI source code directory>/src/include/ndpi_protocols.h \n\nwith the following content\n\n/* my protocol entry */\nvoid ndpi_search_my_protocol(\n\tstruct ndpi_detection_module_struct *ndpi_struct,\n\tstruct ndpi_flow_struct *flow);\n\n\nEach protocol must be associated with a NDPI_SELECTION_BITMASK. The full list of NDPI_SELECTION_BITMASK is contained in the file \n\n<nDPI source code directory>/src/include/ndpi_define.h\n\nAfter choosing the selection bitmask for your protocol, you must inform nDPI of the new protocol by editing the file \n\n<nDPI source code directory>/src/lib/ndpi_main.c\n\nit is necessary to add your protocol to the the function as follow\n\nvoid ndpi_set_protocol_detection_bitmask2(\n\t\tstruct ndpi_detection_module_struct *ndpi_struct,\n\t\tconst NDPI_PROTOCOL_BITMASK * dbm)\n.....\n.....\n.....\n\n\n#ifdef NDPI_PROTOCOL_MY_PROTOCOL\n  ndpi_set_bitmask_protocol_detection(ndpi_struct,detection_bitmask,a,\n\t\t\t\t      NDPI_PROTOCOL_MY_PROTOCOL,\n\t\t\t\t      ndpi_search_my_protocol,\n\t\t\t\t      NDPI_SELECTION_BITMASK_MY_PROTOCOL,\n\t\t\t\t      SAVE_DETECTION_BITMASK_AS_UNKNOW,\n\t\t\t\t      ADD_TO_DETECTION_BITMASK);\n\n  /* Update callback_buffer index */\n  a++;\n#endif\n\n.....\n.....\n.....\n\nndpi_struct->callback_buffer_size = a;\n\n  NDPI_LOG(NDPI_PROTOCOL_UNKNOWN, ndpi_struct, NDPI_LOG_DEBUG,\n\t   \"callback_buffer_size is %u\\n\", ndpi_struct->callback_buffer_size);\n\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 24,
+      "text": "nDPI - Quick Start Guide"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 18,
+      "text": "nDPI - Quick Start"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "CELL",
+      "characters": 12,
+      "text": "www.ntop.org"
+    },
+    {
+      "kind": "CELL",
+      "characters": 9,
+      "text": "ntop site"
+    },
+    {
+      "kind": "CELL",
+      "characters": 8,
+      "text": "nDPI web"
+    },
+    {
+      "kind": "CELL",
+      "characters": 34,
+      "text": "http://www.ntop.org/products/ndpi/"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 590
+  }
+}

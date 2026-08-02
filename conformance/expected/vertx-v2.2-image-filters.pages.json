@@ -1,0 +1,149 @@
+{
+  "file": "vertx-v2.2-image-filters.pages",
+  "sha1": "d8911fd500fddc766550e30cda35b5badd93f860",
+  "app": "pages",
+  "fileFormatVersion": "2.2.4",
+  "objects": 315,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 58
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/CalculationEngine-3236.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/DocumentStylesheet-3239.iwa",
+      "objects": 241
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-3235.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 83,
+      "text": "A gentle guide to\nasynchronous programming\nwith Eclipse Vert.x \nfor Java developers"
+    },
+    {
+      "kind": "BODY",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 47,
+      "text": "By Julien Ponge, Thomas Segismont & Julien Viet"
+    }
+  ],
+  "pages": {
+    "isPageLayout": true,
+    "sections": 1,
+    "paragraphs": 1
+  }
+}
