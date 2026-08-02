@@ -97,7 +97,20 @@ const RED_DOT = Uint8Array.from(
   (c) => c.charCodeAt(0),
 );
 
-const RUNGS: { name: string; note: string; build: (doc: PagesDocument) => void }[] = [
+/**
+ * A rung may name its own base when the shared ones cannot express it.
+ *
+ * Both ladder bases are deliberately plain, which makes them useless for
+ * testing drawable placement — there is nothing on the page to copy. Rather
+ * than make the bases busier and every other rung harder to read, the one
+ * rung that needs a drawable brings its own document.
+ */
+const RUNGS: {
+  name: string;
+  note: string;
+  base?: URL;
+  build: (doc: PagesDocument) => void;
+}[] = [
   {
     name: "P00-untouched",
     note: "loaded and saved with no edit at all — isolates the container layer",
@@ -276,6 +289,26 @@ const RUNGS: { name: string; note: string; build: (doc: PagesDocument) => void }
     },
   },
   {
+    name: "P19-copy-drawable",
+    // The plain bases have no drawable to copy, so this one supplies a
+    // document that does: current format, six sections, a group on page 1.
+    base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
+    note: "a floating drawable copied onto a later page — the placement claim",
+    build: (doc) => {
+      const pages = doc.floatingDrawablePages();
+      const from = pages[0];
+      if (from === undefined) throw new Error("base has no floating drawables");
+      const source = doc.floatingDrawables(from)?.drawables()[0];
+      if (!source) throw new Error("no drawable to copy");
+      // Onto a page that has none, offset so it cannot be confused with the
+      // original if both happen to land on screen together.
+      // The target page has no drawables, so it has no page group either.
+      const target = doc.floatingDrawables(from + 2, { create: true });
+      if (!target) throw new Error("no container for the target page");
+      target.addCopyOf(source, { x: 100, y: 300 });
+    },
+  },
+  {
     name: "P11-inline-image",
     note: "a 1x1 red PNG inserted inline and scaled up — the experimental one",
     build: (doc) => {
@@ -299,9 +332,11 @@ function main(argv: string[]): number {
     assertPlainBase(bytes);
     console.log(`\n=== ${base.tag}: ${base.note} ===`);
     for (const rung of RUNGS) {
+      // A rung with its own base is emitted once, not per base.
+      if (rung.base && base !== BASES[0]) continue;
       const path = `${outDir}/${base.tag}-${rung.name}.pages`;
       try {
-        const doc = PagesDocument.load(bytes);
+        const doc = PagesDocument.load(rung.base ? new Uint8Array(readFileSync(rung.base)) : bytes);
         rung.build(doc);
         writeFileSync(path, doc.save());
         console.log(`${(base.tag + "-" + rung.name).padEnd(28)} ${rung.note}`);

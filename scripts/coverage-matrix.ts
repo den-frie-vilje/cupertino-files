@@ -519,7 +519,12 @@ export const CAPABILITIES: Capability[] = [
           (c.numbers?.sheets().some((s) => c.numbers!.sheetContainer(s.id).ids().length > 0) ?? false) ||
           (c.pages?.floatingDrawablePages().length ?? 0) > 0,
       ),
-    note: "one abstraction over three containers; copies are deep so the two objects are independent",
+    note:
+      "one abstraction over three containers; copies are deep so the two objects are independent. " +
+      "In Pages a page with no floating objects has no page_groups entry at all, so placing the " +
+      "first drawable on a page needs floatingDrawables(page, { create: true }) — the created " +
+      "group carries the two fields every group in the corpus carries, page index and drawable " +
+      "list, inserted in page order",
     manualProof: {
       claim: "A drawable we copied onto another page/slide/sheet appears there, at the geometry we set.",
       why:

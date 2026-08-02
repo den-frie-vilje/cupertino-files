@@ -74,7 +74,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent</sub> | all | ✅ read + write | 27 | iwork16→current |
+| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 27 | iwork16→current |
 | Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 37 | all |
 | Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 37 | all |
 | Geometry (enumerate, move, resize) | all | ✅ read + write | 34 | iwork16→current |

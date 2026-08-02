@@ -631,16 +631,41 @@ export class PagesDocument extends IWorkDocument {
    * page that has any, each with background, foreground and main lists.
    * `pageIndex` selects the group; omit it for the first one the document
    * has. Pages with no floating objects have no group, so a document can
-   * be missing the page you ask for even though the page exists.
+   * be missing the page you ask for even though the page exists — which is
+   * why `create` exists: without it there is no way to put the first
+   * drawable on a page, and "copy this onto page 3" is the ordinary case.
+   *
+   * A created group carries exactly what Apple's do. Every page group in
+   * every fixture here holds two fields and no others — the page index and
+   * the drawable list — and `libetonyek-pages5-extra-dir` has three of them
+   * for pages 0, 1 and 2, in page order, which is what the insert below
+   * preserves.
    */
-  floatingDrawables(pageIndex?: number): DrawableContainer | undefined {
+  floatingDrawables(
+    pageIndex?: number,
+    options: { create?: boolean } = {},
+  ): DrawableContainer | undefined {
     const holder = this.store.resolve(refId(this.docObject.message, TPDocument.FLOATING_DRAWABLES));
     if (!holder) return undefined;
     const groups = holder.message.getMessages(FloatingDrawables.PAGE_GROUPS);
-    const group =
+    let group =
       pageIndex === undefined
         ? groups[0]
         : groups.find((g) => (g.getUint(PageGroup.PAGE_INDEX) ?? 0) === pageIndex);
+    if (!group && options.create && pageIndex !== undefined) {
+      const fresh = RawMessage.create();
+      fresh.setVarint(PageGroup.PAGE_INDEX, pageIndex);
+      const ordered = [...groups, fresh].sort(
+        (a, b) => (a.getUint(PageGroup.PAGE_INDEX) ?? 0) - (b.getUint(PageGroup.PAGE_INDEX) ?? 0),
+      );
+      holder.message.setMessages(FloatingDrawables.PAGE_GROUPS, ordered);
+      holder.message.markDirty();
+      // Re-read: setMessages re-parses, so the instance to write through is
+      // the one now owned by the holder, not the one just built.
+      group = holder.message
+        .getMessages(FloatingDrawables.PAGE_GROUPS)
+        .find((g) => (g.getUint(PageGroup.PAGE_INDEX) ?? 0) === pageIndex);
+    }
     if (!group) return undefined;
     // The group is an inline submessage, so the container writes through
     // the holder object it belongs to.
