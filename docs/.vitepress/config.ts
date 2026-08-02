@@ -61,7 +61,7 @@ export default defineConfig({
         ],
       },
     ],
-    socialLinks: [{ icon: "github", link: "https://github.com/olekristensen/cupertino-files" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/den-frie-vilje/cupertino-files" }],
     search: { provider: "local" },
     outline: { level: [2, 3] },
     footer: {
@@ -69,7 +69,7 @@ export default defineConfig({
         "MIT licensed. Independently made — not by Apple in California. Not affiliated with or endorsed by Apple Inc.",
     },
     editLink: {
-      pattern: "https://github.com/olekristensen/cupertino-files/edit/main/docs/:path",
+      pattern: "https://github.com/den-frie-vilje/cupertino-files/edit/main/docs/:path",
       text: "Suggest a change to this page",
     },
   },

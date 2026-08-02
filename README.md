@@ -3,7 +3,7 @@
 **Read, inspect, and edit Apple iWork documents — Pages, Numbers, Keynote —
 in pure TypeScript. Zero runtime dependencies, no Apple software required.**
 
-**Documentation: <https://olekristensen.github.io/cupertino-files/>**
+**Documentation: <https://den-frie-vilje.github.io/cupertino-files/>**
 
 Apple's modern document format (2013 → today) is a ZIP package of
 Snappy-compressed protobuf object graphs. This library implements the whole

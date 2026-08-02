@@ -14,7 +14,7 @@ hero:
       link: /FORMAT
     - theme: alt
       text: GitHub
-      link: https://github.com/olekristensen/cupertino-files
+      link: https://github.com/den-frie-vilje/cupertino-files
 
 features:
   - icon: 📄

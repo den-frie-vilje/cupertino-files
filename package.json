@@ -21,7 +21,7 @@
   "author": "Ole Kristensen <ole@kristensen.name>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/olekristensen/cupertino-files.git"
+    "url": "git+https://github.com/den-frie-vilje/cupertino-files.git"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -92,5 +92,5 @@
     "typescript-eslint": "^8.65.0",
     "vitepress": "^1.6.4"
   },
-  "homepage": "https://olekristensen.github.io/cupertino-files/"
+  "homepage": "https://den-frie-vilje.github.io/cupertino-files/"
 }
