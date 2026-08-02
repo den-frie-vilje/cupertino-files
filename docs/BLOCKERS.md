@@ -126,6 +126,13 @@ because none of them was visible offline:
    corpus boundaries put U+0004 where the previous paragraph's newline
    was; ours wrote only the `table_section` entry, and Pages knew the
    section without paginating it ("P07 fails, not on a new page").
+10. **A point-anchored table must never hold an objectless entry.** Every
+   newly created attribute table was seeded with an empty entry at 0 —
+   right for run tables, where it means "nothing in effect", fatal for
+   `table_footnote`/`table_attachment`, where an entry is an object at a
+   position: Pages crashed on open walking the footnote table ("P09 pages
+   crashed on open"). 107 such tables in the corpus; zero objectless
+   entries.
 
 Each is now guarded by a test that measures the rule from the corpus rather
 than restating a conclusion, so a future Pages that changes one fails the
@@ -133,9 +140,12 @@ suite instead of a document.
 
 **Not yet checked:** P04 (hyperlink), P05 (header/footer), P06 (page
 number), P07 (section break — rebuilt with the U+0004 fix after its first
-check failed), P08 (comment), P09 (footnote), P10 (page setup), P11
-(inline image). P07, P09 and P11 carry fresh fixes and are the
-highest-value opens. Nothing about them is known to be wrong;
+check failed), P08 (comment), P09 (footnote — rebuilt after its
+first check crashed Pages; the objectless seed entry is gone), P10 (page
+setup), P11 (inline image — rebuilt for the same reason: its attachment
+rode on an already-present table, but rebuilt files are the ones to
+trust). P07, P09 and P11 carry fresh fixes and are the highest-value
+opens. Nothing about them is known to be wrong;
 nothing is known to be right. (P18's corrected bookmark — named,
 `ranged=true`, spanning its phrase — is confirmed.)
 

@@ -756,3 +756,84 @@ describe("a section break is a character as well as a table entry", () => {
     expect(`uncovered: ${uncovered.join(",")}`).toBe("uncovered: ");
   });
 });
+
+describe("point-anchored tables never hold an objectless entry", () => {
+  // P09 crashed Pages on open. The library seeded every newly created
+  // attribute table with an objectless entry at 0 — correct for run-shaped
+  // tables, where it means "nothing in effect from here", and fatal for
+  // point-anchored ones, where an entry IS an object at a position: the
+  // footnote-numbering walk dereferenced the entry that named nothing.
+  // Ten confirmed rungs never hit it because they never created one of
+  // these tables from nothing.
+  const POINT = [9, 16]; // table_attachment, table_footnote
+
+  const objectless = (doc: PagesDocument): string[] => {
+    const out: string[] = [];
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== 2001) continue;
+      for (const field of POINT) {
+        let table: RawMessage | undefined;
+        try {
+          table = obj.message.getMessage(field);
+        } catch {
+          continue;
+        }
+        for (const entry of table?.getMessages(1) ?? []) {
+          let ref: bigint | undefined;
+          try {
+            ref = entry.getMessage(2)?.getVarint(1);
+          } catch {
+            ref = undefined;
+          }
+          if (ref === undefined) out.push(`#${obj.identifier}.${field}@${entry.getUint(1)}`);
+        }
+      }
+    }
+    return out;
+  };
+
+  it("matches the corpus: dozens of such tables, zero objectless entries", () => {
+    // 45 in the Pages fixtures alone (107 across all three apps).
+    let tables = 0;
+    const bad: string[] = [];
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        if (obj.type !== 2001) continue;
+        for (const field of POINT) {
+          try {
+            if (obj.message.getMessage(field)) tables++;
+          } catch {
+            continue;
+          }
+        }
+      }
+      bad.push(...objectless(doc).map((x) => `${name}:${x}`));
+    }
+    expect(tables >= 45).toBe(true);
+    expect(`corpus objectless: ${bad.join(" ")}`).toBe("corpus objectless: ");
+  });
+
+  it("authors a footnote without one, in the body and in the note", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("a sentence that carries a footnote.");
+    doc.body.addFootnote(doc.body.text.length - 1, "the note");
+    const saved = PagesDocument.load(doc.save());
+    expect(`objectless: ${objectless(saved).join(" ")}`).toBe("objectless: ");
+    expect(saved.body.footnotes().length).toBe(1);
+  });
+
+  it("authors an inline attachment without one", () => {
+    const doc = PagesDocument.load(TEMPLATE);
+    doc.appendParagraph("a page number follows: ");
+    doc.body.insertPageNumber(doc.body.text.length);
+    const saved = PagesDocument.load(doc.save());
+    expect(`objectless: ${objectless(saved).join(" ")}`).toBe("objectless: ");
+  });
+});

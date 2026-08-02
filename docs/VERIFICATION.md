@@ -316,7 +316,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** a footnote this library creates is numbered and laid out by Pages
 
-**Why the suite cannot settle it.** numbering depends on how many footnotes precede it and on the document's footnote settings, both resolved during layout. The note's storage was also, until the shape audit ran, missing all six attribute tables that 2676 of 2676 corpus storages carry — `table_para_style` among them, which is where a paragraph's style lives. The same omission in the body rendered a whole document unstyled, so a footnote written before that fix would most likely have appeared with no style at all.
+**Why the suite cannot settle it.** The first in-app check crashed Pages on open. Cause, measured: every newly created attribute table was seeded with an objectless entry at index 0 — harmless in run-shaped tables, where it means "nothing in effect", fatal in the point-anchored `table_footnote`/`table_attachment`, where an entry is an object at a position and the numbering walk dereferences it. 107 point-anchored tables in the corpus carry zero objectless entries. The seed is now shape-aware, and the earlier shape-audit fix (the six attribute tables all 2676 corpus storages carry) still stands.
 
 **How to settle it.** add footnotes at two positions, open in Pages, and confirm they number in document order, render at the page foot, and are set in the document's Footnote style rather than in the body face
 

@@ -654,13 +654,23 @@ export class TextStorage {
   }
 
   private ensureTable(tableField: number): void {
-    if (!this.msg.has(tableField)) {
-      const table = RawMessage.create();
+    if (this.msg.has(tableField)) return;
+    const table = RawMessage.create();
+    // Run-shaped tables get a leading objectless entry — "nothing in effect
+    // from 0" — which is a marker the corpus itself carries. Point-anchored
+    // tables must NOT: there an entry *is* an object at a position, and an
+    // objectless one is a null attachment. Across all 107 attachment and
+    // footnote tables in the corpus there is not a single objectless entry,
+    // and seeding one crashed Pages on open — the app walked the footnote
+    // table to number the notes and dereferenced the entry that named
+    // nothing. First created-from-nothing table in the ladder, which is why
+    // ten confirmed rungs never hit it.
+    if (!POINT_ANCHORED_OBJECT_TABLES.includes(tableField)) {
       const entry = RawMessage.create();
       entry.setVarint(ENTRY_CHARACTER_INDEX, 0);
       table.addMessage(ATTR_TABLE_ENTRIES, entry);
-      this.msg.setMessage(tableField, table);
     }
+    this.msg.setMessage(tableField, table);
   }
 
   // -------------------------------------------------------- styles & fluency
