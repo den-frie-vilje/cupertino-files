@@ -906,3 +906,67 @@ describe("a footnote mark is superscripted, in the body and in the note", () => 
     }
   });
 });
+
+describe("a comment always names an author", () => {
+  // "P08 can't read comment on iPhone." Every corpus comment carries
+  // field 3, a reference to a named TSK.AnnotationAuthorArchive listed in
+  // the document's roster; ours wrote none when the document had no
+  // existing author to reuse — the ladder base has a roster wired to the
+  // document root with zero authors in it. Pages for iOS showed the
+  // authorless comment as an unreadable placeholder.
+  const COMMENT = 3056;
+
+  it("matches the corpus: every comment carries an author reference", () => {
+    let comments = 0;
+    const bad: string[] = [];
+    for (const name of readdirSync(FIXTURES)) {
+      if (!name.endsWith(".pages")) continue;
+      let doc: PagesDocument;
+      try {
+        doc = PagesDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        if (obj.type !== COMMENT) continue;
+        comments++;
+        let author: bigint | undefined;
+        try {
+          author = obj.message.getMessage(3)?.getVarint(1);
+        } catch {
+          author = undefined;
+        }
+        if (author === undefined || !doc.store.resolve(author)) bad.push(`${name}#${obj.identifier}`);
+      }
+    }
+    expect(comments >= 4).toBe(true);
+    expect(`authorless corpus comments: ${bad.join(" ")}`).toBe("authorless corpus comments: ");
+  });
+
+  it("creates and registers a default author when the document has none", () => {
+    const base = new Uint8Array(
+      readFileSync(new URL("patrickomatic-termpaper-footers-masks.pages", FIXTURES)),
+    );
+    const doc = PagesDocument.load(base);
+    doc.appendParagraph("a phrase carrying a comment.");
+    const at = doc.body.text.lastIndexOf("phrase");
+    doc.body.addComment(at, at + 6, "the comment text");
+
+    const saved = PagesDocument.load(doc.save());
+    for (const { obj } of saved.store.allObjects()) {
+      if (obj.type !== COMMENT) continue;
+      const author = saved.store.resolve(obj.message.getMessage(3)?.getVarint(1));
+      expect(`author resolves: ${author !== undefined}`).toBe("author resolves: true");
+      expect(author!.message.getString(1)).toBe("iwork-files");
+      expect(obj.getObjectReferences().includes(author!.identifier)).toBe(true);
+      // And the roster the base already carries now lists them.
+      for (const { obj: roster } of saved.store.allObjects()) {
+        if (roster.type !== 213) continue;
+        const listed = roster.message
+          .getMessages(1)
+          .some((r) => r.getVarint(1) === author!.identifier);
+        expect(`roster lists the author: ${listed}`).toBe("roster lists the author: true");
+      }
+    }
+  });
+});

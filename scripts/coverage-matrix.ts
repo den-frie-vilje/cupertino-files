@@ -418,6 +418,15 @@ export const CAPABILITIES: Capability[] = [
     name: "Hyperlinks",
     apps: "all",
     status: "read+write",
+    manualProof: {
+      claim: "a hyperlink this library inserts is live in the app",
+      settled:
+        "**Confirmed in Pages — \"P04 pass\".** The linked words are a live hyperlink to " +
+        "the URL given, on the current-format ladder base.",
+      why: "a link is a smartfield run plus a URL ref; only the app proves it is clickable",
+      how: "`npm run pages:docs` emits P04-hyperlink; the linked words name themselves",
+      risk: "low",
+    },
     probe: (c) => safe(() => c.doc.textStorages().some((s) => s.links().length > 0)),
   },
   {
@@ -431,9 +440,9 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "a page-number attachment this library inserts renders as a live number",
       settled:
-        "**Confirmed in Pages.** A page number renders as a live field, and a page count updates " +
-        "when a page is inserted. A date field renders and is editable as a date. All three on a " +
-        "current-format document",
+        "**Confirmed in Pages.** A page number inserted into the body renders as a live " +
+        "number (\"P06 pass\"), a page count updates when a page is inserted, and a date " +
+        "field renders and is editable as a date. All on current-format documents",
       why: "the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page",
       how: "insert a page number into a footer, open in Pages across a multi-page document, and confirm it counts up rather than showing a literal or a blank",
       risk: "medium",
@@ -518,6 +527,9 @@ export const CAPABILITIES: Capability[] = [
         "Round three: the note renders small in Footnote style, the mark is a raised " +
         "number, and the note storage carries the six attribute tables all 2676 corpus " +
         "storages have.",
+      why:
+        "numbering and layout are the app's; the suite proves the archives and anchors " +
+        "round-trip, and three app rounds proved what the archives must also carry",
       how:
         "add footnotes at two positions, open in Pages, and confirm they number in document " +
         "order, render at the page foot, and are set in the document's Footnote style rather " +
@@ -752,6 +764,15 @@ export const CAPABILITIES: Capability[] = [
     name: "Headers & footers (3 columns × first/even/odd)",
     apps: ["pages"],
     status: "read+write",
+    manualProof: {
+      claim: "header and footer text written into the section masters renders on the page",
+      settled:
+        "**Confirmed in Pages — \"P05 pass\".** Centre-column header and footer text " +
+        "written into every page-master variant renders in the page chrome.",
+      why: "headers live on section page masters; only layout proves the storages are the ones drawn",
+      how: "`npm run pages:docs` emits P05-header-footer with the expectations in the body text",
+      risk: "low",
+    },
     probe: (c) =>
       safe(
         () =>

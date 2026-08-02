@@ -124,7 +124,7 @@ export function resolveAuthor(
   store: ObjectStore,
   component: Component,
   author: bigint | string | undefined,
-): IwaObject | undefined {
+): IwaObject {
   const existing = authorsOf(store);
   if (typeof author === "bigint") {
     const found = store.object(author);
@@ -138,7 +138,13 @@ export function resolveAuthor(
     if (byName) return byName;
     return createAuthor(store, component, author);
   }
-  return existing[0];
+  // No author given and none in the document: create one rather than write
+  // an authorless comment. All corpus comments carry an author, and a
+  // comment without one is the shape Pages for iOS showed as an empty
+  // placeholder — the bubble exists, the text never displays. The ladder
+  // base was exactly this case: a roster wired to the document root with
+  // zero authors in it.
+  return existing[0] ?? createAuthor(store, component, "iwork-files");
 }
 
 /** Create an author and add them to the document's roster. */
@@ -176,7 +182,7 @@ export function buildComment(
   component: Component,
   text: string,
   options: AddCommentOptions = {},
-): { highlight: IwaObject; commentStorage: IwaObject; author: IwaObject | undefined } {
+): { highlight: IwaObject; commentStorage: IwaObject; author: IwaObject } {
   const author = resolveAuthor(store, component, options.author);
 
   const storageMessage = RawMessage.create();
@@ -184,11 +190,11 @@ export function buildComment(
   const date = RawMessage.create();
   date.setDouble(DateFields.SECONDS, ((options.created ?? new Date()).getTime() - APPLE_EPOCH_MS) / 1000);
   storageMessage.setMessage(CommentStorageFields.CREATION_DATE, date);
-  if (author) storageMessage.setMessage(CommentStorageFields.AUTHOR, makeRef(author.identifier));
+  storageMessage.setMessage(CommentStorageFields.AUTHOR, makeRef(author.identifier));
 
   const commentStorage = store.createObject(COMMENT_TYPE.COMMENT_STORAGE, component);
   commentStorage.setMessageBytes(storageMessage.toBytes());
-  if (author) commentStorage.setObjectReferences([author.identifier]);
+  commentStorage.setObjectReferences([author.identifier]);
 
   const highlightMessage = RawMessage.create();
   highlightMessage.setMessage(HighlightFields.COMMENT_STORAGE, makeRef(commentStorage.identifier));

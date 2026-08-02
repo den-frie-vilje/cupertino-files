@@ -222,11 +222,24 @@ export const RUNGS: {
   },
   {
     name: "P10-page-setup",
-    note: "landscape orientation with wide margins",
+    note: "A4 landscape — the page dimensions carry the geometry, the flag is metadata",
     build: (doc) => {
-      doc.appendParagraph("P10: this page should be landscape with wide margins.");
-      // 0 portrait, 1 landscape.
-      doc.setPageSetup({ orientation: 1, leftMargin: 144, rightMargin: 144 });
+      doc.appendParagraph(
+        "P10: this page should be A4 landscape — noticeably wider than it is tall.",
+      );
+      doc.appendParagraph(
+        "A portrait page, or a US Letter shape, means the page-size fields are not what Pages lays out from.",
+      );
+      // Measured: every corpus document stores its real geometry in the
+      // width/height fields — the one wide document is 2880x2304 with
+      // orientation 1 — so a landscape rung must swap the dimensions, not
+      // just set the flag. The first version set only the flag and margins,
+      // and nothing visibly changed. A4 values are corpus-exact doubles.
+      doc.setPageSetup({
+        pageWidth: 841.8900146484375,
+        pageHeight: 595.280029296875,
+        orientation: 1,
+      });
     },
   },
   {

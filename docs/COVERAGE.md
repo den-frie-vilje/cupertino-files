@@ -156,7 +156,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-38 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+40 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -165,6 +165,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
 - 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
+- 🟡 low — Text & styles → **Hyperlinks**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**
 - 🟠 medium — Text & styles → **Date fields and bookmarks (read + create)**
 - 🟠 medium — Text & styles → **Comment creation and removal**
@@ -176,6 +177,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Drawables & media → **Inline image insertion**
 - 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
 - 🟠 medium — Pages → **Sections (read + insert)**
+- 🟡 low — Pages → **Headers & footers (3 columns × first/even/odd)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**

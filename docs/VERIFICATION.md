@@ -368,7 +368,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-12 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+14 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -423,9 +423,25 @@ result mean something; what changed is that it is no longer a request.
 
 **Was claimed.** a footnote this library creates is numbered and laid out by Pages
 
-**Why it needed an app.** undefined
+**Why it needed an app.** numbering and layout are the app's; the suite proves the archives and anchors round-trip, and three app rounds proved what the archives must also carry
 
 **Outcome.** **Confirmed in Pages — "P09 pass" — after three rounds, each of which found a distinct defect class.** Round one crashed the app: every newly created attribute table was seeded with an objectless entry at index 0, fatal in the point-anchored `table_footnote`/`table_attachment` where an entry is an object at a position (107 such tables in the corpus, zero objectless entries — the seed is now shape-aware). Round two rendered and numbered the note but drew the reference on the baseline: every corpus mark, body U+000E and note U+FFFC alike, is covered by one shared anonymous character style whose whole bag is `superscript = 1`, and we wrote none. Round three: the note renders small in Footnote style, the mark is a raised number, and the note storage carries the six attribute tables all 2676 corpus storages have.
+
+### ✅ Headers & footers (3 columns × first/even/odd)
+
+**Was claimed.** header and footer text written into the section masters renders on the page
+
+**Why it needed an app.** headers live on section page masters; only layout proves the storages are the ones drawn
+
+**Outcome.** **Confirmed in Pages — "P05 pass".** Centre-column header and footer text written into every page-master variant renders in the page chrome.
+
+### ✅ Hyperlinks
+
+**Was claimed.** a hyperlink this library inserts is live in the app
+
+**Why it needed an app.** a link is a smartfield run plus a URL ref; only the app proves it is clickable
+
+**Outcome.** **Confirmed in Pages — "P04 pass".** The linked words are a live hyperlink to the URL given, on the current-format ladder base.
 
 ### ✅ Inline image insertion
 
@@ -441,7 +457,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** the value comes from pagination, which nothing here performs — the suite proves the archive and anchor round-trip, not what appears on the page
 
-**Outcome.** **Confirmed in Pages.** A page number renders as a live field, and a page count updates when a page is inserted. A date field renders and is editable as a date. All three on a current-format document
+**Outcome.** **Confirmed in Pages.** A page number inserted into the body renders as a live number ("P06 pass"), a page count updates when a page is inserted, and a date field renders and is editable as a date. All on current-format documents
 
 ### ✅ Paragraph & character styles (by name, plus creation and editing)
 
