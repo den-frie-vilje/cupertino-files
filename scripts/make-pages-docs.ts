@@ -242,11 +242,19 @@ const RUNGS: {
   },
   {
     name: "P14-delete-a-range",
-    note: "a phrase removed from the middle of the body",
+    note: "a word removed from the middle of a line that states its own expected result",
     build: (doc) => {
-      doc.appendParagraph("P14: the word DELETEME should not appear anywhere.");
-      const at = doc.body.text.lastIndexOf(" DELETEME");
-      doc.deleteRange(at, at + " DELETEME".length);
+      // A deletion leaves no trace, so the rung has to carry its own answer:
+      // the line above says what the line below should say. Checking it
+      // needs nothing but the file. The first version said "the word
+      // DELETEME should not appear anywhere", which is unverifiable without
+      // the original — absence looks the same as never-having-been-there.
+      doc.appendParagraph("P14: the line below should read exactly — alpha gamma");
+      const target = doc.appendParagraph("alpha beta gamma");
+      const starts = doc.body.paragraphStarts();
+      const at = doc.body.text.indexOf(" beta", starts[target]!);
+      if (at < 0) throw new Error("target line not found");
+      doc.deleteRange(at, at + " beta".length);
     },
   },
   {
@@ -295,6 +303,12 @@ const RUNGS: {
     base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
     note: "a floating drawable copied onto a later page — the placement claim",
     build: (doc) => {
+      // Say so in the text too: a drawable that fails to appear leaves a
+      // blank page, which is indistinguishable from a page that was always
+      // blank unless the document tells you what to expect.
+      doc.appendParagraph(
+        "P19: the graphic from page 1 should also appear on page 3, lower and to the left.",
+      );
       const pages = doc.floatingDrawablePages();
       const from = pages[0];
       if (from === undefined) throw new Error("base has no floating drawables");

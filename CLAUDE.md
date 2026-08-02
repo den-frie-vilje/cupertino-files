@@ -15,6 +15,12 @@ the machine cannot do. Make it as cheap as possible to act on:
   usually the more informative outcome and should not feel like bad news.
 - **One thing per file where it is cheap to do so.** A ladder of documents
   that each change one thing localises a fault without a second round trip.
+- **The file must carry its own answer.** A checker should not need the
+  original to tell whether a rung passed. This bites hardest on deletions
+  and on anything visual: a word that is absent looks exactly like a word
+  that was never there, and a graphic that failed to appear looks exactly
+  like a blank page. Put the expected result *in* the document — a line
+  that says what the line below should say — rather than in the message.
 
 ## What counts as verified
 
