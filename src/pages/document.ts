@@ -301,7 +301,12 @@ export class PagesDocument extends IWorkDocument {
     }));
   }
 
-  /** Literal find/replace across the body. Returns replacement count. */
+  /**
+   * Literal find/replace across the body, preserving the styling of the
+   * surrounding text. Returns how many occurrences changed.
+   *
+   * @agentTool replace_text
+   */
   replaceText(find: string, replace: string): number {
     return this.body.replaceAll(find, replace);
   }
@@ -317,6 +322,7 @@ export class PagesDocument extends IWorkDocument {
   /**
    * Append a paragraph to the body. `style` may be a style name ("Heading 1")
    * or a style object id. Returns the new paragraph index.
+   * @agentTool append_paragraph
    */
   appendParagraph(text: string, style?: string | bigint): number {
     const index = this.body.appendParagraph(text);
@@ -334,6 +340,7 @@ export class PagesDocument extends IWorkDocument {
    * Apply direct character formatting to a body range: creates an anonymous
    * TSWP.CharacterStyleArchive (parented on the effective style at `start`)
    * and spans it over [start, end). Returns the new style's id.
+   * @agentTool format_text
    */
   applyCharacterFormatting(start: number, end: number, formatting: CharacterFormatting): bigint {
     const current = this.body.effectiveObjectAt(Storage.TABLE_CHAR_STYLE, start);
@@ -565,7 +572,11 @@ export class PagesDocument extends IWorkDocument {
     };
   }
 
-  /** Update page geometry (points; 1 pt = 1/72 in). Only given fields change. */
+  /**
+   * Update page geometry (points; 1 pt = 1/72 in). Only given fields change.
+   *
+   * @agentTool set_page_setup
+   */
   setPageSetup(update: Partial<PageSetup>): void {
     const m = this.docObject.message;
     const setF = (no: number, v: number | undefined) => {
@@ -633,7 +644,11 @@ export class PagesDocument extends IWorkDocument {
     return this.bodyOrUndefined?.bookmarks() ?? [];
   }
 
-  /** Make a body range a hyperlink. */
+  /**
+   * Make a body range a hyperlink.
+   *
+   * @agentTool insert_link
+   */
   insertLink(
     start: number,
     end: number,

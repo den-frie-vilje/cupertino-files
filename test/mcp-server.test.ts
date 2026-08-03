@@ -108,15 +108,21 @@ describe("the MCP server over stdio", () => {
         "describe_document",
         "format_cells",
         "format_text",
+        "insert_link",
         "list_formulas",
+        "manage_sheets",
+        "manage_slides",
         "merge_cells",
         "modify_table",
         "read_table",
         "read_text",
         "replace_text",
+        "set_cell_format",
         "set_cells",
         "set_formula",
+        "set_page_setup",
         "set_slide_text",
+        "set_table_bands",
       ]);
       // Every tool must say what it is — the descriptions are the UI.
       for (const tool of listed.tools as { description: string }[]) {

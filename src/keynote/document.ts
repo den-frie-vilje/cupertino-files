@@ -530,6 +530,7 @@ export class KeynoteDocument extends IWorkDocument {
    * nothing is rescaled to match: a deck resized from 1920×1080 to 1024×768
    * keeps its objects where they were, which is what Keynote's own
    * "change slide size" does before you rearrange.
+   * @agentTool manage_slides
    */
   setSlideSize(width: number, height: number): void {
     const show = this.show().message;
@@ -650,6 +651,7 @@ export class KeynoteDocument extends IWorkDocument {
    * `after` is a slide index; -1 puts the new slide first. By default the
    * copy is emptied of its drawables, giving a fresh slide on the same
    * layout; pass `withContent` to duplicate outright.
+   * @agentTool manage_slides
    */
   addSlide(options: { copyOf?: number; after?: number; withContent?: boolean } = {}): KeynoteSlide {
     const slides = this.slides();
@@ -764,7 +766,11 @@ export class KeynoteDocument extends IWorkDocument {
     return created;
   }
 
-  /** Duplicate a slide, content and all. */
+  /**
+   * Duplicate a slide, content and all.
+   *
+   * @agentTool manage_slides
+   */
   duplicateSlide(index: number): KeynoteSlide {
     return this.addSlide({ copyOf: index, after: index, withContent: true });
   }
@@ -776,6 +782,7 @@ export class KeynoteDocument extends IWorkDocument {
    * package: other objects may still reference it, and this library never
    * garbage-collects the object graph — an orphan is inert, a dangling
    * reference is not.
+   * @agentTool manage_slides
    */
   removeSlide(index: number): void {
     const slides = this.slides();
@@ -785,7 +792,11 @@ export class KeynoteDocument extends IWorkDocument {
     this.removeSlideNode(slide.node.identifier);
   }
 
-  /** Move a slide to a new position in presentation order. */
+  /**
+   * Move a slide to a new position in presentation order.
+   *
+   * @agentTool manage_slides
+   */
   moveSlide(from: number, to: number): void {
     const slides = this.slides();
     const slide = slides[from];

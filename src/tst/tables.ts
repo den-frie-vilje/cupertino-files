@@ -709,6 +709,7 @@ export class TableModel {
    * A cell shows one format, so any format the record already carried is
    * cleared first — leaving a stale currency id beside a new date id would
    * make the display depend on which flag the app happens to read first.
+   * @agentTool set_cell_format
    */
   setCellFormat(row: number, column: number, format: CellFormat): void {
     this.requireWritable();
@@ -726,7 +727,11 @@ export class TableModel {
     this.writeRowLayout(located.rowInfo, layout);
   }
 
-  /** Apply one format across a rectangular block. */
+  /**
+   * Apply one format across a rectangular block.
+   *
+   * @agentTool set_cell_format
+   */
   setRangeFormat(
     row: number,
     column: number,
@@ -856,7 +861,11 @@ export class TableModel {
     return raw ? CellRecord.decode(raw).id(CellFlag.FORMULA_ID) : undefined;
   }
 
-  /** Every formula cell in the table, with its rendered text. */
+  /**
+   * Every formula cell in the table, with its rendered text.
+   *
+   * @agentTool list_formulas
+   */
   formulas(): { row: number; column: number; formula: string }[] {
     const out: { row: number; column: number; formula: string }[] = [];
     if (this.storageGeneration !== "v5") return out;
@@ -1116,6 +1125,7 @@ export class TableModel {
    * Rich text (`{ type: "richText" }`) cannot be written: the value lives
    * in a separate TSWP storage object. Set plain `text` instead, or edit
    * the existing rich-text storage through {@link richTextStorage}.
+   * @agentTool set_cells
    */
   setCell(row: number, column: number, input: CellInput, options: WriteOptions = {}): void {
     // Normalise first: an unrecognised value must throw before anything is
@@ -1194,6 +1204,7 @@ export class TableModel {
    *
    * Refuses a function it has no index for rather than inventing one — see
    * `authorableFunctions()` for the 271 it knows.
+   * @agentTool set_formula
    */
   setFormula(
     row: number,
@@ -1360,6 +1371,7 @@ export class TableModel {
    *
    * The anchor's value survives; everything the rectangle covers is
    * discarded, exactly as merging does in the app.
+   * @agentTool merge_cells
    */
   mergeCells(row: number, column: number, rowCount: number, columnCount: number): void {
     this.requireWritable();
@@ -1531,6 +1543,7 @@ export class TableModel {
    * The cells it covered come back empty, which is what the app does: the
    * values they held before merging were discarded at merge time and are
    * not recoverable from the file.
+   * @agentTool merge_cells
    */
   unmergeCells(row: number, column: number): boolean {
     this.requireWritable();
@@ -1731,6 +1744,7 @@ export class TableModel {
    * so this is a safe edit that does not touch the tiles. Counts are
    * clamped to the table's real size: a header count past the last row
    * would leave the app with no body.
+   * @agentTool set_table_bands
    */
   setBands(bands: {
     headerRows?: number;
@@ -1778,13 +1792,22 @@ export class TableModel {
       : (this.object.message.getDouble(TableModelFields.DEFAULT_COLUMN_WIDTH) ?? 0);
   }
 
-  /** Set an explicit row height; 0 restores the table default. */
+  /**
+   * Set an explicit row height; 0 restores the table default.
+   *
+   * @agentTool modify_table
+   */
   setRowHeight(row: number, points: number): void {
     const header = this.header(DataStoreFields.ROW_HEADERS, row);
     if (!header) throw new RangeError(`row ${row} has no header entry to size`);
     header.setFloat(HeaderFields.SIZE, points);
   }
 
+  /**
+   * Set one column's width in points.
+   *
+   * @agentTool modify_table
+   */
   setColumnWidth(column: number, points: number): void {
     const header = this.header(DataStoreFields.COLUMN_HEADERS, column);
     if (!header) throw new RangeError(`column ${column} has no header entry to size`);
@@ -1845,6 +1868,7 @@ export class TableModel {
    * an absolute range spanning the insertion point still names its old
    * bounds. Adjusting those correctly is calc-engine work; see
    * docs/FORMAT.md §14.7.
+   * @agentTool modify_table
    */
   insertRows(at: number, count = 1): void {
     this.requireWritable();
@@ -1865,7 +1889,11 @@ export class TableModel {
     this.shiftMergesForRows(at, count);
   }
 
-  /** Delete rows starting at `at`. */
+  /**
+   * Delete rows starting at `at`.
+   *
+   * @agentTool modify_table
+   */
   deleteRows(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -1882,7 +1910,11 @@ export class TableModel {
     this.shiftMergesForRows(at, -count);
   }
 
-  /** Insert blank columns before `at`. */
+  /**
+   * Insert blank columns before `at`.
+   *
+   * @agentTool modify_table
+   */
   insertColumns(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -1902,7 +1934,11 @@ export class TableModel {
     this.shiftMergesForColumns(at, count);
   }
 
-  /** Delete columns starting at `at`. */
+  /**
+   * Delete columns starting at `at`.
+   *
+   * @agentTool modify_table
+   */
   deleteColumns(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -2222,7 +2258,13 @@ export class TableModel {
     this.refreshTileTotals();
   }
 
-  /** Apply the same formatting to a rectangular block of cells. */
+  /**
+   * Apply the same formatting to a rectangular block of cells — fill,
+   * borders, padding, alignment, wrap — leaving every cell's value
+   * untouched.
+   *
+   * @agentTool format_cells
+   */
   setRangeFormatting(
     row: number,
     column: number,

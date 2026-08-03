@@ -26,8 +26,12 @@ the Model Context Protocol over stdio, that's the whole configuration:
 }
 ```
 
-The server exposes thirteen tools. Start with `describe_document` — it
-tells the agent a document's shape before anything reads or writes it.
+The server exposes nineteen tools, and their descriptions are not
+written twice: each editing tool's text is extracted from the API's own
+documentation (the `@agentTool` tag in the docblock), so the words an
+agent reads are the words the [API reference](/api/) shows, kept in
+sync by CI. Start with `describe_document` — it tells the agent a
+document's shape before anything reads or writes it.
 
 | Tool | What it does |
 | --- | --- |
@@ -44,6 +48,12 @@ tells the agent a document's shape before anything reads or writes it.
 | `replace_text` | Style-preserving find and replace in a Pages body |
 | `format_text` | Bold, italics, fonts and color for a phrase |
 | `set_slide_text` | Rewrite a Keynote slide's title, body or notes |
+| `manage_slides` | Add, duplicate, move, remove slides; set the slide size |
+| `manage_sheets` | Add, rename, move, remove Numbers sheets; add tables |
+| `set_cell_format` | Number, currency, date, duration display formats |
+| `set_table_bands` | Header and footer bands, freeze and repeat |
+| `set_page_setup` | Margins, page size, orientation for Pages |
+| `insert_link` | Turn a phrase in a Pages body into a hyperlink |
 
 Rows and columns are 0-based throughout. Writes save over the input —
 the same thing the apps do — unless `output` names somewhere else. A

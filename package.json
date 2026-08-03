@@ -85,7 +85,9 @@
     "docs:build": "npm run api:docs && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "prepare": "npm run build",
-    "api:docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-vitepress-theme --entryPoints src/index.ts --out docs/api --readme none --excludeInternal --skipErrorChecking --sanitizeComments"
+    "api:docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-vitepress-theme --out docs/api",
+    "tooldocs": "node scripts/generate-tool-docs.ts",
+    "tooldocs:check": "node scripts/generate-tool-docs.ts --check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

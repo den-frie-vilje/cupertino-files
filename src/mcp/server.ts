@@ -24,6 +24,8 @@ import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
 import { hexColor, solidStroke, type Fill } from "../tsd/style.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
+import type { CellFormat } from "../tst/formats.ts";
+import { TOOL_DOCS } from "./tool-docs.generated.ts";
 
 const PROTOCOL_FALLBACK = "2025-06-18";
 const SERVER_INFO = { name: "cupertino-files", version: packageVersion() };
@@ -83,12 +85,25 @@ function save(doc: AnyDocument, path: string, output: string | undefined): strin
 
 // ---------------------------------------------------------------------- tools
 
-interface Tool {
+export interface Tool {
   name: string;
   description: string;
   inputSchema: object;
   handler: (args: Record<string, unknown>) => string;
 }
+
+/**
+ * Tools that are compositions with no single backing method — their
+ * descriptions live here, everything else's comes from the API's TSDoc
+ * via {@link TOOL_DOCS}. The census test requires this list to stay in
+ * step with the generated bindings.
+ */
+export const COMPOSITE_TOOLS: readonly string[] = [
+  "describe_document",
+  "read_text",
+  "read_table",
+  "set_slide_text",
+];
 
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
@@ -102,13 +117,35 @@ const TABLE_PROP = {
 } as const;
 const OUTPUT_PROP = { type: "string", description: "Save here instead of over the input" } as const;
 
+/**
+ * A bound tool's description IS the API's docblock — extracted by
+ * scripts/generate-tool-docs.ts from the `@agentTool` tag — plus the
+ * adapter's own notes: the schema-level things the API cannot know (hex
+ * colors, find-by-text addressing, output paths). Throws at import when
+ * a tool and its tag disagree, the way protoFields refuses a misspelled
+ * field, so the server cannot start with stale text.
+ */
+function apiDoc(tool: string, adapterNotes: string): string {
+  const entries = TOOL_DOCS.get(tool);
+  if (!entries || entries.length === 0) {
+    throw new Error(
+      `no API method is tagged @agentTool ${tool}; add the tag and run npm run tooldocs`,
+    );
+  }
+  const summary =
+    entries.length === 1
+      ? entries[0]!.summary
+      : entries.map((e) => `${e.api.split(".")[1]}: ${e.summary}`).join(" ");
+  return `${summary} ${adapterNotes}`.trim();
+}
+
 function requirePath(args: Record<string, unknown>): string {
   const path = str(args.path);
   if (!path) throw new RangeError("path is required");
   return path;
 }
 
-const TOOLS: Tool[] = [
+export const TOOLS: readonly Tool[] = [
   {
     name: "describe_document",
     description:
@@ -214,9 +251,10 @@ const TOOLS: Tool[] = [
   },
   {
     name: "list_formulas",
-    description:
-      "List every formula in a table (or in all tables when none is named), with its 0-based " +
-      "row and column and its rendered text, e.g. =SUM(C3:K6).",
+    description: apiDoc(
+      "list_formulas",
+      "Omit table to list every table. Coordinates are 0-based.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -235,11 +273,11 @@ const TOOLS: Tool[] = [
   },
   {
     name: "set_cells",
-    description:
-      "Write values into table cells and save the document. Rows and columns are 0-based; " +
-      "values may be strings, numbers, booleans, or null to clear. Presentation the cells " +
-      "already carry (styles, number formats, comments) is preserved. Saves over the input " +
-      "unless output names another path.",
+    description: apiDoc(
+      "set_cells",
+      "Rows and columns are 0-based; values may be strings, numbers, booleans, or null to " +
+        "clear. Saves over the input unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -288,11 +326,12 @@ const TOOLS: Tool[] = [
   },
   {
     name: "set_formula",
-    description:
-      "Write a formula into a table cell and save the document. The formula is infix text " +
-      "like =SUM(A1:A5) or =Other::B2 (0-based row/column address the cell, the formula text " +
-      "uses ordinary A1 references). Nothing evaluates: pass cachedValue so the cell displays " +
-      "correctly until an app recalculates. Saves over the input unless output is given.",
+    description: apiDoc(
+      "set_formula",
+      "Address the cell with 0-based row/column; the formula is infix text like =SUM(A1:A5) " +
+        "or =Other::B2. Pass cachedValue as the displayed value. Saves over the input unless " +
+        "output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -329,10 +368,10 @@ const TOOLS: Tool[] = [
   },
   {
     name: "append_paragraph",
-    description:
-      "Append a paragraph of text to the end of a Pages document's body and save it. " +
-      "Optionally apply a named paragraph style, e.g. \"Heading 1\". Saves over the input " +
-      "unless output names another path.",
+    description: apiDoc(
+      "append_paragraph",
+      "Pages documents only. Saves over the input unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -355,10 +394,10 @@ const TOOLS: Tool[] = [
   },
   {
     name: "replace_text",
-    description:
-      "Find and replace text throughout a Pages document's body, preserving the styling of " +
-      "the surrounding text, and save it. Returns how many occurrences changed. Saves over " +
-      "the input unless output names another path.",
+    description: apiDoc(
+      "replace_text",
+      "Pages documents only. Saves over the input unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -383,10 +422,12 @@ const TOOLS: Tool[] = [
   },
   {
     name: "format_text",
-    description:
-      "Apply character formatting — bold, italic, font size, font name, font color — to the " +
-      "first occurrence of a phrase in a Pages document's body, and save it. Colors are hex " +
-      "like #cc0000. Saves over the input unless output names another path.",
+    description: apiDoc(
+      "format_text",
+      "This tool finds the first occurrence of the phrase and formats that range: bold, " +
+        "italic, fontSize, fontName, fontColor (hex like #cc0000). Pages documents only. " +
+        "Saves over the input unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -424,12 +465,12 @@ const TOOLS: Tool[] = [
   },
   {
     name: "format_cells",
-    description:
-      "Format a rectangular block of table cells — background fill, borders, vertical " +
-      "alignment, text wrap — and save the document. Rows and columns are 0-based; rowCount " +
-      "and columnCount default to 1. Colors are hex like #f5f5f0; borders take a hex color " +
-      "and a width in points. Cell values are untouched. Saves over the input unless output " +
-      "names another path.",
+    description: apiDoc(
+      "format_cells",
+      "Rows and columns are 0-based; rowCount and columnCount default to 1. Colors are hex " +
+        "like #f5f5f0; borders take {color, width}. Saves over the input unless output names " +
+        "another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -487,11 +528,12 @@ const TOOLS: Tool[] = [
   },
   {
     name: "merge_cells",
-    description:
-      "Merge a rectangle of table cells, anchored at its top-left, and save the document. " +
-      "The anchor's value survives; covered cells are discarded, exactly as merging does in " +
-      "the app. Rows and columns are 0-based. Saves over the input unless output is given. " +
-      "To split a merge instead, call with rowCount and columnCount omitted and unmerge true.",
+    description: apiDoc(
+      "merge_cells",
+      "Pass rowCount and columnCount to merge; pass unmerge true (omitting the counts) to " +
+        "split the merge anchored at row/column instead. 0-based. Saves over the input " +
+        "unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -534,12 +576,12 @@ const TOOLS: Tool[] = [
   },
   {
     name: "modify_table",
-    description:
-      "Insert or delete table rows or columns, or set a column's width, and save the " +
-      "document. Actions: insert_rows, delete_rows, insert_columns, delete_columns (with at " +
-      "and count, both 0-based), set_column_width (with at and width in points). Cells keep " +
-      "their formatting; formulas and merges shift with the grid. Saves over the input " +
-      "unless output names another path.",
+    description: apiDoc(
+      "modify_table",
+      "Actions: insert_rows, delete_rows, insert_columns, delete_columns (at + count, " +
+        "0-based), set_column_width and set_row_height (at + width or height in points). " +
+        "Saves over the input unless output names another path.",
+    ),
     inputSchema: {
       type: "object",
       properties: {
@@ -547,11 +589,15 @@ const TOOLS: Tool[] = [
         table: TABLE_PROP,
         action: {
           type: "string",
-          enum: ["insert_rows", "delete_rows", "insert_columns", "delete_columns", "set_column_width"],
+          enum: [
+            "insert_rows", "delete_rows", "insert_columns", "delete_columns",
+            "set_column_width", "set_row_height",
+          ],
         },
         at: { type: "number", description: "0-based row or column position" },
         count: { type: "number", description: "How many, default 1" },
         width: { type: "number", description: "Points, for set_column_width" },
+        height: { type: "number", description: "Points, for set_row_height" },
         output: OUTPUT_PROP,
       },
       required: ["path", "action", "at"],
@@ -581,6 +627,12 @@ const TOOLS: Tool[] = [
           const width = num(args.width);
           if (width === undefined) throw new RangeError("width is required for set_column_width");
           table.setColumnWidth(at, width);
+          break;
+        }
+        case "set_row_height": {
+          const height = num(args.height);
+          if (height === undefined) throw new RangeError("height is required for set_row_height");
+          table.setRowHeight(at, height);
           break;
         }
         default:
@@ -631,6 +683,309 @@ const TOOLS: Tool[] = [
       if (notes !== undefined) slide.notes = notes;
       const target = save(doc, path, str(args.output));
       return `updated slide ${index} and saved ${target}`;
+    },
+  },
+  {
+    name: "manage_slides",
+    description: apiDoc(
+      "manage_slides",
+      "Actions: add (copyOf + after, both 0-based slide indexes), duplicate (slide), move " +
+        "(slide + to), remove (slide), set_size (width + height in points). Keynote " +
+        "documents only. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .key document" },
+        action: {
+          type: "string",
+          enum: ["add", "duplicate", "move", "remove", "set_size"],
+        },
+        slide: { type: "number", description: "0-based slide index the action targets" },
+        after: { type: "number", description: "add: insert after this index (default: end)" },
+        to: { type: "number", description: "move: destination index" },
+        width: { type: "number", description: "set_size: points" },
+        height: { type: "number", description: "set_size: points" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "action"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof KeynoteDocument)) {
+        throw new RangeError("manage_slides edits Keynote documents; this is not one");
+      }
+      const action = str(args.action);
+      const slide = num(args.slide);
+      switch (action) {
+        case "add":
+          doc.addSlide({ copyOf: slide, after: num(args.after) ?? doc.slideCount() - 1 });
+          break;
+        case "duplicate":
+          if (slide === undefined) throw new RangeError("duplicate needs slide");
+          doc.duplicateSlide(slide);
+          break;
+        case "move": {
+          const to = num(args.to);
+          if (slide === undefined || to === undefined) throw new RangeError("move needs slide and to");
+          doc.moveSlide(slide, to);
+          break;
+        }
+        case "remove":
+          if (slide === undefined) throw new RangeError("remove needs slide");
+          doc.removeSlide(slide);
+          break;
+        case "set_size": {
+          const width = num(args.width);
+          const height = num(args.height);
+          if (width === undefined || height === undefined) {
+            throw new RangeError("set_size needs width and height");
+          }
+          doc.setSlideSize(width, height);
+          break;
+        }
+        default:
+          throw new RangeError(`unknown action ${String(action)}`);
+      }
+      const target = save(doc, path, str(args.output));
+      return `${action}: deck now has ${doc.slideCount()} slide(s); saved ${target}`;
+    },
+  },
+  {
+    name: "manage_sheets",
+    description: apiDoc(
+      "manage_sheets",
+      "Actions: add_sheet (name?, copyOf?), rename_sheet (sheet + name), move_sheet (sheet " +
+        "+ to), remove_sheet (sheet), add_table (sheet + name?) — sheet is a 0-based index; " +
+        "use describe_document to see the layout. Numbers documents only. Saves over the " +
+        "input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .numbers document" },
+        action: {
+          type: "string",
+          enum: ["add_sheet", "rename_sheet", "move_sheet", "remove_sheet", "add_table"],
+        },
+        sheet: { type: "number", description: "0-based sheet index the action targets" },
+        name: { type: "string", description: "add_sheet/rename_sheet/add_table: the name" },
+        copyOf: { type: "number", description: "add_sheet: 0-based sheet to copy" },
+        to: { type: "number", description: "move_sheet: destination index" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "action"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof NumbersDocument)) {
+        throw new RangeError("manage_sheets edits Numbers documents; this is not one");
+      }
+      const action = str(args.action);
+      const sheet = num(args.sheet);
+      switch (action) {
+        case "add_sheet":
+          doc.addSheet({ name: str(args.name), copyOf: num(args.copyOf) });
+          break;
+        case "rename_sheet": {
+          const name = str(args.name);
+          if (sheet === undefined || !name) throw new RangeError("rename_sheet needs sheet and name");
+          doc.renameSheet(sheet, name);
+          break;
+        }
+        case "move_sheet": {
+          const to = num(args.to);
+          if (sheet === undefined || to === undefined) {
+            throw new RangeError("move_sheet needs sheet and to");
+          }
+          doc.moveSheet(sheet, to);
+          break;
+        }
+        case "remove_sheet":
+          if (sheet === undefined) throw new RangeError("remove_sheet needs sheet");
+          doc.removeSheet(sheet);
+          break;
+        case "add_table": {
+          const id = doc.sheets()[sheet ?? 0]?.id;
+          if (id === undefined) throw new RangeError(`no sheet at index ${sheet ?? 0}`);
+          doc.addTable(id, { name: str(args.name) });
+          break;
+        }
+        default:
+          throw new RangeError(`unknown action ${String(action)}`);
+      }
+      const target = save(doc, path, str(args.output));
+      return `${action}: document now has ${doc.sheets().length} sheet(s); saved ${target}`;
+    },
+  },
+  {
+    name: "set_page_setup",
+    description: apiDoc(
+      "set_page_setup",
+      "All values are points; only the fields given change. orientation: 0 portrait, 1 " +
+        "landscape. Pages documents only. Saves over the input unless output names another " +
+        "path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .pages document" },
+        pageWidth: { type: "number" },
+        pageHeight: { type: "number" },
+        leftMargin: { type: "number" },
+        rightMargin: { type: "number" },
+        topMargin: { type: "number" },
+        bottomMargin: { type: "number" },
+        headerMargin: { type: "number" },
+        footerMargin: { type: "number" },
+        orientation: { type: "number", enum: [0, 1] },
+        output: OUTPUT_PROP,
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = pagesDocument(open(path), "set_page_setup");
+      const fields = [
+        "pageWidth", "pageHeight", "leftMargin", "rightMargin", "topMargin",
+        "bottomMargin", "headerMargin", "footerMargin", "orientation",
+      ] as const;
+      const update: Record<string, number> = {};
+      for (const field of fields) {
+        const value = num(args[field]);
+        if (value !== undefined) update[field] = value;
+      }
+      if (Object.keys(update).length === 0) {
+        throw new RangeError("nothing to set; pass at least one page-setup field");
+      }
+      doc.setPageSetup(update);
+      const target = save(doc, path, str(args.output));
+      return `updated ${Object.keys(update).join(", ")} and saved ${target}`;
+    },
+  },
+  {
+    name: "set_cell_format",
+    description: apiDoc(
+      "set_cell_format",
+      "The format object: { kind: \"number\" | \"percentage\" | \"currency\" | \"date\" | " +
+        "\"duration\" | \"text\" | \"boolean\", ... } — currency takes code (e.g. \"EUR\"), " +
+        "date takes pattern (e.g. \"d MMM yyyy\"), numeric kinds take decimalPlaces and " +
+        "thousandsSeparator. 0-based coordinates; rowCount/columnCount default 1. Saves " +
+        "over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        row: { type: "number", description: "0-based first row" },
+        column: { type: "number", description: "0-based first column" },
+        rowCount: { type: "number", description: "Rows in the block, default 1" },
+        columnCount: { type: "number", description: "Columns in the block, default 1" },
+        format: {
+          type: "object",
+          description: "A CellFormat: kind plus its options (see the tool description)",
+        },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "row", "column", "format"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const row = num(args.row);
+      const column = num(args.column);
+      const format = args.format;
+      if (row === undefined || column === undefined || typeof format !== "object" || !format) {
+        throw new RangeError("row, column and format are required");
+      }
+      table.setRangeFormat(
+        row,
+        column,
+        Math.max(1, num(args.rowCount) ?? 1),
+        Math.max(1, num(args.columnCount) ?? 1),
+        format as CellFormat,
+      );
+      const target = save(doc, path, str(args.output));
+      return `formatted the block at r${row}c${column} of ${JSON.stringify(table.name ?? "")} and saved ${target}`;
+    },
+  },
+  {
+    name: "insert_link",
+    description: apiDoc(
+      "insert_link",
+      "This tool finds the first occurrence of the phrase in the body and links that range. " +
+        "Pages documents only. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .pages document" },
+        find: { type: "string", description: "The phrase to turn into a link (first occurrence)" },
+        url: { type: "string", description: "The link target, e.g. https://example.com" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "find", "url"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const find = str(args.find);
+      const url = str(args.url);
+      if (!find || !url) throw new RangeError("find and url are required");
+      const doc = pagesDocument(open(path), "insert_link");
+      const at = doc.body.text.indexOf(find);
+      if (at < 0) throw new RangeError(`the body does not contain ${JSON.stringify(find)}`);
+      doc.insertLink(at, at + find.length, url);
+      const target = save(doc, path, str(args.output));
+      return `linked ${JSON.stringify(find)} to ${url} and saved ${target}`;
+    },
+  },
+  {
+    name: "set_table_bands",
+    description: apiDoc(
+      "set_table_bands",
+      "Header/footer counts plus freeze and repeat toggles, any subset. Saves over the " +
+        "input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        headerRows: { type: "number" },
+        headerColumns: { type: "number" },
+        footerRows: { type: "number" },
+        freezeHeaderRows: { type: "boolean" },
+        freezeHeaderColumns: { type: "boolean" },
+        repeatHeaderRows: { type: "boolean" },
+        repeatHeaderColumns: { type: "boolean" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const bands: Record<string, number | boolean> = {};
+      for (const field of ["headerRows", "headerColumns", "footerRows"] as const) {
+        const value = num(args[field]);
+        if (value !== undefined) bands[field] = value;
+      }
+      for (const field of [
+        "freezeHeaderRows", "freezeHeaderColumns", "repeatHeaderRows", "repeatHeaderColumns",
+      ] as const) {
+        if (typeof args[field] === "boolean") bands[field] = args[field];
+      }
+      if (Object.keys(bands).length === 0) {
+        throw new RangeError("nothing to set; pass at least one band field");
+      }
+      table.setBands(bands);
+      const target = save(doc, path, str(args.output));
+      return `updated ${Object.keys(bands).join(", ")} on ${JSON.stringify(table.name ?? "")} and saved ${target}`;
     },
   },
 ];
