@@ -649,6 +649,40 @@ export class PagesDocument extends IWorkDocument {
     this.body.applyEdits(edits);
   }
 
+  /** The body's placeholder-text spans ("tap or click to add …"). */
+  placeholders(): { start: number; end: number; text: string; fieldId: bigint }[] {
+    return this.bodyOrUndefined?.placeholders() ?? [];
+  }
+
+  /**
+   * Fill the body's `index`-th placeholder: real text in, placeholder
+   * marking off, styling kept — what typing into one does in Pages.
+   * Returns the filled span as a fluent range.
+   */
+  fillPlaceholder(index: number, text: string): TextRange {
+    const placeholder = this.body.placeholders()[index];
+    if (!placeholder) {
+      throw new RangeError(
+        `no placeholder ${index}: the body has ${this.body.placeholders().length}`,
+      );
+    }
+    const span = this.body.fillPlaceholder(placeholder, text);
+    return this.body.range(span.start, span.end);
+  }
+
+  /**
+   * Mark a body span as placeholder text, the way Format → Advanced →
+   * Define as Placeholder Text does. Returns the field's id.
+   */
+  defineAsPlaceholder(start: number, end: number): bigint {
+    return this.body.defineAsPlaceholder(start, end);
+  }
+
+  /** Effective character formatting at a body position, inheritance folded in. */
+  characterFormattingAt(pos: number): ReturnType<TextStorage["characterFormattingAt"]> {
+    return this.body.characterFormattingAt(pos);
+  }
+
   /** Body hyperlinks ([] for page-layout documents). */
   links(): { start: number; end: number; url: string; fieldId: bigint }[] {
     return this.bodyOrUndefined?.links() ?? [];

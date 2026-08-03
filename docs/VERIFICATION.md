@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 20 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -41,8 +41,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 16 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 17 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 18 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 19 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 20 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 19 | 🟡 low | Text & styles → Placeholder text (list, fill, define) | a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text | manual |
+| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Cell styling (fill, four borders, padding, alignment, wrap)
 
@@ -264,7 +265,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 19. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 19. Placeholder text (list, fill, define)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Text & styles  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text
+
+**Why the suite cannot settle it.** the written archive is byte-shaped like the app's own, but tap-to-replace is editor behaviour nothing offline can observe
+
+**How to settle it.** define a placeholder over a bracketed token in a blank document, fill another, open in Pages: click the defined one (whole-span selection expected), click and type in the filled one (ordinary editing expected)
+
+### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -276,7 +289,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 20. Table of contents (rules read + write, cached entries read)
+### 21. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  

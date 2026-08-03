@@ -523,6 +523,30 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
+    name: "Placeholder text (list, fill, define)",
+    apps: ["pages"],
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.textStorages().some((s) => s.placeholders().length > 0)),
+    note:
+      "the template tap-to-replace mechanism. Filling sheds the marking the way typing does; " +
+      "defineAsPlaceholder writes the measured shape (smart-field super + varint 1, uniform " +
+      "across 73 app-written instances). A placeholder over an attachment's U+FFFC is a body " +
+      "document's image placeholder — same field, no drawable archive",
+    manualProof: {
+      claim:
+        "a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text",
+      why:
+        "the written archive is byte-shaped like the app's own, but tap-to-replace is editor " +
+        "behaviour nothing offline can observe",
+      how:
+        "define a placeholder over a bracketed token in a blank document, fill another, open in " +
+        "Pages: click the defined one (whole-span selection expected), click and type in the " +
+        "filled one (ordinary editing expected)",
+      risk: "low",
+    },
+  },
+  {
+    group: "Text & styles",
     name: "Date fields and bookmarks (read + create)",
     apps: "all",
     status: "read+write",

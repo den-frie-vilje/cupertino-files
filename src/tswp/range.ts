@@ -164,6 +164,13 @@ export class TextRange {
     return this;
   }
 
+  /** Mark this range as template placeholder text (tap to replace). */
+  asPlaceholder(): this {
+    this.assertFresh();
+    this.storage.defineAsPlaceholder(this.start, this.end);
+    return this;
+  }
+
   /** Remove hyperlinks overlapping this range. */
   unlink(): this {
     this.assertFresh();

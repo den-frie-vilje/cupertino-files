@@ -7,6 +7,18 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Pages placeholder text — the template tap-to-replace mechanism — is a
+  first-class feature: `placeholders()` lists the ghost-text spans,
+  `fillPlaceholder()` puts real content in and sheds the marking the way
+  typing does, and `defineAsPlaceholder()` /
+  `find(...)[0].asPlaceholder()` create one, writing the shape measured
+  across 73 app-written instances. An image placeholder in a body
+  document is the same field over the image's object character, so the
+  same calls cover it.
+- Verification readers: `characterFormattingAt(pos)` answers "what
+  formatting really applies here" with inheritance folded in;
+  `characterStyleRuns()` (which existed) is now documented as the
+  whole-document sweep.
 - Fixed: text edits reaching the end of a storage no longer smear
   styling document-wide. The paragraph-style table's entry at
   `text.length` is the final empty paragraph's entry, present exactly

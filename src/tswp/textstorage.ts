@@ -46,16 +46,18 @@ import {
 } from "./schema.ts";
 import { makeRef, RANGE_LENGTH, RANGE_LOCATION, refId } from "../tsp/schema.ts";
 import { TSD_TYPE } from "../tsd/schema.ts";
-import { StylesheetModel } from "../tss/stylesheet.ts";
+import { StylesheetModel, type CharacterFormatting } from "../tss/stylesheet.ts";
 import { ParagraphHandle, TextRange } from "./range.ts";
 import { typeName } from "../tsp/registry.ts";
 import {
   ATTACHMENT_TYPE,
   AttachmentKind,
+  SMART_FIELD_TYPE,
   TextualAttachment,
   buildBookmark,
   buildDateField,
   buildNumberAttachment,
+  buildPlaceholderField,
   readDateField,
   readNumberAttachment,
   type DateFieldOptions,
@@ -391,6 +393,22 @@ export class TextStorage {
    */
   characterStyleIdAt(pos: number): bigint | undefined {
     return this.effectiveObjectAt(Storage.TABLE_CHAR_STYLE, pos);
+  }
+
+  /**
+   * The formatting in effect at `pos`, with inheritance folded in: the
+   * paragraph style's character bag as the base, the character-style
+   * chain's values on top — id in, effective {@link CharacterFormatting}
+   * out, no schema knowledge needed.
+   */
+  characterFormattingAt(pos: number): CharacterFormatting {
+    const sheet = this.sheet();
+    if (!sheet) return {};
+    const resolve = (id: bigint | undefined) =>
+      id === undefined ? undefined : sheet.style(id)?.resolved().character;
+    const base = resolve(this.effectiveObjectAt(Storage.TABLE_PARA_STYLE, pos));
+    const overlay = resolve(this.characterStyleIdAt(pos));
+    return { ...base, ...overlay };
   }
 
   /**
@@ -1322,6 +1340,63 @@ export class TextStorage {
       });
     }
     return out;
+  }
+
+  /**
+   * Placeholder text runs — a template's "tap or click to add …" spans,
+   * which the app selects whole on a click and replaces on the first
+   * keystroke (`TSWP.PlaceholderSmartFieldArchive`).
+   */
+  placeholders(): { start: number; end: number; text: string; fieldId: bigint }[] {
+    const text = this.text;
+    const out: { start: number; end: number; text: string; fieldId: bigint }[] = [];
+    for (const run of this.objectRuns(Storage.TABLE_SMARTFIELD)) {
+      if (run.objectId === undefined) continue;
+      if (this.store.object(run.objectId)?.type !== SMART_FIELD_TYPE.PLACEHOLDER) continue;
+      out.push({
+        start: run.start,
+        end: run.end,
+        text: text.slice(run.start, run.end),
+        fieldId: run.objectId,
+      });
+    }
+    return out;
+  }
+
+  /**
+   * Fill a placeholder: put real text in its span and shed the placeholder
+   * marking, which is what typing into one does in Pages. The replacement
+   * keeps the placeholder's styling — a template styles its ghost text the
+   * way the final content should look. Returns the filled span.
+   */
+  fillPlaceholder(
+    placeholder: { start: number; end: number },
+    text: string,
+  ): { start: number; end: number } {
+    // Clear the field over the old span before the text moves: the
+    // span-clearing write is exact, while a replacement keeps the run
+    // boundary at `start` — which would leave the new text still marked.
+    this.spanObject(Storage.TABLE_SMARTFIELD, placeholder.start, placeholder.end, undefined);
+    this.replaceRange(placeholder.start, placeholder.end, text);
+    return { start: placeholder.start, end: placeholder.start + text.length };
+  }
+
+  /**
+   * Mark [start, end) as placeholder text, the way Format → Advanced →
+   * Define as Placeholder Text does: a click in the app selects the whole
+   * span and typing replaces it. Any smart field already on the span is
+   * replaced, like inserting any other field. Returns the field's id.
+   */
+  defineAsPlaceholder(start: number, end: number): bigint {
+    const length = this.text.length;
+    if (start < 0 || end <= start || end > length) {
+      throw new RangeError(`defineAsPlaceholder: invalid range ${start}..${end} (len ${length})`);
+    }
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError("storage component not found");
+    const field = buildPlaceholderField(this.store, component);
+    this.spanObject(Storage.TABLE_SMARTFIELD, start, end, field.identifier);
+    return field.identifier;
   }
 
   /**
