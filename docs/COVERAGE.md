@@ -11,12 +11,12 @@ zero fixtures” at the same time — which is exactly the thing worth knowing.
 
 | App | iwork13 | iwork16 | iwork19 | modern | current | Total | Newest format | Newest build |
 |---|---:|---:|---:|---:|---:|---:|---|---|
-| **Pages** | 1 | 4 | 5 | 7 | 6 | 23 | 26.3.1 | `T15.3 (7375.0.54)` |
-| **Numbers** | · | 1 | · | 3 | 6 | 10 | 26.1.0 | `M15.2.1-7048.0.3-2` |
-| **Keynote** | · | 2 | 1 | 2 | 3 | 8 | 26.1.0 | `M15.2.1-7048.0.3-2` |
+| **Pages** | 1 | 4 | 5 | 7 | 8 | 25 | 26.3.1 | `M15.3-7050.0.24-2` |
+| **Numbers** | · | 1 | · | 3 | 8 | 12 | 26.3.1 | `M15.3-7050.0.24-2` |
+| **Keynote** | · | 2 | 1 | 2 | 4 | 9 | 26.3.1 | `M15.3-7050.0.24-2` |
 
 Eras are classified from `fileFormatVersion`; see `docs/FORMAT.md` §11. 
-Corpus: **41 documents**. Every one round-trips byte-identically.
+Corpus: **46 documents**. Every one round-trips byte-identically.
 
 ## Feature coverage
 
@@ -26,14 +26,14 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Flat zip layout | all | ✅ read + write | 39 | all |
+| Flat zip layout | all | ✅ read + write | 44 | all |
 | Nested Index.zip layout | all | ✅ read + write | 2 | iwork19→iwork19 |
 | Wrapper-directory layout | all | ✅ read + write | **0** | — |
-| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 41 | all |
-| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 41 | all |
-| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 41 | all |
-| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 41 | all |
-| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 41 | all |
+| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 46 | all |
+| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 46 | all |
+| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 46 | all |
+| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 46 | all |
+| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 46 | all |
 | Mixed-codec packages (LZFSE component beside Snappy)<br><sub>undecodable components stay opaque and are preserved, never fatal</sub> | all | 🔍 read only | **0** | — |
 | iWork '09 XML documents<br><sub>detected and rejected with a clear error</sub> | all | ✗ out of scope | n/a | — |
 | Password-protected documents<br><sub>detected via .iwph and rejected</sub> | all | ✗ out of scope | n/a | — |
@@ -43,29 +43,29 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Unknown type IDs preserved across edits<br><sub>forward compatibility; registerTypes() can name them at runtime</sub> | all | ✅ read + write | 1 | iwork13→iwork13 |
-| Multi-payload archives | all | 🔍 read only | 31 | iwork19→current |
-| Older-reader compatibility diffs (type-0 patches)<br><sub>preserved verbatim; not recomputed when the base message changes</sub> | all | 🔍 read only | 9 | modern→current |
-| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 27 | modern→current |
+| Multi-payload archives | all | 🔍 read only | 36 | iwork19→current |
+| Older-reader compatibility diffs (type-0 patches)<br><sub>preserved verbatim; not recomputed when the base message changes</sub> | all | 🔍 read only | 11 | modern→current |
+| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 32 | modern→current |
 
 ### Text & styles
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Text read/edit with full attribute-table fixup | all | ✅ read + write | 41 | all |
-| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 41 | all |
-| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 41 | all |
-| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 41 | all |
-| Tab stops (position, alignment, leader) | all | ✅ read + write | 37 | all |
-| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions decoded against the measured bitmask (1 top, 2 bottom, 4 left, 8 right)</sub> | all | ✅ read + write | 24 | all |
-| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 41 | all |
-| List styles | all | ✅ read + write | 23 | all |
+| Text read/edit with full attribute-table fixup | all | ✅ read + write | 46 | all |
+| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 46 | all |
+| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 46 | all |
+| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 46 | all |
+| Tab stops (position, alignment, leader) | all | ✅ read + write | 42 | all |
+| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions decoded against the measured bitmask (1 top, 2 bottom, 4 left, 8 right)</sub> | all | ✅ read + write | 27 | all |
+| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 46 | all |
+| List styles | all | ✅ read + write | 25 | all |
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
-| Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 24 | iwork16→current |
+| Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 26 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 13 | iwork16→current |
-| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 41 | all |
+| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 46 | all |
 | Placeholder text (list, fill, define)<br><sub>the template tap-to-replace mechanism. Filling sheds the marking the way typing does; defineAsPlaceholder writes the measured shape (smart-field super + varint 1, uniform across 73 app-written instances). A placeholder over an attachment's U+FFFC is a body document's image placeholder — same field, no drawable archive</sub> | Pages | ✅ read + write | 5 | iwork19→current |
 | Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 5 | iwork16→modern |
-| Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 4 | iwork16→current |
+| Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 5 | iwork16→current |
 | Footnote creation and removal<br><sub>the reference is a U+000E in its own table; the note is a separate storage of footnote kind — endnotes are the same machinery under kind 1 (document) or 2 (section), read by the same accessor</sub> | Pages | ✅ read + write | 1 | iwork19→iwork19 |
 | Change tracking (insertions/deletions)<br><sub>tables preserved and index-shifted correctly; no semantic API</sub> | all | 🔍 read only | 1 | modern→modern |
 | Table of contents (rules read + write, cached entries read)<br><sub>collection rules are editable; cached entries are a layout result this library will not invent</sub> | Pages | ✅ read + write | 2 | iwork19→iwork19 |
@@ -74,13 +74,13 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 27 | iwork16→current |
-| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 41 | all |
-| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 41 | all |
-| Geometry (enumerate, move, resize) | all | ✅ read + write | 35 | iwork16→current |
+| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 30 | iwork16→current |
+| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 46 | all |
+| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 46 | all |
+| Geometry (enumerate, move, resize) | all | ✅ read + write | 38 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
-| Image cropping (set, move, remove a mask) | all | ✅ read + write | 15 | iwork16→current |
-| Media variant resolution (unmaterialized originals) | all | 🔍 read only | 10 | iwork16→current |
+| Image cropping (set, move, remove a mask) | all | ✅ read + write | 16 | iwork16→current |
+| Media variant resolution (unmaterialized originals) | all | 🔍 read only | 11 | iwork16→current |
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
 
@@ -91,24 +91,24 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Sections (read + insert)<br><sub>validation counts multi-section documents only</sub> | Pages | ✅ read + write | 5 | iwork19→current |
 | Headers & footers (3 columns × first/even/odd) | Pages | ✅ read + write | 6 | iwork19→modern |
 | Master-page drawables | Pages | 🔍 read only | 2 | iwork19→modern |
-| Page setup (size, margins, orientation) | Pages | ✅ read + write | 23 | all |
+| Page setup (size, margins, orientation) | Pages | ✅ read + write | 25 | all |
 | Page-layout (body-less) documents | Pages | ✅ read + write | 2 | iwork16→modern |
 | Text boxes | Pages | ✅ read + write | 9 | iwork16→current |
-| Document settings (hyphenation, ligatures, footnote config) | Pages | ✅ read + write | 23 | all |
+| Document settings (hyphenation, ligatures, footnote config) | Pages | ✅ read + write | 25 | all |
 
 ### Numbers & tables
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Sheets (add, duplicate, rename, move, remove)<br><sub>a duplicated sheet deep-copies its tables, so the two tabs edit different cells</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
-| Table cell reading — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 18 | iwork19→current |
+| Sheets (add, duplicate, rename, move, remove)<br><sub>a duplicated sheet deep-copies its tables, so the two tabs edit different cells</sub> | Numbers | ✅ read + write | 12 | iwork16→current |
+| Table cell reading — modern BNC/v5 storage<br><sub>numbers, text, rich text, dates, booleans, durations, merges</sub> | all | 🔍 read only | 20 | iwork19→current |
 | Table cell reading — pre-BNC storage (iWork '13/'15)<br><sub>text, numbers and dates. Layout measured from the corpus itself (`npm run prebnc`), not documented anywhere; a record shape that was not measured is refused and counted by undecodedPreBncCells() rather than guessed. Writing this storage is out of scope — a current app converts these files on open</sub> | all | 🔍 read only | 4 | iwork16→iwork16 |
-| Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 18 | iwork19→current |
-| Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 18 | iwork19→current |
-| Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 22 | iwork16→current |
-| Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 22 | iwork16→current |
+| Table cell writing (text, number, date, bool, duration)<br><sub>string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved</sub> | all | ✅ read + write | 20 | iwork19→current |
+| Cell styling (fill, four borders, padding, alignment, wrap) | all | ✅ read + write | 20 | iwork19→current |
+| Table styling (banded rows, grid strokes, visibility) | all | ✅ read + write | 24 | iwork16→current |
+| Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 24 | iwork16→current |
 | Merged cell ranges<br><sub>mergeCells/unmergeCells, complete with the calc engine's dependency ledger: the kind-5 owner's (row 0, column = formula_index) record, tile minted on first use. Deleting Apple's last merge in issue102 and remaking it through mergeCells reproduces the whole saved file byte for byte</sub> | all | ✅ read + write | 5 | modern→current |
-| Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 17 | iwork19→current |
+| Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 19 | iwork19→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 7 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_&lt;id&gt;. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 6 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 1 | current→current |
@@ -116,35 +116,35 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Pop-up menu creation (TST.PopUpMenuModel)<br><sub>The one widget built from the schema rather than measured. A menu is the only control needing a second archive — the model holding its choices — and no document available here contains one, so its shape comes from the vendored proto2 definition: repeated TSCE.CellValueArchive, each item carrying the TSK.FormatStructArchive its schema marks required. Cells sharing choices share one model. Reading, round-tripping and the cell's own format are all checked offline; none of that is the app's opinion</sub> | Numbers | ✅ read + write | n/a | — |
 | Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, cross-table references (`Other::A1`, resolved to the target's owner UUID), nested calls, omitted arguments, and any of the 272 measured functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with its own text saves the whole document byte-identical to the original. Nothing evaluates — pass the cached result as `value`. Arrays and #REF! are refused</sub> | all | ✅ read + write | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
-| Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
+| Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 12 | iwork16→current |
 | Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; appearance has its own rows below</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
 | Chart appearance: type and series colours<br><sub>chart type reads and writes against the full TSCHArchives_Common enum (a test parses the proto, so the next value Apple adds fails the suite rather than a document). Series colour copies on write: style archives are shared — one is referenced by ten charts in a borrowed document — so setSeriesFill clones a shared archive, repoints this chart's slot and retargets the reference declaration, instead of recolouring every chart at once</sub> | all | ✅ read + write | 1 | iwork16→iwork16 |
 | Chart appearance: axes, legend, gridlines<br><sub>axis visibility, gridlines, tick marks and gridline strokes read and write, per axis and per kind. Nearly every axis property exists twice — once for category, once for value — and an archive fills only its own family, so reading the wrong one returns undefined for everything and looks like an empty archive rather than a bug; the chart names the two kinds in separate fields, so nothing is inferred. Writes copy on write like series fills. Legend fill, stroke and opacity write the same way</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
-| Conditional formatting rules<br><sub>conditions decoded from the rule's formula, which states the comparison. setConditionalRules writes all six comparisons — every predicate_type code is observed, the last two (&gt; at 7, &gt;= at 8) measured 2026-08-03 from seed documents whose formulas state the operators. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | 1 | current→current |
-| Conditional formatting: apply an existing rule set to more cells | all | ✅ read + write | 1 | current→current |
+| Conditional formatting rules<br><sub>conditions decoded from the rule's formula, which states the comparison. setConditionalRules writes all six comparisons — every predicate_type code is observed, the last two (&gt; at 7, &gt;= at 8) measured 2026-08-03 from seed documents whose formulas state the operators. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | 2 | current→current |
+| Conditional formatting: apply an existing rule set to more cells | all | ✅ read + write | 2 | current→current |
 | Conditional formatting: authoring new rules<br><sub>all six comparisons write. = &lt;&gt; &lt; &lt;= were observed in the corpus; &gt; (7) and &gt;= (8) were measured 2026-08-03, closing the menu-order enum — codes were refused until observed because a rule filed under a wrong code reads back correctly while showing the wrong condition in the editor. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | n/a | — |
-| Filters (mode, enable state, per-column rules)<br><sub>rule reading is measured against the first non-empty filter set (see the BLOCKERS ledger): predicates decode with their formulas, sharing the conditional-formatting encoding; every corpus fixture's filter set is empty, so the container, mode and enable flag are fixture-proven while rule-bearing bytes await a donated fixture</sub> | all | 🔍 read only | 12 | modern→current |
-| Filters: enable, disable, combining mode | all | ✅ read + write | 12 | modern→current |
+| Filters (mode, enable state, per-column rules)<br><sub>rule reading is pinned against the populated two-rule set in olekristensen-v26.3-mac-filters.numbers — columns, switches, predicates and their formulas, sharing the conditional-formatting encoding — alongside the empty sets every template-era fixture carries</sub> | all | 🔍 read only | 14 | modern→current |
+| Filters: enable, disable, combining mode | all | ✅ read + write | 14 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 1 | current→current |
-| Categories: enable or disable grouping | all | ✅ read + write | 12 | modern→current |
+| Categories: enable or disable grouping | all | ✅ read + write | 14 | modern→current |
 | Categories: regrouping rows after an edit<br><sub>regroupCategories puts rows back in the groups their values now call for, and writes only the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for byte across every by-value table in the fixture. Creating or removing a group is refused: which rows are "Animal" the data answers, but a new group's identity, its sort position and the per-column fields beside the tree are things only the app knows</sub> | all | ✅ read + write | 1 | current→current |
 | Categories: creating a grouping, and per-group summaries<br><sub>creating a group needs its identity, its sort position and the several per-column and per-row fields written alongside the tree, none of which any fixture explains; and no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
-| Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions; row/column insert and delete keep the map in lockstep, minting and retiring identities — read-only means no direct authoring API</sub> | all | 🔍 read only | 22 | iwork16→current |
+| Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions; row/column insert and delete keep the map in lockstep, minting and retiring identities — read-only means no direct authoring API</sub> | all | 🔍 read only | 24 | iwork16→current |
 | Filters: authoring rules and recomputing hidden rows<br><sub>a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates</sub> | all | ○ roadmap | n/a | — |
 
 ### Keynote
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
-| Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 8 | iwork16→current |
-| Speaker notes | Keynote | ✅ read + write | 2 | iwork16→iwork16 |
+| Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
+| Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 9 | iwork16→current |
+| Speaker notes | Keynote | ✅ read + write | 3 | iwork16→current |
 | Transitions<br><sub>named effects were blocked on evidence — every corpus slide says effect "none" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 17 of 17); written effects copy a string measured from the app that run, never a guess</sub> | Keynote | ✅ read + write | **0** | — |
-| Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
-| Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
+| Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
+| Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
-| Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
-| Builds (animations): read and retime<br><sub>NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in animationAttributes (field 18), undecoded, so they read undefined on modern builds and retiming writes legacy fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ⚠️ experimental | **0** | — |
+| Master / layout slides | Keynote | 🔍 read only | 9 | iwork16→current |
+| Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 1 | current→current |
 | Builds: creating an animation<br><sub>withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written</sub> | Keynote | ○ roadmap | n/a | — |
 
 ### Concurrency
@@ -220,7 +220,6 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - Keynote → **Transitions**
 - Keynote → **Skipped slides**
-- Keynote → **Builds (animations): read and retime**
 
 **Thinly validated** (1–2 fixtures — no cross-check if an encoding varies):
 
@@ -237,11 +236,11 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Chart data editing (values, names, series, categories)** (2)
 - Numbers & tables → **Chart appearance: type and series colours** (1)
 - Numbers & tables → **Chart appearance: axes, legend, gridlines** (2)
-- Numbers & tables → **Conditional formatting rules** (1)
-- Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** (1)
+- Numbers & tables → **Conditional formatting rules** (2)
+- Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** (2)
 - Numbers & tables → **Categories (row grouping, nesting, date bucketing)** (1)
 - Numbers & tables → **Categories: regrouping rows after an edit** (1)
-- Keynote → **Speaker notes** (2)
+- Keynote → **Builds (animations): read and retime** (1)
 
 ## Fixture inventory
 
@@ -270,6 +269,11 @@ correctly. They are listed with their reasoning and repro steps in
 | `olekristensen-v26.3-ios-borders-logical.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
 | `olekristensen-v26.3-ios-placeholder-consumed.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
 | `olekristensen-v26.3-ios-rtl-direction.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
+| `olekristensen-v26.3-mac-borders-logical.pages` | Pages | current | 26.3.1 | `M15.3-7050.0.24-2` |
+| `olekristensen-v26.3-mac-builds-effects.key` | Keynote | current | 26.3.1 | `M15.3-7050.0.24-2` |
+| `olekristensen-v26.3-mac-conditional-rules.numbers` | Numbers | current | 26.3.1 | `M15.3-7050.0.24-2` |
+| `olekristensen-v26.3-mac-filters.numbers` | Numbers | current | 26.3.1 | `M15.3-7050.0.24-2` |
+| `olekristensen-v26.3-mac-placeholder-consumed.pages` | Pages | current | 26.3.1 | `M15.3-7050.0.24-2` |
 | `patrickomatic-pages26-sections-masks.pages` | Pages | current | 26.1.0 | `M15.2.1-7048.0.3-2` |
 | `patrickomatic-termpaper-footers-masks.pages` | Pages | current | 26.1.0 | `M15.2.1-7048.0.3-2` |
 | `picodocs-v14.4-headers-tables.pages` | Pages | modern | 14.4.1 | `M14.5-7045.0.17-4` |

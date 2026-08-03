@@ -285,11 +285,11 @@ describe("every fixture survives an edit cycle", () => {
       }
       edited++;
     }
-    // Every modern document in the corpus: 23 Pages, 10 Numbers, 8 Keynote.
+    // Every modern document in the corpus: 25 Pages, 12 Numbers, 9 Keynote.
     // The one skip is the iWork '09 XML file, which is rejected by design.
     // Exact numbers on purpose — "more than thirty" would hide a fixture
     // quietly becoming uneditable.
-    expect(edited).toBe(41);
+    expect(edited).toBe(46);
     expect(skipped).toEqual(["tika-iwork09-testPages.pages"]);
   });
 
@@ -325,9 +325,9 @@ describe("every fixture survives an edit cycle", () => {
       }
       written++;
     }
-    // 15 of the 41 carry a writable v5 table; the rest have no tables at
+    // 17 of the 46 carry a writable v5 table; the rest have no tables at
     // all, or only pre-BNC storage, which reads but does not write.
-    expect(written).toBe(15);
+    expect(written).toBe(17);
   });
 });
 

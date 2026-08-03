@@ -1,0 +1,361 @@
+{
+  "file": "olekristensen-v26.3-mac-filters.numbers",
+  "sha1": "810f0569d8a46b62222ab281ca820ced0a0c3902",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 621,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-916217.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916218.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916219.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916220.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916221.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916222.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916223.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916224.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916225.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916226.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916227.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916229.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916552.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 487
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 11,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "SEED · filter rules (docs/BLOCKERS.md, send-back ask)"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "numbers"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "text"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "The first real filter set is measured; a run on your version re-measures it, and the saved file is the outstanding fixture — send it back."
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "4"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "kobber"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1) Click the table, then Organize (Organiser) → Filter"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "sten"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2) Add a Filter on column B: greater than · 10"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "11"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "koral"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3) Add a Filter on column C: text contains · ko"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "14"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "birk"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4) Keep filters ON (rows will hide — that is the point)"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "kork"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5) Save (⌘S), close, then run:"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "18"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "lind"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "npm run probe -- seed-filters.numbers"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "9"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "skov"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "The probe reads the rules, not the view; a probe that still shows an empty filter set means Numbers stores rules elsewhere — the more interesting outcome."
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "21"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "koks"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "6"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "eg"
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "25"
+              },
+              {
+                "r": 10,
+                "c": 2,
+                "v": "kobolt"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -298,22 +298,27 @@ describe("character and paragraph formatting", () => {
 
   it("side bits are logical: an RTL paragraph's visual-left edge stores trailing", () => {
     // Visual-left on LTR is 4, visual-right on LTR is 8, visual-left on
-    // RTL is 8: the bit names the logical side.
-    const doc = PagesDocument.load(fixture("olekristensen-v26.3-ios-borders-logical.pages"));
-    const sheet = doc.body.sheet()!;
-    const bitsOf = (start: number): number => {
-      const id = doc.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
-      if (id === undefined) return 0;
-      return sheet.style(id)?.resolved().paragraph.borderPositions ?? 0;
-    };
-    const starts = doc.body.paragraphStarts();
-    const used = starts.map(bitsOf).filter((bits) => bits !== 0).sort((a, b) => a - b);
-    expect(used.join(",")).toBe("4,8,8");
+    // RTL is 8: the bit names the logical side. Both writers agree.
+    for (const name of [
+      "olekristensen-v26.3-ios-borders-logical.pages",
+      "olekristensen-v26.3-mac-borders-logical.pages",
+    ]) {
+      const doc = PagesDocument.load(fixture(name));
+      const sheet = doc.body.sheet()!;
+      const bitsOf = (start: number): number => {
+        const id = doc.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
+        if (id === undefined) return 0;
+        return sheet.style(id)?.resolved().paragraph.borderPositions ?? 0;
+      };
+      const starts = doc.body.paragraphStarts();
+      const used = starts.map(bitsOf).filter((bits) => bits !== 0).sort((a, b) => a - b);
+      expect(`${name}: ${used.join(",")}`).toBe(`${name}: 4,8,8`);
 
-    const paragraphs = doc.paragraphs();
-    const hebrew = paragraphs.findIndex((p) => /[֐-׿]/.test(p.text));
-    expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
-    expect(bitsOf(starts[hebrew]!)).toBe(BorderPosition.TRAILING);
+      const paragraphs = doc.paragraphs();
+      const hebrew = paragraphs.findIndex((p) => /[֐-׿]/.test(p.text));
+      expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
+      expect(bitsOf(starts[hebrew]!)).toBe(BorderPosition.TRAILING);
+    }
   });
 
   it("clears a nullable property with its paired null flag", () => {

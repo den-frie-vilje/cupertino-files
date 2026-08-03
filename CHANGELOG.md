@@ -7,6 +7,25 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Keynote build effects and timing are decoded: `effect` (an identifier
+  string in two schemes, `apple:dissolve character` /
+  `com.apple.iWork.Keynote.BUKAnvil`), `animationType`, `duration` and
+  `delay` now read from `KN.AnimationAttributesArchive` with the legacy
+  `database_*` fields as fallback, and retiming writes the same fields —
+  measured against the corpus's first animated deck, whose three
+  app-authored builds are pinned in tests.
+- Filter-rule reading is pinned against the corpus's first populated
+  filter set: columns, per-rule switches, combining mode and predicate
+  formulas, including the type-3 "text contains" compilation. The
+  conditional-formatting comparisons `>5`, `>=7`, text-contains and
+  is-blank gain corpus evidence in a second fixture.
+- The fixture corpus grows 41 → 46 with five macOS iWork 15.3-written
+  documents (the first M15.3 writer files in the corpus), covering
+  builds, filters, conditional rules, and macOS agreement on the border
+  side bits, paragraph direction and placeholder consumption measured
+  on iOS. All measurement seeds are banked; `npm run seeds` keeps the
+  scaffolding with an empty registry for the next question that needs
+  a person in an app.
 - The border bitmask's side bits are measured *logical*: 4 is the
   leading edge and 8 the trailing edge, swapping visual sides with the
   paragraph's writing direction (a left-edge border on an RTL paragraph

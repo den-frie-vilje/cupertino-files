@@ -2,13 +2,15 @@
  * Predicates, conditional formatting and filters.
  *
  * These three share one archive — `TST.FormulaPredicateArchive` — so they
- * are tested together, against the two things the corpus actually proves:
+ * are tested together, against what the corpus proves:
  *
  *  - `numbers-parser-v26.1-xlsx-lineage.numbers` has three real
  *    conditional-style rule sets, whose conditions decode to `<0` and `=0`
  *    and whose refcounts must equal the number of cells pointing at them.
- *  - Filter sets appear in fixtures from all three apps, always *empty*,
- *    which is exactly what a reader should report rather than papering over.
+ *  - `olekristensen-v26.3-mac-conditional-rules.numbers` adds sets
+ *    decoding to `>5`, `>=7`, text-contains and is-blank.
+ *  - Filter sets appear in fixtures from all three apps, empty except the
+ *    two-rule row filter in `olekristensen-v26.3-mac-filters.numbers`.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
@@ -257,6 +259,25 @@ describe("predicates", () => {
   });
 });
 
+describe("conditional formatting beyond plain comparisons", () => {
+  it("reads comparison, text-contains and is-blank rule sets", () => {
+    const document = open("olekristensen-v26.3-mac-conditional-rules.numbers");
+    const table = tablesOf(document.store).find(
+      (t) => t.conditionalStyleSets().size > 0,
+    )!;
+    const rules = [...table.conditionalStyleSets().values()].flatMap((set) =>
+      set.rules().map((r) => ({ type: r.predicate!.predicateType, text: r.predicate!.text })),
+    );
+    rules.sort((a, b) => (a.text < b.text ? -1 : 1));
+    expect(rules).toEqual([
+      { type: 34, text: "ISBLANK(THIS_CELL)" },
+      { type: 3, text: 'NOT(ISERROR(FUNCTION_296("pear",THIS_CELL)))' },
+      { type: 7, text: "THIS_CELL>5" },
+      { type: 8, text: "THIS_CELL>=7" },
+    ]);
+  });
+});
+
 describe("filters", () => {
   /** Fixtures across all three apps that carry filter sets. */
   const WITH_FILTERS = [
@@ -277,7 +298,7 @@ describe("filters", () => {
     }
   });
 
-  it("reports the corpus honestly: every filter set is empty", () => {
+  it("reads an untouched filter set as empty", () => {
     for (const name of WITH_FILTERS) {
       for (const table of tablesOf(open(name).store)) {
         const { rows, columns } = table.filterSets();
@@ -288,6 +309,29 @@ describe("filters", () => {
         }
       }
     }
+  });
+
+  it("reads a populated row filter: columns, conditions, switches", () => {
+    const document = open("olekristensen-v26.3-mac-filters.numbers");
+    const table = tablesOf(document.store).find(
+      (t) => (t.filterSets().rows?.rules().length ?? 0) > 0,
+    )!;
+    const set = table.filterSets().rows!;
+    expect(set.mode).toBe("all");
+    expect(set.enabled).toBe(true);
+    expect(set.consistent).toBe(true);
+
+    const rules = set.rules();
+    expect(rules.length).toBe(2);
+    expect(rules.map((r) => r.column)).toEqual([0, 1]);
+    expect(rules.every((r) => r.enabled && !r.legacy)).toBe(true);
+    expect(rules[0]!.predicate!.predicateType).toBe(7);
+    expect(rules[0]!.predicate!.text).toBe("OTHER_TABLE::R[0]C[0]>10");
+    expect(rules[1]!.predicate!.predicateType).toBe(3);
+    expect(rules[1]!.predicate!.text).toBe(
+      'NOT(ISERROR(FUNCTION_296("ko",OTHER_TABLE::R[0]C[1])))',
+    );
+    expect(set.describe().length).toBe(2);
   });
 
   it("reads both combining modes", () => {

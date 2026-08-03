@@ -1435,10 +1435,10 @@ export const CAPABILITIES: Capability[] = [
         }),
       ),
     note:
-      "rule reading is measured against the first non-empty filter set (see the BLOCKERS " +
-      "ledger): predicates decode with their formulas, sharing the conditional-formatting " +
-      "encoding; every corpus fixture's filter set is empty, so the container, mode and enable " +
-      "flag are fixture-proven while rule-bearing bytes await a donated fixture",
+      "rule reading is pinned against the populated two-rule set in " +
+      "olekristensen-v26.3-mac-filters.numbers — columns, switches, predicates and their " +
+      "formulas, sharing the conditional-formatting encoding — alongside the empty sets " +
+      "every template-era fixture carries",
   },
   {
     group: "Numbers & tables",
@@ -1449,8 +1449,11 @@ export const CAPABILITIES: Capability[] = [
       safe(() => c.doc.tables().some((t) => t.filterSets().rows !== undefined)),
     manualProof: {
       claim: "enabling a filter set makes Numbers apply its rules",
-      why: "no fixture has a populated filter set, so the suite can only prove an empty one round-trips with the flag flipped",
-      how: "build a Numbers table with a filter rule, save, flip is_enabled with this library, reopen and confirm the row visibility changes",
+      why:
+        "the corpus now carries a populated, enabled set the app itself wrote, but a flag " +
+        "flipped by this library has never been reopened in the app — and hidden rows are " +
+        "recomputed there, not here",
+      how: "take olekristensen-v26.3-mac-filters.numbers, flip is_enabled off with this library, reopen and confirm all rows show",
       risk: "medium",
     },
   },
@@ -1718,23 +1721,26 @@ export const CAPABILITIES: Capability[] = [
     group: "Keynote",
     name: "Builds (animations): read and retime",
     apps: ["keynote"],
-    status: "experimental",
+    status: "read+write",
     probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.builds().length > 0)),
     note:
-      "NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in " +
-      "animationAttributes (field 18), undecoded, so they read undefined on modern builds and " +
-      "retiming writes legacy fields. Will not create a build — see docs/BLOCKERS.md",
+      "effect, timing, delivery, trigger and per-stage chunks all read, pinned against the " +
+      "three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and " +
+      "timing decode from KN.AnimationAttributesArchive with database_* fallback, and " +
+      "retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md",
     manualProof: {
       claim: "the build model reads a real animation correctly",
       settled:
-        "**Half confirmed, half refuted (2026-08-03, the first animated deck anywhere).** " +
-        "Confirmed: three builds survive authoring and resave, the slide↔build graph reads " +
-        "correctly, and delivery stores English display strings (\"All at Once\", " +
-        "\"By Paragraph\") even under a Danish UI. Refuted: every database_* field read for " +
-        "effect and timing was absent from the app-authored builds — including one given 3 s " +
-        "duration and 1 s delay by hand — so modern Keynote packs effect and timing into " +
-        "animationAttributes (field 18), which stays undecoded until the deck's bytes are " +
-        "measured. The saved deck itself is the outstanding evidence",
+        "**Half confirmed, half refuted (2026-08-03, the first animated deck anywhere), then " +
+        "closed whole when the deck's bytes arrived.** Confirmed: three builds survive " +
+        "authoring and resave, the slide↔build graph reads correctly, and delivery stores " +
+        "English display strings (\"All at Once\", \"By Paragraph\") even under a Danish UI. " +
+        "Refuted: every database_* field read for effect and timing was absent from the " +
+        "app-authored builds — including one given 3 s duration and 1 s delay by hand — so " +
+        "modern Keynote packs effect and timing into animationAttributes. The returned deck " +
+        "settled that field as KN.AnimationAttributesArchive (in the vendored schema all " +
+        "along): effect strings in two schemes, duration/delay doubles, and per-chunk timing " +
+        "on staged delivery. The deck is now the fixture the readers are pinned against",
       why: "not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation",
       how: "a three-slide deck with a different effect on each and one text build delivered by line, then `npm run probe -- animated.key`",
       risk: "high",

@@ -20,36 +20,16 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — nothing left to make; three finished seeds to send back
+## Needs a Mac — nothing outstanding
 
-**Shortcut: `npm run seeds -- out`** writes ready-made starting points
-with every remaining click inside the document itself (cells beside the
-data, presenter notes, Pages comments on the exact paragraph); each
-serves as a re-measurement on any future app version.
+Every seed program has been returned and banked; the returned files are
+fixtures with pins (see ATTRIBUTION.md). `npm run seeds` is the standing
+scaffolding for the next question that needs a person: it writes
+documents whose remaining clicks live inside the document itself, and
+its registry is empty until a blocker below stages one.
 
-**Send back the three finished seeds** from the first round —
-`seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
-files. Their probe runs measured everything visible from outside (the
-ledger below); what remains in each is byte-level:
-
-- `seed-builds.key` — the biggest: effect and timing live in
-  `animationAttributes` (field 18), which nothing has ever decoded, and
-  this is the only animated deck anywhere. As a fixture it would end the
-  build model's schema-only status.
-- `seed-filters.numbers` — the only non-empty filter set anywhere; as a
-  fixture it pins filter-rule reading and the cross-owner reference that
-  currently renders `OTHER_TABLE::`.
-- `seed-rules.numbers` — pins predicate codes 3/7/8/34 and the unnamed
-  "text contains" function 296 against real bytes.
-
-Unlike borrowed documents these are yours to give: made by you from
-generated seeds, they can enter `fixtures/` with attribution if you say
-so.
-
-Record each run in the ledger below, then `npm run coverage`.
-
-**Before making any of these**, remember the technique that closed most
-of this page: somebody has already made the document you need. Parser
+**Before staging a seed**, remember the technique that closed most of
+this page: somebody has already made the document you need. Parser
 projects keep per-feature test files; public spreadsheets demonstrate
 whole function libraries. The rule that keeps borrowing clean: **read the
 properties, keep the measurement, discard the file** — nothing borrowed
@@ -69,23 +49,22 @@ that rebuild the structures from them.
   `npm run harvest -- --ingest doc.numbers`, `--emit-sheet probe.tsv`,
   or `--drive` (macOS, drives Numbers directly). It refuses to guess — a
   name is accepted only when every observation agrees.
-- **Keynote builds: decoding `animationAttributes`, then creation.** The
-  slide↔build graph and delivery reads are deck-confirmed, but modern
-  Keynote keeps effect and timing inside `animationAttributes`
-  (field 18), undecoded until the saved seed deck's bytes arrive (the
-  send-back ask above). Creation stays withheld until the app confirms a
-  build we write — a build the app silently drops looks exactly like one
-  never written. (Cell-control creation shipped and is app-confirmed;
-  see VERIFICATION.)
+- **Keynote builds: creation.** Reading is measured whole — effect,
+  timing and delivery decode from `animationAttributes` against the
+  fixture deck — and retiming writes the same fields. Creation stays
+  withheld until the app confirms a build this library writes from
+  nothing: a build the app silently drops looks exactly like one never
+  written. (Cell-control creation shipped and is app-confirmed; see
+  VERIFICATION.)
 - **Creating a category group.** Regrouping shipped (byte-identical on
   unchanged data). Creation is blocked on a group's identity, sort
   position and eight unexplained sidecar fields; bucketed groupings
   ("dates by quarter") additionally mean evaluating the grouping
   formula. **Recomputing filtered rows** is the same class: which rows a
   filter hides lives in `TST.HiddenStateExtentArchive`, and computing it
-  means evaluating predicates. (Filter *rule* reading is measured against
-  the first real filter set — see the ledger; every corpus fixture's set
-  is still empty, so rule-bearing fixture bytes await the donated seed.)
+  means evaluating predicates. (Filter *rule* reading is pinned against
+  the populated set in `olekristensen-v26.3-mac-filters.numbers`; rule
+  *synthesis* waits for an app round-trip of a library-written rule.)
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -154,6 +133,9 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | predicate_type 7/8 | Numbers (macOS, Danish UI), via seed-rules + seed-filters | **solved — the menu-order prediction confirmed whole**: 7 = `>` (twice over: a conditional rule and a filter), 8 = `>=`, each stated by its own formula. All six comparison codes observed; setConditionalRules writes all six | `src/tst/predicates.ts`, test/conditional-writing.test.ts |
 | 2026-08-03 | filter rules + predicate_type 3 | Numbers (macOS, Danish UI), via seed-filters | **first non-empty filter set anywhere — rules read**, filters and conditional formatting sharing the predicate encoding. Type 3 is "text contains": `NOT(ISERROR(f(needle, cell)))` with `f` the unnamed function index 296 (SEARCH is 131). Filter formulas render `OTHER_TABLE::` — the filter owner's references resolve to no named table yet | `scripts/probe-unknowns.ts` |
 | 2026-08-03 | Keynote build vocabulary | Keynote (macOS, Danish UI), via seed-builds | **half confirmed, half refuted**: three builds survive authoring; the slide↔build graph and delivery read correctly, delivery storing English display strings ("All at Once", "By Paragraph") under a Danish UI. Every `database_*` field (effect, duration, delay) was absent — even with 3 s / 1 s set by hand — so effect and timing live in `animationAttributes` (field 18), undecoded. The saved deck's bytes are the outstanding evidence | `src/keynote/builds.ts` |
+| 2026-08-03 | `animationAttributes` decode | Keynote (macOS M15.3 writer), the returned seed deck as fixture | **SOLVED — the field is `KN.AnimationAttributesArchive` and it was in the vendored schema all along**: `effect` (2) an identifier string in two schemes (`apple:dissolve character`, `apple:move in character`, `com.apple.iWork.Keynote.BUKAnvil`), `animation_type` (1) "In", `duration` (3) and `delay` (5) seconds as doubles, plus `random_number_seed` (11) and `writing_direction_is_rtl` (16). Readers now take these with `database_*` fallback; retiming writes them. The deck also shows per-chunk timing (two automatic chunks, delay 1 s, duration 1.75 s) on staged delivery | `src/keynote/builds.ts`, test/keynote.test.ts |
+| 2026-08-03 | filters + rules as corpus evidence | Numbers (macOS M15.3 writer), returned seeds as fixtures | **pinned against real bytes**: the populated two-rule row filter (col A `>10` type 7, col B contains-"ko" type 3, mode all, arrays consistent) and the conditional sets `>5`/`>=7`/contains-"pear"/is-blank (7/8/3/34) are fixtures with tests; the earlier probe-output measurements now have standing evidence | `test/predicates.test.ts` |
+| 2026-08-03 | macOS re-measurement of iOS findings | Pages (macOS M15.3 writer), returned seeds as fixtures | **both writers agree**: borders {4, 8, 8} with the RTL visual-left edge at 8, the library's (1, 0) direction pair surviving the resave, and a library-defined placeholder consumed by click-and-type to zero fields | test/styling.test.ts, test/placeholders.test.ts |
 | 2026-08-01 | cell-control interaction_type | n/a — borrowed documents | **solved**: 4 stepper, 5 slider, 6 star, 7 pop-up, 8 checkbox; also found and fixed the dropped-checkbox bug | `src/tst/controls.ts` |
 | 2026-08-01/02 | Pages ladder P00–P19 | Pages (macOS 26.x) | **all rungs confirmed**; twelve well-formed-but-wrong defects found, fixed, pinned | VERIFICATION.md |
 | 2026-08-02 | Keynote ladder K00–K10 (v26) | Keynote (macOS + iOS) | **all rungs confirmed**; six defects found (four offline by shape:audit, two by the app), fixed, pinned | VERIFICATION.md |

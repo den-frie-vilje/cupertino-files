@@ -22,8 +22,8 @@
  * }
  * ```
  *
- * **No fixture contains a build**, so the byte-level model is checked
- * against the schema and one probed deck, not a corpus. That is why this
+ * `fixtures/olekristensen-v26.3-mac-builds-effects.key` carries three
+ * app-authored builds; the byte-level model is measured against it. This
  * module:
  *
  *  - reads and **edits** existing builds, where the risk is a field number
@@ -37,14 +37,17 @@
  * `delivery` stores English *display* strings ("All at Once",
  * "By Paragraph") regardless of the system locale. The `database_*`
  * fields are legacy: a modern app-authored build carries none of them —
- * effect and timing live inside `attributes.animationAttributes`
- * (field 18), which nothing here decodes yet, so `effect`, `duration`
- * and `delay` read `undefined` on modern builds.
+ * effect and timing live in `attributes.animationAttributes`
+ * (`KN.AnimationAttributesArchive`): `effect` is an identifier string in
+ * one of two schemes (`apple:dissolve character`,
+ * `com.apple.iWork.Keynote.BUKAnvil`), `animation_type` a display word
+ * ("In"), `duration` and `delay` seconds as doubles. Readers here take
+ * the animation attributes first and fall back to the legacy fields.
  *
  * `npm run probe -- <deck>` prints everything a deck's builds contain —
- * delivery, trigger, chunks, and the shape of `animationAttributes` — so
- * any animated deck either confirms this reading or shows exactly where
- * it is wrong.
+ * delivery, trigger, chunks, and the animation attributes — so any
+ * animated deck either confirms this reading or shows exactly where it
+ * is wrong.
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -100,6 +103,18 @@ export const BuildAttributesFields = protoFields("KN.BuildAttributesArchive", {
   CUSTOM_MOTION_BLUR: "custom_motion_blur",
 });
 
+/** KN.AnimationAttributesArchive — where a modern build keeps its effect. */
+export const AnimationAttributesFields = protoFields("KN.AnimationAttributesArchive", {
+  ANIMATION_TYPE: "animation_type",
+  EFFECT: "effect",
+  DURATION: "duration",
+  DIRECTION: "direction",
+  DELAY: "delay",
+  IS_AUTOMATIC: "is_automatic",
+  RANDOM_NUMBER_SEED: "random_number_seed",
+  WRITING_DIRECTION_IS_RTL: "writing_direction_is_rtl",
+});
+
 /** KN.BuildAttributesArchive.BuildAttributesTextDelivery. */
 export const TextDelivery = protoEnum("KN.BuildAttributesArchive.BuildAttributesTextDelivery", {
   UNDEFINED: "kTextDeliveryUndefined",
@@ -150,11 +165,14 @@ export interface BuildInfo {
    */
   delivery: string | undefined;
   /**
-   * Effect name from the legacy `database_effect` field. Modern builds
-   * keep the effect inside `animationAttributes` (undecoded) instead, so
-   * expect `undefined` there.
+   * Effect identifier, e.g. `apple:dissolve character` or
+   * `com.apple.iWork.Keynote.BUKAnvil` — modern builds keep it in
+   * `animationAttributes`; the legacy `database_effect` is the fallback.
    */
   effect: string | undefined;
+  /** Display word for the effect's category ("In"). */
+  animationType: string | undefined;
+  /** Seconds. From `animationAttributes`, legacy fields as fallback. */
   duration: number | undefined;
   delay: number | undefined;
   /** One of {@link TextDelivery}, for text animated piece by piece. */
@@ -182,17 +200,28 @@ export class BuildModel {
     return this.object.message.getMessage(BuildFields.ATTRIBUTES);
   }
 
+  private animationAttributes(): ReturnType<IwaObject["message"]["getMessage"]> {
+    return this.attributes()?.getMessage(BuildAttributesFields.ANIMATION_ATTRIBUTES);
+  }
+
   read(): BuildInfo {
     const attributes = this.attributes();
+    const animation = this.animationAttributes();
     return {
       id: this.id,
       drawableId: refId(this.object.message, BuildFields.DRAWABLE),
       delivery: this.object.message.getString(BuildFields.DELIVERY),
-      effect: attributes?.getString(BuildAttributesFields.DATABASE_EFFECT),
+      effect:
+        animation?.getString(AnimationAttributesFields.EFFECT) ??
+        attributes?.getString(BuildAttributesFields.DATABASE_EFFECT),
+      animationType: animation?.getString(AnimationAttributesFields.ANIMATION_TYPE),
       duration:
+        animation?.getDouble(AnimationAttributesFields.DURATION) ??
         attributes?.getDouble(BuildAttributesFields.DATABASE_DURATION) ??
         this.object.message.getDouble(BuildFields.DURATION_DEPRECATED),
-      delay: attributes?.getDouble(BuildAttributesFields.DATABASE_DELAY),
+      delay:
+        animation?.getDouble(AnimationAttributesFields.DELAY) ??
+        attributes?.getDouble(BuildAttributesFields.DATABASE_DELAY),
       textDelivery: attributes?.getUint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY),
       deliveryOption: attributes?.getUint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION),
       chunks: this.chunks(),
@@ -228,11 +257,9 @@ export class BuildModel {
    * fields are the ones Apple wrote, and a mistake shows up the moment the
    * deck is played. Only the properties given are changed.
    *
-   * Caveat: modern app-authored builds carry no `database_duration`/
-   * `database_delay` — their timing lives in `animationAttributes` — so
-   * retiming a modern build writes fields the current app no longer
-   * writes itself, unverified until an edited deck round-trips the app.
-   * `delivery`, which the app does write, is the confirmed part.
+   * Timing goes where the build keeps it: into `animationAttributes` when
+   * the build has one (modern builds do), into the legacy `database_*`
+   * fields otherwise. A retimed deck has not round-tripped the app.
    */
   set(update: {
     duration?: number;
@@ -258,11 +285,14 @@ export class BuildModel {
       }
       return;
     }
+    const animation = this.animationAttributes();
     if (update.duration !== undefined) {
-      attributes.setDouble(BuildAttributesFields.DATABASE_DURATION, update.duration);
+      if (animation) animation.setDouble(AnimationAttributesFields.DURATION, update.duration);
+      else attributes.setDouble(BuildAttributesFields.DATABASE_DURATION, update.duration);
     }
     if (update.delay !== undefined) {
-      attributes.setDouble(BuildAttributesFields.DATABASE_DELAY, update.delay);
+      if (animation) animation.setDouble(AnimationAttributesFields.DELAY, update.delay);
+      else attributes.setDouble(BuildAttributesFields.DATABASE_DELAY, update.delay);
     }
     if (update.textDelivery !== undefined) {
       attributes.setVarint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY, update.textDelivery);

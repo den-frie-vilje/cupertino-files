@@ -49,16 +49,20 @@ describe("reading placeholders", () => {
   });
 
   it("a consumed placeholder leaves no field behind", () => {
-    const doc = PagesDocument.load(
-      new Uint8Array(
-        readFileSync(new URL("olekristensen-v26.3-ios-placeholder-consumed.pages", FIXTURES)),
-      ),
-    );
-    const total = doc
-      .textStorages()
-      .reduce((n, storage) => n + storage.placeholders().length, 0);
-    expect(total).toBe(0);
-    expect(doc.bodyText.includes("Jeg har selv skrevet")).toBe(true);
+    const cases: [string, string][] = [
+      ["olekristensen-v26.3-ios-placeholder-consumed.pages", "Jeg har selv skrevet"],
+      ["olekristensen-v26.3-mac-placeholder-consumed.pages", "Jeg skriver noget"],
+    ];
+    for (const [name, typed] of cases) {
+      const doc = PagesDocument.load(
+        new Uint8Array(readFileSync(new URL(name, FIXTURES))),
+      );
+      const total = doc
+        .textStorages()
+        .reduce((n, storage) => n + storage.placeholders().length, 0);
+      expect(`${name}: ${total}`).toBe(`${name}: 0`);
+      expect(doc.bodyText.includes(typed)).toBe(true);
+    }
   });
 });
 

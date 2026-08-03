@@ -464,6 +464,44 @@ describe("slide placeholders", () => {
   });
 });
 
+describe("builds", () => {
+  it("reads effect, timing and delivery from an app-authored deck", () => {
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));
+    const builds = doc.slides().flatMap((slide) => slide.builds().map((b) => b.read()));
+    expect(builds.length).toBe(3);
+    // Both effect-identifier schemes.
+    expect(builds.map((b) => b.effect)).toEqual([
+      "apple:dissolve character",
+      "apple:move in character",
+      "com.apple.iWork.Keynote.BUKAnvil",
+    ]);
+    expect(builds.every((b) => b.animationType === "In")).toBe(true);
+    expect(builds.map((b) => b.duration)).toEqual([1, 1, 1.75]);
+    expect(builds.map((b) => b.delay)).toEqual([0, 0, 0]);
+    expect(builds.map((b) => b.delivery)).toEqual([
+      "All at Once",
+      "All at Once",
+      "By Paragraph",
+    ]);
+    // Staged delivery carries per-stage chunks with their own timing.
+    const staged = builds[2]!;
+    expect(staged.chunks.length).toBe(2);
+    expect(
+      staged.chunks.every((c) => c.delay === 1 && c.duration === 1.75 && c.automatic === true),
+    ).toBe(true);
+  });
+
+  it("retimes a modern build inside its animation attributes", () => {
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));
+    doc.slides()[0]!.builds()[0]!.set({ duration: 2.5, delay: 0.5 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const info = reloaded.slides()[0]!.builds()[0]!.read();
+    expect(info.duration).toBe(2.5);
+    expect(info.delay).toBe(0.5);
+    expect(info.effect).toBe("apple:dissolve character");
+  });
+});
+
 describe("presentation settings", () => {
   const decks = readdirSync(FIXTURES).filter((name) => name.endsWith(".key"));
 
