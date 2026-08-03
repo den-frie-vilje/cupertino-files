@@ -1192,15 +1192,13 @@ export class TableModel {
    * already there and wrong otherwise. There is no third option that does
    * not involve implementing Apple's calc engine.
    *
-   * **The dependency tracker is not written.** The calc engine keeps its
-   * own per-cell ledger — `TSCE.FormulaOwnerDependenciesArchive` enumerates
-   * exactly the cells that hold formulas, each with precedent edges — and
-   * this method leaves it alone: a replaced formula keeps its stale edges,
-   * and a formula written into a fresh cell is absent from the ledger
-   * entirely. Replacing a formula with its own text is proven harmless by
-   * bytes (the document saves identical to Apple's); whether the engine
-   * rebuilds the ledger on open for the other two cases is an app-behavior
-   * question the bisect ladder's formula rungs (19-21) exist to answer.
+   * **The dependency tracker is not written — and does not need to be.**
+   * The calc engine keeps its own per-cell ledger
+   * (`TSCE.FormulaOwnerDependenciesArchive`) that this method leaves
+   * alone. Numbers rebuilds it on open rather than trusting it: the e2e
+   * recompute probe writes a formula with a deliberately wrong cached
+   * value and the app reports the recomputed result (confirmed
+   * 2026-08-03; the probe runs on every `npm run test:e2e`).
    *
    * Refuses a function it has no index for rather than inventing one — see
    * `authorableFunctions()` for the 272 it knows.

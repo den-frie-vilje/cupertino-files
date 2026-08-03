@@ -12,18 +12,28 @@
  *   src/<app>/blank-donor.generated.ts        the same bytes, base64
  *
  * Choices, and why:
- *  - Pages:   iwork-mcp-v14.5-sample.pages (MIT), a plain word-processing
- *             document — re-papered to A4 with the exact values Apple's own
- *             A4 documents carry (measured identically in fixtures written
- *             twelve app versions apart), since the source is US Letter.
- *  - Numbers: numbers-parser-v26.1-date-formats.numbers (MIT) — already
- *             `iso-a4`, like every numbers-parser fixture.
- *  - Keynote: tika-testKeynote2018.key (Apache-2.0), a plain deck that is
- *             already 1920 × 1080.
+ *  - Pages:   iwork-mcp-v14.5-sample.pages (MIT) — made from Apple's Blank
+ *             template (13.2), so it carries the canonical style set
+ *             (Title, Subtitle, Heading 1–3, Body, Caption …) —
+ *             re-papered to A4 with the exact values Apple's own A4
+ *             documents carry, since the source is US Letter.
+ *  - Numbers: numbers-parser-v26.1-date-formats.numbers (MIT) — Apple's
+ *             Blank template (dev/15.3), already `iso-a4`.
+ *  - Keynote: iwork-mcp-v14.5-sample.key (MIT) — Apple's Basic White
+ *             theme (13.2), the chooser's default, English master names,
+ *             1920 × 1080. Its theme media makes this the heaviest donor;
+ *             smaller decks in the corpus all carry custom or non-English
+ *             templates, and the masters are the product.
+ *
+ * ASSERT_VANILLA below is the contract: each donor must present what a
+ * new document from Apple's own chooser would — Blank-template styles,
+ * A4 (Pages, Numbers), Basic White masters at 16:9 (Keynote). Generation
+ * and `--check` both enforce it, so a donor swap that drifts from
+ * Apple's defaults fails loudly.
  *
  * Preview images are dropped from the packages — the apps regenerate them
- * on save, and they are half the bytes. Run with `--check` to verify the
- * embedded modules match the donor files (CI runs this as `blanks:check`).
+ * on save. Run with `--check` to verify the embedded modules match the
+ * donor files (CI runs this as `blanks:check`).
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -89,12 +99,46 @@ const DONORS: readonly Donor[] = [
   },
   {
     kind: "keynote",
-    fixture: "tika-testKeynote2018.key",
+    fixture: "iwork-mcp-v14.5-sample.key",
     file: "blank.key",
     module: "src/keynote/blank-donor.generated.ts",
     make: (template) => stripPreviews(KeynoteDocument.blankFrom(template).save()),
   },
 ];
+
+/** The donor must look like a new document from Apple's own chooser. */
+const ASSERT_VANILLA: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
+  pages: (bytes) => {
+    const doc = PagesDocument.load(bytes);
+    const template = (doc.compatibility().appBuilds ?? []).find((s) => s.startsWith("Template:"));
+    if (!template?.includes("Blank")) throw new Error(`pages donor is not from Blank: ${template}`);
+    const styles = new Set(doc.paragraphStyles().map((s) => s.name));
+    for (const wanted of ["Title", "Subtitle", "Heading", "Heading 2", "Heading 3", "Body", "Caption"]) {
+      if (!styles.has(wanted)) throw new Error(`pages donor lacks the ${wanted} style`);
+    }
+    const setup = doc.pageSetup();
+    if (setup.paperId !== "iso-a4") throw new Error(`pages donor paper is ${setup.paperId}, not iso-a4`);
+  },
+  numbers: (bytes) => {
+    const doc = NumbersDocument.load(bytes);
+    const template = (doc.compatibility().appBuilds ?? []).find((s) => s.startsWith("Template:"));
+    if (!template?.includes("Blank")) throw new Error(`numbers donor is not from Blank: ${template}`);
+    if (doc.object(1n)?.message.getString(11) !== "iso-a4") {
+      throw new Error("numbers donor paper_id is not iso-a4");
+    }
+  },
+  keynote: (bytes) => {
+    const doc = KeynoteDocument.load(bytes);
+    const size = doc.slideSize();
+    if (size?.width !== 1920 || size.height !== 1080) {
+      throw new Error(`keynote donor is ${size?.width}×${size?.height}, not 1920×1080`);
+    }
+    const masters = new Set(doc.masterSlides().map((m) => m.name));
+    for (const wanted of ["Title", "Title & Bullets", "Bullets"]) {
+      if (!masters.has(wanted)) throw new Error(`keynote donor lacks the ${wanted} master`);
+    }
+  },
+};
 
 function base64Lines(bytes: Uint8Array): string {
   const b64 = Buffer.from(bytes).toString("base64");
@@ -145,10 +189,17 @@ for (const donor of DONORS) {
       console.error(`${donor.module} does not match data/blanks/${donor.file}`);
       failed = true;
     }
+    try {
+      ASSERT_VANILLA[donor.kind](wanted);
+    } catch (error) {
+      console.error((error as Error).message);
+      failed = true;
+    }
     continue;
   }
   const template = new Uint8Array(readFileSync(join(ROOT, "fixtures", donor.fixture)));
   const bytes = donor.make(template);
+  ASSERT_VANILLA[donor.kind](bytes);
   if (!existsSync(BLANKS_DIR)) mkdirSync(BLANKS_DIR, { recursive: true });
   writeFileSync(target, bytes);
   writeFileSync(modulePath, moduleSource(donor, bytes));

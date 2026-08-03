@@ -26,12 +26,8 @@ the Model Context Protocol over stdio, that's the whole configuration:
 }
 ```
 
-The server exposes twenty tools, and their descriptions are not
-written twice: each editing tool's text is extracted from the API's own
-documentation (the `@agentTool` tag in the docblock), so the words an
-agent reads are the words the [API reference](/api/) shows, kept in
-sync by CI. Start with `describe_document` — it tells the agent a
-document's shape before anything reads or writes it.
+The server exposes twenty tools. Start with `describe_document` — it
+tells the agent a document's shape before anything reads or writes it.
 
 | Tool | What it does |
 | --- | --- |

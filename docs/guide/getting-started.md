@@ -25,11 +25,13 @@ writeFileSync("Report 2025.pages", doc.save());
 ```
 
 Use the typed loader when you know the app. When you don't,
-`IWorkDocument.open(bytes)` looks at the document and decides.
+`IWorkDocument.open(bytes)` looks at the document and decides. Starting
+without a file at all also works: `PagesDocument.blank()` is a fresh A4
+document, `NumbersDocument.blank()` a fresh spreadsheet,
+`KeynoteDocument.blank()` a fresh 16:9 deck.
 
-Everything you leave alone is preserved byte-for-byte — including fields
-this library has never heard of. That's what makes it safe to edit a
-document written by an app version that doesn't exist yet.
+Everything you leave alone is preserved, byte for byte — even in
+documents from app versions newer than this library.
 
 ## Spreadsheets and slides
 
@@ -52,22 +54,15 @@ deck.addSlide({ copyOf: 0 });
 ```
 
 From here, the [full tour](/guide/documents) covers text, styles, tables,
-fields, slides, and drawables — and the generated
-[capability matrix](/COVERAGE) lists everything, with how thoroughly each
-item is exercised.
+fields, slides, and drawables; the [capability matrix](/COVERAGE) lists
+everything.
 
 ## Some documents are politely declined
 
-Three kinds of file are detected and refused rather than mis-handled.
-That's a promise, not a gap:
+- **Password-protected documents** — refused; this library decrypts
+  nothing (see [legal posture](/LEGAL)).
+- **iWork '09 XML documents** — a different, older format; refused with
+  a clear error.
 
-- **Password-protected documents.** This library circumvents nothing, by
-  design — it matters more than it looks; see [legal posture](/LEGAL).
-- **iWork '09 XML documents.** A different, older format. Refused with a
-  clear error instead of a wrong answer.
-- **Table records it hasn't measured.** Very old (iWork '13-era) tables
-  read fine — and where a record's shape is unknown, the reader says so
-  instead of guessing at your data.
-
-When something can't be done, you'll be told — with the reason, and
-usually with the next step.
+When something can't be done, the error says why, and usually what to do
+instead.

@@ -24,8 +24,8 @@ features:
     title: Round trips you can trust
     details: Documents come back byte-for-byte wherever you didn't edit — including parts of the format nobody has met yet. Files from future app versions survive.
   - icon: 📏
-    title: Measured, not guessed
-    details: Every default and every format rule comes from real documents the apps wrote. When something hasn't been confirmed in Pages, Numbers, or Keynote yet, the docs say so — plainly.
+    title: Honest about limits
+    details: When something can't be done safely — a password-protected file, an unmeasured corner of the format — you get a clear error and a next step, never a wrong answer.
   - icon: 🌍
     title: Beyond TypeScript
     details: The format specification, a language-neutral conformance suite, and recovered schemas with full provenance. Building an importer in C++, Java, or Rust? Start here.
@@ -54,10 +54,8 @@ writeFileSync("Report 2025.pages", doc.save());
 
 :::
 
-Open the result in Pages. It opens. That's not an assumption — it's
-checked feature by feature in the apps themselves, and the
-[verification ledger](/VERIFICATION) shows exactly what has been
-confirmed, in whose words, and what hasn't yet.
+Open the result in Pages — it opens, styles intact.
+([How we know.](/guide/fidelity))
 
 ## one more thing …
 

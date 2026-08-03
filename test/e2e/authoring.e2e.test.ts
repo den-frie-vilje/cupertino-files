@@ -85,9 +85,9 @@ describe("e2e: authored from nothing", () => {
     },
   );
 
-  // The donor deck is 2018-era (the smallest clean fixture); current
-  // Keynote should convert it silently. A failure at `open` — or a hang —
-  // means the old-format donor needs replacing with a current-format one.
+  // The donor deck is Apple's Basic White theme (13.2). A failure at
+  // `open` means Keynote rejects the embedded donor itself and it needs
+  // remaking (scripts/make-blanks.ts).
   it("Keynote opens a blank() deck and reads our note", { skip: skip.Keynote ?? false }, () => {
     session!.remember("Keynote");
     const path = session!.path("from-nothing.key");

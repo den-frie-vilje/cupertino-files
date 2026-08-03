@@ -27,18 +27,14 @@ table.setFormula(1, 2, "=B2*1.25", { value: 179_750 });
 writeFileSync("budget.numbers", sheet.save());
 ```
 
-Everything you don't touch is preserved byte-for-byte — and for
-documents written by current apps, an edited save is typically
-byte-for-byte what the app itself would have written, down to the
-compression ([how that works](https://den-frie-vilje.github.io/cupertino-files/guide/fidelity)).
+Everything you don't touch is preserved byte-for-byte
+([how](https://den-frie-vilje.github.io/cupertino-files/guide/fidelity)).
 Works in Node ≥ 18 and modern browsers. Bytes in, bytes out.
 
-The format is undocumented, so this is an ongoing reverse-engineering —
-measured from thousands of real documents, never guessed. The library
-claims only what its tests prove, says so when a capability is still
-waiting on evidence, and politely declines what it cannot do safely.
-[`docs/COVERAGE.md`](docs/COVERAGE.md), generated from the code, is the
-always-current answer to "does it do X?". The short version:
+The format is undocumented; this library is an ongoing
+reverse-engineering of it, measured from real documents.
+[`docs/COVERAGE.md`](docs/COVERAGE.md) is the always-current answer to
+"does it do X?". The short version:
 
 ## What you can do
 
@@ -46,21 +42,21 @@ always-current answer to "does it do X?". The short version:
 
 | | |
 |---|---|
-| Text | Find & replace, append, insert — every edit keeps all twenty-plus attribute tables consistent |
+| Text | Find & replace, append, insert — styles and fields stay attached |
 | Styles | Named paragraph and character styles: apply, edit, create; direct formatting too |
 | Layout | Sections, headers & footers, page setup, margins, orientation |
 | Extras | Comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents |
-| Images | Inline insertion (app-confirmed), floating placement, crops, filters |
+| Images | Inline insertion, floating placement, crops, filters |
 
 ### Numbers
 
 | | |
 |---|---|
 | Cells | Read and write every value type; formatting, styles, and comments survive your edits |
-| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — compiled to Apple's exact encoding, 272 functions |
+| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions |
 | Formatting | Fills, borders, alignment, wrap; number, currency, date and duration formats; bands |
 | Structure | Sheets and tables (add, rename, move, remove), rows and columns, merges, column widths |
-| Reading | Conditional formatting, filters, categories, and cell controls all read faithfully |
+| Reading | Conditional formatting, filters, categories, and cell controls all read |
 
 ### Keynote
 
@@ -73,7 +69,7 @@ always-current answer to "does it do X?". The short version:
 
 | | |
 |---|---|
-| New documents | `NumbersDocument.blank()` and friends — a fresh A4 document or 16:9 deck, no template file needed, every style Apple-authored |
+| New documents | `NumbersDocument.blank()` and friends — a fresh A4 document or 16:9 deck, no template file needed |
 | Drawables | Move, resize, copy, and style shapes, text boxes, and images — shadows, fills, strokes, opacity |
 | Charts | Data (categories, series, values) and appearance (type, colours, gridlines, legend) |
 | Fidelity | Byte-identical round trips; future app versions load with their new features intact |
@@ -92,11 +88,8 @@ waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
 | For AI agents | `npx -y cupertino-files mcp` — an MCP server with twenty creating, editing and formatting tools, plus a Claude Code skill in the package |
 | For other implementations | A language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself |
 
-Agent tool descriptions are generated from the API's own documentation,
-so the words an agent reads are the words the
-[API reference](https://den-frie-vilje.github.io/cupertino-files/api/)
-shows — one source, kept in sync by CI. More in
-[For AI agents](https://den-frie-vilje.github.io/cupertino-files/guide/agents).
+More in [For AI agents](https://den-frie-vilje.github.io/cupertino-files/guide/agents)
+and the [API reference](https://den-frie-vilje.github.io/cupertino-files/api/).
 
 ## Development
 
@@ -107,9 +100,9 @@ npm run test:e2e          # macOS only: drives the real apps
 
 Contributions are warmly welcome — [CONTRIBUTING.md](CONTRIBUTING.md)
 shows the way, and [docs/BLOCKERS.md](docs/BLOCKERS.md) lists questions
-where twelve minutes with a Mac genuinely advances the state of the
-art. Test fixtures are real Apple-written documents from the Apache
-Tika and libetonyek test suites ([attribution](fixtures/ATTRIBUTION.md)).
+where a few minutes with a Mac genuinely helps. Test fixtures are real
+Apple-written documents from the Apache Tika and libetonyek test suites
+([attribution](fixtures/ATTRIBUTION.md)).
 
 Built on the shoulders of
 [iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat),
