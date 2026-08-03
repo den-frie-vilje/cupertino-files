@@ -107,10 +107,10 @@ describe("chart data", () => {
     const { chart } = firstChart(CHART);
     // Padding with zeroes and padding with gaps look identical in the data
     // and completely different on the page, so neither is chosen for you.
-    expect(() => chart.setSeriesValues(0, [n(1), n(2)])).toThrow();
-    expect(() => chart.setData([[n(1), n(2), n(3), n(4)]])).toThrow();
-    expect(() => chart.setValue(0, 9, n(1))).toThrow();
-    expect(() => chart.setValue(9, 0, n(1))).toThrow();
+    expect(() => { chart.setSeriesValues(0, [n(1), n(2)]); }).toThrow();
+    expect(() => { chart.setData([[n(1), n(2), n(3), n(4)]]); }).toThrow();
+    expect(() => { chart.setValue(0, 9, n(1)); }).toThrow();
+    expect(() => { chart.setValue(9, 0, n(1)); }).toThrow();
   });
 
   it("renames series and categories", () => {
@@ -121,8 +121,8 @@ describe("chart data", () => {
     const reloaded = chartsOf(IWorkDocument.open(document.save()).store)[0]!;
     expect(reloaded.rowNames()).toEqual(["North", "Region 2"]);
     expect(reloaded.columnNames()).toEqual(["April", "May", "June", "Q3"]);
-    expect(() => chart.setRowName(9, "x")).toThrow();
-    expect(() => chart.setColumnName(9, "x")).toThrow();
+    expect(() => { chart.setRowName(9, "x"); }).toThrow();
+    expect(() => { chart.setColumnName(9, "x"); }).toThrow();
   });
 
   it("adds a series with an id-map entry of its own", () => {

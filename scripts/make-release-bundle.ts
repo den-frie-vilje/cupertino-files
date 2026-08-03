@@ -36,7 +36,7 @@ function main(): number {
   mkdirSync(stage, { recursive: true });
 
   const copy = (rel: string, to = rel): void =>
-    cpSync(fileURLToPath(new URL(rel, ROOT)), `${stage}/${to}`, { recursive: true });
+    { cpSync(fileURLToPath(new URL(rel, ROOT)), `${stage}/${to}`, { recursive: true }); };
 
   copy("proto");
   copy("conformance");

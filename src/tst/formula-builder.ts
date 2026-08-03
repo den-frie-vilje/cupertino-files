@@ -210,7 +210,7 @@ export function buildFormula(
   options: BuildFormulaOptions = {},
 ): RawMessage {
   const nodes = RawMessage.create();
-  emit(expression, origin, (node) => nodes.addMessage(AstNodeArrayFields.NODES, node), options);
+  emit(expression, origin, (node) => { nodes.addMessage(AstNodeArrayFields.NODES, node); }, options);
   return nodes;
 }
 

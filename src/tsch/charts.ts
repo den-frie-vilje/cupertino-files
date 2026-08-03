@@ -479,7 +479,7 @@ export class ChartModel {
         `chart has ${this.rowCount} series but ${data.length} rows were given; use addSeries or removeSeries to change the count`,
       );
     }
-    data.forEach((values, row) => this.setSeriesValues(row, values));
+    data.forEach((values, row) => { this.setSeriesValues(row, values); });
   }
 
   get rowCount(): number {

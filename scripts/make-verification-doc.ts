@@ -49,13 +49,13 @@ function main(argv: string[]): number {
     ],
     [
       "formula: =1+2*3 should show 7",
-      (row) => table.setFormula(row, 1, "=1+2*3", { value: 7 }),
+      (row) => { table.setFormula(row, 1, "=1+2*3", { value: 7 }); },
     ],
     [
       "formula with a relative reference: =B2*2",
       (row) => {
         table.setCell(row, 1, 21);
-        table.setFormula(row, 2, "=B" + (row + 1) + "*2", { value: 42 });
+        table.setFormula(row, 2, `=B${row + 1}*2`, { value: 42 });
       },
     ],
     [

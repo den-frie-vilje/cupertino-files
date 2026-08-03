@@ -443,7 +443,7 @@ export class PagesDocument extends IWorkDocument {
     paragraph?: ParagraphFormatting;
   }): bigint {
     const id = this.stylesheet.createParagraphStyle(options);
-    if (options.name !== undefined) this.listInThemeStyles(id);
+    this.listInThemeStyles(id);
     return id;
   }
 
@@ -872,7 +872,7 @@ export class PagesDocument extends IWorkDocument {
       undefined,
       group,
       DrawableEntry.DRAWABLE,
-      (id) => this.addToZOrder(id),
+      (id) => { this.addToZOrder(id); },
     );
   }
 

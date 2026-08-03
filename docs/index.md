@@ -17,16 +17,16 @@ hero:
       link: https://github.com/den-frie-vilje/cupertino-files
 
 features:
-  - icon: 📄
+  - icon: ¶
     title: The whole stack
     details: Snappy, protobuf, ZIP, IWA archives, the object graph — implemented from the bytes up, with a typed document model on top. You work with paragraphs and slides. The bytes take care of themselves.
-  - icon: 🔁
+  - icon: ⟲
     title: Round trips you can trust
     details: Documents come back byte-for-byte wherever you didn't edit — including parts of the format nobody has met yet. Files from future app versions survive.
-  - icon: 📏
+  - icon: ∅
     title: Honest about limits
     details: When something can't be done safely — a password-protected file, an unmeasured corner of the format — you get a clear error and a next step, never a wrong answer.
-  - icon: 🌍
+  - icon: ⇄
     title: Beyond TypeScript
     details: The format specification, a language-neutral conformance suite, and recovered schemas with full provenance. Building an importer in C++, Java, or Rust? Start here.
 ---

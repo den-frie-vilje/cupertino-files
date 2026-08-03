@@ -322,8 +322,9 @@ export type PopupItem = string | number;
  *    listed without its checkmark. Occupying slot 0 with a real value fixes
  *    the count and breaks the selection, which is what rules out "slot 0
  *    holds the selection" and leaves only "slot 0 is the None entry".
+ *
+ * Slot 0 is therefore always the NIL entry below — measured, settled.
  */
-const NONE_SLOT_IS_NIL = true;
 
 /**
  * Build a `TST.PopUpMenuModel` from a list of choices.
@@ -362,9 +363,9 @@ const NIL_SLOT: unique symbol = Symbol("popup none slot");
 export function buildPopupMenuModel(items: readonly PopupItem[]): RawMessage {
   if (items.length === 0) throw new RangeError("a pop-up menu needs at least one item");
   const model = RawMessage.create();
-  // Slot 0 first, always — see NONE_SLOT_IS_NIL. Without it the menu loses
-  // whichever choice happens to be written first.
-  const entries: (PopupItem | typeof NIL_SLOT)[] = NONE_SLOT_IS_NIL ? [NIL_SLOT, ...items] : [...items];
+  // Slot 0 first, always — see the measurement above. Without it the menu
+  // loses whichever choice happens to be written first.
+  const entries: (PopupItem | typeof NIL_SLOT)[] = [NIL_SLOT, ...items];
   model.setMessages(
     PopUpMenuModelFields.TSCE_ITEM,
     entries.map((item) => {

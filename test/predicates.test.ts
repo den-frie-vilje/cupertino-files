@@ -159,7 +159,7 @@ describe("conditional formatting", () => {
         }
       }
     }
-    expect(() => table.setConditionalStyleKey(row, column, 9999)).toThrow();
+    expect(() => { table.setConditionalStyleKey(row, column, 9999); }).toThrow();
   });
 
   it("saves a re-pointed conditional style without corrupting the document", () => {
@@ -305,7 +305,7 @@ describe("filters", () => {
     const table = tablesOf(open(WITH_FILTERS[0]!).store).find(
       (t) => t.filterSets().rows !== undefined,
     )!;
-    expect(() => table.filterSets().rows!.setRuleEnabled(0, true)).toThrow();
+    expect(() => { table.filterSets().rows!.setRuleEnabled(0, true); }).toThrow();
   });
 });
 

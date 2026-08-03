@@ -1309,7 +1309,7 @@ export class TableModel {
       throw new RangeError("table has no formula table; cannot store a formula");
     }
     const message = list.message;
-    const key = Number(message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(message));
+    const key = message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(message);
     const entry = RawMessage.create();
     entry.setVarint(ListEntry.KEY, key);
     entry.setVarint(ListEntry.REFCOUNT, 1);
@@ -1411,7 +1411,7 @@ export class TableModel {
       );
     }
     const store = owner.getMessage(MergeOwner.FORMULA_STORE) ?? RawMessage.create();
-    const index = Number(store.getUint(FormulaStore.NEXT_INDEX) ?? 0);
+    const index = store.getUint(FormulaStore.NEXT_INDEX) ?? 0;
 
     const pair = RawMessage.create();
     pair.setVarint(FormulaStore.PAIR_INDEX, index);
@@ -2410,7 +2410,7 @@ export class TableModel {
     const object = this.store.createObject(CONDITIONAL_STYLE_SET_TYPE, component);
     object.setMessageBytes(set.toBytes());
 
-    const key = Number(list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message));
+    const key = list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message);
     const entry = RawMessage.create();
     entry.setVarint(ListEntry.KEY, key);
     entry.setVarint(ListEntry.REFCOUNT, 1);
@@ -2814,7 +2814,7 @@ export class TableModel {
       return key;
     }
 
-    const key = Number(list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message));
+    const key = list.message.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(list.message);
     const entry = RawMessage.create();
     entry.setVarint(ListEntry.KEY, key);
     entry.setVarint(ListEntry.REFCOUNT, 1);

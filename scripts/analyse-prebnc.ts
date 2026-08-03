@@ -99,7 +99,7 @@ function recordsOf(path: string): Record[] {
       const tile = ref === undefined ? undefined : document.store.resolve(BigInt(ref));
       if (!tile) continue;
       for (const info of tile.message.getMessages(TileFields.ROW_INFOS)) {
-        const row = Number(info.getUint(TileRowInfo.TILE_ROW_INDEX) ?? 0);
+        const row = info.getUint(TileRowInfo.TILE_ROW_INDEX) ?? 0;
         const buffer = info.getBytes(TileRowInfo.CELL_STORAGE_BUFFER_PRE_BNC);
         const offsets = info.getBytes(TileRowInfo.CELL_OFFSETS_PRE_BNC);
         if (!buffer || !offsets) continue;

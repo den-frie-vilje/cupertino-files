@@ -202,7 +202,7 @@ function main(): void {
     try {
       results.push(inventory(file));
     } catch (e) {
-      if (json) results.push({ file, app: "error", era: "", formatVersion: undefined, appBuild: String((e as Error).message), layout: "", objects: 0, features: {}, unsupported: [] });
+      if (json) results.push({ file, app: "error", era: "", formatVersion: undefined, appBuild: (e as Error).message, layout: "", objects: 0, features: {}, unsupported: [] });
       else console.log(`${file}\n  ERROR: ${(e as Error).message}\n`);
     }
   }

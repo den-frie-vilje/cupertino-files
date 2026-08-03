@@ -371,7 +371,7 @@ export class ChartAxisStyle extends ChartStyleArchive {
   /** Resolve a `[category, value]` pair against this axis's kind. */
   field(property: keyof typeof AxisStyleProperty): number {
     const pair = AxisStyleProperty[property];
-    if (!pair) throw new RangeError(`unknown axis property ${String(property)}`);
+    if (!pair) throw new RangeError(`unknown axis property ${property}`);
     return this.kind === "category" ? pair[0] : pair[1];
   }
 

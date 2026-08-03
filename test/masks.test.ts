@@ -246,7 +246,7 @@ describe("image masks", () => {
     // Turn the first line into a curve: no longer the rectangle we wrote.
     path.getMessages(1)[1]!.setVarint(1, PathElementType.CURVE_TO);
     expect(mask.isRectangular).toBe(false);
-    expect(() => mask.setSize(10, 10)).toThrow();
+    expect(() => { mask.setSize(10, 10); }).toThrow();
     expect(document.store).not.toBe(undefined);
   });
 });

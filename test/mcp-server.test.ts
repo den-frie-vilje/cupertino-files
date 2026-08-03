@@ -192,7 +192,7 @@ describe("the MCP server over stdio", () => {
       expect(cats.merges().some((m) => m.row === 4 && m.column === 2 && m.columnCount === 2)).toBe(
         true,
       );
-      const fill = cats.cellFormatting(2, 2)?.fill;
+      const fill = cats.cellFormatting(2, 2).fill;
       expect(fill?.kind).toBe("color");
 
       // A document from nothing: create, fill, read back with the library
