@@ -7,6 +7,14 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Paragraph base direction reads and writes:
+  `setParagraphDirection(i, "rtl" | "ltr" | "natural")` and
+  `doc.paragraph(i).setDirection(...)` write the pair the app itself
+  writes when its ⇄ control flips a paragraph — the storage's bidi
+  `(1, 0)` for RTL, measured from an app-flipped document. The
+  style-bag `writingDirection` is confirmed vestigial (the app leaves
+  it untouched) and its docblock points at the real mechanism.
+
 ## 0.2.0 — 2026-08-03
 
 - Pages placeholder text — the template tap-to-replace mechanism — is a

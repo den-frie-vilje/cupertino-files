@@ -135,11 +135,11 @@ export interface ParagraphFormatting {
   /** Character a decimal tab aligns on (locale-dependent: "." or ","). */
   decimalTab?: string;
   /**
-   * Stored raw, and apparently vestigial: no corpus style carries the
-   * field, and styled values 0, 1 and 2 all render left-to-right in
-   * Pages. Per-paragraph direction evidence lives in the storage's
-   * `table_para_bidi` pairs instead (0 = LTR, 65535 = natural observed;
-   * the RTL value is unmeasured).
+   * Stored raw, and vestigial: no corpus style carries the field, styled
+   * values 0/1/2 all render left-to-right, and the app leaves it
+   * untouched when flipping a paragraph. The working mechanism is the
+   * storage's bidi table — use `setParagraphDirection` /
+   * `ParagraphHandle.setDirection` instead.
    */
   writingDirection?: number;
 }

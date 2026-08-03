@@ -1343,6 +1343,67 @@ export class TextStorage {
   }
 
   /**
+   * A paragraph's base writing direction, from the storage's bidi table
+   * (`table_para_bidi`): the run-anchored entry pair whose first slot is
+   * the direction — 0 LTR, 1 RTL, 65535 natural — with the second slot 0,
+   * or 65535 when the first is natural. The paragraph style plays no part;
+   * the app writes only this pair when a paragraph is flipped.
+   */
+  paragraphDirection(paragraphIndex: number): "ltr" | "rtl" | "natural" {
+    const start = this.paragraphStarts()[paragraphIndex];
+    if (start === undefined) {
+      throw new RangeError(`paragraphDirection: no paragraph ${paragraphIndex}`);
+    }
+    const first = this.bidiPairAt(start)[0];
+    return first === 1 ? "rtl" : first === 0 ? "ltr" : "natural";
+  }
+
+  /**
+   * Set a paragraph's base writing direction, writing the same pair the
+   * app writes when the direction control flips a paragraph: (1, 0) for
+   * RTL, (0, 0) for LTR, (65535, 65535) for natural. Every paragraph gets
+   * its own entry so no run bleeds into a neighbour, with existing values
+   * carried.
+   */
+  setParagraphDirection(paragraphIndex: number, direction: "ltr" | "rtl" | "natural"): void {
+    const starts = this.paragraphStarts();
+    if (starts[paragraphIndex] === undefined) {
+      throw new RangeError(`setParagraphDirection: no paragraph ${paragraphIndex}`);
+    }
+    const table = RawMessage.create();
+    for (let i = 0; i < starts.length; i++) {
+      const pair =
+        i === paragraphIndex
+          ? direction === "rtl"
+            ? [1, 0]
+            : direction === "ltr"
+              ? [0, 0]
+              : [65535, 65535]
+          : this.bidiPairAt(starts[i]!);
+      const entry = RawMessage.create();
+      entry.setVarint(ENTRY_CHARACTER_INDEX, starts[i]!);
+      entry.setVarint(ENTRY_PARA_FIRST, pair[0]!);
+      entry.setVarint(ENTRY_PARA_SECOND, pair[1]!);
+      table.addMessage(ATTR_TABLE_ENTRIES, entry);
+    }
+    this.msg.setMessage(Storage.TABLE_PARA_BIDI, table);
+  }
+
+  /** The bidi pair ruling `pos` — the last entry at or before it. */
+  private bidiPairAt(pos: number): [number, number] {
+    const entries = this.msg.getMessage(Storage.TABLE_PARA_BIDI)?.getMessages(ATTR_TABLE_ENTRIES) ?? [];
+    let pair: [number, number] = [65535, 65535];
+    for (const entry of entries) {
+      if ((entry.getUint(ENTRY_CHARACTER_INDEX) ?? 0) > pos) break;
+      pair = [
+        Number(entry.getVarint(ENTRY_PARA_FIRST) ?? 65535n),
+        Number(entry.getVarint(ENTRY_PARA_SECOND) ?? 65535n),
+      ];
+    }
+    return pair;
+  }
+
+  /**
    * Placeholder text runs — a template's "tap or click to add …" spans,
    * which the app selects whole on a click and replaces on the first
    * keystroke (`TSWP.PlaceholderSmartFieldArchive`).
