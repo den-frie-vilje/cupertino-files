@@ -166,7 +166,7 @@ export const CAPABILITIES: Capability[] = [
       how: "npm run test:e2e on a Mac opens each edited document in its app.",
       e2e: true,
       settled:
-        "**Confirmed for Pages and Numbers; Keynote untested.** A current-format Pages document " +
+        "**Confirmed for all three apps.** A current-format Pages document " +
         "(file format 26.1.0) was edited, saved and opened with its formatting intact — appending " +
         "a paragraph, applying character formatting, and applying a named paragraph style. " +
         "Getting there took four separate defects, none of which any offline check could see, " +
@@ -174,7 +174,11 @@ export const CAPABILITIES: Capability[] = [
         "storage must not declare its stylesheet in `object_references`; paragraphs end at " +
         "U+0004/U+0005/U+000C as well as U+000A but not at U+2028; and `table_para_style` is " +
         "dense while the list and layout tables are sparse. Numbers is covered separately by the " +
-        "widget and regrouping checks. Keynote has never been opened at all",
+        "widget and regrouping checks — and directly on 2026-08-03, when the e2e suite's " +
+        "cell-write round-trip passed: Numbers opened a package whose cells we wrote and read " +
+        "our values back. Keynote joined the same day: the speaker-notes round-trip — our edit " +
+        "of the notes storage, opened and reported back by Keynote — passed on a current " +
+        "install, and Keynote also opened the deck whose transition we wrote",
       risk: "high",
     },
   },
@@ -1521,7 +1525,7 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slides().some((s) => s.transition()?.enabled) ?? false),
-    note: "named effects blocked on evidence: every corpus slide says effect \"none\", and the effect vocabulary is Keynote-internal — writing an unmeasured string is the well-formed-but-wrong class",
+    note: "named effects were blocked on evidence — every corpus slide says effect \"none\" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back (confirmed 2026-08-03); writing effects copies a string measured from the app that run, never a guess",
     manualProof: {
       claim: "Keynote honours automatic advance written into the transition attributes.",
       why:
