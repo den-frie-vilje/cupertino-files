@@ -15,12 +15,8 @@ const page = PagesDocument.blank();      // empty body, A4
 const from = PagesDocument.blankFrom(templateBytes); // any document as template
 ```
 
-`blank()` needs no template file: the package embeds a donor — an
-Apple-written document emptied at build time — so every style and
-identity in a "new" document was authored by an Apple app. That is also
-how the apps themselves do it; a new document in Numbers is a bundled
-template, instantiated. `blankFrom` is the same operation with your own
-document as the donor, keeping its design.
+`blank()` needs no template file. `blankFrom` starts from any document
+you have, keeping its design.
 
 ## Text
 
@@ -38,9 +34,8 @@ storage.appendParagraph("More");
 storage.setParagraphStyle(0, styleId);
 ```
 
-Every edit rewrites the text **and** fixes up all 20+ attribute tables
-(styles, smart fields, attachments, sections, change tracking…) so no
-index ever dangles — the app-crash failure mode of naive editors.
+Edits keep styles, comments, footnotes, and fields attached to the right
+text.
 
 For richer flows, `doc.find(pattern)` returns `TextRange` handles:
 
@@ -75,9 +70,7 @@ Fills, gradients, strokes and shadows are one shared vocabulary — the
 same values style text, table cells and shapes: `colorFill(r, g, b)`,
 `linearGradient(a, b)`, `solidStroke(color, width)`, `hexColor("#0066ff")`.
 
-A created paragraph style appears in the app's styles panel — which takes
-four distinct pieces of archive plumbing that the library handles and the
-apps have confirmed.
+A created style appears in the app's styles panel, ready to reapply.
 
 ## Tables
 
@@ -103,15 +96,10 @@ table.mergeCells(0, 0, 1, 3);            // anchor keeps its value, covered cell
 table.unmergeCells(0, 0);
 ```
 
-Worth knowing: merges live in the calc engine, where the apps actually
-keep them, and writing into a merge-covered cell throws. Formulas are a
-*table* feature — Pages documents have them too — and render
-per-position because references are stored as offsets from the using
-cell; `setFormula` compiles the same way, so what you type is what the
-cell means. Cross-table references (`Other::A2`) work both directions.
-Function names aren't in the file format at all; 272 measured indexes
-author and render by name, the rest render as `FUNCTION_<id>` and are
-refused for writing rather than guessed.
+Worth knowing: writing into a merge-covered cell throws; formulas work
+in Pages and Keynote tables too; nothing evaluates, so pass the value to
+display as `{ value }`. 272 functions are supported by name — an
+unknown one renders as `FUNCTION_<id>` and is refused for writing.
 
 ## Numbers: conditional formatting, filters, categories
 
@@ -121,10 +109,8 @@ table.filterSets();                // { rows, columns }
 table.activeCategories()?.groups(); // tree: [{ value, label, rows, children }]
 ```
 
-Conditions are read from each rule's *formula*, so they read correctly
-even for Apple's unpublished type codes. **Nothing evaluates**: the API
-reports what rules are, not which currently matches — that needs the calc
-engine, and a wrong answer would look exactly like a right one.
+**Nothing evaluates**: the API reports what the rules are, not which
+currently matches.
 
 ## Fields, comments, footnotes, bookmarks
 
@@ -136,10 +122,9 @@ body.insertLink(5, 12, "https://example.com");
 body.addBookmark(10, 20, "Introduction");
 ```
 
-Conventions the apps expect — the hyperlink character style, the
-superscripted footnote mark, the shared comment author — are applied by
-default, measured from how the apps themselves write documents; each can
-be skipped (`{ characterStyle: false }`) or overridden with your own id.
+The conventions the apps expect — link styling, footnote marks, comment
+authors — are applied by default; skip with `{ characterStyle: false }`
+or pass your own.
 
 ## Slides
 
@@ -168,11 +153,9 @@ chart.setValue(0, 2, { type: "number", value: 99 });
 chart.addSeries("Region 3", values);
 ```
 
-Chart data and appearance are both editable — type, series colours,
-axis gridlines and legend styling, each copying a shared style archive
-before writing so sibling charts keep theirs. Cropping never touches
-the media — a mask defines the window in the image's own coordinate
-space.
+Chart data and appearance are both editable — type, series colours, axis
+gridlines, legend — and styling one chart never restyles its siblings.
+Crops are non-destructive.
 
 ## Low level
 
@@ -185,7 +168,5 @@ typeName(objects[0].type, "pages");      // "TP.DocumentArchive"
 objects[0].message.getString(3);         // schema-light protobuf access
 ```
 
-The `RawMessage` layer preserves unknown fields byte-for-byte and
-re-serializes only along mutated paths — the property that makes editing
-future files safe. The [format specification](/FORMAT) documents every
-layer beneath this API.
+The [format specification](/FORMAT) documents every layer beneath this
+API, and [Fidelity](/guide/fidelity) explains how round trips stay exact.

@@ -208,9 +208,15 @@ export const CAPABILITIES: Capability[] = [
       "instantiated. blanks:check pins the embedded bytes to data/blanks/",
     manualProof: {
       claim: "Pages, Numbers and Keynote each open a blank() document and read our edits back.",
+      settled:
+        "**Confirmed in all three apps (2026-08-03, 17 of 17)** — Pages reported our " +
+        "paragraph, Numbers our cell and recomputed formula, Keynote our presenter note, each " +
+        "from a preview-stripped blank(). The Keynote donor has since moved from the 2018-era " +
+        "deck to Apple's Basic White (13.2) for default English masters; the same e2e test " +
+        "covers the new donor on every run",
       why:
         "The donors round-trip offline and take edits, but only the apps can say they accept a " +
-        "package whose previews are stripped — and, for Keynote, whose donor is 2018-era.",
+        "package whose previews are stripped.",
       how:
         "npm run test:e2e on a Mac: the 'authored from nothing' suite writes one blank() " +
         "document per app, has the app report our marker back, and says what each failure means.",
@@ -1026,15 +1032,18 @@ export const CAPABILITIES: Capability[] = [
       "reproduces the whole saved file byte for byte",
     manualProof: {
       claim: "Numbers accepts a merge this library wrote, and shows it where we put it.",
+      settled:
+        "**Accepted and re-emitted (2026-08-03, 17 of 17).** The e2e merge-survival test " +
+        "writes a fresh merge — ledger tile minted — into a fixture, has Numbers resave the " +
+        "entire package, and finds the merge intact in the app's own rewrite: the engine " +
+        "accepted our records and re-encoded them from its model. The visual half (one cell " +
+        "spanning, text intact) rides along with any future rung-06 glance, but acceptance " +
+        "is no longer in question",
       why:
         "Recreating one of Apple's merges reproduces the whole file byte-for-byte, which is as " +
         "far as offline proof reaches — a *fresh* merge additionally mints a ledger tile object, " +
         "and whether the engine is satisfied with it is the app's call alone.",
-      how:
-        "npm run bisect:docs -- <outDir>, open 06-merge in Numbers: row 9 should show one cell " +
-        "spanning B..D with its text intact. Reading is separately checkable: open " +
-        "iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 " +
-        "and 1 span all 4 columns).",
+      how: "npm run test:e2e on a Mac — the 'merge we wrote survives Numbers resaving' test.",
       risk: "medium",
     },
   },
@@ -1207,7 +1216,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Formula writing (authoring an AST)",
     apps: "all",
-    status: "experimental",
+    status: "read+write",
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
       "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
@@ -1220,6 +1229,14 @@ export const CAPABILITIES: Capability[] = [
       claim:
         "Numbers recalculates a formula this library wrote — replaced or fresh — rather than " +
         "trusting the stale dependency tracker beside it.",
+      settled:
+        "**Confirmed — Numbers recomputes.** The e2e recompute probe (2026-08-03, 17 of 17): " +
+        "a fresh formula written with a deliberately wrong cached value (`=B2*2` cached as 999 " +
+        "over B2 = 100) opened in Numbers reporting 200 — the recomputed truth, not our cache. " +
+        "So the engine does not trust the per-cell dependency tracker setFormula leaves stale; " +
+        "it rebuilds on open, and no tracker write is needed for app correctness. The probe " +
+        "runs on every e2e pass (test/e2e/authoring.e2e.test.ts), so a future Numbers that " +
+        "starts trusting the tracker fails loudly. Bisect rungs 19–21 are superseded",
       why:
         "The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive " +
         "lists exactly the formula cells, with precedent edges — measured on the issue102 " +
@@ -1228,10 +1245,7 @@ export const CAPABILITIES: Capability[] = [
         "proven byte-identical and needs no app check; whether the engine rebuilds the tracker " +
         "on open, or trusts it, only Numbers can say.",
       how:
-        "npm run bisect:docs -- <outDir>, then open rungs 19-21 in Numbers. Each file states " +
-        "its own pass and fail in a cell beside the formula; 21 is the decisive one — a fresh " +
-        "formula whose precedent you edit, which only recalculates if the engine noticed the " +
-        "new cell.",
+        "npm run test:e2e on a Mac — the 'recomputes our formula' test carries the probe.",
       risk: "high",
     },
   },
