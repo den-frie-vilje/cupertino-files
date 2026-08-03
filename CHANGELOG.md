@@ -7,6 +7,8 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+## 0.2.0 — 2026-08-03
+
 - Pages placeholder text — the template tap-to-replace mechanism — is a
   first-class feature: `placeholders()` lists the ghost-text spans,
   `fillPlaceholder()` puts real content in and sheds the marking the way

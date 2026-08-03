@@ -1,6 +1,6 @@
 {
   "name": "cupertino-files",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Read, inspect, and edit Apple Pages, Numbers and Keynote documents (iWork / Creator Studio, modern IWA format) in pure TypeScript with zero runtime dependencies.",
   "keywords": [
     "iwork",
