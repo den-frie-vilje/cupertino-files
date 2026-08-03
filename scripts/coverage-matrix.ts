@@ -245,7 +245,11 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read",
     probe: (c) => c.report.probe.opaqueComponents.length > 0,
-    note: "undecodable components stay opaque and are preserved, never fatal",
+    note:
+      "decodeLzfseStream reads the container (raw and LZVN blocks; FSE blocks refused " +
+      "precisely) and the probe reports its reading of any opaque component; the document " +
+      "model keeps such components opaque and byte-preserved because no redistributable " +
+      "specimen exists to measure the payload against — see docs/BLOCKERS.md",
   },
   {
     group: "Container",

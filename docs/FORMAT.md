@@ -106,6 +106,17 @@ A reader that fails the whole document over one such component throws away
 the many that parse fine; this library reports them as opaque, preserves
 their bytes verbatim, and loads the rest.
 
+The LZFSE container is a sequence of blocks, each opening with a 4-byte
+magic: `bvx-` raw bytes (header: `n_raw_bytes`), `bvxn` one
+LZVN-compressed block (header: `n_raw_bytes`, `n_payload_bytes`),
+`bvx1`/`bvx2` FSE-entropy-coded blocks, `bvx$` end of stream. The one
+measured iWork specimen is a single LZVN block. `decodeLzfseStream`
+decodes the raw and LZVN forms (LZVN per Apple's published reference —
+a byte-code of literal/match ops with small/medium/large/previous
+distance encodings); the FSE forms are refused with a precise error.
+What the decoded `OperationStorage` payload *means* is unmeasured — the
+document model keeps such components opaque until a specimen exists.
+
 The Snappy framing itself is **not** the standard Snappy framing format:
 there is no `sNaPpY` stream identifier and no CRC-32C anywhere. Each payload is a standalone raw
 Snappy block (its own uncompressed-length varint preamble + literal/copy

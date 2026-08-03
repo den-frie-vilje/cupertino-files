@@ -7,6 +7,18 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- The LZFSE container that collaboration-mode components use
+  (`Index/OperationStorage.iwa` beside Snappy components) now decodes:
+  `decodeLzfseStream` reads raw and LZVN blocks (the LZVN decoder is
+  ported from Apple's published lzfse reference, BSD-3-Clause) and
+  refuses FSE-coded blocks precisely. The probe reports its reading of
+  any opaque component; the document model still keeps such components
+  opaque and byte-preserved, because the decoded payload's meaning
+  awaits a redistributable specimen — a collaboration seed is staged
+  for exactly that.
+- New end-to-end rungs (macOS): paragraph direction, a defined
+  placeholder, paragraph borders, a retimed build and a disabled filter
+  set each survive the app rewriting the package.
 - Keynote build effects and timing are decoded: `effect` (an identifier
   string in two schemes, `apple:dissolve character` /
   `com.apple.iWork.Keynote.BUKAnvil`), `animationType`, `duration` and
