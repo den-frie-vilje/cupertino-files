@@ -82,7 +82,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive lists exactly the formula cells, with precedent edges — measured on the issue102 fixture), and setFormula does not update it: a replaced formula keeps stale edges, and a fresh formula cell is missing from the tracker entirely. A same-text replace is proven byte-identical and needs no app check; whether the engine rebuilds the tracker on open, or trusts it, only Numbers can say.
 
-**How to settle it.** npm run bisect:docs -- <outDir>, then open rungs 19-21 in Numbers. Each file states its own pass and fail in a cell beside the formula; 21 is the decisive one — a fresh formula whose precedent you edit, which only recalculates if the engine noticed the new cell.
+**How to settle it.** npm run bisect:docs -- &lt;outDir&gt;, then open rungs 19-21 in Numbers. Each file states its own pass and fail in a cell beside the formula; 21 is the decisive one — a fresh formula whose precedent you edit, which only recalculates if the engine noticed the new cell.
 
 ### 4. Sheets (add, duplicate, rename, move, remove)
 
@@ -168,7 +168,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** The archives round-trip and copy-on-write correctly, which is the file's side of the story; only the app can say the toggle changes what is drawn rather than being ignored.
 
-**How to settle it.** npm run pages:docs -- <outDir>, open P20-chart-gridlines: the page states its own pass — the column chart should show no horizontal gridlines behind its bars.
+**How to settle it.** npm run pages:docs -- &lt;outDir&gt;, open P20-chart-gridlines: the page states its own pass — the column chart should show no horizontal gridlines behind its bars.
 
 ### 11. Chart data editing (values, names, series, categories)
 
@@ -242,7 +242,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** Recreating one of Apple's merges reproduces the whole file byte-for-byte, which is as far as offline proof reaches — a *fresh* merge additionally mints a ledger tile object, and whether the engine is satisfied with it is the app's call alone.
 
-**How to settle it.** npm run bisect:docs -- <outDir>, open 06-merge in Numbers: row 9 should show one cell spanning B..D with its text intact. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
+**How to settle it.** npm run bisect:docs -- &lt;outDir&gt;, open 06-merge in Numbers: row 9 should show one cell spanning B..D with its text intact. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
 
 ### 17. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
@@ -278,7 +278,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** The mapping is inferred, not observed. It fits three independent constraints — the field is a plain int32 rather than a set, the deprecated enum it replaced packs a position in 0..4 beside a line style, and the Pages inspector offers exactly five choices — but every value in the corpus is 0, 1 or 2, so 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.
 
-**How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders & Rules control. Ten minutes settles the whole mapping.
+**How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders &amp; Rules control. Ten minutes settles the whole mapping.
 
 ### 20. Drawable shadows (enabled, angle, offset, blur, opacity)
 

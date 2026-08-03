@@ -98,6 +98,15 @@ interface Capability {
   manualProof?: ManualProof;
 }
 
+/**
+ * Free text headed for the docs site must not read as markup: VitePress
+ * runs every page through Vue's template compiler, and a `<outDir>` in a
+ * proof's instructions is an unclosed element to it — the build fails.
+ */
+function vueSafe(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 /** Never let one malformed document abort the whole survey. */
 const safe = (fn: () => boolean): boolean => {
   try {
@@ -1795,7 +1804,7 @@ function render(facts: FixtureFacts[]): string {
       // Notes land inside literal <sub> HTML, where a bare "<" in prose
       // (FUNCTION_<id>, <file>) reads as an unclosed tag — Vue-based
       // renderers refuse the whole page over it. Escape, always.
-      const escaped = capability.note?.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const escaped = capability.note ? vueSafe(capability.note) : undefined;
       const note = escaped ? `<br><sub>${escaped}</sub>` : "";
       out.push(
         `| ${capability.name}${note} | ${apps} | ${STATUS_LABEL[capability.status]} | ${count} | ${eraText} |`,
@@ -1977,7 +1986,7 @@ function renderVerification(): string {
   pending.forEach((c, i) => {
     const proof = c.manualProof!;
     out.push(
-      `| ${i + 1} | ${RISK_LABEL[proof.risk]} | ${c.group} → ${c.name} | ${proof.claim} | ` +
+      `| ${i + 1} | ${RISK_LABEL[proof.risk]} | ${c.group} → ${c.name} | ${vueSafe(proof.claim)} | ` +
         `${proof.e2e ? "`test:e2e`" : "manual"} |`,
     );
   });
@@ -1991,11 +2000,11 @@ function renderVerification(): string {
     out.push(`**Group:** ${c.group}  `);
     out.push(`**Status in the matrix:** ${STATUS_LABEL[c.status]}`);
     out.push("");
-    out.push(`**Claim.** ${proof.claim}`);
+    out.push(`**Claim.** ${vueSafe(proof.claim)}`);
     out.push("");
-    out.push(`**Why the suite cannot settle it.** ${proof.why}`);
+    out.push(`**Why the suite cannot settle it.** ${vueSafe(proof.why)}`);
     out.push("");
-    out.push(`**How to settle it.** ${proof.how}`);
+    out.push(`**How to settle it.** ${vueSafe(proof.how)}`);
     out.push("");
     if (proof.e2e) {
       out.push("> Already exercised by `npm run test:e2e` on a Mac with the app installed.");
@@ -2016,11 +2025,11 @@ function renderVerification(): string {
       const proof = c.manualProof!;
       out.push(`### ✅ ${c.name}`);
       out.push("");
-      out.push(`**Was claimed.** ${proof.claim}`);
+      out.push(`**Was claimed.** ${vueSafe(proof.claim)}`);
       out.push("");
-      out.push(`**Why it needed an app.** ${proof.why}`);
+      out.push(`**Why it needed an app.** ${vueSafe(proof.why)}`);
       out.push("");
-      out.push(`**Outcome.** ${proof.settled}`);
+      out.push(`**Outcome.** ${vueSafe(proof.settled)}`);
       out.push("");
     }
   }
