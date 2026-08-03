@@ -150,6 +150,14 @@ cap makes unusable. Worth noting for anyone who later relaxes the cap: they are 
 
 ## Collaboration-mode Pages: a format variant the loader rejects
 
+> **Update 2026-08-03: no longer true — all three recommendations below are
+> implemented.** A component that fails to decode goes opaque instead of
+> failing the document, `bvx*` magic is reported as LZFSE framing with a
+> collaboration-mode explanation, and the bytes are preserved verbatim
+> through edits and saves. `test/collaboration-mode.test.ts` rebuilds this
+> section's byte shape from the measurements below and pins the behaviour.
+> The section stands as the record of the finding.
+
 This is the most useful thing the pass found, and it is a **bug report, not a fixture**.
 
 Source: The Document Foundation Bugzilla
