@@ -42,6 +42,7 @@ export default defineConfig({
         text: "The format",
         items: [
           { text: "Specification", link: "/FORMAT" },
+          { text: "Fidelity", link: "/guide/fidelity" },
           { text: "Conformance suite", link: "/guide/conformance" },
           { text: "End-to-end app tests", link: "/E2E" },
         ],

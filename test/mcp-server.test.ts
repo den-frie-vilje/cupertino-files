@@ -106,11 +106,17 @@ describe("the MCP server over stdio", () => {
       expect(names).toEqual([
         "append_paragraph",
         "describe_document",
+        "format_cells",
+        "format_text",
         "list_formulas",
+        "merge_cells",
+        "modify_table",
         "read_table",
         "read_text",
+        "replace_text",
         "set_cells",
         "set_formula",
+        "set_slide_text",
       ]);
       // Every tool must say what it is — the descriptions are the UI.
       for (const tool of listed.tools as { description: string }[]) {
@@ -144,12 +150,104 @@ describe("the MCP server over stdio", () => {
       const reread = NumbersDocument.load(new Uint8Array(readFileSync(copy)));
       expect(reread.tables().find((t) => t.name === "Cats")!.cellText(2, 2)).toBe("250");
 
+      // Formatting and structure edits, on the same copy: fill a block,
+      // merge a rectangle, insert a row — then read the file back with
+      // the library and check each landed.
+      const formatted = await call(client, "format_cells", {
+        path: copy,
+        table: "Cats",
+        row: 2,
+        column: 2,
+        columnCount: 2,
+        fill: "#fff2cc",
+        borders: { color: "#333333", width: 0.5 },
+      });
+      expect(formatted.isError).toBe(false);
+      const merged = await call(client, "merge_cells", {
+        path: copy,
+        table: "Cats",
+        row: 4,
+        column: 2,
+        rowCount: 1,
+        columnCount: 2,
+      });
+      expect(merged.isError).toBe(false);
+      const grown = await call(client, "modify_table", {
+        path: copy,
+        table: "Cats",
+        action: "insert_rows",
+        at: 7,
+      });
+      expect(grown.isError).toBe(false);
+      const edited = NumbersDocument.load(new Uint8Array(readFileSync(copy)));
+      const cats = edited.tables().find((t) => t.name === "Cats")!;
+      expect(cats.rowCount).toBe(8);
+      expect(cats.merges().some((m) => m.row === 4 && m.column === 2 && m.columnCount === 2)).toBe(
+        true,
+      );
+      const fill = cats.cellFormatting(2, 2)?.fill;
+      expect(fill?.kind).toBe("color");
+
       // A failure must be a result the model can read, not a dead server.
       const missing = await call(client, "read_table", { path: fixture, table: "Nope" });
       expect(missing.isError).toBe(true);
       expect(missing.text).toContain("no table named");
       const after = await call(client, "describe_document", { path: fixture });
       expect(after.isError).toBe(false);
+    } finally {
+      client.close();
+    }
+  });
+
+  it("edits Pages text and Keynote slides through the wire", async () => {
+    const client = new Client();
+    try {
+      await client.request("initialize", {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "suite", version: "0" },
+      });
+      client.notify("notifications/initialized");
+      const dir = mkdtempSync(join(tmpdir(), "cupertino-mcp-"));
+
+      const pages = join(dir, "doc.pages");
+      writeFileSync(
+        pages,
+        readFileSync(new URL("iwork-mcp-v14.5-sample.pages", FIXTURES).pathname),
+      );
+      const appended = await call(client, "append_paragraph", {
+        path: pages,
+        text: "A closing thought from the wire.",
+      });
+      expect(appended.isError).toBe(false);
+      const replaced = await call(client, "replace_text", {
+        path: pages,
+        find: "closing thought",
+        replace: "final word",
+      });
+      expect(replaced.text).toContain("replaced 1 occurrence");
+      const styled = await call(client, "format_text", {
+        path: pages,
+        find: "final word",
+        bold: true,
+        fontColor: "#cc0000",
+      });
+      expect(styled.isError).toBe(false);
+      const text = await call(client, "read_text", { path: pages });
+      expect(text.text).toContain("A final word from the wire.");
+
+      const deck = join(dir, "deck.key");
+      writeFileSync(deck, readFileSync(new URL("iwork-mcp-v14.5-sample.key", FIXTURES).pathname));
+      const slide = await call(client, "set_slide_text", {
+        path: deck,
+        slide: 0,
+        title: "Retitled over MCP",
+        notes: "Spoken, not shown.",
+      });
+      expect(slide.isError).toBe(false);
+      const deckText = await call(client, "read_text", { path: deck });
+      expect(deckText.text).toContain("Retitled over MCP");
+      expect(deckText.text).toContain("[notes] Spoken, not shown.");
     } finally {
       client.close();
     }

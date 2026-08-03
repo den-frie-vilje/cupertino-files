@@ -17,9 +17,11 @@ TypeScript/JavaScript — no Apple apps, no external binaries, no native
 modules. It works in Node ≥ 18 and browsers (bytes in → bytes out).
 
 The package also ships an MCP server — `npx -y cupertino-files mcp` —
-whose seven tools (describe, read text/tables/formulas, set cells and
-formulas, append paragraphs) cover the common cases without writing
-code; prefer the API below when a task outgrows them.
+whose thirteen tools (describe, read text/tables/formulas, set cells
+and formulas, format cells and text, merge, insert/delete rows and
+columns, edit Pages paragraphs and Keynote slides) cover the common
+cases without writing code; prefer the API below when a task outgrows
+them.
 
 ```ts
 import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
