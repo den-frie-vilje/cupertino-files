@@ -21,7 +21,7 @@
   "author": "Ole Kristensen <ole@kristensen.name>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/olekristensen/cupertino-files.git"
+    "url": "git+https://github.com/den-frie-vilje/cupertino-files.git"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -33,12 +33,14 @@
     }
   },
   "bin": {
+    "cupertino-files": "./dist/main.js",
     "cupertino-dump": "./dist/cli.js"
   },
   "files": [
     "dist",
     "proto",
     "skills",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE",
     "THIRD-PARTY-NOTICES.md",
@@ -80,17 +82,24 @@
     "keynote:docs": "node scripts/make-keynote-docs.ts",
     "prepublishOnly": "npm run build && npm run lint && npm test",
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:build": "npm run api:docs && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepare": "npm run build",
+    "api:docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-vitepress-theme --out docs/api",
+    "tooldocs": "node scripts/generate-tool-docs.ts",
+    "tooldocs:check": "node scripts/generate-tool-docs.ts --check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.10.0",
     "eslint": "^10.8.0",
     "protobufjs": "^8.7.1",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
+    "typedoc-vitepress-theme": "^1.1.3",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.65.0",
     "vitepress": "^1.6.4"
   },
-  "homepage": "https://olekristensen.github.io/cupertino-files/"
+  "homepage": "https://den-frie-vilje.github.io/cupertino-files/"
 }

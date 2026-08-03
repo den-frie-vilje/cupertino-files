@@ -13,7 +13,7 @@
  * we detect and refuse it. All non-IWA entries are passed through unchanged
  * on save; IWA entries are replaced only when their component was modified.
  */
-import { buildZip, ZipReader, type ZipWriteEntry } from "../base/zip.ts";
+import { buildZip, localHeaderHasZip64, ZipReader, type ZipWriteEntry } from "../base/zip.ts";
 
 export class EncryptedDocumentError extends Error {
   constructor() {
@@ -28,6 +28,10 @@ interface OuterEntry {
   dosTime: number;
   dosDate: number;
   isDirectory: boolean;
+  /** The original local header carried a ZIP64 extra (preserved on save). */
+  zip64Local: boolean;
+  /** Physical position of the local record (preserved on save). */
+  localRank: number;
 }
 
 export class IWorkContainer {
@@ -51,6 +55,7 @@ export class IWorkContainer {
   static fromBytes(bytes: Uint8Array): IWorkContainer {
     const c = new IWorkContainer();
     const zip = ZipReader.parse(bytes);
+    const outerRanks = physicalRanks(zip);
     for (const e of zip.entries) {
       c.outer.push({
         name: e.name,
@@ -58,6 +63,8 @@ export class IWorkContainer {
         dosTime: e.dosTime,
         dosDate: e.dosDate,
         isDirectory: e.isDirectory,
+        zip64Local: localHeaderHasZip64(bytes, e),
+        localRank: outerRanks.get(e)!,
       });
     }
 
@@ -86,6 +93,7 @@ export class IWorkContainer {
     if (indexZip) {
       c.indexZipEntry = indexZip.name;
       const innerZip = ZipReader.parse(indexZip.data);
+      const innerRanks = physicalRanks(innerZip);
       for (const e of innerZip.entries) {
         c.inner.push({
           name: e.name,
@@ -93,6 +101,8 @@ export class IWorkContainer {
           dosTime: e.dosTime,
           dosDate: e.dosDate,
           isDirectory: e.isDirectory,
+          zip64Local: localHeaderHasZip64(indexZip.data, e),
+          localRank: innerRanks.get(e)!,
         });
         if (!e.isDirectory && e.name.endsWith(".iwa")) {
           c.iwaFiles.set(canonicalIwaName(e.name), c.inner[c.inner.length - 1]!.data);
@@ -141,7 +151,13 @@ export class IWorkContainer {
       const innerEntries: ZipWriteEntry[] = [];
       for (const e of this.inner) {
         if (e.isDirectory) {
-          innerEntries.push({ name: e.name, data: new Uint8Array(0), dosTime: e.dosTime, dosDate: e.dosDate });
+          innerEntries.push({
+            name: e.name,
+            data: new Uint8Array(0),
+            dosTime: e.dosTime,
+            dosDate: e.dosDate,
+            localRank: e.localRank,
+          });
           continue;
         }
         const canonical = e.name.endsWith(".iwa") ? canonicalIwaName(e.name) : undefined;
@@ -152,6 +168,8 @@ export class IWorkContainer {
           data: replacement ?? e.data,
           dosTime: e.dosTime,
           dosDate: e.dosDate,
+          zip64Local: e.zip64Local,
+          localRank: e.localRank,
         });
       }
       for (const [canonical, data] of remaining) {
@@ -163,6 +181,8 @@ export class IWorkContainer {
         data: e.name === this.indexZipEntry ? newIndexZip : e.data,
         dosTime: e.dosTime,
         dosDate: e.dosDate,
+        zip64Local: e.zip64Local,
+        localRank: e.localRank,
       }));
       for (const [name, data] of additions) {
         outerEntries.push({ name: this.prefix + name, data });
@@ -173,7 +193,13 @@ export class IWorkContainer {
     const outerEntries: ZipWriteEntry[] = [];
     for (const e of this.outer) {
       if (e.isDirectory) {
-        outerEntries.push({ name: e.name, data: new Uint8Array(0), dosTime: e.dosTime, dosDate: e.dosDate });
+        outerEntries.push({
+          name: e.name,
+          data: new Uint8Array(0),
+          dosTime: e.dosTime,
+          dosDate: e.dosDate,
+          localRank: e.localRank,
+        });
         continue;
       }
       const rel = e.name.slice(this.prefix.length);
@@ -185,16 +211,36 @@ export class IWorkContainer {
         data: replacement ?? e.data,
         dosTime: e.dosTime,
         dosDate: e.dosDate,
+        zip64Local: e.zip64Local,
+        localRank: e.localRank,
       });
     }
     for (const [canonical, data] of remaining) {
       outerEntries.push({ name: this.prefix + canonical, data });
     }
     for (const [name, data] of additions) {
-      outerEntries.push({ name: this.prefix + name, data });
+      outerEntries.push({ name: this.prefix + name, data, zip64Local: wantsZip64Local(name) });
     }
     return buildZip(outerEntries);
   }
+}
+
+/** Rank entries by where their local records physically sit in the file. */
+function physicalRanks(zip: ZipReader): Map<ZipReader["entries"][number], number> {
+  const ranks = new Map<ZipReader["entries"][number], number>();
+  [...zip.entries]
+    .sort((a, b) => a.localHeaderOffset - b.localHeaderOffset)
+    .forEach((e, rank) => ranks.set(e, rank));
+  return ranks;
+}
+
+/**
+ * Whether Apple's writer would mark a fresh entry with the local ZIP64
+ * extra: `Metadata/*` and the root previews carry it in every
+ * modern-writer fixture; `Index/*` and `Data/*` never do.
+ */
+function wantsZip64Local(name: string): boolean {
+  return name.startsWith("Metadata/") || /^preview[^/]*\.(jpe?g|png)$/.test(name);
 }
 
 /** Normalize an IWA path to the canonical "Index/<...>.iwa" form. */

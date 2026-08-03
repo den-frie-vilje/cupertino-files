@@ -1,9 +1,23 @@
 import { defineConfig } from "vitepress";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import type { DefaultTheme } from "vitepress";
 
 // The site root is docs/, so the canonical documents — FORMAT.md, the
 // generated COVERAGE.md and VERIFICATION.md, BLOCKERS.md, LEGAL.md — are
 // pages directly. One source of truth; the repo's staleness guards protect
 // the site for free.
+
+// The API reference is generated (npm run api:docs) and gitignored, so a
+// dev server without it must still start; the sidebar JSON's links are
+// emitted repo-relative and need the docs/ prefix folded away.
+const typedocSidebarPath = fileURLToPath(new URL("../api/typedoc-sidebar.json", import.meta.url));
+const apiSidebar: DefaultTheme.SidebarItem[] = existsSync(typedocSidebarPath)
+  ? (JSON.parse(
+      readFileSync(typedocSidebarPath, "utf8").replaceAll("/docs/api/", "/api/"),
+    ) as DefaultTheme.SidebarItem[])
+  : [];
+
 export default defineConfig({
   title: "cupertino-files",
   description:
@@ -27,20 +41,27 @@ export default defineConfig({
       },
       { text: "npm", link: "https://www.npmjs.com/package/cupertino-files" },
     ],
-    sidebar: [
+    sidebar: {
+      "/api/": [
+        { text: "API reference", link: "/api/", items: apiSidebar },
+      ],
+      "/": [
       {
         text: "Guide",
         items: [
           { text: "Getting started", link: "/guide/getting-started" },
           { text: "Working with documents", link: "/guide/documents" },
           { text: "CLI", link: "/guide/cli" },
+          { text: "For AI agents", link: "/guide/agents" },
           { text: "API design", link: "/guide/api-design" },
+          { text: "API reference", link: "/api/" },
         ],
       },
       {
         text: "The format",
         items: [
           { text: "Specification", link: "/FORMAT" },
+          { text: "Fidelity", link: "/guide/fidelity" },
           { text: "Conformance suite", link: "/guide/conformance" },
           { text: "End-to-end app tests", link: "/E2E" },
         ],
@@ -60,8 +81,9 @@ export default defineConfig({
           { text: "Legal posture", link: "/LEGAL" },
         ],
       },
-    ],
-    socialLinks: [{ icon: "github", link: "https://github.com/olekristensen/cupertino-files" }],
+      ],
+    },
+    socialLinks: [{ icon: "github", link: "https://github.com/den-frie-vilje/cupertino-files" }],
     search: { provider: "local" },
     outline: { level: [2, 3] },
     footer: {
@@ -69,7 +91,7 @@ export default defineConfig({
         "MIT licensed. Independently made — not by Apple in California. Not affiliated with or endorsed by Apple Inc.",
     },
     editLink: {
-      pattern: "https://github.com/olekristensen/cupertino-files/edit/main/docs/:path",
+      pattern: "https://github.com/den-frie-vilje/cupertino-files/edit/main/docs/:path",
       text: "Suggest a change to this page",
     },
   },

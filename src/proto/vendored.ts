@@ -367,6 +367,17 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "absolute_row": 4,
     "preserve_rectangular": 5,
   },
+  "TSCE.ASTNodeArrayArchive.ASTColonTractArchive.ASTColonTractAbsoluteRangeArchive": {
+    "range_begin": 1,
+    "range_end": 2,
+  },
+  "TSCE.ASTNodeArrayArchive.ASTCrossTableReferenceExtraInfoArchive": {
+    "table_id": 1,
+    "AST_reference_whitespace_after_sheet_name": 2,
+    "AST_reference_whitespace_before_table_name": 3,
+    "AST_reference_whitespace_after_table_name": 4,
+    "AST_reference_whitespace_before_cell_address": 5,
+  },
   "TSCE.ASTNodeArrayArchive.ASTNodeArchive": {
     "AST_node_type": 1,
     "AST_function_node_index": 2,
@@ -419,6 +430,23 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "row_uid": 2,
     "column_absolute": 3,
     "row_absolute": 4,
+  },
+  "TSCE.CellDependenciesTiledArchive": {
+    "cell_record_tiles": 1,
+  },
+  "TSCE.CellRecordExpandedArchive": {
+    "column": 1,
+    "row": 2,
+    "dirty_self_plus_precedents_count": 3,
+    "is_in_a_cycle": 4,
+    "has_calculated_precedents": 5,
+    "expanded_edges": 6,
+  },
+  "TSCE.CellRecordTileArchive": {
+    "internal_owner_id": 1,
+    "tile_column_begin": 2,
+    "tile_row_begin": 3,
+    "cell_records": 4,
   },
   "TSCE.FormulaArchive": {
     "AST_node_array": 1,
@@ -793,6 +821,13 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "bool_false_string": 45,
     "prefix": 10000,
     "suffix": 10001,
+  },
+  "TSP.CFUUIDArchive": {
+    "uuid_bytes": 1,
+    "uuid_w0": 2,
+    "uuid_w1": 3,
+    "uuid_w2": 4,
+    "uuid_w3": 5,
   },
   "TSP.Color": {
     "model": 1,

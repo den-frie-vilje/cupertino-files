@@ -145,6 +145,7 @@ export class NumbersDocument extends IWorkDocument {
    *
    * By default the copy keeps its tables (a duplicate); pass
    * `withContent: false` for an empty sheet.
+   * @agentTool manage_sheets
    */
   addSheet(options: { name?: string; copyOf?: number; at?: number; withContent?: boolean } = {}): SheetInfo {
     const sheets = this.sheets();
@@ -177,7 +178,11 @@ export class NumbersDocument extends IWorkDocument {
     return { id: sheet.identifier, name: sheet.message.getString(TN_SHEET_NAME) };
   }
 
-  /** Remove a sheet from the document's tab order. */
+  /**
+   * Remove a sheet from the document's tab order.
+   *
+   * @agentTool manage_sheets
+   */
   removeSheet(index: number): void {
     const sheets = this.sheets();
     const sheet = sheets[index];
@@ -188,7 +193,11 @@ export class NumbersDocument extends IWorkDocument {
     this.writeSheetOrder(sheets.filter((_, i) => i !== index).map((s) => s.id));
   }
 
-  /** Rename a sheet. Names must be unique, as they are in the app. */
+  /**
+   * Rename a sheet. Names must be unique, as they are in the app.
+   *
+   * @agentTool manage_sheets
+   */
   renameSheet(index: number, name: string): void {
     const sheets = this.sheets();
     const sheet = this.store.object(sheets[index]?.id ?? -1n);
@@ -199,7 +208,11 @@ export class NumbersDocument extends IWorkDocument {
     );
   }
 
-  /** Move a sheet to a new position in tab order. */
+  /**
+   * Move a sheet to a new position in tab order.
+   *
+   * @agentTool manage_sheets
+   */
   moveSheet(from: number, to: number): void {
     const ids = this.sheets().map((s) => s.id);
     if (from < 0 || from >= ids.length) throw new RangeError(`no sheet at index ${from}`);
@@ -239,6 +252,7 @@ export class NumbersDocument extends IWorkDocument {
    * `withContent: false` clears the cells but keeps the shape, styling and
    * header bands — a blank table laid out like its source, which is what
    * you want far more often than a duplicate of the data.
+   * @agentTool manage_sheets
    */
   addTable(
     sheetId: bigint,

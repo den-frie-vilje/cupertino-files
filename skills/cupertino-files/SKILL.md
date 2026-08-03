@@ -16,6 +16,14 @@ The `cupertino-files` package manipulates iWork documents entirely in
 TypeScript/JavaScript — no Apple apps, no external binaries, no native
 modules. It works in Node ≥ 18 and browsers (bytes in → bytes out).
 
+The package also ships an MCP server — `npx -y cupertino-files mcp` —
+whose nineteen tools (describe, read, edit and format tables, text,
+slides, sheets, links and page setup) cover the common cases without
+writing code, and a matching CLI (`cupertino-files tools` / `call`).
+Tool descriptions are generated from the API's own docblocks
+(`@agentTool` tags), so they cannot drift. Prefer the API below when a
+task outgrows them.
+
 ```ts
 import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
 ```
@@ -704,11 +712,13 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
    without confirming the feature is supported.
 6. Check `docs/COVERAGE.md` before assuming a feature is missing — it is
    generated from the code and says read, write or neither for every
-   capability. Genuinely absent today: authoring formulas, conditional
-   and filter *rules*, categories, merge ranges, chart appearance, and
-   creating cell controls or Keynote builds. For those, drop to the
-   low-level `RawMessage` layer and consult `docs/FORMAT.md` — §14 covers
-   tables byte by byte.
+   capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
+   cross-table references included), merges (`mergeCells`, dependency
+   ledger and all) and chart appearance (type, series colours, axes,
+   legend, gridlines) all write. Genuinely absent today: authoring
+   conditional and filter *rules*, categories, and creating cell controls
+   or Keynote builds. For those, drop to the low-level `RawMessage` layer
+   and consult `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
    repro. Check it before relying on paragraph border positions, cell

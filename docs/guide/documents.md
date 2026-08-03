@@ -78,17 +78,22 @@ table.setBands({ headerRows: 1, freezeHeaderRows: true, repeatHeaderRows: true }
 table.insertRows(3, 2);
 table.setCellFormat(1, 1, { category: "currency", currencyCode: "EUR" });
 
-table.merges();                          // [{ row, column, rowCount, columnCount }]
 table.cellFormula(1, 3);                 // "=B2*C2"
+table.setFormula(1, 4, "=SUM(B2:B9)", { value: 1500 });  // nothing evaluates; pass the cache
+table.merges();                          // [{ row, column, rowCount, columnCount }]
+table.mergeCells(0, 0, 1, 3);            // anchor keeps its value, covered cells go
+table.unmergeCells(0, 0);
 ```
 
-Worth knowing: merges are decoded from the calc engine, where the apps
-actually keep them (the documented `merge_region_map` is empty in every
-real document), and writing into a merge-covered cell throws. Formulas
-are a *table* feature — Pages documents have them too — and render
+Worth knowing: merges live in the calc engine, where the apps actually
+keep them, and writing into a merge-covered cell throws. Formulas are a
+*table* feature — Pages documents have them too — and render
 per-position because references are stored as offsets from the using
-cell. Function names aren't in the file format at all; measured indexes
-render by name, the rest as `FUNCTION_<id>` rather than a guess.
+cell; `setFormula` compiles the same way, so what you type is what the
+cell means. Cross-table references (`Other::A2`) work both directions.
+Function names aren't in the file format at all; 271 measured indexes
+author and render by name, the rest render as `FUNCTION_<id>` and are
+refused for writing rather than guessed.
 
 ## Numbers: conditional formatting, filters, categories
 
@@ -145,9 +150,11 @@ chart.setValue(0, 2, { type: "number", value: 99 });
 chart.addSeries("Region 3", values);
 ```
 
-Chart *data* is editable; appearance is on the
-[open-questions list](/BLOCKERS). Cropping never touches the media — a
-mask defines the window in the image's own coordinate space.
+Chart data and appearance are both editable — type, series colours,
+axis gridlines and legend styling, each copying a shared style archive
+before writing so sibling charts keep theirs. Cropping never touches
+the media — a mask defines the window in the image's own coordinate
+space.
 
 ## Low level
 

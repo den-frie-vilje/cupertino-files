@@ -46,7 +46,18 @@ import {
   type TableCategories,
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
-import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
+import {
+  CELL_RECORD_TILE,
+  CellRecordExpandedFields,
+  CellRecordTileFields,
+  FORMULA_OWNER_DEPENDENCIES,
+  FormulaOwnerFields,
+  FormulaOwnerRegistry,
+  OwnerKind,
+  readCfUid,
+  readOwnerUid,
+  TiledDependenciesFields,
+} from "../tsce/owners.ts";
 import {
   controlsOf,
   buildPopupMenuModel,
@@ -698,6 +709,7 @@ export class TableModel {
    * A cell shows one format, so any format the record already carried is
    * cleared first — leaving a stale currency id beside a new date id would
    * make the display depend on which flag the app happens to read first.
+   * @agentTool set_cell_format
    */
   setCellFormat(row: number, column: number, format: CellFormat): void {
     this.requireWritable();
@@ -715,7 +727,11 @@ export class TableModel {
     this.writeRowLayout(located.rowInfo, layout);
   }
 
-  /** Apply one format across a rectangular block. */
+  /**
+   * Apply one format across a rectangular block.
+   *
+   * @agentTool set_cell_format
+   */
   setRangeFormat(
     row: number,
     column: number,
@@ -825,6 +841,18 @@ export class TableModel {
     return registry;
   }
 
+  /**
+   * The raw `TSCE.FormulaArchive` behind a cell, if it has one.
+   *
+   * The unrendered truth — what {@link cellFormulaDetail} renders, and the
+   * yardstick formula *writing* is measured against: a rebuilt formula is
+   * proven by comparing bytes with what Apple stored here.
+   */
+  formulaArchiveAt(row: number, column: number): RawMessage | undefined {
+    const id = this.formulaId(row, column);
+    return id === undefined ? undefined : this.formulaTable().get(id);
+  }
+
   /** `formula_id` of a cell, if its record carries one. */
   formulaId(row: number, column: number): number | undefined {
     const located = this.locateRow(row);
@@ -833,7 +861,11 @@ export class TableModel {
     return raw ? CellRecord.decode(raw).id(CellFlag.FORMULA_ID) : undefined;
   }
 
-  /** Every formula cell in the table, with its rendered text. */
+  /**
+   * Every formula cell in the table, with its rendered text.
+   *
+   * @agentTool list_formulas
+   */
   formulas(): { row: number; column: number; formula: string }[] {
     const out: { row: number; column: number; formula: string }[] = [];
     if (this.storageGeneration !== "v5") return out;
@@ -1093,6 +1125,7 @@ export class TableModel {
    * Rich text (`{ type: "richText" }`) cannot be written: the value lives
    * in a separate TSWP storage object. Set plain `text` instead, or edit
    * the existing rich-text storage through {@link richTextStorage}.
+   * @agentTool set_cells
    */
   setCell(row: number, column: number, input: CellInput, options: WriteOptions = {}): void {
     // Normalise first: an unrecognised value must throw before anything is
@@ -1119,11 +1152,13 @@ export class TableModel {
     const previous = layout.records[column];
     const record = previous ? CellRecord.decode(previous) : new CellRecord();
     const previousStringId = record.id(CellFlag.STRING_ID);
+    const previousFormulaId = record.id(CellFlag.FORMULA_ID);
 
     this.applyValue(record, value);
 
     // A literal supersedes whatever formula produced the old value.
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
+    if (previousFormulaId !== undefined) this.releaseFormula(previousFormulaId);
     if (previousStringId !== undefined && record.id(CellFlag.STRING_ID) !== previousStringId) {
       this.releaseString(previousStringId);
     }
@@ -1157,8 +1192,19 @@ export class TableModel {
    * already there and wrong otherwise. There is no third option that does
    * not involve implementing Apple's calc engine.
    *
+   * **The dependency tracker is not written.** The calc engine keeps its
+   * own per-cell ledger — `TSCE.FormulaOwnerDependenciesArchive` enumerates
+   * exactly the cells that hold formulas, each with precedent edges — and
+   * this method leaves it alone: a replaced formula keeps its stale edges,
+   * and a formula written into a fresh cell is absent from the ledger
+   * entirely. Replacing a formula with its own text is proven harmless by
+   * bytes (the document saves identical to Apple's); whether the engine
+   * rebuilds the ledger on open for the other two cases is an app-behavior
+   * question the bisect ladder's formula rungs (19-21) exist to answer.
+   *
    * Refuses a function it has no index for rather than inventing one — see
    * `authorableFunctions()` for the 271 it knows.
+   * @agentTool set_formula
    */
   setFormula(
     row: number,
@@ -1175,14 +1221,40 @@ export class TableModel {
     this.requireVisible(row, column, options);
 
     const expression = typeof formula === "string" ? parseFormula(formula) : formula;
-    const ast = buildFormula(expression, { row, column });
-    const archive = RawMessage.create();
-    archive.setMessage(Formula.AST_NODE_ARRAY, ast);
-    const key = this.internFormula(archive);
+    const ast = buildFormula(expression, { row, column }, {
+      tableUid: (name) => this.owners().tableUid(name),
+    });
 
-    // The cached value first, so its flags are in place before the formula
-    // id is attached; `value: undefined` deliberately leaves the old cache.
-    if (options.value !== undefined) this.setCell(row, column, options.value, options);
+    // When the cell already carries this exact recipe, keep its entry
+    // instead of minting a new key. This is what makes a same-text replace
+    // a byte-level no-op — the strongest proof formula writing has — and it
+    // also preserves entry fields this library does not model (the xlsx
+    // importer's translation_flags ride alongside the AST in field 6).
+    const previousId = this.formulaId(row, column);
+    const previousAst =
+      previousId === undefined
+        ? undefined
+        : this.formulaTable().get(previousId)?.getMessage(Formula.AST_NODE_ARRAY);
+    const reuse = previousAst !== undefined && bytesEqual(previousAst.toBytes(), ast.toBytes());
+    let key: number;
+    if (reuse) {
+      key = previousId!;
+      this.retainFormula(key);
+    } else {
+      const archive = RawMessage.create();
+      archive.setMessage(Formula.AST_NODE_ARRAY, ast);
+      key = this.internFormula(archive);
+    }
+    // The cell's old reference is dropped exactly once: by the value write
+    // below when there is one — setCell strips formula flags — or directly.
+    // With `reuse` the retain above and this release cancel to a no-op.
+    if (options.value !== undefined) {
+      // The cached value first, so its flags are in place before the
+      // formula id is attached; `value: undefined` leaves the old cache.
+      this.setCell(row, column, options.value, options);
+    } else if (previousId !== undefined) {
+      this.releaseFormula(previousId);
+    }
 
     const located = this.locateRow(row);
     if (!located) {
@@ -1215,7 +1287,9 @@ export class TableModel {
     const existing = layout.records[column];
     if (!existing) return false;
     const record = CellRecord.decode(existing);
-    if (record.id(CellFlag.FORMULA_ID) === undefined) return false;
+    const previousId = record.id(CellFlag.FORMULA_ID);
+    if (previousId === undefined) return false;
+    this.releaseFormula(previousId);
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
@@ -1248,6 +1322,39 @@ export class TableModel {
   }
 
   /**
+   * Bump a formula-table entry's refcount by one more referencing cell.
+   *
+   * Apple's convention, measured across every fixture: the refcount equals
+   * the number of cell records naming the key — 39 of 39 entries agree.
+   */
+  private retainFormula(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    const entry = list?.message
+      .getMessages(DataList.ENTRIES)
+      .find((e) => e.getUint(ListEntry.KEY) === key);
+    entry?.setVarint(ListEntry.REFCOUNT, (entry.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+  }
+
+  /** Drop one cell's reference to a formula entry, removing it at zero. */
+  private releaseFormula(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
+    if (!list) return;
+    const m = list.message;
+    const entries = m.getMessages(DataList.ENTRIES);
+    const entry = entries.find((e) => e.getUint(ListEntry.KEY) === key);
+    if (!entry) return;
+    const remaining = (entry.getUint(ListEntry.REFCOUNT) ?? 1) - 1;
+    if (remaining > 0) {
+      entry.setVarint(ListEntry.REFCOUNT, remaining);
+      return;
+    }
+    m.setMessages(
+      DataList.ENTRIES,
+      entries.filter((e) => e !== entry),
+    );
+  }
+
+  /**
    * Merge a rectangle of cells, anchored at its top-left.
    *
    * A merge is not a property of the cells. It is a **formula owned by the
@@ -1264,6 +1371,7 @@ export class TableModel {
    *
    * The anchor's value survives; everything the rectangle covers is
    * discarded, exactly as merging does in the app.
+   * @agentTool merge_cells
    */
   mergeCells(row: number, column: number, rowCount: number, columnCount: number): void {
     this.requireWritable();
@@ -1325,6 +1433,7 @@ export class TableModel {
     owner.setMessage(MergeOwner.FORMULA_STORE, store);
     this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
     this.object.message.markDirty();
+    this.addMergeLedgerRecord(index);
 
     // Everything the merge swallows loses its record entirely.
     for (let r = row; r <= lastRow; r++) {
@@ -1336,11 +1445,105 @@ export class TableModel {
   }
 
   /**
+   * The calc engine's dependency ledger entry for one merge.
+   *
+   * The merge owner's `FormulaOwnerDependenciesArchive` lists each merge
+   * as a synthetic cell — `(row 0, column = formula_index)` with an empty
+   * edges message; both merge-bearing corpus documents agree byte for
+   * byte, 8 records of 8. Idempotent, because recreating a merge at an
+   * index the ledger still remembers must not duplicate the record. A
+   * document with no kind-5 dependencies archive (the pre-4008 era) is
+   * left alone: its merges live in the region map and the engine has no
+   * ledger to keep consistent.
+   */
+  private addMergeLedgerRecord(index: number): void {
+    const owner = this.mergeDependenciesOwner();
+    if (!owner) return;
+    const tiled =
+      owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES) ?? RawMessage.create();
+    // 32-column tiles, created when first occupied.
+    const tileBegin = index - (index % 32);
+    let tile: IwaObject | undefined;
+    for (const ref of tiled.getMessages(TiledDependenciesFields.TILES)) {
+      const candidate = this.store.resolve(ref);
+      if (candidate?.message.getUint(CellRecordTileFields.TILE_COLUMN_BEGIN) === tileBegin) {
+        tile = candidate;
+        break;
+      }
+    }
+    if (!tile) {
+      const component = this.store.componentOf(owner.identifier);
+      if (!component) return;
+      tile = this.store.createObject(CELL_RECORD_TILE, component);
+      tile.message.setVarint(
+        CellRecordTileFields.INTERNAL_OWNER_ID,
+        owner.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0,
+      );
+      tile.message.setVarint(CellRecordTileFields.TILE_COLUMN_BEGIN, tileBegin);
+      tile.message.setVarint(CellRecordTileFields.TILE_ROW_BEGIN, 0);
+      tiled.addMessage(TiledDependenciesFields.TILES, makeRef(tile.identifier));
+      owner.message.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, tiled);
+      owner.message.markDirty();
+      // The owner is an Apple-authored object with no reference extractor,
+      // so its bookkeeping does not recompute on save; declare the one
+      // reference this write added, or the tile dangles and the shape
+      // audit (rightly) flags an object nothing points at.
+      this.store.declareReference(owner, tile.identifier);
+    }
+    const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+    if (records.some((r) => r.getUint(CellRecordExpandedFields.COLUMN) === index)) return;
+    const record = RawMessage.create();
+    record.setVarint(CellRecordExpandedFields.COLUMN, index);
+    record.setVarint(CellRecordExpandedFields.ROW, 0);
+    record.setMessage(CellRecordExpandedFields.EXPANDED_EDGES, RawMessage.create());
+    tile.message.addMessage(CellRecordTileFields.CELL_RECORDS, record);
+    tile.message.markDirty();
+  }
+
+  /** Drop a merge's ledger record; the tile stays, like the high-water index. */
+  private removeMergeLedgerRecord(index: number): void {
+    const owner = this.mergeDependenciesOwner();
+    const tiled = owner?.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES);
+    for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+      const tile = this.store.resolve(ref);
+      if (!tile) continue;
+      const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+      const kept = records.filter(
+        (r) => r.getUint(CellRecordExpandedFields.COLUMN) !== index,
+      );
+      if (kept.length !== records.length) {
+        tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, kept);
+        tile.message.markDirty();
+        return;
+      }
+    }
+  }
+
+  /** The kind-5 dependencies archive matching this table's merge owner id. */
+  private mergeDependenciesOwner(): IwaObject | undefined {
+    const uid = readCfUid(
+      this.object.message
+        .getMessage(TableModelFields.MERGE_OWNER)
+        ?.getMessage(MergeOwner.OWNER_ID),
+    );
+    if (!uid) return undefined;
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+      const candidate = readOwnerUid(
+        obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID),
+      );
+      if (candidate && candidate.lo === uid.lo && candidate.hi === uid.hi) return obj;
+    }
+    return undefined;
+  }
+
+  /**
    * Remove the merge anchored at a cell, returning false if there is none.
    *
    * The cells it covered come back empty, which is what the app does: the
    * values they held before merging were discarded at merge time and are
    * not recoverable from the file.
+   * @agentTool merge_cells
    */
   unmergeCells(row: number, column: number): boolean {
     this.requireWritable();
@@ -1348,13 +1551,13 @@ export class TableModel {
     const store = owner?.getMessage(MergeOwner.FORMULA_STORE);
     if (!owner || !store) return false;
 
-    const kept = store
-      .getMessages(FormulaStore.FORMULAS)
-      .filter((pair) => {
-        const range = mergeRangeOfPair(pair);
-        return !(range && range.row === row && range.column === column);
-      });
-    if (kept.length === store.getMessages(FormulaStore.FORMULAS).length) return false;
+    const pairs = store.getMessages(FormulaStore.FORMULAS);
+    const removed = pairs.filter((pair) => {
+      const range = mergeRangeOfPair(pair);
+      return range !== undefined && range.row === row && range.column === column;
+    });
+    if (removed.length === 0) return false;
+    const kept = pairs.filter((pair) => !removed.includes(pair));
 
     // next_index is a high-water mark, not a count: leaving it alone keeps
     // ids unique against anything the engine still remembers.
@@ -1362,6 +1565,11 @@ export class TableModel {
     owner.setMessage(MergeOwner.FORMULA_STORE, store);
     this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
     this.object.message.markDirty();
+    // The ledger record goes with its pair; the tile stays, like the index.
+    for (const pair of removed) {
+      const index = pair.getUint(FormulaStore.PAIR_INDEX);
+      if (index !== undefined) this.removeMergeLedgerRecord(index);
+    }
     return true;
   }
 
@@ -1536,6 +1744,7 @@ export class TableModel {
    * so this is a safe edit that does not touch the tiles. Counts are
    * clamped to the table's real size: a header count past the last row
    * would leave the app with no body.
+   * @agentTool set_table_bands
    */
   setBands(bands: {
     headerRows?: number;
@@ -1583,13 +1792,22 @@ export class TableModel {
       : (this.object.message.getDouble(TableModelFields.DEFAULT_COLUMN_WIDTH) ?? 0);
   }
 
-  /** Set an explicit row height; 0 restores the table default. */
+  /**
+   * Set an explicit row height; 0 restores the table default.
+   *
+   * @agentTool modify_table
+   */
   setRowHeight(row: number, points: number): void {
     const header = this.header(DataStoreFields.ROW_HEADERS, row);
     if (!header) throw new RangeError(`row ${row} has no header entry to size`);
     header.setFloat(HeaderFields.SIZE, points);
   }
 
+  /**
+   * Set one column's width in points.
+   *
+   * @agentTool modify_table
+   */
   setColumnWidth(column: number, points: number): void {
     const header = this.header(DataStoreFields.COLUMN_HEADERS, column);
     if (!header) throw new RangeError(`column ${column} has no header entry to size`);
@@ -1650,6 +1868,7 @@ export class TableModel {
    * an absolute range spanning the insertion point still names its old
    * bounds. Adjusting those correctly is calc-engine work; see
    * docs/FORMAT.md §14.7.
+   * @agentTool modify_table
    */
   insertRows(at: number, count = 1): void {
     this.requireWritable();
@@ -1670,7 +1889,11 @@ export class TableModel {
     this.shiftMergesForRows(at, count);
   }
 
-  /** Delete rows starting at `at`. */
+  /**
+   * Delete rows starting at `at`.
+   *
+   * @agentTool modify_table
+   */
   deleteRows(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -1681,13 +1904,17 @@ export class TableModel {
     if (rows.length - count < 1) throw new RangeError("a table must keep at least one row");
     // Release the strings the deleted cells held, so the string table does
     // not accumulate entries nothing references.
-    for (const row of rows.slice(at, at + count)) this.releaseRowStrings(row);
+    for (const row of rows.slice(at, at + count)) this.releaseRowRefs(row);
     rows.splice(at, count);
     this.rewriteRows(rows);
     this.shiftMergesForRows(at, -count);
   }
 
-  /** Insert blank columns before `at`. */
+  /**
+   * Insert blank columns before `at`.
+   *
+   * @agentTool modify_table
+   */
   insertColumns(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -1707,7 +1934,11 @@ export class TableModel {
     this.shiftMergesForColumns(at, count);
   }
 
-  /** Delete columns starting at `at`. */
+  /**
+   * Delete columns starting at `at`.
+   *
+   * @agentTool modify_table
+   */
   deleteColumns(at: number, count = 1): void {
     this.requireWritable();
     if (count <= 0) return;
@@ -1719,7 +1950,7 @@ export class TableModel {
     if (this.columnCount - count < 1) throw new RangeError("a table must keep at least one column");
     const rows = this.snapshotRows();
     for (const row of rows) {
-      for (const record of row.records.slice(at, at + count)) this.releaseRecordString(record);
+      for (const record of row.records.slice(at, at + count)) this.releaseRecordRefs(record);
       row.records.splice(at, count);
     }
     const widths = this.columnWidths();
@@ -1937,15 +2168,18 @@ export class TableModel {
     this.object.message.getMessage(TableModelFields.MERGE_OWNER)?.remove(MergeOwner.FORMULA_STORE);
   }
 
-  /** Decrement string-table refcounts for every string a row referenced. */
-  private releaseRowStrings(row: RowSnapshot): void {
-    for (const record of row.records) this.releaseRecordString(record);
+  /** Drop the string- and formula-table references a deleted row held. */
+  private releaseRowRefs(row: RowSnapshot): void {
+    for (const record of row.records) this.releaseRecordRefs(record);
   }
 
-  private releaseRecordString(record: Uint8Array | undefined): void {
+  private releaseRecordRefs(record: Uint8Array | undefined): void {
     if (!record) return;
-    const id = CellRecord.decode(record).id(CellFlag.STRING_ID);
-    if (id !== undefined) this.releaseString(id);
+    const decoded = CellRecord.decode(record);
+    const stringId = decoded.id(CellFlag.STRING_ID);
+    if (stringId !== undefined) this.releaseString(stringId);
+    const formulaId = decoded.id(CellFlag.FORMULA_ID);
+    if (formulaId !== undefined) this.releaseFormula(formulaId);
   }
 
   // --------------------------------------------------------------- styling
@@ -2024,7 +2258,13 @@ export class TableModel {
     this.refreshTileTotals();
   }
 
-  /** Apply the same formatting to a rectangular block of cells. */
+  /**
+   * Apply the same formatting to a rectangular block of cells — fill,
+   * borders, padding, alignment, wrap — leaving every cell's value
+   * untouched.
+   *
+   * @agentTool format_cells
+   */
   setRangeFormatting(
     row: number,
     column: number,

@@ -308,4 +308,15 @@ describe("axis and legend styles", () => {
     }
     expect(message.includes("unknown axis property")).toBe(true);
   });
+
+  it("writes the legend's fill and opacity and reads them back", () => {
+    const { doc, chart } = firstChart(UNSTYLED);
+    const legend = chart.legendStyle()!;
+    legend.setFill(RED);
+    legend.setOpacity(0.75);
+
+    const after = chartsOf(IWorkDocument.open(doc.save()).store)[0]!;
+    expect(rgb(after.legendStyle()!.fill())).toBe("255,0,0");
+    expect(after.legendStyle()!.opacity).toBe(0.75);
+  });
 });

@@ -72,6 +72,16 @@ Notes:
 - A **password-protected** document contains an `.iwph` entry (iWork
   protection header); the whole package is then encrypted and unreadable
   without the password. Detect and refuse.
+- **Apple's zip writer, for the byte-faithful:** general-purpose flags
+  `0x0000` (no UTF-8 bit), version-needed 20, version-made-by 62, no
+  central-directory extras or comments. `Metadata/*` and the root
+  `preview*.jpg` local headers carry a redundant ZIP64 extended-info extra
+  (id `0x0001`, both sizes as 64-bit values, while the real sizes also sit
+  in the 32-bit fields); `Index/*` and `Data/*` never do — 1751 of 1751
+  IWA entries across this corpus are bare. In incrementally saved
+  documents the **local records' physical order can differ from the
+  central directory's order**; both orders are meaningful and must be
+  preserved independently to reproduce the file.
 
 ## 3. `.iwa` files: Snappy chunk framing
 
@@ -107,6 +117,37 @@ straddle chunk boundaries. Encoding: split the archive stream at 64 KiB
 boundaries and Snappy-compress each piece. (The apps tolerate chunks whose
 payload fails Snappy decoding by treating them as stored-uncompressed;
 writers never emit that.)
+
+### 3.1 Which Snappy, exactly
+
+Apple links stock [google/snappy], and its compressor output is
+reproducible bit for bit — which vintage depends on when the writing app
+shipped:
+
+- **2013–2016 writers** emit the classic `CompressFragment` (snappy
+  ≤ 1.1.8): linear scan acceleration (`skip++ >> 5`), top-bits hashing.
+- **2023+ writers** emit the 1.1.9 (2020) rewrite: each restart begins
+  with an unrolled probe of the next 16 positions, the accelerator grows
+  geometrically (`skip += skip >> 5`), and a smaller-than-16 KiB input
+  hashes with the bits just above the 2-byte entry stride, so only
+  full-size hash tables coincide with the classic form.
+
+Across this repository's corpus, 1740 of 1751 stored components re-encode
+byte-identically with one of the two (`test/byte-identity.test.ts` pins
+the split). Mixed-age documents contain both at once — incremental save
+keeps whatever bytes an older writer left. The 11 holdouts are ordinary
+Snappy in standard 64 KiB chunks whose matches were found *better* than
+google's greedy encoder finds them (a 263 KiB stylesheet stored in
+42 KiB) — certain old iOS-era builds evidently linked a stronger
+encoder — and rewriting them with either vintage produces a valid,
+slightly larger component.
+
+Matching the compressor matters for one reason: it makes a re-serialized
+component identical to what the app would have written, which upgrades
+"the document round-trips" to "the document is byte-for-byte Apple's
+file" — the strongest form of write verification this format allows.
+
+[google/snappy]: https://github.com/google/snappy
 
 ## 4. Archive streams: objects
 

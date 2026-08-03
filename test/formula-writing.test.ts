@@ -13,7 +13,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
-import { authorableFunctions, parseFormula } from "../src/tst/formula-builder.ts";
+import { authorableFunctions, buildFormula, parseFormula } from "../src/tst/formula-builder.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const bytes = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -77,7 +77,8 @@ describe("compiling formulas", () => {
   });
 
   it("writes function calls, including nested ones", () => {
-    expect(roundTrip("=SUM(A1:A5)")).toBe("=SUM($A$1:$A$5)");
+    expect(roundTrip("=SUM(A1:A5)")).toBe("=SUM(A1:A5)"); // as typed — relative tract
+    expect(roundTrip("=SUM($A$1:$A$5)")).toBe("=SUM($A$1:$A$5)"); // pinned stays pinned
     expect(roundTrip("=ABS(-3)")).toBe("=ABS(-3)");
     expect(roundTrip("=MAX(MIN(1,2),3)")).toBe("=MAX(MIN(1,2),3)");
     expect(roundTrip("=COUNT()")).toBe("=COUNT()");
@@ -90,6 +91,40 @@ describe("compiling formulas", () => {
     // DURATION(,,8,22,11,500) is in the corpus — the omitted arguments are
     // nodes, not absences, and rendering them as TRUE was a real bug once.
     expect(roundTrip("=DURATION(,,8,22,11,500)")).toBe("=DURATION(,,8,22,11,500)");
+  });
+
+  it("round-trips a cross-table reference through a real document", () => {
+    // `Other::A1` stores the target table's owner UUID, so it can only be
+    // written inside a document that has the table. The categories fixture
+    // has 1020 of these; write a fresh one and read it back through the
+    // renderer, which resolves the UUID back to the name independently.
+    const doc = NumbersDocument.load(bytes("numbers-parser-v26.0-categories.numbers"));
+    const table = doc.tables().find((t) => t.name === "Categories")!;
+    table.setFormula(1, 1, "=Uncategorized::E2", { value: 40 });
+    const reread = NumbersDocument.load(doc.save());
+    const after = reread.tables().find((t) => t.name === "Categories")!;
+    expect(after.cellFormulaDetail(1, 1)?.text).toBe("=Uncategorized::E2");
+    expect(after.cellText(1, 1)).toBe("40");
+  });
+
+  it("refuses a cross-table reference it cannot resolve", () => {
+    // Without a document there is no identity to store; with one, a name
+    // that matches no table is a formula the engine could never follow.
+    let message = "";
+    try {
+      buildFormula(parseFormula("=Elsewhere::A1"), { row: 0, column: 0 });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toContain("needs a document");
+
+    const doc = NumbersDocument.load(bytes(FIXTURE));
+    try {
+      doc.tables()[0]!.setFormula(4, 1, "=NoSuchTable::A1");
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toContain("no table named");
   });
 
   it("refuses a function it has no index for", () => {

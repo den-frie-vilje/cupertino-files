@@ -85,68 +85,264 @@ export function snappyUncompressBlock(input: Uint8Array): Uint8Array {
   return out;
 }
 
-const HASH_BITS = 14;
-const HASH_TABLE_SIZE = 1 << HASH_BITS;
-const MAX_COPY_OFFSET = 0xffff; // we only emit copy-2 tags
-
-function hash4(v: number): number {
-  return (Math.imul(v, 0x1e35a7bd) >>> (32 - HASH_BITS)) & (HASH_TABLE_SIZE - 1);
-}
+/**
+ * The compressor below is a byte-exact port of google/snappy's reference
+ * `CompressFragment` (the classic form, snappy ≤ 1.1.8) — not merely a
+ * valid Snappy encoder but *the* encoder, reproducing its output bit for
+ * bit: the same hash-table sizing, the same zero-initialized table with no
+ * sentinel (a spurious candidate at position 0 is checked by comparing
+ * bytes, exactly as upstream does), the same `skip++ >> 5` scan
+ * acceleration, the same copy-1/copy-2 tag choices and 64/60-byte long-copy
+ * chunking, and the same post-copy double table seeding.
+ *
+ * Byte-exactness is not pedantry here. Apple links stock snappy, so
+ * matching it makes a re-compressed component identical to what the app
+ * would have written — which is what lets a saved document be compared to
+ * Apple's own bytes at the component level rather than only after
+ * decompression.
+ */
+const MAX_HASH_TABLE_SIZE = 1 << 14;
 
 function load32(b: Uint8Array, i: number): number {
   return (b[i]! | (b[i + 1]! << 8) | (b[i + 2]! << 16) | (b[i + 3]! << 24)) >>> 0;
 }
 
+function hashBytes(v: number, shift: number): number {
+  return Math.imul(v, 0x1e35a7bd) >>> shift;
+}
+
+/** Literal tag + length bytes + payload, as EmitLiteral writes them. */
 function emitLiteral(w: ByteWriter, src: Uint8Array, from: number, to: number): void {
   const len = to - from;
   if (len <= 0) return;
-  const n = len - 1;
+  let n = len - 1;
   if (n < 60) {
     w.byte(n << 2);
-  } else if (n < 0x100) {
-    w.byte(60 << 2);
-    w.byte(n);
-  } else if (n < 0x10000) {
-    w.byte(61 << 2);
-    w.byte(n & 0xff);
-    w.byte((n >>> 8) & 0xff);
-  } else if (n < 0x1000000) {
-    w.byte(62 << 2);
-    w.byte(n & 0xff);
-    w.byte((n >>> 8) & 0xff);
-    w.byte((n >>> 16) & 0xff);
   } else {
-    w.byte(63 << 2);
-    w.byte(n & 0xff);
-    w.byte((n >>> 8) & 0xff);
-    w.byte((n >>> 16) & 0xff);
-    w.byte((n >>> 24) & 0xff);
+    // Length bytes, little-endian, as many as needed; tag encodes the count.
+    let count = 0;
+    const lengthBytes: number[] = [];
+    while (n > 0) {
+      lengthBytes.push(n & 0xff);
+      n >>>= 8;
+      count++;
+    }
+    w.byte((59 + count) << 2);
+    for (const b of lengthBytes) w.byte(b);
   }
   w.bytes(src.subarray(from, to));
 }
 
-function emitCopy(w: ByteWriter, offset: number, len: number): void {
-  // Emit copy-2 tags (1..64 bytes each); chunk longer matches.
-  while (len > 0) {
-    const chunk = Math.min(len, 64);
-    // Avoid leaving a tail shorter than 4 when possible (matches snappy's
-    // reference encoder and keeps tags efficient); any length 1..64 is legal.
-    let emit = chunk;
-    if (len > 64 && len - 64 < 4) emit = 60;
-    w.byte(((emit - 1) << 2) | 2);
+/** One copy tag for len ≤ 64: copy-1 when it fits, copy-2 otherwise. */
+function emitCopyAtMost64(w: ByteWriter, offset: number, len: number): void {
+  if (len < 12 && offset < 2048) {
+    w.byte(1 + ((len - 4) << 2) + ((offset >>> 8) << 5));
+    w.byte(offset & 0xff);
+  } else {
+    w.byte(2 + ((len - 1) << 2));
     w.byte(offset & 0xff);
     w.byte((offset >>> 8) & 0xff);
-    len -= emit;
   }
 }
 
+function emitCopy(w: ByteWriter, offset: number, len: number): void {
+  // Long matches: 64-byte tags while ≥ 68 remain, then a 60-byte tag if
+  // needed, so the final tag never carries fewer than 4 bytes.
+  while (len >= 68) {
+    emitCopyAtMost64(w, offset, 64);
+    len -= 64;
+  }
+  if (len > 64) {
+    emitCopyAtMost64(w, offset, 60);
+    len -= 60;
+  }
+  emitCopyAtMost64(w, offset, len);
+}
+
 /**
- * Compress a buffer into a single raw Snappy block (greedy hash matcher,
- * copy-2 tags only). Output decodes with any conformant Snappy decoder.
+ * Compress one fragment (≤ 64 KiB) exactly as snappy's CompressFragment.
+ *
+ * Structured line-for-line against the C++ so the two can be read side by
+ * side; the labels in comments are upstream's.
  */
-export function snappyCompressBlock(input: Uint8Array): Uint8Array {
+function compressFragment(w: ByteWriter, input: Uint8Array): void {
   const n = input.length;
-  const w = new ByteWriter(64 + n + (n >>> 2));
+  // Smallest power of two covering the input, in [256, 16384].
+  let tableSize = 256;
+  while (tableSize < MAX_HASH_TABLE_SIZE && tableSize < n) tableSize <<= 1;
+  const shift = 32 - 31 + Math.clz32(tableSize); // 32 - log2(tableSize)
+  const table = new Uint16Array(tableSize);
+
+  let nextEmit = 0;
+  const INPUT_MARGIN = 15;
+  let ip = 0;
+
+  if (n >= INPUT_MARGIN) {
+    const ipLimit = n - INPUT_MARGIN;
+    outer: for (let nextHash = hashBytes(load32(input, ++ip), shift); ; ) {
+      // Step 1: scan for a 4-byte match, accelerating through
+      // incompressible regions: after 32 probes without a match, look at
+      // every other byte; after 32 more, every third; and so on.
+      let skip = 32;
+      let nextIp = ip;
+      let candidate: number;
+      do {
+        ip = nextIp;
+        const hash = nextHash;
+        const bytesBetweenHashLookups = skip++ >>> 5;
+        nextIp = ip + bytesBetweenHashLookups;
+        if (nextIp > ipLimit) break outer;
+        nextHash = hashBytes(load32(input, nextIp), shift);
+        candidate = table[hash]!;
+        table[hash] = ip;
+      } while (load32(input, ip) !== load32(input, candidate));
+
+      // Step 2: emit the unmatched bytes before the match as a literal.
+      emitLiteral(w, input, nextEmit, ip);
+
+      // Step 3: emit the copy, then keep emitting copies for as long as
+      // the position right after each match immediately matches again.
+      for (;;) {
+        const base = ip;
+        let matched = 4;
+        while (ip + matched < n && input[ip + matched] === input[candidate + matched]) matched++;
+        ip += matched;
+        emitCopy(w, base - candidate, matched);
+        nextEmit = ip;
+        if (ip >= ipLimit) break outer;
+        // Seed the table for ip - 1 as well as ip before probing — the
+        // one-position lookbehind is upstream's density trick, and skipping
+        // it changes which candidate the next probe finds.
+        table[hashBytes(load32(input, ip - 1), shift)] = ip - 1;
+        const data = load32(input, ip);
+        const curHash = hashBytes(data, shift);
+        candidate = table[curHash]!;
+        table[curHash] = ip;
+        if (data !== load32(input, candidate)) break;
+      }
+
+      nextHash = hashBytes(load32(input, ++ip), shift);
+    }
+  }
+
+  // emit_remainder: everything scanned past the last emit is one literal.
+  if (nextEmit < n) emitLiteral(w, input, nextEmit, n);
+}
+
+/**
+ * `CompressFragment` as rewritten in snappy 1.1.9 (2020) — the vintage
+ * current Apple apps link. Three visible differences from the classic
+ * form: each restart begins with an unrolled probe of the next 16
+ * positions at every-byte granularity; the scan accelerator grows
+ * geometrically (`skip += skip >> 5`) instead of linearly; and the hash
+ * for a smaller-than-maximum table selects bits just above the 2-byte
+ * entry stride rather than the top bits, so sub-16 KiB inputs hash
+ * differently even though full-size tables coincide.
+ */
+function compressFragmentModern(w: ByteWriter, input: Uint8Array): void {
+  const n = input.length;
+  let tableSize = 256;
+  while (tableSize < MAX_HASH_TABLE_SIZE && tableSize < n) tableSize <<= 1;
+  const indexMask = tableSize - 1;
+  // (hash15 & 2(ts-1)) >> 1 as upstream byte-addresses it, folded to an index.
+  const tableIndex = (v: number): number => (Math.imul(v, 0x1e35a7bd) >>> 18) & indexMask;
+  const table = new Uint16Array(tableSize);
+
+  const INPUT_MARGIN = 15;
+  let ip = 0;
+
+  /**
+   * Step 3, shared by both match finders: emit copies while each match's
+   * end immediately matches again. Returns the position to resume scanning
+   * from, or -1 when the input ran out and the remainder has been emitted.
+   */
+  const copyLoop = (from: number, firstCandidate: number): number => {
+    let at = from;
+    let candidate = firstCandidate;
+    for (;;) {
+      const base = at;
+      let matched = 4;
+      while (at + matched < n && input[at + matched] === input[candidate + matched]) matched++;
+      at += matched;
+      emitCopy(w, base - candidate, matched);
+      if (at >= n - INPUT_MARGIN) {
+        if (at < n) emitLiteral(w, input, at, n);
+        return -1;
+      }
+      table[tableIndex(load32(input, at - 1))] = at - 1;
+      const data = load32(input, at);
+      const h = tableIndex(data);
+      candidate = table[h]!;
+      table[h] = at;
+      if (data !== load32(input, candidate)) return at;
+    }
+  };
+
+  if (n >= INPUT_MARGIN) {
+    const ipLimit = n - INPUT_MARGIN;
+    outer: for (;;) {
+      const nextEmit = ip++;
+
+      // The unrolled 16-position probe: every byte, no acceleration.
+      let skip = 32;
+      let candidate = 0;
+      let found = false;
+      if (ipLimit - ip >= 16) {
+        for (let i = 0; i < 16 && !found; i++) {
+          const dword = load32(input, ip + i);
+          const h = tableIndex(dword);
+          candidate = table[h]!;
+          table[h] = ip + i;
+          if (load32(input, candidate) === dword) {
+            ip += i;
+            found = true;
+          }
+        }
+        if (!found) {
+          ip += 16;
+          skip += 16;
+        }
+      }
+
+      // The accelerating scan.
+      if (!found) {
+        for (;;) {
+          const data = load32(input, ip);
+          const h = tableIndex(data);
+          const bytesBetween = skip >>> 5;
+          skip += bytesBetween;
+          const nextIp = ip + bytesBetween;
+          if (nextIp > ipLimit) {
+            ip = nextEmit;
+            break outer;
+          }
+          candidate = table[h]!;
+          table[h] = ip;
+          if (data === load32(input, candidate)) break;
+          ip = nextIp;
+        }
+      }
+
+      emitLiteral(w, input, nextEmit, ip);
+      ip = copyLoop(ip, candidate);
+      if (ip < 0) return;
+    }
+  }
+
+  if (ip < n) emitLiteral(w, input, ip, n);
+}
+
+/**
+ * Compress a buffer into a single raw Snappy block: the varint
+ * uncompressed-length header followed by 64 KiB fragments, each compressed
+ * independently — byte-identical to `snappy::Compress` on the same input.
+ */
+export function snappyCompressBlock(
+  input: Uint8Array,
+  vintage: "classic" | "modern" = "modern",
+): Uint8Array {
+  const n = input.length;
+  const w = new ByteWriter(32 + n + Math.ceil(n / 6));
   // Varint uncompressed length header.
   let x = n;
   while (x >= 0x80) {
@@ -154,62 +350,12 @@ export function snappyCompressBlock(input: Uint8Array): Uint8Array {
     x >>>= 7;
   }
   w.byte(x);
-
-  if (n < 4) {
-    emitLiteral(w, input, 0, n);
-    return w.toBytes();
+  const FRAGMENT = 0x10000; // snappy's kBlockSize
+  for (let pos = 0; pos === 0 || pos < n; pos += FRAGMENT) {
+    const fragment = input.subarray(pos, Math.min(pos + FRAGMENT, n));
+    if (vintage === "modern") compressFragmentModern(w, fragment);
+    else compressFragment(w, fragment);
   }
-
-  const table = new Int32Array(HASH_TABLE_SIZE).fill(-1);
-  let ip = 0;
-  let litStart = 0;
-  const ipLimit = n - 4;
-
-  while (ip <= ipLimit) {
-    let skip = 32;
-    let candidate: number;
-    let cur = load32(input, ip);
-    // Find a match, skipping faster through incompressible regions.
-    for (;;) {
-      const h = hash4(cur);
-      candidate = table[h]!;
-      table[h] = ip;
-      if (
-        candidate >= 0 &&
-        ip - candidate <= MAX_COPY_OFFSET &&
-        load32(input, candidate) === cur
-      ) {
-        break;
-      }
-      const bytesBetween = skip >>> 5;
-      skip++;
-      ip += bytesBetween;
-      if (ip > ipLimit) {
-        candidate = -1;
-        break;
-      }
-      cur = load32(input, ip);
-    }
-    if (candidate < 0) break;
-
-    emitLiteral(w, input, litStart, ip);
-
-    // Extend the match forward.
-    let matched = 4;
-    while (ip + matched < n && input[ip + matched] === input[candidate + matched]) matched++;
-    emitCopy(w, ip - candidate, matched);
-    ip += matched;
-    litStart = ip;
-
-    if (ip <= ipLimit) {
-      // Refresh the hash for the position just before the new cursor to help
-      // find adjacent matches (cheap approximation of the reference encoder).
-      const h = hash4(load32(input, ip - 1));
-      table[h] = ip - 1;
-    }
-  }
-
-  emitLiteral(w, input, litStart, n);
   return w.toBytes();
 }
 

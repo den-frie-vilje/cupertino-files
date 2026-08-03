@@ -16,12 +16,12 @@
  * or the package layer and nothing above it matters. Every later rung
  * changes one thing more than the one before.
  *
- * "No edits" means every *archive* comes back identical, which is the
- * identity that matters. The container bytes do not: an IWA payload
- * re-compresses to different-but-equivalent Snappy output, and the zip
- * writer sets the UTF-8 filename flag where Apple leaves it clear. A
- * resaved document is never a byte-for-byte copy of its input, and no
- * conclusion should be drawn from that.
+ * "No edits" now means the strictest thing it can: for a modern-writer
+ * fixture like this template, rung 0 is a **byte-for-byte copy** of the
+ * fixture — the Snappy port and the container writer reproduce Apple's
+ * exact bytes (test/byte-identity.test.ts holds that for 35 of 38 fixture
+ * packages). If Numbers rejects rung 0, the file on disk was damaged in
+ * transit, because it is indistinguishable from the one Apple wrote.
  *
  * Open them in order and stop at the first failure. Report that name.
  */
@@ -32,6 +32,11 @@ import { chartsOf } from "../src/tsch/charts.ts";
 export const TEMPLATE = new URL("../fixtures/numbers-parser-v26.0-categories.numbers", import.meta.url);
 /** A rung needing something the main template has not got: here, a chart. */
 export const CHART_TEMPLATE = new URL("../fixtures/tika-testNumbers2013.numbers", import.meta.url);
+/** The formula rungs need a live formula to replace: Cats C7 = SUM(C3:K6). */
+export const FORMULA_TEMPLATE = new URL(
+  "../fixtures/numbers-parser-v26.0-issue102.numbers",
+  import.meta.url,
+);
 
 /** Each rung: a name, and what it does to a freshly loaded fixture. */
 export const RUNGS: {
@@ -233,6 +238,43 @@ export const RUNGS: {
         value: "Pear",
         startsWithFirstItem: false,
       });
+    },
+  },
+  // The formula rungs probe the one thing no offline check can settle: the
+  // calc engine keeps a per-cell dependency tracker beside the formulas
+  // (TSCE.FormulaOwnerDependenciesArchive lists exactly the formula cells,
+  // measured on this very fixture), and setFormula does not write it. A
+  // same-text replace is proven byte-identical, so it needs no rung; these
+  // three each make the tracker staler than the one before, and the first
+  // that misbehaves in Numbers tells us what the engine trusts.
+  {
+    name: "19-formula-replace",
+    note: "the SUM's range shrunk, cached value left stale on purpose",
+    template: FORMULA_TEMPLATE,
+    build: (doc) => {
+      const cats = doc.tables().find((t) => t.name === "Cats")!;
+      cats.setFormula(6, 2, "=SUM(C3:K5)");
+      cats.setCell(6, 4, "19: C7 now =SUM(C3:K5). PASS: C7 shows 1300 (or shows it after any edit elsewhere). FAIL: stays 1500 forever, errors, or the file will not open.");
+    },
+  },
+  {
+    name: "20-formula-fresh",
+    note: "a formula written into a cell that never had one, cache supplied",
+    template: FORMULA_TEMPLATE,
+    build: (doc) => {
+      const cats = doc.tables().find((t) => t.name === "Cats")!;
+      cats.setFormula(5, 4, "=1+2", { value: 3 });
+      cats.setCell(5, 5, "20: E6 is a new formula, =1+2. PASS: E6 shows 3 and the formula bar shows =1+2. FAIL: empty cell, error, or the file will not open.");
+    },
+  },
+  {
+    name: "21-formula-dependent",
+    note: "a fresh formula whose precedent the checker edits — the tracker test",
+    template: FORMULA_TEMPLATE,
+    build: (doc) => {
+      const cats = doc.tables().find((t) => t.name === "Cats")!;
+      cats.setFormula(2, 6, "=E3*2", { value: 200 });
+      cats.setCell(2, 7, "21: G3 is a new formula, =E3*2, showing 200. Now type 150 into E3 (the 100 on this row). PASS: G3 changes to 300. FAIL: G3 stays 200 — the engine trusted a dependency tracker we did not update.");
     },
   },
 ];

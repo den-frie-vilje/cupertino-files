@@ -41,6 +41,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules/", "dist/", "src/proto/vendored.ts", "*.config.js"],
+    ignores: ["node_modules/", "dist/", "docs/.vitepress/", "src/proto/vendored.ts", "*.config.js"],
   },
 );

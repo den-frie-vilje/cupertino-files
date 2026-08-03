@@ -98,6 +98,15 @@ interface Capability {
   manualProof?: ManualProof;
 }
 
+/**
+ * Free text headed for the docs site must not read as markup: VitePress
+ * runs every page through Vue's template compiler, and a `<outDir>` in a
+ * proof's instructions is an unclosed element to it — the build fails.
+ */
+function vueSafe(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 /** Never let one malformed document abort the whole survey. */
 const safe = (fn: () => boolean): boolean => {
   try {
@@ -983,19 +992,21 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.merges().length > 0)),
     note:
-      "mergeCells/unmergeCells. A merge we build for a rectangle Apple also merged is " +
-      "byte-identical to Apple's own node — cross-table info, sticky bits, tract and the SUM " +
-      "wrapper — reconstructed from the object graph, not copied",
+      "mergeCells/unmergeCells, complete with the calc engine's dependency ledger: the " +
+      "kind-5 owner's (row 0, column = formula_index) record, tile minted on first use. " +
+      "Deleting Apple's last merge in issue102 and remaking it through mergeCells " +
+      "reproduces the whole saved file byte for byte",
     manualProof: {
       claim: "Numbers accepts a merge this library wrote, and shows it where we put it.",
       why:
-        "The bytes we write match Apple's exactly for the same rectangle, which is the strongest " +
-        "offline evidence available — but byte equality of one node is not the same as the engine " +
-        "accepting the document, and no scripting API reports merges.",
+        "Recreating one of Apple's merges reproduces the whole file byte-for-byte, which is as " +
+        "far as offline proof reaches — a *fresh* merge additionally mints a ledger tile object, " +
+        "and whether the engine is satisfied with it is the app's call alone.",
       how:
-        "Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately " +
-        "checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key " +
-        "Metrics: rows 0 and 1 span all 4 columns).",
+        "npm run bisect:docs -- <outDir>, open 06-merge in Numbers: row 9 should show one cell " +
+        "spanning B..D with its text intact. Reading is separately checkable: open " +
+        "iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 " +
+        "and 1 span all 4 columns).",
       risk: "medium",
     },
   },
@@ -1171,18 +1182,28 @@ export const CAPABILITIES: Capability[] = [
     status: "experimental",
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
-      "anchored references, ranges, nested calls, omitted arguments, and any of the 271 " +
-      "harvested functions. Nothing evaluates — pass the cached result as `value`. Cross-table " +
-      "references and arrays are refused: both need a calc-engine identity registered elsewhere",
+      "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 271 harvested " +
+      "functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula " +
+      "rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with " +
+      "its own text saves the whole document byte-identical to the original. Nothing " +
+      "evaluates — pass the cached result as `value`. Arrays and #REF! are refused",
     manualProof: {
-      claim: "Numbers computes what a formula we authored says, and does not report it as damaged.",
+      claim:
+        "Numbers recalculates a formula this library wrote — replaced or fresh — rather than " +
+        "trusting the stale dependency tracker beside it.",
       why:
-        "Round-tripping proves the writer and the renderer agree, which is real evidence but " +
-        "not the engine's opinion. Nothing offline can say whether the engine wants dependency " +
-        "records beside the AST that we are not writing.",
+        "The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive " +
+        "lists exactly the formula cells, with precedent edges — measured on the issue102 " +
+        "fixture), and setFormula does not update it: a replaced formula keeps stale edges, and " +
+        "a fresh formula cell is missing from the tracker entirely. A same-text replace is " +
+        "proven byte-identical and needs no app check; whether the engine rebuilds the tracker " +
+        "on open, or trusts it, only Numbers can say.",
       how:
-        "setFormula a few shapes — an arithmetic expression, a range SUM, an anchored reference " +
-        "— save, open in Numbers, and check the values recompute rather than showing an error.",
+        "npm run bisect:docs -- <outDir>, then open rungs 19-21 in Numbers. Each file states " +
+        "its own pass and fail in a cell beside the formula; 21 is the decisive one — a fresh " +
+        "formula whose precedent you edit, which only recalculates if the engine noticed the " +
+        "new cell.",
       risk: "high",
     },
   },
@@ -1261,7 +1282,18 @@ export const CAPABILITIES: Capability[] = [
       "per kind. Nearly every axis property exists twice — once for category, once for value — " +
       "and an archive fills only its own family, so reading the wrong one returns undefined for " +
       "everything and looks like an empty archive rather than a bug; the chart names the two " +
-      "kinds in separate fields, so nothing is inferred. Writes copy on write like series fills",
+      "kinds in separate fields, so nothing is inferred. Writes copy on write like series fills. " +
+      "Legend fill, stroke and opacity write the same way",
+    manualProof: {
+      claim: "Pages draws the chart without the gridlines this library switched off.",
+      why:
+        "The archives round-trip and copy-on-write correctly, which is the file's side of the " +
+        "story; only the app can say the toggle changes what is drawn rather than being ignored.",
+      how:
+        "npm run pages:docs -- <outDir>, open P20-chart-gridlines: the page states its own pass " +
+        "— the column chart should show no horizontal gridlines behind its bars.",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",
@@ -1772,7 +1804,7 @@ function render(facts: FixtureFacts[]): string {
       // Notes land inside literal <sub> HTML, where a bare "<" in prose
       // (FUNCTION_<id>, <file>) reads as an unclosed tag — Vue-based
       // renderers refuse the whole page over it. Escape, always.
-      const escaped = capability.note?.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const escaped = capability.note ? vueSafe(capability.note) : undefined;
       const note = escaped ? `<br><sub>${escaped}</sub>` : "";
       out.push(
         `| ${capability.name}${note} | ${apps} | ${STATUS_LABEL[capability.status]} | ${count} | ${eraText} |`,
@@ -1954,7 +1986,7 @@ function renderVerification(): string {
   pending.forEach((c, i) => {
     const proof = c.manualProof!;
     out.push(
-      `| ${i + 1} | ${RISK_LABEL[proof.risk]} | ${c.group} → ${c.name} | ${proof.claim} | ` +
+      `| ${i + 1} | ${RISK_LABEL[proof.risk]} | ${c.group} → ${c.name} | ${vueSafe(proof.claim)} | ` +
         `${proof.e2e ? "`test:e2e`" : "manual"} |`,
     );
   });
@@ -1968,11 +2000,11 @@ function renderVerification(): string {
     out.push(`**Group:** ${c.group}  `);
     out.push(`**Status in the matrix:** ${STATUS_LABEL[c.status]}`);
     out.push("");
-    out.push(`**Claim.** ${proof.claim}`);
+    out.push(`**Claim.** ${vueSafe(proof.claim)}`);
     out.push("");
-    out.push(`**Why the suite cannot settle it.** ${proof.why}`);
+    out.push(`**Why the suite cannot settle it.** ${vueSafe(proof.why)}`);
     out.push("");
-    out.push(`**How to settle it.** ${proof.how}`);
+    out.push(`**How to settle it.** ${vueSafe(proof.how)}`);
     out.push("");
     if (proof.e2e) {
       out.push("> Already exercised by `npm run test:e2e` on a Mac with the app installed.");
@@ -1993,11 +2025,11 @@ function renderVerification(): string {
       const proof = c.manualProof!;
       out.push(`### ✅ ${c.name}`);
       out.push("");
-      out.push(`**Was claimed.** ${proof.claim}`);
+      out.push(`**Was claimed.** ${vueSafe(proof.claim)}`);
       out.push("");
-      out.push(`**Why it needed an app.** ${proof.why}`);
+      out.push(`**Why it needed an app.** ${vueSafe(proof.why)}`);
       out.push("");
-      out.push(`**Outcome.** ${proof.settled}`);
+      out.push(`**Outcome.** ${vueSafe(proof.settled ?? "")}`);
       out.push("");
     }
   }

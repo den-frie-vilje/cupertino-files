@@ -14,5 +14,10 @@ npx cupertino-dump object   Report.pages 42  # one object's protobuf, pretty
 npx cupertino-dump extract  Report.pages out/  # the raw .iwa streams, decompressed
 ```
 
+The same commands answer to `npx -y cupertino-files dump <command>`,
+and `npx -y cupertino-files mcp` starts the
+[MCP server](/guide/agents) that lets AI agents read, edit and format
+documents through the same library.
+
 Filing an issue? `info` answers the first question we'll ask — which app
 version wrote the document.

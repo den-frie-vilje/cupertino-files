@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time! A quick look at
-        [docs/BLOCKERS.md](https://github.com/olekristensen/cupertino-files/blob/main/docs/BLOCKERS.md)
+        [docs/BLOCKERS.md](https://github.com/den-frie-vilje/cupertino-files/blob/main/docs/BLOCKERS.md)
         may be worth it first — some features are already listed there
         waiting on one small example document, and if you can make that
         document, you might close the gap yourself on the spot.

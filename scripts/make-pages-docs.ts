@@ -39,6 +39,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PagesDocument } from "../src/index.ts";
+import { chartsOf } from "../src/tsch/charts.ts";
 
 /**
  * Two bases, deliberately.
@@ -436,7 +437,7 @@ export const RUNGS: {
   },
   {
     name: "P11-inline-image",
-    note: "a 1x1 red PNG inserted inline and scaled up — the experimental one",
+    note: "a 1x1 red PNG inserted inline and scaled up — app-confirmed (P11 pass)",
     build: (doc) => {
       doc.appendParagraph(
         "P11: a red square one inch across should appear at the end of the next line.",
@@ -447,6 +448,21 @@ export const RUNGS: {
         width: 72,
         height: 72,
       });
+    },
+  },
+  {
+    name: "P20-chart-gridlines",
+    base: new URL("../fixtures/draftjs-v2.3-comments.pages", import.meta.url),
+    note: "the chart's horizontal gridlines switched off — the axis-style write",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P20: the column chart in this document should show NO horizontal gridlines " +
+          "behind its bars (they were switched off). Lines still there, a missing " +
+          "chart, or a refused file are each a failure.",
+      );
+      const chart = chartsOf(doc.store)[0];
+      if (!chart) throw new Error("base has no chart");
+      chart.setAxisMajorGridlines("value", false);
     },
   },
 ];

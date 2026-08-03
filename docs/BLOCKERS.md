@@ -20,7 +20,7 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — three documents, ~12 minutes total
+## Needs a Mac — three documents to make and three files to open, ~15 minutes total
 
 **1. `rules.numbers` — 5 min.** One numeric column. Add a
 conditional-formatting rule using **greater than** and another using
@@ -60,6 +60,18 @@ Apple's templates *define* bordered styles that documents never apply —
 the paragraphs must carry the border, and `probe` labels each `USED` or
 `(defined but unused)` so it cannot be missed twice.
 
+**4. Formula rungs 19–21 — 3 min, nothing to make.** `npm run
+bisect:docs -- out` and open `19-formula-replace`, `20-formula-fresh`
+and `21-formula-dependent` in Numbers; each states its own pass and fail
+in a cell beside the formula. They settle the one authoring question no
+offline check can: the calc engine keeps a per-cell dependency ledger
+(`TSCE.FormulaOwnerDependenciesArchive`) that `setFormula` does not
+update, and 21 — a fresh formula whose precedent you edit — is the
+decisive probe of whether Numbers rebuilds that ledger on open or trusts
+it. A failure is the more informative outcome: it means dependency
+records must be written beside the formula, and names exactly which
+ones.
+
 Record each run in the ledger below, then `npm run coverage`.
 
 **Before making any of these**, remember the technique that closed most
@@ -74,14 +86,20 @@ that rebuild the structures from them.
 
 ## Blocked on evaluation or the app — not on format knowledge
 
-- **Formula authoring.** Reading is done (271 function indexes harvested,
-  zero conflicts; the index is measured, not alphabetical). Authoring
-  needs the calc engine's dependency records written beside the formula,
-  and any function outside the 271 has no index. Widening the table is
-  the same harvest against more documents:
-  `npm run harvest -- --ingest doc.numbers`, `--emit-sheet probe.tsv`, or
-  `--drive` (macOS, drives Numbers directly). It refuses to guess — a
-  name is accepted only when every observation agrees.
+- **Formula authoring: the dependency ledger.** Authoring itself is
+  shipped and proven by bytes — every parseable corpus formula rebuilds
+  byte-identical to Apple's AST (1242 of 1242, cross-table references
+  and whole-column spans included; only the two #REF! specimens stay
+  unauthorable, on purpose), and a same-text replace saves the whole
+  document byte-identical to the original. What remains
+  app-blocked is the calc engine's per-cell dependency ledger, which
+  `setFormula` leaves stale (bisect rungs 19–21 above are the probe), and
+  the function table's edge: any function outside the harvested 271 has
+  no index. Widening the table is the same harvest against more
+  documents: `npm run harvest -- --ingest doc.numbers`,
+  `--emit-sheet probe.tsv`, or `--drive` (macOS, drives Numbers
+  directly). It refuses to guess — a name is accepted only when every
+  observation agrees.
 - **Writing a cell control / creating a Keynote build.** Reading both is
   shipped (controls fully named: 4 stepper, 5 slider, 6 star, 7 pop-up,
   8 checkbox). Creation is withheld until the app confirms it: a widget
@@ -95,13 +113,21 @@ that rebuild the structures from them.
   means evaluating predicates. (Filter *rule* layout itself is
   schema-derived: every filter set in the corpus is empty — 164 sets,
   163 empty, mode "all" — measured, not unlucky.)
-- **Writing merge ranges.** Nothing conceptual left: a merge is a formula
-  owned by a UUID derived from the table's own (`src/tsce/owners.ts`,
-  FORMAT.md §14.11). Remaining: write the owner entry, dependency
-  records and merge formula together, then check in Numbers.
-- **Chart appearance.** Type, colours, axes, legend are style references
-  not yet modeled. Implementation work, not reverse engineering; the
-  corpus has only two charts, so a document with several types helps.
+- **Writing merge ranges: only the app's word left.** The whole write is
+  now in place and proven to the byte: the merge formula (SUM over an
+  all-sticky absolute tract carrying the table's kind-1 identity), the
+  formula-store pair, and the kind-5 owner's dependency-ledger record —
+  `(row 0, column = formula_index)`, empty edges, tile minted on first
+  use. Deleting Apple's last merge in issue102 and remaking it through
+  `mergeCells` reproduces the whole file byte for byte
+  (test/merges.test.ts). Remaining: bisect rung `06-merge` in Numbers,
+  which now exercises the ledger path too.
+- **Chart appearance: only the app's word left.** Type, series colours,
+  axis visibility and gridlines, tick marks and legend styling all read
+  and write, copy-on-write against shared style archives. Remaining:
+  Pages ladder rung `P20-chart-gridlines` in the app (the corpus still
+  has only two charts, so a document with several chart types would
+  widen the evidence).
 - **Keynote v14 upgrade path.** The current-format ladder (v26, all
   eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
   — the deck Keynote converts on open, a different code path — are
@@ -125,6 +151,21 @@ that rebuild the structures from them.
   are out of scope** (FORMAT.md §13).
 - **Transition effect strings are opaque.** Exposed raw, never invented;
   the vocabulary arrives with `animated.key` above.
+- **Eleven corpus components came from a stronger Snappy encoder.**
+  They decode as perfectly ordinary Snappy in standard 64 KiB chunks —
+  the codec is not in question — but their matches are found better than
+  google's greedy encoder finds them (a 263 KiB stylesheet in 42 KiB),
+  so re-encoding one with the byte-exact port produces a valid, larger
+  component rather than Apple's bytes. Some old iOS-era builds evidently
+  linked a different (perhaps optimal-parse) encoder; identifying which
+  would mean matching its output the way the two google vintages were
+  matched. Harmless unless one is edited, and pinned as the known gap in
+  `test/byte-identity.test.ts`.
+- **Two fixtures are re-zipped wrapper bundles, not app-written files.**
+  Their entries were deflated by whatever tool zipped the bundle;
+  byte-identity would mean cloning that tool's deflate, which is not this
+  format. Content round-trips; container bytes differ, and the
+  byte-identity test names them as the exceptions.
 
 ---
 

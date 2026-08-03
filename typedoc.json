@@ -1,0 +1,19 @@
+{
+  "$schema": "https://typedoc-plugin-markdown.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "readme": "none",
+  "excludeInternal": true,
+  "skipErrorChecking": true,
+  "sanitizeComments": true,
+  "blockTags": [
+    "@param",
+    "@returns",
+    "@remarks",
+    "@example",
+    "@deprecated",
+    "@see",
+    "@defaultValue",
+    "@throws",
+    "@agentTool"
+  ]
+}

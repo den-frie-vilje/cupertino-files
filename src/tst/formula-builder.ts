@@ -23,34 +23,41 @@
  * and why copying a formula between cells changes what it means, exactly
  * as it does in the app.
  *
- * ## Ranges are written absolute
+ * ## Ranges follow their `$` flags, per axis
  *
  * A colon tract can express its bounds two ways, and both occur in real
  * files: `absolute_column`/`absolute_row` hold indexes, `relative_column`/
  * `relative_row` hold offsets from the formula's cell. Apple writes the
  * relative form for a range typed as `C3:K6` — `=SUM(C3:K6)` in C7 stores
- * columns `0…8` and rows `-4…-1`, as **plain signed varints**, not the
- * zigzag encoding a single coordinate uses.
+ * columns `0…8` and rows `-4…-1`, as **plain 64-bit two's-complement
+ * varints**, not the zigzag encoding a single coordinate uses — and the
+ * absolute form for `$`-pinned axes, which is also what merges use. This
+ * writer does the same, so what you type is what moves (or doesn't) when
+ * rows are inserted, exactly as in the app. An axis with only one pinned
+ * endpoint has no corpus specimen and falls back to absolute, the
+ * encoding that cannot silently shift.
  *
- * This writer emits the absolute form, which merges also use and the reader
- * has always handled. The cells denoted are identical; what differs is what
- * happens when rows are inserted above the range, where a relative tract
- * moves and an absolute one does not. A range authored here therefore reads
- * back as `$A$1:$A$5` rather than `A1:A5` — the same cells, said the
- * anchored way.
+ * ## Cross-table references need a resolver
+ *
+ * `Other::A1` compiles to a reference node carrying the *target table's
+ * calc-engine identity* — the kind-1 owner UUID, unanimous across every
+ * cross-table node in the corpus — and a table name only means something
+ * inside a document. Pass {@link BuildFormulaOptions.tableUid} (which
+ * `TableModel.setFormula` does for you); without one, compiling a
+ * cross-table reference refuses rather than writing an identity the
+ * engine has never heard of.
  *
  * ## What is deliberately missing
  *
- * Cross-table references (`Other::A1`), arrays, and the `#REF!` error are
- * not authored. Each needs a calc-engine identity — a table UUID, an owner
- * — that must be registered elsewhere in the document, and a formula
- * pointing at an identity the engine does not know is worse than no
- * formula. Reading all three works.
+ * Arrays, the `#REF!` error and sheet-qualified references are not
+ * authored: each is either absent from the corpus or — for `#REF!` — a
+ * lost reference nobody should write on purpose. Reading them all works.
  */
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
 import { HARVESTED_FUNCTIONS } from "./function-names.ts";
-import { encodeDecimal128 } from "./cellrecord.ts";
+import { packDecimal128 } from "./cellrecord.ts";
+import { protoFields } from "../proto/fields.ts";
 
 /** An expression to compile. Built by {@link parseFormula} or by hand. */
 export type FormulaExpression =
@@ -59,8 +66,17 @@ export type FormulaExpression =
   | { kind: "boolean"; value: boolean }
   /** A cell, as an offset or an absolute index; `undefined` means "same". */
   | { kind: "ref"; column: Coordinate; row: Coordinate }
-  /** A rectangle, stored as a colon tract with absolute bounds. */
-  | { kind: "range"; from: { column: number; row: number }; to: { column: number; row: number } }
+  /** A cell on another table: `Other::A1`. Compiling needs a resolver. */
+  | { kind: "crossRef"; table: string; column: Coordinate; row: Coordinate }
+  /** A whole column, as in `SUM(D)`: a reference with no row at all. */
+  | { kind: "columnRef"; column: Coordinate }
+  /**
+   * A rectangle, stored as a colon tract. Each axis keeps its `$` flag:
+   * `C3:K6` stores *relative* ranges (offsets from the using cell) and
+   * `$C$3:$K$6` absolute ones — measured, not assumed; the corpus's
+   * `=SUM(C3:K6)` is relative on both axes.
+   */
+  | { kind: "range"; from: { column: Coordinate; row: Coordinate }; to: { column: Coordinate; row: Coordinate } }
   | { kind: "call"; name: string; args: FormulaExpression[] }
   | { kind: "binary"; op: BinaryOperator; left: FormulaExpression; right: FormulaExpression }
   | { kind: "unary"; op: UnaryOperator; operand: FormulaExpression }
@@ -118,10 +134,31 @@ export function authorableFunctions(): string[] {
 
 /** Coordinate fields: zigzag index, then the absolute flag. */
 const CoordinateFields = { INDEX: 1, ABSOLUTE: 2 } as const;
-const ColonTractFields = { ABSOLUTE_COLUMN: 3, ABSOLUTE_ROW: 4, PRESERVE_RECTANGULAR: 5 } as const;
-const TractRangeFields = { BEGIN: 1, END: 2 } as const;
-const StickyBitsField = 33;
-const ColonTractField = 40;
+const CrossTableInfoFields = protoFields(
+  "TSCE.ASTNodeArrayArchive.ASTCrossTableReferenceExtraInfoArchive",
+  { TABLE_ID: "table_id" },
+);
+/** TSP.CFUUIDArchive's four-uint32 encoding, the one these nodes use. */
+const CfUuidWordFields = protoFields("TSP.CFUUIDArchive", {
+  LOWER_LOW: "uuid_w0",
+  LOWER_HIGH: "uuid_w1",
+  UPPER_LOW: "uuid_w2",
+  UPPER_HIGH: "uuid_w3",
+});
+const ColonTractFields = protoFields("TSCE.ASTNodeArrayArchive.ASTColonTractArchive", {
+  RELATIVE_COLUMN: "relative_column",
+  RELATIVE_ROW: "relative_row",
+  ABSOLUTE_COLUMN: "absolute_column",
+  ABSOLUTE_ROW: "absolute_row",
+  PRESERVE_RECTANGULAR: "preserve_rectangular",
+});
+// Same begin/end numbers in the relative and absolute range archives.
+const TractRangeFields = protoFields(
+  "TSCE.ASTNodeArrayArchive.ASTColonTractArchive.ASTColonTractAbsoluteRangeArchive",
+  { BEGIN: "range_begin", END: "range_end" },
+);
+const StickyBitsField = 33; // AST_sticky_bits
+const ColonTractField = 40; // AST_colon_tract
 
 function zigzag(value: number): number {
   return (value << 1) ^ (value >> 31);
@@ -145,6 +182,18 @@ function coordinate(axis: Coordinate): RawMessage {
   return message;
 }
 
+/** Document context a pure expression cannot carry itself. */
+export interface BuildFormulaOptions {
+  /**
+   * Resolve a table name to its calc-engine identity — the kind-1 owner
+   * UUID, which is what every cross-table node in the corpus carries.
+   * `TableModel.setFormula` supplies this from the document's owner
+   * registry; without it, a cross-table reference is refused rather than
+   * compiled against an identity the engine has never heard of.
+   */
+  tableUid?: (name: string) => { lo: bigint; hi: bigint } | undefined;
+}
+
 /**
  * Compile an expression to a `TSCE.ASTNodeArrayArchive`.
  *
@@ -154,9 +203,10 @@ function coordinate(axis: Coordinate): RawMessage {
 export function buildFormula(
   expression: FormulaExpression,
   origin: { row: number; column: number },
+  options: BuildFormulaOptions = {},
 ): RawMessage {
   const nodes = RawMessage.create();
-  emit(expression, origin, (node) => nodes.addMessage(AstNodeArrayFields.NODES, node));
+  emit(expression, origin, (node) => nodes.addMessage(AstNodeArrayFields.NODES, node), options);
   return nodes;
 }
 
@@ -165,6 +215,7 @@ function emit(
   expression: FormulaExpression,
   origin: { row: number; column: number },
   push: (node: RawMessage) => void,
+  options: BuildFormulaOptions,
 ): void {
   const node = RawMessage.create();
   switch (expression.kind) {
@@ -172,11 +223,12 @@ function emit(
       node.setVarint(AstNodeFields.TYPE, AstNodeType.NUMBER);
       node.setDouble(AstNodeFields.NUMBER, expression.value);
       // Apple writes the same number twice: an IEEE double *and* a
-      // decimal128, in every one of the 140 number nodes in the corpus.
-      // The reader only needs the double, so omitting these round-trips
-      // fine here and would still be a file no app ever wrote — and the
-      // decimal is the one the calc engine trusts for money.
-      const decimal = encodeDecimal128(expression.value);
+      // decimal128. The decimal is the one the calc engine trusts for
+      // money — and unlike a cell record's decimal, it is *plain*: 30 is
+      // stored as 30·10⁰, never normalized to 3·10¹. Every corpus formula
+      // agrees (the `+30` and `DURATION(…,500,…)` nodes are the proof —
+      // normalizing them was a byte mismatch against every one).
+      const decimal = formulaDecimal(expression.value);
       const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
       node.setVarint(AstNodeFields.NUMBER_DECIMAL_LOW, view.getBigUint64(0, true));
       node.setVarint(AstNodeFields.NUMBER_DECIMAL_HIGH, view.getBigUint64(8, true));
@@ -191,7 +243,11 @@ function emit(
       node.setVarint(AstNodeFields.BOOLEAN, expression.value ? 1 : 0);
       break;
     case "empty":
-      node.setVarint(AstNodeFields.TYPE, AstNodeType.EMPTY_ARGUMENT);
+      // An omitted argument is a TOKEN node carrying
+      // `AST_token_node_boolean = 1` — measured on all 32 `DURATION(,,…)`
+      // omissions in the corpus, where EMPTY_ARGUMENT never appears.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.TOKEN);
+      node.setVarint(AstNodeFields.TOKEN_BOOLEAN, 1);
       break;
     case "ref":
       node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
@@ -202,34 +258,105 @@ function emit(
       node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
       node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
       break;
+    case "columnRef":
+      // `SUM(D)` spans the column: the same reference node with the row
+      // simply absent. All three corpus specimens agree, and `SUM(C)`
+      // written *in* column C proves the offset is relative — an absolute
+      // index would have stored 2, not 0.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
+      node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
+      break;
+    case "crossRef": {
+      const resolve = options.tableUid;
+      if (!resolve) {
+        throw new RangeError(
+          `cross-table reference ${JSON.stringify(expression.table)}::… needs a document to ` +
+            "resolve the table's calc-engine identity; write it through TableModel.setFormula",
+        );
+      }
+      const uid = resolve(expression.table);
+      if (!uid) {
+        throw new RangeError(
+          `no table named ${JSON.stringify(expression.table)} in this document — a cross-table ` +
+            "reference stores the target's owner UUID, and there is none to store",
+        );
+      }
+      // Same node type and coordinates as a local reference — offsets
+      // unless `$`-pinned — plus the target table's identity. Apple does
+      // NOT use the dedicated CROSS_TABLE_CELL_REFERENCE node type here:
+      // all 1020 cross-table nodes in the corpus are ordinary
+      // CELL_REFERENCE nodes whose extra-info field carries the kind-1
+      // owner UUID as four uint32 words, and the byte proof caught the
+      // difference on the first run.
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
+      node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
+      node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
+      const cf = RawMessage.create();
+      cf.setVarint(CfUuidWordFields.LOWER_LOW, uid.lo & 0xffffffffn);
+      cf.setVarint(CfUuidWordFields.LOWER_HIGH, uid.lo >> 32n);
+      cf.setVarint(CfUuidWordFields.UPPER_LOW, uid.hi & 0xffffffffn);
+      cf.setVarint(CfUuidWordFields.UPPER_HIGH, uid.hi >> 32n);
+      const info = RawMessage.create();
+      info.setMessage(CrossTableInfoFields.TABLE_ID, cf);
+      node.setMessage(AstNodeFields.CROSS_TABLE_INFO, info);
+      break;
+    }
     case "range": {
-      // A rectangle is a colon tract with absolute bounds, the same shape a
-      // merge uses. Sticky bits are all zero here: unlike a merge, a range
-      // in a formula does move when rows are inserted around it.
+      // A rectangle is a colon tract. Per axis, `$` decides the encoding:
+      // an unpinned axis stores a *relative* range — begin/end as signed
+      // offsets from the using cell, inclusive — and a pinned one stores
+      // absolute indexes. Measured: `=SUM(C3:K6)` in the corpus stores
+      // relative {0..8} columns and {-4..-1} rows; the absolute form was
+      // a byte mismatch against it (and is what merges use, which is
+      // where the earlier "ranges are absolute" reading came from). An
+      // axis with one pinned endpoint has no corpus specimen; it falls
+      // back to absolute, the encoding that cannot silently shift.
       node.setVarint(AstNodeFields.TYPE, AstNodeType.COLON_TRACT);
       const sticky = RawMessage.create();
       for (const field of [1, 2, 3, 4]) sticky.setVarint(field, 0);
       node.setMessage(StickyBitsField, sticky);
       const tract = RawMessage.create();
-      tract.setMessage(
+      const axis = (
+        from: Coordinate,
+        to: Coordinate,
+        originIndex: number,
+        relativeField: number,
+        absoluteField: number,
+      ): void => {
+        if (!from.absolute && !to.absolute) {
+          tract.setMessage(
+            relativeField,
+            relativeTractRange(from.value - originIndex, to.value - originIndex),
+          );
+        } else {
+          tract.setMessage(absoluteField, tractRange(from.value, to.value));
+        }
+      };
+      axis(
+        expression.from.column,
+        expression.to.column,
+        origin.column,
+        ColonTractFields.RELATIVE_COLUMN,
         ColonTractFields.ABSOLUTE_COLUMN,
-        tractRange(expression.from.column, expression.to.column),
       );
-      tract.setMessage(
+      axis(
+        expression.from.row,
+        expression.to.row,
+        origin.row,
+        ColonTractFields.RELATIVE_ROW,
         ColonTractFields.ABSOLUTE_ROW,
-        tractRange(expression.from.row, expression.to.row),
       );
       tract.setVarint(ColonTractFields.PRESERVE_RECTANGULAR, 1);
       node.setMessage(ColonTractField, tract);
       break;
     }
     case "unary":
-      emit(expression.operand, origin, push);
+      emit(expression.operand, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, UNARY_NODE[expression.op]);
       break;
     case "binary":
-      emit(expression.left, origin, push);
-      emit(expression.right, origin, push);
+      emit(expression.left, origin, push, options);
+      emit(expression.right, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, BINARY_NODE[expression.op]);
       break;
     case "call": {
@@ -240,7 +367,7 @@ function emit(
             "run `npm run harvest` against a document that uses it, or see docs/BLOCKERS.md",
         );
       }
-      for (const arg of expression.args) emit(arg, origin, push);
+      for (const arg of expression.args) emit(arg, origin, push, options);
       node.setVarint(AstNodeFields.TYPE, AstNodeType.FUNCTION);
       node.setVarint(AstNodeFields.FUNCTION_INDEX, index);
       node.setVarint(AstNodeFields.FUNCTION_NUM_ARGS, expression.args.length);
@@ -256,6 +383,44 @@ function tractRange(begin: number, end: number): RawMessage {
   // Apple omits the end when the range is one row or column wide.
   if (begin !== end) range.setVarint(TractRangeFields.END, Math.max(begin, end));
   return range;
+}
+
+/**
+ * A relative tract range: signed offsets from the using cell, inclusive,
+ * as 64-bit two's-complement varints — `C3:K6` used from C7 stores rows
+ * {-4..-1} exactly so. Begin is written even at zero (measured); the
+ * omit-when-equal rule mirrors {@link tractRange}, unexercised by the
+ * corpus on this form.
+ */
+function relativeTractRange(begin: number, end: number): RawMessage {
+  const range = RawMessage.create();
+  const lo = Math.min(begin, end);
+  const hi = Math.max(begin, end);
+  range.setVarint(TractRangeFields.BEGIN, BigInt.asUintN(64, BigInt(lo)));
+  if (lo !== hi) range.setVarint(TractRangeFields.END, BigInt.asUintN(64, BigInt(hi)));
+  return range;
+}
+
+/**
+ * The plain decimal a formula number node carries: the value's own digits
+ * with no normalization — trailing zeros stay in the mantissa.
+ */
+function formulaDecimal(value: number): Uint8Array {
+  if (!Number.isFinite(value)) return new Uint8Array(16);
+  const negative = value < 0 || Object.is(value, -0);
+  const text = Math.abs(value).toString();
+  if (text.includes("e") || text.includes("E")) {
+    // Magnitudes beyond plain notation: fall back to exponent form.
+    const [mantissaText, exponentText] = text.split(/[eE]/);
+    const [intPart, fracPart = ""] = mantissaText!.split(".");
+    return packDecimal128(
+      BigInt(`${intPart}${fracPart}`),
+      Number.parseInt(exponentText!, 10) - fracPart.length,
+      negative,
+    );
+  }
+  const [intPart, fracPart = ""] = text.split(".");
+  return packDecimal128(BigInt(`${intPart}${fracPart}`), -fracPart.length, negative);
 }
 
 // --------------------------------------------------------------- parsing
@@ -341,6 +506,19 @@ class Parser {
     }
     if (this.text.startsWith('"', this.at)) return this.parseString();
 
+    // A cross-table reference: a table name, `::`, then a cell. The
+    // renderer emits names unquoted — spaces, dots and all — so a name is
+    // recognised only by the `::` that follows it, matched lazily so the
+    // name cannot swallow the address.
+    const cross = /^([A-Za-z_][A-Za-z0-9_ .]*?) *:: *(\$?[A-Za-z]+\$?\d+)/.exec(
+      this.text.slice(this.at),
+    );
+    if (cross) {
+      const target = parseReference(cross[2]!)!;
+      this.at += cross[0].length;
+      return { kind: "crossRef", table: cross[1]!, column: target.column, row: target.row };
+    }
+
     const identifier = /^[A-Za-z_][A-Za-z0-9_.]*/.exec(this.text.slice(this.at));
     if (identifier) {
       const word = identifier[0];
@@ -371,7 +549,22 @@ class Parser {
   /** A reference or a range; both start the same way. */
   private tryReference(): FormulaExpression | undefined {
     const cell = /^\$?[A-Za-z]+\$?\d+/.exec(this.text.slice(this.at));
-    if (!cell) return undefined;
+    if (!cell) {
+      // A bare column: `SUM(D)`. Up to three letters, no digits after —
+      // anything longer or followed by more word characters is a name,
+      // and names are not references.
+      const column = /^(\$?)([A-Za-z]{1,3})(?![A-Za-z0-9_.(])/.exec(this.text.slice(this.at));
+      if (!column) return undefined;
+      let index = 0;
+      for (const character of column[2]!.toUpperCase()) {
+        index = index * 26 + (character.charCodeAt(0) - 64);
+      }
+      this.at += column[0].length;
+      return {
+        kind: "columnRef",
+        column: { value: index - 1, absolute: column[1] === "$" },
+      };
+    }
     const from = parseReference(cell[0]);
     if (!from) return undefined;
     const after = this.at + cell[0].length;
@@ -380,15 +573,14 @@ class Parser {
       const to = second ? parseReference(second[0]) : undefined;
       if (!to) this.fail("range end expected after ':'");
       this.at = after + 1 + second![0].length;
-      // A range is stored with absolute bounds, so a relative endpoint is
-      // resolved here rather than silently written as an absolute one.
-      // Every range in the corpus has absolute bounds, and a colon tract
-      // has no way to say otherwise, so `A1:B2` and `$A$1:$B$2` compile the
-      // same. Accepting both matches what the app displays.
+      // Each endpoint keeps its `$` flags: the tract encodes an unpinned
+      // axis relative to the using cell and a pinned one absolute, so
+      // `A1:B2` and `$A$1:$B$2` are different bytes — measured, where the
+      // earlier reading ("ranges are absolute") generalized from merges.
       return {
         kind: "range",
-        from: { column: from.column.value, row: from.row.value },
-        to: { column: to.column.value, row: to.row.value },
+        from: { column: from.column, row: from.row },
+        to: { column: to.column, row: to.row },
       };
     }
     this.at = after;

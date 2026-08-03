@@ -26,8 +26,8 @@ jobs:
         node: ["22.x", "24.x"]
     name: node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -45,8 +45,8 @@ jobs:
     # authored archives shaped like Apple's within the recorded budget.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "24.x"
           cache: npm
@@ -55,12 +55,13 @@ jobs:
       - run: npm run proto:embed:check
       - run: npm run required:check
       - run: npm run shape:check
+      - run: npm run tooldocs:check
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "24.x"
           cache: npm

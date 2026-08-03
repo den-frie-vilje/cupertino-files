@@ -50,6 +50,40 @@ function mergeNodes(table: { object: { message: RawMessage } }): string[] {
 }
 
 describe("writing merges", () => {
+  it("recreates a deleted merge byte-identically — the whole file", () => {
+    // The strongest form available, same instrument as the formula star:
+    // stage the document as it stood before Apple's last merge existed —
+    // drop the pair at index 11, wind next_formula_index back to 11 —
+    // then make the same merge through the public API and require the
+    // *saved file* to equal Apple's original byte for byte. Everything
+    // participates: pair bytes and position, the wound-back counter, the
+    // covered cells' absence, the untouched dependency ledger, the
+    // re-compressed component, the container.
+    const original = new Uint8Array(
+      readFileSync(new URL("numbers-parser-v26.0-issue102.numbers", FIXTURES)),
+    );
+    const doc = NumbersDocument.load(original);
+    const cats = doc.tables().find((t) => t.name === "Cats")!;
+    const owner = (
+      cats as unknown as { object: { message: RawMessage } }
+    ).object.message.getMessage(TableModelFields.MERGE_OWNER)!;
+    const store = owner.getMessage(2)!;
+    const pairs = store.getMessages(3);
+    expect(pairs.map((p) => p.getUint(1)).join(",")).toBe("0,2,10,11");
+    store.setMessages(
+      3,
+      pairs.filter((p) => p.getUint(1) !== 11),
+    );
+    store.setVarint(2, 11);
+    expect(cats.merges().length).toBe(3);
+
+    cats.mergeCells(6, 2, 1, 9);
+
+    const saved = doc.save();
+    expect(saved.length).toBe(original.length);
+    expect(saved.every((b, i) => b === original[i])).toBe(true);
+  });
+
   it("builds a node byte-identical to the one Apple wrote", () => {
     // Both of Apple's merges are removed first, so nothing is left to copy
     // and the node has to be reconstructed from the object graph: the
@@ -166,5 +200,53 @@ describe("writing merges", () => {
 
     const after = NumbersDocument.load(doc.save()).tables().find((t) => t.name === name)!;
     expect(after.merges()).toEqual([{ row: 2, column: 0, rowCount: 2, columnCount: 2 }]);
+  });
+
+  it("keeps the dependency ledger in step with the formula store", () => {
+    // The calc engine lists each merge in the kind-5 owner's tiled ledger
+    // as (row 0, column = formula_index) with empty edges — measured on
+    // both merge-bearing fixtures, 8 records of 8. Creating a merge on a
+    // table that never had one must mint the tile object too, and
+    // unmerging releases the record while the tile stays, like the
+    // high-water index.
+    const ledgerIndexes = (table: unknown): number[] => {
+      // Reach through the same private resolver production uses rather
+      // than duplicating the UUID arithmetic here; the assertion is about
+      // the ledger's contents, not about finding it twice.
+      const t = table as {
+        store: { resolve(ref: unknown): { message: RawMessage } | undefined };
+        mergeDependenciesOwner(): { message: RawMessage } | undefined;
+      };
+      const owner = t.mergeDependenciesOwner();
+      const out: number[] = [];
+      const tiled = owner?.message.getMessage(13);
+      for (const ref of tiled?.getMessages(1) ?? []) {
+        const tile = t.store.resolve(ref);
+        for (const record of tile?.message.getMessages(4) ?? []) {
+          out.push(record.getUint(1) ?? -1);
+        }
+      }
+      return out.sort((a, b) => a - b);
+    };
+
+    // Existing-tile path: earnings' Key Metrics ledger holds {0, 1}.
+    const doc = load();
+    const table = doc.tables().find((t) => t.name === TABLE)!;
+    expect(ledgerIndexes(table)).toEqual([0, 1]);
+    table.mergeCells(3, 1, 1, 3); // next free index is 2
+    expect(ledgerIndexes(table)).toEqual([0, 1, 2]);
+    expect(table.unmergeCells(3, 1)).toBe(true);
+    expect(ledgerIndexes(table)).toEqual([0, 1]);
+
+    // Fresh-tile path: a categories table has never had a merge, so the
+    // tile object itself must be created — and survive a save/reload.
+    const doc2 = NumbersDocument.load(bytes("numbers-parser-v26.0-categories.numbers"));
+    const t2 = doc2.tables().find((t) => t.merges().length === 0 && t.rowCount > 4)!;
+    const name = t2.name;
+    expect(ledgerIndexes(t2)).toEqual([]);
+    t2.mergeCells(2, 0, 2, 2);
+    expect(ledgerIndexes(t2)).toEqual([0]);
+    const after = NumbersDocument.load(doc2.save()).tables().find((t) => t.name === name)!;
+    expect(ledgerIndexes(after)).toEqual([0]);
   });
 });

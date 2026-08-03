@@ -1,5 +1,7 @@
 # Builds the VitePress site from docs/ and publishes it to GitHub Pages.
-# One-time setup: repository Settings → Pages → Source: "GitHub Actions".
+# No setup needed: configure-pages enables Pages on first run (the token
+# has pages: write), so a fresh or freshly transferred repository deploys
+# without touching Settings.
 name: Docs
 
 on:
@@ -20,15 +22,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "24.x"
           cache: npm
       - run: npm ci
       - run: npm run docs:build
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: docs/.vitepress/dist
 
@@ -40,4 +44,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
