@@ -137,6 +137,11 @@ describe("blank() from the embedded donors", () => {
     expect(setup.paperId).toBe("iso-a4");
     expect(setup.pageWidth).toBe(595.280029296875);
     expect(setup.pageHeight).toBe(841.8900146484375);
+    // The house typography: Palatino body, Helvetica Neue display.
+    expect(doc.stylesheet.style("Body")!.resolved().character?.fontName).toBe("Palatino-Roman");
+    expect(
+      doc.stylesheet.style("Title")!.resolved().character?.fontName?.startsWith("HelveticaNeue"),
+    ).toBe(true);
     doc.appendParagraph("first words");
     const re = PagesDocument.load(doc.save());
     expect(re.bodyText).toContain("first words");
@@ -165,6 +170,10 @@ describe("blank() from the embedded donors", () => {
     const size = doc.slideSize();
     expect(size?.width).toBe(1920);
     expect(size?.height).toBe(1080);
+    // The house typography reaches the deck's theme too.
+    expect(doc.stylesheets()[0]!.style("Body")!.resolved().character?.fontName).toBe(
+      "Palatino-Roman",
+    );
     doc.slides()[0]!.notes = "spoken";
     const re = KeynoteDocument.load(doc.save());
     expect(re.slides()[0]!.notes.trim()).toBe("spoken");

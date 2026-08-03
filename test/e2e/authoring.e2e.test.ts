@@ -37,6 +37,10 @@ describe("e2e: authored from nothing", () => {
   // the blank() capability regresses to app-blocked, and the donor (see
   // scripts/make-blanks.ts) needs remaking. A failure on the marker means
   // the donor opened but our edit did not survive.
+  // The font readback checks the house typography end to end: the donor's
+  // Body style says Palatino, and Pages must agree once real text lands.
+  // Text right but font "Helvetica…" means our appended paragraph did not
+  // pick up the Body style — a styling bug, not a donor bug.
   it("Pages opens a blank() document and reads our paragraph", { skip: skip.Pages ?? false }, () => {
     session!.remember("Pages");
     const path = session!.path("from-nothing.pages");
@@ -44,7 +48,14 @@ describe("e2e: authored from nothing", () => {
     const doc = PagesDocument.blank();
     doc.appendParagraph(marker);
     writeFileSync(path, doc.save());
-    expect(withDocument("Pages", path, "body text of theDoc")).toContain(marker);
+    const reported = withDocument(
+      "Pages",
+      path,
+      `(body text of theDoc) & "|" & (font of word 1 of body text of theDoc)`,
+    );
+    const [text, font] = reported.split("|");
+    expect(text).toContain(marker);
+    expect(font).toContain("Palatino");
   });
 
   // Two questions in one document. The text cell is the acceptance check.
@@ -87,7 +98,11 @@ describe("e2e: authored from nothing", () => {
 
   // The donor deck is Apple's Basic White theme (13.2). A failure at
   // `open` means Keynote rejects the embedded donor itself and it needs
-  // remaking (scripts/make-blanks.ts).
+  // remaking (scripts/make-blanks.ts). The body-font readback checks the
+  // house typography: the theme's Body style says Palatino, and typed
+  // placeholder text must come back serif. A Helvetica answer means the
+  // placeholder does not draw from the named Body style — which names
+  // the next probe, not a broken deck.
   it("Keynote opens a blank() deck and reads our note", { skip: skip.Keynote ?? false }, () => {
     session!.remember("Keynote");
     const path = session!.path("from-nothing.key");
@@ -100,11 +115,17 @@ describe("e2e: authored from nothing", () => {
       `tell application "Keynote"\n` +
         `  set theDoc to open ${posix(path)}\n` +
         `  set n to presenter notes of slide 1 of theDoc\n` +
+        `  tell slide 1 of theDoc\n` +
+        `    set object text of default body item to "serif check"\n` +
+        `    set f to font of object text of default body item\n` +
+        `  end tell\n` +
         `  close theDoc saving no\n` +
-        `  return n\n` +
+        `  return n & "|" & f\n` +
         `end tell`,
     );
-    expect(reported).toContain(marker);
+    const [note, bodyFont] = reported.split("|");
+    expect(note).toContain(marker);
+    expect(bodyFont).toContain("Palatino");
   });
 
   // A merge this library wrote must survive Numbers rewriting the entire

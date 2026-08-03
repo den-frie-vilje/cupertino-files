@@ -3320,19 +3320,6 @@
         "type 7": 546
       }
     },
-    "TSWP.TextualAttachmentArchive": {
-      "count": 8,
-      "referenced": 8,
-      "fields": {
-        "2": {
-          "name": "kind",
-          "share": 1
-        }
-      },
-      "referrerSets": {
-        "TSWP.StorageArchive": 8
-      }
-    },
     "TSWP.TOCAttachmentArchive": {
       "count": 4,
       "referenced": 4,
@@ -3475,6 +3462,19 @@
       "referrerSets": {
         "type 10001": 19,
         "TSWP.TOCInfoArchive": 4
+      }
+    },
+    "TSWP.TextualAttachmentArchive": {
+      "count": 8,
+      "referenced": 8,
+      "fields": {
+        "2": {
+          "name": "kind",
+          "share": 1
+        }
+      },
+      "referrerSets": {
+        "TSWP.StorageArchive": 8
       }
     },
     "TSWP.UnsupportedHyperlinkFieldArchive": {

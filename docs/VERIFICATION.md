@@ -429,7 +429,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The donors round-trip offline and take edits, but only the apps can say they accept a package whose previews are stripped.
 
-**Outcome.** **Confirmed in all three apps (2026-08-03, 17 of 17)** — Pages reported our paragraph, Numbers our cell and recomputed formula, Keynote our presenter note, each from a preview-stripped blank(). The Keynote donor has since moved from the 2018-era deck to Apple's Basic White (13.2) for default English masters; the same e2e test covers the new donor on every run
+**Outcome.** **Confirmed in all three apps (2026-08-03, 17 of 17 — twice)** — Pages reported our paragraph, Numbers our cell and recomputed formula, Keynote our presenter note, each from a preview-stripped blank(); the Basic White Keynote donor passed the same suite the day it replaced the 2018-era deck. The house restyle that followed (Palatino body, gray secondary, terracotta accent) is checked by the font read-backs the suite now carries: Pages and Keynote each report the typed text's font, so a donor whose styling the app ignores fails visibly
 
 ### ✅ Page numbers and page counts (insert, read, remove)
 

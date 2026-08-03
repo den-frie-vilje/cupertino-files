@@ -204,16 +204,20 @@ export const CAPABILITIES: Capability[] = [
       "blank() instantiates a donor embedded in the package — a corpus fixture emptied by " +
       "blankFrom at build time (scripts/make-blanks.ts records which and why), previews " +
       "stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, " +
-      "Keynote 1920×1080. The apps do the same: a new document is a bundled template, " +
-      "instantiated. blanks:check pins the embedded bytes to data/blanks/",
+      "Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue " +
+      "display, terracotta accent) through the public style API. The apps do the same: a new " +
+      "document is a bundled template, instantiated. blanks:check pins the embedded bytes to " +
+      "data/blanks/ and asserts the house contract",
     manualProof: {
       claim: "Pages, Numbers and Keynote each open a blank() document and read our edits back.",
       settled:
-        "**Confirmed in all three apps (2026-08-03, 17 of 17)** — Pages reported our " +
+        "**Confirmed in all three apps (2026-08-03, 17 of 17 — twice)** — Pages reported our " +
         "paragraph, Numbers our cell and recomputed formula, Keynote our presenter note, each " +
-        "from a preview-stripped blank(). The Keynote donor has since moved from the 2018-era " +
-        "deck to Apple's Basic White (13.2) for default English masters; the same e2e test " +
-        "covers the new donor on every run",
+        "from a preview-stripped blank(); the Basic White Keynote donor passed the same suite " +
+        "the day it replaced the 2018-era deck. The house restyle that followed (Palatino " +
+        "body, gray secondary, terracotta accent) is checked by the font read-backs the suite " +
+        "now carries: Pages and Keynote each report the typed text's font, so a donor whose " +
+        "styling the app ignores fails visibly",
       why:
         "The donors round-trip offline and take edits, but only the apps can say they accept a " +
         "package whose previews are stripped.",
@@ -1982,14 +1986,14 @@ function renderVerification(): string {
   const withProof = CAPABILITIES.filter((c) => c.manualProof);
   const settled = withProof
     .filter((c) => c.manualProof!.settled)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)); // code-unit order: generated docs
   const pending = withProof
     .filter((c) => !c.manualProof!.settled)
     .sort(
     (a, b) =>
       RISK_ORDER[a.manualProof!.risk] - RISK_ORDER[b.manualProof!.risk] ||
-      a.group.localeCompare(b.group) ||
-      a.name.localeCompare(b.name),
+      (a.group < b.group ? -1 : a.group > b.group ? 1 : 0) ||
+        (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
   );
   const out: string[] = [];
   out.push("# Claims we cannot prove offline");

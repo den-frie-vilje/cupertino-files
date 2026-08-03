@@ -1,0 +1,53 @@
+/**
+ * The house style, shared with the documents blank() makes
+ * (scripts/make-blanks.ts): Palatino for body text, Helvetica Neue for
+ * display, a terracotta accent, and Apple's label gray for secondary
+ * text. A document made by this library and the site describing it
+ * should read as one thing.
+ */
+
+:root {
+  /* Body type: Palatino, with the closest faces elsewhere. */
+  --vp-font-family-base: "Palatino", "Palatino Linotype", "Book Antiqua",
+    "URW Palladio L", Georgia, serif;
+  /* Display type for headings and chrome. */
+  --cf-font-display: "Helvetica Neue", "HelveticaNeue", Helvetica, Arial,
+    sans-serif;
+
+  /* The accent: terracotta #A85D45, as in the documents' Heading Red. */
+  --vp-c-brand-1: #a85d45;
+  --vp-c-brand-2: #97533e;
+  --vp-c-brand-3: #864a37;
+  --vp-c-brand-soft: rgba(168, 93, 69, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #ce8b6f;
+  --vp-c-brand-2: #bc7a5f;
+  --vp-c-brand-3: #a96c53;
+  --vp-c-brand-soft: rgba(206, 139, 111, 0.16);
+}
+
+/* Headings and interface chrome in the display face; body stays serif. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.VPNav,
+.VPLocalNav,
+.VPSidebar,
+.VPFooter,
+.VPButton,
+.VPBadge,
+.VPFeature > .box > .title,
+.custom-block-title {
+  font-family: var(--cf-font-display);
+}
+
+/* Palatino sits a little small; give running text a touch more room. */
+.vp-doc {
+  font-size: 16.5px;
+  line-height: 1.65;
+}

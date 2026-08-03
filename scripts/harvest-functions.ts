@@ -296,7 +296,7 @@ function ingest(paths: readonly string[], appLabel: string): Harvested {
       Object.entries(functions).sort(([a], [b]) => Number(a) - Number(b)),
     ),
     unrecognised: [...unrecognised].filter((name) => !observations.has(name)).sort(),
-    conflicts: conflicts.sort((a, b) => a.name.localeCompare(b.name)),
+    conflicts: conflicts.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
     provenance: {
       app: appLabel,
       harvestedAt: new Date().toISOString().slice(0, 10),
@@ -336,7 +336,7 @@ function alphabeticalReport(functions: Record<string, string>): string {
   if (pairs.length < 3) return "too few mappings to test the alphabetical hypothesis";
   let ascending = 0;
   for (let i = 1; i < pairs.length; i++) {
-    if (pairs[i]!.name.localeCompare(pairs[i - 1]!.name) > 0) ascending++;
+    if (pairs[i]!.name > pairs[i - 1]!.name) ascending++;
   }
   const ratio = ascending / (pairs.length - 1);
   const verdict =
