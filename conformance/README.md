@@ -42,7 +42,7 @@ carry share, and the *sets* of archive types observed pointing at each
 type.
 
 This is the artifact for anyone writing iWork files. Every export defect
-this project found in an app — fourteen so far — was **well-formed and
+this project found in an app — every one so far — was **well-formed and
 incomplete**: schema-valid, round-trippable, and wrong only against what
 Apple always writes. A writer in any language can audit its output with
 the same three questions our `shape:audit` asks:

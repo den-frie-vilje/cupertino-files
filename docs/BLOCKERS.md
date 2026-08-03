@@ -83,10 +83,10 @@ that rebuild the structures from them.
   `npm run harvest -- --ingest doc.numbers`, `--emit-sheet probe.tsv`,
   or `--drive` (macOS, drives Numbers directly). It refuses to guess — a
   name is accepted only when every observation agrees.
-- **Writing a cell control / creating a Keynote build.** Reading both is
-  shipped (controls fully named: 4 stepper, 5 slider, 6 star, 7 pop-up,
-  8 checkbox). Creation is withheld until the app confirms it: a widget
-  or build the app silently drops looks exactly like one never written.
+- **Creating a Keynote build.** Reading ships; creation is withheld
+  until the app confirms it — a build the app silently drops looks
+  exactly like one never written. (Cell-control creation shipped and is
+  app-confirmed; see VERIFICATION.)
 - **Creating a category group.** Regrouping shipped (byte-identical on
   unchanged data). Creation is blocked on a group's identity, sort
   position and eight unexplained sidecar fields; bucketed groupings
@@ -96,15 +96,6 @@ that rebuild the structures from them.
   means evaluating predicates. (Filter *rule* layout itself is
   schema-derived: every filter set in the corpus is empty — 164 sets,
   163 empty, mode "all" — measured, not unlucky.)
-- **Writing merge ranges: only the app's word left.** The whole write is
-  now in place and proven to the byte: the merge formula (SUM over an
-  all-sticky absolute tract carrying the table's kind-1 identity), the
-  formula-store pair, and the kind-5 owner's dependency-ledger record —
-  `(row 0, column = formula_index)`, empty edges, tile minted on first
-  use. Deleting Apple's last merge in issue102 and remaking it through
-  `mergeCells` reproduces the whole file byte for byte
-  (test/merges.test.ts). Remaining: bisect rung `06-merge` in Numbers,
-  which now exercises the ledger path too.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:

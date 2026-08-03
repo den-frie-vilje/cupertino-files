@@ -56,14 +56,14 @@ reverse-engineering of it, measured from real documents.
 | Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions |
 | Formatting | Fills, borders, alignment, wrap; number, currency, date and duration formats; bands |
 | Structure | Sheets and tables (add, rename, move, remove), rows and columns, merges, column widths |
-| Reading | Conditional formatting, filters, categories, and cell controls all read |
+| More | Conditional rules, cell controls, and category regrouping write too; filter rules and new category groups read only |
 
 ### Keynote
 
 | | |
 |---|---|
 | Slides | Add, duplicate, reorder, remove, skip; titles, bodies, presenter notes |
-| Decks | Slide size, auto-advance; builds and transitions read |
+| Decks | Slide size, auto-advance; transitions read and write, builds read |
 
 ### Everywhere
 
@@ -101,8 +101,8 @@ npm run test:e2e          # macOS only: drives the real apps
 Contributions are warmly welcome — [CONTRIBUTING.md](CONTRIBUTING.md)
 shows the way, and [docs/BLOCKERS.md](docs/BLOCKERS.md) lists questions
 where a few minutes with a Mac genuinely helps. Test fixtures are real
-Apple-written documents from the Apache Tika and libetonyek test suites
-([attribution](fixtures/ATTRIBUTION.md)).
+Apple-written documents from open-source test suites and public
+repositories ([attribution](fixtures/ATTRIBUTION.md)).
 
 Built on the shoulders of
 [iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat),

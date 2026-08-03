@@ -1,8 +1,7 @@
 # The same guards a local `npm test` enforces, run where nobody can forget
-# them. The suite executes TypeScript directly via Node's type stripping, so
-# CI needs Node ≥ 22.18 even though the *built* package supports ≥ 18 — the
-# engines field describes consumers of dist/, this matrix describes
-# developers of src/.
+# them. The suite executes TypeScript directly via Node's type stripping
+# (Node ≥ 22.18 for developers of src/; the engines field says what
+# consumers of dist/ need).
 name: CI
 
 on:
@@ -34,7 +33,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      # 549 tests, including the repository guards: coverage:check,
+      # The full suite, including the repository guards: coverage:check,
       # conformance:check, harvest:check and privacy:check run inside the
       # suite, so generated docs and fixtures cannot drift silently.
       - run: npm test

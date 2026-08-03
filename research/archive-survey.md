@@ -23,7 +23,7 @@ members, so a 941 MB `.key` cost a few tens of KB to version-check.
   existing iOS-written file at the identical format version).
 - **One genuinely novel specimen, not addable:** a Pages **collaboration-mode** package
   (`fileFormatVersion` 14.4.1) whose `Index/OperationStorage.iwa` is **LZFSE-compressed
-  (`bvxn` … `bvx$`), not Snappy** — see [Collaboration-mode Pages](#collaboration-mode-pages-a-format-variant-the-loader-rejects).
+  (`bvxn` … `bvx$`), not Snappy** — see [Collaboration-mode Pages](#collaboration-mode-pages-a-format-variant-the-loader-once-rejected).
   It is a bug-tracker attachment with no redistribution grant, so it is reported, not shipped.
 - **`web.archive.org` is unreachable from this environment** (connection reset on every
   request, including via the fetch tool), so the Wayback CDX / URL-pattern route could not be
@@ -148,7 +148,7 @@ cap makes unusable. Worth noting for anyone who later relaxes the cap: they are 
 | same | `testdata/a.numbers` | Apache-2.0 | numbers | 11.1.2 | `M11.1-7031.0.102-2` | older than existing `.numbers` fixtures |
 | CPAN `Image-ExifTool` (all versions) | `t/images/iWork.numbers` | Perl/Artistic | — | — | — | **1,359 bytes** — a deliberately truncated ExifTool test stub, not a real package |
 
-## Collaboration-mode Pages: a format variant the loader rejects
+## Collaboration-mode Pages: a format variant the loader once rejected
 
 > **Update 2026-08-03: no longer true — all three recommendations below are
 > implemented.** A component that fails to decode goes opaque instead of
@@ -164,7 +164,7 @@ Source: The Document Foundation Bugzilla
 [bug 166298](https://bugs.documentfoundation.org/show_bug.cgi?id=166298),
 attachment 200502 (`Test LibreOffice.pages.zip`, 114,997 bytes, uploaded 2025-04-24). The
 reporter's finding: LibreOffice opens their Pages documents fine *until* they switch on Pages'
-**Collaboration / share** mode, after which import fails. `cupertino-files` fails on it too.
+**Collaboration / share** mode, after which import fails. `cupertino-files` failed on it too at the time (resolved — see the note above).
 
 What the package actually is:
 

@@ -1100,11 +1100,11 @@ self-consistent in a way that is hard to fake: every anchor holds a value,
 **no covered cell ever holds one**, and the 14.4 and 26.0 saves of the
 same document decode identically.
 
-Writing a merge is *not* supported, and the reason is the owner UUID.
-`merge_owner.owner_id` is not the table's UUID — in every file examined it
-differs from the `table_id` inside the AST node by a small delta in one
-half. Synthesizing a merge means inventing calc-engine identity, and a
-wrong guess corrupts the dependency graph rather than failing loudly.
+Writing a merge **is** supported — `mergeCells` writes the formula-store
+pair and the kind-5 owner's dependency-ledger record, byte-identical to
+Apple's own merges and confirmed by Numbers re-emitting one through a
+full resave. The owner-UUID derivation that once blocked this is
+documented in §14.11.
 
 ### 14.5 Formulas
 
@@ -1148,23 +1148,25 @@ Three traps:
   offsets. A reader that knows only the absolute pair renders real ranges
   as `#REF!`.
 - **Function names are not in the format.** `AST_function_node_index` is an
-  index into an Apple-internal list absent from every public schema. Only
-  one entry is derivable from the corpus by arithmetic: **168 = SUM**
+  index into an Apple-internal list absent from every public schema. Two
+  entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
-  7920). Guessing the rest would convert a visible gap into silent wrong
-  answers, so unknown ids render as `FUNCTION_<id>` and callers can supply
-  a harvested table.
+  7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
+  from the live-app harvest; 271 more names are harvested, 272 authorable
+  in total. Guessing beyond that would convert a visible gap into silent
+  wrong answers, so unknown ids render as `FUNCTION_<id>` and callers can
+  supply their own table.
 
-Cross-table references cannot be resolved to a table *name*: the `table_id`
-in `AST_cross_table_reference_extra_info` is a derived UUID matching no
-table's own identifier — the same derivation used for merge owners — and
-the calc engine's dependency records do not map it back either. Rendering
-such a reference as a bare `A2` would read as a cell in the formula's own
-table, so it must be marked.
+Cross-table references **do** resolve to table names — the `table_id` in
+`AST_cross_table_reference_extra_info` is the target's kind-1 calc-engine
+owner identity, and §14.11 documents the mapping (all 1020 corpus
+cross-table references resolve). `setFormula` authors them the same way.
 
-Writing formulas needs both the function table and the calc-engine
-dependency records, and is not implemented. Writing a *literal* over a
-formula cell correctly clears `formula_id`.
+Writing formulas is implemented: `setFormula` compiles infix text to the
+postfix AST byte-identically to Apple's encoding, and no dependency-
+tracker write is needed — Numbers rebuilds the tracker on open (measured
+by the e2e recompute probe). Writing a *literal* over a formula cell
+correctly clears `formula_id`.
 
 ### 14.6 Cell and table styles
 
@@ -1240,8 +1242,9 @@ makes it decodable without Apple's enum:
 terminal operator node is the *documented* `TSCE.ASTNodeType` enum, whose
 meaning is visible in any formula bar. So the formula is authoritative for
 what a condition means, and `predicate_type` is carried through opaquely.
-The corpus supplies two pairings — 5 = `=`, 9 = `<` — and a value outside
-that set reads as `undefined` rather than a guess.
+The corpus supplies four pairings — 5 = `=`, 6 = `<>`, 9 = `<`,
+10 = `<=` — and a value outside that set reads as `undefined` rather
+than a guess.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -2045,10 +2048,10 @@ writing and chart appearance all used to be here.
   formula evaluated.
 - **Creating a Keynote build** (animation). The model reads; authoring one
   needs a deck with a build to compare against.
-- Creating documents **from scratch**. `blankFrom()` derives an empty
-  document from a real one, which is the practical route and the one
-  numbers-parser takes; synthesising a package with no template is not
-  attempted.
+- Creating documents **from nothing at all**. `blank()` instantiates an
+  embedded, Apple-authored donor and `blankFrom()` empties any document
+  you have — both the practical route the apps themselves take.
+  Synthesising a package with no donor whatsoever is not attempted.
 - Image/media **insertion** (Data/ plumbing is specified in §5.4/§10 but
   not yet wrapped in a high-level API).
 - **Change-tracking editing.** Its tables are preserved and shifted

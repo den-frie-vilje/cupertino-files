@@ -14,7 +14,7 @@ description: >-
 
 The `cupertino-files` package manipulates iWork documents entirely in
 TypeScript/JavaScript — no Apple apps, no external binaries, no native
-modules. It works in Node ≥ 18 and browsers (bytes in → bytes out).
+modules. It works in Node ≥ 22 and browsers (bytes in → bytes out).
 
 The package also ships an MCP server — `npx -y cupertino-files mcp` —
 whose twenty tools (create, describe, read, edit and format tables, text,
@@ -236,18 +236,18 @@ cell of a filled-down column.
 
 Two honest gaps, both visible in the output rather than papered over:
 
-- **Function names are not in the format.** Only ids proven by arithmetic
-  are named (currently just `SUM`); the rest render as `FUNCTION_<id>`.
+- **Function names are not in the format.** 272 measured ids are named;
+  an unknown one renders as `FUNCTION_<id>` and is refused for writing.
   Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`, or measure
-  the whole table on a Mac with `npm run harvest -- --drive` (Protocol 1 in
-  `docs/BLOCKERS.md`). `functionTableProvenance()` reports how many
-  names are in effect and where they came from.
-- **Cross-table references cannot name their target**, so they render with
-  an `OTHER_TABLE::` prefix. Do not present that as a real table name.
+  on a Mac with `npm run harvest -- --drive`. `functionTableProvenance()`
+  reports how many names are in effect and where they came from.
+- **Cross-table references resolve to table names** (`Other::A2`) via the
+  calc engine's owner identities, both reading and writing.
 
-Writing formulas is not implemented — it needs the missing function table
-plus calc-engine dependency records. Writing a literal over a formula cell
-correctly clears the formula.
+Writing formulas: `t.setFormula(row, col, "=SUM(B2:B9)", { value: 1500 })`
+— text in, Apple's exact AST encoding out. Nothing evaluates, so pass the
+cached display value. Writing a literal over a formula cell correctly
+clears the formula.
 
 ### Writing cells
 
@@ -272,8 +272,9 @@ untouched. `NaN`, `Infinity` and an invalid `Date` are all refused.
 Writing preserves the cell's styles, number formats and comments, and
 clears any formula. Rich text (`type: "richText"`) cannot be written
 directly — use `type: "text"`, or edit `t.richTextStorage(row, col)`.
-Rows and columns **cannot be added or removed**; coordinates outside the
-existing table throw.
+Rows and columns: `insertRows(at, count)`, `deleteRows(at, count)`,
+`insertColumns`, `deleteColumns`, `setColumnWidth`, `setRowHeight`.
+Coordinates outside the existing table throw.
 
 Writing a value into a cell a merge has swallowed also throws — the value
 would be stored and displayed nowhere. Write to the merge's anchor
@@ -360,12 +361,11 @@ Two things to know before relying on this:
   seen — and `predicate.operator` is `undefined`, rather than a guess, when
   the rule is something richer than a comparison ("text contains").
 
-**Writing rules is not implemented** for either. Applying an *existing*
-rule set to more cells works; authoring a new one needs the `predicate_type`
-value the condition editor expects, and only two of that enum's members
-appear in any file examined. `npm run harvest:predicates -- <file>` extracts
-more from a document whose conditions you set up yourself — see
-`docs/BLOCKERS.md` (the rules.numbers ask).
+**Conditional rules write** for the four measured operators — `=`, `<>`,
+`<`, `<=` via `setConditionalRules` — byte-identical to Apple's encoding;
+`>` and `>=` are refused until their codes are measured (the rules.numbers
+ask in `docs/BLOCKERS.md`). **Filter rules do not write** — every filter
+set in the corpus is empty, so there is nothing measured to write.
 
 ### Categories (row grouping)
 
@@ -424,9 +424,11 @@ survives attaching it.
 The control needs a value of the right type — a boolean for a checkbox, a
 number for the others — so pass `value` unless the cell already holds one.
 
-Pop-up menus are not created: the menu's list of choices lives in a
-`chooser_control_popup_model` no examined document contains.
-`setPopupMenu(row, column, modelId)` attaches one you already have.
+Pop-up menus are created with
+`setCellControl(row, col, { widget: "popupMenu", items: [...] })` — the
+None entry occupies slot 0 as a bare `NIL_TYPE`, measured and
+app-confirmed. `setPopupMenu(row, column, modelId)` attaches an existing
+model instead.
 
 ## Shadows and drawable styling
 
@@ -453,10 +455,10 @@ drawableStylesOf(doc.store);             // every styled drawable in a document
 your parameters when you untick the box.
 
 **Important:** tables written by iWork '13/'15-era apps use *pre-BNC* cell
-storage, which cannot be decoded. `cells()` and `setCell()` **throw**
-rather than returning an empty array or writing something wrong. Always
-check `t.hasReadableCells` / `t.storageGeneration` when file age is
-unknown.
+storage, which reads (text, numbers, dates — by measured position) but
+never writes: `setCell()` **throws** rather than writing something wrong,
+and unmeasured record shapes refuse instead of guessing. Check
+`t.hasReadableCells` / `t.storageGeneration` when file age is unknown.
 
 ## Charts
 
@@ -688,12 +690,11 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
 
 ## Rules of thumb
 
-1. Never construct documents from scratch — there is no API for it and
-   there will not be one. To make a *new* document, use
-   `NumbersDocument.blankFrom(template)` (or `PagesDocument`/
-   `KeynoteDocument`), which empties a real file and keeps every identity,
-   style and master an Apple app wrote. Any document works as the template,
-   including one the user hands you.
+1. Never synthesise a document graph by hand. To make a *new* document,
+   use `NumbersDocument.blank()` (or `PagesDocument`/`KeynoteDocument`) —
+   an embedded, Apple-authored donor, A4 or 16:9, app-confirmed — or
+   `blankFrom(template)` to empty a document you already have, keeping
+   its design. The `create_document` MCP tool is the same thing by path.
 2. Make all edits through the API, not by writing raw protobuf fields,
    unless the task is explicitly about the wire format — the API maintains
    attribute-table indexes, object references, and package metadata that
@@ -716,9 +717,9 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
    legend, gridlines) all write. Genuinely absent today: authoring
-   conditional and filter *rules*, categories, and creating cell controls
-   or Keynote builds. For those, drop to the low-level `RawMessage` layer
-   and consult `docs/FORMAT.md` — §14 covers tables byte by byte.
+   filter *rules*, creating category groups, and creating Keynote builds.
+   For those, drop to the low-level `RawMessage` layer and consult
+   `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
    repro. Check it before relying on paragraph border positions, cell
