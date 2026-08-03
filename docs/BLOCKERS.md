@@ -29,17 +29,19 @@ follow, save, run the command the file names.
 
 **1. `seed-borders.pages` — 2 min, two questions in one.** The border
 bitmask is measured in left-to-right paragraphs: 1 top, 2 bottom, 4
-left, 8 right, unions literal. Open: which stored `writing_direction`
-value means right-to-left (2 does not — the ledger — and neither does
-unset), and does an RTL paragraph keep the side bits as on-page sides
-(visual) or swap them (logical start/end)? The seed ladders three Hebrew
-paragraphs with values 0, 1, 2. One look answers the first question:
-whichever line stands right-aligned names the value. Give that line a
-green left-edge border and `npm run probe -- seed-borders.pages` prints
-the style's `writing_direction` beside its border code — 4 visual, 8
-logical. If no line stands right-aligned, all three values are refuted
-and the next step is the app's own direction control (needs an RTL input
-source enabled in System Settings).
+left, 8 right, unions literal. Direction is not the style bag's
+`writing_direction` (all its values refuted — the ledger); the evidence
+points at the storage's `table_para_bidi` pairs, where 0 = LTR and
+65535 = natural are observed and **1** is the untested RTL candidate.
+The seed writes three Hebrew paragraphs with bidi pairs 1, 0 and
+natural. One look: does exactly the `[bidi 1]` line stand
+right-aligned? Then give it a green left-edge border and `npm run probe
+-- seed-borders.pages` — the probe prints every bidi pair and border
+code, so the paste answers both the RTL value and whether the side bits
+are visual (4) or logical (8). If no line stands right-aligned, the
+bidi write is refuted too, and the next step is measuring what Pages
+itself writes: enable a Hebrew input source, flip the paragraph with
+the app's own direction control, save, send the file.
 
 **2. Send back the three finished seeds** from the first round —
 `seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
@@ -158,6 +160,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | border bits 4/8 + RTL | Pages (macOS, Danish UI), via seed-borders v2 | **left and right assigned**: red left-only = 4, blue right-only = 8, the probe's stroke colours naming their paragraphs. The RTL leg failed its precondition — the Hebrew-first paragraph rendered LTR with the Danish tail folded into the same line, so unset `writing_direction` is not "natural" — leaving visual-vs-logical open; the regenerated seed writes an explicit RTL paragraph style instead | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | paragraph `writing_direction` value | Pages (macOS, Danish UI), via seed-borders v4 | **value 2 refuted as RTL**: a Hebrew paragraph styled `writingDirection: 2` rendered left-aligned. The caret's behaviour inside the Hebrew (a typed space appears to the caret's right) is run-level Unicode bidi, present in any paragraph, and says nothing about paragraph base direction. The honoured value is unmeasured; the v5 seed ladders 0/1/2 and has the person border the line that stands right-aligned | `scripts/make-seeds.ts`, `src/tss/stylesheet.ts` |
+| 2026-08-03 | `writing_direction` ladder (style bag) | Pages (macOS, Danish UI), via seed-borders v5 | **the whole style-bag route refuted**: styled 0, 1 and 2 rendered identically left-aligned, and the caret differed in-word vs line-start exactly as run-level bidi inside an LTR paragraph predicts. With no corpus style carrying the field, direction does not live there; the v6 seed writes the storage's `table_para_bidi` pairs instead (1 as the RTL candidate beside the observed 0 and 65535) | `scripts/make-seeds.ts`, `scripts/probe-unknowns.ts` |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
 | 2026-08-03 | predicate_type 7/8 | Numbers (macOS, Danish UI), via seed-rules + seed-filters | **solved — the menu-order prediction confirmed whole**: 7 = `>` (twice over: a conditional rule and a filter), 8 = `>=`, each stated by its own formula. All six comparison codes observed; setConditionalRules writes all six | `src/tst/predicates.ts`, test/conditional-writing.test.ts |
 | 2026-08-03 | filter rules + predicate_type 3 | Numbers (macOS, Danish UI), via seed-filters | **first non-empty filter set anywhere — rules read**, filters and conditional formatting sharing the predicate encoding. Type 3 is "text contains": `NOT(ISERROR(f(needle, cell)))` with `f` the unnamed function index 296 (SEARCH is 131). Filter formulas render `OTHER_TABLE::` — the filter owner's references resolve to no named table yet | `scripts/probe-unknowns.ts` |
@@ -207,3 +210,4 @@ Expensive to establish, easy to lose, no app involved:
 | A pop-up menu's slot 0 is a bare `NIL_TYPE` None entry | Without it Numbers dropped the first choice; with a *valued* slot 0 the choices returned but the current-value checkmark vanished. Three-way experiment in the app. |
 | A Keynote slide's paint-order membership for placeholders is a per-deck convention | 8 of 12 placeholders listed in one deck's `owned_drawables`/z-order, 0 of 33 in another — which is why no ubiquity threshold catches unlisting them, and why the app had to (an added slide rendered entirely empty). |
 | Placeholders carry their slide as drawable parent and never declare it | 546 of 546 corpus placeholders, super-depth 3 — the container rule at Keynote-local type ids. |
+| Per-paragraph direction lives in `table_para_bidi`, not the paragraph style | No style in 37 fixtures sets `writing_direction`, while the pptx-lineage deck writes a bidi ParaData pair per storage — observed `(0, 0)` and `(65535, 65535)`, 0xFFFF being uint16 −1: the NSWritingDirection scale (natural/LTR) at exactly those widths. This library's own storage builder writes `(0, 0)`. The RTL pair value is unobserved; styled `writing_direction` 0/1/2 all render LTR in Pages (ledger). |

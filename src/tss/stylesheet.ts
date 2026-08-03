@@ -135,9 +135,11 @@ export interface ParagraphFormatting {
   /** Character a decimal tab aligns on (locale-dependent: "." or ","). */
   decimalTab?: string;
   /**
-   * Base paragraph direction, stored raw. Which values the apps honour is
-   * unmeasured — 2 does not render right-to-left in Pages, so the once
-   * assumed 0 natural / 1 LTR / 2 RTL reading is wrong at least there.
+   * Stored raw, and apparently vestigial: no corpus style carries the
+   * field, and styled values 0, 1 and 2 all render left-to-right in
+   * Pages. Per-paragraph direction evidence lives in the storage's
+   * `table_para_bidi` pairs instead (0 = LTR, 65535 = natural observed;
+   * the RTL value is unmeasured).
    */
   writingDirection?: number;
 }

@@ -36,9 +36,12 @@ history uses Conventional Commits, so the detail behind any entry is one
   effect and timing live in the undecoded `animationAttributes` — so
   those read `undefined` on modern decks, and the probe now prints
   chunks, triggers and the field-18 shape to close in on them.
-- Paragraph styles can set `writingDirection` (stored raw — value 2 does
-  not render right-to-left in Pages, so the honoured mapping is under
-  measurement via the borders seed's value ladder).
+- Paragraph styles can set `writingDirection`, though measurement shows
+  the field is vestigial (styled 0/1/2 all render left-to-right; no
+  corpus style carries it). Per-paragraph direction evidence lives in
+  the storage's `table_para_bidi` pairs — 0 = LTR and 65535 = natural
+  observed, the RTL value under measurement via the borders seed — and
+  the probe now prints any bidi table that departs from the baseline.
 - Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
 - Toolchain refresh: TypeScript 6, `strictTypeChecked` linting,
   `noImplicitReturns` and `verbatimModuleSyntax`, patched vite via
