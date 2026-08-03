@@ -86,10 +86,9 @@ const GridValue = {
 /**
  * TSCH.ChartType enum values, complete against `TSCHArchives_Common.proto`.
  *
- * The table used to stop at 21, which was not a judgement call — it was
- * simply short. Two chart types in real documents (22 and 25) rendered as
- * `"type 22"` and `"type 25"` because of it. They are `bubble2D` and
- * `donut2D`.
+ * Completeness matters: types 22 (`bubble2D`) and 25 (`donut2D`) occur in
+ * real documents, and any id the table lacks renders as its bare number,
+ * `"type 22"`.
  */
 export const CHART_TYPE_NAMES: Readonly<Record<number, string>> = {
   0: "undefined",

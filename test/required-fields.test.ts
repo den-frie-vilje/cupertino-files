@@ -74,10 +74,10 @@ describe("the schema parser", () => {
     // How a ChartArchive ends up inside a ChartDrawableArchive at 10000.
     //
     // The extended type has to be declared here. A real parser attaches an
-    // extension to a type that exists and drops one that does not; the
-    // regex parser it replaced invented the target, which is why this
-    // snippet used to omit it. In the vendored set every target exists —
-    // all 41 files are parsed into one root precisely so they do.
+    // extension to a type that exists and drops one that does not — only a
+    // parser that invents targets would accept this snippet without the
+    // declaration. In the vendored set every target exists — all 41 files
+    // are parsed into one root precisely so they do.
     const parsed = parseProtoText(
       `package TSCH;
        message ChartDrawableArchive {

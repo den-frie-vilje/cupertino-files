@@ -1,26 +1,25 @@
 /**
  * Read the vendored `.proto` schemas — with a real protobuf parser.
  *
- * This used to be two hand-written regex parsers, one in `src/tsp/required.ts`
- * and a second in `check-proto-drift.ts`, each tracking brace depth and a
- * name stack well enough for the files in `proto/` and no further. They
- * agreed with `protobufjs` on 1468 of 1469 messages and every one of the 163
- * enums, so they were not *wrong* — but "not wrong on the inputs we happen to
- * have" is the standing of a parser nobody should have to maintain, in a
- * project whose whole premise is that unverified assumptions are the enemy.
+ * `protobufjs` is the canonical reader and does the job properly, where a
+ * hand-written regex parser — tracking brace depth and a name stack well
+ * enough for the files in `proto/` and no further — can only ever be "not
+ * wrong on the inputs we happen to have". That is no standing for a parser
+ * in a project whose whole premise is that unverified assumptions are the
+ * enemy.
  *
- * `protobufjs` is the canonical reader and does the job properly. It is a
- * **devDependency**: nothing under `src/` imports it, the library keeps its
- * zero-runtime-dependency promise, and the schemas reach the runtime through
- * `src/proto/vendored.ts`, which this module's callers generate.
+ * `protobufjs` is a **devDependency**: nothing under `src/` imports it, the
+ * library keeps its zero-runtime-dependency promise, and the schemas reach
+ * the runtime through `src/proto/vendored.ts`, which this module's callers
+ * generate.
  *
- * ## What the real parser gets right that the regex one did not
+ * ## What a real parser gets right that a regex one does not
  *
  * **Extensions.** Five families each `extend .TSS.ThemeArchive` with a field
  * that protobuf convention names `extension`, at 100, 110, 120, 200 and 210.
- * The regex parser flattened all five to the bare name and needed a
- * hand-written special case to tell them apart; protobufjs qualifies each by
- * its declaring scope (`.TSWP.ThemePresetsArchive.extension`) and the
+ * Flattened to the bare name they collide, and telling them apart again
+ * takes a hand-written special case; protobufjs qualifies each by its
+ * declaring scope (`.TSWP.ThemePresetsArchive.extension`) and the
  * ambiguity never arises. The key used here is the carried message type,
  * which is what a caller actually means by "the paragraph-style preset list".
  *

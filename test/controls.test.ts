@@ -1,8 +1,8 @@
 /**
  * Numbers cell controls — the five data-entry widgets.
  *
- * `interaction_type` is an enum Apple never published. It was settled by
- * reading documents that lay one widget out per row and state in their own
+ * `interaction_type` is an enum Apple never published. It is measured from
+ * documents that lay one widget out per row and state in their own
  * cell values which row is which — a checkbox row holding FALSE/TRUE, a
  * star row bounded [0…5], a slider row whose bounds match a published test
  * that builds exactly that cell as a slider.
@@ -66,8 +66,9 @@ describe("cell control specs", () => {
   });
 
   it("reads a checkbox, whose whole spec is one varint", () => {
-    // This is the case that used to be dropped: a lone interaction_type is
-    // indistinguishable from a bare TSP.Reference unless you know the field.
+    // The case a field-guessing reader silently drops: a lone
+    // interaction_type is indistinguishable from a bare TSP.Reference
+    // unless you know the field.
     const control = readCellSpec(spec(InteractionType.CHECKBOX), 5);
     expect(control.interactionType).toBe(8);
     expect(control.widget).toBe("checkbox");

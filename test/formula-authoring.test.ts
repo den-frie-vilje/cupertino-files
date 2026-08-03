@@ -73,9 +73,8 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
     // Every rebuilt formula must match — zero tolerance, named offenders.
     expect(`mismatches: ${mismatches.join(" | ")}`).toBe("mismatches: ");
     expect(identical).toBe(rebuilt);
-    // Floors guard the guard: coverage must not silently shrink. 1244
-    // formulas and 1242 rebuilds measured 2026-08-02 (219 before
-    // cross-table references and whole-column spans landed); the entire
+    // Floors guard the guard: coverage must not silently shrink. The
+    // corpus holds 1244 formulas and 1242 of them rebuild; the entire
     // remaining gap is two #REF! errors, which stay unauthorable on
     // purpose — writing a lost reference is not a feature.
     expect(total >= 1244).toBe(true);

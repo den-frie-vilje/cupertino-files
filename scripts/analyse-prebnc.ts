@@ -5,10 +5,10 @@
  *   node scripts/analyse-prebnc.ts [file...]      # defaults to the corpus
  *
  * Six of the corpus's fifty tables were written by iWork '13/'15-era apps
- * and use a cell storage this library refuses to decode. That refusal was
- * inherited — the reference Python implementation refuses them too — not
- * earned. Nothing about the layout needs a Mac: the records are in files
- * already here, and the string table beside them is a free oracle.
+ * and use the pre-BNC cell storage that `src/tst/prebnc.ts` decodes; this
+ * script is the measuring instrument behind that decoder. Nothing about
+ * the layout needs a Mac: the records are in files already here, and the
+ * string table beside them is a free oracle.
  *
  * This script does the measuring. It extracts every pre-BNC record with
  * exact boundaries (from the offsets array, not by guessing lengths) and
@@ -16,7 +16,7 @@
  * system in the per-flag payload sizes, and with six flag combinations it
  * is over-determined — so the sizes are solved, not assumed.
  *
- * What is established (see docs/BLOCKERS.md priority 8):
+ * What is established:
  *
  *   - The header is 12 bytes, same shape as v5: version(1) type(1) pad(2)
  *     flags(u32 @4) extras(u32 @8). Version is 4 in every record; the pad
@@ -36,11 +36,11 @@
  * other than the plain string slot. Column 0 of the Transactions fixture is
  * a pop-up menu — and `src/tst/formats.ts` already records format 266 as a
  * pre-BNC-only pop-up menu — so bit 7 is very likely the control field, and
- * a menu cell's text lives with the menu. That is the last thing to pin
- * down before the decoder can be written.
+ * a menu cell's text lives with the menu. The exact flag→field assignment
+ * is the part `src/tst/prebnc.ts` reports as unresolved.
  *
  * The output is deliberately raw. This is a measuring instrument, not a
- * reader; the reader goes in src/tst/ once the last field is named.
+ * reader; the reader is `src/tst/prebnc.ts`.
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { IWorkDocument } from "../src/tsa/document.ts";

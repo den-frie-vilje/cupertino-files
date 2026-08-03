@@ -1,11 +1,11 @@
 /**
  * What does a *real* one have that ours does not?
  *
- * Three bugs in a row got past every check in this suite, and they failed
- * in three different ways:
+ * An authored archive can be wrong in three distinct ways, and different
+ * checks catch them:
  *
  *  - a conditional rule missing two `required` fields — malformed protobuf,
- *    caught now by `required-fields.test.ts` reading the schema;
+ *    caught by `required-fields.test.ts` reading the schema;
  *  - a cell style missing `super` — same class, same checker;
  *  - a cell control missing its **format** — perfectly well-formed, all
  *    required fields present, and completely invisible in Numbers.

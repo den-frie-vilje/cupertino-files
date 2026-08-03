@@ -1,10 +1,9 @@
 /**
  * Pre-BNC cell records — storage version 4, written by iWork '13/'15 apps.
  *
- * These were long filed "out of scope", inherited from the reference Python
- * implementation rather than earned. Nothing about the layout needs Apple:
- * the records sit in ordinary documents, and the string table beside them
- * says in plain English whether a reading is right.
+ * Nothing about the layout needs Apple: the records sit in ordinary
+ * documents, and the string table beside them says in plain English
+ * whether a reading is right.
  *
  * ## What was measured
  *

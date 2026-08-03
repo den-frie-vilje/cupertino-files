@@ -154,9 +154,9 @@ describe("reference extractors agree with Apple", () => {
     //     the sheet contains. This is the container rule again and it is on
     //     a live path: creating a character style dirties the stylesheet.
     //
-    // Two instances of that container rule are already fixed — a storage
-    // must not declare its stylesheet, a drawable must not declare its
-    // parent — and both were found by exactly this comparison.
+    // Two instances of that container rule hold elsewhere — a storage must
+    // not declare its stylesheet, a drawable must not declare its parent —
+    // and this comparison is exactly what catches a violation of either.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
     expect(`disagree<=231: ${disagree <= 231} (${disagree})`).toBe(
       `disagree<=231: true (${disagree})`,

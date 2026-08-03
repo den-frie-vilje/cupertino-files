@@ -19,7 +19,7 @@
  *    (8 → 12 → 24) shift by exactly that many hours. Six arguments, the
  *    last four hours/minutes/seconds/milliseconds, the first two omitted:
  *    `DURATION(weeks, days, hours, minutes, seconds, milliseconds)`.
- *  - **86 = MEDIAN** — the e2e function harvest (2026-08-03, a current
+ *  - **86 = MEDIAN** — the e2e function harvest (a live, current-format
  *    Numbers install) had the app author eight probe formulas; seven
  *    rendered under their harvested names and the run reported exactly one
  *    unnamed id, 86, leaving `=MEDIAN(B1:B3)` as the only unaccounted

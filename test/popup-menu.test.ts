@@ -9,8 +9,8 @@
  *
  * So this is built from the vendored schema. That is a weaker footing than
  * the rest of the library stands on, and the reason to say so plainly is
- * that schema-correct has already proved insufficient once: a control with
- * no format was valid in every checkable respect and invisible in the app.
+ * that schema-correct is not sufficient: a control with no format is
+ * valid in every checkable respect and invisible in the app.
  * What these tests can prove is that the archive is well-formed, that its
  * required fields are populated to the bottom, that the cell carries the
  * format a real menu cell carries, and that it reads back. Whether Numbers
@@ -45,10 +45,10 @@ describe("pop-up menu model", () => {
   });
 
   it('keeps a choice literally named "nil"', () => {
-    // The None slot used to be marked by the in-band string "nil", so a menu
-    // whose first choice was the word itself lost that choice — encoded as a
-    // second bare NIL slot instead of a string. The marker is a symbol now;
-    // this pins the only input that could tell the difference.
+    // The None-slot marker is a symbol, not an in-band string: a string
+    // marker like "nil" would encode a menu whose first choice is the word
+    // itself as a second bare NIL slot, losing the choice. This pins the
+    // only input that could tell the difference.
     const model = buildPopupMenuModel(["nil", "other"]);
     expect(readPopupMenuModel(model).join("|")).toBe("nil|other");
   });
@@ -57,7 +57,7 @@ describe("pop-up menu model", () => {
     // `StringCellValueArchive.format` and `NumberCellValueArchive.format`
     // are both `required`. Omitting either makes the message malformed,
     // and a malformed message anywhere takes the whole document with it —
-    // which is exactly how a conditional rule broke a file once.
+    // the apps refuse the file.
     const model = RawMessage.parse(buildPopupMenuModel(["a", 2]).toBytes());
     const items = model.getMessages(2);
     // Three, not two: the None slot precedes the choices.
@@ -112,8 +112,8 @@ describe("authoring a menu onto a cell", () => {
     const value = table.cellValue(1, 0);
     expect(value?.type === "text" ? value.value : undefined).toBe("Pear");
 
-    // The format is the part that was missing from every widget until
-    // recently, and a text menu takes a text format.
+    // The format is the part a widget is invisible without, and a text
+    // menu takes a text format.
     expect((flagsOn(table, 1, 0) & CellFlag.TEXT_FORMAT_ID) !== 0).toBe(true);
   });
 
@@ -159,9 +159,9 @@ describe("authoring a menu onto a cell", () => {
   });
 
   it("attaching an existing model also formats the cell", () => {
-    // The regression that made this worth checking: setPopupMenu is the one
-    // control path that never called the format helper, so a menu attached
-    // this way would have been as invisible as the widgets used to be.
+    // setPopupMenu is the one control path that does not go through
+    // setCellControl, so it is the path that could miss the format — and
+    // an unformatted control is invisible in the app.
     const doc = load();
     const table = doc.tables()[0]!;
     const key = table.setCellControl(1, 0, { widget: "popupMenu", items: ["A", "B"] });

@@ -48,9 +48,9 @@ export const BASES: { tag: string; url: URL; note: string }[] = [
 ];
 
 /**
- * Refuse a base a rung's change would be lost in. The Pages ladder learned
- * this the expensive way: its first base looked empty to every metric and
- * turned out to be a full-page diagram. For a deck, legibility is a small
+ * Refuse a base a rung's change would be lost in. A document that reads as
+ * empty to the obvious metrics can still draw as a full-page diagram, so
+ * the caps here are deliberately tight. For a deck, legibility is a small
  * slide count and slides that are not crowded.
  */
 function assertLegibleBase(bytes: Uint8Array): KeynoteDocument {

@@ -2,9 +2,10 @@
  * Authoring TSCE formulas: infix text in, AST node array out.
  *
  * The reader in {@link ./formulas.ts} walks a postfix node array and
- * produces text. This is the other direction, and it exists because
- * `AST_function_node_index` is now known for 272 functions — before that,
- * authoring a call meant writing an index nobody had measured.
+ * produces text. This is the other direction, and it rests on
+ * `AST_function_node_index` being known for 272 functions — authoring a
+ * call means writing the function's index, which only a measured table
+ * can supply.
  *
  * ## Postfix, and why the order looks backwards
  *
@@ -290,8 +291,8 @@ function emit(
       // NOT use the dedicated CROSS_TABLE_CELL_REFERENCE node type here:
       // all 1020 cross-table nodes in the corpus are ordinary
       // CELL_REFERENCE nodes whose extra-info field carries the kind-1
-      // owner UUID as four uint32 words, and the byte proof caught the
-      // difference on the first run.
+      // owner UUID as four uint32 words; writing the dedicated node type
+      // is a byte mismatch against every one of them.
       node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
       node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
       node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
@@ -310,11 +311,11 @@ function emit(
       // an unpinned axis stores a *relative* range — begin/end as signed
       // offsets from the using cell, inclusive — and a pinned one stores
       // absolute indexes. Measured: `=SUM(C3:K6)` in the corpus stores
-      // relative {0..8} columns and {-4..-1} rows; the absolute form was
-      // a byte mismatch against it (and is what merges use, which is
-      // where the earlier "ranges are absolute" reading came from). An
-      // axis with one pinned endpoint has no corpus specimen; it falls
-      // back to absolute, the encoding that cannot silently shift.
+      // relative {0..8} columns and {-4..-1} rows, and the absolute form
+      // is a byte mismatch against it. Merges do store absolute tracts —
+      // they are the wrong specimen to generalise ranges from. An axis
+      // with one pinned endpoint has no corpus specimen; it falls back to
+      // absolute, the encoding that cannot silently shift.
       node.setVarint(AstNodeFields.TYPE, AstNodeType.COLON_TRACT);
       const sticky = RawMessage.create();
       for (const field of [1, 2, 3, 4]) sticky.setVarint(field, 0);
@@ -579,8 +580,9 @@ class Parser {
       this.at = after + 1 + second![0].length;
       // Each endpoint keeps its `$` flags: the tract encodes an unpinned
       // axis relative to the using cell and a pinned one absolute, so
-      // `A1:B2` and `$A$1:$B$2` are different bytes — measured, where the
-      // earlier reading ("ranges are absolute") generalized from merges.
+      // `A1:B2` and `$A$1:$B$2` are different bytes — measured; merges,
+      // which store absolute tracts, are the wrong specimen to generalise
+      // ranges from.
       return {
         kind: "range",
         from: { column: from.column, row: from.row },

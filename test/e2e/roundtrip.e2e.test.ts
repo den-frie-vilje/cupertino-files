@@ -22,7 +22,7 @@
  *
  * Direction 2 also *manufactures* coverage the fixture corpus lacks — most
  * importantly a Keynote slide with a real transition, which no licensed
- * document anywhere was found to contain.
+ * document anywhere is known to contain.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { describe, expect, it } from "../harness.ts";
@@ -388,8 +388,8 @@ describe("e2e: Numbers", () => {
       expect(sums.length).toBeGreaterThan(0);
 
       // Print each id with the formula that produced it, so the run itself
-      // says which name the id belongs to — that pairing is how MEDIAN was
-      // pinned to 86 on 2026-08-03.
+      // says which name the id belongs to — that pairing is what pins an
+      // id (MEDIAN = 86 is measured exactly this way).
       if (found.size > 0) {
         console.log(
           `\nunnamed function ids seen (add to registerFormulaFunctions):\n` +

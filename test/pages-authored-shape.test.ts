@@ -100,9 +100,8 @@ describe("editing text keeps the run tables in Apple's shape", () => {
   it("gives every paragraph an entry in table_para_style", () => {
     // The rule, measured: across the fixtures all 2060 paragraph starts
     // carry an entry, in 19 of 19 documents. A paragraph without one makes
-    // Pages drop the styling for the whole body — which is exactly what an
-    // appended line used to produce, while the rung that also called
-    // setParagraphStyle rendered correctly.
+    // Pages drop the styling for the whole body, while the same document
+    // with the entry declared renders correctly.
     for (const base of BASES) {
       const doc = appended(base);
       const at = entryIndexes(doc, 5);
@@ -113,8 +112,7 @@ describe("editing text keeps the run tables in Apple's shape", () => {
 
   it("leaves the list and layout tables sparse", () => {
     // The other half of the same rule. Those tables carry 216 and 20 entries
-    // for the same 2060 paragraphs, so densifying them is equally wrong —
-    // and was the first thing tried.
+    // for the same 2060 paragraphs, so densifying them is equally wrong.
     for (const base of BASES) {
       const before = runTable(load(base), 7);
       const after = runTable(appended(base), 7);
@@ -508,13 +506,13 @@ describe("a character style we author has what Apple's has", () => {
 });
 
 /**
- * The rest of what `npm run shape:audit` found, pinned one fix at a time.
+ * Shape-audit findings, pinned one at a time.
  *
- * The audit compares every archive a ladder rung writes against the shape
- * the corpus gives that type, and its first run named four omissions at
- * once. A budget check keeps the count from growing; these keep each
- * individual fix from quietly coming undone, because a budget that goes
- * 2 → 2 while one defect returns and another is fixed says nothing.
+ * `npm run shape:audit` compares every archive a ladder rung writes
+ * against the shape the corpus gives that type. A budget check keeps the
+ * finding count from growing; these tests pin each individual fix so it
+ * cannot quietly come undone, because a budget that goes 2 → 2 while one
+ * defect returns and another is fixed says nothing.
  */
 describe("archives we create carry the shape Apple's carry", () => {
   const STORAGE_TYPE = 2001;

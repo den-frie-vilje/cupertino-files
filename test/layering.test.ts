@@ -21,11 +21,11 @@
  * holds only because leaves stay leaves: a `schema.ts` may import nothing
  * above `tsp`, and this file checks that too.
  *
- * The rule exists because it was broken twice in one week, both times by a
- * fix: `tsp/store.ts` imported `drawableParent` from `tsd` (now injected
- * via `loadStore`), and `tsp/extractors.ts` composed family extractor maps
- * (now `tsa/extractors.ts`). Nothing failed — upward imports work fine
- * right up until they become a cycle or an unbundleable core.
+ * The rule needs a test precisely because nothing else fails: upward
+ * imports work fine right up until they become a cycle or an unbundleable
+ * core, and the tempting ones sit on fix paths — `tsp/store.ts` wanting
+ * `drawableParent` from `tsd` (injected via `loadStore` instead), or `tsp`
+ * composing family extractor maps (they live in `tsa/extractors.ts`).
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
