@@ -40,7 +40,7 @@ format as a working, zero-dependency TypeScript library.
   styling, bands, row and column operations, display formats.
 - Formula authoring compiled to Apple's own AST encoding — operators,
   ranges, anchored and cross-table references (`Other::A2`),
-  whole-column spans, 271 harvested function names — with every
+  whole-column spans, 272 measured function names — with every
   parseable corpus formula rebuilding byte-identical to Apple's bytes.
 - Merges written the way the calc engine keeps them, dependency ledger
   included; conditional formatting, filters, categories and cell

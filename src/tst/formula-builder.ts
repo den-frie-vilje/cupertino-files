@@ -3,7 +3,7 @@
  *
  * The reader in {@link ./formulas.ts} walks a postfix node array and
  * produces text. This is the other direction, and it exists because
- * `AST_function_node_index` is now known for 271 functions — before that,
+ * `AST_function_node_index` is now known for 272 functions — before that,
  * authoring a call meant writing an index nobody had measured.
  *
  * ## Postfix, and why the order looks backwards
@@ -56,6 +56,7 @@
 import { RawMessage } from "../base/protobuf.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType } from "../tsce/ast.ts";
 import { HARVESTED_FUNCTIONS } from "./function-names.ts";
+import { BUILTIN_FUNCTIONS } from "./function-builtins.ts";
 import { packDecimal128 } from "./cellrecord.ts";
 import { protoFields } from "../proto/fields.ts";
 
@@ -122,9 +123,12 @@ const PRECEDENCE: readonly (readonly BinaryOperator[])[] = [
   ["^"],
 ];
 
-/** name → index, inverted from the harvested table, upper-cased. */
+/** name → index, inverted from both measured tables, upper-cased. */
 const FUNCTION_INDEXES: ReadonlyMap<string, number> = new Map(
-  [...HARVESTED_FUNCTIONS].map(([index, name]) => [name.toUpperCase(), index]),
+  [...HARVESTED_FUNCTIONS, ...BUILTIN_FUNCTIONS].map(([index, name]) => [
+    name.toUpperCase(),
+    index,
+  ]),
 );
 
 /** Every function this library can author, in name order. */

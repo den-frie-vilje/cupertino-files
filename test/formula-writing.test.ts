@@ -162,9 +162,11 @@ describe("compiling formulas", () => {
 
   it("knows the functions it says it knows", () => {
     const names = authorableFunctions();
-    expect(names.length).toBe(271);
+    expect(names.length).toBe(272);
     expect(names.includes("SUM")).toBe(true);
     expect(names.includes("DURATION")).toBe(true);
+    // Measured by the e2e harvest on a real Numbers install (2026-08-03).
+    expect(names.includes("MEDIAN")).toBe(true);
     // Sorted, and free of duplicates — it is an inverted map, and a
     // duplicate name would mean two indexes claiming one function.
     expect([...new Set(names)].length).toBe(names.length);

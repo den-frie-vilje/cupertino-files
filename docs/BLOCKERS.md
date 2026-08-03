@@ -94,8 +94,8 @@ that rebuild the structures from them.
   document byte-identical to the original. What remains
   app-blocked is the calc engine's per-cell dependency ledger, which
   `setFormula` leaves stale (bisect rungs 19–21 above are the probe), and
-  the function table's edge: any function outside the harvested 271 has
-  no index. Widening the table is the same harvest against more
+  the function table's edge: any function outside the 272 with measured
+  ids has no index. Widening the table is the same harvest against more
   documents: `npm run harvest -- --ingest doc.numbers`,
   `--emit-sheet probe.tsv`, or `--drive` (macOS, drives Numbers
   directly). It refuses to guess — a name is accepted only when every

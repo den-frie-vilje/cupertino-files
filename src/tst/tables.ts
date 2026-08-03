@@ -1203,7 +1203,7 @@ export class TableModel {
    * question the bisect ladder's formula rungs (19-21) exist to answer.
    *
    * Refuses a function it has no index for rather than inventing one — see
-   * `authorableFunctions()` for the 271 it knows.
+   * `authorableFunctions()` for the 272 it knows.
    * @agentTool set_formula
    */
   setFormula(
