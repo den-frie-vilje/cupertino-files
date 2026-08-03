@@ -1,0 +1,144 @@
+{
+  "file": "olekristensen-v14.4-placeholders-image.pages",
+  "sha1": "0a1356b823c434730f325958611f0590ef8b3d25",
+  "app": "pages",
+  "fileFormatVersion": "14.4.1",
+  "objects": 571,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 76
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1334957.iwa",
+      "objects": 7
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1334956.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 470
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 1971,
+      "text": "Ole Kristensen – 3. august 2026\nFotorapport\n￼\u0005Undertitel\nDette er et eksempel på et citatfelt (med en nøglesætning fra din rapport). Tryk eller klik på denne tekst for at tilføje din egen.\nTryk eller klik på denne eksempeltekst for at komme i gang med at skrive. Du kan se og redigere dette dokument på din Mac, iPad, iPhone eller på iCloud.com.\nDet er nemt at redigere tekst, ændre skrifter og tilføje flot grafik. Brug afsnitsformater til at opnå et ensartet udseende i hele dokumentet. Dette afsnit bruger f.eks. formatet Brødtekst. Du kan ændre det på fanen Tekst under betjeningsmulighederne til Format.\nTræk dine egne fotos ind i billedeksempler i denne skabelon, og beskær eller juster størrelsen, hvis du ønsker det. Hvis du vil tilføje en billedtekst, skal du vælge billedet og trykke eller klikke på fanen Format i betjeningsmulighederne til Format.\nTryk eller klik på en knap på værktøjslinjen for at tilføje fotos, billedgallerier, lydklip, videoer, diagrammer eller nogle af de mere end 700 justerbare figurer, eller træk og anbring objekter på siden. Du kan anbringe objekter i lag, ændre størrelsen og placere dem overalt på siden. Hvis du vil ændre, hvordan et objekt bevæger sig med teksten, skal du vælge objektet og derefter trykke eller klikke på fanen Arranger under betjeningsmulighederne til Format.\nOverskrift\nDu kan både bruge Pages til tekstbehandling og sidelayout. Denne skabelon til Fotorapport er indstillet til tekstbehandling, så din tekst flyder fra side til side, når du skriver, og nye sider oprettes automatisk, når du når til bunden af en side.\nI sidelayoutdokumenter kan du manuelt skifte rækkefølge på sider og frit placere tekstfelter, billeder og andre objekter på en side. Hvis du vil oprette et sidelayoutdokument, skal du vælge en skabelon til sidelayout i skabelonvælgeren. Du kan også ændre dette dokument til sidelayout på din Mac, iPad eller iPhone ved at slå Brødtekst i dokument fra i betjeningsmulighederne til Dokument."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 11,
+      "text": "Fotorapport"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 12
+  }
+}

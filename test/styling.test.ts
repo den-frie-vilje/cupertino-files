@@ -33,7 +33,7 @@ import {
   type Stroke,
 } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
-import { ParaProps, StyleArchive, TSWP_TYPE } from "../src/tswp/schema.ts";
+import { ParaProps, Storage, StyleArchive, TSWP_TYPE } from "../src/tswp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -294,6 +294,26 @@ describe("character and paragraph formatting", () => {
       .map((s) => s.style(id))
       .find((s) => s !== undefined)!;
     expect(style.paragraph().borderPositions).toBe(15);
+  });
+
+  it("side bits are logical: an RTL paragraph's visual-left edge stores trailing", () => {
+    // Visual-left on LTR is 4, visual-right on LTR is 8, visual-left on
+    // RTL is 8: the bit names the logical side.
+    const doc = PagesDocument.load(fixture("olekristensen-v26.3-ios-borders-logical.pages"));
+    const sheet = doc.body.sheet()!;
+    const bitsOf = (start: number): number => {
+      const id = doc.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
+      if (id === undefined) return 0;
+      return sheet.style(id)?.resolved().paragraph.borderPositions ?? 0;
+    };
+    const starts = doc.body.paragraphStarts();
+    const used = starts.map(bitsOf).filter((bits) => bits !== 0).sort((a, b) => a - b);
+    expect(used.join(",")).toBe("4,8,8");
+
+    const paragraphs = doc.paragraphs();
+    const hebrew = paragraphs.findIndex((p) => /[֐-׿]/.test(p.text));
+    expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
+    expect(bitsOf(starts[hebrew]!)).toBe(BorderPosition.TRAILING);
   });
 
   it("clears a nullable property with its paired null flag", () => {
