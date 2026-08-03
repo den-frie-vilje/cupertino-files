@@ -34,11 +34,14 @@
  *     legacy `database_*` fields no longer carry.
  *  5. **Unresolved formula owners** — owner UUIDs that name no object.
  *  6. **Unknown archive types** — type ids absent from the registry.
- *  7. **Paragraph border positions** — `border_positions` with each style's
- *     stroke colour and writing direction, decoded against the measured
- *     bitmask (1 top, 2 bottom, 4 left, 8 right). A value outside those
- *     bits would be a new finding; whether an RTL paragraph flips the
- *     side bits is the one open question.
+ *  7. **Paragraph border positions and direction** — `border_positions`
+ *     with each style's stroke colour, decoded against the measured
+ *     bitmask (1 top, 2 bottom, 4 left, 8 right); a value outside those
+ *     bits would be a new finding. Also the storage's `table_para_bidi`
+ *     pairs wherever a table departs from the uniform baseline —
+ *     per-paragraph direction lives there, not in the style bag, with
+ *     0 = LTR and 65535 (uint16 −1) = natural observed and the RTL
+ *     value still open.
  *
  * Sections with nothing to report say so, so a run against an ordinary
  * document is a short, honest "nothing new here".
@@ -56,7 +59,15 @@ import {
   DeliveryOption,
   TextDelivery,
 } from "../src/keynote/builds.ts";
-import { ParaProps, StyleArchive } from "../src/tswp/schema.ts";
+import {
+  ATTR_TABLE_ENTRIES,
+  ENTRY_CHARACTER_INDEX,
+  ENTRY_PARA_FIRST,
+  ENTRY_PARA_SECOND,
+  ParaProps,
+  Storage,
+  StyleArchive,
+} from "../src/tswp/schema.ts";
 import { readStroke } from "../src/tsd/style.ts";
 import type { RawMessage } from "../src/base/protobuf.ts";
 import type { ObjectStore } from "../src/tsp/store.ts";
@@ -102,6 +113,8 @@ interface Findings {
     /** True when a paragraph actually uses this style — see below. */
     used: boolean;
   }[];
+  /** table_para_bidi pairs, for storages that depart from a uniform baseline. */
+  paraBidi: { pair: string; snippet: string }[];
 }
 
 function probe(path: string): Findings {
@@ -116,6 +129,7 @@ function probe(path: string): Findings {
     unresolvedOwners: [],
     unknownTypes: [],
     borderPositions: [],
+    paraBidi: [],
   };
 
   // 1 + 2 + 3: everything that hangs off a table.
@@ -218,6 +232,29 @@ function probe(path: string): Findings {
   for (const storage of document.textStorages()) {
     for (const paragraph of storage.paragraphs()) {
       if (paragraph.styleId !== undefined) usedStyleIds.add(paragraph.styleId);
+    }
+    // Per-paragraph direction lives in the storage's bidi table, not the
+    // style bag. A uniform all-(0,0) or all-(65535,65535) table is the
+    // baseline everywhere; only a departure is worth a line.
+    const table = storage.object.message.getMessage(Storage.TABLE_PARA_BIDI);
+    const entries = table?.getMessages(ATTR_TABLE_ENTRIES) ?? [];
+    const pairs = entries.map((entry) => ({
+      start: Number(entry.getVarint(ENTRY_CHARACTER_INDEX) ?? 0n),
+      first: entry.getVarint(ENTRY_PARA_FIRST) ?? 0n,
+      second: entry.getVarint(ENTRY_PARA_SECOND) ?? 0n,
+    }));
+    const baseline = (p: { first: bigint; second: bigint }) =>
+      (p.first === 0n && p.second === 0n) || (p.first === 65535n && p.second === 65535n);
+    if (pairs.length === 0 || (pairs.every(baseline) && new Set(pairs.map((p) => p.first)).size <= 1)) {
+      continue;
+    }
+    const paragraphs = storage.paragraphs();
+    for (const p of pairs.slice(0, 30)) {
+      const para = paragraphs.find((info) => info.start === p.start);
+      findings.paraBidi.push({
+        pair: `(${p.first}, ${p.second})`,
+        snippet: (para?.text ?? `char ${p.start}`).slice(0, 44),
+      });
     }
   }
   for (const { obj } of document.store.allObjects()) {
@@ -399,15 +436,18 @@ function render(findings: Findings): string {
   );
   section(
     "7. Paragraph border positions (decoded against the measured bitmask)",
-    findings.borderPositions.map(
-      (b) =>
-        `border_positions=${b.value} ${describeBorderBits(b.value)} style=${JSON.stringify(b.style)}` +
-        (b.stroke === undefined ? " (no stroke)" : ` stroke=${b.stroke}`) +
-        (b.writingDirection === undefined ? "" : ` writing_direction=${b.writingDirection}`) +
-        (b.used
-          ? "  USED — match the stroke colour to the paragraph wearing it"
-          : "  (defined but unused: no paragraph applies it, so nothing renders)"),
-    ),
+    [
+      ...findings.borderPositions.map(
+        (b) =>
+          `border_positions=${b.value} ${describeBorderBits(b.value)} style=${JSON.stringify(b.style)}` +
+          (b.stroke === undefined ? " (no stroke)" : ` stroke=${b.stroke}`) +
+          (b.writingDirection === undefined ? "" : ` writing_direction=${b.writingDirection}`) +
+          (b.used
+            ? "  USED — match the stroke colour to the paragraph wearing it"
+            : "  (defined but unused: no paragraph applies it, so nothing renders)"),
+      ),
+      ...findings.paraBidi.map((b) => `para_bidi pair=${b.pair}  ${JSON.stringify(b.snippet)}`),
+    ],
     "no paragraph borders here",
   );
   return out.join("\n");

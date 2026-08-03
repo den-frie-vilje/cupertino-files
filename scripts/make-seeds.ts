@@ -21,6 +21,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import { RawMessage } from "../src/base/protobuf.ts";
+import {
+  ATTR_TABLE_ENTRIES,
+  ENTRY_CHARACTER_INDEX,
+  ENTRY_PARA_FIRST,
+  ENTRY_PARA_SECOND,
+  Storage,
+} from "../src/tswp/schema.ts";
 
 const outDir = process.argv[2] ?? "out";
 mkdirSync(outDir, { recursive: true });
@@ -106,47 +114,49 @@ function seedBuilds(): Uint8Array {
 
 function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
-  // UI terms verified against Apple's Danish Pages guide (tan802e88b40):
-  // indholdsoversigten Format → Layout → Afsnitsrammer, lokalmenuen
-  // Stregtype, positionsknapper, farvefeltet. The value Pages honours for
-  // writing_direction is unmeasured (2 renders left-to-right), so three
-  // Hebrew paragraphs ladder the candidate values 0/1/2 and the person
-  // borders whichever one stands right-aligned; the probe then prints
-  // that style's writing_direction beside its border code — naming the
-  // RTL value and settling visual-vs-logical side bits in one run.
-  for (const value of [0, 1, 2]) {
-    doc.createParagraphStyle({
-      name: `RTL${String(value)}`,
-      paragraph: { writingDirection: value, alignment: 4 },
-    });
-  }
+  // Direction is not the paragraph-style bag's writing_direction: no
+  // corpus style carries that field, and styled 0/1/2 all render LTR.
+  // The evidence points at the storage's per-paragraph bidi table
+  // instead — the pptx-lineage deck writes pairs (0, 0) and
+  // (65535, 65535), the NSWritingDirection scale at uint16 widths
+  // (-1 natural, 0 LTR), and this library's own storage builder writes
+  // (0, 0) — so 1 is the evidence-backed RTL candidate, written here
+  // straight into table_para_bidi. UI terms verified against Apple's
+  // Danish Pages guide (tan802e88b40).
   doc.appendParagraph(
-    "SEED · afsnitsrammer + skriveretning (docs/BLOCKERS.md). Målt: 1 top, 2 bund, 4 venstre, 8 højre — i venstre-mod-højre-afsnit. To spørgsmål tilbage: hvilken gemt værdi af writing_direction betyder højre-mod-venstre (2 gør det ikke, og heller ikke uudfyldt), og beholder et RTL-afsnit sidebittene som på papiret (visuelt), eller bytter det dem om (logisk start/slut)? De tre hebraiske linjer herunder har skriveretning 0, 1 og 2 — kig efter den, der står højrestillet. De præcise klik står i kommentarerne; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
+    "SEED · skriveretning + rammernes sidste spørgsmål (docs/BLOCKERS.md). Målt: rammebittene er 1 top, 2 bund, 4 venstre, 8 højre i venstre-mod-højre-afsnit, og skriveretningen bor ikke i afsnitsformatet — den bor efter alt at dømme i tekstlagerets bidi-tabel, hvor 0 er venstre-mod-højre og 65535 er 'naturlig'. De tre hebraiske linjer herunder har bidi-parret 1 (kandidaten for højre-mod-venstre), 0 og 65535. Kig: står netop [bidi 1]-linjen højrestillet? Klikkene står i kommentaren; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
-  const targets: { marker: string; style?: string; comment?: string }[] = [
+  const targets: { marker: string; pair: number; comment?: string }[] = [
     {
-      marker: "VENSTRE — giv dette afsnit en rød streg, kun i venstre side.",
+      marker: "העברית נכתבת מימין לשמאל [bidi 1]",
+      pair: 1,
       comment:
-        "Klik i afsnittet → indholdsoversigten Format → Layout → Afsnitsrammer: vælg en ubrudt streg i lokalmenuen Stregtype, klik kun positionsknappen for venstre kant, vælg rød i farvefeltet, 3 pt.",
+        "Står denne linje højrestillet — og de to næste venstrestillet — er bidi-parret 1 målt som højre-mod-venstre. Giv så netop denne linje en grøn streg, 3 pt: indholdsoversigten Format → Layout → Afsnitsrammer → ubrudt streg i lokalmenuen Stregtype → kun positionsknappen for venstre kant → grøn i farvefeltet. Koden i proben afgør resten: 4 = siderne er visuelle, 8 = logiske (start/slut). Står ingen linje højrestillet, er også bidi-vejen afvist — spring stregen over, notér det, og næste skridt er at slå et hebraisk tastatur til og bruge Pages' egen retningsknap, så vi kan måle, hvad appen selv skriver.",
     },
-    {
-      marker: "HØJRE — giv dette afsnit en blå streg, kun i højre side.",
-      comment: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
-    },
-    {
-      marker: "עברית — værdi 0",
-      style: "RTL0",
-      comment:
-        "Én af de tre hebraiske linjer (værdi 0, 1, 2) bør stå højrestillet. Giv netop dén linje en grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som det røde afsnit. Står ingen af dem højrestillet, er alle tre værdier afvist: spring den grønne streg over, og notér det. Proben viser bagefter den grønne stils writing_direction (= RTL-værdien) sammen med dens kode: 4 = visuelle sider, 8 = logiske (start/slut).",
-    },
-    { marker: "עברית — værdi 1", style: "RTL1" },
-    { marker: "עברית — værdi 2", style: "RTL2" },
+    { marker: "העברית נכתבת מימין לשמאל [bidi 0]", pair: 0 },
+    { marker: "העברית נכתבת מימין לשמאל [bidi naturlig]", pair: 65535 },
   ];
-  for (const t of targets) doc.appendParagraph(t.marker, t.style);
+  for (const t of targets) doc.appendParagraph(t.marker);
   doc.appendParagraph(
-    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — forventet: rød = 4, blå = 8; den grønne linje viser sin writing_direction (RTL-værdien), og dens kode afgør visuel kontra logisk. Resultatet føres i docs/BLOCKERS.md-loggen.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben skriver hvert afsnits bidi-par og hver rammekode med stregens farve. Resultatet føres i docs/BLOCKERS.md-loggen.",
   );
+  // The bidi table is written after all text edits so nothing reshuffles
+  // it: one run-anchored entry per paragraph, the pair duplicated across
+  // both slots the way every observed entry duplicates its value.
   const body = doc.body;
+  const bidi = RawMessage.create();
+  for (const para of body.paragraphs()) {
+    // Match the tag only at the paragraph's end: the intro *mentions*
+    // "[bidi 1]" in prose, and a substring match would tag it too.
+    const target = targets.find((t) => para.text.endsWith(`[bidi ${t.pair === 65535 ? "naturlig" : String(t.pair)}]`));
+    const pair = target?.pair ?? 65535;
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, para.start);
+    entry.setVarint(ENTRY_PARA_FIRST, pair);
+    entry.setVarint(ENTRY_PARA_SECOND, pair);
+    bidi.addMessage(ATTR_TABLE_ENTRIES, entry);
+  }
+  body.object.message.setMessage(Storage.TABLE_PARA_BIDI, bidi);
   for (const t of targets) {
     if (t.comment === undefined) continue;
     const range = doc.find(t.marker)[0];
@@ -212,17 +222,22 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
     bytes: seedBorders(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
-      if (d.comments().length !== 3) throw new Error("borders: expected 3 comments");
+      if (d.comments().length !== 1) throw new Error("borders: expected 1 comment");
       if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
       if (!d.bodyText.includes("עברית")) throw new Error("borders: RTL paragraphs missing");
-      for (const value of [0, 1, 2]) {
-        const style = d.listedParagraphStyles().find((s) => s.name === `RTL${String(value)}`);
-        if (!style) throw new Error(`borders: RTL${String(value)} style missing`);
-        const props = d
-          .stylesheets()
-          .map((sheet) => sheet.style(style.id)?.paragraph())
-          .find((p) => p !== undefined);
-        if (props?.writingDirection !== value) throw new Error(`borders: RTL${String(value)} direction not written`);
+      const table = d.body.object.message.getMessage(Storage.TABLE_PARA_BIDI);
+      const byStart = new Map(
+        (table?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map((e) => [
+          Number(e.getVarint(ENTRY_CHARACTER_INDEX) ?? 0n),
+          Number(e.getVarint(ENTRY_PARA_FIRST) ?? 0n),
+        ]),
+      );
+      for (const para of d.body.paragraphs()) {
+        const expected = para.text.endsWith("[bidi 1]") ? 1 : para.text.endsWith("[bidi 0]") ? 0 : 65535;
+        const actual = byStart.get(para.start);
+        if (actual !== expected) {
+          throw new Error(`borders: bidi pair at ${String(para.start)} is ${String(actual)}, expected ${String(expected)}`);
+        }
       }
     },
   },
