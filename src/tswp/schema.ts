@@ -297,31 +297,34 @@ export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
 /**
  * `ParagraphStylePropertiesArchive.border_positions` — which edges draw.
  *
- * **Partly measured, partly inferred, and the inferred half is suspect.**
+ * **A bitmask, measured 2026-08-03** from a document authored for exactly
+ * this question (the seed-borders errand; ledger in docs/BLOCKERS.md): a
+ * person gave four paragraphs top-only, bottom-only, top-and-bottom, and
+ * all-four borders in Pages, and the saved file carries **1, 2, 3, 15**
+ * in that order. Bit 1 is top and bit 2 is bottom; 3 being their union is
+ * what proves these are flags, not an enum; 15 adds two bits for the
+ * vertical edges. The corpus's 4335 styles had only established that 0 is
+ * "none" (4208 with no stroke, 127 with a configured-but-off stroke) —
+ * and the previous guess, an enum with ALL = 4, would have drawn a single
+ * vertical edge where a box was meant.
  *
- * What the corpus establishes: **0 is "none"**. 4208 paragraph styles carry
- * position 0 with no stroke at all, and a further 127 carry 0 *with* a
- * stroke — a border configured and switched off, which is what Pages leaves
- * behind when you clear one.
- *
- * What it does not establish: which edge 1 and 2 mean. Only four styles in
- * the whole corpus use a non-zero position — three "Heading 3" and one
- * "Title", all inheriting from Apple's stock templates — so there is one
- * effective data point per value and no way to tell an edge apart without
- * rendering. **1 and 2 could be the other way round**, and 3 and 4 are not
- * observed at all; they follow the five choices in the Pages inspector
- * (none / top / bottom / top and bottom / all) and the deprecated enum's
- * shape.
- *
- * Read the raw integer, not this enum, if the distinction matters to you.
- * The borders.pages ask in `docs/BLOCKERS.md` settles it in about ten minutes.
+ * Still open: which of bits 4 and 8 is left and which is right — nothing
+ * observed uses them separately, so the names say exactly that. "Left"
+ * itself is also unproven: the pair could be logical (leading/trailing),
+ * flipping sides in a right-to-left paragraph. The follow-up seed — a
+ * left-only, a right-only, and an RTL paragraph bordered on the same
+ * visual side as the first — settles both questions in one run.
  */
 export const BorderPosition = {
   NONE: 0,
   TOP: 1,
   BOTTOM: 2,
   TOP_AND_BOTTOM: 3,
-  ALL: 4,
+  /** One vertical edge, side unmeasured — see the docblock. */
+  VERTICAL_BIT_A: 4,
+  /** The other vertical edge, side unmeasured — see the docblock. */
+  VERTICAL_BIT_B: 8,
+  ALL: 15,
 } as const;
 
 /** TSWP.TabsArchive: repeated TabArchive at 1. */

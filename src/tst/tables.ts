@@ -45,7 +45,7 @@ import {
   type GroupValue,
   type TableCategories,
 } from "./categories.ts";
-import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
+import { randomUid, uidMapOf, uidMapTarget, writeUidMap, type ColumnRowUidMap } from "./uidmap.ts";
 import {
   CELL_RECORD_TILE,
   CellRecordExpandedFields,
@@ -1884,6 +1884,7 @@ export class TableModel {
     });
     rows.splice(at, 0, ...Array.from({ length: count }, blank));
     this.rewriteRows(rows);
+    this.spliceUidMap("rows", at, 0, count);
     this.shiftMergesForRows(at, count);
   }
 
@@ -1905,6 +1906,7 @@ export class TableModel {
     for (const row of rows.slice(at, at + count)) this.releaseRowRefs(row);
     rows.splice(at, count);
     this.rewriteRows(rows);
+    this.spliceUidMap("rows", at, count, 0);
     this.shiftMergesForRows(at, -count);
   }
 
@@ -1929,6 +1931,7 @@ export class TableModel {
     this.object.message.setVarint(TableModelFields.NUMBER_OF_COLUMNS, this.columnCount + count);
     this.rewriteRows(rows);
     this.rewriteColumnHeaders(widths, rows);
+    this.spliceUidMap("columns", at, 0, count);
     this.shiftMergesForColumns(at, count);
   }
 
@@ -1956,7 +1959,28 @@ export class TableModel {
     this.object.message.setVarint(TableModelFields.NUMBER_OF_COLUMNS, this.columnCount - count);
     this.rewriteRows(rows);
     this.rewriteColumnHeaders(widths, rows);
+    this.spliceUidMap("columns", at, count, 0);
     this.shiftMergesForColumns(at, -count);
+  }
+
+  /**
+   * Keep the identity map in lockstep with a row/column splice.
+   *
+   * Numbers renders a table at its identity map's size, not the grid's:
+   * an inserted column the map does not know is invisible in the app —
+   * measured 2026-08-03, when a seed document's C and D columns vanished.
+   * New positions mint fresh identities; surviving positions keep theirs,
+   * which is the map's whole purpose. Tables without a map stay without.
+   */
+  private spliceUidMap(kind: "columns" | "rows", at: number, removed: number, added: number): void {
+    const target = uidMapTarget(this.store, this.object.message);
+    if (!target) return;
+    const map = this.uidMap();
+    const columns = map.columnUidList();
+    const rows = map.rowUidList();
+    const list = kind === "columns" ? columns : rows;
+    list.splice(at, removed, ...Array.from({ length: added }, randomUid));
+    writeUidMap(target, columns, rows);
   }
 
   /** Every row's records and header geometry, indexed by table row. */
