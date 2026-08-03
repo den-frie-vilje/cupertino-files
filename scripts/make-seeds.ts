@@ -106,29 +106,44 @@ function seedBuilds(): Uint8Array {
 
 function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
-  // Every writable direction candidate renders LTR — the style bag's
-  // writing_direction (0/1/2) and the storage's bidi pairs (1/0/65535)
-  // alike, with the donor's alignment measured natural, so nothing
-  // masked them. Those fields are most likely derived values the app
-  // recomputes. The decisive measurement is therefore inverted: stage
-  // vanilla text, have the person flip it with Pages' own direction
-  // control, and diff the returned file — it shows exactly, and only,
-  // what the app writes for a real RTL paragraph.
+  // Direction is written the way the app itself writes it — the bidi
+  // pair (1, 0), measured from an app-flipped file — so the Hebrew line
+  // renders right-aligned with no manual flipping. The one remaining
+  // border question rides on it: does an RTL paragraph keep the side
+  // bits visual (4 = the page's left) or flip them logically? UI terms
+  // verified against Apple's Danish Pages guide (tan802e88b40).
   doc.appendParagraph(
-    "SEED · skriveretning: hvad skriver appen selv? (docs/BLOCKERS.md). Alle felter, vi kan sætte — afsnitsformatets writing_direction og tekstlagerets bidi-par — renderer venstre-mod-højre, med naturlig justering målt i donoren, så intet maskerede dem. De er formentlig afledte værdier, appen genberegner. Målingen er derfor vendt om: DU vender linjen herunder med Pages' egen retningsknap, arkiverer og sender filen retur — så viser forskellen på filen præcis, hvor retningen bor. Virker på både iPhone og Mac; de præcise trin står i kommentaren på den hebraiske linje.",
+    "SEED · rammernes sidste spørgsmål (docs/BLOCKERS.md). Skriveretningen er nu målt, og biblioteket skriver den selv: linje 4 herunder bør stå højrestillet helt af sig selv — gør den ikke, er dét i sig selv et fund. Målt i venstre-mod-højre-afsnit: 1 top, 2 bund, 4 venstre, 8 højre. Tilbage står ét spørgsmål: beholder et højre-mod-venstre-afsnit sidebittene som på papiret (visuelt), eller bytter de plads (logisk)? Giv de tre linjer rammer som beskrevet i kommentarerne; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
-  const marker = "עברית לדוגמה";
-  doc.appendParagraph(marker, "Body");
+  const targets: { marker: string; comment: string }[] = [
+    {
+      marker: "VENSTRE — giv dette afsnit en rød streg, kun i venstre side.",
+      comment:
+        "Klik i afsnittet → indholdsoversigten Format → Layout → Afsnitsrammer: vælg en ubrudt streg i lokalmenuen Stregtype, klik kun positionsknappen for venstre kant, vælg rød i farvefeltet, 3 pt.",
+    },
+    {
+      marker: "HØJRE — giv dette afsnit en blå streg, kun i højre side.",
+      comment: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
+    },
+    {
+      marker: "עברית מיושרת לימין",
+      comment:
+        "Denne linje bør allerede stå højrestillet (biblioteket har skrevet retningen). Giv den en grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som det røde afsnit. Kode 4 i proben = sidebittene er visuelle; kode 8 = logiske (start/slut); alt andet = nyt fund.",
+    },
+  ];
+  for (const t of targets) doc.appendParagraph(t.marker, "Body");
+  const rtlIndex = doc.paragraphs().findIndex((p) => p.text === "עברית מיושרת לימין");
+  if (rtlIndex < 0) throw new Error("seed-borders: RTL line not found");
+  doc.body.setParagraphDirection(rtlIndex, "rtl");
   doc.appendParagraph(
-    "Arkivér til sidst, og send filen retur. Kunne du ikke finde retningsknappen, så send filen alligevel med en note — også dét er et fund.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver rammekode med stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4, blå = 8; grøn afgør visuel kontra logisk. Resultatet føres i docs/BLOCKERS.md-loggen.",
   );
-  const range = doc.find(marker)[0];
-  if (!range) throw new Error("seed-borders: marker not found");
-  doc.body.addComment(
-    range.start,
-    range.end,
-    "1) Slå et hebraisk tastatur til: iPhone — Indstillinger → Generelt → Tastatur → Tastaturer → Tilføj nyt tastatur → Hebraisk; Mac — Systemindstillinger → Tastatur → Inputkilder → Tilføj → Hebraisk. 2) Sæt markøren i denne linje. 3) Tryk på knappen for afsnitsretning (⇄) — den dukker op i formatværktøjerne, når et højre-mod-venstre-tastatur er slået til. Linjen skal nu stå højrestillet. 4) Skriv gerne et par tegn med det hebraiske tastatur i linjen. 5) Arkivér, og send filen retur.",
-  );
+  const body = doc.body;
+  for (const t of targets) {
+    const range = doc.find(t.marker)[0];
+    if (!range) throw new Error(`seed-borders: marker not found: ${t.marker}`);
+    body.addComment(range.start, range.end, t.comment);
+  }
   return doc.save();
 }
 
@@ -216,9 +231,11 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
     bytes: seedBorders(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
-      if (d.comments().length !== 1) throw new Error("borders: expected 1 comment");
-      if (!d.bodyText.includes("send filen retur")) throw new Error("borders: instructions missing");
-      if (!d.bodyText.includes("עברית לדוגמה")) throw new Error("borders: Hebrew line missing");
+      if (d.comments().length !== 3) throw new Error("borders: expected 3 comments");
+      if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
+      const rtl = d.paragraphs().findIndex((p) => p.text === "עברית מיושרת לימין");
+      if (rtl < 0) throw new Error("borders: Hebrew line missing");
+      if (d.body.paragraphDirection(rtl) !== "rtl") throw new Error("borders: direction not written");
     },
   },
   {

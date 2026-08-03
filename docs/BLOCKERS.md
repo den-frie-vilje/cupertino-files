@@ -27,20 +27,14 @@ with every remaining click inside the document itself (cells beside the
 data, presenter notes, Pages comments on the exact paragraph). Open,
 follow, save, run the command the file names.
 
-**1. `seed-borders.pages` — 3 min, the app answers directly.** Every
-writable direction candidate is refuted as an input: the style bag's
-`writing_direction` (0/1/2) and the storage's bidi pairs (1/0/65535)
-all render left-to-right, with the donor's alignment measured natural —
-nothing masked them, so those fields are most likely derived values the
-app recomputes. The measurement is therefore inverted: the seed stages
-a vanilla Hebrew line; enable a Hebrew input source, flip the line with
-Pages' own paragraph-direction control (⇄), type a few characters with
-the Hebrew keyboard, save, and send the file back. The diff against the
-staged bytes shows exactly, and only, what the app writes for a real
-RTL paragraph — alignment, direction fields, bidi table and all — and
-the border question (are side bits 4/8 visual or logical?) rides on the
-same returned file. Works on iPhone and Mac alike; the steps are in a
-comment on the line.
+**1. `seed-borders.pages` — 2 min, the last border question.**
+Direction is measured and the library writes it itself, so the seed's
+Hebrew line should stand right-aligned with no setup at all — if it
+does not, that alone is a finding. Give the two LTR lines their red
+left-only and blue right-only borders, the RTL line a green LEFT-edge
+border (same button as the red one), save, and `npm run probe --
+seed-borders.pages`: green decoding to 4 means the side bits are visual
+sides of the page, 8 means they are logical start/end.
 
 **2. Send back the three finished seeds** from the first round —
 `seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
@@ -161,6 +155,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | paragraph `writing_direction` value | Pages (macOS, Danish UI), via seed-borders v4 | **value 2 refuted as RTL**: a Hebrew paragraph styled `writingDirection: 2` rendered left-aligned. The caret's behaviour inside the Hebrew (a typed space appears to the caret's right) is run-level Unicode bidi, present in any paragraph, and says nothing about paragraph base direction. The honoured value is unmeasured; the v5 seed ladders 0/1/2 and has the person border the line that stands right-aligned | `scripts/make-seeds.ts`, `src/tss/stylesheet.ts` |
 | 2026-08-03 | end-of-storage editing smear | field report: an agent editing a real letterhead template, verified by Pages rendering + a bisect ladder | **bug confirmed and fixed**: edits whose range reached `text.length` left the new final empty paragraph without its para-style entry, and Pages drops body styling whole when any paragraph lacks one. Corpus measurement made the rule exact — an entry at `text.length` exists iff the text ends with a terminator (31/31 vs 0/1270) — and the writer now derives it from the new text. The same report drove the offset-safety layer (stale ranges throw; `applyEdits`) | `src/tswp/textstorage.ts`, test/text-endedit.test.ts |
 | 2026-08-03 | `writing_direction` ladder (style bag) | Pages (macOS, Danish UI), via seed-borders v5 | **the whole style-bag route refuted**: styled 0, 1 and 2 rendered identically left-aligned, and the caret differed in-word vs line-start exactly as run-level bidi inside an LTR paragraph predicts. With no corpus style carrying the field, direction does not live there; the v6 seed writes the storage's `table_para_bidi` pairs instead (1 as the RTL candidate beside the observed 0 and 65535) | `scripts/make-seeds.ts`, `scripts/probe-unknowns.ts` |
+| 2026-08-03 | paragraph direction | Pages (iOS, T15.3 writer), app-flipped seed returned | **SOLVED — the app's own write names the mechanism**: flipping a paragraph writes only the storage's bidi pair, **(1, 0)** — first slot the direction (0 LTR / 1 RTL / 65535 natural), second slot 0 — with the paragraph style untouched and alignment still natural. Our ladder's (1, 1) was one slot off, which is why it rendered LTR, and the derived-cache reading falls with it. `setParagraphDirection` now writes the measured pair | `src/tswp/textstorage.ts`, test/direction.test.ts |
 | 2026-08-03 | placeholder authoring | Pages (iOS, T15.3 writer), via seed-placeholder + the returned file | **confirmed through the native lifecycle**: one tap selected the library-defined span whole, typing replaced it, and the resave shows the field consumed — the app treated our archive exactly as its own. The filled line edited as plain text. Also the first iOS-written artifact over library-authored bytes | `scripts/coverage-matrix.ts` |
 | 2026-08-03 | bidi-pair ladder (`table_para_bidi`) | Pages (iOS, Danish UI), via seed-borders v6 | **pairs refuted as an input too**: bidi (1,1), (0,0) and (65535,65535) all rendered left-aligned — and the donor's Body alignment is measured *natural* (4, own and resolved), so alignment masked nothing. Together with the style-bag refutation the model that fits is that both fields are derived values the app recomputes, like the calc engine's dependency ledger. The v8 seed inverts the measurement: the person flips a staged Hebrew line with the app's own direction control and returns the file, and the diff names the mechanism | `scripts/make-seeds.ts` |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
@@ -213,4 +208,4 @@ Expensive to establish, easy to lose, no app involved:
 | A Keynote slide's paint-order membership for placeholders is a per-deck convention | 8 of 12 placeholders listed in one deck's `owned_drawables`/z-order, 0 of 33 in another — which is why no ubiquity threshold catches unlisting them, and why the app had to (an added slide rendered entirely empty). |
 | Placeholders carry their slide as drawable parent and never declare it | 546 of 546 corpus placeholders, super-depth 3 — the container rule at Keynote-local type ids. |
 | Placeholder text is a bare smart field, and an image placeholder is the same field over U+FFFC | `TSWP.PlaceholderSmartFieldArchive` (2031) is the smart-field super plus one varint = 1 across every modern instance — 73 measured: the corpus's 64 and a donated document made for the question, whose image placeholder is a 2031 spanning the attachment character with no `TP.PlaceholderArchive` anywhere. The lone 0-valued varint is a v10-era file. |
-| Per-paragraph direction lives in `table_para_bidi`, not the paragraph style | No style in 37 fixtures sets `writing_direction`, while the pptx-lineage deck writes a bidi ParaData pair per storage — observed `(0, 0)` and `(65535, 65535)`, 0xFFFF being uint16 −1: the NSWritingDirection scale (natural/LTR) at exactly those widths. This library's own storage builder writes `(0, 0)`. The RTL pair value is unobserved; styled `writing_direction` 0/1/2 all render LTR in Pages (ledger). |
+| Per-paragraph direction lives in `table_para_bidi`, not the paragraph style | No style in 37 fixtures sets `writing_direction`, while the pptx-lineage deck writes a bidi ParaData pair per storage — the NSWritingDirection scale at uint16 widths. The pair's semantics are app-confirmed: first slot the direction (0 LTR, 1 RTL, 65535 natural), second slot 0 (65535 only with natural); an app-flipped paragraph carries exactly `(1, 0)` with its style untouched. One wrong slot — `(1, 1)` — renders LTR. |

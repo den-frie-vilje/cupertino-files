@@ -190,6 +190,7 @@ doc.find(/https?:\/\/\S+/g).forEach((r) => r.link(r.text));
 doc.paragraph(0).setStyle("Title");
 doc.paragraph(2).setListStyle("Bullet");
 doc.paragraph(2).insertAfter("Next point", "Body");
+doc.paragraph(3).setDirection("rtl");  // base direction, written as the app's ⇄ control writes it
 doc.range(0, 10).italic().color(0.8, 0, 0);
 ```
 

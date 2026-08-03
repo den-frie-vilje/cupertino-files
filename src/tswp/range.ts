@@ -265,6 +265,17 @@ export class ParagraphHandle {
     return this;
   }
 
+  /** Base writing direction — where "natural" resolves from the text. */
+  get direction(): "ltr" | "rtl" | "natural" {
+    return this.storage.paragraphDirection(this.index);
+  }
+
+  /** Flip the paragraph's base direction, as the app's ⇄ control does. */
+  setDirection(direction: "ltr" | "rtl" | "natural"): this {
+    this.storage.setParagraphDirection(this.index, direction);
+    return this;
+  }
+
   get listStyleId(): bigint | undefined {
     return this.storage.listStyleIdAt(this.index);
   }
