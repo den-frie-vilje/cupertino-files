@@ -28,6 +28,10 @@ task outgrows them.
 import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
 ```
 
+The package is ESM-only — `require()` fails with
+`ERR_PACKAGE_PATH_NOT_EXPORTED`. For a scratch script:
+`node --input-type=module -e "…"` or a `.mjs` file.
+
 ## Loading and saving
 
 ```ts
@@ -92,10 +96,49 @@ For Numbers: `doc.sheets()` → `[{ id, name }]`. For Keynote:
 
 ## Editing a Pages document
 
+The safe path — it covers the modal job (take a real template, keep its
+design, swap the words, drop surplus paragraphs):
+
 ```ts
-doc.replaceText("old", "new");                    // literal find/replace, returns count
-doc.insertText(pos, "inserted");                  // UTF-16 offsets, same as JS string indexes
-doc.deleteRange(start, end);
+// Per-paragraph, by index: a ParagraphHandle resolves offsets at call
+// time, so sequential edits never go stale.
+const clause = doc.paragraph(4);
+clause.text = "New wording for this clause";      // keeps the paragraph's styling
+clause.setStyle("Body");
+doc.paragraph(9).delete();                         // boundary-safe, even for the last paragraph
+
+// Span replace: one atomic replaceWith per span — the replacement
+// inherits the replaced span's styling, through \n splits too.
+for (const hit of doc.find("TODO")) hit.replaceWith("Done").bold();
+
+// Many spans from one pass: applyEdits needs no ordering discipline —
+// every offset refers to the snapshot you read it from.
+const spans = doc.paragraphs();
+doc.applyEdits([
+  { start: spans[2].start, end: spans[2].end, replacement: "New clause" },
+  { start: spans[5].start, end: spans[5].end },     // omitted replacement = delete
+]);
+```
+
+Three things the API enforces so you don't have to:
+
+- A `TextRange` (from `find()`/`range()`) captures offsets. After an edit
+  earlier in the text it throws `stale TextRange` instead of silently
+  hitting the wrong span — use the range an operation returns, re-obtain,
+  or use `applyEdits`. Edits *after* a range never invalidate it.
+- `deleteRange` + `insertText` is **not** a replace: the deletion removes
+  the span's styling with it, so the insert inherits from the collapsed
+  boundary. Each call is correct alone; for replace semantics use
+  `replaceWith` / `replaceRange` / `applyEdits`.
+- Edits touching the very end of the text — deleting a tail, emptying or
+  rewriting the last paragraph — are safe; the writer keeps the
+  paragraph-style tables aligned for you.
+
+Offset-based calls (offsets are UTF-16 code units, identical to JS string
+indexing, so `text.indexOf(...)` results are valid):
+
+```ts
+doc.replaceText("old", "new");                    // literal find/replace everywhere, returns count
 doc.appendParagraph("New paragraph", "Heading 1"); // style by name (optional)
 doc.setParagraphStyle(2, "Body");                  // paragraph index, style name or bigint id
 doc.applyCharacterFormatting(start, end, { bold: true, fontSize: 18, fontColor: { r: 1, g: 0, b: 0 } });
@@ -104,12 +147,13 @@ doc.createParagraphStyle({ name: "My Style", basedOn: "Body",
 doc.setPageSetup({ topMargin: 72 });               // points; 72 pt = 1 inch
 doc.sections()[0].setHeaderText("Confidential");   // writes all page-master variants
 doc.drawables()[0].setGeometry({ x: 100, y: 50 }); // move/resize objects
+doc.insertText(pos, "inserted");                   // inherits the style ruling at pos
+doc.deleteRange(start, end);
 ```
 
-### Fluent editing (usually the nicest API)
+### More fluent calls
 
 ```ts
-for (const hit of doc.find("TODO")) hit.replaceWith("Done").bold();
 doc.find(/https?:\/\/\S+/g).forEach((r) => r.link(r.text));
 doc.paragraph(0).setStyle("Title");
 doc.paragraph(2).setListStyle("Bullet");
@@ -117,12 +161,24 @@ doc.paragraph(2).insertAfter("Next point", "Body");
 doc.range(0, 10).italic().color(0.8, 0, 0);
 ```
 
-`find()` returns live `TextRange`s (string = literal, RegExp honored).
-Ranges support `.replaceWith() .delete() .format() .bold() .italic()
+`find()` returns `TextRange`s (string = literal, RegExp honored). Ranges
+support `.replaceWith() .delete() .format() .bold() .italic()
 .underline() .fontSize() .fontName() .color() .link() .unlink()
 .applyCharacterStyle() .applyParagraphStyle() .applyListStyle()
 .paragraphs()`. Prefer ONE `.format({...})` call with all properties over
 chaining sugar methods — each call creates a style object.
+
+### Checking styling survived, without a Mac
+
+`doc.paragraphs()[i].styleName` covers named *paragraph* styles only.
+Character runs: `doc.body.characterStyleIdAt(pos)` returns the ruling
+character-style id (`doc.body.styleNameOf(id)` names it when it is a
+named style); `undefined` means "no direct character styling — the
+paragraph style alone applies", which is the normal state of most text,
+not a failure. What no offline read can prove is how the app *renders*.
+When a render is wrong, bisect: one operation per file, each from a
+fresh copy of the original, open each — the failing rung names the
+operation.
 
 **Character** options: `bold`, `italic`, `fontSize`, `fontName`
 (PostScript name), `fontColor`, `backgroundColor` (highlight), `underline`
