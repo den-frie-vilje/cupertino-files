@@ -50,6 +50,40 @@ function mergeNodes(table: { object: { message: RawMessage } }): string[] {
 }
 
 describe("writing merges", () => {
+  it("recreates a deleted merge byte-identically — the whole file", () => {
+    // The strongest form available, same instrument as the formula star:
+    // stage the document as it stood before Apple's last merge existed —
+    // drop the pair at index 11, wind next_formula_index back to 11 —
+    // then make the same merge through the public API and require the
+    // *saved file* to equal Apple's original byte for byte. Everything
+    // participates: pair bytes and position, the wound-back counter, the
+    // covered cells' absence, the untouched dependency ledger, the
+    // re-compressed component, the container.
+    const original = new Uint8Array(
+      readFileSync(new URL("numbers-parser-v26.0-issue102.numbers", FIXTURES)),
+    );
+    const doc = NumbersDocument.load(original);
+    const cats = doc.tables().find((t) => t.name === "Cats")!;
+    const owner = (
+      cats as unknown as { object: { message: RawMessage } }
+    ).object.message.getMessage(TableModelFields.MERGE_OWNER)!;
+    const store = owner.getMessage(2)!;
+    const pairs = store.getMessages(3);
+    expect(pairs.map((p) => p.getUint(1)).join(",")).toBe("0,2,10,11");
+    store.setMessages(
+      3,
+      pairs.filter((p) => p.getUint(1) !== 11),
+    );
+    store.setVarint(2, 11);
+    expect(cats.merges().length).toBe(3);
+
+    cats.mergeCells(6, 2, 1, 9);
+
+    const saved = doc.save();
+    expect(saved.length).toBe(original.length);
+    expect(saved.every((b, i) => b === original[i])).toBe(true);
+  });
+
   it("builds a node byte-identical to the one Apple wrote", () => {
     // Both of Apple's merges are removed first, so nothing is left to copy
     // and the node has to be reconstructed from the object graph: the
