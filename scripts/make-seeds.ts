@@ -106,14 +106,14 @@ function seedBuilds(): Uint8Array {
 
 function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
-  // Direction is written the way the app itself writes it — the bidi
-  // pair (1, 0), measured from an app-flipped file — so the Hebrew line
-  // renders right-aligned with no manual flipping. The one remaining
-  // border question rides on it: does an RTL paragraph keep the side
-  // bits visual (4 = the page's left) or flip them logically? UI terms
-  // verified against Apple's Danish Pages guide (tan802e88b40).
+  // Everything here is measured; the seed re-verifies on whatever app
+  // version opens it. The side bits are logical — 4 leading, 8 trailing
+  // — so the green left-edge border on the RTL line is expected to store
+  // 8, and the library writes the RTL direction itself (the bidi pair
+  // the app's own control writes). UI terms verified against Apple's
+  // Danish Pages guide (tan802e88b40).
   doc.appendParagraph(
-    "SEED · rammernes sidste spørgsmål (docs/BLOCKERS.md). Skriveretningen er nu målt, og biblioteket skriver den selv: linje 4 herunder bør stå højrestillet helt af sig selv — gør den ikke, er dét i sig selv et fund. Målt i venstre-mod-højre-afsnit: 1 top, 2 bund, 4 venstre, 8 højre. Tilbage står ét spørgsmål: beholder et højre-mod-venstre-afsnit sidebittene som på papiret (visuelt), eller bytter de plads (logisk)? Giv de tre linjer rammer som beskrevet i kommentarerne; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
+    "SEED · afsnitsrammer, genmåling (docs/BLOCKERS.md-loggen). Alt er målt: 1 top, 2 bund, 4 leading, 8 trailing — sidebittene er logiske og bytter visuel side med skriveretningen. Linje 4 herunder er sat til højre-mod-venstre af biblioteket og bør stå højrestillet af sig selv. Giv de tre linjer rammer som beskrevet i kommentarerne; forventet resultat: rød = 4, blå = 8, grøn = 8. Enhver afvigelse på din app-version er et fund. Panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
   const targets: { marker: string; comment: string }[] = [
     {
@@ -128,7 +128,7 @@ function seedBorders(): Uint8Array {
     {
       marker: "עברית מיושרת לימין",
       comment:
-        "Denne linje bør allerede stå højrestillet (biblioteket har skrevet retningen). Giv den en grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som det røde afsnit. Kode 4 i proben = sidebittene er visuelle; kode 8 = logiske (start/slut); alt andet = nyt fund.",
+        "Denne linje bør allerede stå højrestillet (biblioteket har skrevet retningen). Giv den en grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som det røde afsnit. Forventet kode i proben: 8 (trailing — sidebittene er logiske). Alt andet er et fund.",
     },
   ];
   for (const t of targets) doc.appendParagraph(t.marker, "Body");
@@ -136,7 +136,7 @@ function seedBorders(): Uint8Array {
   if (rtlIndex < 0) throw new Error("seed-borders: RTL line not found");
   doc.body.setParagraphDirection(rtlIndex, "rtl");
   doc.appendParagraph(
-    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver rammekode med stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4, blå = 8; grøn afgør visuel kontra logisk. Resultatet føres i docs/BLOCKERS.md-loggen.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver rammekode med stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4 (leading), blå = 8 (trailing), grøn = 8 (trailing — RTL bytter siderne). En afvigelse føres i docs/BLOCKERS.md-loggen.",
   );
   const body = doc.body;
   for (const t of targets) {

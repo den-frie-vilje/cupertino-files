@@ -424,16 +424,14 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.",
       settled:
-        "**Refuted, and replaced with the measured truth: it is a bitmask.** Two seed-borders " +
-        "runs (2026-08-03, Pages, Danish UI): top-only, bottom-only, top-and-bottom and " +
-        "all-four borders carried 1, 2, 3, 15 — the union is what proves flags — and a red " +
-        "left-only border wrote 4 while a blue right-only wrote 8, the probe's stroke colours " +
-        "naming their paragraphs. The enum reading (ALL = 4) would have drawn one left edge " +
-        "where a box was meant. One remainder stays open: the run's RTL leg failed its own " +
-        "precondition (the Hebrew-first paragraph rendered LTR — unset writing_direction does " +
-        "not mean natural), so whether an RTL paragraph keeps the side bits visual or flips " +
-        "them logically is unmeasured; the regenerated seed authors the RTL paragraph with an " +
-        "explicit writing direction to close it",
+        "**Refuted, and replaced with the measured truth: a bitmask with logical side bits.** " +
+        "Three seed-borders rounds (2026-08-03, Pages, Danish UI): top/bottom/both/all carried " +
+        "1, 2, 3, 15 — the union proving flags — red left-only wrote 4 and blue right-only 8 in " +
+        "LTR paragraphs, and the closing round put a green left-edge border on a genuinely RTL " +
+        "paragraph (direction written by this library, accepted by the app) and stored **8**: " +
+        "the side bits are logical — 4 leading, 8 trailing — swapping visual sides with the " +
+        "paragraph's direction. The enum reading (ALL = 4) would have drawn one leading edge " +
+        "where a box was meant",
       why:
         "The old mapping was inferred from the inspector's five choices and the deprecated " +
         "enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it " +
@@ -520,6 +518,34 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read",
     probe: (c) => safe(() => c.doc.textStorages().some((s) => s.smartFields().length > 0)),
+  },
+  {
+    group: "Text & styles",
+    name: "Paragraph writing direction (read + write)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .textStorages()
+          .some((s) => s.paragraphs().some((p) => s.paragraphDirection(p.index) !== "natural")),
+      ),
+    note:
+      "the storage's bidi pair, written as the app's own direction control writes it — (1, 0) " +
+      "RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial " +
+      "and untouched even by the app",
+    manualProof: {
+      claim: "a paragraph this library sets to RTL renders right-to-left in Pages",
+      settled:
+        "**Confirmed in the same round trip that taught the mechanism** (2026-08-03, iOS " +
+        "Pages, T15.3 writer): the pair was copied from an app-flipped paragraph, and a " +
+        "library-written (1, 0) then survived the app's resave untouched with the paragraph " +
+        "behaving as RTL — its left-edge border control stored the trailing bit, which only an " +
+        "RTL paragraph does",
+      why: "rendering direction is editor behaviour nothing offline can observe",
+      how: "setParagraphDirection on a Hebrew paragraph, open in Pages, confirm right alignment",
+      risk: "low",
+    },
   },
   {
     group: "Text & styles",

@@ -7,6 +7,11 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- The border bitmask's side bits are measured *logical*: 4 is the
+  leading edge and 8 the trailing edge, swapping visual sides with the
+  paragraph's writing direction (a left-edge border on an RTL paragraph
+  stores 8). `BorderPosition` gains `LEADING`/`TRAILING`;
+  `LEFT`/`RIGHT` remain as the left-to-right aliases.
 - Paragraph base direction reads and writes:
   `setParagraphDirection(i, "rtl" | "ltr" | "natural")` and
   `doc.paragraph(i).setDirection(...)` write the pair the app itself

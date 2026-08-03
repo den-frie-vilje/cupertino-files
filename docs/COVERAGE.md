@@ -62,6 +62,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 23 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 12 | iwork16→current |
+| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 37 | all |
 | Placeholder text (list, fill, define)<br><sub>the template tap-to-replace mechanism. Filling sheds the marking the way typing does; defineAsPlaceholder writes the measured shape (smart-field super + varint 1, uniform across 73 app-written instances). A placeholder over an attachment's U+FFFC is a body document's image placeholder — same field, no drawable archive</sub> | Pages | ✅ read + write | 4 | iwork19→current |
 | Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 4 | iwork16→modern |
 | Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 2 | iwork16→iwork19 |
@@ -155,7 +156,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-49 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+50 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -167,6 +168,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
 - 🟡 low — Text & styles → **Hyperlinks**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**
+- 🟡 low — Text & styles → **Paragraph writing direction (read + write)**
 - 🟡 low — Text & styles → **Placeholder text (list, fill, define)**
 - 🟠 medium — Text & styles → **Date fields and bookmarks (read + create)**
 - 🟠 medium — Text & styles → **Comment creation and removal**

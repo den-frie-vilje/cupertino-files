@@ -20,23 +20,14 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — one two-minute document, and three finished seeds to send back
+## Needs a Mac — nothing left to make; three finished seeds to send back
 
 **Shortcut: `npm run seeds -- out`** writes ready-made starting points
 with every remaining click inside the document itself (cells beside the
-data, presenter notes, Pages comments on the exact paragraph). Open,
-follow, save, run the command the file names.
+data, presenter notes, Pages comments on the exact paragraph); each
+serves as a re-measurement on any future app version.
 
-**1. `seed-borders.pages` — 2 min, the last border question.**
-Direction is measured and the library writes it itself, so the seed's
-Hebrew line should stand right-aligned with no setup at all — if it
-does not, that alone is a finding. Give the two LTR lines their red
-left-only and blue right-only borders, the RTL line a green LEFT-edge
-border (same button as the red one), save, and `npm run probe --
-seed-borders.pages`: green decoding to 4 means the side bits are visual
-sides of the page, 8 means they are logical start/end.
-
-**2. Send back the three finished seeds** from the first round —
+**Send back the three finished seeds** from the first round —
 `seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
 files. Their probe runs measured everything visible from outside (the
 ledger below); what remains in each is byte-level:
@@ -155,6 +146,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | paragraph `writing_direction` value | Pages (macOS, Danish UI), via seed-borders v4 | **value 2 refuted as RTL**: a Hebrew paragraph styled `writingDirection: 2` rendered left-aligned. The caret's behaviour inside the Hebrew (a typed space appears to the caret's right) is run-level Unicode bidi, present in any paragraph, and says nothing about paragraph base direction. The honoured value is unmeasured; the v5 seed ladders 0/1/2 and has the person border the line that stands right-aligned | `scripts/make-seeds.ts`, `src/tss/stylesheet.ts` |
 | 2026-08-03 | end-of-storage editing smear | field report: an agent editing a real letterhead template, verified by Pages rendering + a bisect ladder | **bug confirmed and fixed**: edits whose range reached `text.length` left the new final empty paragraph without its para-style entry, and Pages drops body styling whole when any paragraph lacks one. Corpus measurement made the rule exact — an entry at `text.length` exists iff the text ends with a terminator (31/31 vs 0/1270) — and the writer now derives it from the new text. The same report drove the offset-safety layer (stale ranges throw; `applyEdits`) | `src/tswp/textstorage.ts`, test/text-endedit.test.ts |
 | 2026-08-03 | `writing_direction` ladder (style bag) | Pages (macOS, Danish UI), via seed-borders v5 | **the whole style-bag route refuted**: styled 0, 1 and 2 rendered identically left-aligned, and the caret differed in-word vs line-start exactly as run-level bidi inside an LTR paragraph predicts. With no corpus style carrying the field, direction does not live there; the v6 seed writes the storage's `table_para_bidi` pairs instead (1 as the RTL candidate beside the observed 0 and 65535) | `scripts/make-seeds.ts`, `scripts/probe-unknowns.ts` |
+| 2026-08-03 | border side bits under RTL | Pages (iOS, T15.3 writer), via the final seed-borders round | **CLOSED — the side bits are logical**: a green left-edge border on a genuinely RTL paragraph (direction written by this library; the (1, 0) pair survived the app's resave untouched) stored **8**, so 4 is the *leading* edge and 8 the *trailing*, swapping visual sides with the paragraph's direction. Red 4 / blue 8 re-confirmed in LTR in the same file. `BorderPosition` gains `LEADING`/`TRAILING`, with `LEFT`/`RIGHT` staying as the LTR aliases | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | paragraph direction | Pages (iOS, T15.3 writer), app-flipped seed returned | **SOLVED — the app's own write names the mechanism**: flipping a paragraph writes only the storage's bidi pair, **(1, 0)** — first slot the direction (0 LTR / 1 RTL / 65535 natural), second slot 0 — with the paragraph style untouched and alignment still natural. Our ladder's (1, 1) was one slot off, which is why it rendered LTR, and the derived-cache reading falls with it. `setParagraphDirection` now writes the measured pair | `src/tswp/textstorage.ts`, test/direction.test.ts |
 | 2026-08-03 | placeholder authoring | Pages (iOS, T15.3 writer), via seed-placeholder + the returned file | **confirmed through the native lifecycle**: one tap selected the library-defined span whole, typing replaced it, and the resave shows the field consumed — the app treated our archive exactly as its own. The filled line edited as plain text. Also the first iOS-written artifact over library-authored bytes | `scripts/coverage-matrix.ts` |
 | 2026-08-03 | bidi-pair ladder (`table_para_bidi`) | Pages (iOS, Danish UI), via seed-borders v6 | **pairs refuted as an input too**: bidi (1,1), (0,0) and (65535,65535) all rendered left-aligned — and the donor's Body alignment is measured *natural* (4, own and resolved), so alignment masked nothing. Together with the style-bag refutation the model that fits is that both fields are derived values the app recomputes, like the calc engine's dependency ledger. The v8 seed inverts the measurement: the person flips a staged Hebrew line with the app's own direction control and returns the file, and the diff names the mechanism | `scripts/make-seeds.ts` |
