@@ -260,6 +260,40 @@ describe("character and paragraph formatting", () => {
     expect(paragraph.tabs![2]!.position).toBe(432);
   });
 
+  it("border_positions is the measured bitmask, not the refuted enum", () => {
+    // Measured 2026-08-03 via the seed-borders errand (BLOCKERS ledger):
+    // a person applied top / bottom / top-and-bottom / all-four borders in
+    // Pages, and the file carries 1, 2, 3, 15 in that order. 3 = 1|2 is
+    // what proves flags; the old enum reading (ALL = 4) would have drawn
+    // one vertical edge where a box was meant. This pin keeps the model
+    // from drifting back.
+    expect(BorderPosition.TOP | BorderPosition.BOTTOM).toBe(BorderPosition.TOP_AND_BOTTOM);
+    expect(BorderPosition.ALL).toBe(15);
+    expect(
+      BorderPosition.TOP |
+        BorderPosition.BOTTOM |
+        BorderPosition.VERTICAL_BIT_A |
+        BorderPosition.VERTICAL_BIT_B,
+    ).toBe(BorderPosition.ALL);
+
+    // And the writer round-trips the full mask through a real document.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const sheet = doc.stylesheets()[0]!;
+    const id = sheet.createParagraphStyle({
+      name: "Boxed",
+      paragraph: {
+        border: solidStroke({ r: 0.8, g: 0.4, b: 0.2 }, 2),
+        borderPositions: BorderPosition.ALL,
+      },
+    });
+    const reloaded = PagesDocument.load(doc.save());
+    const style = reloaded
+      .stylesheets()
+      .map((s) => s.style(id))
+      .find((s) => s !== undefined)!;
+    expect(style.paragraph().borderPositions).toBe(15);
+  });
+
   it("clears a nullable property with its paired null flag", () => {
     // "Inherit the parent's font" and "explicitly no font" are different
     // states; passing undefined must produce the second, not the first.

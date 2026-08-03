@@ -30,9 +30,13 @@
  *     currently schema-derived with nothing to check it against.
  *  5. **Unresolved formula owners** — owner UUIDs that name no object.
  *  6. **Unknown archive types** — type ids absent from the registry.
- *  7. **Paragraph border positions** — `border_positions` with the styles
- *     using it. Settles which edge each value draws, the one remaining
- *     inferred mapping in the text model.
+ *  7. **Paragraph border positions** — `border_positions` with each style's
+ *     stroke colour and writing direction. The 2026-08-03 run settled the
+ *     bitmask (1 top, 2 bottom, 3 both, 15 all); still open is which of
+ *     bits 4/8 is left and which right — and whether they are visual
+ *     sides at all, or logical (leading/trailing) ones that flip in a
+ *     right-to-left paragraph. Colour names the paragraph, direction
+ *     names the frame of reference.
  *
  * Sections with nothing to report say so, so a run against an ordinary
  * document is a short, honest "nothing new here".
@@ -46,6 +50,7 @@ import { FormulaOwnerRegistry } from "../src/tsce/owners.ts";
 import { readPredicate } from "../src/tst/predicates.ts";
 import { BuildFields } from "../src/keynote/builds.ts";
 import { ParaProps, StyleArchive } from "../src/tswp/schema.ts";
+import { readStroke } from "../src/tsd/style.ts";
 
 interface Findings {
   file: string;
@@ -66,7 +71,10 @@ interface Findings {
   borderPositions: {
     value: number;
     style: string | undefined;
-    hasStroke: boolean;
+    /** Width and colour — the colour is what ties a code to its paragraph. */
+    stroke: string | undefined;
+    /** ParaProps.WRITING_DIRECTION when set; unset means natural. */
+    writingDirection: number | undefined;
     /** True when a paragraph actually uses this style — see below. */
     used: boolean;
   }[];
@@ -187,10 +195,19 @@ function probe(path: string): Findings {
     // 0 is "no border" and fills every document; only the interesting
     // values are worth reporting.
     if (value === undefined || value === 0) continue;
+    const stroke = readStroke(props!.getMessage(ParaProps.STROKE));
+    const direction = props!.getVarint(ParaProps.WRITING_DIRECTION);
     findings.borderPositions.push({
       value,
       style: obj.message.getMessage(1)?.getString(1),
-      hasStroke: props!.has(ParaProps.STROKE),
+      stroke:
+        stroke === undefined
+          ? undefined
+          : `${stroke.width ?? "?"}pt ` +
+            (stroke.color === undefined
+              ? "(no colour)"
+              : `rgb(${stroke.color.r.toFixed(2)}, ${stroke.color.g.toFixed(2)}, ${stroke.color.b.toFixed(2)})`),
+      writingDirection: direction === undefined ? undefined : Number(BigInt.asIntN(64, direction)),
       used: usedStyleIds.has(obj.identifier),
     });
   }
@@ -280,12 +297,14 @@ function render(findings: Findings): string {
     "7. Paragraph border positions (which edge each value draws)",
     findings.borderPositions.map(
       (b) =>
-        `border_positions=${b.value} style=${JSON.stringify(b.style)} hasStroke=${b.hasStroke}` +
+        `border_positions=${b.value} style=${JSON.stringify(b.style)}` +
+        (b.stroke === undefined ? " (no stroke)" : ` stroke=${b.stroke}`) +
+        (b.writingDirection === undefined ? "" : ` writing_direction=${b.writingDirection}`) +
         (b.used
-          ? "  USED — extract preview.jpg from the package to see which edge it draws"
+          ? "  USED — match the stroke colour to the paragraph wearing it"
           : "  (defined but unused: no paragraph applies it, so nothing renders)"),
     ),
-    "no paragraph borders here — a document with top/bottom/both/all borders settles the mapping",
+    "no paragraph borders here — left-only and right-only borders would settle the two remaining bits",
   );
   return out.join("\n");
 }

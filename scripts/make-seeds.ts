@@ -69,23 +69,28 @@ function seedBuilds(): Uint8Array {
   doc.addSlide({ copyOf: 0, withContent: true });
   const slides = doc.slides();
 
+  // UI terms verified against Apple's Danish Keynote guide (Animer,
+  // Tilføj en effekt, Byg ind, Varighed, Forsinkelse, Bygrækkefølge);
+  // the effect names themselves are best-effort — the instructions say
+  // any distinct effect works, because the probe measures whatever was
+  // picked.
   const perSlide = [
     {
-      title: "Build seed 1 of 3 — Dissolve",
-      body: "Animate this text box: Build In → Dissolve.\nThe exact clicks are in the presenter notes below.",
+      title: "Byg-frø 1 af 3 — Opløs",
+      body: "Animér denne tekstboks: Byg ind → Opløs (Dissolve).\nDe præcise klik står i præsentationsnoterne.",
       notes:
-        "1) Click this body text box once. 2) Animate (Animér) in the toolbar → Add an Effect → Dissolve. 3) Continue to slide 2.",
+        "1) Klik én gang på denne tekstboks. 2) Animer (i indholdsoversigten) → Byg ind → Tilføj en effekt → Opløs. Hedder effekten noget andet hos dig: vælg en hvilken som helst — proben måler den, du vælger. 3) Videre til lysbillede 2.",
     },
     {
-      title: "Build seed 2 of 3 — Move In",
-      body: "Animate this text box: Build In → Move In.",
-      notes: "Same as slide 1, choosing Move In. Then continue to slide 3.",
+      title: "Byg-frø 2 af 3 — Flyt ind",
+      body: "Animér denne tekstboks: Byg ind → Flyt ind (Move In) — eller en anden effekt end på lysbillede 1.",
+      notes: "Som lysbillede 1, blot med en anden effekt. Videre til lysbillede 3.",
     },
     {
-      title: "Build seed 3 of 3 — Anvil, by line",
-      body: "Animate this text box: Build In → Anvil.\nDelivery: By Line. Duration: 3 s. Delay: 1 s.",
+      title: "Byg-frø 3 af 3 — Ambolt, efter linje",
+      body: "Animér denne tekstboks: Byg ind → Ambolt (Anvil) — eller en tredje, forskellig effekt.\nLevering: Efter linje. Varighed: 3 s. Forsinkelse: 1 s.",
       notes:
-        "1) Add the Anvil effect to this text box. 2) In the build options set Delivery: By Line (Efter linje), Duration 3 s, Delay 1 s. 3) Save (⌘S), close, then run: npm run probe -- seed-builds.key — section 4 prints each build's effect, delivery and timing. No builds in the output means Keynote dropped them, which is itself the finding (docs/BLOCKERS.md #2).",
+        "1) Giv denne tekstboks en tredje effekt. 2) I effektens indstillinger: Levering → Efter linje, Varighed 3 s, Forsinkelse 1 s. 3) Arkivér (⌘S), luk, og kør: npm run probe -- seed-builds.key — afsnit 4 viser hver bygnings effekt, levering og timing. Ingen bygninger i outputtet betyder, at Keynote smed dem væk — hvilket i sig selv er fundet (docs/BLOCKERS.md #2).",
     },
   ];
   perSlide.forEach((content, i) => {
@@ -101,18 +106,35 @@ function seedBuilds(): Uint8Array {
 
 function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
+  // UI terms verified against Apple's Danish Pages guide (tan802e88b40):
+  // indholdsoversigten Format → Layout → Afsnitsrammer, lokalmenuen
+  // Stregtype, positionsknapper, farvefeltet. The third paragraph begins
+  // with Hebrew on purpose: the donor styles leave writing_direction
+  // unset (natural), so Pages resolves that paragraph right-to-left from
+  // its first strong character — which sharpens "which bit is left?"
+  // into "are the bits visual sides at all, or logical (start/end)?".
   doc.appendParagraph(
-    "SEED · paragraph borders (docs/BLOCKERS.md #3). Four paragraphs follow; give each the border its first word names. Each carries a comment with the exact clicks. Different colours matter — they are how the probe tells the edges apart.",
+    "SEED · afsnitsrammer, de sidste bit (docs/BLOCKERS.md #3). Målingen 2026-08-03 afgjorde formen: en bitmaske — 1 top, 2 bund, 3 begge, 15 alle fire. To spørgsmål står tilbage: hvilken af bit 4 og 8 der er venstre — og om lagringen overhovedet er visuel (venstre/højre) eller logisk (start/slut). Det sidste afgør afsnit 3, som løber højre-mod-venstre. Hvert af de tre afsnit herunder bærer en kommentar med de præcise klik; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
   const targets = [
-    { marker: "TOP — give this paragraph a red border on top only.", steps: "Click into this paragraph → Format sidebar → Layout → Borders & Rules → position: top · 3 pt line · red." },
-    { marker: "BOTTOM — give this paragraph a blue border below only.", steps: "Same panel → position: bottom · 3 pt · blue." },
-    { marker: "BOTH — give this paragraph green borders above and below.", steps: "Same panel → position: top and bottom · 3 pt · green." },
-    { marker: "ALL — box this paragraph in orange.", steps: "Same panel → position: all four sides · 3 pt · orange." },
+    {
+      marker: "VENSTRE — giv dette afsnit en rød streg, kun i venstre side.",
+      steps:
+        "Klik i afsnittet → indholdsoversigten Format → Layout → Afsnitsrammer: vælg en ubrudt streg i lokalmenuen Stregtype, klik kun positionsknappen for venstre kant, vælg rød i farvefeltet, 3 pt.",
+    },
+    {
+      marker: "HØJRE — giv dette afsnit en blå streg, kun i højre side.",
+      steps: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
+    },
+    {
+      marker: "העברית נכתבת מימין לשמאל — dette afsnit begynder med hebraisk og løber derfor højre-mod-venstre.",
+      steps:
+        "Tjek først, at linjen står højrestillet af sig selv — gør den ikke, så notér det og fortsæt alligevel. Samme panel: grøn streg, 3 pt, på samme positionsknap som i første afsnit (venstre kant). Viser proben bagefter samme kode som det røde afsnit, er lagringen visuel; viser den det blå afsnits kode, er den logisk (start/slut).",
+    },
   ];
   for (const t of targets) doc.appendParagraph(t.marker);
   doc.appendParagraph(
-    "Then save (⌘S), close, and run: npm run probe -- seed-borders.pages — it prints which border_positions code each paragraph carries, USED or unused. The saved package's own preview.jpg renders the visual answer too. If 1 and 2 come out swapped against the prediction, that is exactly what this seed exists to catch.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben skriver hver kode sammen med stregens farve, så rød/blå/grøn udpeger afsnittene. Rød afgør venstre-bitten (4 eller 8), blå den anden, grøn skiller visuel fra logisk. Alt andet end 4 og 8 ville være et helt nyt fund — endnu bedre. Resultaterne føres i docs/BLOCKERS.md-loggen.",
   );
   const body = doc.body;
   for (const t of targets) {
@@ -179,8 +201,9 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
     bytes: seedBorders(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
-      if (d.comments().length !== 4) throw new Error("borders: expected 4 comments");
-      if (!d.bodyText.includes("border_positions")) throw new Error("borders: command missing");
+      if (d.comments().length !== 3) throw new Error("borders: expected 3 comments");
+      if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
+      if (!d.bodyText.includes("העברית")) throw new Error("borders: RTL paragraph missing");
     },
   },
   {

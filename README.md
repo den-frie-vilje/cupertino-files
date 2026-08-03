@@ -40,40 +40,34 @@ reverse-engineering of it, measured from real documents.
 
 ### Pages
 
-| | |
-|---|---|
-| Text | Find & replace, append, insert — styles and fields stay attached |
-| Styles | Named paragraph and character styles: apply, edit, create; direct formatting too |
-| Layout | Sections, headers & footers, page setup, margins, orientation |
-| Extras | Comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents |
-| Images | Inline insertion, floating placement, crops, filters |
+- **Text** — find & replace, append, insert; styles and fields stay attached
+- **Styles** — named paragraph and character styles: apply, edit, create; direct formatting too
+- **Layout** — sections, headers & footers, page setup, margins, orientation
+- **Images** — inline insertion, floating placement, crops, filters
+- **Extras** — comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents
 
 ### Numbers
 
-| | |
-|---|---|
-| Cells | Read and write every value type; formatting, styles, and comments survive your edits |
-| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions |
-| Formatting | Fills, borders, alignment, wrap; number, currency, date and duration formats; bands |
-| Structure | Sheets and tables (add, rename, move, remove), rows and columns, merges, column widths |
-| More | Conditional rules, cell controls, and category regrouping write too; filter rules and new category groups read only |
+- **Cells** — read and write every value type; formatting, styles, and comments survive your edits
+- **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions
+- **Formatting** — fills, borders, alignment, wrap; number, currency, date and duration formats; bands
+- **Structure** — sheets and tables (add, rename, move, remove), rows and columns, merges, column widths
+- **More** — conditional rules, cell controls, and category regrouping write too; filter rules and new category groups read only
 
 ### Keynote
 
-| | |
-|---|---|
-| Slides | Add, duplicate, reorder, remove, skip; titles, bodies, presenter notes |
-| Decks | Slide size, auto-advance; transitions read and write, builds read |
+- **Slides** — add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
+- **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
+- **Decks** — slide size, auto-advance; transitions read and write, builds read
 
 ### Everywhere
 
-| | |
-|---|---|
-| New documents | `NumbersDocument.blank()` and friends — a fresh A4 document or 16:9 deck, no template file needed |
-| Drawables | Move, resize, copy, and style shapes, text boxes, and images — shadows, fills, strokes, opacity |
-| Charts | Data (categories, series, values) and appearance (type, colours, gridlines, legend) |
-| Fidelity | Byte-identical round trips; future app versions load with their new features intact |
-| Honesty | iWork '09 XML and password-protected documents are detected and declined, never mis-parsed |
+- **New documents** — `NumbersDocument.blank()` and friends: a fresh A4 document or 16:9 deck, no template file needed
+- **Drawables** — shapes, text boxes, and images on any page, sheet, or slide: move, resize, copy, restyle — shadows, fills, strokes, opacity
+- **Tables** — one table model for all three apps: a table on a slide or a page reads and writes exactly like one in Numbers
+- **Charts** — data (categories, series, values) and appearance (type, colours, gridlines, legend)
+- **Fidelity** — byte-identical round trips; future app versions load with their new features intact
+- **Honesty** — iWork '09 XML and password-protected documents are detected and declined, never mis-parsed
 
 Deeper detail, per capability and with the evidence:
 [the capability matrix](docs/COVERAGE.md) · [what each open question
@@ -81,12 +75,10 @@ waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
 
 ## Tools for every kind of work
 
-| | |
-|---|---|
-| The API | Typed, synchronous, documented — [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents) |
-| The CLI | `npx -y cupertino-files dump info file.pages` inspects; `call` runs any editing tool from the shell |
-| For AI agents | `npx -y cupertino-files mcp` — an MCP server with twenty creating, editing and formatting tools, plus a Claude Code skill in the package |
-| For other implementations | A language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself |
+- **The API** — typed, synchronous, documented: [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents)
+- **The CLI** — `npx -y cupertino-files dump info file.pages` inspects; `call` runs any editing tool from the shell
+- **For AI agents** — `npx -y cupertino-files mcp`: an MCP server with twenty creating, editing and formatting tools, plus a Claude Code skill in the package
+- **For other implementations** — a language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself
 
 More in [For AI agents](https://den-frie-vilje.github.io/cupertino-files/guide/agents)
 and the [API reference](https://den-frie-vilje.github.io/cupertino-files/api/).

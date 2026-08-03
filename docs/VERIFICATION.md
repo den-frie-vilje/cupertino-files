@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -39,12 +39,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 14 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 15 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 16 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 17 | 🟠 medium | Text & styles → Paragraph background & borders (rule stroke + positions) | border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all. | manual |
-| 18 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 19 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 20 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Builds (animations): read and retime
 
@@ -242,19 +241,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 17. Paragraph background & borders (rule stroke + positions)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.
-
-**Why the suite cannot settle it.** The mapping is inferred, not observed. It fits three independent constraints — the field is a plain int32 rather than a set, the deprecated enum it replaced packs a position in 0..4 beside a line style, and the Pages inspector offers exactly five choices — but every value in the corpus is 0, 1 or 2, so 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.
-
-**How to settle it.** Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and read the Borders &amp; Rules control. Ten minutes settles the whole mapping.
-
-### 18. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 17. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -266,7 +253,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 19. Categories: enable or disable grouping
+### 18. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -278,7 +265,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 20. Conditional formatting rules
+### 19. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -290,7 +277,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -302,7 +289,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 22. Table of contents (rules read + write, cached entries read)
+### 21. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -316,7 +303,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-26 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+27 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Categories: regrouping rows after an edit
@@ -454,6 +441,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** Nothing offline distinguishes a listed style from an unlisted one except by correlation with the corpus, and every correlation found so far has been necessary at best. Four rounds of guess-and-check is where guessing stops paying.
 
 **Outcome.** **Confirmed in Pages — "P15 works now".** A created style applies as asked and appears in the paragraph styles panel, on the current-format ladder base. What it took, cumulatively: a `super.name`; a `super.identifier` plus a matching `identifier_to_style_map` entry; both property bags; and an entry in `TSWP.ThemePresetsArchive.paragraph_style_presets` — the theme list the panel reads. The earlier failures were real: the first three alone left the style applying but unlisted. One fine point went unrecorded: the confirming report did not itemise the density pair (P15b, bags copied from Body, against P15c, three properties), so whether a sparse property bag alone lists is not established — `copyOf` exists either way
+
+### ✅ Paragraph background & borders (rule stroke + positions)
+
+**Was claimed.** border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.
+
+**Why it needed an app.** The old mapping was inferred from the inspector's five choices and the deprecated enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it offline.
+
+**Outcome.** **Refuted, and replaced with the measured truth: it is a bitmask.** The seed-borders errand (2026-08-03, Pages, Danish UI) had a person set top-only, bottom-only, top-and-bottom and all-four borders; the file carries 1, 2, 3, 15 — bit 1 top, bit 2 bottom, 3 their union (the union is what proves flags), 15 all four. The enum reading (ALL = 4) would have drawn a single vertical edge where a box was meant. Which of bits 4 and 8 is left vs right — and whether the pair is visual or logical, which an RTL paragraph would flip — stays unassigned until the three-paragraph follow-up seed
 
 ### ✅ Placement (copy onto a page/slide/sheet, remove, reorder in z)
 

@@ -56,17 +56,18 @@ harvests the **transition effect vocabulary** (the corpus knows only
 `"none"`, which is why the Keynote ladder tests auto-advance instead of a
 named effect), and settles whether builds survive `duplicateSlide`.
 
-**3. `borders.pages` — 2 min.** Four paragraphs, each with a paragraph
-border at a different position — top, bottom, top-and-bottom, all — each
-with a distinct rule colour. Then `npm run probe -- borders.pages`.
-→ Settles which edge `border_positions` 1 and 2 draw. Established from
-4335 corpus styles: **0 is "none"**; but only four styles in the corpus
-use a non-zero position, so 1 and 2 may be inverted and 3/4 are
-unobserved. Nobody needs to report back: the package's own
-`preview.jpg` renders the answer. The trap that wasted 128 documents:
-Apple's templates *define* bordered styles that documents never apply —
-the paragraphs must carry the border, and `probe` labels each `USED` or
-`(defined but unused)` so it cannot be missed twice.
+**3. `seed-borders.pages` — 2 min, the last bits.** The 2026-08-03 run
+settled the shape (see the ledger: a bitmask — 1 top, 2 bottom, 3 both,
+15 all). Two assignments remain: which of bits **4** and **8** is left
+and which is right — and whether "left" is even the right word, or the
+pair is logical (leading/trailing) and flips in a right-to-left
+paragraph. The regenerated seed stages three paragraphs — a red
+*left-only* border, a blue *right-only* one, and a Hebrew paragraph that
+runs RTL, to be bordered on the same visual side as the red one. Apply
+each, save, and `npm run probe -- seed-borders.pages` prints each code
+beside its stroke colour: red names the left bit, blue the other; green
+matching red means the bits are visual sides, green matching blue means
+they are logical.
 
 Record each run in the ledger below, then `npm run coverage`.
 
@@ -158,7 +159,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
-| — | border positions | — | **not yet run** — mapping for 1/2 remains inferred | — |
+| 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
 | — | predicate_type 7/8 | — | **not yet run** — 4 of 6 comparison codes observed | — |
 | — | Keynote build vocabulary | — | **not yet run** — no animated deck exists anywhere yet | — |

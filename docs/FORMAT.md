@@ -1529,11 +1529,9 @@ should see listed.
 
 So a listed style needs three things that agree:
 
-| | |
-| --- | --- |
-| `super.name` | the display name |
-| `super.identifier` | a stable string |
-| `identifier_to_style_map` | an entry keyed by that identifier |
+- `super.name` — the display name
+- `super.identifier` — a stable string
+- `identifier_to_style_map` — an entry keyed by that identifier
 
 Apple's identifiers are `<origin>-<n>-paragraphstyle-<Name>`, the origin
 saying where the style came from — `text` for the document's own, alongside

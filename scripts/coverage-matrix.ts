@@ -423,14 +423,19 @@ export const CAPABILITIES: Capability[] = [
     note: "border_positions semantics inferred, not proven by rendering",
     manualProof: {
       claim: "border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.",
+      settled:
+        "**Refuted, and replaced with the measured truth: it is a bitmask.** The seed-borders " +
+        "errand (2026-08-03, Pages, Danish UI) had a person set top-only, bottom-only, " +
+        "top-and-bottom and all-four borders; the file carries 1, 2, 3, 15 — bit 1 top, bit 2 " +
+        "bottom, 3 their union (the union is what proves flags), 15 all four. The enum reading " +
+        "(ALL = 4) would have drawn a single vertical edge where a box was meant. Which of " +
+        "bits 4 and 8 is left vs right — and whether the pair is visual or logical, which an " +
+        "RTL paragraph would flip — stays unassigned until the three-paragraph follow-up seed",
       why:
-        "The mapping is inferred, not observed. It fits three independent constraints — the field is a " +
-        "plain int32 rather than a set, the deprecated enum it replaced packs a position in 0..4 beside a " +
-        "line style, and the Pages inspector offers exactly five choices — but every value in the corpus " +
-        "is 0, 1 or 2, so 3 and 4 are unconfirmed and even 1-vs-2 could be inverted.",
-      how:
-        "Set borderPositions to each of 1..4 on a paragraph with a thick coloured rule, open in Pages, and " +
-        "read the Borders & Rules control. Ten minutes settles the whole mapping.",
+        "The old mapping was inferred from the inspector's five choices and the deprecated " +
+        "enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it " +
+        "offline.",
+      how: "npm run seeds -- out, apply the left-only, right-only and RTL borders, npm run probe.",
       risk: "medium",
     },
   },
