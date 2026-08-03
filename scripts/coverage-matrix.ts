@@ -1273,7 +1273,18 @@ export const CAPABILITIES: Capability[] = [
       "per kind. Nearly every axis property exists twice — once for category, once for value — " +
       "and an archive fills only its own family, so reading the wrong one returns undefined for " +
       "everything and looks like an empty archive rather than a bug; the chart names the two " +
-      "kinds in separate fields, so nothing is inferred. Writes copy on write like series fills",
+      "kinds in separate fields, so nothing is inferred. Writes copy on write like series fills. " +
+      "Legend fill, stroke and opacity write the same way",
+    manualProof: {
+      claim: "Pages draws the chart without the gridlines this library switched off.",
+      why:
+        "The archives round-trip and copy-on-write correctly, which is the file's side of the " +
+        "story; only the app can say the toggle changes what is drawn rather than being ignored.",
+      how:
+        "npm run pages:docs -- <outDir>, open P20-chart-gridlines: the page states its own pass " +
+        "— the column chart should show no horizontal gridlines behind its bars.",
+      risk: "medium",
+    },
   },
   {
     group: "Numbers & tables",

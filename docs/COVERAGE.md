@@ -120,7 +120,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
 | Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
 | Chart appearance: type and series colours<br><sub>chart type reads and writes against the full TSCHArchives_Common enum (a test parses the proto, so the next value Apple adds fails the suite rather than a document). Series colour copies on write: style archives are shared — one is referenced by ten charts in a borrowed document — so setSeriesFill clones a shared archive, repoints this chart's slot and retargets the reference declaration, instead of recolouring every chart at once</sub> | all | ✅ read + write | 1 | iwork16→iwork16 |
-| Chart appearance: axes, legend, gridlines<br><sub>axis visibility, gridlines, tick marks and gridline strokes read and write, per axis and per kind. Nearly every axis property exists twice — once for category, once for value — and an archive fills only its own family, so reading the wrong one returns undefined for everything and looks like an empty archive rather than a bug; the chart names the two kinds in separate fields, so nothing is inferred. Writes copy on write like series fills</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
+| Chart appearance: axes, legend, gridlines<br><sub>axis visibility, gridlines, tick marks and gridline strokes read and write, per axis and per kind. Nearly every axis property exists twice — once for category, once for value — and an archive fills only its own family, so reading the wrong one returns undefined for everything and looks like an empty archive rather than a bug; the chart names the two kinds in separate fields, so nothing is inferred. Writes copy on write like series fills. Legend fill, stroke and opacity write the same way</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
 | Conditional formatting rules<br><sub>conditions decoded from the rule's formula, which states the comparison. setConditionalRules writes = &lt;&gt; &lt; and &lt;=, whose predicate_type codes are observed; &gt; and &gt;= are refused because their codes are only predicted. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | 1 | current→current |
 | Conditional formatting: apply an existing rule set to more cells | all | ✅ read + write | 1 | current→current |
 | Conditional formatting: authoring new rules<br><sub>= &lt;&gt; &lt; and &lt;= are written, whose predicate_type codes are observed; &gt; and &gt;= are refused because theirs are only predicted, and a rule filed under a wrong code reads back correctly while showing the wrong condition in the editor. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | n/a | — |
@@ -157,7 +157,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-46 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+47 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -195,6 +195,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
 - 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Chart appearance: type and series colours**
+- 🟠 medium — Numbers & tables → **Chart appearance: axes, legend, gridlines**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
 - 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
