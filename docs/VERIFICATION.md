@@ -174,9 +174,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** enabling a filter set makes Numbers apply its rules
 
-**Why the suite cannot settle it.** no fixture has a populated filter set, so the suite can only prove an empty one round-trips with the flag flipped
+**Why the suite cannot settle it.** the corpus now carries a populated, enabled set the app itself wrote, but a flag flipped by this library has never been reopened in the app — and hidden rows are recomputed there, not here
 
-**How to settle it.** build a Numbers table with a filter rule, save, flip is_enabled with this library, reopen and confirm the row visibility changes
+**How to settle it.** take olekristensen-v26.3-mac-filters.numbers, flip is_enabled off with this library, reopen and confirm all rows show
 
 ### 12. Formula function names
 
@@ -299,7 +299,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation
 
-**Outcome.** **Half confirmed, half refuted (2026-08-03, the first animated deck anywhere).** Confirmed: three builds survive authoring and resave, the slide↔build graph reads correctly, and delivery stores English display strings ("All at Once", "By Paragraph") even under a Danish UI. Refuted: every database_* field read for effect and timing was absent from the app-authored builds — including one given 3 s duration and 1 s delay by hand — so modern Keynote packs effect and timing into animationAttributes (field 18), which stays undecoded until the deck's bytes are measured. The saved deck itself is the outstanding evidence
+**Outcome.** **Half confirmed, half refuted (2026-08-03, the first animated deck anywhere), then closed whole when the deck's bytes arrived.** Confirmed: three builds survive authoring and resave, the slide↔build graph reads correctly, and delivery stores English display strings ("All at Once", "By Paragraph") even under a Danish UI. Refuted: every database_* field read for effect and timing was absent from the app-authored builds — including one given 3 s duration and 1 s delay by hand — so modern Keynote packs effect and timing into animationAttributes. The returned deck settled that field as KN.AnimationAttributesArchive (in the vendored schema all along): effect strings in two schemes, duration/delay doubles, and per-chunk timing on staged delivery. The deck is now the fixture the readers are pinned against
 
 ### ✅ Categories: regrouping rows after an edit
 

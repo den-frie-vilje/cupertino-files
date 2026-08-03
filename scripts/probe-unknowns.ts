@@ -28,10 +28,10 @@
  *  3. **Cell controls** — `interaction_type` for each widget, with the
  *     fields that widget populates. Unblocks reading and writing checkboxes,
  *     sliders, steppers and pop-up menus.
- *  4. **Keynote builds** — delivery, trigger, per-stage chunks, the
- *     populated attribute fields, and the shape of `animationAttributes`
- *     (field 18), where modern Keynote packs the effect and timing the
- *     legacy `database_*` fields no longer carry.
+ *  4. **Keynote builds** — effect, timing, delivery, trigger, per-stage
+ *     chunks, the populated attribute fields, and the shape of
+ *     `animationAttributes` (decoded: effect and timing live there on
+ *     modern builds; an unlisted field would be a new finding).
  *  5. **Unresolved formula owners** — owner UUIDs that name no object.
  *  6. **Unknown archive types** — type ids absent from the registry.
  *  7. **Paragraph border positions and direction** — `border_positions`
@@ -89,6 +89,9 @@ interface Findings {
     slide: number;
     delivery: string | undefined;
     effect: string | undefined;
+    animationType: string | undefined;
+    duration: number | undefined;
+    delay: number | undefined;
     attributeFields: number[];
     /** eventTrigger (field 4), raw. */
     eventTrigger: number | undefined;
@@ -188,6 +191,9 @@ function probe(path: string): Findings {
             slide: slide.index,
             delivery: info.delivery,
             effect: info.effect,
+            animationType: info.animationType,
+            duration: info.duration,
+            delay: info.delay,
             eventTrigger: attributes?.getUint(BuildAttributesFields.EVENT_TRIGGER),
             textDelivery: enumName(TextDelivery, info.textDelivery),
             deliveryOption: enumName(DeliveryOption, info.deliveryOption),
@@ -414,7 +420,7 @@ function render(findings: Findings): string {
   section(
     "4. Keynote builds",
     findings.builds.flatMap((b) => [
-      `slide ${b.slide}: delivery=${JSON.stringify(b.delivery)} effect=${JSON.stringify(b.effect)} attributeFields=[${b.attributeFields.join(",")}]`,
+      `slide ${b.slide}: effect=${JSON.stringify(b.effect)} type=${JSON.stringify(b.animationType)} duration=${b.duration ?? "unset"} delay=${b.delay ?? "unset"} delivery=${JSON.stringify(b.delivery)} attributeFields=[${b.attributeFields.join(",")}]`,
       ...(b.eventTrigger === undefined ? [] : [`    eventTrigger=${b.eventTrigger}`]),
       ...(b.textDelivery === undefined ? [] : [`    textDelivery=${b.textDelivery}`]),
       ...(b.deliveryOption === undefined ? [] : [`    deliveryOption=${b.deliveryOption}`]),

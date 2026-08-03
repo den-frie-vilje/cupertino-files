@@ -1,0 +1,390 @@
+{
+  "file": "olekristensen-v26.3-mac-conditional-rules.numbers",
+  "sha1": "edb8a5f6fc5e07b37e15c1c44c94d4a937143372",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 633,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-916217.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916218.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916219.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916220.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/Tables/DataList-916221.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916222.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916223.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916224.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916225.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916226.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916227.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916229.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-919392.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 487
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 9
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 11,
+            "columns": 4,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "SEED · conditional-formatting rules (docs/BLOCKERS.md, send-back ask)"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "numbers"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "text"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "blanks"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Do in Numbers, then save:"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "apple"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1) Select B2:B11"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "pear"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "x"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2) Format → Conditional Highlighting (Betinget fremhævning)"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "plum"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3) Add rule: Greater than · 5"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "4"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "pear tart"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4) Add rule: Greater than or equal to · 7"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "5"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "quince"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "x"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5) Select C2:C11 → add rule: Text contains · pear"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "6"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "fig"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "6) Select D2:D11 → add rule: Is blank"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "pearl"
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "7) Save (⌘S), close, then run:"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "8"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "date"
+              },
+              {
+                "r": 9,
+                "c": 0,
+                "v": "npm run harvest:predicates -- seed-rules.numbers"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "9"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "sloe"
+              },
+              {
+                "r": 10,
+                "c": 0,
+                "v": "All six comparison codes are pinned, so steps 3–4 re-measure them on your version — a mismatch is the finding. Steps 5–6 widen the function table: text contains compiles to a function no name table covers. Then send the saved file back — as a fixture it pins these rules against real bytes."
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "10"
+              },
+              {
+                "r": 10,
+                "c": 2,
+                "v": "mirabelle"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

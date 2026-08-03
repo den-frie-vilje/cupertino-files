@@ -903,11 +903,12 @@ Verification applied to every candidate: first two bytes are `PK`, then
 ## Donated fixtures (olekristensen)
 
 Made and donated for this project by Ole Kristensen (github.com/olekristensen),
-who granted their inclusion here. Each began as a library-generated seed
-document (`npm run seeds`), was edited in Pages exactly as its embedded
-instructions asked, and returned — so every one is an app-written artifact
-over library-authored bytes, carrying the measurement it settled. Screened:
-no personal data; the only annotation author string is `cupertino-files`.
+who granted their inclusion here. Except for the first (an app-template
+document), each began as a library-generated seed document (`npm run seeds`),
+was edited in the app exactly as its embedded instructions asked, and
+returned — so every one is an app-written artifact over library-authored
+bytes, carrying the measurement it settled. Screened: no personal data; the
+only annotation author string is `cupertino-files`.
 
 ### olekristensen-v14.4-placeholders-image.pages
 - 219,971 bytes, md5 `31ecb294510c15d071e421ae028ead5e`
@@ -937,6 +938,44 @@ no personal data; the only annotation author string is `cupertino-files`.
   library-written RTL paragraph storing 8 — the file that measured the side
   bits as logical (4 leading, 8 trailing). The library's `(1, 0)` direction
   pair survived the app's resave untouched.
+
+### olekristensen-v26.3-mac-builds-effects.key
+- 547,036 bytes, md5 `6e6c7a056f2ed53845e99d4161af1b7c`
+- Saved by M15.3-7050.0.24-2 (macOS Keynote, format 26.3.1). The corpus's
+  only deck with builds: three Build In effects added in the app — Dissolve
+  (`apple:dissolve character`), Move In (`apple:move in character`) and
+  Anvil (`com.apple.iWork.Keynote.BUKAnvil`), the third delivered "By
+  Paragraph" with two automatic chunks (delay 1 s, duration 1.75 s). The
+  file that decoded `KN.AnimationAttributesArchive` — effect and timing on
+  modern builds.
+
+### olekristensen-v26.3-mac-filters.numbers
+- 110,397 bytes, md5 `8fc8d76fe1e18262b09f16e01346d293`
+- Saved by M15.3-7050.0.24-2 (macOS Numbers). The corpus's only populated
+  filter set: two enabled row rules on one table — column A `>10`
+  (predicate_type 7) and column B text-contains "ko" (type 3, the
+  `NOT(ISERROR(f_296(...)))` compilation) — mode "all", parallel arrays
+  consistent.
+
+### olekristensen-v26.3-mac-conditional-rules.numbers
+- 134,729 bytes, md5 `4c36d9dcad8cfc184280d21b4a49402d`
+- Saved by M15.3-7050.0.24-2 (macOS Numbers). Conditional-formatting rule
+  sets covering `>5` (type 7), `>=7` (type 8), text-contains "pear"
+  (type 3) and is-blank (type 34) — the corpus evidence behind the
+  completed comparison enum.
+
+### olekristensen-v26.3-mac-borders-logical.pages
+- 237,404 bytes, md5 `d6b84be56ca88145e60de7164d8d94f3`
+- Saved by M15.3-7050.0.24-2 (macOS Pages). The macOS re-measurement of the
+  border side bits: the same red/blue/green paragraph ladder as the iOS
+  file, storing {4, 8, 8} with the green visual-left edge on the RTL
+  paragraph at 8 — both writers agree the bits are logical.
+
+### olekristensen-v26.3-mac-placeholder-consumed.pages
+- 177,949 bytes, md5 `c8e521e41af68fa274695fbddf03d694`
+- Saved by M15.3-7050.0.24-2 (macOS Pages). The macOS placeholder round
+  trip: the library-defined placeholder consumed by clicking and typing
+  ("Jeg skriver noget"), zero placeholder fields in the resave.
 
 ## Fixture privacy policy
 

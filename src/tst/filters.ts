@@ -13,16 +13,17 @@
  * enforces that; a set whose arrays disagree is one the app reads with the
  * wrong rule on the wrong column.
  *
- * **What the corpus proves, and what it does not.** Every `FilterSetArchive`
- * across the 20 fixtures containing one is *empty* — mode "all", disabled,
- * no rules. So the container, its enable flag and its mode are validated
- * against real files; the layout of a populated rule list is read from the
- * schema and from the predicate encoding that conditional formatting
- * exercises for real. Creating filter rules from nothing is therefore not
- * offered: {@link FilterSet.setEnabled} and {@link FilterSet.setMode}
- * change fields Apple demonstrably writes, whereas synthesising a rule
- * would be asserting a layout nothing has confirmed. See
- * `docs/VERIFICATION.md`.
+ * **What the corpus proves, and what it does not.** Most corpus
+ * `FilterSetArchive`s are empty — mode "all", disabled, no rules — and
+ * `olekristensen-v26.3-mac-filters.numbers` carries a populated two-rule
+ * set, so the container, switches, parallel arrays and rule predicates
+ * are all validated against app-written bytes. Creating filter rules
+ * from nothing is still not offered: reading a populated set does not
+ * establish everything the app recomputes when it *writes* one (the
+ * hidden-state extent among it), so {@link FilterSet.setEnabled},
+ * {@link FilterSet.setMode} and {@link FilterSet.setRuleEnabled} change
+ * fields Apple demonstrably writes, and rule synthesis stays out until
+ * a library-written rule survives the app.
  *
  * Filtering also *hides rows*, and that is stored separately, in
  * `TST.HiddenStateExtentArchive` — a filter set says which rows should be
