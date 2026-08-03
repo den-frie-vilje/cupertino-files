@@ -37,14 +37,14 @@
 }
 
 .VPHero .image-src {
-  max-width: 240px;
-  max-height: 240px;
+  max-width: 300px;
+  max-height: 300px;
 }
 
 @media (min-width: 640px) {
   .VPHero .image-src {
-    max-width: 320px;
-    max-height: 320px;
+    max-width: 420px;
+    max-height: 340px;
   }
 }
 

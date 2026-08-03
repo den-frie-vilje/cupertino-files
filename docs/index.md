@@ -7,7 +7,7 @@ hero:
   tagline: Open, edit, and save Apple's document formats anywhere JavaScript runs. No Mac required. An open reverse-engineering, still under way — designed so every byte you don't touch comes back exactly.
   image:
     src: /apple.webp
-    alt: A red apple wearing a cupertino-files fruit sticker
+    alt: A cardboard tray of apples, each wearing a cupertino-files fruit sticker
   actions:
     - theme: brand
       text: Get started
