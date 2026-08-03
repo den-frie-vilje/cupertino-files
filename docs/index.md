@@ -5,6 +5,9 @@ hero:
   name: cupertino-files
   text: Pages, Numbers, and Keynote. In TypeScript.
   tagline: Open, edit, and save Apple's document formats anywhere JavaScript runs. No Mac required. Nothing to install but the package. Every byte you don't touch is preserved, exactly.
+  image:
+    src: /apple.webp
+    alt: A red apple wearing a cupertino-files fruit sticker
   actions:
     - theme: brand
       text: Get started
