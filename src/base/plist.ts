@@ -7,7 +7,7 @@
  * module implements just enough of both formats for version/identity
  * introspection.
  */
-import { utf8Decode } from "./bytes.ts";
+import { APPLE_EPOCH_MS, utf8Decode } from "./bytes.ts";
 
 export type PlistValue =
   | null
@@ -72,8 +72,7 @@ export function parseBinaryPlist(data: Uint8Array): PlistValue {
       }
       case 0x3: {
         const view = new DataView(data.buffer, data.byteOffset + pos, 8);
-        // Seconds since 2001-01-01T00:00:00Z.
-        return new Date(978307200000 + view.getFloat64(0) * 1000);
+        return new Date(APPLE_EPOCH_MS + view.getFloat64(0) * 1000);
       }
       case 0x4: {
         readCount();

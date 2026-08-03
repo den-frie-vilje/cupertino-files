@@ -345,7 +345,7 @@ SHA-1 of the file contents), `preferred_file_name`/`file_name`,
 `MessageInfo.type` → protobuf message class, extracted from the apps'
 `TSPRegistry`. The full tables (535 shared + per-app IDs, from a 2026 live
 dump cross-checked against 14.4 parser dumps) are in
-`research/type-registry.json` and compiled into `src/registry.ts`.
+`research/type-registry.json` and compiled into `src/tsp/registry.ts`.
 
 Ranges (shared families identical across all three apps):
 
@@ -487,13 +487,13 @@ Two of these are easy to get wrong:
 
 - **`fill` (6) is a bare `TSP.Color`, not a `TSD.FillArchive`.** A paragraph
   background can only be a flat colour — never a gradient or image.
-- **`border_positions` (45) is an int32, not a bitmask of sides.** It
-  replaced a `DeprecatedParagraphBorderType` enum whose values pack a
-  position in 0..4 alongside a line style, and the Pages inspector offers
-  exactly five choices, so the reading `0 none / 1 top / 2 bottom / 3 top
-  and bottom / 4 all` fits both. This is *inferred, not proven by
-  rendering*: every value in the corpus is 0, 1 or 2. The library exposes
-  the raw integer alongside the named constants.
+- **`border_positions` (45) is a bitmask of sides**, measured against the
+  app: bit 1 top, bit 2 bottom, bit 4 left, bit 8 right. A union means
+  exactly its bits (3 draws top and bottom, 15 all four) and 0 is none.
+  Left and right are measured in left-to-right paragraphs; whether a
+  right-to-left paragraph keeps them as on-page sides or flips them as
+  logical start/end is still unmeasured. The library exposes the raw
+  integer alongside the named constants.
 
 ### 8.1 Shared style values (TSD)
 
@@ -876,7 +876,7 @@ How this library stays correct as Apple ships new versions:
   bit-exact; editing a document written by a future Pages keeps its new
   features intact as long as edits don't semantically collide with them.
 - **Data-driven registry** regenerated from published dumps
-  (`research/type-registry.json` → `src/registry.ts`); unknown type IDs
+  (`research/type-registry.json` → `src/tsp/registry.ts`); unknown type IDs
   degrade to opaque-but-preserved objects, never failures.
 - **Warn, don't gate.** `FormatInfo` surfaces `file_format_version`,
   plist versions and build history; loading never hard-fails on newer
@@ -1242,9 +1242,10 @@ makes it decodable without Apple's enum:
 terminal operator node is the *documented* `TSCE.ASTNodeType` enum, whose
 meaning is visible in any formula bar. So the formula is authoritative for
 what a condition means, and `predicate_type` is carried through opaquely.
-The corpus supplies four pairings — 5 = `=`, 6 = `<>`, 9 = `<`,
-10 = `<=` — and a value outside that set reads as `undefined` rather
-than a guess.
+The corpus supplies all six comparisons — 5 = `=`, 6 = `<>`, 7 = `>`,
+8 = `>=`, 9 = `<`, 10 = `<=` — with filters and conditional formatting
+sharing the encoding; a value outside that set reads as `undefined`
+rather than a guess.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -1323,24 +1324,25 @@ type code, byte-identical to Apple's, and 263 appears in two independent
 documents. Sliders and steppers take an ordinary number format because they
 *display* their value; a checkbox and a rating do not.
 
-Every `FilterSetArchive` in the corpus is empty, across all three apps: mode
-"all", disabled, no rules. The container, its mode and its enable flag are
-therefore fixture-proven; a populated rule list is read from the schema plus
-the predicate encoding that conditional formatting exercises for real, and
-authoring one is not offered.
+Every `FilterSetArchive` in the fixture corpus is empty, across all three
+apps: mode "all", disabled, no rules. That is not a corpus accident —
+across 176 borrowed tables from public parser projects, **164 had a filter
+set and 163 of them were empty**; Numbers writes the container for almost
+every table whether or not anyone filters. The single populated one among
+those carries four rules, all with `predicate_type` **54**, whose
+predicates render as function calls (`SUM(OTHER_TABLE::C[0])`) rather than
+simple comparisons.
 
-That is not a corpus accident. Across 176 borrowed tables from public
-parser projects, **164 had a filter set and 163 of them were empty** —
-Numbers writes the container for almost every table whether or not anyone
-filters. The single populated one carries four rules, all with
-`predicate_type` **54**, whose predicates render as function calls
-(`SUM(OTHER_TABLE::C[0])`) rather than the simple comparisons conditional
-formatting uses. So the one real example teaches the *container* layout and
-says nothing about how a "column is greater than 5" filter is encoded,
-which remains the gap. Authoring one would also only be half a feature:
-which rows a filter hides is stored separately, in
-`TST.HiddenStateExtentArchive`, and computing it means evaluating the
-predicates.
+The common case is measured all the same, from a real filter set authored
+for the purpose: a `>` rule and a text-contains rule, each an ordinary
+`TST.FormulaPredicateArchive` — filters and conditional formatting share
+the predicate encoding, down to the type codes (7 = `>` is confirmed from
+both systems; "text contains" is type 3 in both, compiling to
+`NOT(ISERROR(…))` around an unnamed function index). Rule-bearing fixture
+bytes are still wanted so the reading stays pinned by a redistributable
+file. Authoring stays on the roadmap: which rows a filter hides is stored
+separately, in `TST.HiddenStateExtentArchive`, and computing it means
+evaluating the predicates.
 
 #### The paragraph-aligned run tables do not share a density rule
 
@@ -1865,7 +1867,7 @@ Per-group summaries (`column_agg_type`) are read, but no fixture carries a
 non-empty aggregate list, so the `agg_type` codes are passed through
 unnamed.
 
-## 14.10 Charts (TSCH): the data grid
+### 14.10 Charts (TSCH): the data grid
 
 A chart on a canvas is a `TSCH.ChartDrawableArchive` (5021) whose real
 payload hangs off a protobuf **extension** field (`unity = 10000`) holding a
@@ -1908,7 +1910,7 @@ holding Apple's template numbers — the apps replace those wholesale on
 first edit, so it must be cleared once real data is written. `is_dirty`
 tells the app the chart needs redrawing.
 
-### 14.10.1 Chart appearance, and why it cannot be edited in place
+#### 14.10.1 Chart appearance, and why it cannot be edited in place
 
 Colour and opacity are in a parallel set of archives, one per styleable
 thing: `ChartStyleArchive` (5022), `LegendStyleArchive` (5024),
@@ -2027,18 +2029,14 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Authoring filter rules** is not implemented (§14.7). An existing rule
-  set can be applied to more cells, and a filter set can be enabled,
-  disabled or switched between "all" and "any" — but building a rule means
-  choosing a `predicate_type`, and the one populated filter set across 176
-  borrowed tables uses code 54, a function call rather than a comparison.
-  So there is no worked example of the common case. Recomputing which rows
-  a filter hides additionally means evaluating the predicates.
-- **Authoring conditional rules** covers `=`, `<>`, `<` and `<=`, whose
-  `predicate_type` codes are observed. `>` and `>=` are **refused**: their
-  codes are predicted (7 and 8) but unconfirmed, and a rule filed under the
-  wrong one reads back correctly while showing a different condition in the
-  editor. One document with a "greater than" rule settles it.
+- **Authoring filter rules** is not implemented (§14.7). Rules read — the
+  common case is measured from a real filter set, and the predicate
+  encoding is shared with conditional formatting — and a filter set can be
+  enabled, disabled or switched between "all" and "any". What keeps
+  authoring here is that writing a rule is only half the feature: which
+  rows it hides is stored separately, and recomputing that means
+  evaluating the predicates. Rule-bearing fixture bytes are still wanted
+  to pin the reading.
 - **Creating a category group** (§14.9). Rows can be *regrouped* among
   groups that exist, byte-identically to Apple; creating one needs its
   identity, its sort position and the fields the archive carries beside the
@@ -2050,8 +2048,10 @@ writing and chart appearance all used to be here.
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.
   Synthesising a package with no donor whatsoever is not attempted.
-- Image/media **insertion** (Data/ plumbing is specified in §5.4/§10 but
-  not yet wrapped in a high-level API).
+- **Floating media placement and media swap.** Inline image insertion is
+  shipped (`PagesDocument.insertInlineImage`, app-confirmed); what remains
+  is placing new floating media beyond copying an existing drawable, and
+  swapping the media a placed image or movie points at.
 - **Change-tracking editing.** Its tables are preserved and shifted
   correctly, but there is no semantic API. Comments and footnotes *can* be
   created (`buildComment`, the footnote helpers); change tracking cannot.

@@ -19,7 +19,7 @@
  */
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { makeRef, refId } from "../tsp/schema.ts";
+import { makeRef } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableModel } from "./drawables.ts";
 import { RawMessage, WireType } from "../base/protobuf.ts";
@@ -290,16 +290,4 @@ function stillReferenced(message: RawMessage, id: bigint, depth = 0): boolean {
 export function drawableById(store: ObjectStore, id: bigint): DrawableModel | undefined {
   const object = store.object(id);
   return object ? new DrawableModel(store, object) : undefined;
-}
-
-/** Resolve a container's owner from a reference field, for app models. */
-export function containerFromReference(
-  store: ObjectStore,
-  owner: RawMessage,
-  field: number,
-  listField: number,
-  zOrderField?: number,
-): DrawableContainer | undefined {
-  const target = store.resolve(refId(owner, field));
-  return target ? new DrawableContainer(store, target, listField, zOrderField) : undefined;
 }

@@ -26,6 +26,7 @@ import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
+import { APPLE_EPOCH_MS } from "../base/bytes.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { randomUuid } from "../base/uuid.ts";
 
@@ -66,7 +67,6 @@ const AuthorStorageFields = { AUTHORS: 1 } as const;
 
 /** TSP.Date: seconds = 1, from 2001-01-01. */
 const DateFields = { SECONDS: 1 } as const;
-const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
 
 /** Everything a reader can say about one comment. */
 export interface CommentInfo {

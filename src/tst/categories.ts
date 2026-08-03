@@ -38,6 +38,7 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
+import { APPLE_EPOCH_SECONDS } from "../base/bytes.ts";
 import { ColumnRowUidMap, readUid, type Uid } from "./uidmap.ts";
 
 /** TST.TableModelArchive.category_owner. */
@@ -99,9 +100,6 @@ const CellValueType = { NIL: 1, BOOLEAN: 2, DATE: 3, NUMBER: 4, STRING: 5 } as c
 /** TSCE.IndexSetArchive: entries = 1 { range_begin = 1, range_end = 2 }. */
 const IndexSet = { ENTRIES: 1 } as const;
 const IndexRange = { BEGIN: 1, END: 2 } as const;
-
-/** Seconds between 1970-01-01 and Apple's 2001-01-01 epoch. */
-const APPLE_EPOCH_OFFSET = 978307200;
 
 /**
  * How a column's values become groups.
@@ -511,7 +509,7 @@ export function readCellValue(message: RawMessage | undefined): GroupValue {
       return message.getMessage(CellValueFields.BOOLEAN)?.getBool(1);
     case CellValueType.DATE: {
       const seconds = message.getMessage(CellValueFields.DATE)?.getDouble(1);
-      return seconds === undefined ? undefined : new Date((seconds + APPLE_EPOCH_OFFSET) * 1000);
+      return seconds === undefined ? undefined : new Date((seconds + APPLE_EPOCH_SECONDS) * 1000);
     }
     default:
       return undefined;

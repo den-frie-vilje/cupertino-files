@@ -30,7 +30,7 @@
  * `Revenue::A2`; `TableModel.cellFormula` does this for you.
  */
 import type { RawMessage } from "../base/protobuf.ts";
-import { decodeDecimal128 } from "./tables.ts";
+import { decodeDecimal128 } from "./cellrecord.ts";
 import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
 import { BUILTIN_FUNCTIONS } from "./function-builtins.ts";
 import { readCfUid } from "../tsce/owners.ts";

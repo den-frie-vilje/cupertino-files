@@ -134,7 +134,11 @@ export interface ParagraphFormatting {
   defaultTabStops?: number;
   /** Character a decimal tab aligns on (locale-dependent: "." or ","). */
   decimalTab?: string;
-  /** 0 natural, 1 left-to-right, 2 right-to-left. */
+  /**
+   * Base paragraph direction, stored raw. Which values the apps honour is
+   * unmeasured — 2 does not render right-to-left in Pages, so the once
+   * assumed 0 natural / 1 LTR / 2 RTL reading is wrong at least there.
+   */
   writingDirection?: number;
 }
 

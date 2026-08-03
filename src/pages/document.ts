@@ -6,7 +6,7 @@
  */
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
-import { TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
+import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   describeStyle,
@@ -16,7 +16,6 @@ import {
   type StyleInfo,
 } from "../tss/stylesheet.ts";
 import {
-  ATTACHMENT_CHAR,
   ATTR_TABLE_ENTRIES,
   DrawableAttachment,
   ENTRY_CHARACTER_INDEX,
@@ -958,7 +957,7 @@ export class PagesDocument extends IWorkDocument {
     attachment.message.setVarint(DrawableAttachment.V_OFFSET_TYPE, 0);
     attachment.message.setFloat(DrawableAttachment.V_OFFSET, 0);
 
-    body.insertText(pos, ATTACHMENT_CHAR);
+    body.insertText(pos, OBJECT_REPLACEMENT_CHARACTER);
     // Attachment entries are point-anchored at the U+FFFC character.
     const table = body.object.message.getMessage(Storage.TABLE_ATTACHMENT) ?? RawMessage.create();
     if (!body.object.message.has(Storage.TABLE_ATTACHMENT)) {

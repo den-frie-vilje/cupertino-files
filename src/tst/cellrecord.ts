@@ -275,6 +275,15 @@ export function encodeDecimal128(value: number): Uint8Array {
   return packDecimal128(mantissa, exponent, negative);
 }
 
+/** Decode IEEE 754-2008 decimal128 (binary integer significand) to a JS number. */
+export function decodeDecimal128(b: Uint8Array): number {
+  const exp = (((b[15]! & 0x7f) << 7) | (b[14]! >> 1)) - DECIMAL128_BIAS;
+  let mantissa = BigInt(b[14]! & 1);
+  for (let i = 13; i >= 0; i--) mantissa = mantissa * 256n + BigInt(b[i]!);
+  const sign = (b[15]! & 0x80) !== 0 ? -1 : 1;
+  return sign * Number(mantissa) * Math.pow(10, exp);
+}
+
 /**
  * Pack an exact (mantissa, exponent) pair as decimal128 bytes.
  *

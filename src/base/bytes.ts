@@ -1,7 +1,15 @@
 /**
- * Small byte-level utilities shared by the whole library.
+ * Small byte-level utilities and shared constants for the whole library.
  * Zero dependencies; works in Node and browsers.
  */
+
+/**
+ * Apple's reference date, 2001-01-01T00:00:00Z. Timestamps throughout the
+ * format — cell dates, comment dates, plist dates — are seconds from this
+ * epoch, not Unix's.
+ */
+export const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
+export const APPLE_EPOCH_SECONDS = APPLE_EPOCH_MS / 1000;
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder("utf-8");
