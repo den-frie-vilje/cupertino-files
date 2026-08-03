@@ -298,10 +298,10 @@ describe("table discovery on real fixtures", () => {
   });
 
   it("reads pre-BNC storage rather than refusing it", () => {
-    // The 2013-era fixtures predate Numbers 10's "BNC" cell storage. This
-    // used to throw; the layout has since been measured, so the storage
-    // generation is still reported — callers may care — but the cells come
-    // out. See test/prebnc.test.ts for what they are.
+    // The 2013-era fixtures predate Numbers 10's "BNC" cell storage. The
+    // layout is measured, so the storage generation is reported — callers
+    // may care — and the cells come out. See test/prebnc.test.ts for what
+    // they are.
     const doc = NumbersDocument.load(fixture("tika-testNumbers2013.numbers"));
     const table = doc.tables()[0]!;
     expect(table.storageGeneration).toBe("preBNC");
@@ -1300,10 +1300,10 @@ describe("adding and removing tables", () => {
 
 describe("cell input normalisation", () => {
   /**
-   * `setCell` used to take only the tagged union, and a bare value fell
-   * through every case and wrote an **empty** record — so the natural call
-   * silently erased the cell. Plain values are now first class, and
-   * anything genuinely unrecognised throws instead of destroying data.
+   * The stakes: a bare value that falls through every `setCell` case
+   * writes an **empty** record, so the natural call silently erases the
+   * cell. Plain values are therefore first class, and anything genuinely
+   * unrecognised throws instead of destroying data.
    */
   it("accepts the plain form of every type that has one", () => {
     expect(normalizeCellInput("hi")).toEqual({ type: "text", value: "hi" });

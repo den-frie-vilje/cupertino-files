@@ -44,11 +44,10 @@ import { chartsOf } from "../src/tsch/charts.ts";
 /**
  * Two bases, deliberately.
  *
- * A rung proves something about the *era* of document it was built on. The
- * ladder ran for six rounds on a Pages 14.4 file before anyone asked whether
- * that was current — it was not, and Pages upgrades such a document on open,
- * which is a different path from loading a native one. So every rung is now
- * emitted twice.
+ * A rung proves something about the *era* of document it was built on. A
+ * Pages 14.4 file is not current — Pages upgrades such a document on open,
+ * which is a different path from loading a native one, so a pass on it
+ * alone proves only the upgrade path. Every rung is emitted twice.
  *
  * `file_format_version` is the app that wrote the document;
  * `read_version`/`write_version` are the minimum reader and writer it needs,
@@ -71,9 +70,9 @@ export const BASES: { tag: string; url: URL; note: string }[] = [
 /**
  * Refuse a base whose page is too busy to read a one-line change against.
  *
- * Not a correctness check — a legibility one. The first base looked empty
- * by every number this script had to hand and turned out to be a full-page
- * diagram.
+ * Not a correctness check — a legibility one. A document whose body reads
+ * as empty can still draw as a full-page diagram of floating drawables,
+ * which is exactly the page a one-line change is lost on.
  */
 function assertPlainBase(bytes: Uint8Array): void {
   const doc = PagesDocument.load(bytes);
@@ -289,22 +288,22 @@ export const RUNGS: {
   },
   // ---------------------------------------------------------------- P15
   //
-  // Three rungs, because three attempts at one rung have failed.
+  // Three rungs, because inference has nothing left to offer.
   //
   // A created style applies correctly — the line is large and blue — and
   // does not appear in the paragraph styles panel. Pages knows its name,
   // and prefills it when you go to add the style by hand, so the style is
   // named, identified and mapped; it is only the *listing* that fails.
   //
-  // Each fix so far was inferred from what listed styles have and ours did
-  // not: an identifier and a map entry, then both property bags, then an
-  // entry in `TSWP.ThemePresetsArchive.paragraph_style_presets`. All three
-  // are now written and the panel is unchanged, which means one of the
-  // inferences is about the wrong object. These rungs stop inferring:
+  // Everything inferable from what listed styles have and ours does not
+  // is written: an identifier and a map entry, both property bags, and an
+  // entry in `TSWP.ThemePresetsArchive.paragraph_style_presets` — and the
+  // panel is unchanged, which means one of the inferences is about the
+  // wrong object. These rungs stop inferring:
   //
   //   P15a removes a style Pages certainly does list, and nothing else.
   //   P15b adds one that is a full copy of a listed style.
-  //   P15c is what the library ships today, for contrast.
+  //   P15c is what the library ships, for contrast.
   //
   // a alone says whether the list is even the panel's source. b against c
   // says whether a sparse property bag is what disqualifies ours.

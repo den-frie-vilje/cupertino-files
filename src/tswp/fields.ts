@@ -276,13 +276,12 @@ export function buildBookmark(
   smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
   message.setMessage(BookmarkFieldArchive.SUPER, smartField);
   if (name !== undefined) message.setString(BookmarkFieldArchive.NAME, name);
-  // `ranged` tracks the RUN, not the name. This used to be derived from the
-  // name — "a named bookmark is a destination" — and that inference survived
-  // until someone opened a document carrying a named bookmark over a
-  // 13-character run with ranged=false: Pages resolved the contradiction in
-  // the flag's favour and bookmarked one character. The corpus, re-read:
+  // `ranged` tracks the RUN, not the name: the flag says whether the run is
+  // a span, and the name is orthogonal, so it cannot be derived from the
+  // name ("a named bookmark is a destination" misreads it). Corpus:
   // ranged=true on runs of 13 and 46, ranged=false on runs of exactly 1,
-  // with the name orthogonal. The flag says whether the run is a span.
+  // names on both. A named bookmark over a 13-character run with
+  // ranged=false shows the flag winning: Pages bookmarks one character.
   message.setVarint(BookmarkFieldArchive.RANGED, options.ranged ? 1 : 0);
   message.setVarint(BookmarkFieldArchive.HIDDEN, 0);
 

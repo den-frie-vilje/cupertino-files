@@ -7,8 +7,8 @@ const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXT
 
 /**
  * Feature coverage against REAL Apple-written documents. Each case asserts
- * behavior that was previously only spec-derived, so these are the tests
- * that prove the model matches what the apps actually write.
+ * behavior on an Apple-written file, so the model is held to what the apps
+ * actually write rather than to what the schema alone suggests.
  */
 describe("Pages features on real documents", () => {
   it("reads image filters written by Apple", () => {

@@ -1,36 +1,36 @@
 /**
  * What does Apple put in an archive of this type that we leave out?
  *
- * Every defect this project has found in the app rather than in a test has
- * had the same shape: the archive we wrote was **well-formed and
- * incomplete**. Nothing was malformed, no required field was missing,
- * `required:check` passed, the document round-tripped, and the feature did
- * not work — because Apple always writes something we never write.
+ * The defect that reaches the app rather than a test has a characteristic
+ * shape: an archive that is **well-formed and incomplete**. Nothing is
+ * malformed, no required field is missing, `required:check` passes, the
+ * document round-trips, and the feature does not work — because Apple
+ * always writes something we never write.
  *
  *   * a cell control with no *format* — every field the schema demands,
- *     and the widget silently never drew;
+ *     and the widget silently never draws;
  *   * a character style with `font_color` and no `tsd_fill` — the word
- *     rendered black;
+ *     renders black;
  *   * a floating drawable in its page group and absent from the document's
- *     paint order — nothing appeared on the page at all.
+ *     paint order — nothing appears on the page at all.
  *
- * Each was found by hand, one round trip to a Mac at a time. This script
- * looks for the rest of them offline, by asking the corpus what an archive
- * of each type normally carries and comparing that against what the library
+ * Found by hand, each of those costs a round trip to a Mac. This script
+ * looks for the class offline, by asking the corpus what an archive of
+ * each type normally carries and comparing that against what the library
  * actually writes when it exercises a feature.
  *
- * Three questions, in rising order of how much they have cost:
+ * Three questions, in rising order of cost:
  *
  * 1. **Absent fields.** A field present on ~every Apple instance of a type
  *    and on none of ours. This is the cell-control-format class.
  * 2. **Invented fields.** A field we write that no Apple instance carries.
- *    The rarer direction, and the one that produced a storage declaring its
- *    own stylesheet.
+ *    The rarer direction; a storage declaring its own stylesheet is this
+ *    class.
  * 3. **Absent referrers.** An object of a type that Apple's instances are
  *    always pointed at *by* some other type, where ours is pointed at by
  *    nothing of that type. This is the paint-order class, and it is the
- *    only one of the three that is invisible in the archive itself: our
- *    drawable was perfect, and no object mentioned it.
+ *    only one of the three that is invisible in the archive itself: the
+ *    drawable is perfect, and no object mentions it.
  *
  * The authoring side is the ladders — `make-pages-docs.ts` and
  * `make-bisect-docs.ts` — because those already enumerate every write the
@@ -44,7 +44,7 @@
  * in an unusual place will legitimately lack a referrer that Apple's have.
  * Every finding needs the same treatment as the three above: a rung, a
  * Mac, and someone looking at the screen. What the script buys is the list
- * — the part that was previously found by accident.
+ * — without it, this class of defect surfaces only by accident.
  *
  * Usage: `npm run shape:audit` — or `--check` to fail when the finding
  * count grows.
@@ -401,49 +401,21 @@ function report(findings: Finding[]): void {
  * correct — some of them are explained rather than fixed. What must not
  * happen is a new one appearing unnoticed.
  *
- * The first run produced 17 and named four real defects, none of which any
- * other check could see:
+ * The four findings inside the budget are characterized, not fixed:
  *
- *   * a footnote's new storage had **none** of the six attribute tables
- *     that all 2676 corpus storages carry, `table_para_style` among them —
- *     the same omission that rendered a whole document unstyled once;
- *   * an inserted image had no `style`, where all 83 corpus images point at
- *     the theme's `image-0-imageStyle`, and no `naturalSize`;
- *   * its attachment had none of the four offset fields all 101 corpus
- *     attachments carry;
- *   * an inserted section had its `name` actively stripped, where all 47
- *     corpus sections have one.
- *
- * Plus the container rule one type over: a copied mask declared the image
- * it masks and copied shapes declared their group, because a clone reaches
- * `ObjectStore.save`'s generic scan carrying a `parent` the original never
- * declared.
- *
- * The two that remain are both "our stylesheet declares a style Apple's
- * does not", on paths that are confirmed working in the app — character
- * formatting in Pages and a conditional rule in Numbers. They are the same
- * open question `reference-extractors.test.ts` tracks as 36 stylesheet
- * disagreements, and guessing at a fourth stylesheet rule to close them is
- * how the last four rounds of the style-panel bug went.
- *
- * The Keynote ladder's first offline run added eight findings and named
- * four more real defects before any deck reached the app: an inserted
- * slide node referenced by the show's inline tree and declared by nothing
- * (the damaged-document class — `KN.ShowArchive` had no extractor at all);
- * clone-then-unlink leaving the source's note, drawables and guide
- * storages as orphans no corpus document holds; `slideExtractor` missing
- * `userDefinedGuideStorage`, so a duplicated deck's guides were declared
- * by nothing; and cloned placeholders declaring their slide — the
- * container rule at Keynote-local type ids (546/546 corpus placeholders
- * carry the parent, 0 declare it). All four fixed offline.
- *
- * What that run left is the pair below: `KN.SlideNodeArchive.thumbnails`
- * (16) and `.thumbnailSizes` (10), absent only when the skip rung touches
- * the **v14-era** base's node. Those are slide thumbnails — bitmaps
- * Keynote renders and regenerates on open. The old writer never stored
- * them on this node, this library cannot render a slide, and fabricating
- * a DataReference to nothing is worse than the absence. Characterized,
- * not fixed.
+ *   * Two are "our stylesheet declares a style Apple's does not", on
+ *     paths that are confirmed working in the app — character formatting
+ *     in Pages and a conditional rule in Numbers. They are the same open
+ *     question `reference-extractors.test.ts` tracks as 36 stylesheet
+ *     disagreements, and a fourth stylesheet rule guessed at to close
+ *     them would be exactly the unverified assumption this audit exists
+ *     to catch.
+ *   * Two are `KN.SlideNodeArchive.thumbnails` (16) and `.thumbnailSizes`
+ *     (10), absent only when the skip rung touches the **v14-era** base's
+ *     node. Those are slide thumbnails — bitmaps Keynote renders and
+ *     regenerates on open. That era's writer does not store them on this
+ *     node, this library cannot render a slide, and fabricating a
+ *     DataReference to nothing is worse than the absence.
  */
 export const BUDGET = 4;
 

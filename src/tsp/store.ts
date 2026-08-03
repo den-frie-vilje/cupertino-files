@@ -56,9 +56,9 @@ export type ReferenceExtractor = (message: RawMessage) => bigint[];
  * The store needs the *concept* (a created object's generic reference scan
  * must subtract the back-edge Apple never declares) without knowing any
  * family's types; `tsa` wires in the TSD implementation the same way it
- * wires reference extractors. The persistence layer importing upward into
- * `tsd` is how this was first shipped, and the layering test now forbids
- * exactly that.
+ * wires reference extractors. The layering test forbids the persistence
+ * layer importing upward into `tsd`, which is why this is injected rather
+ * than imported.
  */
 export type ContainerParentResolver = (type: number, message: RawMessage) => bigint | undefined;
 
@@ -526,10 +526,10 @@ export class ObjectStore {
         // A *clone* is not an object this library composed — it arrived
         // whole, carrying whatever the original carried, including the
         // `parent` back-edge that Apple writes into every drawable and
-        // declares in none. Copying a grouped image gave the mask a
-        // declaration of the image it masks and each shape a declaration of
-        // its group. Subtracted here rather than by teaching the scan about
-        // supers, because the scan is deliberately shape-blind.
+        // declares in none. Left in, copying a grouped image gives the mask
+        // a declaration of the image it masks and each shape a declaration
+        // of its group. Subtracted here rather than by teaching the scan
+        // about supers, because the scan is deliberately shape-blind.
         const container = this.containerParentOf(obj.type, obj.message);
         const refs = extractor
           ? dedupe(extractor(obj.message))

@@ -16,7 +16,7 @@
  * or the package layer and nothing above it matters. Every later rung
  * changes one thing more than the one before.
  *
- * "No edits" now means the strictest thing it can: for a modern-writer
+ * "No edits" means the strictest thing it can: for a modern-writer
  * fixture like this template, rung 0 is a **byte-for-byte copy** of the
  * fixture — the Snappy port and the container writer reproduce Apple's
  * exact bytes (test/byte-identity.test.ts holds that for 35 of 38 fixture

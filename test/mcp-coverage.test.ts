@@ -136,7 +136,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["TableModel.setCellControl", "control creation is app-unverified (see docs/BLOCKERS.md); the tool waits for the app's word"],
   ["TableModel.setPopupMenu", "same app-unverified class as setCellControl"],
   ["TableModel.removeCellControl", "paired with control creation; ships with it"],
-  ["TableModel.setConditionalRules", "conditional-rule authoring is limited to measured operators; the JSON schema should ship when the operator set is settled"],
+  ["TableModel.setConditionalRules", "all six comparison codes are measured, so a tool is unblocked; its JSON schema (operator + operand + styles) is still to be designed"],
   ["TableModel.setConditionalStyleKey", "internal plumbing of the conditional-rule path"],
   ["TableModel.regroupCategories", "category regrouping needs category context an agent gets no other tool for yet"],
 ]);

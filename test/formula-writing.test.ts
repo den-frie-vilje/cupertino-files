@@ -1,9 +1,9 @@
 /**
  * Authoring formulas: infix text in, a working cell out.
  *
- * This became possible only once `AST_function_node_index` was known —
- * before the harvest, writing `SUM` meant writing an integer nobody had
- * measured. 271 functions are authorable now.
+ * Everything here rests on the harvested `AST_function_node_index` table:
+ * writing `SUM` means writing Apple's integer for it, which only a
+ * measured table can supply. 271 functions are authorable.
  *
  * The check that matters most here is the **round trip through a different
  * piece of code**: text is parsed and compiled by the writer, then read
@@ -165,7 +165,7 @@ describe("compiling formulas", () => {
     expect(names.length).toBe(272);
     expect(names.includes("SUM")).toBe(true);
     expect(names.includes("DURATION")).toBe(true);
-    // Measured by the e2e harvest on a real Numbers install (2026-08-03).
+    // Measured by the e2e harvest on a real Numbers install.
     expect(names.includes("MEDIAN")).toBe(true);
     // Sorted, and free of duplicates — it is an inverted map, and a
     // duplicate name would mean two indexes claiming one function.

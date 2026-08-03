@@ -87,8 +87,8 @@ describe("blank documents", () => {
     expect(after.cellText(1, 1)).toBe("9.99");
     expect(after.cellText(2, 1)).toBe("24.5");
     // Reads back as typed: an unpinned range is a relative tract, the
-    // encoding Apple uses — the old $-anchored readback was the writer
-    // emitting absolute bounds for everything, fixed by measurement.
+    // encoding Apple uses — a writer that emitted absolute bounds for
+    // everything would read this back $-anchored.
     expect(after.cellFormulaDetail(3, 1)?.text).toBe("=SUM(B2:B3)");
     expect(after.cellText(3, 1)).toBe("34.49");
   });

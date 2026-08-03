@@ -10,7 +10,7 @@
  * ```proto
  * message KN.BuildArchive {                 // type 8
  *   optional TSP.Reference drawable = 1;
- *   required string delivery = 2;           // "byObject", "byWord", …
+ *   required string delivery = 2;           // "All at Once", "By Paragraph", …
  *   required KN.BuildAttributesArchive attributes = 4;
  *   optional int32 chunk_id_seed = 5;
  * }
@@ -22,10 +22,9 @@
  * }
  * ```
  *
- * **No fixture contains a build.** Eight Keynote decks span 2013 to 26.1 and
- * not one has an animation, so unlike everything else in this library the
- * reading here is checked against the schema alone. That distinction is
- * load-bearing, and it is why this module:
+ * **No fixture contains a build**, so the byte-level model is checked
+ * against the schema and one probed deck, not a corpus. That is why this
+ * module:
  *
  *  - reads and **edits** existing builds, where the risk is a field number
  *    being wrong and the damage is visible immediately in the app;
@@ -34,10 +33,18 @@
  *  - exposes `effect` as the raw string Apple stores rather than an enum of
  *    invented names.
  *
- * `scripts/probe-builds.ts` prints everything a deck's builds contain, so
- * one deck with animations — made in five minutes on any Mac — either
- * confirms this reading or shows exactly where it is wrong. See
- * `docs/BLOCKERS.md` (the animated.key ask).
+ * The slide↔build graph and the `delivery` read are deck-confirmed, and
+ * `delivery` stores English *display* strings ("All at Once",
+ * "By Paragraph") regardless of the system locale. The `database_*`
+ * fields are legacy: a modern app-authored build carries none of them —
+ * effect and timing live inside `attributes.animationAttributes`
+ * (field 18), which nothing here decodes yet, so `effect`, `duration`
+ * and `delay` read `undefined` on modern builds.
+ *
+ * `npm run probe -- <deck>` prints everything a deck's builds contain —
+ * delivery, trigger, chunks, and the shape of `animationAttributes` — so
+ * any animated deck either confirms this reading or shows exactly where
+ * it is wrong.
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -142,7 +149,11 @@ export interface BuildInfo {
    * already.
    */
   delivery: string | undefined;
-  /** Effect name, from the attributes bag, when it carries one. */
+  /**
+   * Effect name from the legacy `database_effect` field. Modern builds
+   * keep the effect inside `animationAttributes` (undecoded) instead, so
+   * expect `undefined` there.
+   */
   effect: string | undefined;
   duration: number | undefined;
   delay: number | undefined;
@@ -216,6 +227,12 @@ export class BuildModel {
    * Editing what is already there is safe in a way creation is not: the
    * fields are the ones Apple wrote, and a mistake shows up the moment the
    * deck is played. Only the properties given are changed.
+   *
+   * Caveat: modern app-authored builds carry no `database_duration`/
+   * `database_delay` — their timing lives in `animationAttributes` — so
+   * retiming a modern build writes fields the current app no longer
+   * writes itself, unverified until an edited deck round-trips the app.
+   * `delivery`, which the app does write, is the confirmed part.
    */
   set(update: {
     duration?: number;

@@ -1,27 +1,23 @@
 /**
  * Field numbers come from Apple's schema, not from us.
  *
- * ## What was wrong with constants
+ * ## Why not hand-typed constants
  *
- * Every field number in this library used to be a hand-typed integer with a
- * docblock naming the archive it came from:
+ * A hand-typed integer with a docblock naming the archive it came from —
  *
  * ```ts
  * // TSWP.StorageArchive
  * export const Storage = { KIND: 1, STYLE_SHEET: 2, TABLE_PARA_STYLE: 5 };
  * ```
  *
- * The vendored `.proto` dumps in `proto/` are the actual authority for
- * those numbers, and nothing connected the two but a comment. A separate
- * script cross-checked them, matching constant names to field names by
- * spelling, and it could only reach 72 of 118 constant groups — the rest
- * name no archive, or spell a field differently. Worse, it was the one
- * check not run by `npm test`, and it sat red for an unknown length of time
- * over a constant called `ITEM` that matched a deprecated `item = 1` when
- * it meant `tsce_item = 2`.
- *
- * So the protos were documentation. Deleting the whole directory would have
- * broken nothing, and they were not even in the published package.
+ * — has nothing but that comment connecting it to the vendored `.proto`
+ * dumps in `proto/`, which are the actual authority for the numbers. A
+ * separate cross-check matching constant names to field names by spelling
+ * cannot close the gap: constants that name no archive or spell a field
+ * differently escape it, a check outside `npm test` can sit red unnoticed,
+ * and name-matching itself misleads — a constant called `ITEM` matches a
+ * deprecated `item = 1` while meaning `tsce_item = 2`. Under constants the
+ * protos are documentation: deleting the whole directory breaks nothing.
  *
  * ## What this does instead
  *
@@ -35,9 +31,10 @@
  * });
  * ```
  *
- * Call sites are unchanged — `Storage.TABLE_PARA_STYLE` is still a number,
- * resolved once at module load. What changes is that the number is Apple's,
- * a misspelled or invented field throws before any document is touched, and
+ * A call site reads like a constant — `Storage.TABLE_PARA_STYLE` is still a
+ * number, resolved once at module load. The difference is that the number is
+ * Apple's, a misspelled or invented field throws before any document is
+ * touched, and
  * `proto/` is load-bearing: {@link ./vendored.ts} is generated from it by
  * `npm run proto:embed`, and the suite fails if the two drift apart.
  *

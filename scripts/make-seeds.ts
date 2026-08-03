@@ -108,15 +108,17 @@ function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
   // UI terms verified against Apple's Danish Pages guide (tan802e88b40):
   // indholdsoversigten Format → Layout → Afsnitsrammer, lokalmenuen
-  // Stregtype, positionsknapper, farvefeltet. The third paragraph begins
-  // with Hebrew on purpose: the donor styles leave writing_direction
-  // unset (natural), so Pages resolves that paragraph right-to-left from
-  // its first strong character — which sharpens "which bit is left?"
-  // into "are the bits visual sides at all, or logical (start/end)?".
+  // Stregtype, positionsknapper, farvefeltet. The third paragraph carries
+  // an explicit right-to-left paragraph style, written by this library:
+  // unset writing_direction renders Hebrew-first text LTR, so relying on
+  // the text alone does not produce an RTL paragraph. The seed thereby
+  // also checks that the app honours our writingDirection write — the
+  // comment asks the person to confirm the line is right-aligned.
+  doc.createParagraphStyle({ name: "RTL", paragraph: { writingDirection: 2, alignment: 4 } });
   doc.appendParagraph(
-    "SEED · afsnitsrammer, de sidste bit (docs/BLOCKERS.md #3). Målingen 2026-08-03 afgjorde formen: en bitmaske — 1 top, 2 bund, 3 begge, 15 alle fire. To spørgsmål står tilbage: hvilken af bit 4 og 8 der er venstre — og om lagringen overhovedet er visuel (venstre/højre) eller logisk (start/slut). Det sidste afgør afsnit 3, som løber højre-mod-venstre. Hvert af de tre afsnit herunder bærer en kommentar med de præcise klik; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
+    "SEED · afsnitsrammer, sidste spørgsmål (docs/BLOCKERS.md). Bitmasken er målt i venstre-mod-højre-afsnit: 1 top, 2 bund, 4 venstre, 8 højre; 3 og 15 er unioner. Tilbage står ét spørgsmål: beholder et højre-mod-venstre-afsnit siderne som på papiret (visuelt), eller bytter det dem om (logisk start/slut)? Afsnit 3 herunder er sat til højre-mod-venstre af biblioteket selv. Hvert afsnit bærer en kommentar med de præcise klik; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
-  const targets = [
+  const targets: { marker: string; style?: string; steps: string }[] = [
     {
       marker: "VENSTRE — giv dette afsnit en rød streg, kun i venstre side.",
       steps:
@@ -127,14 +129,15 @@ function seedBorders(): Uint8Array {
       steps: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
     },
     {
-      marker: "העברית נכתבת מימין לשמאל — dette afsnit begynder med hebraisk og løber derfor højre-mod-venstre.",
+      marker: "העברית נכתבת מימין לשמאל",
+      style: "RTL",
       steps:
-        "Tjek først, at linjen står højrestillet af sig selv — gør den ikke, så notér det og fortsæt alligevel. Samme panel: grøn streg, 3 pt, på samme positionsknap som i første afsnit (venstre kant). Viser proben bagefter samme kode som det røde afsnit, er lagringen visuel; viser den det blå afsnits kode, er den logisk (start/slut).",
+        "Tjek først: står denne linje højrestillet? Gør den ikke, er det i sig selv et fund (biblioteket har sat skriveretningen til højre-mod-venstre) — notér det, og fortsæt alligevel. Samme panel: grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som i afsnit 1. Kode 4 i proben = siderne er visuelle; kode 8 = logiske (start/slut); alt andet = nyt fund.",
     },
   ];
-  for (const t of targets) doc.appendParagraph(t.marker);
+  for (const t of targets) doc.appendParagraph(t.marker, t.style);
   doc.appendParagraph(
-    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben skriver hver kode sammen med stregens farve, så rød/blå/grøn udpeger afsnittene. Rød afgør venstre-bitten (4 eller 8), blå den anden, grøn skiller visuel fra logisk. Alt andet end 4 og 8 ville være et helt nyt fund — endnu bedre. Resultaterne føres i docs/BLOCKERS.md-loggen.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver kode og viser stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4, blå = 8; grøn afgør spørgsmålet. Resultatet føres i docs/BLOCKERS.md-loggen.",
   );
   const body = doc.body;
   for (const t of targets) {
@@ -204,6 +207,13 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
       if (d.comments().length !== 3) throw new Error("borders: expected 3 comments");
       if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
       if (!d.bodyText.includes("העברית")) throw new Error("borders: RTL paragraph missing");
+      const rtl = d.listedParagraphStyles().find((s) => s.name === "RTL");
+      if (!rtl) throw new Error("borders: RTL style missing");
+      const props = d
+        .stylesheets()
+        .map((sheet) => sheet.style(rtl.id)?.paragraph())
+        .find((p) => p !== undefined);
+      if (props?.writingDirection !== 2) throw new Error("borders: RTL direction not written");
     },
   },
   {

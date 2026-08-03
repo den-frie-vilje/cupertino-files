@@ -59,7 +59,7 @@ describe("no-op save reproduces Apple's file byte for byte", () => {
       }
     }
     expect(`exceptions: ${wrong.join(" | ")}`).toBe("exceptions: ");
-    // 35 byte-identical of 38 fixture packages, measured 2026-08-02.
+    // Measured floor: 35 byte-identical of 38 fixture packages.
     expect(identical >= 35).toBe(true);
   });
 });
@@ -110,7 +110,7 @@ describe("the Snappy port reproduces Apple's compression", () => {
         if (okModern || okClassic) either++;
       }
     }
-    // Measured 2026-08-02: 1751 components; 1648 match the modern
+    // Measured over the fixtures: 1751 components; 1648 match the modern
     // compressor exactly, 1438 the classic, 1740 one of the two. The 11
     // holdouts are valid Snappy in standard chunks whose matches beat
     // google's greedy encoder — some old iOS builds linked a stronger

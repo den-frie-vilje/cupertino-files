@@ -24,6 +24,7 @@ import {
   type TableModel,
 } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
+import { predicateTypeStatus } from "../src/tst/predicates.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const open = (name: string) =>
@@ -238,6 +239,21 @@ describe("predicates", () => {
     const predicate = set.rules()[0]!.predicate!;
     expect(describePredicate(predicate, "B4").startsWith("B4")).toBe(true);
     expect(describePredicate(predicate).startsWith(SELF_CELL_MARKER)).toBe(true);
+  });
+
+  it("records the completed comparison enum, measured not guessed", () => {
+    // All six codes are observed, so the observation map agrees with the
+    // menu-order hypothesis entry for entry — this pin keeps either side
+    // from drifting.
+    expect([...PREDICATE_TYPE_OPERATORS].sort((a, b) => a[0] - b[0])).toEqual([
+      [5, "="],
+      [6, "<>"],
+      [7, ">"],
+      [8, ">="],
+      [9, "<"],
+      [10, "<="],
+    ]);
+    for (const status of predicateTypeStatus()) expect(status.proven).toBe(true);
   });
 });
 

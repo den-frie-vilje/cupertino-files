@@ -1,11 +1,11 @@
 /**
  * What is still hand-typed, and does it contradict the schema?
  *
- * Most field numbers no longer live here to be checked: they are resolved
- * from the vendored schemas at module load by `src/proto/fields.ts`, so
- * they cannot disagree with Apple in the first place. This script covers
- * the residue — the constants that could not move — and its output is
- * mostly a to-do list rather than a verdict.
+ * Most field numbers are not hand-typed at all: they are resolved from
+ * the vendored schemas at module load by `src/proto/fields.ts`, so they
+ * cannot disagree with Apple in the first place. This script covers the
+ * residue — the constants that cannot move — and its output is mostly a
+ * to-do list rather than a verdict.
  *
  * Two kinds remain, both legitimate:
  *
@@ -19,9 +19,8 @@
  * other three categories are informational: they say how much is not being
  * checked, which is the number to drive down.
  *
- * `test/proto-drift.test.ts` runs this, so it can no longer sit red
- * unnoticed — which it did, over a constant named `ITEM` that matched a
- * deprecated `item = 1` when it meant `tsce_item = 2`.
+ * `test/proto-drift.test.ts` runs this, so it cannot sit red unnoticed —
+ * the fate of any check `npm test` does not run.
  *
  * Usage: `npm run proto:check`.
  */

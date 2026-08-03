@@ -420,22 +420,27 @@ export const CAPABILITIES: Capability[] = [
             }),
           ),
       ),
-    note: "border_positions semantics inferred, not proven by rendering",
+    note: "border_positions decoded against the measured bitmask (1 top, 2 bottom, 4 left, 8 right)",
     manualProof: {
       claim: "border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.",
       settled:
-        "**Refuted, and replaced with the measured truth: it is a bitmask.** The seed-borders " +
-        "errand (2026-08-03, Pages, Danish UI) had a person set top-only, bottom-only, " +
-        "top-and-bottom and all-four borders; the file carries 1, 2, 3, 15 — bit 1 top, bit 2 " +
-        "bottom, 3 their union (the union is what proves flags), 15 all four. The enum reading " +
-        "(ALL = 4) would have drawn a single vertical edge where a box was meant. Which of " +
-        "bits 4 and 8 is left vs right — and whether the pair is visual or logical, which an " +
-        "RTL paragraph would flip — stays unassigned until the three-paragraph follow-up seed",
+        "**Refuted, and replaced with the measured truth: it is a bitmask.** Two seed-borders " +
+        "runs (2026-08-03, Pages, Danish UI): top-only, bottom-only, top-and-bottom and " +
+        "all-four borders carried 1, 2, 3, 15 — the union is what proves flags — and a red " +
+        "left-only border wrote 4 while a blue right-only wrote 8, the probe's stroke colours " +
+        "naming their paragraphs. The enum reading (ALL = 4) would have drawn one left edge " +
+        "where a box was meant. One remainder stays open: the run's RTL leg failed its own " +
+        "precondition (the Hebrew-first paragraph rendered LTR — unset writing_direction does " +
+        "not mean natural), so whether an RTL paragraph keeps the side bits visual or flips " +
+        "them logically is unmeasured; the regenerated seed authors the RTL paragraph with an " +
+        "explicit writing direction to close it",
       why:
         "The old mapping was inferred from the inspector's five choices and the deprecated " +
         "enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it " +
         "offline.",
-      how: "npm run seeds -- out, apply the left-only, right-only and RTL borders, npm run probe.",
+      how:
+        "npm run seeds -- out, check the Hebrew paragraph renders right-aligned, give it a " +
+        "left-edge border, npm run probe — 4 means visual sides, 8 means logical.",
       risk: "medium",
     },
   },
@@ -1354,9 +1359,9 @@ export const CAPABILITIES: Capability[] = [
     probe: (c) => safe(() => c.doc.tables().some((t) => t.conditionalStyleSets().size > 0)),
     note:
       "conditions decoded from the rule's formula, which states the comparison. setConditionalRules " +
-      "writes = <> < and <=, whose predicate_type codes are observed; > and >= are refused because " +
-      "their codes are only predicted. A rule built for a condition Apple also wrote is " +
-      "byte-identical to Apple's, all 424 bytes",
+      "writes all six comparisons — every predicate_type code is observed, the last two (> at 7, " +
+      ">= at 8) measured 2026-08-03 from seed documents whose formulas state the operators. A rule " +
+      "built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes",
     manualProof: {
       claim:
         "the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough",
@@ -1384,10 +1389,11 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     note:
-      "= <> < and <= are written, whose predicate_type codes are observed; > and >= are refused " +
-      "because theirs are only predicted, and a rule filed under a wrong code reads back correctly " +
-      "while showing the wrong condition in the editor. A rule built for a condition Apple also " +
-      "wrote is byte-identical to Apple's, all 424 bytes",
+      "all six comparisons write. = <> < <= were observed in the corpus; > (7) and >= (8) were " +
+      "measured 2026-08-03, closing the menu-order enum — codes were refused until observed " +
+      "because a rule filed under a wrong code reads back correctly while showing the wrong " +
+      "condition in the editor. A rule built for a condition Apple also wrote is byte-identical " +
+      "to Apple's, all 424 bytes",
   },
   {
     group: "Numbers & tables",
@@ -1401,7 +1407,11 @@ export const CAPABILITIES: Capability[] = [
           return rows !== undefined || columns !== undefined;
         }),
       ),
-    note: "every filter set in the corpus is empty, so rule reading is schema-derived; the container, mode and enable flag are fixture-proven",
+    note:
+      "rule reading is measured against the first non-empty filter set (see the BLOCKERS " +
+      "ledger): predicates decode with their formulas, sharing the conditional-formatting " +
+      "encoding; every corpus fixture's filter set is empty, so the container, mode and enable " +
+      "flag are fixture-proven while rule-bearing bytes await a donated fixture",
   },
   {
     group: "Numbers & tables",
@@ -1680,9 +1690,21 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read",
     probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.builds().length > 0)),
-    note: "NO FIXTURE: schema-derived. Reads and retimes existing builds; will not create one — see docs/BLOCKERS.md priority 4",
+    note:
+      "NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in " +
+      "animationAttributes (field 18), undecoded, so they read undefined on modern builds and " +
+      "retiming writes legacy fields. Will not create a build — see docs/BLOCKERS.md",
     manualProof: {
       claim: "the build model reads a real animation correctly",
+      settled:
+        "**Half confirmed, half refuted (2026-08-03, the first animated deck anywhere).** " +
+        "Confirmed: three builds survive authoring and resave, the slide↔build graph reads " +
+        "correctly, and delivery stores English display strings (\"All at Once\", " +
+        "\"By Paragraph\") even under a Danish UI. Refuted: every database_* field read for " +
+        "effect and timing was absent from the app-authored builds — including one given 3 s " +
+        "duration and 1 s delay by hand — so modern Keynote packs effect and timing into " +
+        "animationAttributes (field 18), which stays undecoded until the deck's bytes are " +
+        "measured. The saved deck itself is the outstanding evidence",
       why: "not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation",
       how: "a three-slide deck with a different effect on each and one text build delivered by line, then `npm run probe -- animated.key`",
       risk: "high",

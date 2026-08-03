@@ -7,6 +7,34 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: inserting rows or columns now keeps the table's identity map
+  (`base_column_row_uids`) in lockstep with the grid. Numbers renders a
+  table at the map's size, so columns inserted by earlier versions were
+  invisible in the app; surviving positions keep their UIDs, new ones
+  mint fresh identities in Apple's sort order (measured 2026-08-03 on a
+  seed document, Danish-locale Numbers).
+- `border_positions` is a measured bitmask — 1 top, 2 bottom, 4 left,
+  8 right, unions literal — replacing the refuted enum reading (whose
+  `ALL = 4` would have drawn one left edge). `BorderPosition.LEFT`/
+  `RIGHT` replace the interim `VERTICAL_BIT_A`/`B`; sides measured in
+  LTR paragraphs (two seed-borders runs, 2026-08-03), RTL semantics
+  still open.
+- The conditional-formatting comparison enum is complete: predicate
+  codes 7 (`>`) and 8 (`>=`) measured 2026-08-03 — 7 from both a
+  conditional rule and the first non-empty filter set anywhere —
+  confirming the menu-order prediction whole, so `setConditionalRules`
+  now writes all six comparisons.
+- Filter-rule reading is measured against a real filter set for the
+  first time; "text contains" compiles to `NOT(ISERROR(f(needle,
+  cell)))` with `f` an unnamed function index 296.
+- Keynote builds, first contact: the slide↔build graph and delivery
+  reads confirmed (delivery is an English display string on any locale);
+  the `database_*` effect/timing fields are absent from modern builds —
+  effect and timing live in the undecoded `animationAttributes` — so
+  those read `undefined` on modern decks, and the probe now prints
+  chunks, triggers and the field-18 shape to close in on them.
+- Paragraph styles can set `writingDirection`; the borders seed uses it
+  to stage a genuinely right-to-left paragraph.
 - Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
 - Toolchain refresh: TypeScript 6, `strictTypeChecked` linting,
   `noImplicitReturns` and `verbatimModuleSyntax`, patched vite via

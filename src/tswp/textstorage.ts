@@ -102,12 +102,13 @@ export const STORAGE_KIND = protoEnum("TSWP.StorageArchive.KindType", {
 /**
  * Characters that end a paragraph.
  *
- * **Not just `\n`.** This was `charCodeAt(i) === 10` and that is wrong in a
- * way nothing offline could show: our reader and writer agreed with each
- * other, so every round trip was clean, while Pages disagreed about where
- * paragraphs begin. Since `writeParagraphTable` rebuilds `table_para_style`
- * from *our* paragraph starts, any boundary we failed to see had its style
- * entry silently dropped, and Pages rendered the body unstyled.
+ * **Not just `\n`.** Treating `charCodeAt(i) === 10` as the only terminator
+ * is wrong in a way nothing offline can show: reader and writer agree with
+ * each other, so every round trip is clean, while Pages disagrees about
+ * where paragraphs begin. Since `writeParagraphTable` rebuilds
+ * `table_para_style` from *our* paragraph starts, any boundary this
+ * predicate fails to see has its style entry silently dropped, and Pages
+ * renders the body unstyled.
  *
  * The set is measured, not guessed. Across the Pages fixtures, taking every
  * `table_para_style` entry at index > 0 and looking at the character just
@@ -130,21 +131,20 @@ function isParagraphTerminator(code: number): boolean {
 }
 
 /**
- * The six fields every storage in the corpus carries, and a new one did not.
+ * The six fields every storage in the corpus carries.
  *
  * `table_para_style`, `table_para_data`, `table_list_style`,
  * `table_para_starts`, `table_para_bidi` and `in_document` are present on
  * **2676 of 2676** storages across these fixtures — all nine kinds, all
- * three apps, every era of writer. A storage created here had none of them:
- * just a kind, a stylesheet and a string.
- *
- * Nothing offline objects to that. Every one of the six is `optional`, the
- * archive round-trips, `required:check` passes, and the reader gives the
- * text back unchanged. But `table_para_style` is where a paragraph's style
- * *lives* — a storage without it has no styled paragraph at all — and the
- * same omission in the body was what rendered a whole document unstyled
- * once already. This is that bug, in the one place a storage gets made from
- * scratch rather than edited.
+ * three apps, every era of writer. A storage built from just a kind, a
+ * stylesheet and a string lacks all six, and nothing offline objects:
+ * every one of the six is `optional`, the archive round-trips,
+ * `required:check` passes, and the reader gives the text back unchanged.
+ * But `table_para_style` is where a paragraph's style *lives* — a storage
+ * without it has no styled paragraph at all, and the identical omission in
+ * a body storage renders the whole document unstyled in Pages. This fills
+ * the shape in at the one place a storage gets made from scratch rather
+ * than edited.
  *
  * The values are Apple's, measured on footnote storages: one entry at
  * character 0 in each table, `{0, 0, 0}` for the para-data triples, and
@@ -155,8 +155,8 @@ function fillStorageShape(
   styles: { paragraphStyle?: bigint; listStyle?: bigint },
 ): void {
   // `ObjectAttribute.object` is optional, so an entry with no style is
-  // well-formed — but it is also the shape that has already proved to mean
-  // "unstyled", so the table is only written when there is a style to name.
+  // well-formed — but it is also the shape that means "unstyled", so the
+  // table is only written when there is a style to name.
   const objectTable = (styleId: bigint | undefined): RawMessage | undefined => {
     if (styleId === undefined) return undefined;
     const entry = RawMessage.create();
@@ -524,14 +524,12 @@ export class TextStorage {
    * A paragraph with no entry at all is what breaks. Appending a line and
    * leaving it undeclared makes Pages drop the styling for the whole body;
    * the same document with an explicit entry — what `setParagraphStyle`
-   * writes — renders correctly. That contrast is the evidence, and it is
-   * also how this was found: the rung that set a style worked while the two
-   * that only appended did not.
+   * writes — renders correctly. That contrast is the evidence.
    *
-   * Both earlier attempts applied one rule to all three tables. Writing them
-   * all dense inflates a single-run list table to one entry per paragraph;
-   * writing them all sparse leaves an appended paragraph with no style entry
-   * at all. Each is wrong for two of the three.
+   * One rule for all three tables fails both ways. Writing them all dense
+   * inflates a single-run list table to one entry per paragraph; writing
+   * them all sparse leaves an appended paragraph with no style entry at
+   * all. Each is wrong for two of the three.
    *
    * `terminator` keeps a trailing entry at the end of the text when the
    * table arrived with one — about half of Apple's do, and it is not a

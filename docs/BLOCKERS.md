@@ -20,54 +20,41 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — three documents to make and three files to open, ~15 minutes total
+## Needs a Mac — one two-minute document, and three finished seeds to send back
 
-**Shortcut: `npm run seeds -- out`** writes ready-made starting points —
-`seed-rules.numbers`, `seed-builds.key`, `seed-borders.pages`, and an
-optional `seed-filters.numbers` — with the data already staged and every
-remaining click written inside the document itself (cells beside the
+**Shortcut: `npm run seeds -- out`** writes ready-made starting points
+with every remaining click inside the document itself (cells beside the
 data, presenter notes, Pages comments on the exact paragraph). Open,
-follow, save, run the command the file names. The prose below remains
-the full story for anyone starting from scratch.
+follow, save, run the command the file names.
 
-**1. `rules.numbers` — 5 min.** One numeric column. Add a
-conditional-formatting rule using **greater than** and another using
-**greater than or equal to** — those two specifically; `=`, `<>`, `<`,
-`<=` are already observed (codes 5, 6, 9, 10, exactly where Numbers'
-condition menu predicts). Then `npm run harvest:predicates --
-rules.numbers` — it ends in `CONFIRMED` or `REFUTED` against the
-prediction recorded in `PREDICATE_TYPE_HYPOTHESIS`
-(`src/tst/predicates.ts`, never used when reading). While there, add
-"between", "text contains" and "is blank": those compile to function
-calls and widen the function table.
-→ Unblocks the last two conditional-formatting operators. Authoring for
-the four observed codes is already byte-identical to Apple's.
+**1. `seed-borders.pages` — 2 min, one question.** The border bitmask is
+measured in left-to-right paragraphs: 1 top, 2 bottom, 4 left, 8 right,
+unions literal. One question stands: does a right-to-left paragraph keep
+the side bits as on-page sides (visual), or swap them (logical
+start/end)? The seed's Hebrew paragraph is set right-to-left by the
+library itself — first confirm it renders right-aligned (if it does not,
+that alone is a finding: it means Pages ignores our `writingDirection`
+write), then give it a left-edge border and `npm run probe --
+seed-borders.pages` decodes the answer: 4 means visual, 8 means logical.
 
-**2. `animated.key` — 5 min.** Three slides, a different build effect on
-each (say Dissolve, Move In, Anvil); on one, animate a text box delivered
-**by line** so the build has chunks; give one build a non-default
-duration and delay. Then `npm run probe -- animated.key` — section 4
-prints each build's delivery string, effect name and populated attribute
-fields.
-→ The only gap with no data anywhere: fifteen decks across two borrowed
-corpora, 2013–26.1, contain zero animations, so
-`src/keynote/builds.ts` is schema-derived with nothing to check it. Also
-harvests the **transition effect vocabulary** (the corpus knows only
-`"none"`, which is why the Keynote ladder tests auto-advance instead of a
-named effect), and settles whether builds survive `duplicateSlide`.
+**2. Send back the three finished seeds** from the first round —
+`seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
+files. Their probe runs measured everything visible from outside (the
+ledger below); what remains in each is byte-level:
 
-**3. `seed-borders.pages` — 2 min, the last bits.** The 2026-08-03 run
-settled the shape (see the ledger: a bitmask — 1 top, 2 bottom, 3 both,
-15 all). Two assignments remain: which of bits **4** and **8** is left
-and which is right — and whether "left" is even the right word, or the
-pair is logical (leading/trailing) and flips in a right-to-left
-paragraph. The regenerated seed stages three paragraphs — a red
-*left-only* border, a blue *right-only* one, and a Hebrew paragraph that
-runs RTL, to be bordered on the same visual side as the red one. Apply
-each, save, and `npm run probe -- seed-borders.pages` prints each code
-beside its stroke colour: red names the left bit, blue the other; green
-matching red means the bits are visual sides, green matching blue means
-they are logical.
+- `seed-builds.key` — the biggest: effect and timing live in
+  `animationAttributes` (field 18), which nothing has ever decoded, and
+  this is the only animated deck anywhere. As a fixture it would end the
+  build model's schema-only status.
+- `seed-filters.numbers` — the only non-empty filter set anywhere; as a
+  fixture it pins filter-rule reading and the cross-owner reference that
+  currently renders `OTHER_TABLE::`.
+- `seed-rules.numbers` — pins predicate codes 3/7/8/34 and the unnamed
+  "text contains" function 296 against real bytes.
+
+Unlike borrowed documents these are yours to give: made by you from
+generated seeds, they can enter `fixtures/` with attribution if you say
+so.
 
 Record each run in the ledger below, then `npm run coverage`.
 
@@ -92,19 +79,23 @@ that rebuild the structures from them.
   `npm run harvest -- --ingest doc.numbers`, `--emit-sheet probe.tsv`,
   or `--drive` (macOS, drives Numbers directly). It refuses to guess — a
   name is accepted only when every observation agrees.
-- **Creating a Keynote build.** Reading ships; creation is withheld
-  until the app confirms it — a build the app silently drops looks
-  exactly like one never written. (Cell-control creation shipped and is
-  app-confirmed; see VERIFICATION.)
+- **Keynote builds: decoding `animationAttributes`, then creation.** The
+  slide↔build graph and delivery reads are deck-confirmed, but modern
+  Keynote keeps effect and timing inside `animationAttributes`
+  (field 18), undecoded until the saved seed deck's bytes arrive (the
+  send-back ask above). Creation stays withheld until the app confirms a
+  build we write — a build the app silently drops looks exactly like one
+  never written. (Cell-control creation shipped and is app-confirmed;
+  see VERIFICATION.)
 - **Creating a category group.** Regrouping shipped (byte-identical on
   unchanged data). Creation is blocked on a group's identity, sort
   position and eight unexplained sidecar fields; bucketed groupings
   ("dates by quarter") additionally mean evaluating the grouping
   formula. **Recomputing filtered rows** is the same class: which rows a
   filter hides lives in `TST.HiddenStateExtentArchive`, and computing it
-  means evaluating predicates. (Filter *rule* layout itself is
-  schema-derived: every filter set in the corpus is empty — 164 sets,
-  163 empty, mode "all" — measured, not unlucky.)
+  means evaluating predicates. (Filter *rule* reading is measured against
+  the first real filter set — see the ledger; every corpus fixture's set
+  is still empty, so rule-bearing fixture bytes await the donated seed.)
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -133,7 +124,8 @@ that rebuild the structures from them.
 - **Editing a document an app has open, and live iCloud collaboration,
   are out of scope** (FORMAT.md §13).
 - **Transition effect strings are opaque.** Exposed raw, never invented;
-  the vocabulary arrives with `animated.key` above.
+  the vocabulary arrives with a deck whose slides carry named transitions
+  — the seed build deck measures builds, not transitions.
 - **Eleven corpus components came from a stronger Snappy encoder.**
   They decode as perfectly ordinary Snappy in standard 64 KiB chunks —
   the codec is not in question — but their matches are found better than
@@ -160,9 +152,11 @@ Every protocol run gets a row; failed and partial attempts stay.
 |---|---|---|---|---|
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
+| 2026-08-03 | border bits 4/8 + RTL | Pages (macOS, Danish UI), via seed-borders v2 | **left and right assigned**: red left-only = 4, blue right-only = 8, the probe's stroke colours naming their paragraphs. The RTL leg failed its precondition — the Hebrew-first paragraph rendered LTR with the Danish tail folded into the same line, so unset `writing_direction` is not "natural" — leaving visual-vs-logical open; the regenerated seed writes an explicit RTL paragraph style instead | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
-| — | predicate_type 7/8 | — | **not yet run** — 4 of 6 comparison codes observed | — |
-| — | Keynote build vocabulary | — | **not yet run** — no animated deck exists anywhere yet | — |
+| 2026-08-03 | predicate_type 7/8 | Numbers (macOS, Danish UI), via seed-rules + seed-filters | **solved — the menu-order prediction confirmed whole**: 7 = `>` (twice over: a conditional rule and a filter), 8 = `>=`, each stated by its own formula. All six comparison codes observed; setConditionalRules writes all six | `src/tst/predicates.ts`, test/conditional-writing.test.ts |
+| 2026-08-03 | filter rules + predicate_type 3 | Numbers (macOS, Danish UI), via seed-filters | **first non-empty filter set anywhere — rules read**, filters and conditional formatting sharing the predicate encoding. Type 3 is "text contains": `NOT(ISERROR(f(needle, cell)))` with `f` the unnamed function index 296 (SEARCH is 131). Filter formulas render `OTHER_TABLE::` — the filter owner's references resolve to no named table yet | `scripts/probe-unknowns.ts` |
+| 2026-08-03 | Keynote build vocabulary | Keynote (macOS, Danish UI), via seed-builds | **half confirmed, half refuted**: three builds survive authoring; the slide↔build graph and delivery read correctly, delivery storing English display strings ("All at Once", "By Paragraph") under a Danish UI. Every `database_*` field (effect, duration, delay) was absent — even with 3 s / 1 s set by hand — so effect and timing live in `animationAttributes` (field 18), undecoded. The saved deck's bytes are the outstanding evidence | `src/keynote/builds.ts` |
 | 2026-08-01 | cell-control interaction_type | n/a — borrowed documents | **solved**: 4 stepper, 5 slider, 6 star, 7 pop-up, 8 checkbox; also found and fixed the dropped-checkbox bug | `src/tst/controls.ts` |
 | 2026-08-01/02 | Pages ladder P00–P19 | Pages (macOS 26.x) | **all rungs confirmed**; twelve well-formed-but-wrong defects found, fixed, pinned | VERIFICATION.md |
 | 2026-08-02 | Keynote ladder K00–K10 (v26) | Keynote (macOS + iOS) | **all rungs confirmed**; six defects found (four offline by shape:audit, two by the app), fixed, pinned | VERIFICATION.md |

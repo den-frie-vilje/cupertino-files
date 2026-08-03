@@ -168,8 +168,8 @@ export function randomUid(): Uid {
  * the arrays are parallel, and a hole would desynchronise them.
  *
  * The app renders a table at its identity map's size, not the grid's —
- * an inserted column the map does not know is invisible in Numbers,
- * which is how this writer's absence was discovered.
+ * an inserted column the map does not know is invisible in Numbers, so
+ * every mutation that moves the grid must move the map with it.
  */
 export function writeUidMap(
   target: IwaObject,

@@ -47,10 +47,10 @@ const rgb = (fill: Fill | undefined): string =>
 
 describe("chart type enum", () => {
   it("names every value the shipped proto declares", () => {
-    // The table used to stop at 21 while the enum runs to 27, which is why
-    // two real charts read back as "type 22" and "type 25". Parsing the
-    // proto rather than restating it means the next extension is caught by
-    // this test rather than by a document.
+    // The proto's enum runs to 27, and a table that stops short reads
+    // real charts back as "type 22" and "type 25". Parsing the proto
+    // rather than restating it means the next extension is caught by this
+    // test rather than by a document.
     const proto = readFileSync(
       new URL("../proto/current/TSCHArchives_Common.proto", import.meta.url),
       "utf8",

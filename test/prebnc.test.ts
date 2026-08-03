@@ -1,10 +1,10 @@
 /**
- * Pre-BNC cell storage — the iWork '13/'15 layout, read at last.
+ * Pre-BNC cell storage — the iWork '13/'15 layout.
  *
- * Six of the corpus's tables use storage version 4, and this library used
- * to throw on all of them. The layout is not documented anywhere; it was
- * measured from those very files, with the string table beside them acting
- * as the oracle — a wrong offset does not produce a coherent checkbook.
+ * Six of the corpus's tables use storage version 4. The layout is not
+ * documented anywhere; it is measured from those very files, with the
+ * string table beside them acting as the oracle — a wrong offset does not
+ * produce a coherent checkbook.
  *
  * These tests are deliberately of two kinds. The unit tests pin the record
  * layout byte-for-byte so a regression is a diff rather than a mystery. The

@@ -19,14 +19,14 @@
  * }
  * ```
  *
- * `interaction_type` is an enum Apple never published, and it is now known
- * — measured, not guessed, from documents that put one widget per row and
+ * `interaction_type` is an enum Apple never published, and it is known —
+ * measured, not guessed, from documents that put one widget per row and
  * say in their own cell values which row is which. See
  * {@link InteractionType} for the evidence behind each name.
  *
- * {@link controlShape} survives that discovery and stays useful: it reports
- * what the archive *demonstrably contains* — min/max/increment, or a popup
- * model — independently of the enum. A file from a future Numbers with a
+ * {@link controlShape} does not lean on the enum: it reports what the
+ * archive *demonstrably contains* — min/max/increment, or a popup
+ * model — independently of it. A file from a future Numbers with a
  * sixth widget will still classify as a range or a chooser, which is a
  * better answer than an unrecognised number.
  */
@@ -66,11 +66,10 @@ export const CellSpecFields = protoFields("TST.CellSpecArchive", {
  *    controls in total and the other four are accounted for.
  *  - **7 — pop-up menu.** The only one carrying a chooser popup model.
  *
- * The 4/5 pairing was the weak one — a stepper and a slider store the
- * identical field set, so nothing in a file separates them and the names
- * rested on one matching instance plus elimination. It is now **observed**:
- * a document authoring one of each was opened in Numbers and both drew as
- * labelled.
+ * The 4/5 pairing is the one a file cannot settle — a stepper and a slider
+ * store the identical field set, so nothing in a file separates them. The
+ * assignment is **observed** in the app instead: a document authoring one
+ * of each was opened in Numbers and both drew as labelled.
  *
  * Values outside this set are carried through untouched rather than
  * rejected — see {@link controlShape}, which classifies by contents.
@@ -186,11 +185,12 @@ export function readCellSpec(spec: RawMessage, key: number): CellControl {
 /**
  * TST.TableDataList / .ListEntry, as used by the control-spec table.
  *
- * `CELL_SPEC` is field 12, read off real documents. It used to be a guess,
- * and the guess came with a heuristic that skipped any single-varint
- * submessage so a bare `TSP.Reference` would not be misread as a control —
- * which silently dropped every checkbox, whose whole spec *is* one varint.
- * Knowing the field number removes the need to guess and the bug with it.
+ * `CELL_SPEC` is field 12, read off real documents. A reader that has to
+ * guess the field needs a heuristic that skips any single-varint
+ * submessage so a bare `TSP.Reference` is not misread as a control — and
+ * that heuristic silently drops every checkbox, whose whole spec *is* one
+ * varint. Knowing the field number removes the need to guess and the bug
+ * with it.
  */
 const DataList = { ENTRIES: 3 } as const;
 const ListEntry = { KEY: 1, CELL_SPEC: 12 } as const;
@@ -209,8 +209,9 @@ export function controlsOf(store: ObjectStore, dataStore: RawMessage | undefined
 /**
  * Decode a control-spec `TST.TableDataList`.
  *
- * Split out from {@link controlsOf} so the entry-unwrapping — the part that
- * once dropped checkboxes — can be exercised without a document around it.
+ * Split out from {@link controlsOf} so the entry-unwrapping — the part
+ * where a wrong guess silently drops checkboxes — can be exercised without
+ * a document around it.
  */
 export function readControlList(list: RawMessage): Map<number, CellControl> {
   const out = new Map<number, CellControl>();
@@ -237,9 +238,9 @@ function specAt(entry: RawMessage, field: number): RawMessage | undefined {
 /**
  * Fallback: the spec inside a list entry at some other field.
  *
- * Only reached when field 12 holds nothing. The single-varint guard stays
+ * Only reached when field 12 holds nothing. The single-varint guard lives
  * here — at an unknown field a lone varint really could be a reference —
- * but it no longer costs us checkboxes, which {@link specAt} finds first.
+ * and it does not cost checkboxes, which {@link specAt} finds first.
  */
 function readSpecMessage(entry: RawMessage): RawMessage | undefined {
   for (const field of entry.fields) {
@@ -341,17 +342,17 @@ export type PopupItem = string | number;
  * are `required`, so an item without one is a malformed message and takes
  * the whole document with it. `TSK.FormatStructArchive` has no required
  * fields of its own, but `format_type` is written anyway — an empty format
- * is *valid* and says nothing, and this library has already learned once
- * what valid-but-empty costs.
+ * is *valid* and says nothing, and valid-but-empty is the shape that
+ * leaves a widget undrawn.
  *
  * The deprecated `item` field is left off. It is Apple's own older shape
  * and nothing in the current schema requires both.
  *
  * **Unverified.** No document available here contains a pop-up menu, so
  * this is built from the schema rather than measured against one, and
- * schema-correct has already proved not to mean working — a control with
- * no format was flawless on paper and invisible in the app. Treat a menu
- * as unproven until someone opens one.
+ * schema-correct is not the same as working — a control with no format is
+ * flawless on paper and invisible in the app. Treat a menu as unproven
+ * until someone opens one.
  */
 /**
  * The reserved-slot marker. A symbol, not a string sentinel: menu items are
