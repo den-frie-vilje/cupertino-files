@@ -322,15 +322,17 @@ function collectPredicate(
 
 /**
  * Decode a `border_positions` value against the measured bitmask (see
- * `BorderPosition`): 1 top, 2 bottom, 4 left, 8 right. A residue outside
- * those bits is flagged rather than folded in.
+ * `BorderPosition`): 1 top, 2 bottom, 4 leading, 8 trailing — the side
+ * bits are logical, drawing left/right in an LTR paragraph and swapped
+ * in an RTL one. A residue outside those bits is flagged rather than
+ * folded in.
  */
 function describeBorderBits(value: number): string {
   const edges = [
     ...(value & 1 ? ["top"] : []),
     ...(value & 2 ? ["bottom"] : []),
-    ...(value & 4 ? ["left"] : []),
-    ...(value & 8 ? ["right"] : []),
+    ...(value & 4 ? ["leading"] : []),
+    ...(value & 8 ? ["trailing"] : []),
   ];
   const residue = value & ~15;
   if (residue !== 0) edges.push(`UNKNOWN BIT ${residue} — a new finding`);

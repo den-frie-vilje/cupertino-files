@@ -261,11 +261,15 @@ describe("character and paragraph formatting", () => {
   });
 
   it("border_positions is the measured bitmask, not the refuted enum", () => {
-    // 1 top, 2 bottom, 4 left, 8 right — unions literal, left/right
-    // measured in LTR paragraphs. This pin keeps the model from drifting.
+    // 1 top, 2 bottom, 4 leading, 8 trailing — unions literal. The side
+    // bits are logical: they swap visual sides in an RTL paragraph, so
+    // LEFT/RIGHT alias LEADING/TRAILING for the LTR case. This pin keeps
+    // the model from drifting.
     expect(BorderPosition.TOP | BorderPosition.BOTTOM).toBe(BorderPosition.TOP_AND_BOTTOM);
-    expect(BorderPosition.LEFT).toBe(4);
-    expect(BorderPosition.RIGHT).toBe(8);
+    expect(BorderPosition.LEADING).toBe(4);
+    expect(BorderPosition.TRAILING).toBe(8);
+    expect(BorderPosition.LEFT).toBe(BorderPosition.LEADING);
+    expect(BorderPosition.RIGHT).toBe(BorderPosition.TRAILING);
     expect(BorderPosition.ALL).toBe(15);
     expect(
       BorderPosition.TOP |

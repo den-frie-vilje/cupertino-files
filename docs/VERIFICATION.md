@@ -290,7 +290,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-29 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+30 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -443,7 +443,15 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The old mapping was inferred from the inspector's five choices and the deprecated enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it offline.
 
-**Outcome.** **Refuted, and replaced with the measured truth: it is a bitmask.** Two seed-borders runs (2026-08-03, Pages, Danish UI): top-only, bottom-only, top-and-bottom and all-four borders carried 1, 2, 3, 15 — the union is what proves flags — and a red left-only border wrote 4 while a blue right-only wrote 8, the probe's stroke colours naming their paragraphs. The enum reading (ALL = 4) would have drawn one left edge where a box was meant. One remainder stays open: the run's RTL leg failed its own precondition (the Hebrew-first paragraph rendered LTR — unset writing_direction does not mean natural), so whether an RTL paragraph keeps the side bits visual or flips them logically is unmeasured; the regenerated seed authors the RTL paragraph with an explicit writing direction to close it
+**Outcome.** **Refuted, and replaced with the measured truth: a bitmask with logical side bits.** Three seed-borders rounds (2026-08-03, Pages, Danish UI): top/bottom/both/all carried 1, 2, 3, 15 — the union proving flags — red left-only wrote 4 and blue right-only 8 in LTR paragraphs, and the closing round put a green left-edge border on a genuinely RTL paragraph (direction written by this library, accepted by the app) and stored **8**: the side bits are logical — 4 leading, 8 trailing — swapping visual sides with the paragraph's direction. The enum reading (ALL = 4) would have drawn one leading edge where a box was meant
+
+### ✅ Paragraph writing direction (read + write)
+
+**Was claimed.** a paragraph this library sets to RTL renders right-to-left in Pages
+
+**Why it needed an app.** rendering direction is editor behaviour nothing offline can observe
+
+**Outcome.** **Confirmed in the same round trip that taught the mechanism** (2026-08-03, iOS Pages, T15.3 writer): the pair was copied from an app-flipped paragraph, and a library-written (1, 0) then survived the app's resave untouched with the paragraph behaving as RTL — its left-edge border control stored the trailing bit, which only an RTL paragraph does
 
 ### ✅ Placeholder text (list, fill, define)
 

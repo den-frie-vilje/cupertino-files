@@ -281,17 +281,22 @@ export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
 /**
  * `ParagraphStylePropertiesArchive.border_positions` — which edges draw.
  *
- * A measured bitmask: bit 1 top, bit 2 bottom, bit 4 left, bit 8 right; a
- * union means exactly its bits (3 draws top and bottom, 15 all four), and
- * 0 is none. Left and right are measured in left-to-right paragraphs;
- * whether a right-to-left paragraph keeps them as on-page sides or flips
- * them as logical start/end is still unmeasured.
+ * A measured bitmask: bit 1 top, bit 2 bottom, and two *logical* side
+ * bits — 4 the leading edge, 8 the trailing edge — that follow the
+ * paragraph's writing direction: in an LTR paragraph 4 draws on the
+ * page's left and 8 on its right, in an RTL paragraph the two swap
+ * sides (the left-edge control on an RTL paragraph stores 8). A union
+ * means exactly its bits (3 draws top and bottom, 15 all four), and 0
+ * is none. `LEFT`/`RIGHT` name the LTR case and alias
+ * `LEADING`/`TRAILING`.
  */
 export const BorderPosition = {
   NONE: 0,
   TOP: 1,
   BOTTOM: 2,
   TOP_AND_BOTTOM: 3,
+  LEADING: 4,
+  TRAILING: 8,
   LEFT: 4,
   RIGHT: 8,
   ALL: 15,
