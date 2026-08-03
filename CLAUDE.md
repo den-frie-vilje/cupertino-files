@@ -69,5 +69,8 @@ of that history layer, not of the code.) When a measurement closes a
 question, rewrite the comment to the settled state and put the story in
 the commit message. A test still names the fixture or document it
 re-measures — that is evidence, not history — but not the date it was
-first run. Code that narrates its own past fills context fast and goes
-stale faster.
+first run. Test titles and describe blocks are comments too: name the
+file, never who provided it or the session that produced it — "donated",
+"returned", "measured on the phone" all belong in the commit message or
+`fixtures/ATTRIBUTION.md`, never in code. Code that narrates its own
+past fills context fast and goes stale faster.

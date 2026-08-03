@@ -306,7 +306,7 @@ describe("readers are pure", () => {
     // The project's core guarantee, checked against the *readers* rather
     // than the writers: a reader that quietly marks its object dirty
     // rewrites part of the file on save, and the damage shows up in a
-    // document nobody meant to edit. Exercising all of them on all 37
+    // document nobody meant to edit. Exercising all of them on all 41
     // fixtures is the cheapest way to keep that honest as readers are added.
     const names = readdirSync(FIXTURES).filter((name) => /\.(pages|numbers|key)$/.test(name));
     let checked = 0;

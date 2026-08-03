@@ -6,6 +6,7 @@
  * the first is natural; the paragraph style is untouched. These pins keep
  * the writer on that exact shape — one wrong slot renders LTR.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { PagesDocument } from "../src/index.ts";
 import {
@@ -63,6 +64,21 @@ describe("paragraph direction", () => {
     expect(`${entries.find((e) => e.start === starts[2])!.first},${entries.find((e) => e.start === starts[2])!.second}`).toBe(
       "65535,65535",
     );
+  });
+
+  it("reads the (1, 0) pair from an app-written document", () => {
+    const doc = PagesDocument.load(
+      new Uint8Array(
+        readFileSync(new URL("../fixtures/olekristensen-v26.3-ios-rtl-direction.pages", import.meta.url)),
+      ),
+    );
+    const paragraphs = doc.paragraphs();
+    const hebrew = paragraphs.findIndex((p) => /[֐-׿]/.test(p.text));
+    expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
+    expect(doc.body.paragraphDirection(0)).toBe("ltr");
+    const start = doc.body.paragraphStarts()[hebrew]!;
+    const entry = bidiEntries(doc).find((e) => e.start === start)!;
+    expect(`${entry.first},${entry.second}`).toBe("1,0");
   });
 
   it("keeps direction attached to its paragraph through earlier edits", () => {

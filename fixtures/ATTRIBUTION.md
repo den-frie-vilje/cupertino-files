@@ -900,6 +900,44 @@ Verification applied to every candidate: first two bytes are `PK`, then
   current loader therefore rejects outright.
 
 
+## Donated fixtures (olekristensen)
+
+Made and donated for this project by Ole Kristensen (github.com/olekristensen),
+who granted their inclusion here. Each began as a library-generated seed
+document (`npm run seeds`), was edited in Pages exactly as its embedded
+instructions asked, and returned — so every one is an app-written artifact
+over library-authored bytes, carrying the measurement it settled. Screened:
+no personal data; the only annotation author string is `cupertino-files`.
+
+### olekristensen-v14.4-placeholders-image.pages
+- 219,971 bytes, md5 `31ecb294510c15d071e421ae028ead5e`
+- Saved by M14.4-7043.0.93-4 (macOS Pages, format 14.4.1). A template-derived
+  document with 9 `TSWP.PlaceholderSmartFieldArchive` fields, one of them
+  spanning an image's U+FFFC — the body-document image-placeholder mechanism.
+  Danish template ghost text ("Tryk eller klik på denne eksempeltekst …").
+
+### olekristensen-v26.3-ios-placeholder-consumed.pages
+- 176,953 bytes, md5 `46c3ecd9f61799c109e25d2806b2940d`
+- Saved by T15.3 (7375.0.54) (iOS Pages, format 26.3.1) — the corpus's first
+  iOS-written file. The seed-placeholder round trip: a library-defined
+  placeholder was tapped and typed through in the app, and the resave shows
+  the field consumed; the library-filled line remained plain text.
+
+### olekristensen-v26.3-ios-rtl-direction.pages
+- 226,240 bytes, md5 `14e7bdd69cca535497c87e16910fe499`
+- Saved by T15.3 (iOS Pages). A Hebrew paragraph flipped with the app's own
+  paragraph-direction control: the storage's bidi pair reads `(1, 0)` on that
+  paragraph with the style untouched — the file that named the direction
+  mechanism.
+
+### olekristensen-v26.3-ios-borders-logical.pages
+- 240,218 bytes, md5 `d458800c1f4a6d10ad1f7ea7f4e98525`
+- Saved by T15.3 (iOS Pages). Red left-only (4) and blue right-only (8)
+  borders on LTR paragraphs, and a green left-edge border on a
+  library-written RTL paragraph storing 8 — the file that measured the side
+  bits as logical (4 leading, 8 trailing). The library's `(1, 0)` direction
+  pair survived the app's resave untouched.
+
 ## Fixture privacy policy
 
 A permissive licence makes a document *redistributable*; it does not make it *appropriate*

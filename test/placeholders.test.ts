@@ -2,10 +2,10 @@
  * Placeholder text (`TSWP.PlaceholderSmartFieldArchive`) and the
  * resolved-formatting readers.
  *
- * The corpus carries 64 placeholder fields across four Pages documents;
- * `patrickomatic-pages26-sections-masks.pages` alone anchors 18 of them,
- * which is the read evidence. Writing is pinned against that measured
- * shape: the smart-field super with a fresh UUID and one varint = 1.
+ * The corpus carries 73 placeholder fields across five Pages documents;
+ * `patrickomatic-pages26-sections-masks.pages` alone anchors 18 of them.
+ * Writing is pinned against the measured shape: the smart-field super
+ * with a fresh UUID and one varint = 1.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
@@ -31,6 +31,34 @@ describe("reading placeholders", () => {
       expect(placeholder.text.length).toBeGreaterThan(0);
       expect(placeholder.end).toBeGreaterThan(placeholder.start);
     }
+  });
+
+  it("an image placeholder is the field over the object-replacement character", () => {
+    const doc = PagesDocument.load(
+      new Uint8Array(readFileSync(new URL("olekristensen-v14.4-placeholders-image.pages", FIXTURES))),
+    );
+    const all = doc
+      .textStorages()
+      .flatMap((storage) => storage.placeholders().map((ph) => ({ storage, ph })));
+    expect(all.length).toBe(9);
+    expect(doc.placeholders().length).toBe(7);
+    const images = all.filter(
+      ({ storage, ph }) => storage.text.slice(ph.start, ph.end) === "￼",
+    );
+    expect(images.length).toBe(1);
+  });
+
+  it("a consumed placeholder leaves no field behind", () => {
+    const doc = PagesDocument.load(
+      new Uint8Array(
+        readFileSync(new URL("olekristensen-v26.3-ios-placeholder-consumed.pages", FIXTURES)),
+      ),
+    );
+    const total = doc
+      .textStorages()
+      .reduce((n, storage) => n + storage.placeholders().length, 0);
+    expect(total).toBe(0);
+    expect(doc.bodyText.includes("Jeg har selv skrevet")).toBe(true);
   });
 });
 

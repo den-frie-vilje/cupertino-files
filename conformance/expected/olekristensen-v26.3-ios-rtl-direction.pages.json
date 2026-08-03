@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-ios-rtl-direction.pages",
+  "sha1": "72cb7520c867be726448e2159b2f471f7a59979c",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 574,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 53
+    },
+    {
+      "name": "Index/ViewState-2000035.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 494
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 722,
+      "text": "SEED · skriveretning: hvad skriver appen selv? (docs/BLOCKERS.md). Alle felter, vi kan sætte — afsnitsformatets writing_direction og tekstlagerets bidi-par — renderer venstre-mod-højre, med naturlig justering målt i donoren, så intet maskerede dem. De er formentlig afledte værdier, appen genberegner. Målingen er derfor vendt om: DU vender linjen herunder med Pages' egen retningsknap, arkiverer og sender filen retur — så viser forskellen på filen præcis, hvor retningen bor. Virker på både iPhone og Mac; de præcise trin står i kommentaren på den hebraiske linje.\nעברית חגיגית לדוגמה\nArkivér til sidst, og send filen retur. Kunne du ikke finde retningsknappen, så send filen alligevel med en note — også dét er et fund."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 3
+  }
+}

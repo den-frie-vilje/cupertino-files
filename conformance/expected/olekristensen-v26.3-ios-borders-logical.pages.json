@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-ios-borders-logical.pages",
+  "sha1": "07efd79ead55cb7af1f8b910b3006b0882fb5fbc",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 581,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 57
+    },
+    {
+      "name": "Index/ViewState-2000039.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 497
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 927,
+      "text": "SEED · rammernes sidste spørgsmål (docs/BLOCKERS.md). Skriveretningen er nu målt, og biblioteket skriver den selv: linje 4 herunder bør stå højrestillet helt af sig selv — gør den ikke, er dét i sig selv et fund. Målt i venstre-mod-højre-afsnit: 1 top, 2 bund, 4 venstre, 8 højre. Tilbage står ét spørgsmål: beholder et højre-mod-venstre-afsnit sidebittene som på papiret (visuelt), eller bytter de plads (logisk)? Giv de tre linjer rammer som beskrevet i kommentarerne; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.\nVENSTRE — giv dette afsnit en rød streg, kun i venstre side.\nHØJRE — giv dette afsnit en blå streg, kun i højre side.\nעברית מיושרת לימין\nArkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver rammekode med stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4, blå = 8; grøn afgør visuel kontra logisk. Resultatet føres i docs/BLOCKERS.md-loggen."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 5
+  }
+}

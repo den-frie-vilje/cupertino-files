@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-ios-placeholder-consumed.pages",
+  "sha1": "adbd9e12bfbd7a849180737c7f7e80ce151ed941",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 571,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 51
+    },
+    {
+      "name": "Index/ViewState-2000034.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 494
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 729,
+      "text": "SEED · pladsholdertekst (docs/BLOCKERS.md). Biblioteket har markeret linje 2 som pladsholder og udfyldt en tidligere pladsholder i linje 3. To tryk afgør begge spørgsmål — og virker fint på iPhone.\nJeg har selv skrevet det her\nUdfyldt af biblioteket — denne linje var en pladsholder.\n1) Tryk én gang i linje 2: markeres HELE spannet mellem «…» i ét hug (og erstattes det hele, når du skriver)? Ja = bibliotekets pladsholder-markering virker. Nej (markøren lander bare som i almindelig tekst) = fundet er, at appen ignorerer vores felt. 2) Tryk i linje 3: opfører den sig som helt almindelig tekst? Ja = udfyldning fjerner markeringen korrekt. Arkivér til sidst, og send filen retur — så måler jeg, hvad appen selv har skrevet om."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 4
+  }
+}
