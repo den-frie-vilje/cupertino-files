@@ -93,6 +93,15 @@ interface Tool {
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
 
+// Schema fragments every table tool shares; hoisted so the wording that
+// teaches the model stays in one place.
+const PATH_PROP = { type: "string", description: "Path to the document" } as const;
+const TABLE_PROP = {
+  type: "string",
+  description: "Table name; may be omitted when the document has exactly one table",
+} as const;
+const OUTPUT_PROP = { type: "string", description: "Save here instead of over the input" } as const;
+
 function requirePath(args: Record<string, unknown>): string {
   const path = str(args.path);
   if (!path) throw new RangeError("path is required");
@@ -109,7 +118,7 @@ const TOOLS: Tool[] = [
       "or editing it.",
     inputSchema: {
       type: "object",
-      properties: { path: { type: "string", description: "Path to the document" } },
+      properties: { path: PATH_PROP },
       required: ["path"],
     },
     handler: (args) => {
@@ -145,7 +154,7 @@ const TOOLS: Tool[] = [
       "bodies and presenter notes per slide. For Numbers, use read_table instead.",
     inputSchema: {
       type: "object",
-      properties: { path: { type: "string", description: "Path to the document" } },
+      properties: { path: PATH_PROP },
       required: ["path"],
     },
     handler: (args) => {
@@ -175,11 +184,8 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         maxRows: { type: "number", description: "Row cap, default 100" },
       },
       required: ["path"],
@@ -214,7 +220,7 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
+        path: PATH_PROP,
         table: { type: "string", description: "Table name; omit for every table" },
       },
       required: ["path"],
@@ -237,11 +243,8 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         cells: {
           type: "array",
           description: "Cells to write",
@@ -255,7 +258,7 @@ const TOOLS: Tool[] = [
             required: ["row", "column"],
           },
         },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "cells"],
     },
@@ -293,16 +296,13 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         row: { type: "number", description: "0-based row" },
         column: { type: "number", description: "0-based column" },
         formula: { type: "string", description: "Infix formula text, e.g. =A1*2" },
         cachedValue: { description: "Value the cell shows until recalculation" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "row", "column", "formula"],
     },
@@ -339,7 +339,7 @@ const TOOLS: Tool[] = [
         path: { type: "string", description: "Path to the .pages document" },
         text: { type: "string", description: "Paragraph text" },
         style: { type: "string", description: "Named paragraph style, e.g. \"Heading 1\"" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "text"],
     },
@@ -365,7 +365,7 @@ const TOOLS: Tool[] = [
         path: { type: "string", description: "Path to the .pages document" },
         find: { type: "string", description: "Exact text to find" },
         replace: { type: "string", description: "Replacement text" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "find", "replace"],
     },
@@ -397,7 +397,7 @@ const TOOLS: Tool[] = [
         fontSize: { type: "number", description: "Point size" },
         fontName: { type: "string", description: "PostScript name, e.g. Helvetica-Bold" },
         fontColor: { type: "string", description: "Hex color, e.g. #cc0000" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "find"],
     },
@@ -433,11 +433,8 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         row: { type: "number", description: "0-based first row" },
         column: { type: "number", description: "0-based first column" },
         rowCount: { type: "number", description: "Rows in the block, default 1" },
@@ -450,7 +447,7 @@ const TOOLS: Tool[] = [
         },
         verticalAlignment: { type: "string", enum: ["top", "middle", "bottom"] },
         textWrap: { type: "boolean" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "row", "column"],
     },
@@ -498,17 +495,14 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         row: { type: "number", description: "0-based anchor row" },
         column: { type: "number", description: "0-based anchor column" },
         rowCount: { type: "number", description: "Rows to span (≥1; with columnCount > 1×1)" },
         columnCount: { type: "number", description: "Columns to span" },
         unmerge: { type: "boolean", description: "Remove the merge anchored here instead" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "row", "column"],
     },
@@ -549,11 +543,8 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Path to the document" },
-        table: {
-          type: "string",
-          description: "Table name; may be omitted when the document has exactly one table",
-        },
+        path: PATH_PROP,
+        table: TABLE_PROP,
         action: {
           type: "string",
           enum: ["insert_rows", "delete_rows", "insert_columns", "delete_columns", "set_column_width"],
@@ -561,7 +552,7 @@ const TOOLS: Tool[] = [
         at: { type: "number", description: "0-based row or column position" },
         count: { type: "number", description: "How many, default 1" },
         width: { type: "number", description: "Points, for set_column_width" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "action", "at"],
     },
@@ -613,7 +604,7 @@ const TOOLS: Tool[] = [
         title: { type: "string" },
         body: { type: "string" },
         notes: { type: "string" },
-        output: { type: "string", description: "Save here instead of over the input" },
+        output: OUTPUT_PROP,
       },
       required: ["path", "slide"],
     },

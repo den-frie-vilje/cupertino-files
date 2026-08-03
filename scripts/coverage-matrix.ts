@@ -2029,7 +2029,7 @@ function renderVerification(): string {
       out.push("");
       out.push(`**Why it needed an app.** ${vueSafe(proof.why)}`);
       out.push("");
-      out.push(`**Outcome.** ${vueSafe(proof.settled)}`);
+      out.push(`**Outcome.** ${vueSafe(proof.settled ?? "")}`);
       out.push("");
     }
   }
