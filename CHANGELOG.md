@@ -36,8 +36,9 @@ history uses Conventional Commits, so the detail behind any entry is one
   effect and timing live in the undecoded `animationAttributes` — so
   those read `undefined` on modern decks, and the probe now prints
   chunks, triggers and the field-18 shape to close in on them.
-- Paragraph styles can set `writingDirection`; the borders seed uses it
-  to stage a genuinely right-to-left paragraph.
+- Paragraph styles can set `writingDirection` (stored raw — value 2 does
+  not render right-to-left in Pages, so the honoured mapping is under
+  measurement via the borders seed's value ladder).
 - Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
 - Toolchain refresh: TypeScript 6, `strictTypeChecked` linting,
   `noImplicitReturns` and `verbatimModuleSyntax`, patched vite via

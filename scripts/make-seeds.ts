@@ -34,7 +34,7 @@ function seedRules(): Uint8Array {
   table.setColumnWidth(0, 460);
 
   const instructions = [
-    "SEED · conditional-formatting rules (docs/BLOCKERS.md #1)",
+    "SEED · conditional-formatting rules (docs/BLOCKERS.md, send-back ask)",
     "Do in Numbers, then save:",
     "1) Select B2:B11",
     "2) Format → Conditional Highlighting (Betinget fremhævning)",
@@ -44,7 +44,7 @@ function seedRules(): Uint8Array {
     "6) Select D2:D11 → add rule: Is blank",
     "7) Save (⌘S), close, then run:",
     "npm run harvest:predicates -- seed-rules.numbers",
-    "Either verdict is a finding: CONFIRMED pins the two missing operator codes, REFUTED corrects the prediction. Steps 5–6 widen the function table for free.",
+    "All six comparison codes are pinned, so steps 3–4 re-measure them on your version — a mismatch is the finding. Steps 5–6 widen the function table: text contains compiles to a function no name table covers. Then send the saved file back — as a fixture it pins these rules against real bytes.",
   ];
   instructions.forEach((text, i) => { table.setCell(i, 0, text); });
 
@@ -108,42 +108,50 @@ function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
   // UI terms verified against Apple's Danish Pages guide (tan802e88b40):
   // indholdsoversigten Format → Layout → Afsnitsrammer, lokalmenuen
-  // Stregtype, positionsknapper, farvefeltet. The third paragraph carries
-  // an explicit right-to-left paragraph style, written by this library:
-  // unset writing_direction renders Hebrew-first text LTR, so relying on
-  // the text alone does not produce an RTL paragraph. The seed thereby
-  // also checks that the app honours our writingDirection write — the
-  // comment asks the person to confirm the line is right-aligned.
-  doc.createParagraphStyle({ name: "RTL", paragraph: { writingDirection: 2, alignment: 4 } });
+  // Stregtype, positionsknapper, farvefeltet. The value Pages honours for
+  // writing_direction is unmeasured (2 renders left-to-right), so three
+  // Hebrew paragraphs ladder the candidate values 0/1/2 and the person
+  // borders whichever one stands right-aligned; the probe then prints
+  // that style's writing_direction beside its border code — naming the
+  // RTL value and settling visual-vs-logical side bits in one run.
+  for (const value of [0, 1, 2]) {
+    doc.createParagraphStyle({
+      name: `RTL${String(value)}`,
+      paragraph: { writingDirection: value, alignment: 4 },
+    });
+  }
   doc.appendParagraph(
-    "SEED · afsnitsrammer, sidste spørgsmål (docs/BLOCKERS.md). Bitmasken er målt i venstre-mod-højre-afsnit: 1 top, 2 bund, 4 venstre, 8 højre; 3 og 15 er unioner. Tilbage står ét spørgsmål: beholder et højre-mod-venstre-afsnit siderne som på papiret (visuelt), eller bytter det dem om (logisk start/slut)? Afsnit 3 herunder er sat til højre-mod-venstre af biblioteket selv. Hvert afsnit bærer en kommentar med de præcise klik; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
+    "SEED · afsnitsrammer + skriveretning (docs/BLOCKERS.md). Målt: 1 top, 2 bund, 4 venstre, 8 højre — i venstre-mod-højre-afsnit. To spørgsmål tilbage: hvilken gemt værdi af writing_direction betyder højre-mod-venstre (2 gør det ikke, og heller ikke uudfyldt), og beholder et RTL-afsnit sidebittene som på papiret (visuelt), eller bytter det dem om (logisk start/slut)? De tre hebraiske linjer herunder har skriveretning 0, 1 og 2 — kig efter den, der står højrestillet. De præcise klik står i kommentarerne; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
   );
-  const targets: { marker: string; style?: string; steps: string }[] = [
+  const targets: { marker: string; style?: string; comment?: string }[] = [
     {
       marker: "VENSTRE — giv dette afsnit en rød streg, kun i venstre side.",
-      steps:
+      comment:
         "Klik i afsnittet → indholdsoversigten Format → Layout → Afsnitsrammer: vælg en ubrudt streg i lokalmenuen Stregtype, klik kun positionsknappen for venstre kant, vælg rød i farvefeltet, 3 pt.",
     },
     {
       marker: "HØJRE — giv dette afsnit en blå streg, kun i højre side.",
-      steps: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
+      comment: "Samme panel: kun positionsknappen for højre kant, farven blå, 3 pt.",
     },
     {
-      marker: "העברית נכתבת מימין לשמאל",
-      style: "RTL",
-      steps:
-        "Tjek først: står denne linje højrestillet? Gør den ikke, er det i sig selv et fund (biblioteket har sat skriveretningen til højre-mod-venstre) — notér det, og fortsæt alligevel. Samme panel: grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som i afsnit 1. Kode 4 i proben = siderne er visuelle; kode 8 = logiske (start/slut); alt andet = nyt fund.",
+      marker: "עברית — værdi 0",
+      style: "RTL0",
+      comment:
+        "Én af de tre hebraiske linjer (værdi 0, 1, 2) bør stå højrestillet. Giv netop dén linje en grøn streg, 3 pt, på positionsknappen for VENSTRE kant — samme knap som det røde afsnit. Står ingen af dem højrestillet, er alle tre værdier afvist: spring den grønne streg over, og notér det. Proben viser bagefter den grønne stils writing_direction (= RTL-værdien) sammen med dens kode: 4 = visuelle sider, 8 = logiske (start/slut).",
     },
+    { marker: "עברית — værdi 1", style: "RTL1" },
+    { marker: "עברית — værdi 2", style: "RTL2" },
   ];
   for (const t of targets) doc.appendParagraph(t.marker, t.style);
   doc.appendParagraph(
-    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben afkoder hver kode og viser stregens farve, så rød/blå/grøn udpeger afsnittene. Forventet: rød = 4, blå = 8; grøn afgør spørgsmålet. Resultatet føres i docs/BLOCKERS.md-loggen.",
+    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — forventet: rød = 4, blå = 8; den grønne linje viser sin writing_direction (RTL-værdien), og dens kode afgør visuel kontra logisk. Resultatet føres i docs/BLOCKERS.md-loggen.",
   );
   const body = doc.body;
   for (const t of targets) {
+    if (t.comment === undefined) continue;
     const range = doc.find(t.marker)[0];
     if (!range) throw new Error(`seed-borders: marker not found: ${t.marker}`);
-    body.addComment(range.start, range.end, t.steps);
+    body.addComment(range.start, range.end, t.comment);
   }
   return doc.save();
 }
@@ -157,8 +165,8 @@ function seedFilters(): Uint8Array {
   table.setColumnWidth(0, 460);
 
   const instructions = [
-    "SEED · filter rules (docs/BLOCKERS.md, optional fourth)",
-    "Every filter set in the corpus is empty — this makes the first real one.",
+    "SEED · filter rules (docs/BLOCKERS.md, send-back ask)",
+    "The first real filter set is measured; a run on your version re-measures it, and the saved file is the outstanding fixture — send it back.",
     "1) Click the table, then Organize (Organiser) → Filter",
     "2) Add a Filter on column B: greater than · 10",
     "3) Add a Filter on column C: text contains · ko",
@@ -206,14 +214,16 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
       const d = PagesDocument.load(bytes);
       if (d.comments().length !== 3) throw new Error("borders: expected 3 comments");
       if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
-      if (!d.bodyText.includes("העברית")) throw new Error("borders: RTL paragraph missing");
-      const rtl = d.listedParagraphStyles().find((s) => s.name === "RTL");
-      if (!rtl) throw new Error("borders: RTL style missing");
-      const props = d
-        .stylesheets()
-        .map((sheet) => sheet.style(rtl.id)?.paragraph())
-        .find((p) => p !== undefined);
-      if (props?.writingDirection !== 2) throw new Error("borders: RTL direction not written");
+      if (!d.bodyText.includes("עברית")) throw new Error("borders: RTL paragraphs missing");
+      for (const value of [0, 1, 2]) {
+        const style = d.listedParagraphStyles().find((s) => s.name === `RTL${String(value)}`);
+        if (!style) throw new Error(`borders: RTL${String(value)} style missing`);
+        const props = d
+          .stylesheets()
+          .map((sheet) => sheet.style(style.id)?.paragraph())
+          .find((p) => p !== undefined);
+        if (props?.writingDirection !== value) throw new Error(`borders: RTL${String(value)} direction not written`);
+      }
     },
   },
   {

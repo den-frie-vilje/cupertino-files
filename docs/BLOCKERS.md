@@ -27,15 +27,19 @@ with every remaining click inside the document itself (cells beside the
 data, presenter notes, Pages comments on the exact paragraph). Open,
 follow, save, run the command the file names.
 
-**1. `seed-borders.pages` — 2 min, one question.** The border bitmask is
-measured in left-to-right paragraphs: 1 top, 2 bottom, 4 left, 8 right,
-unions literal. One question stands: does a right-to-left paragraph keep
-the side bits as on-page sides (visual), or swap them (logical
-start/end)? The seed's Hebrew paragraph is set right-to-left by the
-library itself — first confirm it renders right-aligned (if it does not,
-that alone is a finding: it means Pages ignores our `writingDirection`
-write), then give it a left-edge border and `npm run probe --
-seed-borders.pages` decodes the answer: 4 means visual, 8 means logical.
+**1. `seed-borders.pages` — 2 min, two questions in one.** The border
+bitmask is measured in left-to-right paragraphs: 1 top, 2 bottom, 4
+left, 8 right, unions literal. Open: which stored `writing_direction`
+value means right-to-left (2 does not — the ledger — and neither does
+unset), and does an RTL paragraph keep the side bits as on-page sides
+(visual) or swap them (logical start/end)? The seed ladders three Hebrew
+paragraphs with values 0, 1, 2. One look answers the first question:
+whichever line stands right-aligned names the value. Give that line a
+green left-edge border and `npm run probe -- seed-borders.pages` prints
+the style's `writing_direction` beside its border code — 4 visual, 8
+logical. If no line stands right-aligned, all three values are refuted
+and the next step is the app's own direction control (needs an RTL input
+source enabled in System Settings).
 
 **2. Send back the three finished seeds** from the first round —
 `seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
@@ -153,6 +157,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | border bits 4/8 + RTL | Pages (macOS, Danish UI), via seed-borders v2 | **left and right assigned**: red left-only = 4, blue right-only = 8, the probe's stroke colours naming their paragraphs. The RTL leg failed its precondition — the Hebrew-first paragraph rendered LTR with the Danish tail folded into the same line, so unset `writing_direction` is not "natural" — leaving visual-vs-logical open; the regenerated seed writes an explicit RTL paragraph style instead | `src/tswp/schema.ts`, test/styling.test.ts |
+| 2026-08-03 | paragraph `writing_direction` value | Pages (macOS, Danish UI), via seed-borders v4 | **value 2 refuted as RTL**: a Hebrew paragraph styled `writingDirection: 2` rendered left-aligned. The caret's behaviour inside the Hebrew (a typed space appears to the caret's right) is run-level Unicode bidi, present in any paragraph, and says nothing about paragraph base direction. The honoured value is unmeasured; the v5 seed ladders 0/1/2 and has the person border the line that stands right-aligned | `scripts/make-seeds.ts`, `src/tss/stylesheet.ts` |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
 | 2026-08-03 | predicate_type 7/8 | Numbers (macOS, Danish UI), via seed-rules + seed-filters | **solved — the menu-order prediction confirmed whole**: 7 = `>` (twice over: a conditional rule and a filter), 8 = `>=`, each stated by its own formula. All six comparison codes observed; setConditionalRules writes all six | `src/tst/predicates.ts`, test/conditional-writing.test.ts |
 | 2026-08-03 | filter rules + predicate_type 3 | Numbers (macOS, Danish UI), via seed-filters | **first non-empty filter set anywhere — rules read**, filters and conditional formatting sharing the predicate encoding. Type 3 is "text contains": `NOT(ISERROR(f(needle, cell)))` with `f` the unnamed function index 296 (SEARCH is 131). Filter formulas render `OTHER_TABLE::` — the filter owner's references resolve to no named table yet | `scripts/probe-unknowns.ts` |
