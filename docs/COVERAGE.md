@@ -140,7 +140,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 8 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 2 | iwork16→iwork16 |
-| Transitions<br><sub>named effects blocked on evidence: every corpus slide says effect "none", and the effect vocabulary is Keynote-internal — writing an unmeasured string is the well-formed-but-wrong class</sub> | Keynote | ✅ read + write | **0** | — |
+| Transitions<br><sub>named effects were blocked on evidence — every corpus slide says effect "none" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back (confirmed 2026-08-03); writing effects copies a string measured from the app that run, never a guess</sub> | Keynote | ✅ read + write | **0** | — |
 | Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |

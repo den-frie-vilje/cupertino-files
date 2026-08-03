@@ -192,10 +192,14 @@ describe("e2e: Keynote", () => {
       writeFileSync(path, doc.save());
 
       // Keynote must accept the package and report our duration.
+      // Fetch the record, then read the field locally — asking the app for
+      // `transition duration of (transition properties of …)` in one breath
+      // sends a specifier chain Keynote cannot coerce (-1700).
       const reported = osascript(
         `tell application "Keynote"\n` +
           `  set theDoc to open ${posix(path)}\n` +
-          `  set d to transition duration of (transition properties of slide 1 of theDoc)\n` +
+          `  set tp to transition properties of slide 1 of theDoc\n` +
+          `  set d to transition duration of tp\n` +
           `  close theDoc saving no\n` +
           `  return d as string\n` +
           `end tell`,
