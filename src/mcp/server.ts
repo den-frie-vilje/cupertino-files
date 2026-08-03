@@ -22,7 +22,7 @@ import { KeynoteDocument } from "../keynote/document.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
-import { hexColor, solidStroke, type Fill } from "../tsd/style.ts";
+import { hexColor, solidStroke } from "../tsd/style.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
@@ -503,7 +503,7 @@ export const TOOLS: readonly Tool[] = [
       }
       const formatting: CellFormatting = {};
       if (str(args.fill)) {
-        formatting.fill = { kind: "color", color: hexColor(str(args.fill)!) } as Fill;
+        formatting.fill = { kind: "color", color: hexColor(str(args.fill)!) };
       }
       const borders = args.borders as { color?: string; width?: number } | undefined;
       if (borders?.color) {
