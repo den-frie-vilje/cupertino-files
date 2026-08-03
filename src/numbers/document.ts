@@ -5,6 +5,7 @@
  * text/stylesheet/drawable machinery, sheet enumeration and round-trip save.
  */
 import { IWorkDocument } from "../tsa/document.ts";
+import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
@@ -93,6 +94,21 @@ export class NumbersDocument extends IWorkDocument {
     // made in Numbers, which is also a template with the content deleted.
     doc.compact();
     return doc;
+  }
+
+  /**
+   * A new, empty Numbers spreadsheet — one sheet, one table, A4 paper, no
+   * template file needed.
+   *
+   * The embedded donor is an Apple-written corpus fixture (already
+   * `iso-a4`) emptied by {@link blankFrom}, so every style and identity in
+   * the "new" document was authored by an Apple app.
+   * `scripts/make-blanks.ts` records its provenance.
+   *
+   * @agentTool create_document
+   */
+  static blank(): NumbersDocument {
+    return NumbersDocument.load(blankDonorBytes());
   }
 
   /** Tables of one sheet, or of the whole document when no sheet is given. */

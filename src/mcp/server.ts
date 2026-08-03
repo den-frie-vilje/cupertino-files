@@ -13,7 +13,7 @@
  * save in place unless `output` names somewhere else, which mirrors what
  * the apps themselves do to a document.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
@@ -364,6 +364,58 @@ export const TOOLS: readonly Tool[] = [
       });
       const target = save(doc, path, str(args.output));
       return `set ${formula} at r${row}c${column} of ${JSON.stringify(table.name ?? "")} and saved ${target}`;
+    },
+  },
+  {
+    name: "create_document",
+    description: apiDoc(
+      "create_document",
+      "kind picks the app, or the path's extension does. Refuses to overwrite an existing file.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Where to write the new document (.pages, .numbers or .key)",
+        },
+        kind: {
+          type: "string",
+          enum: ["pages", "numbers", "keynote"],
+          description: "Which app's document to create; defaults to what the extension says",
+        },
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      if (existsSync(path)) {
+        throw new RangeError(`${path} already exists; create_document refuses to overwrite`);
+      }
+      const kind =
+        str(args.kind) ??
+        (path.endsWith(".pages")
+          ? "pages"
+          : path.endsWith(".numbers")
+            ? "numbers"
+            : path.endsWith(".key")
+              ? "keynote"
+              : undefined);
+      const doc =
+        kind === "pages"
+          ? PagesDocument.blank()
+          : kind === "numbers"
+            ? NumbersDocument.blank()
+            : kind === "keynote"
+              ? KeynoteDocument.blank()
+              : undefined;
+      if (!doc) {
+        throw new RangeError(
+          "kind must be pages, numbers or keynote — or give the path a .pages/.numbers/.key extension",
+        );
+      }
+      writeFileSync(path, doc.save());
+      return `created a blank ${kind} document at ${path}`;
     },
   },
   {

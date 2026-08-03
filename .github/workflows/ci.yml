@@ -56,6 +56,7 @@ jobs:
       - run: npm run required:check
       - run: npm run shape:check
       - run: npm run tooldocs:check
+      - run: npm run blanks:check
 
   build:
     runs-on: ubuntu-latest

@@ -73,6 +73,7 @@ always-current answer to "does it do X?". The short version:
 
 | | |
 |---|---|
+| New documents | `NumbersDocument.blank()` and friends — a fresh A4 document or 16:9 deck, no template file needed, every style Apple-authored |
 | Drawables | Move, resize, copy, and style shapes, text boxes, and images — shadows, fills, strokes, opacity |
 | Charts | Data (categories, series, values) and appearance (type, colours, gridlines, legend) |
 | Fidelity | Byte-identical round trips; future app versions load with their new features intact |
@@ -88,7 +89,7 @@ waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
 |---|---|
 | The API | Typed, synchronous, documented — [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents) |
 | The CLI | `npx -y cupertino-files dump info file.pages` inspects; `call` runs any editing tool from the shell |
-| For AI agents | `npx -y cupertino-files mcp` — an MCP server with nineteen editing and formatting tools, plus a Claude Code skill in the package |
+| For AI agents | `npx -y cupertino-files mcp` — an MCP server with twenty creating, editing and formatting tools, plus a Claude Code skill in the package |
 | For other implementations | A language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself |
 
 Agent tool descriptions are generated from the API's own documentation,

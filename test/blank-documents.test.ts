@@ -16,6 +16,12 @@
  * spreadsheet" means in practice — including in Numbers, where every new
  * document starts from a template.
  *
+ * `blank()` is the same idea with the donor shipped in the package: a
+ * corpus fixture emptied by `blankFrom` at build time (A4, 16:9 — see
+ * scripts/make-blanks.ts), so "new document" needs no template file at
+ * all. The app-acceptance half of that claim lives in
+ * test/e2e/authoring.e2e.test.ts.
+ *
  * ## The other half: compaction
  *
  * `compact()` drops archives nothing can reach. Getting it right took two
@@ -120,6 +126,56 @@ describe("blank documents", () => {
       message = (error as Error).message;
     }
     expect(message.length).toBeGreaterThan(0);
+  });
+});
+
+describe("blank() from the embedded donors", () => {
+  it("makes an empty A4 Pages document that survives an edit cycle", () => {
+    const doc = PagesDocument.blank();
+    expect(doc.bodyText.trim()).toBe("");
+    const setup = doc.pageSetup();
+    expect(setup.paperId).toBe("iso-a4");
+    expect(setup.pageWidth).toBe(595.280029296875);
+    expect(setup.pageHeight).toBe(841.8900146484375);
+    doc.appendParagraph("first words");
+    const re = PagesDocument.load(doc.save());
+    expect(re.bodyText).toContain("first words");
+    expect(re.pageSetup().paperId).toBe("iso-a4");
+    expect(re.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("makes an empty A4 Numbers spreadsheet with one writable table", () => {
+    const doc = NumbersDocument.blank();
+    expect(doc.sheets().length).toBe(1);
+    const table = doc.tables()[0]!;
+    expect(table.cells().length).toBe(0);
+    // TN.DocumentArchive.paper_id, the field the print dialog reads.
+    expect(doc.object(1n)!.message.getString(11)).toBe("iso-a4");
+    table.setCell(1, 0, "hello");
+    table.setCell(1, 1, 42);
+    const re = NumbersDocument.load(doc.save());
+    expect(re.tables()[0]!.cellText(1, 0)).toBe("hello");
+    expect(re.tables()[0]!.cellText(1, 1)).toBe("42");
+    expect(re.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("makes an empty 16:9 Keynote deck with one editable slide", () => {
+    const doc = KeynoteDocument.blank();
+    expect(doc.slides().length).toBe(1);
+    const size = doc.slideSize();
+    expect(size?.width).toBe(1920);
+    expect(size?.height).toBe(1080);
+    doc.slides()[0]!.notes = "spoken";
+    const re = KeynoteDocument.load(doc.save());
+    expect(re.slides()[0]!.notes.trim()).toBe("spoken");
+    expect(re.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("hands each caller independent documents", () => {
+    const first = PagesDocument.blank();
+    first.appendParagraph("mine");
+    const second = PagesDocument.blank();
+    expect(second.bodyText.includes("mine")).toBe(false);
   });
 });
 
