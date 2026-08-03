@@ -32,6 +32,21 @@
   font-weight: 500;
 }
 
+/* The hero photo: circle-cropped like a fruit sticker, soft accent glow. */
+:root {
+  --vp-home-hero-image-background-image: radial-gradient(
+    circle,
+    var(--vp-c-brand-soft) 35%,
+    transparent 72%
+  );
+  --vp-home-hero-image-filter: blur(44px);
+}
+
+.VPHero .image-src {
+  border-radius: 50%;
+  box-shadow: 0 10px 44px rgba(0, 0, 0, 0.12);
+}
+
 /* Feature icons are plain text glyphs, not emoji — flat, in the accent. */
 .VPFeature .icon {
   font-family: var(--cf-font-serif);
