@@ -22,6 +22,14 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ## Needs a Mac — three documents to make and three files to open, ~15 minutes total
 
+**Shortcut: `npm run seeds -- out`** writes ready-made starting points —
+`seed-rules.numbers`, `seed-builds.key`, `seed-borders.pages`, and an
+optional `seed-filters.numbers` — with the data already staged and every
+remaining click written inside the document itself (cells beside the
+data, presenter notes, Pages comments on the exact paragraph). Open,
+follow, save, run the command the file names. The prose below remains
+the full story for anyone starting from scratch.
+
 **1. `rules.numbers` — 5 min.** One numeric column. Add a
 conditional-formatting rule using **greater than** and another using
 **greater than or equal to** — those two specifically; `=`, `<>`, `<`,
