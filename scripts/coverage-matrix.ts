@@ -1567,7 +1567,7 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slides().some((s) => s.transition()?.enabled) ?? false),
-    note: "named effects were blocked on evidence — every corpus slide says effect \"none\" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 13 of 13); written effects copy a string measured from the app that run, never a guess",
+    note: "named effects were blocked on evidence — every corpus slide says effect \"none\" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 17 of 17); written effects copy a string measured from the app that run, never a guess",
     manualProof: {
       claim: "Keynote honours automatic advance written into the transition attributes.",
       why:

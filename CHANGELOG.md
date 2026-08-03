@@ -74,7 +74,7 @@ format as a working, zero-dependency TypeScript library.
 ### Tooling
 
 - `npx -y cupertino-files mcp` — a zero-dependency MCP server with
-  thirteen tools covering describing, reading, editing and formatting
+  twenty tools covering describing, reading, editing and formatting
   documents, for Claude Code, Claude Desktop, Cursor and friends.
 - `npx -y cupertino-files dump` (also `cupertino-dump`) — inspection CLI.
 - A Claude Code skill ships in the package.

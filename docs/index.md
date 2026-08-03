@@ -4,7 +4,7 @@ layout: home
 hero:
   name: cupertino-files
   text: Pages, Numbers, and Keynote. In TypeScript.
-  tagline: Open, edit, and save Apple's document formats anywhere JavaScript runs. No Mac required. Nothing to install but the package. Every byte you don't touch is preserved, exactly.
+  tagline: Open, edit, and save Apple's document formats anywhere JavaScript runs. No Mac required. An open reverse-engineering, still under way — designed so every byte you don't touch comes back exactly.
   image:
     src: /apple.webp
     alt: A red apple wearing a cupertino-files fruit sticker
@@ -21,17 +21,17 @@ hero:
 
 features:
   - icon: ¶
-    title: The whole stack
-    details: Snappy, protobuf, ZIP, IWA archives, the object graph — implemented from the bytes up, with a typed document model on top. You work with paragraphs and slides. The bytes take care of themselves.
+    title: The whole stack, from hex
+    details: Snappy, protobuf, ZIP, IWA archives, the object graph — reimplemented by reading real documents until they made sense. A typed model on top, so you get to think in paragraphs and slides instead.
   - icon: ⟲
-    title: Round trips you can trust
-    details: Documents come back byte-for-byte wherever you didn't edit — including parts of the format nobody has met yet. Files from future app versions survive.
+    title: Bytes in, bytes out
+    details: What you don't edit is left exactly alone — that's the design, held against every fixture we could legally get. Documents from app versions we haven't met yet should ride along unharmed.
   - icon: ∅
-    title: Honest about limits
-    details: When something can't be done safely — a password-protected file, an unmeasured corner of the format — you get a clear error and a next step, never a wrong answer.
+    title: It mostly just works
+    details: And where it doesn't, it declines with a reason — a clear error beats a plausible guess. Password-protected documents are refused on principle.
   - icon: ⇄
-    title: Beyond TypeScript
-    details: The format specification, a language-neutral conformance suite, and recovered schemas with full provenance. Building an importer in C++, Java, or Rust? Start here.
+    title: For the next implementer
+    details: The format written down as we learn it, a language-neutral conformance suite, and the recovered schemas with their provenance. Port it, check yourself, tell us what we got wrong.
 ---
 
 ## Say hello
@@ -57,8 +57,9 @@ writeFileSync("Report 2025.pages", doc.save());
 
 :::
 
-Open the result in Pages — it opens, styles intact.
-([How we know.](/guide/fidelity))
+Open the result in Pages. It opens — and if yours ever doesn't, that is
+a bug report we genuinely want. ([How we know it usually
+does.](/guide/fidelity))
 
 ## one more thing …
 

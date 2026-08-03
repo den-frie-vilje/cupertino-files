@@ -97,17 +97,23 @@ the app itself.
 
 ## What only the apps can confirm
 
-Two things in this repository are validated *here and nowhere else*,
-because no amount of reading Apple's files can prove them:
+Several things in this repository are validated *here and nowhere else*,
+because no amount of reading Apple's files can prove them
+(`roundtrip.e2e.test.ts` and `authoring.e2e.test.ts`):
 
 - **Cell writing.** The unit suite proves our records re-encode
   byte-identically and reload through our own parser. Only Numbers can
   confirm it agrees — so the e2e suite writes a cell with the library and
   asks Numbers, through AppleScript, what it reads back.
 - **Keynote transitions.** No licensed deck in the corpus has a non-`none`
-  effect, so the app has to create the case for us (above).
+  effect, so the app has to create the case for us (above) — and read
+  back one we wrote.
+- **blank() documents**, opened and read back in all three apps.
+- **Merge survival** through a full Numbers rewrite of the package.
+- **The formula-recompute probe**, which settled that Numbers rebuilds
+  its dependency tracker on open rather than trusting the file's.
 
-These are the two claims the scripting dictionaries happen to expose.
+These are the claims the scripting dictionaries happen to expose.
 Others cannot be reached this way at all — cell fills, paragraph border
 positions, shadow geometry, colour spaces — and those are collected in
 [`docs/VERIFICATION.md`](VERIFICATION.md) with what would settle each. That

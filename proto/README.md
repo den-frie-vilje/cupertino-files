@@ -14,8 +14,8 @@
 > deliberate, and moving it to `protoFields` is the point.
 
 Curated set of protobuf schema definitions for the modern iWork IWA file format,
-collected to support a TypeScript library that reads/writes Apple Pages
-(`.pages`) documents. These schemas are **not published by Apple**; they were
+collected to support a TypeScript library that reads/writes Apple Pages,
+Numbers and Keynote documents. These schemas are **not published by Apple**; they were
 recovered from the iWork application binaries by open-source projects using
 "proto-dump"-style extraction (protobuf descriptors are embedded in the app
 binaries and can be decompiled back into `.proto` source). The files below are
@@ -63,8 +63,9 @@ The `*_sos.proto` files declare separate `…SOS` packages (`TSKSOS`, `TSWPSOS`,
 subsystem — and are imported by `TSDCommandArchives.proto`,
 `TSWPCommandArchives.proto`, `TSTCommandArchives.proto`.
 
-Numbers-app-specific `TN*` schemas were deliberately omitted (nothing in the
-`TS*` families imports them, and this project targets Pages).
+Numbers-app-specific `TN*` schemas are omitted from `current/` (nothing in
+the `TS*` families imports them); they are vendored separately under
+`numbers-14.4/` below.
 
 ## Caveats
 
