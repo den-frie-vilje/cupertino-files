@@ -25,11 +25,29 @@
  *             smaller decks in the corpus all carry custom or non-English
  *             templates, and the masters are the product.
  *
- * ASSERT_VANILLA below is the contract: each donor must present what a
- * new document from Apple's own chooser would — Blank-template styles,
- * A4 (Pages, Numbers), Basic White masters at 16:9 (Keynote). Generation
- * and `--check` both enforce it, so a donor swap that drifts from
- * Apple's defaults fails loudly.
+ * ## The house style
+ *
+ * On top of Apple's defaults, the donors carry this project's own
+ * typography — a quiet variation, applied through the same style API any
+ * caller could use:
+ *
+ *  - **Body type is Palatino** (Apple's serif): Pages Body at 12 pt and
+ *    Footnote; Keynote Body; Keynote Quote in Palatino-Italic.
+ *  - **Display stays Helvetica Neue**, as Apple set it: titles, headings,
+ *    labels, headers and footers.
+ *  - **A subtle palette**: secondary text (Subtitle, Caption,
+ *    Attribution) in Apple's label gray #6E6E73; the accent — Pages'
+ *    "Heading Red" — softened to terracotta #A85D45. Body ink stays
+ *    print black.
+ *
+ * The docs site uses the same faces and accent
+ * (docs/.vitepress/theme/custom.css), so a document made by `blank()`
+ * and the site describing it read as one thing.
+ *
+ * ASSERT_HOUSE below is the contract: Blank-template vocabulary, A4
+ * (Pages, Numbers), Basic White masters at 16:9 (Keynote), and the house
+ * faces where they belong. Generation and `--check` both enforce it, so
+ * donor drift fails loudly.
  *
  * Preview images are dropped from the packages — the apps regenerate them
  * on save. Run with `--check` to verify the embedded modules match the
@@ -63,6 +81,30 @@ const A4 = {
   paperId: "iso-a4",
 } as const;
 
+/** The palette: Apple's secondary-label gray, and a terracotta accent. */
+const GRAY = { r: 0.431, g: 0.431, b: 0.451, space: "srgb" } as const; // #6E6E73
+const TERRACOTTA = { r: 0.659, g: 0.365, b: 0.271, space: "srgb" } as const; // #A85D45
+
+const SERIF = "Palatino-Roman";
+const SERIF_ITALIC = "Palatino-Italic";
+
+function applyPagesHouseStyle(doc: PagesDocument): void {
+  const sheet = doc.stylesheet;
+  sheet.style("Body")?.setCharacter({ fontName: SERIF, fontSize: 12 });
+  sheet.style("Footnote")?.setCharacter({ fontName: SERIF });
+  sheet.style("Caption")?.setCharacter({ fontName: SERIF_ITALIC, bold: false, fontColor: GRAY });
+  sheet.style("Subtitle")?.setCharacter({ fontColor: GRAY });
+  sheet.style("Heading Red")?.setCharacter({ fontColor: TERRACOTTA });
+}
+
+function applyKeynoteHouseStyle(doc: KeynoteDocument): void {
+  const sheet = doc.stylesheets()[0];
+  if (!sheet) throw new Error("keynote donor has no stylesheet to restyle");
+  sheet.style("Body")?.setCharacter({ fontName: SERIF });
+  sheet.style("Quote")?.setCharacter({ fontName: SERIF_ITALIC });
+  sheet.style("Attribution")?.setCharacter({ fontColor: GRAY });
+}
+
 /** Drop the root preview images; the apps rebuild them on save. */
 function stripPreviews(saved: Uint8Array): Uint8Array {
   const zip = ZipReader.parse(saved);
@@ -87,6 +129,7 @@ const DONORS: readonly Donor[] = [
     make: (template) => {
       const doc = PagesDocument.blankFrom(template);
       doc.setPageSetup(A4);
+      applyPagesHouseStyle(doc);
       return stripPreviews(doc.save());
     },
   },
@@ -102,12 +145,19 @@ const DONORS: readonly Donor[] = [
     fixture: "iwork-mcp-v14.5-sample.key",
     file: "blank.key",
     module: "src/keynote/blank-donor.generated.ts",
-    make: (template) => stripPreviews(KeynoteDocument.blankFrom(template).save()),
+    make: (template) => {
+      const doc = KeynoteDocument.blankFrom(template);
+      applyKeynoteHouseStyle(doc);
+      return stripPreviews(doc.save());
+    },
   },
 ];
 
-/** The donor must look like a new document from Apple's own chooser. */
-const ASSERT_VANILLA: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
+/**
+ * The donor must look like a new document from Apple's own chooser,
+ * wearing the house style where the house style belongs.
+ */
+const ASSERT_HOUSE: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
   pages: (bytes) => {
     const doc = PagesDocument.load(bytes);
     const template = (doc.compatibility().appBuilds ?? []).find((s) => s.startsWith("Template:"));
@@ -118,6 +168,12 @@ const ASSERT_VANILLA: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
     }
     const setup = doc.pageSetup();
     if (setup.paperId !== "iso-a4") throw new Error(`pages donor paper is ${setup.paperId}, not iso-a4`);
+    const body = doc.stylesheet.style("Body")?.resolved().character;
+    if (body?.fontName !== SERIF) throw new Error(`pages Body is ${body?.fontName}, not ${SERIF}`);
+    const title = doc.stylesheet.style("Title")?.resolved().character;
+    if (!title?.fontName?.startsWith("HelveticaNeue")) {
+      throw new Error(`pages Title is ${title?.fontName}, not Helvetica Neue`);
+    }
   },
   numbers: (bytes) => {
     const doc = NumbersDocument.load(bytes);
@@ -137,6 +193,8 @@ const ASSERT_VANILLA: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
     for (const wanted of ["Title", "Title & Bullets", "Bullets"]) {
       if (!masters.has(wanted)) throw new Error(`keynote donor lacks the ${wanted} master`);
     }
+    const body = doc.stylesheets()[0]?.style("Body")?.resolved().character;
+    if (body?.fontName !== SERIF) throw new Error(`keynote Body is ${body?.fontName}, not ${SERIF}`);
   },
 };
 
@@ -190,7 +248,7 @@ for (const donor of DONORS) {
       failed = true;
     }
     try {
-      ASSERT_VANILLA[donor.kind](wanted);
+      ASSERT_HOUSE[donor.kind](wanted);
     } catch (error) {
       console.error((error as Error).message);
       failed = true;
@@ -199,7 +257,7 @@ for (const donor of DONORS) {
   }
   const template = new Uint8Array(readFileSync(join(ROOT, "fixtures", donor.fixture)));
   const bytes = donor.make(template);
-  ASSERT_VANILLA[donor.kind](bytes);
+  ASSERT_HOUSE[donor.kind](bytes);
   if (!existsSync(BLANKS_DIR)) mkdirSync(BLANKS_DIR, { recursive: true });
   writeFileSync(target, bytes);
   writeFileSync(modulePath, moduleSource(donor, bytes));

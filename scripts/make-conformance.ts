@@ -139,7 +139,10 @@ function profilesDocument(): object {
   const label = (type: number): string => typeName(type) ?? `type ${type}`;
 
   const profiles: Record<string, unknown> = {};
-  const entries = [...corpusProfile()].sort((a, b) => label(a[0]).localeCompare(label(b[0])));
+  const entries = [...corpusProfile()].sort((a, b) => {
+    const [la, lb] = [label(a[0]), label(b[0])];
+    return la < lb ? -1 : la > lb ? 1 : 0; // code-unit order: committed artifact
+  });
   for (const [type, p] of entries) {
     const fields: Record<string, unknown> = {};
     for (const [no, seen] of [...p.fields].sort((a, b) => a[0] - b[0])) {
@@ -149,7 +152,7 @@ function profilesDocument(): object {
       };
     }
     const referrerSets: Record<string, number> = {};
-    for (const [sig, count] of [...p.referrerSets].sort((a, b) => a[0].localeCompare(b[0]))) {
+    for (const [sig, count] of [...p.referrerSets].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
       const names =
         sig === "" ? "(nothing)" : sig.split(",").map((t) => label(Number(t))).join(" + ");
       referrerSets[names] = count;

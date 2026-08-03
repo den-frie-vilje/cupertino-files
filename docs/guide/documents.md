@@ -15,8 +15,8 @@ const page = PagesDocument.blank();      // empty body, A4
 const from = PagesDocument.blankFrom(templateBytes); // any document as template
 ```
 
-`blank()` needs no template file. `blankFrom` starts from any document
-you have, keeping its design.
+`blank()` needs no template file; `blankFrom` keeps the given
+document's design.
 
 ## Text
 

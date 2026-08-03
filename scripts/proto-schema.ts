@@ -49,7 +49,10 @@ export function vendoredFiles(): VendoredFile[] {
   const out: VendoredFile[] = [];
   const walk = (dir: URL, prefix: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-      a.name.localeCompare(b.name),
+      // Code-unit order, never localeCompare: this order is embedded in a
+      // generated, committed file, and collation varies by machine locale —
+      // a Danish macOS and an English CI must agree byte for byte.
+      a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
     )) {
       if (entry.isDirectory()) walk(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`);
       else if (entry.name.endsWith(".proto")) {

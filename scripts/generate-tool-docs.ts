@@ -84,7 +84,7 @@ async function extract(): Promise<{
       }
     }
   }
-  census.sort((a, b) => a.api.localeCompare(b.api));
+  census.sort((a, b) => (a.api < b.api ? -1 : a.api > b.api ? 1 : 0)); // code-unit order: committed artifact
   return { tools, census };
 }
 

@@ -16,8 +16,10 @@ format as a working, zero-dependency TypeScript library.
   format, 2013 →), in Node ≥ 18 and browsers — bytes in, bytes out.
 - New documents from nothing: `blank()` on each app class instantiates
   an embedded, Apple-authored donor — A4 for Pages and Numbers, 16:9
-  for Keynote — the same way the apps instantiate a bundled template.
-  `blankFrom(bytes)` does the same with any document as the template.
+  for Keynote — the same way the apps instantiate a bundled template,
+  dressed in the house typography: Palatino body text, Helvetica Neue
+  headings, a terracotta accent. `blankFrom(bytes)` does the same with
+  any document as the template.
 - Byte-fidelity round trips: untouched components are preserved exactly,
   and for documents written by current apps an edited save is typically
   byte-for-byte what the app itself would have written — the Snappy
