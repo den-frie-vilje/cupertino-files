@@ -126,6 +126,9 @@ export const STORAGE_KIND = protoEnum("TSWP.StorageArchive.KindType", {
  * paragraph — a shift-return — and treating it as a terminator would break
  * the mapping just as thoroughly in the other direction.
  */
+/** Edit-start log per storage object; see TextStorage#editStarts. */
+const EDIT_STARTS = new WeakMap<IwaObject, number[]>();
+
 function isParagraphTerminator(code: number): boolean {
   return code === 0x0a || code === 0x04 || code === 0x05 || code === 0x0c;
 }
@@ -219,6 +222,36 @@ export class TextStorage {
 
   private get msg(): RawMessage {
     return this.object.message;
+  }
+
+  /**
+   * The start offset of every edit made to this storage, in order — keyed
+   * by the underlying object, since wrapper instances are created freely.
+   * A captured offset stays meaningful as long as every later edit began
+   * at or after it — nothing under it has moved — which is what lets
+   * {@link TextRange} tell a still-valid range from a stale one and refuse
+   * the stale one loudly instead of editing the wrong span.
+   */
+  private get editStarts(): number[] {
+    let starts = EDIT_STARTS.get(this.object);
+    if (!starts) {
+      starts = [];
+      EDIT_STARTS.set(this.object, starts);
+    }
+    return starts;
+  }
+
+  /** Edit count; pair with {@link offsetsStableSince} for staleness checks. */
+  get revision(): number {
+    return this.editStarts.length;
+  }
+
+  /** True when every edit made after `revision` began at or after `end`. */
+  offsetsStableSince(revision: number, end: number): boolean {
+    for (let i = revision; i < this.editStarts.length; i++) {
+      if (this.editStarts[i]! < end) return false;
+    }
+    return true;
   }
 
   get kind(): number {
@@ -350,8 +383,33 @@ export class TextStorage {
     return out;
   }
 
-  /** Effective object id at a position (last set value at or before `pos`). */
+  /**
+   * The character style ruling `pos`, or `undefined` when no direct
+   * character styling applies there and the paragraph style alone rules —
+   * the normal state of most text. Resolve a name with
+   * {@link styleNameOf}.
+   */
+  characterStyleIdAt(pos: number): bigint | undefined {
+    return this.effectiveObjectAt(Storage.TABLE_CHAR_STYLE, pos);
+  }
+
+  /**
+   * Effective object id at a position — the last value set at or before
+   * `pos` in the given attribute table.
+   *
+   * `tableField` is a `Storage.*` field number (e.g.
+   * `Storage.TABLE_CHAR_STYLE`), not a name. `undefined` means no run
+   * entry rules the position: for the character table that is "no direct
+   * character styling here — the paragraph style alone applies", which is
+   * the normal state of most text, not an error.
+   */
   effectiveObjectAt(tableField: number, pos: number): bigint | undefined {
+    if (typeof tableField !== "number" || !Number.isInteger(tableField)) {
+      throw new TypeError(
+        `effectiveObjectAt: tableField must be a Storage.* field number ` +
+          `(e.g. Storage.TABLE_CHAR_STYLE), got ${typeof tableField}`,
+      );
+    }
     let value: bigint | undefined;
     const table = this.msg.getMessage(tableField);
     if (!table) return undefined;
@@ -379,36 +437,34 @@ export class TextStorage {
     if (start < 0 || end < start || end > oldText.length) {
       throw new RangeError(`replaceRange: invalid range ${start}..${end} (len ${oldText.length})`);
     }
+    this.editStarts.push(start);
     const newText = oldText.slice(0, start) + replacement + oldText.slice(end);
     const delta = replacement.length - (end - start);
 
     // Effective paragraph-aligned values must be computed BEFORE mutation.
+    //
+    // Text ending with a paragraph terminator has one more paragraph than
+    // paragraphStarts() lists: the empty final one after the terminator,
+    // whose entry sits at exactly text.length. Corpus-wide, 31 of 31
+    // terminator-ending storages carry that entry in the dense para-style
+    // table and 0 of 1270 others do; sparse tables declare it only when
+    // its value differs, like any paragraph. Treating the position as one
+    // more paragraph start makes the one rebuild loop produce every
+    // observed shape — and matters: a final empty paragraph left without
+    // its para-style entry makes Pages drop styling for the whole body.
+    const endsWithTerminator =
+      newText.length > 0 && isParagraphTerminator(newText.charCodeAt(newText.length - 1));
     const newStarts = this.paragraphStarts(newText);
+    const rebuildStarts = endsWithTerminator ? [...newStarts, newText.length] : newStarts;
     const paraRebuilds = new Map<number, (bigint | undefined)[]>();
-    const oldPositions = newStarts.map((s) => {
+    const oldPositions = rebuildStarts.map((s) => {
       // Map each new paragraph start back to a position in the old text.
       const oldPos = s <= start ? s : s >= start + replacement.length ? s - delta : start;
       return Math.min(Math.max(oldPos, 0), oldText.length);
     });
-    // Whether each table ended with an entry past the last paragraph — a
-    // terminator at the old text length, which the rebuild must reproduce
-    // at the new one. See writeParagraphTable.
-    const paraTerminator = new Map<number, boolean>();
     for (const f of PARA_ALIGNED_OBJECT_TABLES) {
       if (!this.msg.has(f)) continue;
       paraRebuilds.set(f, this.effectiveObjectsAt(f, oldPositions));
-      const indexes = (this.msg.getMessage(f)?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map(
-        (e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0,
-      );
-      // On empty text the `0 === 0` comparison would misread the table's one
-      // paragraph entry at 0 as a trailing terminator, and the rebuild would
-      // then manufacture an end-of-text entry Apple never wrote. Keynote's
-      // ladder caught it: filling an empty subtitle placeholder produced
-      // `@0→Subtitle @54 @111(end)`, and the app dropped the styling.
-      paraTerminator.set(
-        f,
-        oldText.length > 0 && indexes[indexes.length - 1] === oldText.length,
-      );
     }
 
     // 1. The text itself.
@@ -428,7 +484,7 @@ export class TextStorage {
 
     // 3. Paragraph-aligned tables: rebuild one entry per paragraph.
     for (const [f, values] of paraRebuilds) {
-      this.writeParagraphTable(f, newStarts, values, paraTerminator.get(f));
+      this.writeParagraphTable(f, rebuildStarts, values);
     }
   }
 
@@ -502,7 +558,6 @@ export class TextStorage {
     if (changed) table.setMessages(ATTR_TABLE_ENTRIES, kept);
   }
 
-  /** Rebuild a paragraph-aligned table: entry per paragraph, ∅ for repeats. */
   /**
    * Rewrite a paragraph-aligned run table.
    *
@@ -531,15 +586,16 @@ export class TextStorage {
    * them all sparse leaves an appended paragraph with no style entry at
    * all. Each is wrong for two of the three.
    *
-   * `terminator` keeps a trailing entry at the end of the text when the
-   * table arrived with one — about half of Apple's do, and it is not a
-   * paragraph, so the loop below cannot produce it.
+   * The final empty paragraph of terminator-ending text is a paragraph
+   * like any other — `starts` includes its position (= text length), so
+   * the same loop covers it: dense table always, sparse tables when its
+   * value differs. That is the corpus's exact shape, and the entry is
+   * load-bearing — see replaceRange.
    */
   private writeParagraphTable(
     tableField: number,
     starts: number[],
     values: (bigint | undefined)[],
-    terminator?: boolean,
   ): void {
     const table = this.msg.getMessage(tableField);
     if (!table) return;
@@ -558,11 +614,6 @@ export class TextStorage {
       }
       entries.push(entry);
     }
-    if (terminator) {
-      const end = RawMessage.create();
-      end.setVarint(ENTRY_CHARACTER_INDEX, this.text.length);
-      entries.push(end);
-    }
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
   }
 
@@ -572,6 +623,35 @@ export class TextStorage {
 
   deleteRange(start: number, end: number): void {
     this.replaceRange(start, end, "");
+  }
+
+  /**
+   * Apply several non-overlapping edits from one snapshot of the text.
+   *
+   * Every edit's offsets refer to the text as it is *now*: the batch is
+   * sorted descending internally, so no edit shifts another's offsets and
+   * callers need no re-reading discipline between spans. Overlapping
+   * edits are refused before anything is written. An omitted
+   * `replacement` deletes the range.
+   */
+  applyEdits(edits: readonly { start: number; end: number; replacement?: string }[]): void {
+    const length = this.text.length;
+    const sorted = [...edits].sort((a, b) => b.start - a.start || b.end - a.end);
+    for (const e of sorted) {
+      if (e.start < 0 || e.end < e.start || e.end > length) {
+        throw new RangeError(`applyEdits: invalid range ${e.start}..${e.end} (len ${length})`);
+      }
+    }
+    for (let i = 1; i < sorted.length; i++) {
+      // Descending order: the previous entry begins at or after this one.
+      if (sorted[i]!.end > sorted[i - 1]!.start) {
+        throw new RangeError(
+          `applyEdits: overlapping edits ${sorted[i]!.start}..${sorted[i]!.end} and ` +
+            `${sorted[i - 1]!.start}..${sorted[i - 1]!.end}`,
+        );
+      }
+    }
+    for (const e of sorted) this.replaceRange(e.start, e.end, e.replacement ?? "");
   }
 
   /** Replace the storage's whole text, keeping run structure where possible. */

@@ -27,7 +27,7 @@ export function expect(actual: unknown): {
   toBeCloseTo(n: number, digits?: number): void;
   toContain(item: unknown): void;
   toContainEqual(item: unknown): void;
-  toThrow(): void;
+  toThrow(pattern?: RegExp): void;
   not: {
     toBe(expected: unknown): void;
     toEqual(expected: unknown): void;
@@ -75,8 +75,11 @@ export function expect(actual: unknown): {
       });
       assert.ok(found, `expected ${JSON.stringify(actual)} to contain ${JSON.stringify(item)}`);
     },
-    toThrow() {
-      assert.throws(actual as () => unknown);
+    toThrow(pattern?: RegExp) {
+      // RegExp only: assert.throws treats a string second argument as the
+      // assertion message, which silently checks nothing.
+      if (pattern) assert.throws(actual as () => unknown, pattern);
+      else assert.throws(actual as () => unknown);
     },
     not: {
       toBe(expected) {

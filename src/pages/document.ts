@@ -639,6 +639,16 @@ export class PagesDocument extends IWorkDocument {
     return this.body.paragraph(index);
   }
 
+  /**
+   * Apply several non-overlapping body edits from one snapshot — offsets
+   * for every edit refer to the text as it is now, in any order; an
+   * omitted `replacement` deletes the range. The safe way to make many
+   * changes gathered from one `paragraphs()`/`find()` pass.
+   */
+  applyEdits(edits: readonly { start: number; end: number; replacement?: string }[]): void {
+    this.body.applyEdits(edits);
+  }
+
   /** Body hyperlinks ([] for page-layout documents). */
   links(): { start: number; end: number; url: string; fieldId: bigint }[] {
     return this.bodyOrUndefined?.links() ?? [];

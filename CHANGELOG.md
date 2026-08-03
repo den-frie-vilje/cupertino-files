@@ -7,6 +7,22 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: text edits reaching the end of a storage no longer smear
+  styling document-wide. The paragraph-style table's entry at
+  `text.length` is the final empty paragraph's entry, present exactly
+  when the text ends with a terminator (measured: 31 of 31 vs 0 of 1270
+  corpus storages); the writer now derives it from the new text instead
+  of preserving whatever the old table had. Found by an agent's field
+  report editing a real letterhead template.
+- Safer editing by construction: a `TextRange` made stale by an
+  earlier-offset edit now throws instead of silently editing the wrong
+  span (edits after a range never invalidate it, so the descending-order
+  idiom still works); new `applyEdits([...])` applies many
+  non-overlapping edits from one snapshot with no ordering discipline;
+  new `characterStyleIdAt(pos)` reads the ruling character style without
+  schema imports; `effectiveObjectAt` rejects a non-numeric table
+  argument loudly. The skill now leads with the safe path and states the
+  delete-plus-insert semantics once.
 - One-click releases: Actions → Release with a version number cuts the
   changelog, bumps, tags, creates the GitHub release and publishes to
   npm via trusted publishing — no tokens anywhere.

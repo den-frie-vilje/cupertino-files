@@ -1,10 +1,14 @@
 /**
  * Developer-facing fluent handles over text storages: {@link TextRange} for
  * span operations and {@link ParagraphHandle} for paragraph operations.
- * These are thin, always-live views — they read through to the storage on
- * every call, so mixing handle operations with direct storage edits is safe
- * as long as offsets are re-obtained after text-length changes (use the
- * return values, which carry updated ranges).
+ *
+ * A {@link ParagraphHandle} addresses by paragraph *index* and resolves
+ * offsets on every call, so it stays valid across text edits (its index
+ * shifts only when earlier paragraphs are added or removed). A
+ * {@link TextRange} captures offsets at creation and refuses to operate
+ * once an edit before it has shifted the text underneath — use the ranges
+ * its operations return, re-obtain via `find()`/`range()`, or hand all
+ * spans to `applyEdits()`, which needs no ordering discipline at all.
  */
 import type { TextStorage } from "./textstorage.ts";
 import type { CharacterFormatting, ParagraphFormatting } from "../tss/stylesheet.ts";
@@ -15,6 +19,8 @@ export class TextRange {
   readonly storage: TextStorage;
   readonly start: number;
   readonly end: number;
+  /** The storage revision this range's offsets were captured against. */
+  private readonly revision: number;
 
   constructor(storage: TextStorage, start: number, end: number) {
     const len = storage.text.length;
@@ -24,19 +30,40 @@ export class TextRange {
     this.storage = storage;
     this.start = start;
     this.end = end;
+    this.revision = storage.revision;
+  }
+
+  /**
+   * Captured offsets stay meaningful only while nothing before them moves.
+   * Edits at or after `end` are fine — including the descending-order
+   * idiom over one snapshot — but an edit before this range shifts the
+   * text under it, and using the range then would silently hit the wrong
+   * span. Loud is better.
+   */
+  private assertFresh(): void {
+    if (!this.storage.offsetsStableSince(this.revision, this.end)) {
+      throw new RangeError(
+        `stale TextRange ${this.start}..${this.end}: the storage was edited before this range ` +
+          `after it was obtained — re-obtain offsets (find()/range()/paragraph()), or make ` +
+          `multi-span changes through applyEdits(), which needs no ordering discipline`,
+      );
+    }
   }
 
   get text(): string {
+    this.assertFresh();
     return this.storage.text.slice(this.start, this.end);
   }
 
   /** Replace this range's text; returns the range covering the replacement. */
   replaceWith(text: string): TextRange {
+    this.assertFresh();
     this.storage.replaceRange(this.start, this.end, text);
     return new TextRange(this.storage, this.start, this.start + text.length);
   }
 
   delete(): void {
+    this.assertFresh();
     this.storage.deleteRange(this.start, this.end);
   }
 
@@ -47,6 +74,7 @@ export class TextRange {
    * creates one style object.
    */
   format(formatting: CharacterFormatting): this {
+    this.assertFresh();
     const sheet = this.storage.sheet();
     if (!sheet) throw new RangeError("storage has no stylesheet; cannot create styles");
     const current = this.storage.effectiveObjectAt(Storage.TABLE_CHAR_STYLE, this.start);
@@ -104,6 +132,7 @@ export class TextRange {
 
   /** Apply a character style by name or id (undefined restores paragraph style). */
   applyCharacterStyle(style: string | bigint | undefined): this {
+    this.assertFresh();
     const id =
       style === undefined
         ? undefined
@@ -114,6 +143,7 @@ export class TextRange {
 
   /** Apply a paragraph style to every paragraph intersecting this range. */
   applyParagraphStyle(style: string | bigint): this {
+    this.assertFresh();
     const id = this.storage.resolveStyle(style, TSWP_TYPE.PARAGRAPH_STYLE);
     for (const p of this.paragraphIndexes()) this.storage.setParagraphStyle(p, id);
     return this;
@@ -121,6 +151,7 @@ export class TextRange {
 
   /** Apply a list style (e.g. "Bullet", "Numbered", "None") to intersecting paragraphs. */
   applyListStyle(style: string | bigint): this {
+    this.assertFresh();
     const id = this.storage.resolveStyle(style, TSWP_TYPE.LIST_STYLE);
     for (const p of this.paragraphIndexes()) this.storage.setListStyle(p, id);
     return this;
@@ -128,17 +159,20 @@ export class TextRange {
 
   /** Make this range a hyperlink. */
   link(url: string): this {
+    this.assertFresh();
     this.storage.insertLink(this.start, this.end, url);
     return this;
   }
 
   /** Remove hyperlinks overlapping this range. */
   unlink(): this {
+    this.assertFresh();
     this.storage.removeLinks(this.start, this.end);
     return this;
   }
 
   paragraphIndexes(): number[] {
+    this.assertFresh();
     const out: number[] = [];
     for (const p of this.storage.paragraphs()) {
       // A paragraph intersects if its span (including terminator position)
