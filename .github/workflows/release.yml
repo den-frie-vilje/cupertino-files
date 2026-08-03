@@ -3,10 +3,14 @@
 # lint and the full suite inside `npm publish`, so a release that would
 # ship broken never leaves the runner.
 #
-# Setup (once): add an npm automation token as the NPM_TOKEN repository
-# secret. `--provenance` then attests the published tarball to this
-# repository and commit — the supply-chain counterpart of the provenance
-# discipline everywhere else in this project.
+# Auth is npm trusted publishing (OIDC): npmjs.com is configured to trust
+# this repository's release.yml, so no token is minted, stored, or able to
+# leak — and npm attests provenance automatically on every publish from a
+# public repository. Setup (once, and only after the package first exists
+# on the registry): npmjs.com → package → Settings → Trusted Publisher →
+# GitHub Actions, with organization den-frie-vilje, repository
+# cupertino-files, and workflow filename release.yml — the fields are
+# case-sensitive and the filename must match this file's name exactly.
 name: Release
 
 on:
@@ -15,7 +19,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm --provenance
+  id-token: write # the OIDC token npm exchanges for a publish credential
 
 jobs:
   publish:
@@ -27,6 +31,8 @@ jobs:
           node-version: "24.x"
           cache: npm
           registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm ≥ 11.5.1; Node's bundled npm can lag.
+      - run: npm install -g npm@latest
       - run: npm ci
       - name: Tag must match package.json
         run: |
@@ -36,6 +42,4 @@ jobs:
             echo "package.json is $PKG but the release tag is $GITHUB_REF_NAME" >&2
             exit 1
           fi
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish
