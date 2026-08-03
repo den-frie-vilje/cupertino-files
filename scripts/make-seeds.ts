@@ -21,14 +21,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
-import { RawMessage } from "../src/base/protobuf.ts";
-import {
-  ATTR_TABLE_ENTRIES,
-  ENTRY_CHARACTER_INDEX,
-  ENTRY_PARA_FIRST,
-  ENTRY_PARA_SECOND,
-  Storage,
-} from "../src/tswp/schema.ts";
 
 const outDir = process.argv[2] ?? "out";
 mkdirSync(outDir, { recursive: true });
@@ -114,55 +106,57 @@ function seedBuilds(): Uint8Array {
 
 function seedBorders(): Uint8Array {
   const doc = PagesDocument.blank();
-  // Direction is not the paragraph-style bag's writing_direction: no
-  // corpus style carries that field, and styled 0/1/2 all render LTR.
-  // The evidence points at the storage's per-paragraph bidi table
-  // instead — the pptx-lineage deck writes pairs (0, 0) and
-  // (65535, 65535), the NSWritingDirection scale at uint16 widths
-  // (-1 natural, 0 LTR), and this library's own storage builder writes
-  // (0, 0) — so 1 is the evidence-backed RTL candidate, written here
-  // straight into table_para_bidi. UI terms verified against Apple's
-  // Danish Pages guide (tan802e88b40).
+  // Every writable direction candidate renders LTR — the style bag's
+  // writing_direction (0/1/2) and the storage's bidi pairs (1/0/65535)
+  // alike, with the donor's alignment measured natural, so nothing
+  // masked them. Those fields are most likely derived values the app
+  // recomputes. The decisive measurement is therefore inverted: stage
+  // vanilla text, have the person flip it with Pages' own direction
+  // control, and diff the returned file — it shows exactly, and only,
+  // what the app writes for a real RTL paragraph.
   doc.appendParagraph(
-    "SEED · skriveretning + rammernes sidste spørgsmål (docs/BLOCKERS.md). Målt: rammebittene er 1 top, 2 bund, 4 venstre, 8 højre i venstre-mod-højre-afsnit, og skriveretningen bor ikke i afsnitsformatet — den bor efter alt at dømme i tekstlagerets bidi-tabel, hvor 0 er venstre-mod-højre og 65535 er 'naturlig'. De tre hebraiske linjer herunder har bidi-parret 1 (kandidaten for højre-mod-venstre), 0 og 65535. Kig: står netop [bidi 1]-linjen højrestillet? Klikkene står i kommentaren; panelet er Layout → Afsnitsrammer i indholdsoversigten Format.",
+    "SEED · skriveretning: hvad skriver appen selv? (docs/BLOCKERS.md). Alle felter, vi kan sætte — afsnitsformatets writing_direction og tekstlagerets bidi-par — renderer venstre-mod-højre, med naturlig justering målt i donoren, så intet maskerede dem. De er formentlig afledte værdier, appen genberegner. Målingen er derfor vendt om: DU vender linjen herunder med Pages' egen retningsknap, arkiverer og sender filen retur — så viser forskellen på filen præcis, hvor retningen bor. Virker på både iPhone og Mac; de præcise trin står i kommentaren på den hebraiske linje.",
   );
-  const targets: { marker: string; pair: number; comment?: string }[] = [
-    {
-      marker: "העברית נכתבת מימין לשמאל [bidi 1]",
-      pair: 1,
-      comment:
-        "Står denne linje højrestillet — og de to næste venstrestillet — er bidi-parret 1 målt som højre-mod-venstre. Giv så netop denne linje en grøn streg, 3 pt: indholdsoversigten Format → Layout → Afsnitsrammer → ubrudt streg i lokalmenuen Stregtype → kun positionsknappen for venstre kant → grøn i farvefeltet. Koden i proben afgør resten: 4 = siderne er visuelle, 8 = logiske (start/slut). Står ingen linje højrestillet, er også bidi-vejen afvist — spring stregen over, notér det, og næste skridt er at slå et hebraisk tastatur til og bruge Pages' egen retningsknap, så vi kan måle, hvad appen selv skriver.",
-    },
-    { marker: "העברית נכתבת מימין לשמאל [bidi 0]", pair: 0 },
-    { marker: "העברית נכתבת מימין לשמאל [bidi naturlig]", pair: 65535 },
-  ];
-  for (const t of targets) doc.appendParagraph(t.marker);
+  const marker = "עברית לדוגמה";
+  doc.appendParagraph(marker, "Body");
   doc.appendParagraph(
-    "Arkivér (⌘S), luk, og kør: npm run probe -- seed-borders.pages — proben skriver hvert afsnits bidi-par og hver rammekode med stregens farve. Resultatet føres i docs/BLOCKERS.md-loggen.",
+    "Arkivér til sidst, og send filen retur. Kunne du ikke finde retningsknappen, så send filen alligevel med en note — også dét er et fund.",
   );
-  // The bidi table is written after all text edits so nothing reshuffles
-  // it: one run-anchored entry per paragraph, the pair duplicated across
-  // both slots the way every observed entry duplicates its value.
-  const body = doc.body;
-  const bidi = RawMessage.create();
-  for (const para of body.paragraphs()) {
-    // Match the tag only at the paragraph's end: the intro *mentions*
-    // "[bidi 1]" in prose, and a substring match would tag it too.
-    const target = targets.find((t) => para.text.endsWith(`[bidi ${t.pair === 65535 ? "naturlig" : String(t.pair)}]`));
-    const pair = target?.pair ?? 65535;
-    const entry = RawMessage.create();
-    entry.setVarint(ENTRY_CHARACTER_INDEX, para.start);
-    entry.setVarint(ENTRY_PARA_FIRST, pair);
-    entry.setVarint(ENTRY_PARA_SECOND, pair);
-    bidi.addMessage(ATTR_TABLE_ENTRIES, entry);
-  }
-  body.object.message.setMessage(Storage.TABLE_PARA_BIDI, bidi);
-  for (const t of targets) {
-    if (t.comment === undefined) continue;
-    const range = doc.find(t.marker)[0];
-    if (!range) throw new Error(`seed-borders: marker not found: ${t.marker}`);
-    body.addComment(range.start, range.end, t.comment);
-  }
+  const range = doc.find(marker)[0];
+  if (!range) throw new Error("seed-borders: marker not found");
+  doc.body.addComment(
+    range.start,
+    range.end,
+    "1) Slå et hebraisk tastatur til: iPhone — Indstillinger → Generelt → Tastatur → Tastaturer → Tilføj nyt tastatur → Hebraisk; Mac — Systemindstillinger → Tastatur → Inputkilder → Tilføj → Hebraisk. 2) Sæt markøren i denne linje. 3) Tryk på knappen for afsnitsretning (⇄) — den dukker op i formatværktøjerne, når et højre-mod-venstre-tastatur er slået til. Linjen skal nu stå højrestillet. 4) Skriv gerne et par tegn med det hebraiske tastatur i linjen. 5) Arkivér, og send filen retur.",
+  );
+  return doc.save();
+}
+
+// -------------------------------------------------------- placeholder.pages
+
+function seedPlaceholder(): Uint8Array {
+  // The one thing offline checks cannot see about placeholders is the
+  // editor behaviour: does a span this library defines tap-select whole,
+  // and does a filled one edit as plain text? Two taps answer both.
+  const doc = PagesDocument.blank();
+  doc.appendParagraph(
+    "SEED · pladsholdertekst (docs/BLOCKERS.md). Biblioteket har markeret linje 2 som pladsholder og udfyldt en tidligere pladsholder i linje 3. To tryk afgør begge spørgsmål — og virker fint på iPhone.",
+  );
+  doc.appendParagraph("«PLADSHOLDER — tryk én gang her»", "Body");
+  doc.appendParagraph("Udfyldt af biblioteket — denne linje var en pladsholder.", "Body");
+  doc.appendParagraph(
+    "1) Tryk én gang i linje 2: markeres HELE spannet mellem «…» i ét hug, og erstattes det hele, når du skriver? Ja = bibliotekets pladsholder-markering virker. Nej (markøren lander som i almindelig tekst) = appen ignorerer vores felt — også et fund. 2) Tryk i linje 3: opfører den sig som helt almindelig tekst? Ja = udfyldning fjerner markeringen korrekt. Arkivér til sidst, og send filen retur — så måles, hvad appen selv har skrevet om.",
+  );
+  const token = doc.find("«PLADSHOLDER — tryk én gang her»")[0];
+  if (!token) throw new Error("seed-placeholder: token not found");
+  token.asPlaceholder();
+  const filled = doc.find("Udfyldt af biblioteket — denne linje var en pladsholder.")[0];
+  if (!filled) throw new Error("seed-placeholder: filled line not found");
+  doc.body.defineAsPlaceholder(filled.start, filled.end);
+  doc.body.fillPlaceholder(
+    { start: filled.start, end: filled.end },
+    "Udfyldt af biblioteket — denne linje var en pladsholder.",
+  );
   return doc.save();
 }
 
@@ -223,22 +217,19 @@ const seeds: { name: string; bytes: Uint8Array; check: (bytes: Uint8Array) => vo
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
       if (d.comments().length !== 1) throw new Error("borders: expected 1 comment");
-      if (!d.bodyText.includes("npm run probe")) throw new Error("borders: command missing");
-      if (!d.bodyText.includes("עברית")) throw new Error("borders: RTL paragraphs missing");
-      const table = d.body.object.message.getMessage(Storage.TABLE_PARA_BIDI);
-      const byStart = new Map(
-        (table?.getMessages(ATTR_TABLE_ENTRIES) ?? []).map((e) => [
-          Number(e.getVarint(ENTRY_CHARACTER_INDEX) ?? 0n),
-          Number(e.getVarint(ENTRY_PARA_FIRST) ?? 0n),
-        ]),
-      );
-      for (const para of d.body.paragraphs()) {
-        const expected = para.text.endsWith("[bidi 1]") ? 1 : para.text.endsWith("[bidi 0]") ? 0 : 65535;
-        const actual = byStart.get(para.start);
-        if (actual !== expected) {
-          throw new Error(`borders: bidi pair at ${String(para.start)} is ${String(actual)}, expected ${String(expected)}`);
-        }
-      }
+      if (!d.bodyText.includes("send filen retur")) throw new Error("borders: instructions missing");
+      if (!d.bodyText.includes("עברית לדוגמה")) throw new Error("borders: Hebrew line missing");
+    },
+  },
+  {
+    name: "seed-placeholder.pages",
+    bytes: seedPlaceholder(),
+    check: (bytes) => {
+      const d = PagesDocument.load(bytes);
+      const placeholders = d.placeholders();
+      if (placeholders.length !== 1) throw new Error("placeholder: expected exactly 1 defined");
+      if (!placeholders[0]!.text.startsWith("«PLADSHOLDER")) throw new Error("placeholder: wrong span");
+      if (!d.bodyText.includes("send filen retur")) throw new Error("placeholder: instructions missing");
     },
   },
   {
