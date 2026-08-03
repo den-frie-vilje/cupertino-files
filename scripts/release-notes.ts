@@ -4,10 +4,13 @@
  *
  *   node --experimental-strip-types scripts/release-notes.ts 0.2.0
  *
- * Refuses an empty Unreleased section — a release with nothing to say is
- * a mistake — and leaves a fresh empty Unreleased heading behind. Runs
- * before `npm ci` on the release runner, so it must need nothing beyond
- * Node itself.
+ * Idempotent per version, so a half-completed release run is finished by
+ * re-running it: when the changelog already carries the version's
+ * section, the notes are regenerated from it and the file is left
+ * untouched. A fresh cut refuses an empty Unreleased section — a release
+ * with nothing to say is a mistake — and leaves a fresh empty Unreleased
+ * heading behind. Runs before `npm ci` on the release runner, so it must
+ * need nothing beyond Node itself.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 
@@ -20,6 +23,20 @@ if (version === undefined || !/^\d+\.\d+\.\d+$/.test(version)) {
 }
 const path = "CHANGELOG.md";
 const changelog = readFileSync(path, "utf8");
+
+// End-of-input is (?![\s\S]) rather than $: with the m flag, $ matches
+// at every line end and would hand back an empty body.
+const already = new RegExp(
+  `^## ${version.replaceAll(".", "\\.")} — .*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`,
+  "m",
+).exec(changelog);
+if (already) {
+  const body = (already[1] ?? "").trim();
+  writeFileSync("RELEASE_NOTES.md", `${body}\n`);
+  console.log(`CHANGELOG.md already carries ${version}; notes regenerated from its section.`);
+  process.exit(0);
+}
+
 const match = /^## Unreleased\n([\s\S]*?)(?=^## )/m.exec(changelog);
 if (!match) {
   console.error("CHANGELOG.md has no '## Unreleased' section followed by a version section.");

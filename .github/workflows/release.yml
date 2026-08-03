@@ -50,16 +50,22 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
           GH_TOKEN: ${{ github.token }}
+        # Every step is idempotent, so a half-completed cut is finished by
+        # re-running the same dispatch: the notes script regenerates from
+        # an already-cut changelog, the commit is skipped when there is
+        # nothing to commit, the tag is annotated (a lightweight tag is
+        # invisible to --follow-tags, which is how run 1 lost its tag) and
+        # pushed explicitly, and the release is only created when absent.
         run: |
           node --experimental-strip-types scripts/release-notes.ts "$VERSION"
           npm pkg set version="$VERSION"
           npm install --package-lock-only --ignore-scripts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "release: v$VERSION"
-          git tag "v$VERSION"
-          git push origin "HEAD:${GITHUB_REF_NAME}" --follow-tags
-          gh release create "v$VERSION" --title "v$VERSION" --notes-file RELEASE_NOTES.md
+          git diff --quiet || git commit -am "release: v$VERSION"
+          git tag -f -a "v$VERSION" -m "v$VERSION"
+          git push origin "HEAD:${GITHUB_REF_NAME}" "refs/tags/v$VERSION"
+          gh release view "v$VERSION" >/dev/null 2>&1 || gh release create "v$VERSION" --title "v$VERSION" --notes-file RELEASE_NOTES.md
       - run: npm ci
       - name: Version must match the release
         env:
