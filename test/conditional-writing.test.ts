@@ -110,32 +110,18 @@ describe("writing conditional rules", () => {
     expect(rules[0]!.predicate?.operator).toBe("<=");
   });
 
-  it("writes each comparison whose code has been observed", () => {
-    for (const operator of ["=", "<>", "<", "<="] as const) {
+  it("writes all six comparisons, every code observed", () => {
+    // A rule stored under a wrong code is one the condition editor shows
+    // as a different condition while the formula states the truth — which
+    // is why only observed codes are writable, and why this loop covers
+    // exactly the observed set.
+    for (const operator of ["=", "<>", ">", ">=", "<", "<="] as const) {
       const doc = load();
       const table = doc.tables()[0]!;
       table.setConditionalRules(1, 0, [{ operator, value: 7, cell: RED }]);
       const after = NumbersDocument.load(doc.save()).tables()[0]!;
       expect(`${operator}: ${after.conditionalRules(1, 0)[0]?.predicate?.operator}`).toBe(
         `${operator}: ${operator}`,
-      );
-    }
-  });
-
-  it("refuses a comparison whose code is only predicted", () => {
-    // `>` and `>=` are predicted to be 7 and 8. A rule stored under a wrong
-    // code is one the condition editor shows as a different condition while
-    // the formula states the truth — very hard to notice, so it is refused.
-    const table = load().tables()[0]!;
-    for (const operator of [">", ">="] as const) {
-      let message = "";
-      try {
-        table.setConditionalRules(1, 0, [{ operator, value: 0, cell: RED }]);
-      } catch (error) {
-        message = (error as Error).message;
-      }
-      expect(`${operator}: ${message.includes("no predicate_type is confirmed")}`).toBe(
-        `${operator}: true`,
       );
     }
   });

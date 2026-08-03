@@ -1197,8 +1197,8 @@ export class TableModel {
    * (`TSCE.FormulaOwnerDependenciesArchive`) that this method leaves
    * alone. Numbers rebuilds it on open rather than trusting it: the e2e
    * recompute probe writes a formula with a deliberately wrong cached
-   * value and the app reports the recomputed result (confirmed
-   * 2026-08-03; the probe runs on every `npm run test:e2e`).
+   * value and the app reports the recomputed result on every
+   * `npm run test:e2e`.
    *
    * Refuses a function it has no index for rather than inventing one — see
    * `authorableFunctions()` for the 272 it knows.
@@ -1967,8 +1967,7 @@ export class TableModel {
    * Keep the identity map in lockstep with a row/column splice.
    *
    * Numbers renders a table at its identity map's size, not the grid's:
-   * an inserted column the map does not know is invisible in the app —
-   * measured 2026-08-03, when a seed document's C and D columns vanished.
+   * an inserted column the map does not know is invisible in the app.
    * New positions mint fresh identities; surviving positions keep theirs,
    * which is the map's whole purpose. Tables without a map stay without.
    */

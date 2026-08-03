@@ -1,17 +1,14 @@
 /**
- * The identity map moves with the grid.
- *
- * Numbers renders a table at its identity map's size, not its grid's —
- * measured 2026-08-03, when a seed document's freshly inserted C and D
- * columns were simply invisible in the app: the grid said four columns,
- * `base_column_row_uids` still said two, and the app believed the map.
+ * The identity map moves with the grid: Numbers renders a table at its
+ * identity map's size, not its grid's, so a position the map does not
+ * know is invisible in the app.
  *
  * The contract pinned here: every row/column insert and delete keeps the
  * map in lockstep, surviving positions keep their identities (that is
  * the map's whole purpose — categories and calc dependencies address by
  * UID), fresh positions get fresh distinct identities, and the sorted
- * arrays keep Apple's measured order — ascending by (upper, lower), as
- * issue102's "Cats" columns establish.
+ * arrays keep Apple's order — ascending by (upper, lower), as issue102's
+ * "Cats" columns establish.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";

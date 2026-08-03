@@ -54,3 +54,20 @@ been checked, add `settled:` to that block so the request moves off
 Measurements from documents that cannot be redistributed live as constants
 in the test files, each naming where it came from so it can be re-measured.
 Do not add such a document to `fixtures/`.
+
+## Comments record state; commits record history
+
+A comment or docblock describes the *current* state of knowledge: what a
+field means, what the invariant is, what is still unmeasured. It does not
+narrate how or when that knowledge arrived — no dates, no run-by-run
+stories, no obituaries for refuted guesses, and no "see the ledger"
+pointers either: git blame reaches the history without a signpost.
+Provenance lives where history lives: the commit message that landed the
+change, the ledger in `docs/BLOCKERS.md`, and the changelog.
+(`manualProof`/`settled` blocks in `scripts/coverage-matrix.ts` are part
+of that history layer, not of the code.) When a measurement closes a
+question, rewrite the comment to the settled state and put the story in
+the commit message. A test still names the fixture or document it
+re-measures — that is evidence, not history — but not the date it was
+first run. Code that narrates its own past fills context fast and goes
+stale faster.

@@ -261,19 +261,17 @@ describe("character and paragraph formatting", () => {
   });
 
   it("border_positions is the measured bitmask, not the refuted enum", () => {
-    // Measured 2026-08-03 via the seed-borders errand (BLOCKERS ledger):
-    // a person applied top / bottom / top-and-bottom / all-four borders in
-    // Pages, and the file carries 1, 2, 3, 15 in that order. 3 = 1|2 is
-    // what proves flags; the old enum reading (ALL = 4) would have drawn
-    // one vertical edge where a box was meant. This pin keeps the model
-    // from drifting back.
+    // 1 top, 2 bottom, 4 left, 8 right — unions literal, left/right
+    // measured in LTR paragraphs. This pin keeps the model from drifting.
     expect(BorderPosition.TOP | BorderPosition.BOTTOM).toBe(BorderPosition.TOP_AND_BOTTOM);
+    expect(BorderPosition.LEFT).toBe(4);
+    expect(BorderPosition.RIGHT).toBe(8);
     expect(BorderPosition.ALL).toBe(15);
     expect(
       BorderPosition.TOP |
         BorderPosition.BOTTOM |
-        BorderPosition.VERTICAL_BIT_A |
-        BorderPosition.VERTICAL_BIT_B,
+        BorderPosition.LEFT |
+        BorderPosition.RIGHT,
     ).toBe(BorderPosition.ALL);
 
     // And the writer round-trips the full mask through a real document.

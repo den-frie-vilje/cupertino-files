@@ -167,11 +167,11 @@ export class ConditionalStyleSet {
  * must agree. {@link buildConditionalStyleSet} derives one from the other
  * so they cannot drift.
  *
- * Only the four comparisons whose `predicate_type` has been *observed* can
- * be written. `>` and `>=` are predicted to be 7 and 8 but no document has
- * confirmed the pairing, and a rule stored under the wrong code is a rule
- * the editor shows as something else while the formula says the truth —
- * the kind of disagreement that is very hard to notice.
+ * All six comparisons are writable — every `predicate_type` code is
+ * observed ({@link PREDICATE_TYPE_OPERATORS}). An unobserved code would be
+ * refused, because a rule stored under a wrong code is a rule the editor
+ * shows as something else while the formula says the truth — the kind of
+ * disagreement that is very hard to notice.
  */
 export interface ConditionalCondition {
   operator: PredicateOperator;
@@ -237,8 +237,7 @@ export function buildConditionalStyleSet(
     if (predicateType === undefined) {
       throw new RangeError(
         `no predicate_type is confirmed for ${JSON.stringify(condition.operator)}; ` +
-          `writable operators are ${[...PREDICATE_TYPE_OPERATORS.values()].join(" ")} ` +
-          "— see docs/BLOCKERS.md priority 2",
+          `writable operators are ${[...PREDICATE_TYPE_OPERATORS.values()].join(" ")}`,
       );
     }
     const formula = buildPredicateFormula(condition, tableUid);

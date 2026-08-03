@@ -130,15 +130,17 @@ export type PredicateOperator = "=" | "<>" | ">" | ">=" | "<" | "<=";
  * silently read as "greater than" when it means "greater than or equal"
  * is worse than one honestly reported as unknown.
  *
- * Sources: `numbers-parser-v26.1-xlsx-lineage.numbers` in this repository —
- * three conditional-style sets, types 9 (`<`) and 5 (`=`). Types 6 (`<>`)
- * and 10 (`<=`) come from public conditional-formatting demo documents read
- * and discarded; each was confirmed by its own formula, and
- * `scripts/harvest-predicates.ts` re-derives all four from any such file.
+ * All six codes are observed, each stated by a real document's own
+ * formula, and they follow the condition menu's order laid out from 5.
+ * Filters and conditional formatting share the encoding — 7 is confirmed
+ * from both. `scripts/harvest-predicates.ts` re-derives every pairing
+ * from any rule-bearing file.
  */
 export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = new Map([
   [5, "="],
   [6, "<>"],
+  [7, ">"],
+  [8, ">="],
   [9, "<"],
   [10, "<="],
 ]);
@@ -152,6 +154,13 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  * entry in {@link PREDICATE_TYPE_OPERATORS}. Recording the codes anyway
  * means a reader can say *which* condition it is looking at, and it keeps
  * them from being mistaken for gaps in the comparison enum.
+ *
+ * Type **3** is "text contains" in both rule systems: it compiles to
+ * `NOT(ISERROR(f(needle, cell)))`, where `f` is function index **296** —
+ * SEARCH-shaped in its arguments, but not SEARCH, which is 131. That index
+ * is in no harvested name table, so the formula renders it `FUNCTION_296`
+ * and this map records no entry for 3: an entry's value is the identifying
+ * callee's *name*, and 296 does not have one yet.
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [34, "ISBLANK"],
@@ -159,27 +168,14 @@ export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
 ]);
 
 /**
- * A **prediction** for the rest of the enum, held separately from the proof.
- *
- * Numbers' condition menu lists the numeric comparisons in a fixed order:
- * equal to, not equal to, greater than, greater than or equal to, less
- * than, less than or equal to. Laying that order out from 5 predicts all
- * six codes, and **four of the six are now observed** — 5 `=`, 6 `<>`,
- * 9 `<`, 10 `<=` — each landing exactly where the menu says it should.
- *
- * What is left is narrower than it looks. Two codes remain, 7 and 8, and
- * two operators remain, `>` and `>=`; the only open question is whether
- * they are in menu order or swapped. No document read so far uses either
- * condition.
- *
- * It is still a prediction, and this map is **never consulted when
- * reading**: {@link readPredicate} takes the operator from the formula,
- * which states it outright. What this is for is making a harvest decisive
- * — `scripts/harvest-predicates.ts` checks every observed pairing against
- * it and reports agreements and contradictions, so one document with a
- * "greater than" rule settles the rest instead of merely collecting rows.
- *
- * See `docs/BLOCKERS.md` (the rules.numbers ask).
+ * The menu-order layout of the comparison enum: Numbers' condition menu
+ * lists the comparisons in a fixed order, and laying that order out from
+ * 5 gives every code. All six are observed, so this map now agrees with
+ * {@link PREDICATE_TYPE_OPERATORS} entry for entry; it stays because
+ * `scripts/harvest-predicates.ts` scores fresh observations against it,
+ * which keeps any future measurement decisive. It is **never consulted
+ * when reading**: {@link readPredicate} takes the operator from the
+ * formula, which states it outright.
  */
 export const PREDICATE_TYPE_HYPOTHESIS: ReadonlyMap<number, PredicateOperator> = new Map([
   [5, "="],

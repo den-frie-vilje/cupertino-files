@@ -18,6 +18,9 @@
  *     no name. Unblocks reading, and is a prerequisite for authoring
  *     formulas. Prefer `scripts/harvest-functions.ts`, which drives a whole
  *     probe sheet; this catches ids a hand-made document happens to use.
+ *     Predicate formulas (conditional and filter rules) are swept too — a
+ *     condition can call a function no cell uses; "text contains" calls
+ *     the still-unnamed index 296.
  *  2. **Predicate types** — `predicate_type` paired with the operator its
  *     formula states. Unblocks authoring conditional-formatting and filter
  *     rules. `scripts/harvest-predicates.ts` scores these against the
@@ -25,18 +28,17 @@
  *  3. **Cell controls** — `interaction_type` for each widget, with the
  *     fields that widget populates. Unblocks reading and writing checkboxes,
  *     sliders, steppers and pop-up menus.
- *  4. **Keynote builds** — the delivery strings, effect names and attribute
- *     fields an animation actually uses. Unblocks the build model, which is
- *     currently schema-derived with nothing to check it against.
+ *  4. **Keynote builds** — delivery, trigger, per-stage chunks, the
+ *     populated attribute fields, and the shape of `animationAttributes`
+ *     (field 18), where modern Keynote packs the effect and timing the
+ *     legacy `database_*` fields no longer carry.
  *  5. **Unresolved formula owners** — owner UUIDs that name no object.
  *  6. **Unknown archive types** — type ids absent from the registry.
  *  7. **Paragraph border positions** — `border_positions` with each style's
- *     stroke colour and writing direction. The 2026-08-03 run settled the
- *     bitmask (1 top, 2 bottom, 3 both, 15 all); still open is which of
- *     bits 4/8 is left and which right — and whether they are visual
- *     sides at all, or logical (leading/trailing) ones that flip in a
- *     right-to-left paragraph. Colour names the paragraph, direction
- *     names the frame of reference.
+ *     stroke colour and writing direction, decoded against the measured
+ *     bitmask (1 top, 2 bottom, 4 left, 8 right). A value outside those
+ *     bits would be a new finding; whether an RTL paragraph flips the
+ *     side bits is the one open question.
  *
  * Sections with nothing to report say so, so a run against an ordinary
  * document is a short, honest "nothing new here".
@@ -48,9 +50,16 @@ import { tablesOf } from "../src/tst/tables.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { FormulaOwnerRegistry } from "../src/tsce/owners.ts";
 import { readPredicate } from "../src/tst/predicates.ts";
-import { BuildFields } from "../src/keynote/builds.ts";
+import {
+  BuildAttributesFields,
+  BuildFields,
+  DeliveryOption,
+  TextDelivery,
+} from "../src/keynote/builds.ts";
 import { ParaProps, StyleArchive } from "../src/tswp/schema.ts";
 import { readStroke } from "../src/tsd/style.ts";
+import type { RawMessage } from "../src/base/protobuf.ts";
+import type { ObjectStore } from "../src/tsp/store.ts";
 
 interface Findings {
   file: string;
@@ -65,7 +74,22 @@ interface Findings {
     fields: number[];
     detail: string;
   }[];
-  builds: { slide: number; delivery: string | undefined; effect: string | undefined; attributeFields: number[] }[];
+  builds: {
+    slide: number;
+    delivery: string | undefined;
+    effect: string | undefined;
+    attributeFields: number[];
+    /** eventTrigger (field 4), raw. */
+    eventTrigger: number | undefined;
+    /** custom_textDelivery (20), rendered "value (NAME)". */
+    textDelivery: string | undefined;
+    /** custom_deliveryOption (21), rendered "value (NAME)". */
+    deliveryOption: string | undefined;
+    /** Per-stage timing, for builds delivered in parts. */
+    chunks: { delay: number | undefined; duration: number | undefined; automatic: boolean | undefined }[];
+    /** The shape of animationAttributes (18) — see the header note. */
+    animation18: string | undefined;
+  }[];
   unresolvedOwners: { kind: number; count: number }[];
   unknownTypes: { type: number; count: number }[];
   borderPositions: {
@@ -110,11 +134,11 @@ function probe(path: string): Findings {
       }
     }
     for (const set of table.conditionalStyleSets().values()) {
-      for (const rule of set.rules()) collectPredicate(predicates, rule.predicate);
+      for (const rule of set.rules()) collectPredicate(predicates, functions, rule.predicate);
     }
     const { rows, columns } = table.filterSets();
     for (const set of [rows, columns]) {
-      for (const rule of set?.rules() ?? []) collectPredicate(predicates, rule.predicate);
+      for (const rule of set?.rules() ?? []) collectPredicate(predicates, functions, rule.predicate);
     }
     for (const [key, control] of table.controls()) {
       findings.controls.push({
@@ -138,17 +162,30 @@ function probe(path: string): Findings {
   if (document.app === "keynote") {
     try {
       const deck = KeynoteDocument.load(new Uint8Array(readFileSync(path)));
+      const enumName = (table: Readonly<Record<string, number>>, value: number | undefined) =>
+        value === undefined
+          ? undefined
+          : `${value} (${Object.entries(table).find(([, n]) => n === value)?.[0] ?? "UNRECOGNISED"})`;
       for (const slide of deck.slides()) {
         for (const build of slide.builds()) {
           const info = build.read();
+          const attributes = build.object.message.getMessage(BuildFields.ATTRIBUTES);
           findings.builds.push({
             slide: slide.index,
             delivery: info.delivery,
             effect: info.effect,
+            eventTrigger: attributes?.getUint(BuildAttributesFields.EVENT_TRIGGER),
+            textDelivery: enumName(TextDelivery, info.textDelivery),
+            deliveryOption: enumName(DeliveryOption, info.deliveryOption),
+            chunks: info.chunks.map((chunk) => ({
+              delay: chunk.delay,
+              duration: chunk.duration,
+              automatic: chunk.automatic,
+            })),
+            animation18: describeAnimationAttributes(deck.store, attributes),
             attributeFields:
-              build.object.message
-                .getMessage(BuildFields.ATTRIBUTES)
-                ?.fields.map((field) => field.no)
+              attributes?.fields
+                .map((field) => field.no)
                 .filter((no, i, all) => all.indexOf(no) === i)
                 .sort((a, b) => a - b) ?? [],
           });
@@ -228,11 +265,71 @@ function probe(path: string): Findings {
 
 function collectPredicate(
   into: Map<number, { operator: string | undefined; sample: string }>,
+  functions: Map<number, { occurrences: number; sample: string }>,
   predicate: ReturnType<typeof readPredicate>,
 ): void {
-  if (!predicate || predicate.predicateType === undefined) return;
+  if (!predicate) return;
+  // A condition can call a function no cell uses — "text contains" calls
+  // the still-unnamed index 296 — so predicate formulas feed the unknown-
+  // function sweep too. The renderer already marks them: FUNCTION_<id>.
+  for (const match of predicate.text.matchAll(/\bFUNCTION_(\d+)\b/g)) {
+    const index = Number(match[1]);
+    const seen = functions.get(index) ?? { occurrences: 0, sample: predicate.text };
+    seen.occurrences++;
+    functions.set(index, seen);
+  }
+  if (predicate.predicateType === undefined) return;
   if (into.has(predicate.predicateType)) return;
   into.set(predicate.predicateType, { operator: predicate.operator, sample: predicate.text });
+}
+
+/**
+ * Decode a `border_positions` value against the measured bitmask (see
+ * `BorderPosition`): 1 top, 2 bottom, 4 left, 8 right. A residue outside
+ * those bits is flagged rather than folded in.
+ */
+function describeBorderBits(value: number): string {
+  const edges = [
+    ...(value & 1 ? ["top"] : []),
+    ...(value & 2 ? ["bottom"] : []),
+    ...(value & 4 ? ["left"] : []),
+    ...(value & 8 ? ["right"] : []),
+  ];
+  const residue = value & ~15;
+  if (residue !== 0) edges.push(`UNKNOWN BIT ${residue} — a new finding`);
+  return `(${edges.join("+") || "none"})`;
+}
+
+/**
+ * The shape of `attributes.animationAttributes` (field 18) — where modern
+ * Keynote packs the effect and timing the legacy `database_*` fields no
+ * longer carry. Whether 18 is an inline archive or a `TSP.Reference` is
+ * itself unmeasured, so both readings are attempted: a lone varint at
+ * field 1 that resolves in the store is reported as the reference it then
+ * must be, anything else as an inline message with its field numbers.
+ */
+function describeAnimationAttributes(store: ObjectStore, attributes: RawMessage | undefined): string | undefined {
+  const message = attributes?.getMessage(BuildAttributesFields.ANIMATION_ATTRIBUTES);
+  if (!message) return undefined;
+  const numbers = message.fields
+    .map((field) => field.no)
+    .filter((no, i, all) => all.indexOf(no) === i)
+    .sort((a, b) => a - b);
+  if (numbers.length === 1 && numbers[0] === 1) {
+    const id = message.getVarint(1);
+    const target = id === undefined ? undefined : store.resolve(id);
+    if (target) {
+      const targetFields = target.message.fields
+        .map((field) => field.no)
+        .filter((no, i, all) => all.indexOf(no) === i)
+        .sort((a, b) => a - b);
+      return (
+        `→ reference to object ${target.identifier} type ${target.type} ` +
+        `(${typeName(target.type, "keynote") ?? "UNREGISTERED — measure it"}) fields=[${targetFields.join(",")}]`
+      );
+    }
+  }
+  return `inline, fields=[${numbers.join(",")}]`;
 }
 
 function describeControl(control: { minimum?: number; maximum?: number; increment?: number; popupModelId?: bigint }): string {
@@ -277,10 +374,17 @@ function render(findings: Findings): string {
   );
   section(
     "4. Keynote builds",
-    findings.builds.map(
-      (b) =>
-        `slide ${b.slide}: delivery=${JSON.stringify(b.delivery)} effect=${JSON.stringify(b.effect)} attributeFields=[${b.attributeFields.join(",")}]`,
-    ),
+    findings.builds.flatMap((b) => [
+      `slide ${b.slide}: delivery=${JSON.stringify(b.delivery)} effect=${JSON.stringify(b.effect)} attributeFields=[${b.attributeFields.join(",")}]`,
+      ...(b.eventTrigger === undefined ? [] : [`    eventTrigger=${b.eventTrigger}`]),
+      ...(b.textDelivery === undefined ? [] : [`    textDelivery=${b.textDelivery}`]),
+      ...(b.deliveryOption === undefined ? [] : [`    deliveryOption=${b.deliveryOption}`]),
+      ...(b.animation18 === undefined ? [] : [`    animationAttributes(18) ${b.animation18}`]),
+      ...b.chunks.map(
+        (chunk, i) =>
+          `    chunk ${i}: delay=${chunk.delay ?? "unset"} duration=${chunk.duration ?? "unset"} automatic=${chunk.automatic ?? "unset"}`,
+      ),
+    ]),
     "no animations here — this is the gap an animated deck closes",
   );
   section(
@@ -294,17 +398,17 @@ function render(findings: Findings): string {
     "every type is known",
   );
   section(
-    "7. Paragraph border positions (which edge each value draws)",
+    "7. Paragraph border positions (decoded against the measured bitmask)",
     findings.borderPositions.map(
       (b) =>
-        `border_positions=${b.value} style=${JSON.stringify(b.style)}` +
+        `border_positions=${b.value} ${describeBorderBits(b.value)} style=${JSON.stringify(b.style)}` +
         (b.stroke === undefined ? " (no stroke)" : ` stroke=${b.stroke}`) +
         (b.writingDirection === undefined ? "" : ` writing_direction=${b.writingDirection}`) +
         (b.used
           ? "  USED — match the stroke colour to the paragraph wearing it"
           : "  (defined but unused: no paragraph applies it, so nothing renders)"),
     ),
-    "no paragraph borders here — left-only and right-only borders would settle the two remaining bits",
+    "no paragraph borders here",
   );
   return out.join("\n");
 }
@@ -329,7 +433,9 @@ function main(argv: string[]): number {
     all.some((f) => f.unknownFunctions.length) ||
     all.some((f) => f.controls.length) ||
     all.some((f) => f.builds.length) ||
-    all.some((f) => f.borderPositions.some((b) => b.used));
+    // The border bitmask is fully measured (1|2|4|8); only a residue
+    // outside it is news now.
+    all.some((f) => f.borderPositions.some((b) => (b.value & ~15) !== 0));
   console.log(
     open
       ? "\nSomething here is new. Record it in the docs/BLOCKERS.md ledger and turn it into a test."
