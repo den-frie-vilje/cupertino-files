@@ -71,6 +71,7 @@ export const TPDocument = protoFields("TP.DocumentArchive", {
   PAGE_SCALE: "page_scale",
   TABLES_CUSTOM_FORMAT_LIST: "tables_custom_format_list",
   ORIENTATION: "orientation",
+  PAPER_ID: "paper_id",
 });
 
 /** TP.SectionArchive (post-5.0 fields; never write the OBSOLETE_* ones). */

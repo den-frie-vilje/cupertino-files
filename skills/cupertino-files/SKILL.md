@@ -17,7 +17,7 @@ TypeScript/JavaScript — no Apple apps, no external binaries, no native
 modules. It works in Node ≥ 18 and browsers (bytes in → bytes out).
 
 The package also ships an MCP server — `npx -y cupertino-files mcp` —
-whose nineteen tools (describe, read, edit and format tables, text,
+whose twenty tools (create, describe, read, edit and format tables, text,
 slides, sheets, links and page setup) cover the common cases without
 writing code, and a matching CLI (`cupertino-files tools` / `call`).
 Tool descriptions are generated from the API's own docblocks

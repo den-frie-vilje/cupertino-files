@@ -105,6 +105,7 @@ describe("the MCP server over stdio", () => {
       const names = (listed.tools as { name: string }[]).map((t) => t.name).sort();
       expect(names).toEqual([
         "append_paragraph",
+        "create_document",
         "describe_document",
         "format_cells",
         "format_text",
@@ -193,6 +194,22 @@ describe("the MCP server over stdio", () => {
       );
       const fill = cats.cellFormatting(2, 2)?.fill;
       expect(fill?.kind).toBe("color");
+
+      // A document from nothing: create, fill, read back with the library
+      // — and a second create at the same path must refuse, as a result.
+      const fresh = join(dir, "fresh.numbers");
+      const created = await call(client, "create_document", { path: fresh });
+      expect(created.isError).toBe(false);
+      const filled = await call(client, "set_cells", {
+        path: fresh,
+        cells: [{ row: 1, column: 0, value: "from nothing" }],
+      });
+      expect(filled.isError).toBe(false);
+      const madeDoc = NumbersDocument.load(new Uint8Array(readFileSync(fresh)));
+      expect(madeDoc.tables()[0]!.cellText(1, 0)).toBe("from nothing");
+      const refused = await call(client, "create_document", { path: fresh });
+      expect(refused.isError).toBe(true);
+      expect(refused.text).toContain("refuses to overwrite");
 
       // A failure must be a result the model can read, not a dead server.
       const missing = await call(client, "read_table", { path: fixture, table: "Nope" });

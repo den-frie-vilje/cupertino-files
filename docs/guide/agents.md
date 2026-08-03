@@ -26,7 +26,7 @@ the Model Context Protocol over stdio, that's the whole configuration:
 }
 ```
 
-The server exposes nineteen tools, and their descriptions are not
+The server exposes twenty tools, and their descriptions are not
 written twice: each editing tool's text is extracted from the API's own
 documentation (the `@agentTool` tag in the docblock), so the words an
 agent reads are the words the [API reference](/api/) shows, kept in
@@ -35,6 +35,7 @@ document's shape before anything reads or writes it.
 
 | Tool | What it does |
 | --- | --- |
+| `create_document` | A new blank document — Pages, Numbers or Keynote — at a path |
 | `describe_document` | The document's shape: app, tables, slides, charts |
 | `read_text` | A Pages body, or a Keynote deck slide by slide |
 | `read_table` | Cells as display text, capped and honest about it |

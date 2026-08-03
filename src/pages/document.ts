@@ -5,6 +5,7 @@
  * page geometry.
  */
 import { IWorkDocument } from "../tsa/document.ts";
+import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
@@ -65,6 +66,14 @@ export interface PageSetup {
   footerMargin: number | undefined;
   /** 0 = portrait, 1 = landscape. */
   orientation: number | undefined;
+  /**
+   * The named paper behind the geometry — `"iso-a4"` and `"na-letter"` in
+   * the corpus. Set it alongside the dimensions so the print dialog agrees
+   * with the page: Apple's A4 is `pageWidth 595.280029296875, pageHeight
+   * 841.8900146484375` with all four margins `56.69291687011719` (2 cm),
+   * measured identically from writers twelve app versions apart.
+   */
+  paperId: string | undefined;
 }
 
 /** One of the up-to-three page-master variants of a section. */
@@ -245,6 +254,21 @@ export class PagesDocument extends IWorkDocument {
     body.setText("");
     doc.compact();
     return doc;
+  }
+
+  /**
+   * A new, empty Pages document — A4, vanilla styling, no template file
+   * needed.
+   *
+   * The embedded donor is an Apple-written corpus fixture emptied by
+   * {@link blankFrom} and re-papered to A4 with byte-measured values, so
+   * every style and identity in the "new" document was authored by an
+   * Apple app. `scripts/make-blanks.ts` records its provenance.
+   *
+   * @agentTool create_document
+   */
+  static blank(): PagesDocument {
+    return PagesDocument.load(blankDonorBytes());
   }
 
   // ------------------------------------------------------------------- body
@@ -569,6 +593,7 @@ export class PagesDocument extends IWorkDocument {
       headerMargin: m.getFloat(TPDocument.HEADER_MARGIN),
       footerMargin: m.getFloat(TPDocument.FOOTER_MARGIN),
       orientation: m.getUint(TPDocument.ORIENTATION),
+      paperId: m.getString(TPDocument.PAPER_ID),
     };
   }
 
@@ -592,6 +617,9 @@ export class PagesDocument extends IWorkDocument {
     setF(TPDocument.FOOTER_MARGIN, update.footerMargin);
     if (update.orientation !== undefined) {
       m.setVarint(TPDocument.ORIENTATION, update.orientation);
+    }
+    if (update.paperId !== undefined) {
+      m.setString(TPDocument.PAPER_ID, update.paperId);
     }
   }
 

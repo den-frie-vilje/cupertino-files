@@ -9,6 +9,7 @@
  */
 import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
+import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
@@ -572,6 +573,21 @@ export class KeynoteDocument extends IWorkDocument {
     for (const storage of doc.slides()[0]!.textStorages()) storage.setText("");
     doc.compact();
     return doc;
+  }
+
+  /**
+   * A new, empty Keynote deck — one slide, 16:9 (1920 × 1080), no template
+   * file needed.
+   *
+   * The embedded donor is an Apple-written corpus fixture emptied by
+   * {@link blankFrom}, so every master, style, and identity in the "new"
+   * deck was authored by an Apple app. `scripts/make-blanks.ts` records
+   * its provenance.
+   *
+   * @agentTool create_document
+   */
+  static blank(): KeynoteDocument {
+    return KeynoteDocument.load(blankDonorBytes());
   }
 
   slides(): KeynoteSlide[] {

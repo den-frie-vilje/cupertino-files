@@ -4,6 +4,24 @@ The fuller tour. Everything here follows the same few conventions — once
 you've used one part of the API, you've used them all
 ([API design](/guide/api-design) explains the grammar).
 
+## New documents
+
+Start from nothing, or from a document you have:
+
+```ts
+const doc = NumbersDocument.blank();     // one sheet, one table, A4
+const deck = KeynoteDocument.blank();    // one slide, 16:9
+const page = PagesDocument.blank();      // empty body, A4
+const from = PagesDocument.blankFrom(templateBytes); // any document as template
+```
+
+`blank()` needs no template file: the package embeds a donor — an
+Apple-written document emptied at build time — so every style and
+identity in a "new" document was authored by an Apple app. That is also
+how the apps themselves do it; a new document in Numbers is a bundled
+template, instantiated. `blankFrom` is the same operation with your own
+document as the donor, keeping its design.
+
 ## Text
 
 All text is the same kind of thing. Body, headers, footers, table cells,

@@ -196,6 +196,30 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Container",
+    name: "New document from nothing (blank)",
+    apps: "all",
+    status: "read+write",
+    probe: () => true,
+    note:
+      "blank() instantiates a donor embedded in the package — a corpus fixture emptied by " +
+      "blankFrom at build time (scripts/make-blanks.ts records which and why), previews " +
+      "stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, " +
+      "Keynote 1920×1080. The apps do the same: a new document is a bundled template, " +
+      "instantiated. blanks:check pins the embedded bytes to data/blanks/",
+    manualProof: {
+      claim: "Pages, Numbers and Keynote each open a blank() document and read our edits back.",
+      why:
+        "The donors round-trip offline and take edits, but only the apps can say they accept a " +
+        "package whose previews are stripped — and, for Keynote, whose donor is 2018-era.",
+      how:
+        "npm run test:e2e on a Mac: the 'authored from nothing' suite writes one blank() " +
+        "document per app, has the app report our marker back, and says what each failure means.",
+      e2e: true,
+      risk: "medium",
+    },
+  },
+  {
+    group: "Container",
     name: "Compaction (drop unreachable archives)",
     apps: "all",
     status: "read+write",
@@ -1525,7 +1549,7 @@ export const CAPABILITIES: Capability[] = [
     apps: ["keynote"],
     status: "read+write",
     probe: (c) => safe(() => c.keynote?.slides().some((s) => s.transition()?.enabled) ?? false),
-    note: "named effects were blocked on evidence — every corpus slide says effect \"none\" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back (confirmed 2026-08-03); writing effects copies a string measured from the app that run, never a guess",
+    note: "named effects were blocked on evidence — every corpus slide says effect \"none\" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 13 of 13); written effects copy a string measured from the app that run, never a guess",
     manualProof: {
       claim: "Keynote honours automatic advance written into the transition attributes.",
       why:
