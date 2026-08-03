@@ -1,17 +1,11 @@
 # cupertino-files
 
-Read, inspect and edit Apple iWork documents — Pages, Numbers, Keynote —
-in pure TypeScript. Zero runtime dependencies, no Apple software
-required.
+**Open, edit, and save Apple Pages, Numbers, and Keynote documents —
+anywhere JavaScript runs.** Pure TypeScript, zero runtime dependencies,
+no Mac required. You work with paragraphs, cells, and slides; the bytes
+take care of themselves.
 
 **Docs: <https://den-frie-vilje.github.io/cupertino-files/>**
-
-The format is undocumented, so this is an ongoing reverse-engineering
-effort: the library attempts to cover it feature by feature, claims only
-what its tests and real documents prove, and refuses what it cannot do
-safely rather than guessing. [`docs/COVERAGE.md`](docs/COVERAGE.md) —
-generated from the code — is the honest, current answer to "does it do
-X?".
 
 ```sh
 npm install cupertino-files
@@ -33,38 +27,74 @@ table.setFormula(1, 2, "=B2*1.25", { value: 179_750 });
 writeFileSync("budget.numbers", sheet.save());
 ```
 
-Works in Node ≥ 18 and modern browsers (bytes in, bytes out). Everything
-you don't touch is preserved byte-for-byte; for documents written by
-current apps, an edited save is typically byte-for-byte what the app
-itself would have written ([how](https://den-frie-vilje.github.io/cupertino-files/guide/fidelity)).
+Everything you don't touch is preserved byte-for-byte — and for
+documents written by current apps, an edited save is typically
+byte-for-byte what the app itself would have written, down to the
+compression ([how that works](https://den-frie-vilje.github.io/cupertino-files/guide/fidelity)).
+Works in Node ≥ 18 and modern browsers. Bytes in, bytes out.
 
-## What works
+The format is undocumented, so this is an ongoing reverse-engineering —
+measured from thousands of real documents, never guessed. The library
+claims only what its tests prove, says so when a capability is still
+waiting on evidence, and politely declines what it cannot do safely.
+[`docs/COVERAGE.md`](docs/COVERAGE.md), generated from the code, is the
+always-current answer to "does it do X?". The short version:
 
-| Area | Status |
+## What you can do
+
+### Pages
+
+| | |
 |---|---|
-| Pages text, styles, sections, headers/footers, comments, footnotes, fields | read + write, app-confirmed |
-| Tables: cells, styling, formats, rows/columns, formulas, merges | read + write |
-| Numbers sheets; Keynote slides, notes, skip/advance | read + write |
-| Drawables (move, resize, style), image crops, chart data + appearance | read + write |
-| Conditional formatting, filters, categories, controls, builds | read |
-| iWork '09 XML, password-protected files | detected and refused |
+| Text | Find & replace, append, insert — every edit keeps all twenty-plus attribute tables consistent |
+| Styles | Named paragraph and character styles: apply, edit, create; direct formatting too |
+| Layout | Sections, headers & footers, page setup, margins, orientation |
+| Extras | Comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents |
+| Images | Inline insertion (app-confirmed), floating placement, crops, filters |
 
-The short version — [`docs/COVERAGE.md`](docs/COVERAGE.md) has the full
-matrix, [`docs/BLOCKERS.md`](docs/BLOCKERS.md) what each gap waits on,
-and [`docs/FORMAT.md`](docs/FORMAT.md) is the format writeup itself,
-with schema dumps in [`proto/`](proto/) and a language-neutral
-[conformance suite](conformance/README.md) for other implementations.
+### Numbers
 
-## Command line and agents
+| | |
+|---|---|
+| Cells | Read and write every value type; formatting, styles, and comments survive your edits |
+| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — compiled to Apple's exact encoding, 271 functions |
+| Formatting | Fills, borders, alignment, wrap; number, currency, date and duration formats; bands |
+| Structure | Sheets and tables (add, rename, move, remove), rows and columns, merges, column widths |
+| Reading | Conditional formatting, filters, categories, and cell controls all read faithfully |
 
-```sh
-npx -y cupertino-files dump info file.pages   # inspect: info|ls|text|styles|object|extract
-npx -y cupertino-files mcp                    # MCP server over stdio, for AI agents
-```
+### Keynote
 
-The MCP server gives agents document editing and formatting without
-writing code; the package also ships a Claude Code
-[skill](skills/cupertino-files/SKILL.md). Details:
+| | |
+|---|---|
+| Slides | Add, duplicate, reorder, remove, skip; titles, bodies, presenter notes |
+| Decks | Slide size, auto-advance; builds and transitions read |
+
+### Everywhere
+
+| | |
+|---|---|
+| Drawables | Move, resize, copy, and style shapes, text boxes, and images — shadows, fills, strokes, opacity |
+| Charts | Data (categories, series, values) and appearance (type, colours, gridlines, legend) |
+| Fidelity | Byte-identical round trips; future app versions load with their new features intact |
+| Honesty | iWork '09 XML and password-protected documents are detected and declined, never mis-parsed |
+
+Deeper detail, per capability and with the evidence:
+[the capability matrix](docs/COVERAGE.md) · [what each open question
+waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
+
+## Tools for every kind of work
+
+| | |
+|---|---|
+| The API | Typed, synchronous, documented — [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents) |
+| The CLI | `npx -y cupertino-files dump info file.pages` inspects; `call` runs any editing tool from the shell |
+| For AI agents | `npx -y cupertino-files mcp` — an MCP server with nineteen editing and formatting tools, plus a Claude Code skill in the package |
+| For other implementations | A language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself |
+
+Agent tool descriptions are generated from the API's own documentation,
+so the words an agent reads are the words the
+[API reference](https://den-frie-vilje.github.io/cupertino-files/api/)
+shows — one source, kept in sync by CI. More in
 [For AI agents](https://den-frie-vilje.github.io/cupertino-files/guide/agents).
 
 ## Development
@@ -74,9 +104,11 @@ npm install && npm test   # unit + fixture suite; never launches an app
 npm run test:e2e          # macOS only: drives the real apps
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Fixtures are real Apple-written
-documents from the Apache Tika and libetonyek test suites
-([attribution](fixtures/ATTRIBUTION.md)).
+Contributions are warmly welcome — [CONTRIBUTING.md](CONTRIBUTING.md)
+shows the way, and [docs/BLOCKERS.md](docs/BLOCKERS.md) lists questions
+where twelve minutes with a Mac genuinely advances the state of the
+art. Test fixtures are real Apple-written documents from the Apache
+Tika and libetonyek test suites ([attribution](fixtures/ATTRIBUTION.md)).
 
 Built on the shoulders of
 [iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat),
@@ -89,7 +121,7 @@ Built on the shoulders of
 An independent project, not affiliated with or endorsed by Apple Inc.
 Apple, iWork, Pages, Numbers and Keynote are trademarks of Apple Inc.,
 used only to name the formats this library interoperates with. It
-contains no Apple code and refuses encrypted documents by design;
+contains no Apple code and declines encrypted documents by design;
 details in [docs/LEGAL.md](docs/LEGAL.md).
 
 ## License
