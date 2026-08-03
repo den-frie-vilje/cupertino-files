@@ -7,6 +7,9 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- One-click releases: Actions → Release with a version number cuts the
+  changelog, bumps, tags, creates the GitHub release and publishes to
+  npm via trusted publishing — no tokens anywhere.
 - Fixed: inserting rows or columns now keeps the table's identity map
   (`base_column_row_uids`) in lockstep with the grid. Numbers renders a
   table at the map's size, so columns inserted by earlier versions were

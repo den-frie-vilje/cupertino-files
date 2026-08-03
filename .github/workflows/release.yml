@@ -1,24 +1,36 @@
-# Publishing is creating a GitHub release: tag v<version>, write the notes,
-# publish — this workflow does the rest. `prepublishOnly` re-runs build,
-# lint and the full suite inside `npm publish`, so a release that would
-# ship broken never leaves the runner.
+# Two ways to release, one pipeline:
 #
-# Auth is npm trusted publishing (OIDC): npmjs.com is configured to trust
-# this repository's release.yml, so no token is minted, stored, or able to
-# leak — and npm attests provenance automatically on every publish from a
-# public repository. Setup (once, and only after the package first exists
-# on the registry): npmjs.com → package → Settings → Trusted Publisher →
-# GitHub Actions, with organization den-frie-vilje, repository
-# cupertino-files, and workflow filename release.yml — the fields are
-# case-sensitive and the filename must match this file's name exactly.
+#  - Actions → Release → "Run workflow" with a version (e.g. 0.2.0): the
+#    run bumps package.json (and the lockfile), retitles the changelog's
+#    Unreleased section, commits, tags v<version>, creates the GitHub
+#    release with that section as its notes, and publishes to npm — one
+#    click end to end. The release it creates cannot re-trigger this
+#    workflow (events from GITHUB_TOKEN never do), which is exactly right:
+#    the same run carries on to publish.
+#  - Publishing a GitHub release by hand still works: the release event
+#    runs the same publish steps against the tag's checkout.
+#
+# Publishing never uses a stored token. npmjs.com trusts this repository's
+# release.yml via OIDC (organization den-frie-vilje, repository
+# cupertino-files, workflow release.yml — the fields are case-sensitive
+# and the filename must match this file's name exactly); npm ≥ 11.5.1
+# performs the exchange, and provenance is attested automatically for a
+# public repository. `prepublishOnly` re-runs build, lint and the full
+# suite inside `npm publish`, so a release that would ship broken never
+# leaves the runner.
 name: Release
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 0.2.0 — no leading v)"
+        required: true
 
 permissions:
-  contents: read
+  contents: write # the dispatch path pushes the release commit and tag
   id-token: write # the OIDC token npm exchanges for a publish credential
 
 jobs:
@@ -33,13 +45,30 @@ jobs:
           registry-url: https://registry.npmjs.org
       # Trusted publishing needs npm ≥ 11.5.1; Node's bundled npm can lag.
       - run: npm install -g npm@latest
+      - name: Cut the release (dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --experimental-strip-types scripts/release-notes.ts "$VERSION"
+          npm pkg set version="$VERSION"
+          npm install --package-lock-only --ignore-scripts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "release: v$VERSION"
+          git tag "v$VERSION"
+          git push origin "HEAD:${GITHUB_REF_NAME}" --follow-tags
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file RELEASE_NOTES.md
       - run: npm ci
-      - name: Tag must match package.json
+      - name: Version must match the release
+        env:
+          EXPECTED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
         run: |
           PKG="$(node -p "require('./package.json').version")"
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${EXPECTED#v}"
           if [ "$PKG" != "$TAG" ]; then
-            echo "package.json is $PKG but the release tag is $GITHUB_REF_NAME" >&2
+            echo "package.json is $PKG but the release is $EXPECTED" >&2
             exit 1
           fi
       - run: npm publish
