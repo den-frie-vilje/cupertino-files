@@ -33,6 +33,7 @@
     }
   },
   "bin": {
+    "cupertino-files": "./dist/main.js",
     "cupertino-dump": "./dist/cli.js"
   },
   "files": [
@@ -81,7 +82,8 @@
     "prepublishOnly": "npm run build && npm run lint && npm test",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

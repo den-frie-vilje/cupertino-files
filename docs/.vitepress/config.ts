@@ -34,6 +34,7 @@ export default defineConfig({
           { text: "Getting started", link: "/guide/getting-started" },
           { text: "Working with documents", link: "/guide/documents" },
           { text: "CLI", link: "/guide/cli" },
+          { text: "For AI agents", link: "/guide/agents" },
           { text: "API design", link: "/guide/api-design" },
         ],
       },

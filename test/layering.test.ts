@@ -46,6 +46,10 @@ const ORDER = [
   "pages",
   "numbers",
   "keynote",
+  // The MCP server sits above the apps: it may import anything, and
+  // nothing may import it — a delivery mechanism, not a layer of the
+  // format model.
+  "mcp",
 ];
 const rank = new Map(ORDER.map((d, i) => [d, i]));
 

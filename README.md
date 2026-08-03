@@ -311,12 +311,32 @@ are packaged separately:
   ledger, and the conformance suite. Calendar-versioned, because it tracks
   the format as measured, not this library's API.
 
-## Claude skill
+## For AI agents
 
-The package ships a [Claude skill](skills/cupertino-files/SKILL.md)
-(`skills/cupertino-files/SKILL.md`) that teaches AI agents the API and its
-guardrails. Point a Claude Code session at an installed copy (or this repo)
-and ask it to work with `.pages` files.
+Three doors, in increasing order of involvement:
+
+**MCP server.** `npx -y cupertino-files mcp` runs a Model Context
+Protocol server over stdio — seven tools for describing, reading and
+editing documents, hand-rolled JSON-RPC with zero dependencies like
+everything else here. Configuration for Claude Code, Claude Desktop,
+Cursor and friends:
+
+```json
+{
+  "mcpServers": {
+    "cupertino-files": { "command": "npx", "args": ["-y", "cupertino-files", "mcp"] }
+  }
+}
+```
+
+**Claude skill.** The package ships a
+[skill](skills/cupertino-files/SKILL.md) that teaches Claude Code the
+API and its guardrails; package skills are discovered automatically in
+installed copies.
+
+**The API.** Agents that write code use the same TypeScript surface as
+everyone else — see the [docs site](https://den-frie-vilje.github.io/cupertino-files/)
+for the guided tour.
 
 ## Fidelity & compatibility
 
