@@ -201,4 +201,52 @@ describe("writing merges", () => {
     const after = NumbersDocument.load(doc.save()).tables().find((t) => t.name === name)!;
     expect(after.merges()).toEqual([{ row: 2, column: 0, rowCount: 2, columnCount: 2 }]);
   });
+
+  it("keeps the dependency ledger in step with the formula store", () => {
+    // The calc engine lists each merge in the kind-5 owner's tiled ledger
+    // as (row 0, column = formula_index) with empty edges — measured on
+    // both merge-bearing fixtures, 8 records of 8. Creating a merge on a
+    // table that never had one must mint the tile object too, and
+    // unmerging releases the record while the tile stays, like the
+    // high-water index.
+    const ledgerIndexes = (table: unknown): number[] => {
+      // Reach through the same private resolver production uses rather
+      // than duplicating the UUID arithmetic here; the assertion is about
+      // the ledger's contents, not about finding it twice.
+      const t = table as {
+        store: { resolve(ref: unknown): { message: RawMessage } | undefined };
+        mergeDependenciesOwner(): { message: RawMessage } | undefined;
+      };
+      const owner = t.mergeDependenciesOwner();
+      const out: number[] = [];
+      const tiled = owner?.message.getMessage(13);
+      for (const ref of tiled?.getMessages(1) ?? []) {
+        const tile = t.store.resolve(ref);
+        for (const record of tile?.message.getMessages(4) ?? []) {
+          out.push(record.getUint(1) ?? -1);
+        }
+      }
+      return out.sort((a, b) => a - b);
+    };
+
+    // Existing-tile path: earnings' Key Metrics ledger holds {0, 1}.
+    const doc = load();
+    const table = doc.tables().find((t) => t.name === TABLE)!;
+    expect(ledgerIndexes(table)).toEqual([0, 1]);
+    table.mergeCells(3, 1, 1, 3); // next free index is 2
+    expect(ledgerIndexes(table)).toEqual([0, 1, 2]);
+    expect(table.unmergeCells(3, 1)).toBe(true);
+    expect(ledgerIndexes(table)).toEqual([0, 1]);
+
+    // Fresh-tile path: a categories table has never had a merge, so the
+    // tile object itself must be created — and survive a save/reload.
+    const doc2 = NumbersDocument.load(bytes("numbers-parser-v26.0-categories.numbers"));
+    const t2 = doc2.tables().find((t) => t.merges().length === 0 && t.rowCount > 4)!;
+    const name = t2.name;
+    expect(ledgerIndexes(t2)).toEqual([]);
+    t2.mergeCells(2, 0, 2, 2);
+    expect(ledgerIndexes(t2)).toEqual([0]);
+    const after = NumbersDocument.load(doc2.save()).tables().find((t) => t.name === name)!;
+    expect(ledgerIndexes(after)).toEqual([0]);
+  });
 });

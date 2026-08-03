@@ -46,7 +46,18 @@ import {
   type TableCategories,
 } from "./categories.ts";
 import { uidMapOf, type ColumnRowUidMap } from "./uidmap.ts";
-import { FormulaOwnerRegistry, OwnerKind } from "../tsce/owners.ts";
+import {
+  CELL_RECORD_TILE,
+  CellRecordExpandedFields,
+  CellRecordTileFields,
+  FORMULA_OWNER_DEPENDENCIES,
+  FormulaOwnerFields,
+  FormulaOwnerRegistry,
+  OwnerKind,
+  readCfUid,
+  readOwnerUid,
+  TiledDependenciesFields,
+} from "../tsce/owners.ts";
 import {
   controlsOf,
   buildPopupMenuModel,
@@ -1410,6 +1421,7 @@ export class TableModel {
     owner.setMessage(MergeOwner.FORMULA_STORE, store);
     this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
     this.object.message.markDirty();
+    this.addMergeLedgerRecord(index);
 
     // Everything the merge swallows loses its record entirely.
     for (let r = row; r <= lastRow; r++) {
@@ -1418,6 +1430,99 @@ export class TableModel {
         this.deleteCellRecord(r, c);
       }
     }
+  }
+
+  /**
+   * The calc engine's dependency ledger entry for one merge.
+   *
+   * The merge owner's `FormulaOwnerDependenciesArchive` lists each merge
+   * as a synthetic cell — `(row 0, column = formula_index)` with an empty
+   * edges message; both merge-bearing corpus documents agree byte for
+   * byte, 8 records of 8. Idempotent, because recreating a merge at an
+   * index the ledger still remembers must not duplicate the record. A
+   * document with no kind-5 dependencies archive (the pre-4008 era) is
+   * left alone: its merges live in the region map and the engine has no
+   * ledger to keep consistent.
+   */
+  private addMergeLedgerRecord(index: number): void {
+    const owner = this.mergeDependenciesOwner();
+    if (!owner) return;
+    const tiled =
+      owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES) ?? RawMessage.create();
+    // 32-column tiles, created when first occupied.
+    const tileBegin = index - (index % 32);
+    let tile: IwaObject | undefined;
+    for (const ref of tiled.getMessages(TiledDependenciesFields.TILES)) {
+      const candidate = this.store.resolve(ref);
+      if (candidate?.message.getUint(CellRecordTileFields.TILE_COLUMN_BEGIN) === tileBegin) {
+        tile = candidate;
+        break;
+      }
+    }
+    if (!tile) {
+      const component = this.store.componentOf(owner.identifier);
+      if (!component) return;
+      tile = this.store.createObject(CELL_RECORD_TILE, component);
+      tile.message.setVarint(
+        CellRecordTileFields.INTERNAL_OWNER_ID,
+        owner.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0,
+      );
+      tile.message.setVarint(CellRecordTileFields.TILE_COLUMN_BEGIN, tileBegin);
+      tile.message.setVarint(CellRecordTileFields.TILE_ROW_BEGIN, 0);
+      tiled.addMessage(TiledDependenciesFields.TILES, makeRef(tile.identifier));
+      owner.message.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, tiled);
+      owner.message.markDirty();
+      // The owner is an Apple-authored object with no reference extractor,
+      // so its bookkeeping does not recompute on save; declare the one
+      // reference this write added, or the tile dangles and the shape
+      // audit (rightly) flags an object nothing points at.
+      this.store.declareReference(owner, tile.identifier);
+    }
+    const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+    if (records.some((r) => r.getUint(CellRecordExpandedFields.COLUMN) === index)) return;
+    const record = RawMessage.create();
+    record.setVarint(CellRecordExpandedFields.COLUMN, index);
+    record.setVarint(CellRecordExpandedFields.ROW, 0);
+    record.setMessage(CellRecordExpandedFields.EXPANDED_EDGES, RawMessage.create());
+    tile.message.addMessage(CellRecordTileFields.CELL_RECORDS, record);
+    tile.message.markDirty();
+  }
+
+  /** Drop a merge's ledger record; the tile stays, like the high-water index. */
+  private removeMergeLedgerRecord(index: number): void {
+    const owner = this.mergeDependenciesOwner();
+    const tiled = owner?.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES);
+    for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+      const tile = this.store.resolve(ref);
+      if (!tile) continue;
+      const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+      const kept = records.filter(
+        (r) => r.getUint(CellRecordExpandedFields.COLUMN) !== index,
+      );
+      if (kept.length !== records.length) {
+        tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, kept);
+        tile.message.markDirty();
+        return;
+      }
+    }
+  }
+
+  /** The kind-5 dependencies archive matching this table's merge owner id. */
+  private mergeDependenciesOwner(): IwaObject | undefined {
+    const uid = readCfUid(
+      this.object.message
+        .getMessage(TableModelFields.MERGE_OWNER)
+        ?.getMessage(MergeOwner.OWNER_ID),
+    );
+    if (!uid) return undefined;
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+      const candidate = readOwnerUid(
+        obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID),
+      );
+      if (candidate && candidate.lo === uid.lo && candidate.hi === uid.hi) return obj;
+    }
+    return undefined;
   }
 
   /**
@@ -1433,13 +1538,13 @@ export class TableModel {
     const store = owner?.getMessage(MergeOwner.FORMULA_STORE);
     if (!owner || !store) return false;
 
-    const kept = store
-      .getMessages(FormulaStore.FORMULAS)
-      .filter((pair) => {
-        const range = mergeRangeOfPair(pair);
-        return !(range && range.row === row && range.column === column);
-      });
-    if (kept.length === store.getMessages(FormulaStore.FORMULAS).length) return false;
+    const pairs = store.getMessages(FormulaStore.FORMULAS);
+    const removed = pairs.filter((pair) => {
+      const range = mergeRangeOfPair(pair);
+      return range !== undefined && range.row === row && range.column === column;
+    });
+    if (removed.length === 0) return false;
+    const kept = pairs.filter((pair) => !removed.includes(pair));
 
     // next_index is a high-water mark, not a count: leaving it alone keeps
     // ids unique against anything the engine still remembers.
@@ -1447,6 +1552,11 @@ export class TableModel {
     owner.setMessage(MergeOwner.FORMULA_STORE, store);
     this.object.message.setMessage(TableModelFields.MERGE_OWNER, owner);
     this.object.message.markDirty();
+    // The ledger record goes with its pair; the tile stays, like the index.
+    for (const pair of removed) {
+      const index = pair.getUint(FormulaStore.PAIR_INDEX);
+      if (index !== undefined) this.removeMergeLedgerRecord(index);
+    }
     return true;
   }
 

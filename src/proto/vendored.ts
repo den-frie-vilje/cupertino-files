@@ -431,6 +431,23 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "column_absolute": 3,
     "row_absolute": 4,
   },
+  "TSCE.CellDependenciesTiledArchive": {
+    "cell_record_tiles": 1,
+  },
+  "TSCE.CellRecordExpandedArchive": {
+    "column": 1,
+    "row": 2,
+    "dirty_self_plus_precedents_count": 3,
+    "is_in_a_cycle": 4,
+    "has_calculated_precedents": 5,
+    "expanded_edges": 6,
+  },
+  "TSCE.CellRecordTileArchive": {
+    "internal_owner_id": 1,
+    "tile_column_begin": 2,
+    "tile_row_begin": 3,
+    "cell_records": 4,
+  },
   "TSCE.FormulaArchive": {
     "AST_node_array": 1,
     "host_column": 2,

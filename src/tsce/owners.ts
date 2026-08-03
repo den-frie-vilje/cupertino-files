@@ -51,6 +51,33 @@ export const FormulaOwnerFields = protoFields("TSCE.FormulaOwnerDependenciesArch
   OWNER_KIND: "owner_kind",
   FORMULA_OWNER: "formula_owner",
   BASE_OWNER_UID: "base_owner_uid",
+  TILED_CELL_DEPENDENCIES: "tiled_cell_dependencies",
+});
+
+/**
+ * The per-cell dependency ledger hanging off an owner: a tiled list of
+ * `CellRecordExpandedArchive`s. For a merge owner, "cells" are synthetic —
+ * `(row 0, column = formula_index)`, one per merged rectangle, with a
+ * deliberately empty edges message; both merge-bearing corpus documents
+ * agree on the exact bytes. Tiles are 32 columns wide (begins observed at
+ * 0, 64, 96 and 128, splitting exactly at multiples of 32) and exist only
+ * once something occupies them: never-merged tables carry the tiled list
+ * with zero tile references.
+ */
+export const CELL_RECORD_TILE = 4009;
+export const TiledDependenciesFields = protoFields("TSCE.CellDependenciesTiledArchive", {
+  TILES: "cell_record_tiles",
+});
+export const CellRecordTileFields = protoFields("TSCE.CellRecordTileArchive", {
+  INTERNAL_OWNER_ID: "internal_owner_id",
+  TILE_COLUMN_BEGIN: "tile_column_begin",
+  TILE_ROW_BEGIN: "tile_row_begin",
+  CELL_RECORDS: "cell_records",
+});
+export const CellRecordExpandedFields = protoFields("TSCE.CellRecordExpandedArchive", {
+  COLUMN: "column",
+  ROW: "row",
+  EXPANDED_EDGES: "expanded_edges",
 });
 
 /** TSCE.HauntedOwnerArchive, on TST.TableModelArchive.haunted_owner = 84. */

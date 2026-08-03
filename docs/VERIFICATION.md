@@ -227,9 +227,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** Numbers accepts a merge this library wrote, and shows it where we put it.
 
-**Why the suite cannot settle it.** The bytes we write match Apple's exactly for the same rectangle, which is the strongest offline evidence available — but byte equality of one node is not the same as the engine accepting the document, and no scripting API reports merges.
+**Why the suite cannot settle it.** Recreating one of Apple's merges reproduces the whole file byte-for-byte, which is as far as offline proof reaches — a *fresh* merge additionally mints a ledger tile object, and whether the engine is satisfied with it is the app's call alone.
 
-**How to settle it.** Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
+**How to settle it.** npm run bisect:docs -- <outDir>, open 06-merge in Numbers: row 9 should show one cell spanning B..D with its text intact. Reading is separately checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 and 1 span all 4 columns).
 
 ### 16. Table structure (rows, columns, bands, sizes, freeze, repeat)
 

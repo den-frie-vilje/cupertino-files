@@ -113,10 +113,15 @@ that rebuild the structures from them.
   means evaluating predicates. (Filter *rule* layout itself is
   schema-derived: every filter set in the corpus is empty — 164 sets,
   163 empty, mode "all" — measured, not unlucky.)
-- **Writing merge ranges.** Nothing conceptual left: a merge is a formula
-  owned by a UUID derived from the table's own (`src/tsce/owners.ts`,
-  FORMAT.md §14.11). Remaining: write the owner entry, dependency
-  records and merge formula together, then check in Numbers.
+- **Writing merge ranges: only the app's word left.** The whole write is
+  now in place and proven to the byte: the merge formula (SUM over an
+  all-sticky absolute tract carrying the table's kind-1 identity), the
+  formula-store pair, and the kind-5 owner's dependency-ledger record —
+  `(row 0, column = formula_index)`, empty edges, tile minted on first
+  use. Deleting Apple's last merge in issue102 and remaking it through
+  `mergeCells` reproduces the whole file byte for byte
+  (test/merges.test.ts). Remaining: bisect rung `06-merge` in Numbers,
+  which now exercises the ledger path too.
 - **Chart appearance.** Type, colours, axes, legend are style references
   not yet modeled. Implementation work, not reverse engineering; the
   corpus has only two charts, so a document with several types helps.

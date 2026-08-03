@@ -983,19 +983,21 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.merges().length > 0)),
     note:
-      "mergeCells/unmergeCells. A merge we build for a rectangle Apple also merged is " +
-      "byte-identical to Apple's own node — cross-table info, sticky bits, tract and the SUM " +
-      "wrapper — reconstructed from the object graph, not copied",
+      "mergeCells/unmergeCells, complete with the calc engine's dependency ledger: the " +
+      "kind-5 owner's (row 0, column = formula_index) record, tile minted on first use. " +
+      "Deleting Apple's last merge in issue102 and remaking it through mergeCells " +
+      "reproduces the whole saved file byte for byte",
     manualProof: {
       claim: "Numbers accepts a merge this library wrote, and shows it where we put it.",
       why:
-        "The bytes we write match Apple's exactly for the same rectangle, which is the strongest " +
-        "offline evidence available — but byte equality of one node is not the same as the engine " +
-        "accepting the document, and no scripting API reports merges.",
+        "Recreating one of Apple's merges reproduces the whole file byte-for-byte, which is as " +
+        "far as offline proof reaches — a *fresh* merge additionally mints a ledger tile object, " +
+        "and whether the engine is satisfied with it is the app's call alone.",
       how:
-        "Merge a rectangle with mergeCells, save, and open in Numbers. Reading is separately " +
-        "checkable: open iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key " +
-        "Metrics: rows 0 and 1 span all 4 columns).",
+        "npm run bisect:docs -- <outDir>, open 06-merge in Numbers: row 9 should show one cell " +
+        "spanning B..D with its text intact. Reading is separately checkable: open " +
+        "iwork-mcp-v14.5-earnings.numbers and confirm merges() matches (Key Metrics: rows 0 " +
+        "and 1 span all 4 columns).",
       risk: "medium",
     },
   },
