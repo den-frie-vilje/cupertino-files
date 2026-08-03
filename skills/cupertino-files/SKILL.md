@@ -134,6 +134,38 @@ Three things the API enforces so you don't have to:
   rewriting the last paragraph — are safe; the writer keeps the
   paragraph-style tables aligned for you.
 
+And three semantics worth knowing before they surprise you:
+
+- A replacement inherits the styling ruling at the **start** of the
+  replaced range. If that position carries direct formatting (a
+  distinctly styled token, say), the new text adopts it — restore
+  formatting on the returned range, or better, use real placeholders
+  (below) instead of styled tokens.
+- Replacing **every occurrence** of one token: pass all hits from a
+  single `find()` snapshot to `applyEdits` —
+  `doc.applyEdits(doc.find("[client]").map((r) => ({ start: r.start, end: r.end, replacement: name })))` —
+  non-overlapping hits of one token always qualify.
+- After deleting paragraph runs next to auto-numbered headings, a
+  surviving empty paragraph can inherit list membership and render as a
+  stray numbered item; `doc.paragraph(i).setListStyle("None")` or
+  `setStyle(...)` clears it.
+
+### Placeholders — fill-in templates without styled-token hacks
+
+Pages' native mechanism (Format → Advanced → Define as Placeholder
+Text): a click selects the whole span, typing replaces it.
+
+```ts
+doc.placeholders();                     // [{ start, end, text, fieldId }] — "Tap or click to add …"
+doc.fillPlaceholder(0, "Acme Corp");    // real text in, marking off, styling kept
+doc.find("[client name]")[0].asPlaceholder();  // make a span tap-to-replace in Pages
+```
+
+Filling sheds the placeholder marking the way typing into one does —
+programmatic content never stays flagged as ghost text. A placeholder
+spanning an image's object character is how a body document marks an
+image placeholder; the same calls read it.
+
 Offset-based calls (offsets are UTF-16 code units, identical to JS string
 indexing, so `text.indexOf(...)` results are valid):
 
@@ -171,14 +203,22 @@ chaining sugar methods — each call creates a style object.
 ### Checking styling survived, without a Mac
 
 `doc.paragraphs()[i].styleName` covers named *paragraph* styles only.
-Character runs: `doc.body.characterStyleIdAt(pos)` returns the ruling
-character-style id (`doc.body.styleNameOf(id)` names it when it is a
-named style); `undefined` means "no direct character styling — the
-paragraph style alone applies", which is the normal state of most text,
-not a failure. What no offline read can prove is how the app *renders*.
-When a render is wrong, bisect: one operation per file, each from a
-fresh copy of the original, open each — the failing rung names the
-operation.
+For character styling, copy-paste level:
+
+```ts
+doc.characterFormattingAt(pos);          // effective CharacterFormatting, inheritance folded in
+doc.body.characterStyleIdAt(pos);        // the ruling character-style id (undefined = paragraph style alone)
+doc.body.characterStyleRuns();           // one pass over the whole body: [{ start, end, objectId }]
+```
+
+`characterFormattingAt` answers "what colour/font/size is this position
+really" with no style-chain walking; sweep `characterStyleRuns()` and
+resolve each run once for whole-document audits. `undefined` ids mean
+"no direct character styling — the paragraph style alone applies",
+which is the normal state of most text, not a failure. What no offline
+read can prove is how the app *renders*. When a render is wrong,
+bisect: one operation per file, each from a fresh copy of the original,
+open each — the failing rung names the operation.
 
 **Character** options: `bold`, `italic`, `fontSize`, `fontName`
 (PostScript name), `fontColor`, `backgroundColor` (highlight), `underline`

@@ -160,6 +160,7 @@ function resolveFormat(options: NumberAttachmentOptions): { code: number; name: 
 export const SMART_FIELD_TYPE = {
   DATE_TIME: 2034,
   BOOKMARK: 2035,
+  PLACEHOLDER: 2031,
 } as const;
 
 /** TSWP.SmartFieldArchive — the base every span field embeds at field 1. */
@@ -254,6 +255,34 @@ export function buildDateField(
   message.setMessage(DateTimeField.DATE, date);
 
   const object = store.createObject(SMART_FIELD_TYPE.DATE_TIME, component);
+  object.setMessageBytes(message.toBytes());
+  return object;
+}
+
+/**
+ * `TSWP.PlaceholderSmartFieldArchive` field numbers. The archive is in no
+ * vendored .proto; the shape is measured across 73 instances (the
+ * corpus's 64 plus a document donated for the question): the smart-field
+ * super, and one varint whose value is 1 in every modern instance (a
+ * single v10-era file carries 0). The varint's meaning is unnamed; 1 is
+ * what the apps write. A placeholder may span an attachment's U+FFFC —
+ * that is how a body document marks an image placeholder, with no
+ * separate drawable archive involved.
+ */
+const PLACEHOLDER_SUPER = 1;
+const PLACEHOLDER_FLAG = 2;
+
+/**
+ * Build a `TSWP.PlaceholderSmartFieldArchive` — template ghost text the
+ * app selects whole on a click and replaces on the first keystroke.
+ */
+export function buildPlaceholderField(store: ObjectStore, component: Component): IwaObject {
+  const message = RawMessage.create();
+  const smartField = RawMessage.create();
+  smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
+  message.setMessage(PLACEHOLDER_SUPER, smartField);
+  message.setVarint(PLACEHOLDER_FLAG, 1);
+  const object = store.createObject(SMART_FIELD_TYPE.PLACEHOLDER, component);
   object.setMessageBytes(message.toBytes());
   return object;
 }

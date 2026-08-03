@@ -137,6 +137,11 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["TableModel.setPopupMenu", "same app-unverified class as setCellControl"],
   ["TableModel.removeCellControl", "paired with control creation; ships with it"],
   ["TableModel.setConditionalRules", "all six comparison codes are measured, so a tool is unblocked; its JSON schema (operator + operand + styles) is still to be designed"],
+  ["PagesDocument.placeholders", "ships as a placeholder tool trio (list/fill/define) once the schemas are designed"],
+  ["PagesDocument.fillPlaceholder", "part of the placeholder tool trio; fill-by-index needs the list tool beside it"],
+  ["PagesDocument.defineAsPlaceholder", "part of the placeholder tool trio; range addressing over JSON wants the find-based design"],
+  ["PagesDocument.applyEdits", "raw offsets over JSON invite stale-snapshot mistakes; replace_text covers the common case until a find-integrated batch design"],
+  ["PagesDocument.characterFormattingAt", "verification reader; the read tools cover agent needs"],
   ["TableModel.setConditionalStyleKey", "internal plumbing of the conditional-rule path"],
   ["TableModel.regroupCategories", "category regrouping needs category context an agent gets no other tool for yet"],
 ]);
