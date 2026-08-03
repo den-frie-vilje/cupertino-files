@@ -72,7 +72,7 @@ export function authoredDocuments(): { name: string; bytes: Uint8Array }[] {
       t.setCell(1, 0, "text"); t.setCell(2, 0, 12.5); t.setCell(3, 0, true);
       t.setCell(4, 0, new Date(Date.UTC(2026, 0, 15)));
     } },
-    { name: "formula", build: (d) => d.tables()[0]!.setFormula(5, 1, "=1+2*3", { value: 7 }) },
+    { name: "formula", build: (d) => { d.tables()[0]!.setFormula(5, 1, "=1+2*3", { value: 7 }); } },
     { name: "formula-range", build: (d) => {
       const t = d.tables()[0]!;
       t.setCell(6, 1, 1); t.setCell(6, 2, 2); t.setCell(6, 3, 3);
@@ -94,7 +94,7 @@ export function authoredDocuments(): { name: string; bytes: Uint8Array }[] {
       t.setCell(1, 0, -10);
       t.setConditionalRules(1, 0, [{ operator: "<", value: 0, cell: RED }]);
     } },
-    { name: "cell-formatting", build: (d) => d.tables()[0]!.setCellFormatting(1, 0, RED) },
+    { name: "cell-formatting", build: (d) => { d.tables()[0]!.setCellFormatting(1, 0, RED); } },
     { name: "regroup", build: (d) => {
       const t = d.tables().find((x) => x.name === "Categories")!;
       const categories = t.activeCategories()!;
@@ -104,7 +104,7 @@ export function authoredDocuments(): { name: string; bytes: Uint8Array }[] {
       t.setCell(groups[0]!.rows[0]!, column, to.label);
       t.regroupCategories();
     } },
-    { name: "insert-rows", build: (d) => d.tables()[0]!.insertRows(2, 2) },
+    { name: "insert-rows", build: (d) => { d.tables()[0]!.insertRows(2, 2); } },
   ];
 
   const out = cases.map(({ name, build }) => {

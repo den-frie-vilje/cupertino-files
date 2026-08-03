@@ -22,7 +22,7 @@ if (subcommand === "mcp") {
 } else if (subcommand === "tools") {
   const { TOOLS } = await import("./mcp/server.ts");
   for (const tool of TOOLS) {
-    console.log(`${tool.name}`);
+    console.log(tool.name);
     console.log(`  ${tool.description}\n`);
   }
 } else if (subcommand === "call") {

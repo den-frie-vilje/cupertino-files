@@ -396,7 +396,7 @@ export function summarizeCompatibility(report: CompatibilityReport): string {
   return (
     `${report.app} document, format ${version} (${report.eraLabel}` +
     `${build ? `, saved by ${build}` : ""}), ${report.probe.containerLayout} layout; ` +
-    `${report.unsupportedFeatures.length === 0 ? "fully supported" : `${report.unsupportedFeatures.length} unsupported feature(s)`}` +
-    `${report.warnings.length > 0 ? `, ${report.warnings.length} warning(s)` : ""}`
+    (report.unsupportedFeatures.length === 0 ? "fully supported" : `${report.unsupportedFeatures.length} unsupported feature(s)`) +
+    (report.warnings.length > 0 ? `, ${report.warnings.length} warning(s)` : "")
   );
 }

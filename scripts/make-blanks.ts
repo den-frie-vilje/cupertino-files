@@ -160,7 +160,7 @@ const DONORS: readonly Donor[] = [
 const ASSERT_HOUSE: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
   pages: (bytes) => {
     const doc = PagesDocument.load(bytes);
-    const template = (doc.compatibility().appBuilds ?? []).find((s) => s.startsWith("Template:"));
+    const template = doc.compatibility().appBuilds.find((s) => s.startsWith("Template:"));
     if (!template?.includes("Blank")) throw new Error(`pages donor is not from Blank: ${template}`);
     const styles = new Set(doc.paragraphStyles().map((s) => s.name));
     for (const wanted of ["Title", "Subtitle", "Heading", "Heading 2", "Heading 3", "Body", "Caption"]) {
@@ -177,7 +177,7 @@ const ASSERT_HOUSE: Record<Donor["kind"], (bytes: Uint8Array) => void> = {
   },
   numbers: (bytes) => {
     const doc = NumbersDocument.load(bytes);
-    const template = (doc.compatibility().appBuilds ?? []).find((s) => s.startsWith("Template:"));
+    const template = doc.compatibility().appBuilds.find((s) => s.startsWith("Template:"));
     if (!template?.includes("Blank")) throw new Error(`numbers donor is not from Blank: ${template}`);
     if (doc.object(1n)?.message.getString(11) !== "iso-a4") {
       throw new Error("numbers donor paper_id is not iso-a4");

@@ -29,7 +29,7 @@ writeFileSync("budget.numbers", sheet.save());
 
 Everything you don't touch is preserved byte-for-byte
 ([how](https://den-frie-vilje.github.io/cupertino-files/guide/fidelity)).
-Works in Node ≥ 18 and modern browsers. Bytes in, bytes out.
+Works in Node ≥ 22 and modern browsers. Bytes in, bytes out.
 
 The format is undocumented; this library is an ongoing
 reverse-engineering of it, measured from real documents.

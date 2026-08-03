@@ -175,10 +175,10 @@ describe("writing merges", () => {
         return (error as Error).message;
       }
     };
-    expect(rejected(() => table.mergeCells(5, 0, 1, 1))).toContain("1×1 merge is not a merge");
-    expect(rejected(() => table.mergeCells(5, 0, 1, 0))).toContain("at least one cell");
-    expect(rejected(() => table.mergeCells(5, 0, 99, 2))).toContain("outside the table");
-    expect(rejected(() => table.mergeCells(-1, 0, 2, 2))).toContain("outside the table");
+    expect(rejected(() => { table.mergeCells(5, 0, 1, 1); })).toContain("1×1 merge is not a merge");
+    expect(rejected(() => { table.mergeCells(5, 0, 1, 0); })).toContain("at least one cell");
+    expect(rejected(() => { table.mergeCells(5, 0, 99, 2); })).toContain("outside the table");
+    expect(rejected(() => { table.mergeCells(-1, 0, 2, 2); })).toContain("outside the table");
   });
 
   it("reports no merge to remove rather than pretending", () => {

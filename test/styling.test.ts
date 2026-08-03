@@ -65,7 +65,7 @@ describe("style value codecs", () => {
     try {
       hexColor("#zz");
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("invalid hex colour");
   });
@@ -328,7 +328,7 @@ describe("character and paragraph formatting", () => {
     try {
       sheet.style(id)!.setParagraph({ alignment: 1 });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("character style");
   });
@@ -495,7 +495,7 @@ describe("drawable styling", () => {
     try {
       media.set({ fill: colorFill(1, 0, 0) });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("no fill");
   });

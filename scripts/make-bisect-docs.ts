@@ -54,7 +54,7 @@ export const RUNGS: {
   {
     name: "01-one-cell",
     note: "one text cell written",
-    build: (doc) => doc.tables()[0]!.setCell(1, 0, "edited"),
+    build: (doc) => { doc.tables()[0]!.setCell(1, 0, "edited"); },
   },
   {
     name: "02-cell-types",
@@ -70,7 +70,7 @@ export const RUNGS: {
   {
     name: "03-formula-literal",
     note: "a formula with no references: =1+2*3",
-    build: (doc) => doc.tables()[0]!.setFormula(5, 1, "=1+2*3", { value: 7 }),
+    build: (doc) => { doc.tables()[0]!.setFormula(5, 1, "=1+2*3", { value: 7 }); },
   },
   {
     name: "04-formula-reference",

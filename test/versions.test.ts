@@ -217,8 +217,8 @@ describe("registry extensibility (teaching the library new types)", () => {
   });
 
   it("rejects invalid type IDs", () => {
-    expect(() => registerTypes({ "not-a-number": "X.Y" })).toThrow();
-    expect(() => registerTypes({ 0: "X.Y" })).toThrow();
+    expect(() => { registerTypes({ "not-a-number": "X.Y" }); }).toThrow();
+    expect(() => { registerTypes({ 0: "X.Y" }); }).toThrow();
   });
 });
 

@@ -5,7 +5,7 @@ npm install cupertino-files
 ```
 
 That's the whole setup. No runtime dependencies, no native modules, no
-Apple software. It runs in Node 18 and up, and in the browser — bytes in,
+Apple software. It runs in Node 22 and up, and in the browser — bytes in,
 bytes out.
 
 ## Open. Edit. Save.

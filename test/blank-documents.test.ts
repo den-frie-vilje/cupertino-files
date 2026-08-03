@@ -138,9 +138,9 @@ describe("blank() from the embedded donors", () => {
     expect(setup.pageWidth).toBe(595.280029296875);
     expect(setup.pageHeight).toBe(841.8900146484375);
     // The house typography: Palatino body, Helvetica Neue display.
-    expect(doc.stylesheet.style("Body")!.resolved().character?.fontName).toBe("Palatino-Roman");
+    expect(doc.stylesheet.style("Body")!.resolved().character.fontName).toBe("Palatino-Roman");
     expect(
-      doc.stylesheet.style("Title")!.resolved().character?.fontName?.startsWith("HelveticaNeue"),
+      doc.stylesheet.style("Title")!.resolved().character.fontName?.startsWith("HelveticaNeue"),
     ).toBe(true);
     doc.appendParagraph("first words");
     const re = PagesDocument.load(doc.save());
@@ -171,7 +171,7 @@ describe("blank() from the embedded donors", () => {
     expect(size?.width).toBe(1920);
     expect(size?.height).toBe(1080);
     // The house typography reaches the deck's theme too.
-    expect(doc.stylesheets()[0]!.style("Body")!.resolved().character?.fontName).toBe(
+    expect(doc.stylesheets()[0]!.style("Body")!.resolved().character.fontName).toBe(
       "Palatino-Roman",
     );
     doc.slides()[0]!.notes = "spoken";

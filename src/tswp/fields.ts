@@ -143,7 +143,10 @@ function resolveFormat(options: NumberAttachmentOptions): { code: number; name: 
     }
     return { code: options.formatCode, name: options.formatName };
   }
-  const known = PAGE_NUMBER_FORMATS[options.format ?? "decimal"];
+  // Widened: the types make this lookup total, but JS callers can pass anything.
+  const known = PAGE_NUMBER_FORMATS[options.format ?? "decimal"] as
+    | (typeof PAGE_NUMBER_FORMATS)[keyof typeof PAGE_NUMBER_FORMATS]
+    | undefined;
   if (!known) {
     throw new RangeError(
       `unknown page number format ${options.format}; known: ${Object.keys(PAGE_NUMBER_FORMATS).join(", ")}. Pass formatCode and formatName to write another.`,

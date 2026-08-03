@@ -250,7 +250,7 @@ function ingest(paths: readonly string[], appLabel: string): Harvested {
             const index = node.getUint(AstNodeFields.FUNCTION_INDEX);
             if (index === undefined) continue;
             const seen = observations.get(name) ?? new Set<number>();
-            seen.add(Number(index));
+            seen.add(index);
             observations.set(name, seen);
           } else if (type === AstNodeType.UNKNOWN_FUNCTION) {
             unrecognised.add(name);
@@ -284,6 +284,7 @@ function ingest(paths: readonly string[], appLabel: string): Harvested {
       // Two names claiming one index means one of them is an alias Numbers
       // rewrote, or the sheet was misread. Trust neither.
       conflicts.push({ name: `${existing}/${name}`, indexes: [index] });
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- the ledger is a JSON Record; dropping the conflicted key is the point
       delete functions[String(index)];
       continue;
     }

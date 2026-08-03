@@ -733,7 +733,7 @@ export class TextStorage {
     }
     const re = pattern.global ? pattern : new RegExp(pattern.source, pattern.flags + "g");
     for (const m of text.matchAll(re)) {
-      if (m.index !== undefined && m[0].length > 0) {
+      if (m[0].length > 0) {
         out.push(new TextRange(this, m.index, m.index + m[0].length));
       }
     }

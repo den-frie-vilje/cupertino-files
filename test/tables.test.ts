@@ -488,7 +488,7 @@ describe("writing cells", () => {
     try {
       table.setCell(0, 0, { type: "text", value: "nope" });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("pre-BNC");
   });
@@ -500,7 +500,7 @@ describe("writing cells", () => {
     try {
       table.setCell(table.rowCount, 0, { type: "number", value: 1 });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("outside the table");
   });
@@ -680,7 +680,7 @@ describe("merged cells", () => {
     try {
       table.setCell(0, 1, { type: "text", value: "invisible" });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("covered by the merge anchored at 0,0");
 
@@ -874,7 +874,7 @@ describe("formulas", () => {
     };
     const num = (v: number) => ({
       type: AstNodeType.NUMBER,
-      extra: (m: RawMessage) => m.setDouble(AstNodeFields.NUMBER, v),
+      extra: (m: RawMessage) => { m.setDouble(AstNodeFields.NUMBER, v); },
     });
 
     // (1+2)*3 — the multiply's left operand binds looser, so it needs brackets.
@@ -1015,10 +1015,10 @@ describe("rows and columns", () => {
     const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
     const table = doc.tables()[0]!;
     for (const attempt of [
-      () => table.deleteRows(0, table.rowCount),
-      () => table.deleteColumns(0, table.columnCount),
-      () => table.insertRows(-1, 1),
-      () => table.deleteRows(0, table.rowCount + 5),
+      () => { table.deleteRows(0, table.rowCount); },
+      () => { table.deleteColumns(0, table.columnCount); },
+      () => { table.insertRows(-1, 1); },
+      () => { table.deleteRows(0, table.rowCount + 5); },
     ]) {
       let threw = false;
       try {
@@ -1196,7 +1196,7 @@ describe("cell formats", () => {
     try {
       table.setCellFormat(1, 0, { kind: "custom", category: "number", formatType: 270 });
     } catch (e) {
-      message = String((e as Error).message);
+      message = (e as Error).message;
     }
     expect(message).toContain("custom format");
   });

@@ -460,7 +460,7 @@ describe("slide placeholders", () => {
     const slide = document.slides()[0]!;
     // Creating one means synthesizing the theme's geometry and style for
     // that role, which is in the master.
-    expect(() => slide.setPlaceholderText(30, "object", "x")).toThrow();
+    expect(() => { slide.setPlaceholderText(30, "object", "x"); }).toThrow();
   });
 });
 

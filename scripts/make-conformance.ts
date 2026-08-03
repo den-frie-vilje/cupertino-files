@@ -59,7 +59,7 @@ const bytesToHex = (b: Uint8Array): string =>
 /** One fixture's expectation document. Key order here is the file's key order. */
 function expectation(name: string, bytes: Uint8Array, doc: IWorkDocument): object {
   const storages = doc.textStorages().map((s) => ({
-    kind: KIND_NAMES.get(s.kind ?? -1) ?? String(s.kind),
+    kind: KIND_NAMES.get(s.kind) ?? `${s.kind}`,
     characters: s.text.length,
     text: s.text,
   }));

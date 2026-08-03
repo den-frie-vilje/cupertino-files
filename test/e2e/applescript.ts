@@ -43,7 +43,7 @@ export function osascript(script: string, timeoutMs = 120_000): string {
   } catch (e) {
     const err = e as { stderr?: string; stdout?: string; message?: string };
     throw new AppleScriptError(
-      (err.stderr || err.stdout || err.message || String(e)).toString().trim(),
+      (err.stderr || err.stdout || err.message || String(e)).trim(),
     );
   }
 }
@@ -59,7 +59,7 @@ export function osajs(script: string, timeoutMs = 120_000): string {
   } catch (e) {
     const err = e as { stderr?: string; stdout?: string; message?: string };
     throw new AppleScriptError(
-      (err.stderr || err.stdout || err.message || String(e)).toString().trim(),
+      (err.stderr || err.stdout || err.message || String(e)).trim(),
     );
   }
 }

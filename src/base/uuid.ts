@@ -6,7 +6,7 @@
  * its siblings. Apple writes uppercase, hyphenated, version-4 values, and
  * the apps compare them as strings, so the format has to match exactly.
  *
- * Randomness comes from the Web Crypto API, which is a global in Node 18+
+ * Randomness comes from the Web Crypto API, which is a global in Node 22+
  * and every browser. Where it is missing the fallback is a counter, not
  * `Math.random`: these identifiers need to be *unique within a document*,
  * not unguessable, and a counter guarantees that where a weak PRNG only

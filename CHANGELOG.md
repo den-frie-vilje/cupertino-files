@@ -5,7 +5,15 @@ The package follows [semantic versioning](https://semver.org/); commit
 history uses Conventional Commits, so the detail behind any entry is one
 `git log` away.
 
-## 0.1.0 — unreleased
+## Unreleased
+
+- Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
+- Toolchain refresh: TypeScript 6, `strictTypeChecked` linting,
+  `noImplicitReturns` and `verbatimModuleSyntax`, patched vite via
+  override, and an `npm audit` gate in CI.
+- npm-normalized `bin` paths, so `npm publish` has nothing to correct.
+
+## 0.1.0 — 2026-08-03
 
 The first release: an ongoing reverse-engineering of Apple's iWork
 format as a working, zero-dependency TypeScript library.
@@ -13,7 +21,7 @@ format as a working, zero-dependency TypeScript library.
 ### Documents
 
 - Load, edit and save Pages, Numbers and Keynote documents (modern IWA
-  format, 2013 →), in Node ≥ 18 and browsers — bytes in, bytes out.
+  format, 2013 →), in Node ≥ 22 and browsers — bytes in, bytes out.
 - New documents from nothing: `blank()` on each app class instantiates
   an embedded, Apple-authored donor — A4 for Pages and Numbers, 16:9
   for Keynote — the same way the apps instantiate a bundled template,

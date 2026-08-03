@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22.x", "24.x"]
+        node: ["22.x", "24.x", "26.x"]
     name: node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v5
