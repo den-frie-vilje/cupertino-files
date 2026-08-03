@@ -20,13 +20,20 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — nothing outstanding
+## Needs a Mac — one seed staged: collaboration mode
 
-Every seed program has been returned and banked; the returned files are
-fixtures with pins (see ATTRIBUTION.md). `npm run seeds` is the standing
-scaffolding for the next question that needs a person: it writes
-documents whose remaining clicks live inside the document itself, and
-its registry is empty until a blocker below stages one.
+`npm run seeds -- out` writes `seed-collaboration.pages`, whose
+remaining clicks live inside the document: open, share via the
+Samarbejd button (no invitation needs sending), save, run the probe,
+send the file back, stop sharing. Collaboration rewrites the package
+with the two components nothing else writes — `OperationStorage.iwa`
+and `ActivityStream.iwa`, LZFSE-framed beside Snappy — and the decoder
+now reads the framing but has never seen a real payload: the returned
+file is both the first redistributable specimen and the measurement of
+what the decoded bytes mean.
+
+Every earlier seed program is returned and banked; the returned files
+are fixtures with pins (see ATTRIBUTION.md).
 
 **Before staging a seed**, remember the technique that closed most of
 this page: somebody has already made the document you need. Parser
@@ -75,6 +82,13 @@ that rebuild the structures from them.
   eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
   — the deck Keynote converts on open, a different code path — are
   generated (`npm run keynote:docs`) and unchecked.
+- **Collaboration components: framing decoded, payload unmeasured.**
+  `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
+  FSE blocks refused precisely) and the probe reports what it makes of
+  any opaque component, but no redistributable document carries an
+  `OperationStorage.iwa` to measure the decoded payload against — the
+  staged collaboration seed above is the path. Until then the document
+  model keeps LZFSE components opaque and byte-preserved.
 
 ## Standing caveats — deliberate, not pending
 
@@ -136,6 +150,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | `animationAttributes` decode | Keynote (macOS M15.3 writer), the returned seed deck as fixture | **SOLVED — the field is `KN.AnimationAttributesArchive` and it was in the vendored schema all along**: `effect` (2) an identifier string in two schemes (`apple:dissolve character`, `apple:move in character`, `com.apple.iWork.Keynote.BUKAnvil`), `animation_type` (1) "In", `duration` (3) and `delay` (5) seconds as doubles, plus `random_number_seed` (11) and `writing_direction_is_rtl` (16). Readers now take these with `database_*` fallback; retiming writes them. The deck also shows per-chunk timing (two automatic chunks, delay 1 s, duration 1.75 s) on staged delivery | `src/keynote/builds.ts`, test/keynote.test.ts |
 | 2026-08-03 | filters + rules as corpus evidence | Numbers (macOS M15.3 writer), returned seeds as fixtures | **pinned against real bytes**: the populated two-rule row filter (col A `>10` type 7, col B contains-"ko" type 3, mode all, arrays consistent) and the conditional sets `>5`/`>=7`/contains-"pear"/is-blank (7/8/3/34) are fixtures with tests; the earlier probe-output measurements now have standing evidence | `test/predicates.test.ts` |
 | 2026-08-03 | macOS re-measurement of iOS findings | Pages (macOS M15.3 writer), returned seeds as fixtures | **both writers agree**: borders {4, 8, 8} with the RTL visual-left edge at 8, the library's (1, 0) direction pair surviving the resave, and a library-defined placeholder consumed by click-and-type to zero fields | test/styling.test.ts, test/placeholders.test.ts |
+| 2026-08-03 | mixed-codec packages (LZFSE beside Snappy) | n/a — ported from Apple's published lzfse reference (BSD-3-Clause) | **framing decoded**: `decodeLzfseStream` walks bvx- / bvxn / bvx$ blocks and the full LZVN opcode table, validated against hand-assembled vectors per opcode family; bvx1/bvx2 (FSE) refused precisely. Payload semantics unmeasured — no redistributable `OperationStorage.iwa` exists; the collaboration seed is staged to produce one | `src/base/lzfse.ts`, test/lzfse.test.ts |
 | 2026-08-01 | cell-control interaction_type | n/a — borrowed documents | **solved**: 4 stepper, 5 slider, 6 star, 7 pop-up, 8 checkbox; also found and fixed the dropped-checkbox bug | `src/tst/controls.ts` |
 | 2026-08-01/02 | Pages ladder P00–P19 | Pages (macOS 26.x) | **all rungs confirmed**; twelve well-formed-but-wrong defects found, fixed, pinned | VERIFICATION.md |
 | 2026-08-02 | Keynote ladder K00–K10 (v26) | Keynote (macOS + iOS) | **all rungs confirmed**; six defects found (four offline by shape:audit, two by the app), fixed, pinned | VERIFICATION.md |

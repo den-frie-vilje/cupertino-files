@@ -43,10 +43,15 @@
  *     0 = LTR and 65535 (uint16 −1) = natural observed and the RTL
  *     value still open.
  *
+ *  8. **Opaque components** — anything preserved verbatim because it
+ *     could not parse, with the LZFSE decoder's reading of
+ *     collaboration-mode components (`OperationStorage.iwa` and friends).
+ *
  * Sections with nothing to report say so, so a run against an ordinary
  * document is a short, honest "nothing new here".
  */
 import { readFileSync } from "node:fs";
+import { decodeLzfseBlocks } from "../src/base/lzfse.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { KeynoteDocument } from "../src/keynote/document.ts";
 import { tablesOf } from "../src/tst/tables.ts";
@@ -118,6 +123,8 @@ interface Findings {
   }[];
   /** table_para_bidi pairs, for storages that depart from a uniform baseline. */
   paraBidi: { pair: string; snippet: string }[];
+  /** Opaque components, with what the LZFSE decoder makes of each. */
+  opaque: { name: string; framing: string; detail: string }[];
 }
 
 function probe(path: string): Findings {
@@ -133,7 +140,30 @@ function probe(path: string): Findings {
     unknownTypes: [],
     borderPositions: [],
     paraBidi: [],
+    opaque: [],
   };
+
+  // 0: opaque components — what does the LZFSE decoder make of each?
+  for (const component of document.store.components) {
+    if (!component.isOpaque) continue;
+    let detail: string;
+    if (component.framing === "lzfse") {
+      try {
+        const blocks = decodeLzfseBlocks(component.serialize());
+        const decoded = blocks.reduce((n, b) => n + b.bytes.length, 0);
+        const first = blocks[0]?.bytes[0];
+        detail =
+          `decodes: ${blocks.map((b) => b.kind).join("+")} → ${decoded} bytes, ` +
+          `first byte 0x${(first ?? 0).toString(16).padStart(2, "0")}` +
+          (first === 0 ? " (IWA chunk header shape)" : " (not an IWA chunk header)");
+      } catch (error) {
+        detail = `LZFSE decode failed: ${(error as Error).message}`;
+      }
+    } else {
+      detail = component.loadError?.message ?? "unreadable";
+    }
+    findings.opaque.push({ name: component.name, framing: component.framing, detail });
+  }
 
   // 1 + 2 + 3: everything that hangs off a table.
   const functions = new Map<number, { occurrences: number; sample: string }>();
@@ -457,6 +487,11 @@ function render(findings: Findings): string {
       ...findings.paraBidi.map((b) => `para_bidi pair=${b.pair}  ${JSON.stringify(b.snippet)}`),
     ],
     "no paragraph borders here",
+  );
+  section(
+    "8. Opaque components (with the LZFSE decoder's reading)",
+    findings.opaque.map((o) => `${o.name} [${o.framing}] — ${o.detail}`),
+    "every component parsed",
   );
   return out.join("\n");
 }

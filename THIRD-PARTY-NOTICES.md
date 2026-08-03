@@ -50,7 +50,16 @@ measurements of those documents (text, structure, archive-shape
 statistics), licensed MIT, with each expectation file naming the fixture
 it measures. Fixtures are not included in the published npm package.
 
+## `src/base/lzfse.ts` — LZVN decoder ported from Apple's lzfse
+
+The LZVN block decoder (opcode table and semantics) is ported to
+TypeScript from Apple's open-source
+[lzfse](https://github.com/lzfse/lzfse) reference implementation,
+© 2015-2016 Apple Inc., BSD-3-Clause
+([`LICENSES/BSD-3-Clause-lzfse.txt`](LICENSES/BSD-3-Clause-lzfse.txt)).
+
 ## Licenses
 
 Full texts of every license named above are in
-[`LICENSES/`](LICENSES/): `MIT.txt`, `Apache-2.0.txt`, `MPL-2.0.txt`.
+[`LICENSES/`](LICENSES/): `MIT.txt`, `Apache-2.0.txt`, `MPL-2.0.txt`,
+`BSD-3-Clause-lzfse.txt`.

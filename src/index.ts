@@ -394,6 +394,8 @@ export {
   UnsupportedIwaFramingError,
 } from "./base/snappy.ts";
 export type { IwaFraming } from "./base/snappy.ts";
+export { decodeLzfseStream, decodeLzfseBlocks, decodeLzvn } from "./base/lzfse.ts";
+export type { LzfseBlock } from "./base/lzfse.ts";
 export { ZipReader, buildZip } from "./base/zip.ts";
 export type { ZipEntryMeta, ZipWriteEntry } from "./base/zip.ts";
 export { inflateRaw } from "./base/inflate.ts";
