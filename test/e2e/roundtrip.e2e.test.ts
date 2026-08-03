@@ -109,9 +109,15 @@ describe("e2e: Pages", () => {
 
       session!.stageFixture(PAGES_FIXTURE, "app-authored.pages");
       // Pages writes the text; the library must read exactly it back.
-      withDocument("Pages", path, `set body text of theDoc to ${JSON.stringify(written)}`, {
-        save: true,
-      });
+      // (A statement, so it cannot go through withDocument's expression slot.)
+      osascript(
+        `tell application "Pages"\n` +
+          `  set theDoc to open ${posix(path)}\n` +
+          `  set body text of theDoc to ${JSON.stringify(written)}\n` +
+          `  save theDoc\n` +
+          `  close theDoc saving no\n` +
+          `end tell`,
+      );
 
       const doc = PagesDocument.load(readFileSync(path));
       expect(doc.bodyText.trim()).toBe(written);
@@ -139,7 +145,7 @@ describe("e2e: Keynote", () => {
         `tell application "Keynote"\n` +
           `  set theDoc to open ${posix(path)}\n` +
           `  tell slide 1 of theDoc\n` +
-          `    set transition properties to {transition effect:dissolve effect, ` +
+          `    set transition properties to {transition effect:dissolve, ` +
           `transition duration:2.0, automatic transition:true}\n` +
           `  end tell\n` +
           `  save theDoc\n` +
@@ -172,7 +178,7 @@ describe("e2e: Keynote", () => {
         `tell application "Keynote"\n` +
           `  set theDoc to open ${posix(path)}\n` +
           `  tell slide 1 of theDoc to set transition properties to ` +
-          `{transition effect:dissolve effect, transition duration:1.0}\n` +
+          `{transition effect:dissolve, transition duration:1.0}\n` +
           `  save theDoc\n` +
           `  close theDoc saving no\n` +
           `end tell`,
@@ -194,7 +200,8 @@ describe("e2e: Keynote", () => {
           `  return d as string\n` +
           `end tell`,
       );
-      expect(Math.abs(Number.parseFloat(reported) - 3.5) < 0.01).toBe(true);
+      // `as string` obeys the system locale — a Danish Mac says "3,5".
+      expect(Math.abs(Number.parseFloat(reported.replace(",", ".")) - 3.5) < 0.01).toBe(true);
 
       const reparsed = KeynoteDocument.load(readFileSync(path));
       expect(reparsed.slides()[0]!.transition()!.duration).toBe(3.5);
@@ -326,7 +333,9 @@ describe("e2e: Numbers", () => {
       );
       const [reportedText, reportedNumber] = reported.split("|");
       expect(reportedText).toBe(text);
-      expect(Math.abs(Number.parseFloat(reportedNumber ?? "") - 1234.5) < 0.001).toBe(true);
+      // `as string` obeys the system locale — a Danish Mac says "1234,5".
+      const numeric = Number.parseFloat((reportedNumber ?? "").replace(",", "."));
+      expect(Math.abs(numeric - 1234.5) < 0.001).toBe(true);
     },
   );
 
@@ -363,21 +372,27 @@ describe("e2e: Numbers", () => {
       );
 
       const table = NumbersDocument.load(readFileSync(path)).tables()[0]!;
-      const found = new Map<string, number>();
-      for (const { row, column } of table.formulas()) {
+      const found = new Map<number, string>();
+      for (const { row, column, formula } of table.formulas()) {
         const detail = table.cellFormulaDetail(row, column)!;
         for (const id of detail.unknownFunctions) {
-          found.set(`FUNCTION_${id}`, id);
+          if (!found.has(id)) found.set(id, formula);
         }
       }
       // SUM must render by name — it is the id the corpus already proves.
       const sums = table.formulas().filter((f) => f.formula.includes("SUM("));
       expect(sums.length).toBeGreaterThan(0);
 
+      // Print each id with the formula that produced it, so the run itself
+      // says which name the id belongs to — that pairing is how MEDIAN was
+      // pinned to 86 on 2026-08-03.
       if (found.size > 0) {
         console.log(
-          `\nunnamed function ids seen (add to registerFormulaFunctions):\n  ` +
-            [...found.values()].sort((a, b) => a - b).join(", ") +
+          `\nunnamed function ids seen (add to registerFormulaFunctions):\n` +
+            [...found.entries()]
+              .sort((a, b) => a[0] - b[0])
+              .map(([id, formula]) => `  ${id} ← ${formula}`)
+              .join("\n") +
             `\n`,
         );
       }

@@ -57,7 +57,7 @@ always-current answer to "does it do X?". The short version:
 | | |
 |---|---|
 | Cells | Read and write every value type; formatting, styles, and comments survive your edits |
-| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — compiled to Apple's exact encoding, 271 functions |
+| Formulas | Author them as text — `=SUM(A1:A5)`, `=Other::B2` — compiled to Apple's exact encoding, 272 functions |
 | Formatting | Fills, borders, alignment, wrap; number, currency, date and duration formats; bands |
 | Structure | Sheets and tables (add, rename, move, remove), rows and columns, merges, column widths |
 | Reading | Conditional formatting, filters, categories, and cell controls all read faithfully |

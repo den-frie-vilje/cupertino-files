@@ -91,7 +91,7 @@ keep them, and writing into a merge-covered cell throws. Formulas are a
 per-position because references are stored as offsets from the using
 cell; `setFormula` compiles the same way, so what you type is what the
 cell means. Cross-table references (`Other::A2`) work both directions.
-Function names aren't in the file format at all; 271 measured indexes
+Function names aren't in the file format at all; 272 measured indexes
 author and render by name, the rest render as `FUNCTION_<id>` and are
 refused for writing rather than guessed.
 

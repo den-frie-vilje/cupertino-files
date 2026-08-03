@@ -32,6 +32,7 @@
 import type { RawMessage } from "../base/protobuf.ts";
 import { decodeDecimal128 } from "./tables.ts";
 import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
+import { BUILTIN_FUNCTIONS } from "./function-builtins.ts";
 import { readCfUid } from "../tsce/owners.ts";
 export {
   AstNodeArrayFields,
@@ -99,41 +100,6 @@ const BINARY_OPERATORS = new Map<number, { symbol: string; precedence: number }>
 
 const UNARY_PRECEDENCE = 6;
 const PRIMARY_PRECEDENCE = 10;
-
-/**
- * Known `AST_function_node_index` values.
- *
- * Deliberately tiny. Apple's index is not published, and a table of
- * confident-looking guesses is worse than an honest gap: a formula
- * rendered as `AVERAGE(...)` when it is really `MEDIAN(...)` is a silent
- * lie, whereas `FUNCTION_42(...)` is a visible one.
- *
- * Every entry here is backed by arithmetic in the fixture corpus:
- *
- *  - **168 = SUM** — `libetonyek-pages5-extra-dir.pages` has `FUNCTION_168`
- *    over a column whose cached result (7920) is exactly the sum of the
- *    cells above it (5500 + 1170 + 1250), and the "Cats" table in
- *    `numbers-parser-*-issue102.numbers` uses the same id for its TOTAL row.
- *  - **212 = DURATION** — in `numbers-parser-v26.1-custom-formats.numbers`,
- *    `=$A$11+FUNCTION_212(,,8,22,11,500)` lands exactly 8h 22m 11.5s after
- *    A11's midnight, and sibling rows differing only in the third argument
- *    (8 → 12 → 24) shift by exactly that many hours. Six arguments, the
- *    last four hours/minutes/seconds/milliseconds, the first two omitted:
- *    `DURATION(weeks, days, hours, minutes, seconds, milliseconds)`.
- *
- * **The index is not alphabetical.** Those two points rule it out — D sorts
- * before S, yet DURATION is 212 and SUM is 168 — and they rule out
- * category-then-name ordering for the same reason. There is no shortcut:
- * the table has to be measured against a real install.
- *
- * Extend at runtime with {@link registerFormulaFunctions} — and see
- * `docs/VERIFICATION.md` for how to harvest more ids from a real Numbers
- * install rather than guessing.
- */
-const BUILTIN_FUNCTIONS: ReadonlyMap<number, string> = new Map([
-  [168, "SUM"],
-  [212, "DURATION"],
-]);
 
 const registeredFunctions = new Map<number, string>();
 
