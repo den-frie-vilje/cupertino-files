@@ -112,9 +112,9 @@ describe("the Snappy port reproduces Apple's compression", () => {
     }
     // Measured 2026-08-02: 1751 components; 1648 match the modern
     // compressor exactly, 1438 the classic, 1740 one of the two. The 11
-    // holdouts compress several times tighter than Snappy can — a
-    // different codec on certain old iOS-writer components — and are the
-    // gap between `either` and `components`.
+    // holdouts are valid Snappy in standard chunks whose matches beat
+    // google's greedy encoder — some old iOS builds linked a stronger
+    // one — and are the gap between `either` and `components`.
     expect(components >= 1751).toBe(true);
     expect(modern >= 1648).toBe(true);
     expect(classic >= 1438).toBe(true);

@@ -122,9 +122,12 @@ that rebuild the structures from them.
   `mergeCells` reproduces the whole file byte for byte
   (test/merges.test.ts). Remaining: bisect rung `06-merge` in Numbers,
   which now exercises the ledger path too.
-- **Chart appearance.** Type, colours, axes, legend are style references
-  not yet modeled. Implementation work, not reverse engineering; the
-  corpus has only two charts, so a document with several types helps.
+- **Chart appearance: only the app's word left.** Type, series colours,
+  axis visibility and gridlines, tick marks and legend styling all read
+  and write, copy-on-write against shared style archives. Remaining:
+  Pages ladder rung `P20-chart-gridlines` in the app (the corpus still
+  has only two charts, so a document with several chart types would
+  widen the evidence).
 - **Keynote v14 upgrade path.** The current-format ladder (v26, all
   eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
   — the deck Keynote converts on open, a different code path — are
@@ -148,12 +151,16 @@ that rebuild the structures from them.
   are out of scope** (FORMAT.md §13).
 - **Transition effect strings are opaque.** Exposed raw, never invented;
   the vocabulary arrives with `animated.key` above.
-- **Eleven corpus components use an unidentified codec.** They live in
-  old iOS-writer documents, decode as ordinary Snappy-framed chunks, and
-  compress far tighter than Snappy can (a 263 KiB stylesheet in 42 KiB) —
-  so re-encoding one with the byte-exact Snappy port produces a valid,
-  larger component rather than Apple's bytes. Harmless unless one is
-  edited, and pinned as the known gap in `test/byte-identity.test.ts`.
+- **Eleven corpus components came from a stronger Snappy encoder.**
+  They decode as perfectly ordinary Snappy in standard 64 KiB chunks —
+  the codec is not in question — but their matches are found better than
+  google's greedy encoder finds them (a 263 KiB stylesheet in 42 KiB),
+  so re-encoding one with the byte-exact port produces a valid, larger
+  component rather than Apple's bytes. Some old iOS-era builds evidently
+  linked a different (perhaps optimal-parse) encoder; identifying which
+  would mean matching its output the way the two google vintages were
+  matched. Harmless unless one is edited, and pinned as the known gap in
+  `test/byte-identity.test.ts`.
 - **Two fixtures are re-zipped wrapper bundles, not app-written files.**
   Their entries were deflated by whatever tool zipped the bundle;
   byte-identity would mean cloning that tool's deflate, which is not this

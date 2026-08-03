@@ -437,7 +437,7 @@ export const RUNGS: {
   },
   {
     name: "P11-inline-image",
-    note: "a 1x1 red PNG inserted inline and scaled up — the experimental one",
+    note: "a 1x1 red PNG inserted inline and scaled up — app-confirmed (P11 pass)",
     build: (doc) => {
       doc.appendParagraph(
         "P11: a red square one inch across should appear at the end of the next line.",

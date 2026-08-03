@@ -842,12 +842,12 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * Insert an image inline at a body-text position (EXPERIMENTAL — see
-   * docs/FORMAT.md §14). Registers the bytes as a Data/ file (SHA-1
-   * deduped), creates the TSD.ImageArchive + attachment objects, anchors
-   * them at a U+FFFC character, and sizes the image from its intrinsic
-   * dimensions (PNG/JPEG/GIF) scaled to fit `maxWidth` (default 400 pt)
-   * unless explicit width/height are given.
+   * Insert an image inline at a body-text position. Registers the bytes
+   * as a Data/ file (SHA-1 deduped), creates the TSD.ImageArchive +
+   * attachment objects, anchors them at a U+FFFC character, and sizes
+   * the image from its intrinsic dimensions (PNG/JPEG/GIF) scaled to fit
+   * `maxWidth` (default 400 pt) unless explicit width/height are given.
+   * App-confirmed: ladder rung P11 renders at the size asked.
    */
   insertInlineImage(
     pos: number,

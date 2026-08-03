@@ -135,11 +135,12 @@ shipped:
 Across this repository's corpus, 1740 of 1751 stored components re-encode
 byte-identically with one of the two (`test/byte-identity.test.ts` pins
 the split). Mixed-age documents contain both at once — incremental save
-keeps whatever bytes an older writer left. The 11 holdouts compress far
-tighter than Snappy can (a 263 KiB stylesheet stored in 42 KiB) and come
-from certain old iOS-era writers; their codec is unidentified, they
-decode as ordinary Snappy-framed chunks, and rewriting them with either
-vintage produces a valid, slightly larger component.
+keeps whatever bytes an older writer left. The 11 holdouts are ordinary
+Snappy in standard 64 KiB chunks whose matches were found *better* than
+google's greedy encoder finds them (a 263 KiB stylesheet stored in
+42 KiB) — certain old iOS-era builds evidently linked a stronger
+encoder — and rewriting them with either vintage produces a valid,
+slightly larger component.
 
 Matching the compressor matters for one reason: it makes a re-serialized
 component identical to what the app would have written, which upgrades
