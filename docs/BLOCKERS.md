@@ -27,21 +27,20 @@ with every remaining click inside the document itself (cells beside the
 data, presenter notes, Pages comments on the exact paragraph). Open,
 follow, save, run the command the file names.
 
-**1. `seed-borders.pages` — 2 min, two questions in one.** The border
-bitmask is measured in left-to-right paragraphs: 1 top, 2 bottom, 4
-left, 8 right, unions literal. Direction is not the style bag's
-`writing_direction` (all its values refuted — the ledger); the evidence
-points at the storage's `table_para_bidi` pairs, where 0 = LTR and
-65535 = natural are observed and **1** is the untested RTL candidate.
-The seed writes three Hebrew paragraphs with bidi pairs 1, 0 and
-natural. One look: does exactly the `[bidi 1]` line stand
-right-aligned? Then give it a green left-edge border and `npm run probe
--- seed-borders.pages` — the probe prints every bidi pair and border
-code, so the paste answers both the RTL value and whether the side bits
-are visual (4) or logical (8). If no line stands right-aligned, the
-bidi write is refuted too, and the next step is measuring what Pages
-itself writes: enable a Hebrew input source, flip the paragraph with
-the app's own direction control, save, send the file.
+**1. `seed-borders.pages` — 3 min, the app answers directly.** Every
+writable direction candidate is refuted as an input: the style bag's
+`writing_direction` (0/1/2) and the storage's bidi pairs (1/0/65535)
+all render left-to-right, with the donor's alignment measured natural —
+nothing masked them, so those fields are most likely derived values the
+app recomputes. The measurement is therefore inverted: the seed stages
+a vanilla Hebrew line; enable a Hebrew input source, flip the line with
+Pages' own paragraph-direction control (⇄), type a few characters with
+the Hebrew keyboard, save, and send the file back. The diff against the
+staged bytes shows exactly, and only, what the app writes for a real
+RTL paragraph — alignment, direction fields, bidi table and all — and
+the border question (are side bits 4/8 visual or logical?) rides on the
+same returned file. Works on iPhone and Mac alike; the steps are in a
+comment on the line.
 
 **2. Send back the three finished seeds** from the first round —
 `seed-rules.numbers`, `seed-filters.numbers`, `seed-builds.key` — as
@@ -162,6 +161,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | paragraph `writing_direction` value | Pages (macOS, Danish UI), via seed-borders v4 | **value 2 refuted as RTL**: a Hebrew paragraph styled `writingDirection: 2` rendered left-aligned. The caret's behaviour inside the Hebrew (a typed space appears to the caret's right) is run-level Unicode bidi, present in any paragraph, and says nothing about paragraph base direction. The honoured value is unmeasured; the v5 seed ladders 0/1/2 and has the person border the line that stands right-aligned | `scripts/make-seeds.ts`, `src/tss/stylesheet.ts` |
 | 2026-08-03 | end-of-storage editing smear | field report: an agent editing a real letterhead template, verified by Pages rendering + a bisect ladder | **bug confirmed and fixed**: edits whose range reached `text.length` left the new final empty paragraph without its para-style entry, and Pages drops body styling whole when any paragraph lacks one. Corpus measurement made the rule exact — an entry at `text.length` exists iff the text ends with a terminator (31/31 vs 0/1270) — and the writer now derives it from the new text. The same report drove the offset-safety layer (stale ranges throw; `applyEdits`) | `src/tswp/textstorage.ts`, test/text-endedit.test.ts |
 | 2026-08-03 | `writing_direction` ladder (style bag) | Pages (macOS, Danish UI), via seed-borders v5 | **the whole style-bag route refuted**: styled 0, 1 and 2 rendered identically left-aligned, and the caret differed in-word vs line-start exactly as run-level bidi inside an LTR paragraph predicts. With no corpus style carrying the field, direction does not live there; the v6 seed writes the storage's `table_para_bidi` pairs instead (1 as the RTL candidate beside the observed 0 and 65535) | `scripts/make-seeds.ts`, `scripts/probe-unknowns.ts` |
+| 2026-08-03 | bidi-pair ladder (`table_para_bidi`) | Pages (iOS, Danish UI), via seed-borders v6 | **pairs refuted as an input too**: bidi (1,1), (0,0) and (65535,65535) all rendered left-aligned — and the donor's Body alignment is measured *natural* (4, own and resolved), so alignment masked nothing. Together with the style-bag refutation the model that fits is that both fields are derived values the app recomputes, like the calc engine's dependency ledger. The v8 seed inverts the measurement: the person flips a staged Hebrew line with the app's own direction control and returns the file, and the diff names the mechanism | `scripts/make-seeds.ts` |
 | 2026-07-31 | cross-table names | n/a — file analysis | **solved without an app**: AST `table_id` is a calc-engine *owner* id (`TSCE.FormulaOwnerDependenciesArchive`); all 1020 corpus cross-table references resolve | `src/tsce/owners.ts` |
 | 2026-08-03 | predicate_type 7/8 | Numbers (macOS, Danish UI), via seed-rules + seed-filters | **solved — the menu-order prediction confirmed whole**: 7 = `>` (twice over: a conditional rule and a filter), 8 = `>=`, each stated by its own formula. All six comparison codes observed; setConditionalRules writes all six | `src/tst/predicates.ts`, test/conditional-writing.test.ts |
 | 2026-08-03 | filter rules + predicate_type 3 | Numbers (macOS, Danish UI), via seed-filters | **first non-empty filter set anywhere — rules read**, filters and conditional formatting sharing the predicate encoding. Type 3 is "text contains": `NOT(ISERROR(f(needle, cell)))` with `f` the unnamed function index 296 (SEARCH is 131). Filter formulas render `OTHER_TABLE::` — the filter owner's references resolve to no named table yet | `scripts/probe-unknowns.ts` |
