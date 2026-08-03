@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 20 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -41,9 +41,8 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 16 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 17 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 18 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 19 | 🟡 low | Text & styles → Placeholder text (list, fill, define) | a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text | manual |
-| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 19 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 20 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Cell styling (fill, four borders, padding, alignment, wrap)
 
@@ -265,19 +264,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 19. Placeholder text (list, fill, define)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text
-
-**Why the suite cannot settle it.** the written archive is byte-shaped like the app's own, but tap-to-replace is editor behaviour nothing offline can observe
-
-**How to settle it.** define a placeholder over a bracketed token in a blank document, fill another, open in Pages: click the defined one (whole-span selection expected), click and type in the filled one (ordinary editing expected)
-
-### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 19. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -289,7 +276,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 21. Table of contents (rules read + write, cached entries read)
+### 20. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -303,7 +290,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-28 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+29 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -457,6 +444,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The old mapping was inferred from the inspector's five choices and the deprecated enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it offline.
 
 **Outcome.** **Refuted, and replaced with the measured truth: it is a bitmask.** Two seed-borders runs (2026-08-03, Pages, Danish UI): top-only, bottom-only, top-and-bottom and all-four borders carried 1, 2, 3, 15 — the union is what proves flags — and a red left-only border wrote 4 while a blue right-only wrote 8, the probe's stroke colours naming their paragraphs. The enum reading (ALL = 4) would have drawn one left edge where a box was meant. One remainder stays open: the run's RTL leg failed its own precondition (the Hebrew-first paragraph rendered LTR — unset writing_direction does not mean natural), so whether an RTL paragraph keeps the side bits visual or flips them logically is unmeasured; the regenerated seed authors the RTL paragraph with an explicit writing direction to close it
+
+### ✅ Placeholder text (list, fill, define)
+
+**Was claimed.** a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text
+
+**Why it needed an app.** the written archive is byte-shaped like the app's own, but tap-to-replace is editor behaviour nothing offline can observe
+
+**Outcome.** **Confirmed in full, through the native lifecycle** (2026-08-03, iOS Pages, T15.3 writer, via seed-placeholder): one tap selected the library-defined span whole, typing replaced the entire span, and the returned resave shows the field consumed — exactly what the app does to its own placeholders. The filled line edited as plain text, so fillPlaceholder sheds the marking correctly. The round trip is also the project's first iOS-written artifact over library-authored bytes
 
 ### ✅ Placement (copy onto a page/slide/sheet, remove, reorder in z)
 
