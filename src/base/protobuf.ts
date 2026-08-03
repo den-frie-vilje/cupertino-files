@@ -39,7 +39,7 @@
  * bytes here, where preserving the unknown is the entire job.
  */
 import { ByteWriter, utf8Decode, utf8Encode } from "./bytes.ts";
-import { readUvarint, uvarintLength, writeUvarint } from "./varint.ts";
+import { readUvarint, writeUvarint } from "./varint.ts";
 
 export const WireType = {
   Varint: 0,
@@ -504,9 +504,4 @@ function skipField(bytes: Uint8Array, pos: number, wire: WireType): number {
     default:
       throw new RangeError(`protobuf: cannot skip wire type ${wire}`);
   }
-}
-
-/** Estimate the encoded size of a length-delimited field (helper for stats). */
-export function lengthDelimitedSize(no: number, payloadLen: number): number {
-  return uvarintLength(no * 8 + WireType.Bytes) + uvarintLength(payloadLen) + payloadLen;
 }

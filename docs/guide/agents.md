@@ -26,31 +26,14 @@ the Model Context Protocol over stdio, that's the whole configuration:
 }
 ```
 
-The server exposes twenty tools. Start with `describe_document` — it
-tells the agent a document's shape before anything reads or writes it.
-
-| Tool | What it does |
-| --- | --- |
-| `create_document` | A new blank document — Pages, Numbers or Keynote — at a path |
-| `describe_document` | The document's shape: app, tables, slides, charts |
-| `read_text` | A Pages body, or a Keynote deck slide by slide |
-| `read_table` | Cells as display text, capped and honest about it |
-| `list_formulas` | Every formula, with its address and rendered text |
-| `set_cells` | Write values; the cells keep their formatting |
-| `set_formula` | Write a formula, with the value it shows meanwhile |
-| `format_cells` | Fill, borders, alignment and wrap for a block of cells |
-| `merge_cells` | Merge a rectangle, or split one with `unmerge` |
-| `modify_table` | Insert or delete rows and columns; set column widths |
-| `append_paragraph` | Add a paragraph to a Pages body, styled by name |
-| `replace_text` | Style-preserving find and replace in a Pages body |
-| `format_text` | Bold, italics, fonts and color for a phrase |
-| `set_slide_text` | Rewrite a Keynote slide's title, body or notes |
-| `manage_slides` | Add, duplicate, move, remove slides; set the slide size |
-| `manage_sheets` | Add, rename, move, remove Numbers sheets; add tables |
-| `set_cell_format` | Number, currency, date, duration display formats |
-| `set_table_bands` | Header and footer bands, freeze and repeat |
-| `set_page_setup` | Margins, page size, orientation for Pages |
-| `insert_link` | Turn a phrase in a Pages body into a hyperlink |
+Start with `describe_document` — it tells the agent a document's shape
+before anything reads or writes it. The rest group by task: reading
+(`read_text`, `read_table`, `list_formulas`), table editing
+(`set_cells`, `set_formula`, `format_cells`, `merge_cells` and their
+kin), Pages text (`append_paragraph`, `replace_text`, `format_text`,
+`insert_link`), and structure (`create_document`, `manage_slides`,
+`manage_sheets`). The live list, each tool with its full description:
+`npx -y cupertino-files tools`.
 
 Rows and columns are 0-based throughout. Writes save over the input —
 the same thing the apps do — unless `output` names somewhere else. A

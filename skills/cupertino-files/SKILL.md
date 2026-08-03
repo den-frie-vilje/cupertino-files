@@ -361,11 +361,12 @@ Two things to know before relying on this:
   seen — and `predicate.operator` is `undefined`, rather than a guess, when
   the rule is something richer than a comparison ("text contains").
 
-**Conditional rules write** for the four measured operators — `=`, `<>`,
-`<`, `<=` via `setConditionalRules` — byte-identical to Apple's encoding;
-`>` and `>=` are refused until their codes are measured (the rules.numbers
-ask in `docs/BLOCKERS.md`). **Filter rules do not write** — every filter
-set in the corpus is empty, so there is nothing measured to write.
+**Conditional rules write** for all six comparisons — `=`, `<>`, `>`,
+`>=`, `<`, `<=` via `setConditionalRules` — byte-identical to Apple's
+encoding; each code is measured from a real document's own formula, and
+filters share the encoding. **Filter rules do not write** — reading is
+measured from a real filter set, but authoring a rule also means
+recomputing which rows it hides, which needs the calc engine.
 
 ### Categories (row grouping)
 
@@ -602,6 +603,17 @@ A bookmark's `ranged` flag is derived from the span you give: `true` for
 more than one character, `false` for a point anchor. Do not set out to
 fight this — Pages trusts the flag over the run, and a mismatch (seen in
 the app) collapses a 13-character bookmark to its first character.
+
+## Inserting images (Pages)
+
+Inline insertion is shipped and app-confirmed: the bytes enter `Data/`
+(SHA-1-deduped), the image is anchored at the body position given, and it
+is sized from its own pixels (fit to `maxWidth`, default 400 pt) unless
+explicit `width`/`height` say otherwise.
+
+```ts
+doc.insertInlineImage(pos, pngBytes, { fileName: "figure.png", maxWidth: 300 });
+```
 
 ## Cropping images
 

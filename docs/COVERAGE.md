@@ -63,11 +63,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 23 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 12 | iwork16→current |
 | Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 4 | iwork16→modern |
-| Bookmarks | all | 🔍 read only | 3 | iwork16→modern |
 | Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 2 | iwork16→iwork19 |
-| Footnote creation and removal<br><sub>the reference is a U+000E in its own table; the note is a separate storage of footnote kind</sub> | Pages | ✅ read + write | 1 | iwork19→iwork19 |
-| Footnotes / endnotes<br><sub>creating footnotes is not implemented</sub> | Pages | 🔍 read only | 1 | iwork19→iwork19 |
-| Comments<br><sub>creating comments is not implemented</sub> | all | 🔍 read only | 2 | iwork16→iwork19 |
+| Footnote creation and removal<br><sub>the reference is a U+000E in its own table; the note is a separate storage of footnote kind — endnotes are the same machinery under kind 1 (document) or 2 (section), read by the same accessor</sub> | Pages | ✅ read + write | 1 | iwork19→iwork19 |
 | Change tracking (insertions/deletions)<br><sub>tables preserved and index-shifted correctly; no semantic API</sub> | all | 🔍 read only | 1 | modern→modern |
 | Table of contents (rules read + write, cached entries read)<br><sub>collection rules are editable; cached entries are a layout result this library will not invent</sub> | Pages | ✅ read + write | 2 | iwork19→iwork19 |
 
@@ -81,7 +78,6 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Geometry (enumerate, move, resize) | all | ✅ read + write | 34 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
 | Image cropping (set, move, remove a mask) | all | ✅ read + write | 14 | iwork16→current |
-| Image masks | all | 🔍 read only | 14 | iwork16→current |
 | Media variant resolution (unmaterialized originals) | all | 🔍 read only | 9 | iwork16→current |
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
@@ -119,7 +115,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, cross-table references (`Other::A1`, resolved to the target's owner UUID), nested calls, omitted arguments, and any of the 272 measured functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with its own text saves the whole document byte-identical to the original. Nothing evaluates — pass the cached result as `value`. Arrays and #REF! are refused</sub> | all | ✅ read + write | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous</sub> | Numbers | ✅ read + write | 10 | iwork16→current |
-| Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
+| Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; appearance has its own rows below</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
 | Chart appearance: type and series colours<br><sub>chart type reads and writes against the full TSCHArchives_Common enum (a test parses the proto, so the next value Apple adds fails the suite rather than a document). Series colour copies on write: style archives are shared — one is referenced by ten charts in a borrowed document — so setSeriesFill clones a shared archive, repoints this chart's slot and retargets the reference declaration, instead of recolouring every chart at once</sub> | all | ✅ read + write | 1 | iwork16→iwork16 |
 | Chart appearance: axes, legend, gridlines<br><sub>axis visibility, gridlines, tick marks and gridline strokes read and write, per axis and per kind. Nearly every axis property exists twice — once for category, once for value — and an archive fills only its own family, so reading the wrong one returns undefined for everything and looks like an empty archive rather than a bug; the chart names the two kinds in separate fields, so nothing is inferred. Writes copy on write like series fills. Legend fill, stroke and opacity write the same way</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
 | Conditional formatting rules<br><sub>conditions decoded from the rule's formula, which states the comparison. setConditionalRules writes all six comparisons — every predicate_type code is observed, the last two (&gt; at 7, &gt;= at 8) measured 2026-08-03 from seed documents whose formulas state the operators. A rule built for a condition Apple also wrote is byte-identical to Apple's, all 424 bytes</sub> | all | ✅ read + write | 1 | current→current |
@@ -131,7 +127,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Categories: enable or disable grouping | all | ✅ read + write | 12 | modern→current |
 | Categories: regrouping rows after an edit<br><sub>regroupCategories puts rows back in the groups their values now call for, and writes only the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for byte across every by-value table in the fixture. Creating or removing a group is refused: which rows are "Animal" the data answers, but a new group's identity, its sort position and the per-column fields beside the tree are things only the app knows</sub> | all | ✅ read + write | 1 | current→current |
 | Categories: creating a grouping, and per-group summaries<br><sub>creating a group needs its identity, its sort position and the several per-column and per-row fields written alongside the tree, none of which any fixture explains; and no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
-| Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions</sub> | all | 🔍 read only | 22 | iwork16→current |
+| Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions; row/column insert and delete keep the map in lockstep, minting and retiring identities — read-only means no direct authoring API</sub> | all | 🔍 read only | 22 | iwork16→current |
 | Filters: authoring rules and recomputing hidden rows<br><sub>a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates</sub> | all | ○ roadmap | n/a | — |
 
 ### Keynote
@@ -146,7 +142,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 8 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 8 | iwork16→current |
-| Builds (animations): read and retime<br><sub>NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in animationAttributes (field 18), undecoded, so they read undefined on modern builds and retiming writes legacy fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | 🔍 read only | **0** | — |
+| Builds (animations): read and retime<br><sub>NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in animationAttributes (field 18), undecoded, so they read undefined on modern builds and retiming writes legacy fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ⚠️ experimental | **0** | — |
 | Builds: creating an animation<br><sub>withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written</sub> | Keynote | ○ roadmap | n/a | — |
 
 ### Concurrency
@@ -228,8 +224,6 @@ correctly. They are listed with their reasoning and repro steps in
 - Object graph → **Unknown type IDs preserved across edits** (1)
 - Text & styles → **Comment creation and removal** (2)
 - Text & styles → **Footnote creation and removal** (1)
-- Text & styles → **Footnotes / endnotes** (1)
-- Text & styles → **Comments** (2)
 - Text & styles → **Change tracking (insertions/deletions)** (1)
 - Text & styles → **Table of contents (rules read + write, cached entries read)** (2)
 - Drawables & media → **Image filters / adjustments** (2)

@@ -185,7 +185,6 @@ export {
   TableModel,
   tablesOf,
   decodeCellRecord,
-  decodeDecimal128,
   cellValueToString,
   groupValueOf,
   normalizeCellInput,
@@ -201,7 +200,7 @@ export type {
   TableBand,
   WriteOptions,
 } from "./tst/tables.ts";
-export { CellRecord, CellType, CellFlag, encodeDecimal128 } from "./tst/cellrecord.ts";
+export { CellRecord, CellType, CellFlag, encodeDecimal128, decodeDecimal128 } from "./tst/cellrecord.ts";
 export {
   renderFormula,
   registerFormulaFunctions,
@@ -332,10 +331,6 @@ export {
   Acceleration,
 } from "./keynote/builds.ts";
 export type { BuildInfo, BuildChunk } from "./keynote/builds.ts";
-export {
-  PREDICATE_TYPE_HYPOTHESIS,
-  predicateTypeStatus,
-} from "./tst/predicates.ts";
 export type { Uid } from "./tst/uidmap.ts";
 export { TextRange, ParagraphHandle } from "./tswp/range.ts";
 export { TableOfContents, tablesOfContents, TOC_TYPE, TocScope } from "./tswp/toc.ts";

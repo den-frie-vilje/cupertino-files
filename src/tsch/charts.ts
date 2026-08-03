@@ -24,6 +24,7 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUuid } from "../base/uuid.ts";
+import { APPLE_EPOCH_MS } from "../base/bytes.ts";
 import {
   ChartAxisStyle,
   ChartLegendStyle,
@@ -132,9 +133,6 @@ export type ChartValue =
   | { type: "number"; value: number }
   | { type: "date"; value: Date }
   | { type: "duration"; seconds: number };
-
-/** Seconds between the Unix epoch and Apple's 2001-01-01 epoch. */
-const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
 
 export class ChartModel {
   readonly store: ObjectStore;

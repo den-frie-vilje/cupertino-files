@@ -45,6 +45,7 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUuid } from "../base/uuid.ts";
+import { APPLE_EPOCH_MS } from "../base/bytes.ts";
 
 /** TSWP archive types for attachments this module builds. */
 export const ATTACHMENT_TYPE = {
@@ -205,7 +206,6 @@ export const BookmarkFieldArchive = protoFields("TSWP.BookmarkFieldArchive", {
 
 /** TSP.Date: seconds = 1, from 2001-01-01. */
 const DATE_SECONDS = 1;
-const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
 
 export interface DateFieldOptions {
   /** The moment the field represents. Defaults to now. */

@@ -553,13 +553,6 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
-    name: "Bookmarks",
-    apps: "all",
-    status: "read",
-    probe: (c) => safe(() => c.doc.textStorages().some((s) => s.bookmarks().length > 0)),
-  },
-  {
-    group: "Text & styles",
     name: "Comment creation and removal",
     apps: "all",
     manualProof: {
@@ -590,7 +583,7 @@ export const CAPABILITIES: Capability[] = [
     apps: ["pages"],
     status: "read+write",
     probe: (c) => safe(() => c.doc.textStorages().some((s) => s.footnotes().length > 0)),
-    note: "the reference is a U+000E in its own table; the note is a separate storage of footnote kind",
+    note: "the reference is a U+000E in its own table; the note is a separate storage of footnote kind — endnotes are the same machinery under kind 1 (document) or 2 (section), read by the same accessor",
     manualProof: {
       claim: "a footnote this library creates is numbered and laid out by Pages",
       settled:
@@ -614,22 +607,6 @@ export const CAPABILITIES: Capability[] = [
         "than in the body face",
       risk: "medium",
     },
-  },
-  {
-    group: "Text & styles",
-    name: "Footnotes / endnotes",
-    apps: ["pages"],
-    status: "read",
-    probe: (c) => safe(() => c.doc.textStorages().some((s) => s.footnotes().length > 0)),
-    note: "creating footnotes is not implemented",
-  },
-  {
-    group: "Text & styles",
-    name: "Comments",
-    apps: "all",
-    status: "read",
-    probe: (c) => safe(() => c.doc.textStorages().some((s) => s.comments().length > 0)),
-    note: "creating comments is not implemented",
   },
   {
     group: "Text & styles",
@@ -753,13 +730,6 @@ export const CAPABILITIES: Capability[] = [
       how: "crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says",
       risk: "medium",
     },
-  },
-  {
-    group: "Drawables & media",
-    name: "Image masks",
-    apps: "all",
-    status: "read",
-    probe: (c) => safe(() => c.doc.images().some((i) => i.hasMask)),
   },
   {
     group: "Drawables & media",
@@ -1290,7 +1260,7 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => c.doc.charts().length > 0),
-    note: "the grid's id map and the sparse per-series style arrays are kept in step; chart appearance is not modelled",
+    note: "the grid's id map and the sparse per-series style arrays are kept in step; appearance has its own rows below",
     manualProof: {
       claim: "a series added or removed here leaves the chart's styling on the right series",
       why: "styling is applied at render time from arrays indexed by series position; the suite proves the indexes shift, not what the app draws",
@@ -1501,7 +1471,10 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.uidMap().columnCount > 0)),
-    note: "resolves the UIDs categories, hidden states and the calc engine use back to positions",
+    note:
+      "resolves the UIDs categories, hidden states and the calc engine use back to positions; " +
+      "row/column insert and delete keep the map in lockstep, minting and retiring identities — " +
+      "read-only means no direct authoring API",
   },
   {
     group: "Numbers & tables",
@@ -1688,7 +1661,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Keynote",
     name: "Builds (animations): read and retime",
     apps: ["keynote"],
-    status: "read",
+    status: "experimental",
     probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.builds().length > 0)),
     note:
       "NO FIXTURE: the graph and delivery reads are deck-confirmed; effect and timing live in " +

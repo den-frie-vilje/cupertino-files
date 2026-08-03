@@ -14,11 +14,12 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { Storage } from "../tswp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { ByteWriter, bytesEqual } from "../base/bytes.ts";
+import { APPLE_EPOCH_MS, ByteWriter, bytesEqual } from "../base/bytes.ts";
 import {
   CellFlag,
   CellRecord,
   CellType,
+  decodeDecimal128,
   FORMAT_FLAGS,
   VALUE_FLAGS,
 } from "./cellrecord.ts";
@@ -506,9 +507,6 @@ export interface MergeRange {
   columnCount: number;
 }
 
-/** Seconds between the Unix epoch and Apple's 2001-01-01 epoch. */
-const APPLE_EPOCH_MS = Date.UTC(2001, 0, 1);
-
 /**
  * A pre-BNC record as a {@link CellValue}, or `undefined` when the record's
  * shape has not been measured.
@@ -534,7 +532,6 @@ function preBncCellValue(
   }
   return undefined;
 }
-const DECIMAL128_BIAS = 0x1820;
 
 export class TableModel {
   readonly store: ObjectStore;
@@ -3470,13 +3467,4 @@ export function decodeCellRecord(
     default:
       throw new RangeError(`unrecognized cell type ${cellType} in v5 storage`);
   }
-}
-
-/** IEEE 754-2008 decimal128 (binary integer significand), bias 0x1820. */
-export function decodeDecimal128(b: Uint8Array): number {
-  const exp = (((b[15]! & 0x7f) << 7) | (b[14]! >> 1)) - DECIMAL128_BIAS;
-  let mantissa = BigInt(b[14]! & 1);
-  for (let i = 13; i >= 0; i--) mantissa = mantissa * 256n + BigInt(b[i]!);
-  const sign = (b[15]! & 0x80) !== 0 ? -1 : 1;
-  return sign * Number(mantissa) * Math.pow(10, exp);
 }

@@ -31,7 +31,6 @@
  * better answer than an unrecognised number.
  */
 import { measuredEnum, protoFields } from "../proto/fields.ts";
-import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { refId } from "../tsp/schema.ts";
@@ -260,15 +259,6 @@ function readSpecMessage(entry: RawMessage): RawMessage | undefined {
     if (sub.has(CellSpecFields.INTERACTION_TYPE)) return sub;
   }
   return undefined;
-}
-
-/** Standalone `TST.CellSpecArchive` objects, for a store that keeps them out of line. */
-export function cellSpecObjects(store: ObjectStore, typeId: number): IwaObject[] {
-  const out: IwaObject[] = [];
-  for (const { obj } of store.allObjects()) {
-    if (obj.type === typeId) out.push(obj);
-  }
-  return out;
 }
 
 /** `TST.PopUpMenuModel`, the archive holding a menu's list of choices. */
