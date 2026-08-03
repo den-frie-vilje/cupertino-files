@@ -535,6 +535,13 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim:
         "a span this library defines as placeholder behaves as one in Pages — a click selects the whole span and typing replaces it — and a filled placeholder behaves as plain text",
+      settled:
+        "**Confirmed in full, through the native lifecycle** (2026-08-03, iOS Pages, T15.3 " +
+        "writer, via seed-placeholder): one tap selected the library-defined span whole, typing " +
+        "replaced the entire span, and the returned resave shows the field consumed — exactly " +
+        "what the app does to its own placeholders. The filled line edited as plain text, so " +
+        "fillPlaceholder sheds the marking correctly. The round trip is also the project's " +
+        "first iOS-written artifact over library-authored bytes",
       why:
         "the written archive is byte-shaped like the app's own, but tap-to-replace is editor " +
         "behaviour nothing offline can observe",
