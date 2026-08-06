@@ -804,7 +804,10 @@ export const CAPABILITIES: Capability[] = [
     name: "Inline image insertion",
     apps: ["pages"],
     status: "read+write",
-    note: "Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment",
+    note:
+      "Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the " +
+      "in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves " +
+      "with its indent",
     manualProof: {
       claim: "an image this library inserts inline appears on the page at the size asked for",
       settled:
@@ -823,6 +826,33 @@ export const CAPABILITIES: Capability[] = [
       how:
         "`npm run pages:docs` emits P11-inline-image: a 1x1 red PNG scaled up. A red square " +
         "on the page is a pass.",
+      risk: "high",
+    },
+  },
+  {
+    group: "Drawables & media",
+    name: "Inline image placement in an indented column",
+    apps: ["pages"],
+    status: "read+write",
+    note:
+      "exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and " +
+      "on none of its 175 floating drawables; the other values place the drawable against " +
+      "the page and are unnamed in any published schema",
+    manualProof: {
+      claim:
+        "an inline image sits in the text column of an indented paragraph, not at the page margin",
+      why:
+        "Reported from a real build: in a template whose body styles are indented, an " +
+        "inserted picture drew from the page margin instead of the column, and the next " +
+        "paragraph flowed up beside it into the running footer. The drawable carried no " +
+        "exterior_text_wrap at all — the field every corpus inline image has — and geometry " +
+        "could not move it, because for an in-flow attachment the position is a cache the " +
+        "app recomputes.",
+      how:
+        "`npm run seeds -- out` writes seed-inline-image.pages: two pictures in a paragraph " +
+        "indented well in from the margin, one in-flow and one page-placed, each labelled " +
+        "with what it should look like. The in-flow picture starting where its own paragraph " +
+        "starts is the pass.",
       risk: "high",
     },
   },

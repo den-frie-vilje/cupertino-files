@@ -231,9 +231,24 @@ export class ParagraphHandle {
     return this.info().styleId;
   }
 
+  /**
+   * The named style this paragraph reads as — resolved through the
+   * parent chain, so direct formatting does not hide it. This is the
+   * name a table of contents collects by.
+   */
   get styleName(): string | undefined {
     const id = this.styleId;
     return id !== undefined ? this.storage.styleNameOf(id) : undefined;
+  }
+
+  /**
+   * True when the paragraph carries direct formatting: its style object
+   * is the anonymous child {@link format} creates, rather than the named
+   * style itself. {@link styleName} still names the style it inherits.
+   */
+  get hasDirectFormatting(): boolean {
+    const id = this.styleId;
+    return id !== undefined && this.storage.ownStyleNameOf(id) === undefined;
   }
 
   setStyle(style: string | bigint): this {

@@ -81,7 +81,8 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
 | Image cropping (set, move, remove a mask) | all | ✅ read + write | 16 | iwork16→current |
 | Media variant resolution (unmaterialized originals) | all | 🔍 read only | 11 | iwork16→current |
-| Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment</sub> | Pages | ✅ read + write | n/a | — |
+| Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves with its indent</sub> | Pages | ✅ read + write | n/a | — |
+| Inline image placement in an indented column<br><sub>exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and on none of its 175 floating drawables; the other values place the drawable against the page and are unnamed in any published schema</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
 
 ### Pages
@@ -156,7 +157,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-50 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+51 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -178,6 +179,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
 - 🟠 medium — Drawables & media → **Image cropping (set, move, remove a mask)**
 - 🔴 high — Drawables & media → **Inline image insertion**
+- 🔴 high — Drawables & media → **Inline image placement in an indented column**
 - 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
 - 🟠 medium — Pages → **Sections (read + insert)**
 - 🟡 low — Pages → **Headers & footers (3 columns × first/even/odd)**

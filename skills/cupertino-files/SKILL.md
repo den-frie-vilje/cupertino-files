@@ -149,6 +149,54 @@ And three semantics worth knowing before they surprise you:
   surviving empty paragraph can inherit list membership and render as a
   stray numbered item; `doc.paragraph(i).setListStyle("None")` or
   `setStyle(...)` clears it.
+- `paragraph(i).format({...})` parents the paragraph on an anonymous
+  style — the look is right and `styleName` still reports the named
+  style it inherits, but the paragraph now carries its own copy.
+  `hasDirectFormatting` tells you which. For anything document-wide, set
+  the property on the named style instead — `sheet.style("Heading
+  1").setParagraph({ keepWithNext: true })` merges — or make a named
+  variant with `createParagraphStyle({ copyOf: "Heading 1", … })`.
+
+### Building a long document by appending
+
+Filling a template end-to-end is a different job from editing one in
+place, and these are the parts that bite:
+
+```ts
+// Every appended paragraph states its own list membership: a bullet
+// does not turn the rest of the document into a list.
+doc.appendParagraph("Chapter One", "Heading 1");
+doc.appendParagraph("Body text.", "Body");
+doc.appendParagraph("A bulleted step", "Body", "Bullet");   // opt in per call
+
+// A picture rides the text column by default, so it lines up with an
+// indented body. `wrap: "page"` places it against the page margins.
+doc.insertInlineImage(doc.body.paragraphStarts()[i], png, { fileName: "shot.png", width: 456 });
+
+// What the template defines vs what it actually uses — a style nobody
+// has seen next to the rest usually looks foreign on the page.
+doc.paragraphStyles();        // every named style
+doc.paragraphStylesInUse();   // [{ name, count }], most-used first
+```
+
+- **The app draws one more paragraph than `paragraphs()` lists** when the
+  text ends with a terminator, which is how the apps write it and what
+  appending preserves. `doc.body.endsWithEmptyParagraph` says so; delete
+  the final `\n` if the trailing blank matters more than matching Apple.
+- **Renaming a running header or footer**: `setFooterText` replaces the
+  storage whole and takes the page-number fields with it. Edit in place
+  instead, which any storage holding fields wants:
+  ```ts
+  for (const section of doc.sections())
+    for (const t of section.templates())
+      for (const storage of [...t.headers, ...t.footers])
+        storage?.replaceAll(OLD_SUBJECT, NEW_SUBJECT);   // page fields survive
+  ```
+- **No API restarts list numbering.** Keep the source's own numbers as
+  text when a document needs "1." to start again.
+- **Removing a picture**: `removeAttachment` unlinks it; `doc.compact()`
+  then reclaims the archives. The image bytes stay in the package —
+  nothing traces a Data/ file safely enough to collect one.
 
 ### Placeholders — fill-in templates without styled-token hacks
 
@@ -220,6 +268,16 @@ which is the normal state of most text, not a failure. What no offline
 read can prove is how the app *renders*. When a render is wrong,
 bisect: one operation per file, each from a fresh copy of the original,
 open each — the failing rung names the operation.
+
+**`paragraphs()` is the wrong instrument for layout.** Text and style
+come back right from documents whose pages are wrong — a picture drawn
+outside its column, a paragraph flowing over the footer, a heading that
+has left the table of contents. What a build script can assert offline
+is the countable: list membership against what the source asked for,
+picture and heading counts, `hasDirectFormatting` where a named style
+was meant, `endsWithEmptyParagraph`, `paragraphStylesInUse()` against
+the template's own vocabulary, geometry and indents against the
+template's. Then still look at a page.
 
 **Character** options: `bold`, `italic`, `fontSize`, `fontName`
 (PostScript name), `fontColor`, `backgroundColor` (highlight), `underline`
@@ -710,7 +768,20 @@ explicit `width`/`height` say otherwise.
 
 ```ts
 doc.insertInlineImage(pos, pngBytes, { fileName: "figure.png", maxWidth: 300 });
+doc.insertInlineImage(pos, pngBytes, { fileName: "plate.png", wrap: "page" });
 ```
+
+The picture **rides the text**: it sits in the text column and moves with
+the paragraph's indent, which is what you want when the body is indented
+(a letterhead template, say). `wrap: "page"` is the other mode — placed
+against the page margins with text flowing around it — where a picture
+in an indented body will *not* line up with the words above it.
+
+Geometry is not the lever for placement: `setGeometry({ x })` writes a
+field the app recomputes for an in-flow attachment, so it reads back and
+changes nothing. Width and height are honoured. To fill the page's full
+measure rather than the text column, size to
+`pageWidth - leftMargin - rightMargin`.
 
 ## Cropping images
 

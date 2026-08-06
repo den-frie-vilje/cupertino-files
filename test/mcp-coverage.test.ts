@@ -142,6 +142,10 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["PagesDocument.defineAsPlaceholder", "part of the placeholder tool trio; range addressing over JSON wants the find-based design"],
   ["PagesDocument.applyEdits", "raw offsets over JSON invite stale-snapshot mistakes; replace_text covers the common case until a find-integrated batch design"],
   ["PagesDocument.characterFormattingAt", "verification reader; the read tools cover agent needs"],
+  [
+    "PagesDocument.paragraphStylesInUse",
+    "verification reader for build scripts; describe_document already reports the style vocabulary an agent needs",
+  ],
   ["TableModel.setConditionalStyleKey", "internal plumbing of the conditional-rule path"],
   ["TableModel.regroupCategories", "category regrouping needs category context an agent gets no other tool for yet"],
 ]);

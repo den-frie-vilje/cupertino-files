@@ -30,11 +30,23 @@ export interface GeometryInfo {
  * TSD.GeometryArchive (field 1 with position/size shape) is found.
  */
 export function findDrawableCore(message: RawMessage, maxDepth = 6): RawMessage | undefined {
+  // Field 1 is `super` in a drawable and something else entirely in the
+  // other archives that reach here — an attachment table lists footnote
+  // marks and smart fields beside drawables — so every read is wire-type
+  // guarded. A search returns `undefined` for "not one of these"; it does
+  // not throw.
+  const submessage = (m: RawMessage, field: number): RawMessage | undefined => {
+    try {
+      return m.fieldWire(field) === WireType.Bytes ? m.getMessage(field) : undefined;
+    } catch {
+      return undefined;
+    }
+  };
   let current: RawMessage | undefined = message;
   for (let depth = 0; depth < maxDepth && current; depth++) {
-    const geometry = current.getMessage(Drawable.GEOMETRY);
+    const geometry = submessage(current, Drawable.GEOMETRY);
     if (geometry && looksLikeGeometry(geometry)) return current;
-    current = current.getMessage(1) ?? undefined;
+    current = submessage(current, 1);
   }
   return undefined;
 }

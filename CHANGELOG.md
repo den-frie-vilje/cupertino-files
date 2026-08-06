@@ -7,6 +7,37 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: an inline image is drawn in the text column instead of at the
+  page margin. The drawable carried no `exterior_text_wrap` — the
+  archive every one of the corpus's 102 inline attachments has — so the
+  app placed it against the page, which in a document with indented body
+  styles left the picture out of line with its own paragraph and the
+  next paragraph flowing up beside it. Images now ride the text by
+  default, with `wrap: "page"` for the other mode, and carry the
+  geometry flags, angle and storage back-pointer the corpus shows.
+- Fixed: a paragraph given direct formatting no longer loses its style's
+  name. Formatting parents the paragraph on an anonymous child of the
+  named style — as the apps themselves do, on 644 of 644 anonymous-style
+  corpus paragraphs — so names now resolve through the parent chain.
+  A heading formatted in place stays a heading, which is what a table of
+  contents collects by; `hasDirectFormatting` tells the two apart. This
+  also fixes reading app-written documents, where direct formatting is
+  the norm rather than the exception.
+- Fixed: an appended paragraph no longer inherits the previous one's
+  list membership, which silently turned every paragraph after a bullet
+  into a list item while its paragraph style still read "Body". Each
+  appended paragraph states its own, the way Apple does (222 of 222
+  corpus list entries name a style, 82 of them "None"); pass a list
+  style to `appendParagraph` to opt in.
+- `paragraphStyles()` lists only styles that have names, instead of the
+  hundreds of anonymous ones direct formatting creates; new
+  `paragraphStylesInUse()` reports what the body actually uses, which is
+  the shorter and more interesting list. New
+  `body.endsWithEmptyParagraph` discloses the paragraph the app draws
+  after a trailing terminator but `paragraphs()` does not list.
+- `findDrawableCore` returns `undefined` for an archive that is not a
+  drawable instead of throwing, so a survey over mixed attachments no
+  longer dies on the first footnote mark.
 - The LZFSE container that collaboration-mode components use
   (`Index/OperationStorage.iwa` beside Snappy components) now decodes:
   `decodeLzfseStream` reads raw and LZVN blocks (the LZVN decoder is
