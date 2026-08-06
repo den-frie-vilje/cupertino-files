@@ -634,6 +634,14 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "title_hidden": 12,
     "caption_hidden": 13,
   },
+  "TSD.ExteriorTextWrapArchive": {
+    "type": 1,
+    "direction": 2,
+    "fit_type": 3,
+    "margin": 4,
+    "alpha_threshold": 5,
+    "is_html_wrap": 6,
+  },
   "TSD.FillArchive": {
     "color": 1,
     "gradient": 2,

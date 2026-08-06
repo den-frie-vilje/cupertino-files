@@ -5,7 +5,7 @@
 /** Tool name → the tagged API methods and the doc summaries agents read. */
 export const TOOL_DOCS: ReadonlyMap<string, readonly { api: string; summary: string }[]> =
   new Map([
-    ["append_paragraph", [{"api":"PagesDocument.appendParagraph","summary":"Append a paragraph to the body. `style` may be a style name (\"Heading 1\") or a style object id. Returns the new paragraph index."}]],
+    ["append_paragraph", [{"api":"PagesDocument.appendParagraph","summary":"Append a paragraph to the body. `style` may be a style name (\"Heading 1\") or a style object id. Returns the new paragraph index. `list` names a list style (\"Bullet\", \"Numbered\") to make the paragraph a list item; without it the paragraph is not one, whatever the paragraph before it was."}]],
     ["create_document", [{"api":"PagesDocument.blank","summary":"A new, empty Pages document — A4, vanilla styling, no template file needed. The embedded donor is an Apple-written corpus fixture emptied by blankFrom and re-papered to A4 with byte-measured values, so every style and identity in the \"new\" document was authored by an Apple app. `scripts/make-blanks.ts` records its provenance."},{"api":"NumbersDocument.blank","summary":"A new, empty Numbers spreadsheet — one sheet, one table, A4 paper, no template file needed. The embedded donor is an Apple-written corpus fixture (already `iso-a4`) emptied by blankFrom, so every style and identity in the \"new\" document was authored by an Apple app. `scripts/make-blanks.ts` records its provenance."},{"api":"KeynoteDocument.blank","summary":"A new, empty Keynote deck — one slide, 16:9 (1920 × 1080), no template file needed. The embedded donor is an Apple-written corpus fixture emptied by blankFrom, so every master, style, and identity in the \"new\" deck was authored by an Apple app. `scripts/make-blanks.ts` records its provenance."}]],
     ["format_cells", [{"api":"TableModel.setRangeFormatting","summary":"Apply the same formatting to a rectangular block of cells — fill, borders, padding, alignment, wrap — leaving every cell's value untouched."}]],
     ["format_text", [{"api":"PagesDocument.applyCharacterFormatting","summary":"Apply direct character formatting to a body range: creates an anonymous TSWP.CharacterStyleArchive (parented on the effective style at `start`) and spans it over [start, end). Returns the new style's id."}]],
@@ -99,6 +99,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "PagesDocument.pageSetup", tool: null },
   { api: "PagesDocument.paragraph", tool: null },
   { api: "PagesDocument.paragraphStyles", tool: null },
+  { api: "PagesDocument.paragraphStylesInUse", tool: null },
   { api: "PagesDocument.paragraphs", tool: null },
   { api: "PagesDocument.placeholders", tool: null },
   { api: "PagesDocument.range", tool: null },

@@ -25,7 +25,7 @@ import {
   TSWP_TYPE,
 } from "../tswp/schema.ts";
 import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
-import { Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
+import { buildTextWrap, Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -345,10 +345,16 @@ export class PagesDocument extends IWorkDocument {
   /**
    * Append a paragraph to the body. `style` may be a style name ("Heading 1")
    * or a style object id. Returns the new paragraph index.
+   *
+   * `list` names a list style ("Bullet", "Numbered") to make the
+   * paragraph a list item; without it the paragraph is not one, whatever
+   * the paragraph before it was.
    * @agentTool append_paragraph
    */
-  appendParagraph(text: string, style?: string | bigint): number {
-    const index = this.body.appendParagraph(text);
+  appendParagraph(text: string, style?: string | bigint, list?: string | bigint): number {
+    const listId =
+      list === undefined ? undefined : this.body.resolveStyle(list, TSWP_TYPE.LIST_STYLE);
+    const index = this.body.appendParagraph(text, listId);
     if (style !== undefined) this.setParagraphStyle(index, style);
     return index;
   }
@@ -395,6 +401,10 @@ export class PagesDocument extends IWorkDocument {
       sheet = sheet.parentSheet()
     ) {
       for (const s of sheet.paragraphStyles()) {
+        // Anonymous styles — the ones direct formatting creates — are
+        // listed in the same sheet but are not styles anybody can apply
+        // by name, and a document accumulates hundreds of them.
+        if (s.name === undefined || s.name.length === 0) continue;
         if (!seen.has(s.id)) {
           seen.add(s.id);
           out.push(s);
@@ -402,6 +412,26 @@ export class PagesDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  /**
+   * Which paragraph styles the body actually uses, most-used first — as
+   * against {@link paragraphStyles}, which is everything the template
+   * *defines*. A template usually defines styles its own sample content
+   * never demonstrates, and those are the ones whose look nobody has
+   * seen next to the rest.
+   */
+  paragraphStylesInUse(): { name: string; count: number }[] {
+    const counts = new Map<string, number>();
+    const paragraphs = this.body.paragraphs();
+    for (let i = 0; i < paragraphs.length; i++) {
+      const name = this.body.paragraph(i).styleName;
+      if (name === undefined) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }
 
   /**
@@ -934,13 +964,27 @@ export class PagesDocument extends IWorkDocument {
    * the image from its intrinsic dimensions (PNG/JPEG/GIF) scaled to fit
    * `maxWidth` (default 400 pt) unless explicit width/height are given.
    * App-confirmed: ladder rung P11 renders at the size asked.
+   *
+   * The image rides the text: it sits in the text column and moves with
+   * the paragraph's indent, because the drawable carries the
+   * in-the-text-flow `exterior_text_wrap`. Pass `wrap: "page"` for the
+   * other behaviour, where the image is placed against the page margins
+   * and text flows around it — with an indented body that means the
+   * picture will not line up with the words above it.
    */
   insertInlineImage(
     pos: number,
     data: Uint8Array,
-    options: { fileName: string; width?: number; height?: number; maxWidth?: number },
+    options: {
+      fileName: string;
+      width?: number;
+      height?: number;
+      maxWidth?: number;
+      wrap?: "text" | "page";
+    },
   ): { imageId: bigint; dataId: bigint } {
     const body = this.body;
+    const wrap = options.wrap ?? "text";
     const component = this.store.componentOf(body.id);
     if (!component) throw new RangeError("body component not found");
     const { dataId } = this.store.addDataFile(data, options.fileName);
@@ -969,7 +1013,15 @@ export class PagesDocument extends IWorkDocument {
     size.setFloat(SizeFields.HEIGHT, height);
     geometry.setMessage(Geometry.POSITION, position);
     geometry.setMessage(Geometry.SIZE, size);
+    // Flags 3 and an explicit angle are on 102 of 102 corpus inline
+    // drawables, without exception.
+    geometry.setVarint(Geometry.FLAGS, 3);
+    geometry.setFloat(Geometry.ANGLE, 0);
     drawable.setMessage(Drawable.GEOMETRY, geometry);
+    // The back-pointer to the storage the drawable is anchored in:
+    // present on all 102, resolving to the TSWP.StorageArchive every time.
+    drawable.setMessage(Drawable.PARENT, makeRef(body.id));
+    drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap(wrap));
     image.message.setMessage(Image.SUPER, drawable);
     if (dims) {
       const natural = RawMessage.create();

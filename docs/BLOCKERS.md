@@ -20,17 +20,25 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — one seed staged: collaboration mode
+## Needs a Mac — two seeds staged
 
-`npm run seeds -- out` writes `seed-collaboration.pages`, whose
-remaining clicks live inside the document: open, share via the
-Samarbejd button (no invitation needs sending), save, run the probe,
-send the file back, stop sharing. Collaboration rewrites the package
-with the two components nothing else writes — `OperationStorage.iwa`
-and `ActivityStream.iwa`, LZFSE-framed beside Snappy — and the decoder
-now reads the framing but has never seen a real payload: the returned
-file is both the first redistributable specimen and the measurement of
-what the decoded bytes mean.
+`npm run seeds -- out` writes both; each carries its own instructions
+and its own expected result.
+
+- `seed-inline-image.pages` — **an eye, not a probe.** Two pictures in a
+  paragraph indented 113 pt from the page margin: the first written
+  with the in-the-text-flow wrap, the second placed against the page.
+  The first starting where its own paragraph's text starts is the pass;
+  the two looking identical means only one mode is ever used, whatever
+  the file says. Nothing to run, just open and look.
+- `seed-collaboration.pages` — open, share via the Samarbejd button (no
+  invitation needs sending), save, run the probe, send the file back,
+  stop sharing. Collaboration rewrites the package with the two
+  components nothing else writes — `OperationStorage.iwa` and
+  `ActivityStream.iwa`, LZFSE-framed beside Snappy — and the decoder now
+  reads the framing but has never seen a real payload: the returned file
+  is both the first redistributable specimen and the measurement of what
+  the decoded bytes mean.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
@@ -82,6 +90,17 @@ that rebuild the structures from them.
   eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
   — the deck Keynote converts on open, a different code path — are
   generated (`npm run keynote:docs`) and unchecked.
+- **Reclaiming a Data/ file nothing points at.** `compact()` collects
+  unreachable *archives*, so removing a picture's anchor and compacting
+  takes the drawable and its attachment; the image bytes stay. The
+  obvious collector is unsafe: every one of the 46 corpus documents has
+  `DataInfo` entries that no object's data-reference list mentions —
+  most of them all of their entries — because the apps link data through
+  a `TSP.DataReference` field inside the archive, not through the
+  reference list this library maintains. A reachability scan keyed on
+  the list would delete every image in the corpus. Doing this properly
+  means finding data references by schema position, which is exactly the
+  knowledge `referencedIds` deliberately does without.
 - **Collaboration components: framing decoded, payload unmeasured.**
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
@@ -150,6 +169,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-08-03 | `animationAttributes` decode | Keynote (macOS M15.3 writer), the returned seed deck as fixture | **SOLVED — the field is `KN.AnimationAttributesArchive` and it was in the vendored schema all along**: `effect` (2) an identifier string in two schemes (`apple:dissolve character`, `apple:move in character`, `com.apple.iWork.Keynote.BUKAnvil`), `animation_type` (1) "In", `duration` (3) and `delay` (5) seconds as doubles, plus `random_number_seed` (11) and `writing_direction_is_rtl` (16). Readers now take these with `database_*` fallback; retiming writes them. The deck also shows per-chunk timing (two automatic chunks, delay 1 s, duration 1.75 s) on staged delivery | `src/keynote/builds.ts`, test/keynote.test.ts |
 | 2026-08-03 | filters + rules as corpus evidence | Numbers (macOS M15.3 writer), returned seeds as fixtures | **pinned against real bytes**: the populated two-rule row filter (col A `>10` type 7, col B contains-"ko" type 3, mode all, arrays consistent) and the conditional sets `>5`/`>=7`/contains-"pear"/is-blank (7/8/3/34) are fixtures with tests; the earlier probe-output measurements now have standing evidence | `test/predicates.test.ts` |
 | 2026-08-03 | macOS re-measurement of iOS findings | Pages (macOS M15.3 writer), returned seeds as fixtures | **both writers agree**: borders {4, 8, 8} with the RTL visual-left edge at 8, the library's (1, 0) direction pair surviving the resave, and a library-defined placeholder consumed by click-and-type to zero fields | test/styling.test.ts, test/placeholders.test.ts |
+| 2026-08-03 | inline image placement, list bleed, style-name loss | n/a — file analysis, from a field report building a ten-chapter manual | **three faults, all measured**: (1) an inserted image carried no `exterior_text_wrap` — the field all 102 corpus inline attachments have — so the app placed it against the page margin instead of the text column, and geometry could not move it because for an in-flow attachment position is a cache the app recomputes; type 0 is the in-flow mode (56 of 102 inline, 0 of 175 floating). (2) `appendParagraph` let list membership run on from a previous bullet: Apple states it per paragraph instead, 222 of 222 corpus list-table entries naming a style and 82 naming "None". (3) A directly formatted paragraph reported no style at all, because the name lives on the named ancestor — 644 of 644 anonymous-style corpus paragraphs have one, and one fixture's every paragraph is anonymous | `src/pages/document.ts`, `src/tswp/textstorage.ts`, test/long-document.test.ts |
 | 2026-08-03 | mixed-codec packages (LZFSE beside Snappy) | n/a — ported from Apple's published lzfse reference (BSD-3-Clause) | **framing decoded**: `decodeLzfseStream` walks bvx- / bvxn / bvx$ blocks and the full LZVN opcode table, validated against hand-assembled vectors per opcode family; bvx1/bvx2 (FSE) refused precisely. Payload semantics unmeasured — no redistributable `OperationStorage.iwa` exists; the collaboration seed is staged to produce one | `src/base/lzfse.ts`, test/lzfse.test.ts |
 | 2026-08-01 | cell-control interaction_type | n/a — borrowed documents | **solved**: 4 stepper, 5 slider, 6 star, 7 pop-up, 8 checkbox; also found and fixed the dropped-checkbox bug | `src/tst/controls.ts` |
 | 2026-08-01/02 | Pages ladder P00–P19 | Pages (macOS 26.x) | **all rungs confirmed**; twelve well-formed-but-wrong defects found, fixed, pinned | VERIFICATION.md |

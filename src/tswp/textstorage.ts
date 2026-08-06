@@ -695,18 +695,51 @@ export class TextStorage {
   /**
    * Append a paragraph, preserving the file's trailing-newline convention.
    * Returns the new paragraph's index.
+   *
+   * The new paragraph states its own list membership rather than
+   * inheriting the previous one's: attribute tables are read as runs, so
+   * one bulleted paragraph would otherwise turn every later append into
+   * a list item — invisibly, because membership lives in the list table
+   * and not in the paragraph style. Apple writes the same statement,
+   * with a list style named "None" (222 of 222 corpus list-table entries
+   * name a style; 82 name that one). Pass a list style to opt in, or
+   * call {@link setListStyle} afterwards.
    */
-  appendParagraph(text: string): number {
+  appendParagraph(text: string, listStyle?: bigint): number {
     if (text.includes("\n")) throw new RangeError("appendParagraph: text must not contain \\n");
     const current = this.text;
+    let index: number;
     if (current.length === 0) {
       this.replaceRange(0, 0, text);
-      return 0;
+      index = 0;
+    } else {
+      const endsWithNewline = current.endsWith("\n");
+      const insertion = endsWithNewline ? `${text}\n` : `\n${text}`;
+      this.replaceRange(current.length, current.length, insertion);
+      index = this.paragraphStarts().length - 1;
     }
-    const endsWithNewline = current.endsWith("\n");
-    const insertion = endsWithNewline ? `${text}\n` : `\n${text}`;
-    this.replaceRange(current.length, current.length, insertion);
-    return this.paragraphStarts().length - 1;
+    const list = listStyle ?? this.styleNamed("None", TSWP_TYPE.LIST_STYLE);
+    if (list !== undefined || this.listStyleIdAt(index) !== undefined) {
+      this.setListStyle(index, list);
+    }
+    return index;
+  }
+
+  /**
+   * True when the text ends with a paragraph terminator, so the app
+   * draws one more, empty paragraph after the last one
+   * {@link paragraphs} lists.
+   *
+   * It is not a fault — 31 of 31 corpus body storages end this way, and
+   * the paragraph-style table carries an entry at `text.length` for
+   * exactly that paragraph — but it is invisible from the paragraph
+   * list, which is worth knowing when a document's last page looks one
+   * line longer than it was built to be. Deleting the final terminator
+   * removes it, at the price of departing from what the apps write.
+   */
+  get endsWithEmptyParagraph(): boolean {
+    const text = this.text;
+    return text.length > 0 && text.endsWith("\n");
   }
 
   /** Set (or clear) the paragraph style of one paragraph. */
@@ -797,8 +830,39 @@ export class TextStorage {
     return found.id;
   }
 
-  /** UI name of a style object (via its TSS.StyleArchive super). */
+  /**
+   * UI name of a style object — the name the app's style panel shows.
+   *
+   * Direct formatting parents a paragraph on an *anonymous* child of the
+   * named style, so the applied object usually carries no name of its
+   * own: 644 of 2093 corpus paragraphs sit on such a style, and every
+   * one of the 644 has a named ancestor (one fixture's every paragraph
+   * does). The name therefore resolves up the parent chain, which is
+   * what makes a directly formatted heading still read as "Heading" —
+   * and still be collected by a table of contents, which matches on the
+   * named style.
+   *
+   * {@link ownStyleNameOf} answers the literal question instead.
+   */
   styleNameOf(styleId: bigint): string | undefined {
+    const sheet = this.sheet();
+    const seen = new Set<bigint>();
+    let id: bigint | undefined = styleId;
+    while (id !== undefined && !seen.has(id)) {
+      seen.add(id);
+      const name = this.ownStyleNameOf(id);
+      if (name !== undefined) return name;
+      id = sheet?.style(id)?.info.parentId;
+    }
+    return undefined;
+  }
+
+  /**
+   * The name written on this style object itself — `undefined` for the
+   * anonymous style direct formatting creates. Use it to tell "styled as
+   * Heading" from "styled as Heading, then modified here".
+   */
+  ownStyleNameOf(styleId: bigint): string | undefined {
     return this.store.object(styleId)?.message.getMessage(1)?.getString(1);
   }
 
@@ -1273,9 +1337,13 @@ export class TextStorage {
   /**
    * Remove an attachment and the placeholder character it occupies.
    *
-   * The archive itself is left in the package, as everywhere else in this
-   * library; what goes is the character and the table entry, which is what
-   * makes the field disappear from the text.
+   * What goes here is the character and the table entry, which is what
+   * makes the field disappear from the text. The archives it left behind
+   * — for an image, the drawable and its attachment — are reclaimed by
+   * `IWorkDocument.compact()`, which collects whatever the document no
+   * longer reaches. The image *bytes* stay: a Data/ file's link to its
+   * object is not something this library can safely trace, so nothing
+   * collects one (see docs/BLOCKERS.md).
    */
   removeAttachment(objectId: bigint): boolean {
     const found = this.attachments().find((entry) => entry.objectId === objectId);
