@@ -35,6 +35,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PagesDocument } from "../src/index.ts";
+import { Storage } from "../src/tswp/schema.ts";
 
 interface Seed {
   name: string;
@@ -129,39 +130,39 @@ function seedInlineImage(): Uint8Array {
     "SEED · indrykket billede (docs/BLOCKERS.md). Brødteksten herunder er rykket 113 pt ind fra sidens margen. Spørgsmålet er, hvor de to billeder starter.",
   );
 
+  // Every paragraph first, images after: an empty paragraph appended at
+  // the very end is not one paragraphs() lists, so an image placed by
+  // that index lands in the paragraph before it.
   const indent = { leftIndent: 113.4 };
   const first = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter i SAMME lodrette linje som denne sætnings første bogstav — altså langt inde på siden. Gør det ikke det, men starter helt ude ved sidens venstre margen, er dét fundet.",
+    "FORVENTET: billedet herunder starter i SAMME lodrette linje som denne sætnings første bogstav — altså langt inde på siden, ikke ude ved sidens venstre margen. Hele denne tekst skal også stå indrykket.",
     "Body",
   );
-  doc.paragraph(first).format(indent);
-  const firstImage = doc.appendParagraph("", "Body");
-  doc.paragraph(firstImage).format(indent);
+  const firstImage = doc.appendParagraph(" ", "Body");
+  const second = doc.appendParagraph(
+    "FORVENTET: billedet herunder starter derimod ude ved sidens venstre margen, ikke i tekstspalten — det er skrevet med den anden tilstand, så de to billeder skal stå forskellige steder.",
+    "Body",
+  );
+  const secondImage = doc.appendParagraph(" ", "Body");
+  const last = doc.appendParagraph(
+    "Kig på de to billeders venstre kant. Forskellige = begge tilstande virker. Ens = kun den ene bliver brugt, uanset hvad filen siger. Står teksten heller ikke indrykket, er dét fundet i stedet. Send filen retur uden at ændre noget.",
+    "Body",
+  );
+  for (const index of [first, firstImage, second, secondImage, last]) {
+    doc.paragraph(index).format(indent);
+  }
+
   doc.insertInlineImage(doc.body.paragraphStarts()[firstImage]!, png, {
     fileName: "i-tekstspalten.png",
     width: 200,
     height: 100,
   });
-
-  const second = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter derimod ude ved sidens venstre margen, ikke i tekstspalten — det er skrevet med den anden tilstand, så de to skal se forskellige ud. Ser de to billeder ens ud, virker indstillingen ikke.",
-    "Body",
-  );
-  doc.paragraph(second).format(indent);
-  const secondImage = doc.appendParagraph("", "Body");
-  doc.paragraph(secondImage).format(indent);
   doc.insertInlineImage(doc.body.paragraphStarts()[secondImage]!, png, {
     fileName: "ved-sidemargenen.png",
     width: 200,
     height: 100,
     wrap: "page",
   });
-
-  const last = doc.appendParagraph(
-    "Kig på de to billeders venstre kant. Forskellige = begge tilstande virker. Ens = kun den ene bliver brugt, uanset hvad filen siger. Send filen retur uden at ændre noget.",
-    "Body",
-  );
-  doc.paragraph(last).format(indent);
   return doc.save();
 }
 
@@ -174,6 +175,23 @@ const seeds: Seed[] = [
       if (d.images().length !== 2) throw new Error("inline image: expected 2 images");
       if (!d.bodyText.includes("FORVENTET")) throw new Error("inline image: expectations missing");
       if (!d.bodyText.includes("Send filen retur")) throw new Error("inline image: return ask missing");
+      // Each picture alone in its paragraph, and every paragraph but the
+      // first indented — the precondition the whole check rests on.
+      const paragraphs = d.paragraphs();
+      const withImage = paragraphs.filter((p) => p.text.includes("￼"));
+      if (withImage.length !== 2) throw new Error("inline image: pictures not in their own paragraphs");
+      if (withImage.some((p) => p.text.trim() !== "￼")) {
+        throw new Error("inline image: a picture shares its paragraph with text");
+      }
+      const sheet = d.body.sheet();
+      const starts = d.body.paragraphStarts();
+      const indents = starts.map((start) => {
+        const id = d.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
+        return id === undefined ? 0 : (sheet?.style(id)?.resolved().paragraph.leftIndent ?? 0);
+      });
+      if (indents.slice(1).some((v) => Math.round(v) !== 113)) {
+        throw new Error(`inline image: paragraphs not indented (${indents.join(", ")})`);
+      }
     },
   },
   {

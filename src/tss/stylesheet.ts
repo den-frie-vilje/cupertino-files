@@ -682,7 +682,17 @@ export function readCharacterProperties(m: RawMessage | undefined): CharacterFor
   return f;
 }
 
-/** Apply paragraph formatting onto an existing property bag (see above). */
+/**
+ * Apply paragraph formatting onto an existing property bag (see above).
+ *
+ * A left indent is written as the pair Apple writes. Of the 8647 corpus
+ * paragraph styles that set `left_indent`, 8645 set `first_line_indent`
+ * beside it, and a style carrying the left indent alone was observed not
+ * to indent in Pages at all. So an unaccompanied left indent gains a
+ * matching first line — a block indent, which is what indenting a
+ * paragraph means — while a bag that already states its own first line
+ * keeps it, hanging indents included.
+ */
 export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting): void {
   if (f.alignment !== undefined) m.setVarint(ParaProps.ALIGNMENT, f.alignment);
   for (const [key, field] of [
@@ -751,6 +761,11 @@ export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting):
     // means "inherit nothing", which is a different thing.
     m.remove(ParaProps.TABS_NULL);
     m.setMessage(ParaProps.TABS, tabs);
+  }
+  // The left indent's other half — see the note above this function.
+  const left = m.getFloat(ParaProps.LEFT_INDENT);
+  if (left !== undefined && m.getFloat(ParaProps.FIRST_LINE_INDENT) === undefined) {
+    m.setFloat(ParaProps.FIRST_LINE_INDENT, left);
   }
 }
 

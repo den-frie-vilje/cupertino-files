@@ -7,6 +7,12 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a left indent now indents in the app. A paragraph style setting
+  `left_indent` alone read back correctly and rendered flush at the
+  margin; Apple pairs it with `first_line_indent` in 8645 of the 8647
+  corpus styles that set it, so an unaccompanied left indent gains a
+  matching first line — a block indent — while a bag stating its own
+  first line keeps it, hanging indents included.
 - Fixed: an inline image is drawn in the text column instead of at the
   page margin. The drawable carried no `exterior_text_wrap` — the
   archive every one of the corpus's 102 inline attachments has — so the
