@@ -14,6 +14,7 @@ import { PagesDocument } from "../src/index.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { Drawable, ExteriorTextWrap, Geometry, TEXT_WRAP_IN_FLOW, TEXT_WRAP_ON_PAGE } from "../src/tsd/schema.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
+import { ParaProps, Storage, StyleArchive } from "../src/tswp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -119,6 +120,39 @@ describe("appended paragraphs state their own list membership", () => {
     doc.body.setText("One\nTwo\n");
     expect(doc.body.endsWithEmptyParagraph).toBe(true);
     expect(doc.paragraphs().length).toBe(2);
+  });
+});
+
+describe("a left indent is written as the pair Apple writes", () => {
+  it("adds the matching first line, so the paragraph indents in the app", () => {
+    // A style setting left_indent alone reads back correctly and does not
+    // indent in Pages. Of 8647 corpus styles setting it, 8645 set
+    // first_line_indent beside it.
+    const doc = PagesDocument.blank();
+    const i = doc.appendParagraph("Indented paragraph.", "Body");
+    doc.paragraph(i).format({ leftIndent: 113.4 });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const styleId = reloaded.body.effectiveObjectAt(
+      Storage.TABLE_PARA_STYLE,
+      reloaded.body.paragraphStarts()[i]!,
+    )!;
+    const bag = reloaded.store.object(styleId)!.message.getMessage(StyleArchive.PARA_PROPERTIES)!;
+    expect(bag.getFloat(ParaProps.LEFT_INDENT)).toBe(113.4000015258789);
+    expect(bag.getFloat(ParaProps.FIRST_LINE_INDENT)).toBe(113.4000015258789);
+  });
+
+  it("leaves a hanging indent alone when the caller states both", () => {
+    const doc = PagesDocument.blank();
+    const i = doc.appendParagraph("Hanging paragraph.", "Body");
+    doc.paragraph(i).format({ leftIndent: 81, firstLineIndent: 54 });
+
+    const resolved = doc.body
+      .sheet()!
+      .style(doc.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, doc.body.paragraphStarts()[i]!)!)!
+      .resolved().paragraph;
+    expect(resolved.leftIndent).toBe(81);
+    expect(resolved.firstLineIndent).toBe(54);
   });
 });
 
