@@ -7,6 +7,33 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: an edit touching a section's first character no longer destroys
+  the document's section list. The section table was classified with the
+  point-anchored tables (whose entry dies with its character), but a
+  section entry marks where a section *begins* — all 25 sectioned corpus
+  bodies keep their first entry at 0 — so rewriting paragraph 0 of a
+  sectioned template silently removed its pagination.
+- Fixed: `formulas()` now lists formulas this library authored. The
+  sweep went through the value-bearing cells, and a freshly written
+  formula has no cached value until the app recomputes — so the library
+  could not see its own output. It walks the row records instead.
+- Fixed: `PagesDocument.paragraphs()` reports the chain-resolved style
+  name, like `paragraph(i).styleName` — a directly formatted heading no
+  longer reads as unnamed in the listing.
+- A demo suite: `npm run demos` generates ten self-describing documents
+  covering every write capability — text and styles, structure and
+  fields, images, charts, cells and formats, formulas, conditional rules
+  and controls, sheets and filters, slides, animations — each check
+  numbered, stating what the library did and what the app should
+  render, with feedback space in the document itself.
+- Documentation drift audit against the code: 41 findings fixed across
+  README, FORMAT.md, the skill, THIRD-PARTY-NOTICES (fixture licenses
+  now enumerated; keynote proto dumps correctly attributed to
+  psobot/keynote-parser) and proto/README — stale corpus counts
+  refreshed, border-position and filter sections rewritten to the
+  measured state, donor style names corrected in skill examples, and
+  the measured transition-effect identifier scheme
+  (`apple:transition/dissolve`) documented.
 - Fixed: a left indent now indents in the app. A paragraph style setting
   `left_indent` alone read back correctly and rendered flush at the
   margin; Apple pairs it with `first_line_indent` in 8645 of the 8647

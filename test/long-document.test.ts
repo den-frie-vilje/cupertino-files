@@ -123,6 +123,33 @@ describe("appended paragraphs state their own list membership", () => {
   });
 });
 
+describe("sections survive edits at their first character", () => {
+  it("rewriting paragraph 0 of a sectioned document keeps its section list", () => {
+    // The section table's entry marks where a section begins — 25 of 25
+    // sectioned corpus bodies keep their first entry at 0 — so an edit
+    // landing there must not take the entry with it. Treating the table
+    // as point-anchored made rewriting paragraph 0 destroy pagination.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    expect(doc.sections().length).toBe(2);
+    doc.paragraph(0).text = "A rewritten opening paragraph.";
+    expect(doc.sections().length).toBe(2);
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.sections().length).toBe(2);
+    expect(reloaded.bodyText.startsWith("A rewritten opening paragraph.")).toBe(true);
+  });
+
+  it("deleting a whole section's text merges it away", () => {
+    // Removing every character from the section start through its
+    // boundary terminator collapses the two entries onto one position,
+    // where the later entry wins — one section remains.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const boundary = doc.body.text.indexOf("\u0004");
+    doc.body.deleteRange(0, boundary + 1);
+    expect(doc.sections().length).toBe(1);
+    expect(PagesDocument.load(doc.save()).sections().length).toBe(1);
+  });
+});
+
 describe("a left indent is written as the pair Apple writes", () => {
   it("adds the matching first line, so the paragraph indents in the app", () => {
     // A style setting left_indent alone reads back correctly and does not

@@ -861,6 +861,11 @@ export class TableModel {
   /**
    * Every formula cell in the table, with its rendered text.
    *
+   * Walks the row records for a formula id rather than going through
+   * {@link cells}: a formula the app wrote carries a cached value, but a
+   * freshly authored one does not until the app recomputes, and it is a
+   * formula either way.
+   *
    * @agentTool list_formulas
    */
   formulas(): { row: number; column: number; formula: string }[] {
@@ -868,10 +873,17 @@ export class TableModel {
     if (this.storageGeneration !== "v5") return out;
     const table = this.formulaTable();
     if (table.size === 0) return out;
-    for (const cell of this.cells()) {
-      if (cell.value.type === "empty" || !cell.value.isFormula) continue;
-      const formula = this.cellFormula(cell.row, cell.column);
-      if (formula) out.push({ row: cell.row, column: cell.column, formula });
+    for (let row = 0; row < this.rowCount; row++) {
+      const located = this.locateRow(row);
+      if (!located) continue;
+      const records = readRowLayout(located.rowInfo, this.columnCount).records;
+      for (let column = 0; column < records.length; column++) {
+        const raw = records[column];
+        if (!raw) continue;
+        if (CellRecord.decode(raw).id(CellFlag.FORMULA_ID) === undefined) continue;
+        const formula = this.cellFormula(row, column);
+        if (formula) out.push({ row, column, formula });
+      }
     }
     return out;
   }

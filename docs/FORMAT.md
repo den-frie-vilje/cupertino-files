@@ -77,8 +77,8 @@ Notes:
   central-directory extras or comments. `Metadata/*` and the root
   `preview*.jpg` local headers carry a redundant ZIP64 extended-info extra
   (id `0x0001`, both sizes as 64-bit values, while the real sizes also sit
-  in the 32-bit fields); `Index/*` and `Data/*` never do — 1751 of 1751
-  IWA entries across this corpus are bare. In incrementally saved
+  in the 32-bit fields); `Index/*` and `Data/*` never do — 1895 of 1895
+  top-level IWA entries across this corpus are bare. In incrementally saved
   documents the **local records' physical order can differ from the
   central directory's order**; both orders are meaningful and must be
   preserved independently to reproduce the file.
@@ -143,9 +143,9 @@ shipped:
   hashes with the bits just above the 2-byte entry stride, so only
   full-size hash tables coincide with the classic form.
 
-Across this repository's corpus, 1740 of 1751 stored components re-encode
+Across this repository's corpus, 1884 of 1895 stored components re-encode
 byte-identically with one of the two (`test/byte-identity.test.ts` pins
-the split). Mixed-age documents contain both at once — incremental save
+the split as floors, so a growing corpus cannot silently regress it). Mixed-age documents contain both at once — incremental save
 keeps whatever bytes an older writer left. The 11 holdouts are ordinary
 Snappy in standard 64 KiB chunks whose matches were found *better* than
 google's greedy encoder finds them (a 263 KiB stylesheet stored in
@@ -303,16 +303,16 @@ formatting generally, not just conditional rules.
 `MessageInfo.field_infos` looks like a second, finer-grained copy of
 `object_references` — one entry per field path, each with its own
 `object_references` list. It is tempting to recompute it the same way. That
-would be wrong, and a survey of 28,867 archives across the corpus says why:
+would be wrong, and a survey of 34,579 archives across the corpus says why:
 
 | observation | count |
 | --- | --- |
-| archives carrying `object_references` **with no `field_infos` at all** | 7,311 |
-| `field_infos` present but `object_references` empty | 4,120 |
-| both present, and the per-field union **differs** from the top-level list | 3,608 |
-| both present and in agreement | 4,153 |
-| `FieldInfo.type` = `Value`(0) / `ObjectReference`(1) / `DataReference`(2) / `Message`(3) | 14,390 / 5,364 / 6 / 6,502 |
-| `unknown_field_rule` = `IgnoreAndPreserveUntilModified`(0) / `IgnoreAndPreserve`(1) | 6,018 / 20,244 |
+| archives carrying `object_references` **with no `field_infos` at all** | 7,970 |
+| `field_infos` present but `object_references` empty | 5,784 |
+| both present, and the per-field union **differs** from the top-level list | 4,471 |
+| both present and in agreement | 5,820 |
+| `FieldInfo.type` = `Value`(0) / `ObjectReference`(1) / `DataReference`(2) / `Message`(3) | 19,226 / 6,701 / 6 / 8,820 |
+| `unknown_field_rule` = `IgnoreAndPreserveUntilModified`(0) / `IgnoreAndPreserve`(1) | 7,395 / 27,358 |
 
 Field paths run up to four levels deep (`[4,22]`, `[11,43]`).
 
@@ -328,7 +328,9 @@ compatibility rules it has no basis for.
 So they are preserved verbatim. The one hazard that remains is staleness —
 an entry naming an object a later edit removed. Auditing every authoring
 path in the library (cells, formulas, merges, controls, conditional rules,
-row deletion, `blankFrom`) found **zero** dangling ids, at either level,
+row deletion, `blankFrom`, inline images, placeholders, bookmarks,
+comments, footnotes, style creation, build edits, filter toggles) found
+**zero** dangling ids, at either level,
 because the edits reshape field *contents* rather than the reference
 topology those entries describe. Should an authoring feature ever move
 references between field paths, this is the invariant it would break.
@@ -494,17 +496,24 @@ space_before=21, tabs=25, widow_control=26, outline_level=27, stroke=32,
 show_in_toc=33, writing_direction=38, list_style=40 (ref),
 following_style=42 (ref), border_positions=45, rounded_corners=46.
 
-Two of these are easy to get wrong:
+Three of these are easy to get wrong:
 
 - **`fill` (6) is a bare `TSP.Color`, not a `TSD.FillArchive`.** A paragraph
   background can only be a flat colour — never a gradient or image.
 - **`border_positions` (45) is a bitmask of sides**, measured against the
-  app: bit 1 top, bit 2 bottom, bit 4 left, bit 8 right. A union means
-  exactly its bits (3 draws top and bottom, 15 all four) and 0 is none.
-  Left and right are measured in left-to-right paragraphs; whether a
-  right-to-left paragraph keeps them as on-page sides or flips them as
-  logical start/end is still unmeasured. The library exposes the raw
-  integer alongside the named constants.
+  app: bit 1 top, bit 2 bottom, and two *logical* side bits — 4 the
+  leading edge, 8 the trailing edge — that swap visual sides with the
+  paragraph's writing direction (the left-edge control on an RTL
+  paragraph stores 8; measured on app-written documents from both the
+  macOS and iOS writers). A union means exactly its bits (3 draws top
+  and bottom, 15 all four) and 0 is none. The library names them
+  `LEADING`/`TRAILING`, with `LEFT`/`RIGHT` as the left-to-right
+  aliases, and exposes the raw integer alongside.
+- **`left_indent` (11) travels with `first_line_indent` (7).** Of the
+  8647 corpus paragraph styles that set the left indent, 8645 set the
+  first line beside it — and a style carrying the left indent alone was
+  observed not to indent in Pages at all. The library's writer supplies
+  the matching first line when a caller gives only the left.
 
 ### 8.1 Shared style values (TSD)
 
@@ -590,9 +599,9 @@ every crop:
 - the **mask**'s geometry is in the **image's** space.
 
 So the visible rectangle is `image.position + mask.position`, sized by the
-mask. That is measured rather than assumed: across the 79 masked images in
+mask. That is measured rather than assumed: across the 87 masked images in
 the corpus this reading puts the visible rectangle at a non-negative
-position 78 times and the crop window inside the image 75 times, against 48
+position and the crop window inside the image for all but a handful, against far fewer
 for the alternative — and it explains the full-bleed cases exactly, where an
 image at (-91, -102) carries a mask at (91, 102) so the crop begins
 precisely at the page origin.
@@ -610,8 +619,8 @@ message TSD.BezierPathSourceArchive {
 
 Every corpus mask is a rectangle, but **not at the size it appears to be**.
 The path lives in its own coordinate space and is stretched — independently
-per axis — to `naturalSize`. Of the 79 masks, 30 write the path at exactly
-`naturalSize`, 12 at a uniform scale of it, and 37 at some other scale; one
+per axis — to `naturalSize`. Of the 87 masks, a third write the path at exactly
+`naturalSize`, some at a uniform scale of it, and the rest at some other scale; one
 is a plain 100×100 reference box stretched to 860×880. So the path's own
 dimensions carry nothing beyond "this shape is a rectangle", and what sizes
 the crop is `naturalSize` — which equals the mask's frame in every file
@@ -652,9 +661,10 @@ message TSWP.NumberAttachmentArchive {               // type 2043
 }
 ```
 
-`number_format` is an unpublished enum, but each archive carries its
+`number_format` is an unpublished enum, and most archives carry a
 `number_format_name` alongside, so the pairing need not be guessed. The
-corpus contains exactly two: 0 with `"decimal"` and 2 with `"lower-roman"`.
+corpus pairs 0 with `"decimal"` (×80) and 2 with `"lower-roman"` (×3);
+six 2013-era archives write 0 with no name at all.
 `string_value` is a *cache* of the last number the app rendered — writing
 one means asserting a page number nobody computed.
 
@@ -822,17 +832,19 @@ discontinuity is meaningful — Apple changed what the number *means*:
 | `iwork16` | `2.x` | 2015–2016 releases | `2.0.24`, build `T2.6.1 (2160)` |
 | `iwork19` | `3.x`–`4.x` | 2017–2019 releases | `3.2.13` (`G-r320-3C102`), `4.2.3` (`M8.2-6520-2`) |
 | `modern` | `10.x`–`14.x` | mirrors the **application** version (2020–2024) | `14.4.1`, build `M14.5-7045.0.17-4` |
-| `current` | `26.x` | year-versioned 2025/2026 releases | `26.0.0` (build `M15.1`), `26.1.0` (builds `M15.2`, `M15.2.1`) |
+| `current` | `26.x` | year-versioned 2025/2026 releases | `26.0.0` (build `M15.1`), `26.1.0` (builds `M15.2`, `M15.2.1`), `26.3.1` (builds `M15.3`, iOS `T15.3`) |
 | `future` | anything higher | released after this library's survey | — |
 
 The build-string prefix identifies the **writing platform**: `M…` for macOS,
 `T…` for iOS/iPadOS, `G…` for some older releases. Both platforms write the
 same format versions — a `26.0.0` Keynote in the corpus was written by iOS
-build `T15.1 (7373.0.281)`, alongside macOS-written 26.1.0 files.
+build `T15.1 (7373.0.281)`, and `26.3.1` documents exist from both
+`M15.3` (macOS) and `T15.3` (iOS) writers.
 
 Note the build string stops matching the format version in the `current`
 era: Apple's marketing version jumped to 26 while internal builds continued
-from 15.x, so a `26.1.0` document is written by an `M15.2.x` build. Use
+from 15.x, so a `26.1.0` document is written by an `M15.2.x` build and a
+`26.3.1` one by `M15.3`/`T15.3`. Use
 `fileFormatVersion` for era decisions, not the build string.
 
 Two further observations from the corpus, both relevant to writers:
@@ -934,8 +946,10 @@ iWork collaboration is **operation-based with server-assigned ordering**,
 not a file-merge or CRDT scheme that a library could join offline. The
 evidence is in the schemas:
 
-- **Edits are commands, not diffs.** 394 of the ~750 registry types are
-  `*CommandArchive` classes (`TSK.CommandArchive` at 132 is the base).
+- **Edits are commands, not diffs.** Around half of the ~750 registry
+  types are command classes — 164 names end in `CommandArchive`, and
+  nearly 400 contain "Command" — spread across every family's own id
+  range rather than under one shared base type.
   Every user action has a serializable command form.
 - **Operational transformation.** `TSCK.CollaborationDocumentSessionState`
   (type 226) carries `rsvp_command_queue_items`,
@@ -1029,8 +1043,10 @@ offset  size  meaning
 | Cell type | Meaning | Value read from |
 |---:|---|---|
 | 0 | empty | — |
+| 1 | span | — (covered by a merge; the anchor holds the value) |
 | 2 | number | decimal128 |
 | 3 | text | `string_id` → stringTable |
+| 4 | formula placeholder | — (value arrives when the app recomputes) |
 | 5 | date | `seconds` since 2001-01-01 |
 | 6 | bool | `double > 0` |
 | 7 | duration | `double` seconds |
@@ -1163,8 +1179,8 @@ Three traps:
   entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
   7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
-  from the live-app harvest; 271 more names are harvested, 272 authorable
-  in total. Guessing beyond that would convert a visible gap into silent
+  from the live-app harvest; with the 271 harvested names (which include
+  SUM and DURATION) the union is 272 authorable in total. Guessing beyond that would convert a visible gap into silent
   wrong answers, so unknown ids render as `FUNCTION_<id>` and callers can
   supply their own table.
 
@@ -1255,8 +1271,10 @@ meaning is visible in any formula bar. So the formula is authoritative for
 what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons — 5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=` — with filters and conditional formatting
-sharing the encoding; a value outside that set reads as `undefined`
-rather than a guess.
+sharing the encoding. Function-shaped conditions are identified too:
+3 is "text contains" (compiled as `NOT(ISERROR(f_296(needle, cell)))`),
+34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
+`undefined` rather than a guess.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -1335,8 +1353,12 @@ type code, byte-identical to Apple's, and 263 appears in two independent
 documents. Sliders and steppers take an ordinary number format because they
 *display* their value; a checkbox and a rating do not.
 
-Every `FilterSetArchive` in the fixture corpus is empty, across all three
-apps: mode "all", disabled, no rules. That is not a corpus accident —
+Nearly every `FilterSetArchive` in the fixture corpus is empty, across
+all three apps: mode "all", disabled, no rules — the exception being the
+populated two-rule set in `olekristensen-v26.3-mac-filters.numbers`
+(column A `>`, column B text-contains, mode "all", enabled), which is
+what pins rule reading to app-written bytes. The emptiness is not a
+corpus accident —
 across 176 borrowed tables from public parser projects, **164 had a filter
 set and 163 of them were empty**; Numbers writes the container for almost
 every table whether or not anyone filters. The single populated one among
@@ -1344,28 +1366,28 @@ those carries four rules, all with `predicate_type` **54**, whose
 predicates render as function calls (`SUM(OTHER_TABLE::C[0])`) rather than
 simple comparisons.
 
-The common case is measured all the same, from a real filter set authored
-for the purpose: a `>` rule and a text-contains rule, each an ordinary
-`TST.FormulaPredicateArchive` — filters and conditional formatting share
-the predicate encoding, down to the type codes (7 = `>` is confirmed from
-both systems; "text contains" is type 3 in both, compiling to
-`NOT(ISERROR(…))` around an unnamed function index). Rule-bearing fixture
-bytes are still wanted so the reading stays pinned by a redistributable
-file. Authoring stays on the roadmap: which rows a filter hides is stored
-separately, in `TST.HiddenStateExtentArchive`, and computing it means
-evaluating the predicates.
+That populated set is the measured common case: a `>` rule and a
+text-contains rule, each an ordinary `TST.FormulaPredicateArchive` —
+filters and conditional formatting share the predicate encoding, down to
+the type codes (7 = `>` is confirmed from both systems; "text contains"
+is type 3 in both, compiling to `NOT(ISERROR(…))` around an unnamed
+function index). A set can be enabled, disabled, switched between "all"
+and "any", and its individual rules toggled; *synthesising* a rule stays
+on the roadmap, because which rows a filter hides is stored separately,
+in `TST.HiddenStateExtentArchive`, and computing it means evaluating the
+predicates.
 
 #### The paragraph-aligned run tables do not share a density rule
 
 `table_para_style` (5), `table_list_style` (7) and `table_layout_style` (12)
 all map character offsets to objects, and they are **not** maintained the
-same way. Measured across the Pages fixtures, for 2060 paragraphs:
+same way. Measured across the Pages fixtures, for 4021 paragraphs:
 
 | table | entries | documents where every paragraph has one |
 | --- | ---: | --- |
-| `table_para_style` | 2067 | **19 of 19** |
-| `table_list_style` | 216 | 3 of 19 (all single-paragraph) |
-| `table_layout_style` | 20 | 3 of 19 (all single-paragraph) |
+| `table_para_style` | 4045 | **25 of 25** |
+| `table_list_style` | 1589 | sparse in every multi-paragraph document |
+| `table_layout_style` | 26 | sparse in every multi-paragraph document |
 
 So the paragraph-style table is **dense** — every paragraph carries an
 entry, without exception — while the other two are **sparse**, carrying one
@@ -1457,11 +1479,11 @@ does not declare it in `object_references`. Measured across the corpus:
 
 | archive | carries `parent` | declares it |
 | --- | ---: | ---: |
-| `TSWP.ShapeInfoArchive` | 285 | 0 |
-| `TSD.ImageArchive` | 151 | 0 |
-| `TSD.MaskArchive` | 79 | 0 |
-| `TSD.GroupArchive` | 13 | 0 |
-| `TSD.MovieArchive` | 8 | 0 |
+| `TSWP.ShapeInfoArchive` | 414 | 0 |
+| `TSD.ImageArchive` | 171 | 0 |
+| `TSD.MaskArchive` | 87 | 0 |
+| `TSD.GroupArchive` | 27 | 0 |
+| `TSD.MovieArchive` | 10 | 0 |
 | `TSD.ConnectionLineArchive` | 36 | **36** |
 
 The connection line is the exception, and it is not an accident: a line
@@ -1487,10 +1509,10 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 2676 of 2676 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
-| an image with no `style` and no `naturalSize` | 83 of 83 point at the theme's `image-0-imageStyle`; 83 of 83 set both sizes | the cell-control-with-no-format shape |
-| an attachment with only `drawable` | 101 of 101 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
-| a section with its `name` removed | 47 of 47 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
+| a footnote storage with a kind, a stylesheet and a string | 2896 of 2896 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
+| an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
+| an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
+| a section with its `name` removed | 53 of 53 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
 
 None of these is malformed. Every field is `optional`, `required:check`
 passes on all four, and the reader gives back exactly what was written.
@@ -1499,7 +1521,7 @@ The audit's third question is the one no archive can answer about itself:
 **who points at this?** For each type it records the whole set of referrer
 types per instance, and reports an object whose set has no precedent in the
 corpus. Asking for the whole set rather than "is referrer X missing" is what
-keeps it usable: every one of the 1360 chart series styles in these fixtures
+keeps it usable: every one of the 1684 chart series styles in these fixtures
 is pointed at by a `TSCH.ChartStylePreset`, which reads like a rule until
 you notice the 18 that are *also* pointed at by a `TSCH.ChartDrawableArchive`
 are the only ones belonging to a chart rather than a theme.
@@ -1559,19 +1581,21 @@ Registration is necessary but not sufficient. A paragraph style also has to
 
 | archive | top-level fields | count |
 | --- | --- | ---: |
-| `TSWP.ParagraphStyleArchive` | `[1, 10, 11, 12]` | **3130 of 3130** |
-| `TSWP.CharacterStyleArchive` | `[1, 10, 11]` | 214 of 233 (rest are `[1]`) |
+| `TSWP.ParagraphStyleArchive` | `[1, 10, 11, 12]` | **9068 of 9069** |
+| `TSWP.CharacterStyleArchive` | `[1, 10, 11]` | 383 of 429 (rest are `[1]`) |
 
-Every paragraph style in the corpus carries `super`, `override_count` and
-**both** property bags — character *and* paragraph — with no exception, empty
-bags included. Character styles are the counter-case that stops this being a
+Every paragraph style in the corpus but one carries `super`,
+`override_count` and **both** property bags — character *and* paragraph —
+empty bags included (the lone exception, a bare `[1]` archive in a
+2013-era deck, is the kind of outlier the rule is stated against, not
+with). Character styles are the counter-case that stops this being a
 blanket rule: they carry no paragraph bag at all.
 
 And registration in the stylesheet is still not the panel. The paragraph
 style list the app shows lives on the **theme**:
 `TP.ThemeArchive.super.110.7` — `TSWP.ThemePresetsArchive` extension 110,
 `paragraph_style_presets` — holding one reference per listed style. Present
-in all 19 IWA-format Pages fixtures (the corpus's 20th `.pages` file is
+in all 25 IWA-format Pages fixtures (the corpus's 26th `.pages` file is
 iWork '09 XML, a different format entirely), always field 7, and its contents are exactly the
 panel's entries, localised with the document so a German template lists
 Titel and Überschrift. Its length tracks what the user sees: twelve in a
@@ -1614,11 +1638,11 @@ Counting that across the Pages fixtures gives the terminator set:
 
 | character | entries following it | what it is |
 | --- | ---: | --- |
-| `U+000A` | 2002 | line feed |
+| `U+000A` | 2607 | line feed |
 | `U+0004` | 28 | section break |
-| `U+0005` | 17 | layout / column break |
+| `U+0005` | 18 | layout / column break |
 | `U+000C` | 1 | page break |
-| `U+2028` | **0** (205 present) | soft line break — *not* a terminator |
+| `U+2028` | **0** (209 present) | soft line break — *not* a terminator |
 
 The section breaks run the other way too: **writing** a section needs the
 character, not just the bookkeeping. All 28 boundaries in the corpus's
@@ -1647,7 +1671,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 2676 storages carry the field and **zero** declare it. What
+fixtures here, 2896 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to* — the paragraph, list and
 column styles — plus same-component placeholders.
 
@@ -1684,11 +1708,11 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 2676 | **0** |
-| `TSD.ImageArchive` | `drawable.parent` | 151 | **0** |
-| `TSD.ImageArchive` | `style` | 163 | 163 |
-| `TSD.ImageArchive` | `mask` | 79 | 79 |
-| `TSD.ImageArchive` | `title` / `caption` | 80 | 80 |
+| `TSWP.StorageArchive` | `style_sheet` | 2896 | **0** |
+| `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
+| `TSD.ImageArchive` | `style` | most | equal — always declared |
+| `TSD.ImageArchive` | `mask` | 87 | 87 |
+| `TSD.ImageArchive` | `title` / `caption` | most | equal — always declared |
 | `TSWP.*StyleArchive` | `super.stylesheet` | many | **0** |
 
 An archive declares what it *resolves through* and never the container that
@@ -1997,7 +2021,7 @@ message TSCE.FormulaOwnerDependenciesArchive {   // type 4008
 
 **Resolution is two hops.** An entry carrying `formula_owner` names its
 object; a derived entry follows `base_owner_uid` to the entry that does.
-Across the corpus that resolves 418 of 524 owners, and every resolution
+Across the corpus that resolves 472 of 564 owners, and every resolution
 lands on a `TST.TableInfoArchive` — nothing else. A table also states its own
 owner through `TableModelArchive.haunted_owner` (field 84), which agrees in
 all 34 cases where both exist.
@@ -2046,15 +2070,20 @@ writing and chart appearance all used to be here.
   enabled, disabled or switched between "all" and "any". What keeps
   authoring here is that writing a rule is only half the feature: which
   rows it hides is stored separately, and recomputing that means
-  evaluating the predicates. Rule-bearing fixture bytes are still wanted
-  to pin the reading.
+  evaluating the predicates. The reading is pinned by the populated set
+  in `olekristensen-v26.3-mac-filters.numbers`, and individual rules can
+  additionally be toggled with `setRuleEnabled`.
 - **Creating a category group** (§14.9). Rows can be *regrouped* among
   groups that exist, byte-identically to Apple; creating one needs its
   identity, its sort position and the fields the archive carries beside the
   tree, which no fixture explains. Bucketed groupings need the grouping
   formula evaluated.
-- **Creating a Keynote build** (animation). The model reads; authoring one
-  needs a deck with a build to compare against.
+- **Creating a Keynote build** (animation). The model reads whole —
+  effect, timing, delivery and chunks, pinned against the three
+  app-authored builds in `olekristensen-v26.3-mac-builds-effects.key` —
+  and retimes or removes existing builds. Creation from nothing stays
+  here: a build the app silently drops is indistinguishable from one
+  never written.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.

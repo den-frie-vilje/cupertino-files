@@ -28,6 +28,26 @@ import { bytesEqual } from "../src/base/bytes.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
+describe("authored formulas are visible to the sweep", () => {
+  it("formulas() lists a formula that has no cached value yet", () => {
+    // A formula the app wrote carries a cached value; a freshly authored
+    // one does not until the app recomputes. Both are formulas, and the
+    // sweep walks the row records rather than the value-bearing cells.
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    if (table.columnCount < 5) table.insertColumns(table.columnCount, 5 - table.columnCount);
+    table.setCell(1, 2, 7);
+    table.setFormula(2, 2, "=C2+1");
+    expect(table.formulas().length).toBe(1);
+    expect(table.formulas()[0]!.formula).toBe("=C2+1");
+
+    const reloaded = NumbersDocument.load(doc.save());
+    const swept = reloaded.tables()[0]!.formulas();
+    expect(swept.length).toBe(1);
+    expect(`${swept[0]!.row},${swept[0]!.column}`).toBe("2,2");
+  });
+});
+
 describe("every parseable corpus formula rebuilds byte-identically", () => {
   it("matches Apple's AST for all of them, with measured floors", () => {
     let total = 0;
