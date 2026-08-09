@@ -52,13 +52,13 @@ reverse-engineering of it, measured from real documents.
 - **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions
 - **Formatting** — fills, borders, alignment, wrap; number, currency, date and duration formats; bands
 - **Structure** — sheets and tables (add, rename, move, remove), rows and columns, merges, column widths
-- **More** — conditional rules, cell controls, and category regrouping write too; filter rules and new category groups read only
+- **More** — conditional rules, cell controls, and category regrouping write too; filter sets toggle and switch mode, though their rules read only, as do category groups
 
 ### Keynote
 
 - **Slides** — add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
 - **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
-- **Decks** — slide size, auto-advance; transitions read and write, builds read
+- **Decks** — slide size, auto-advance; transitions read and write; builds read, retime and remove
 
 ### Everywhere
 

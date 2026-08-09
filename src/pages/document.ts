@@ -318,9 +318,12 @@ export class PagesDocument extends IWorkDocument {
   paragraphs(): (ParagraphInfo & { styleName: string | undefined })[] {
     const body = this.bodyOrUndefined;
     if (!body) return [];
+    // Chain-resolved, like ParagraphHandle.styleName: direct formatting
+    // parents a paragraph on an anonymous style, and the name callers
+    // want is the named ancestor's.
     return body.paragraphs().map((p) => ({
       ...p,
-      styleName: p.styleId !== undefined ? nameOfStyle(this.store, p.styleId) : undefined,
+      styleName: p.styleId !== undefined ? body.styleNameOf(p.styleId) : undefined,
     }));
   }
 
@@ -1092,11 +1095,6 @@ function mediaStyleIdOf(doc: PagesDocument): bigint | undefined {
     if (style !== undefined) return style;
   }
   return undefined;
-}
-
-function nameOfStyle(store: ObjectStore, id: bigint): string | undefined {
-  const obj = store.object(id);
-  return obj?.message.getMessage(1)?.getString(1);
 }
 
 /** TP.SettingsArchive accessor (document-wide behavior switches). */

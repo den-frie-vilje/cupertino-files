@@ -255,10 +255,11 @@ export class StylesheetModel {
     const obj = this.store.createObject(TSWP_TYPE.PARAGRAPH_STYLE, this.component);
     const m = obj.message;
     m.setMessage(StyleArchive.SUPER, buildStyleSuper(options.name, identifier, parentId, this.id));
-    // **Both property bags, always.** Every one of the 3130 paragraph
-    // styles across these fixtures has the identical top-level field set —
-    // super, override_count, char_properties, para_properties — without a
-    // single exception, empty bags included. Matching that costs nothing.
+    // **Both property bags, always.** 9068 of the corpus's 9069 paragraph
+    // styles have the identical top-level field set — super,
+    // override_count, char_properties, para_properties — empty bags
+    // included (the one exception is a bare 2013-era archive). Matching
+    // that costs nothing.
     //
     // The bags are also one of four requirements for the app's style panel
     // to list a created style (with the name, the identifier map entry, and
@@ -266,7 +267,7 @@ export class StylesheetModel {
     // rounds in which each alone changed nothing visible.
     //
     // Character styles are the counter-case, and the reason this is not a
-    // blanket rule: theirs is [1,10,11] in 214 of 233, with no paragraph
+    // blanket rule: theirs is [1,10,11] in 383 of 429, with no paragraph
     // bag at all. Only the paragraph style carries both.
     //
     // `copyOf` starts each bag from an existing style's instead of from

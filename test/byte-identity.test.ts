@@ -59,7 +59,8 @@ describe("no-op save reproduces Apple's file byte for byte", () => {
       }
     }
     expect(`exceptions: ${wrong.join(" | ")}`).toBe("exceptions: ");
-    // Measured floor: 35 byte-identical of 38 fixture packages.
+    // Measured floor: byte-identical for every package except the two
+    // re-zipped wrapper bundles and the eleven strong-Snappy holdouts.
     expect(identical >= 35).toBe(true);
   });
 });

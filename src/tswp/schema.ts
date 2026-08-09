@@ -118,18 +118,22 @@ export const OVERLAP_TABLE_FIELDS: readonly number[] = [
 
 /**
  * Point-anchored object tables: an entry names the single character it
- * occupies, rather than starting a run that continues to the next entry.
+ * occupies — an attachment or a footnote mark at its U+FFFC — rather
+ * than starting a run that continues to the next entry. The distinction
+ * matters when text is deleted: an entry exactly at the start of a
+ * deleted range is a run boundary that survives in a run table, and the
+ * anchor of a character that no longer exists in one of these.
  *
- * Every one of these anchors something at a U+FFFC placeholder — an
- * attachment, a footnote mark, a section break. The distinction matters
- * when text is deleted: an entry exactly at the start of a deleted range is
- * a run boundary that should survive in a run table, and the anchor of a
- * character that no longer exists in one of these.
+ * The section table is *not* one of them: its entry marks where a
+ * section begins, whatever text lands there next, and every one of the
+ * corpus's 25 sectioned bodies keeps its first entry at 0. Treating it
+ * as point-anchored made any edit that touched a section's first
+ * character silently destroy the section list — rewriting paragraph 0
+ * of a sectioned template took its pagination with it.
  */
 export const POINT_ANCHORED_OBJECT_TABLES: readonly number[] = [
   Storage.TABLE_ATTACHMENT,
   Storage.TABLE_FOOTNOTE,
-  Storage.TABLE_SECTION,
 ];
 
 /**

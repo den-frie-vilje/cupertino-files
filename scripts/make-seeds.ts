@@ -36,6 +36,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PagesDocument } from "../src/index.ts";
 import { Storage } from "../src/tswp/schema.ts";
+import { blockPng } from "./png.ts";
 
 interface Seed {
   name: string;
@@ -71,51 +72,6 @@ function seedCollaboration(): Uint8Array {
 
 // ------------------------------------------------------------ inline image
 
-/** A 240×120 PNG: a solid block, big enough to see which edge it starts at. */
-function blockPng(): Uint8Array {
-  const width = 240;
-  const height = 120;
-  const raw: number[] = [];
-  for (let y = 0; y < height; y++) {
-    raw.push(0); // filter byte
-    for (let x = 0; x < width; x++) raw.push(0xc0, 0x39, 0x2b); // terracotta
-  }
-  const chunk = (type: string, body: number[]): number[] => {
-    const bytes = [...body];
-    const nameBytes = Array.from({ length: type.length }, (_, i) => type.charCodeAt(i));
-    const payload = [...nameBytes, ...bytes];
-    const crcTable: number[] = [];
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      crcTable[n] = c >>> 0;
-    }
-    let crc = 0xffffffff;
-    for (const b of payload) crc = crcTable[(crc ^ b) & 0xff]! ^ (crc >>> 8);
-    crc = (crc ^ 0xffffffff) >>> 0;
-    const be = (v: number): number[] => [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
-    return [...be(bytes.length), ...payload, ...be(crc)];
-  };
-  const be = (v: number): number[] => [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
-  const ihdr = chunk("IHDR", [...be(width), ...be(height), 8, 2, 0, 0, 0]);
-  // Store the scanlines uncompressed in a zlib wrapper (deflate stored blocks).
-  const blocks: number[] = [];
-  for (let at = 0; at < raw.length; at += 65535) {
-    const slice = raw.slice(at, at + 65535);
-    const last = at + 65535 >= raw.length ? 1 : 0;
-    blocks.push(last, slice.length & 255, (slice.length >> 8) & 255, ~slice.length & 255, (~slice.length >> 8) & 255, ...slice);
-  }
-  let a = 1;
-  let b = 0;
-  for (const byte of raw) {
-    a = (a + byte) % 65521;
-    b = (b + a) % 65521;
-  }
-  const idat = chunk("IDAT", [0x78, 0x01, ...blocks, ...be(((b << 16) | a) >>> 0)]);
-  const iend = chunk("IEND", []);
-  return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...ihdr, ...idat, ...iend]);
-}
-
 function seedInlineImage(): Uint8Array {
   // An inline picture used to be drawn from the page margin rather than
   // the text column, because the drawable carried no exterior_text_wrap.
@@ -124,7 +80,7 @@ function seedInlineImage(): Uint8Array {
   // difference visible: at the page margin the picture starts to the left
   // of the words above it.
   const doc = PagesDocument.blank();
-  const png = blockPng();
+  const png = blockPng(240, 120);
 
   doc.appendParagraph(
     "SEED · indrykket billede (docs/BLOCKERS.md). Brødteksten herunder er rykket 113 pt ind fra sidens margen. Spørgsmålet er, hvor de to billeder starter.",

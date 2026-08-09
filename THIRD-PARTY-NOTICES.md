@@ -13,9 +13,12 @@ application binaries — where they are embedded as protobuf descriptors —
 by third-party open-source projects, and are redistributed here byte-for-
 byte as those projects published them:
 
-- `proto/current/` and `proto/numbers-14.4/`, `proto/keynote-14.4/`:
-  published by [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
+- `proto/current/` and `proto/numbers-14.4/`: published by
+  [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
   (MIT, © 2021 Jon Connell), extracted from Numbers.app 14.4.
+- `proto/keynote-14.4/`: published by
+  [psobot/keynote-parser](https://github.com/psobot/keynote-parser)
+  (MIT, © Peter Sobot), extracted from Keynote.app 14.4.
 - `proto/pages-2013/`: published by
   [obriensp/iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat)
   (MIT, © 2013 Sean Patrick O'Brien), extracted from Pages 5.x.
@@ -34,16 +37,20 @@ interoperability of independently created software with iWork documents.
 
 ## `fixtures/` and `conformance/` — test documents and measurements
 
-The repository's test fixtures are real iWork documents redistributed
-from two open-source test suites, with per-file provenance (source
-repository, commit, license, md5) in
-[`fixtures/ATTRIBUTION.md`](fixtures/ATTRIBUTION.md):
-
-- [Apache Tika](https://github.com/apache/tika) — Apache License 2.0
-  ([`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt))
-- [libetonyek](https://github.com/LibreOffice/libetonyek) (Document
-  Liberation Project) — MPL-2.0+
-  ([`LICENSES/MPL-2.0.txt`](LICENSES/MPL-2.0.txt))
+The repository's test fixtures are real iWork documents, with per-file
+provenance (source, commit or record, license, md5) in
+[`fixtures/ATTRIBUTION.md`](fixtures/ATTRIBUTION.md). They come from
+open-source test suites and public repositories under a range of
+permissive licenses — Apache-2.0 (Apache Tika, threatconnect, vertx),
+MPL-2.0+ (libetonyek / Document Liberation Project), MIT
+(numbers-parser, iwork-mcp, draftjs, picodocs, picopalette,
+patrickomatic, desmarais), ISC, LGPL-3.0 (a document redistributed as
+data, not linked), CC BY 4.0 (Zenodo/Dataverse research records,
+rougier), and CC0 — plus documents made and donated for this project by
+its author (the `olekristensen-*` files). ATTRIBUTION.md names each
+file's license exactly; the most common license texts are in
+[`LICENSES/`](LICENSES/), and single-file licenses are linked from the
+attribution entries themselves.
 
 The JSON files under `conformance/` are this project's own factual
 measurements of those documents (text, structure, archive-shape
@@ -60,6 +67,7 @@ TypeScript from Apple's open-source
 
 ## Licenses
 
-Full texts of every license named above are in
-[`LICENSES/`](LICENSES/): `MIT.txt`, `Apache-2.0.txt`, `MPL-2.0.txt`,
-`BSD-3-Clause-lzfse.txt`.
+The license texts kept in [`LICENSES/`](LICENSES/) are `MIT.txt`,
+`Apache-2.0.txt`, `MPL-2.0.txt` and `BSD-3-Clause-lzfse.txt`; licenses
+that apply to a single fixture are linked from its
+`fixtures/ATTRIBUTION.md` entry.

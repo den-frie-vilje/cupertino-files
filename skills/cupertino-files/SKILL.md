@@ -153,9 +153,8 @@ And three semantics worth knowing before they surprise you:
   style — the look is right and `styleName` still reports the named
   style it inherits, but the paragraph now carries its own copy.
   `hasDirectFormatting` tells you which. For anything document-wide, set
-  the property on the named style instead — `sheet.style("Heading
-  1").setParagraph({ keepWithNext: true })` merges — or make a named
-  variant with `createParagraphStyle({ copyOf: "Heading 1", … })`.
+  the property on the named style instead — `sheet.style("Heading").setParagraph({ keepWithNext: true })` merges — or make a named
+  variant with `createParagraphStyle({ copyOf: "Heading", … })`.
 
 ### Building a long document by appending
 
@@ -165,7 +164,7 @@ place, and these are the parts that bite:
 ```ts
 // Every appended paragraph states its own list membership: a bullet
 // does not turn the rest of the document into a list.
-doc.appendParagraph("Chapter One", "Heading 1");
+doc.appendParagraph("Chapter One", "Heading");   // style names are the template's own — blank() defines "Heading", not "Heading 1"
 doc.appendParagraph("Body text.", "Body");
 doc.appendParagraph("A bulleted step", "Body", "Bullet");   // opt in per call
 
@@ -219,7 +218,7 @@ indexing, so `text.indexOf(...)` results are valid):
 
 ```ts
 doc.replaceText("old", "new");                    // literal find/replace everywhere, returns count
-doc.appendParagraph("New paragraph", "Heading 1"); // style by name (optional)
+doc.appendParagraph("New paragraph", "Heading"); // style by name (optional) — an unknown name throws
 doc.setParagraphStyle(2, "Body");                  // paragraph index, style name or bigint id
 doc.applyCharacterFormatting(start, end, { bold: true, fontSize: 18, fontColor: { r: 1, g: 0, b: 0 } });
 doc.createParagraphStyle({ name: "My Style", basedOn: "Body",
@@ -251,7 +250,7 @@ chaining sugar methods — each call creates a style object.
 
 ### Checking styling survived, without a Mac
 
-`doc.paragraphs()[i].styleName` covers named *paragraph* styles only.
+`doc.paragraphs()[i].styleName` and `doc.paragraph(i).styleName` both resolve through the parent chain, so a directly formatted heading still names its style.
 For character styling, copy-paste level:
 
 ```ts
@@ -310,7 +309,7 @@ Editing a style changes every run that uses it — the difference between
 "make this heading blue" and "make all headings blue".
 
 ```ts
-const heading = sheet.style("Heading 1")!;   // or sheet.style(styleId)
+const heading = sheet.style("Heading")!;   // undefined for a name the template does not define   // or sheet.style(styleId)
 heading.character();                          // what this style overrides
 heading.paragraph();
 heading.resolved().character;                 // with the parent chain folded in
@@ -819,7 +818,7 @@ slide.body;   slide.body = "First\nSecond";
 slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
-slide.transition();  slide.setTransition({ effect: "dissolve", duration: 1 });
+slide.transition();  slide.setTransition({ effect: "apple:transition/dissolve", duration: 1 });
 ```
 
 Placeholders are the theme's boxes for you to fill. Setting one only works
@@ -883,7 +882,7 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
    byte-identical**, enforced for every fixture, and every fixture also
    survives an open→edit→save→reopen cycle with nothing else disturbed.
    That the *apps* then open the result is a separate claim only a Mac can
-   settle — `npm run test:e2e`, and claim 1 in `docs/VERIFICATION.md`.
+   settle — `npm run test:e2e`, and the open claims in `docs/VERIFICATION.md`.
    Do not promise a user it will open; say it round-trips.
 4. **Never edit a document that is open in an iWork app** — the app rewrites
    the whole package on its next autosave and your changes vanish. Close it
@@ -902,5 +901,7 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
-   repro. Check it before relying on paragraph border positions, cell
-   styling or colour spaces in anything that matters.
+   repro. Check it before relying on cell styling or colour spaces in
+   anything that matters. (Paragraph border positions are settled:
+   measured logical — 4 leading, 8 trailing, swapping visual sides with
+   the writing direction.)

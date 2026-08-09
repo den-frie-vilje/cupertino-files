@@ -91,7 +91,8 @@
     "tooldocs": "node scripts/generate-tool-docs.ts",
     "tooldocs:check": "node scripts/generate-tool-docs.ts --check",
     "audit:check": "npm audit --omit=dev && npm audit --audit-level=high",
-    "seeds": "node scripts/make-seeds.ts"
+    "seeds": "node scripts/make-seeds.ts",
+    "demos": "node scripts/make-demos.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
