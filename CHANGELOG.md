@@ -7,6 +7,18 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: character styling no longer bleeds past its range. Styling to
+  the end of the text leaves the run open — correctly, as no corpus
+  storage carries a character-table entry at `text.length` (0 of 2896) —
+  but every later `appendParagraph` then landed inside the run, so one
+  grey-italic line turned the rest of a growing document grey and
+  italic. Appending now closes an open run first, with the objectless
+  boundary entry that ends runs throughout the corpus (624 of 2079
+  character-table entries), so `applyCharacterFormatting(start, end)`
+  styles exactly `[start, end)` no matter what is appended afterwards.
+  `insertText` keeps the typing model and inherits the run at its
+  position. A non-integer range bound now throws a `RangeError` instead
+  of surfacing as a wire-layer BigInt error.
 - Fixed: an edit touching a section's first character no longer destroys
   the document's section list. The section table was classified with the
   point-anchored tables (whose entry dies with its character), but a

@@ -704,6 +704,13 @@ export class TextStorage {
    * with a list style named "None" (222 of 222 corpus list-table entries
    * name a style; 82 name that one). Pass a list style to opt in, or
    * call {@link setListStyle} afterwards.
+   *
+   * Character styling ends at the same seam: a character-style run open
+   * at the end of the text is closed before the new paragraph is
+   * inserted, so a styled last line never bleeds into what is appended
+   * after it. Raw {@link insertText}/{@link replaceRange} keep the
+   * typing model — text inserted inside or at the edge of a run takes
+   * the run's style.
    */
   appendParagraph(text: string, listStyle?: bigint): number {
     if (text.includes("\n")) throw new RangeError("appendParagraph: text must not contain \\n");
@@ -713,6 +720,7 @@ export class TextStorage {
       this.replaceRange(0, 0, text);
       index = 0;
     } else {
+      this.closeCharacterRun(current.length);
       const endsWithNewline = current.endsWith("\n");
       const insertion = endsWithNewline ? `${text}\n` : `\n${text}`;
       this.replaceRange(current.length, current.length, insertion);
@@ -758,10 +766,18 @@ export class TextStorage {
   /**
    * Apply (or clear, with undefined) a character-style object over a range.
    * The previous effective style resumes at `end`.
+   *
+   * A range ending at `text.length` writes no resume entry — no corpus
+   * storage (0 of 2896) carries a character-table entry at `text.length`,
+   * so the run is left open there. {@link appendParagraph} closes it when
+   * it next extends the text, keeping the styled range at exactly
+   * `[start, end)`.
    */
   setCharacterStyleRange(start: number, end: number, styleId: bigint | undefined): void {
     const text = this.text;
-    if (start < 0 || end <= start || end > text.length) {
+    // Integer checks first: a NaN or undefined bound passes every `<`
+    // comparison and would only surface as a wire-layer BigInt error.
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > text.length) {
       throw new RangeError(`setCharacterStyleRange: invalid range ${start}..${end}`);
     }
     this.ensureTable(Storage.TABLE_CHAR_STYLE);
@@ -790,6 +806,29 @@ export class TextStorage {
   /** Character-style runs (undefined objectId = paragraph style applies). */
   characterStyleRuns(): StyleRun[] {
     return this.objectRuns(Storage.TABLE_CHAR_STYLE);
+  }
+
+  /**
+   * End any character-style run open at `index` by writing an objectless
+   * entry there — the shape that ends runs throughout the corpus (624 of
+   * 2079 character-table entries carry no object; 459 sit directly after
+   * a styled run). Text inserted at or after `index` then falls back to
+   * the paragraph style instead of extending the run. No-op when nothing
+   * is in effect at `index`.
+   */
+  private closeCharacterRun(index: number): void {
+    if (this.effectiveObjectAt(Storage.TABLE_CHAR_STYLE, index) === undefined) return;
+    const table = this.msg.getMessage(Storage.TABLE_CHAR_STYLE)!;
+    const entries = table
+      .getMessages(ATTR_TABLE_ENTRIES)
+      .filter((e) => (e.getUint(ENTRY_CHARACTER_INDEX) ?? 0) !== index);
+    const boundary = RawMessage.create();
+    boundary.setVarint(ENTRY_CHARACTER_INDEX, index);
+    entries.push(boundary);
+    entries.sort(
+      (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
+    );
+    table.setMessages(ATTR_TABLE_ENTRIES, entries);
   }
 
   private ensureTable(tableField: number): void {
