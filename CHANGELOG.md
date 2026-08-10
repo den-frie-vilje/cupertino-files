@@ -15,14 +15,20 @@ history uses Conventional Commits, so the detail behind any entry is one
   new paragraph's own direction pair, copying the storage's baseline;
   2594 of 2896 bidi-bearing corpus storages cover every paragraph start
   the same way.
-- Fixed: an authored paragraph border now draws. The stroke stated only
-  its pattern type where every app-written border (167 of 167 corpus
-  paragraph strokes) also states cap, join, miter limit 4 and the full
-  pattern message — phase, count and six floats — so Pages showed the
-  width but «None» for the stroke, drew nothing, and zeroed
-  `border_positions` on resave. `writeStroke` now writes the complete
-  corpus shape for every stroke, table borders and drawable outlines
-  included.
+- Fixed: an authored paragraph border now draws. Two faults, found one
+  under the other. The stroke stated only its pattern type where every
+  app-written border (167 of 167 corpus paragraph strokes) also states
+  cap, join, miter limit 4 and the full pattern message — phase, count
+  and six floats — so Pages showed the width but «None» for the stroke;
+  `writeStroke` now writes the complete corpus shape for every stroke,
+  table borders and drawable outlines included. With the stroke
+  honoured, the position toggles still sat unselected: the inspector
+  keys on `deprecated_borders`, the historical enum the app writes
+  beside the bitmask on all 17 bordered corpus styles (1·1, 2·2, 4·8,
+  8·16 — old top/bottom values kept, sides moved to 8 leading and
+  16 trailing, top-and-bottom 3, all four 4). The writer now states
+  both fields, and the reader takes positions from the enum in old
+  documents that carry only it.
 - Fixed: character styling no longer bleeds past its range. Styling to
   the end of the text leaves the run open — correctly, as no corpus
   storage carries a character-table entry at `text.length` (0 of 2896) —

@@ -33,7 +33,14 @@ import {
   type Stroke,
 } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
-import { ParaProps, Storage, StyleArchive, TSWP_TYPE } from "../src/tswp/schema.ts";
+import {
+  deprecatedBorders,
+  ParaProps,
+  Storage,
+  StyleArchive,
+  TSWP_TYPE,
+} from "../src/tswp/schema.ts";
+import { readParagraphProperties } from "../src/tss/stylesheet.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -310,6 +317,64 @@ describe("character and paragraph formatting", () => {
       .map((s) => s.style(id))
       .find((s) => s !== undefined)!;
     expect(style.paragraph().borderPositions).toBe(15);
+  });
+
+  it("writes the historical border value the inspector keys on", () => {
+    // border_positions alone leaves the position toggles unselected and
+    // draws nothing; the app writes deprecated_borders beside it on all
+    // 17 corpus styles with non-zero positions. Measured pairs 1·1, 2·2,
+    // 4·8, 8·16; 3 and 15 follow the enum's own structure.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const sheet = doc.stylesheets()[0]!;
+    for (const [positions, historical] of [
+      [1, 1],
+      [2, 2],
+      [3, 3],
+      [4, 8],
+      [8, 16],
+      [15, 4],
+    ] as const) {
+      const id = sheet.createParagraphStyle({
+        paragraph: { border: solidStroke({ r: 0, g: 0, b: 0 }, 1), borderPositions: positions },
+      });
+      const props = sheet.style(id)!.object.message.getMessage(StyleArchive.PARA_PROPERTIES)!;
+      expect(`${positions}·${props.getUint(ParaProps.DEPRECATED_BORDERS)}`).toBe(`${positions}·${historical}`);
+    }
+    // Leading beside trailing short of all four has no historical value.
+    const both = sheet.createParagraphStyle({
+      paragraph: { border: solidStroke({ r: 0, g: 0, b: 0 }, 1), borderPositions: 12 },
+    });
+    const props = sheet.style(both)!.object.message.getMessage(StyleArchive.PARA_PROPERTIES)!;
+    expect(props.getUint(ParaProps.DEPRECATED_BORDERS)).toBe(undefined);
+  });
+
+  it("reads positions from the historical value when the bitmask is absent", () => {
+    for (const [historical, positions] of [
+      [1, 1],
+      [4, 15],
+      [8, 4],
+      [16, 8],
+      [19, 11],
+    ] as const) {
+      const m = RawMessage.create();
+      m.setVarint(ParaProps.DEPRECATED_BORDERS, historical);
+      expect(readParagraphProperties(m).borderPositions).toBe(positions);
+    }
+  });
+
+  it("border styles in app files carry the pair, which is what makes them draw", () => {
+    const doc = PagesDocument.load(fixture("olekristensen-v26.3-mac-borders-logical.pages"));
+    let bordered = 0;
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== TSWP_TYPE.PARAGRAPH_STYLE) continue;
+      const props = obj.message.getMessage(StyleArchive.PARA_PROPERTIES);
+      const positions = props?.getUint(ParaProps.BORDER_POSITIONS);
+      if (positions === undefined || positions === 0) continue;
+      bordered++;
+      const historical = props!.getUint(ParaProps.DEPRECATED_BORDERS);
+      expect(`${positions}·${historical}`).toBe(`${positions}·${deprecatedBorders(positions)}`);
+    }
+    expect(bordered).toBeGreaterThan(0);
   });
 
   it("side bits are logical: an RTL paragraph's visual-left edge stores trailing", () => {

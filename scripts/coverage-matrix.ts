@@ -430,18 +430,20 @@ export const CAPABILITIES: Capability[] = [
       "message, the shape of all 167 corpus paragraph border strokes",
     manualProof: {
       claim:
-        "A border authored by this library draws in Pages: the complete stroke plus border_positions.",
+        "A border authored by this library draws in Pages: complete stroke, border_positions and " +
+        "deprecated_borders together.",
       why:
         "The positions bitmask is settled app knowledge, but every rung that drew a border had the " +
-        "app author the stroke. The first library-authored border ever opened (demo-01, T-10) drew " +
-        "nothing: the stroke stated only its pattern type, the app showed the width but «None» " +
-        "for the stroke and zeroed border_positions on resave. The writer now states the corpus " +
-        "shape — cap, join, miter 4, pattern with phase, count and six floats.",
+        "app author the stroke. Two rounds of demo-01 T-10 found two faults under each other: an " +
+        "abbreviated stroke read as «Ingen» (fixed — the writer states the 167-of-167 corpus " +
+        "shape), and with the stroke honoured the side toggles stayed unselected — the inspector " +
+        "keys on deprecated_borders, the historical enum the app writes beside the bitmask on " +
+        "every bordered corpus style. The writer now states both.",
       how:
         "npm run demos -- out, open demo-01-tekst.pages, T-10: one line with rules above and below, " +
-        "one with a red leading edge, one with a blue trailing edge. Failure = the stroke control " +
-        "still reads «Ingen» and no lines draw, which would point at the colour message's " +
-        "era fields as the remaining difference.",
+        "one with a red leading edge, one with a blue trailing edge, and the position toggles " +
+        "selected in the inspector. Failure = toggles selected but nothing drawn would point at " +
+        "rule_width; toggles still unselected would mean the enum mapping is wrong for 3.",
       risk: "low",
     },
   },

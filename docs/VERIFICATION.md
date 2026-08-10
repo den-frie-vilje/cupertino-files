@@ -42,7 +42,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Paragraph background & borders (rule stroke + positions) | A border authored by this library draws in Pages: the complete stroke plus border_positions. | manual |
+| 20 | 🟡 low | Text & styles → Paragraph background & borders (rule stroke + positions) | A border authored by this library draws in Pages: complete stroke, border_positions and deprecated_borders together. | manual |
 | 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
 | 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
@@ -284,11 +284,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Text & styles  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** A border authored by this library draws in Pages: the complete stroke plus border_positions.
+**Claim.** A border authored by this library draws in Pages: complete stroke, border_positions and deprecated_borders together.
 
-**Why the suite cannot settle it.** The positions bitmask is settled app knowledge, but every rung that drew a border had the app author the stroke. The first library-authored border ever opened (demo-01, T-10) drew nothing: the stroke stated only its pattern type, the app showed the width but «None» for the stroke and zeroed border_positions on resave. The writer now states the corpus shape — cap, join, miter 4, pattern with phase, count and six floats.
+**Why the suite cannot settle it.** The positions bitmask is settled app knowledge, but every rung that drew a border had the app author the stroke. Two rounds of demo-01 T-10 found two faults under each other: an abbreviated stroke read as «Ingen» (fixed — the writer states the 167-of-167 corpus shape), and with the stroke honoured the side toggles stayed unselected — the inspector keys on deprecated_borders, the historical enum the app writes beside the bitmask on every bordered corpus style. The writer now states both.
 
-**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-10: one line with rules above and below, one with a red leading edge, one with a blue trailing edge. Failure = the stroke control still reads «Ingen» and no lines draw, which would point at the colour message's era fields as the remaining difference.
+**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-10: one line with rules above and below, one with a red leading edge, one with a blue trailing edge, and the position toggles selected in the inspector. Failure = toggles selected but nothing drawn would point at rule_width; toggles still unselected would mean the enum mapping is wrong for 3.
 
 ### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 

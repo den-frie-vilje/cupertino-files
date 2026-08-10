@@ -380,7 +380,7 @@ describe("appended paragraphs state their own writing direction", () => {
 
     const table = doc.body.object.message.getMessage(Storage.TABLE_PARA_BIDI)!;
     const covered = new Set(
-      table.getMessages(ATTR_TABLE_ENTRIES).map((e) => Number(e.getUint(ENTRY_CHARACTER_INDEX) ?? 0)),
+      table.getMessages(ATTR_TABLE_ENTRIES).map((e) => e.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
     );
     for (const start of doc.body.paragraphStarts()) {
       expect(covered.has(start)).toBe(true);
