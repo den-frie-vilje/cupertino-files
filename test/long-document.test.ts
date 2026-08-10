@@ -269,3 +269,72 @@ describe("drawable lookup is a search, not an assertion", () => {
     expect(findDrawableCore(alsoNot)).toBe(undefined);
   });
 });
+
+describe("character styling ends where the range ends", () => {
+  it("a paragraph styled to the end of the text does not rule what is appended after it", () => {
+    // The failure this pins: styling [start, end) where end is the end of
+    // the text writes no closing entry, so the run stays open and every
+    // later append lands inside it — a grey-italic note turns the rest of
+    // the document grey and italic.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Brødtekst før noten.", "Body");
+    const note = doc.paragraph(doc.appendParagraph("→ Feedback: skriv her.", "Body")).range();
+    expect(note.end).toBe(doc.body.text.length);
+    const styleId = doc.applyCharacterFormatting(note.start, note.end, { italic: true });
+    expect(doc.body.characterStyleIdAt(note.start)).toBe(styleId);
+
+    const after = doc.paragraph(doc.appendParagraph("Brødtekst efter noten.", "Body")).range();
+    expect(doc.body.characterStyleIdAt(after.start)).toBe(undefined);
+    expect(doc.body.characterStyleIdAt(after.end - 1)).toBe(undefined);
+    // The note keeps its styling; the run closed instead of moving.
+    expect(doc.body.characterStyleIdAt(note.start)).toBe(styleId);
+
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.body.characterStyleIdAt(after.start)).toBe(undefined);
+    expect(reloaded.body.characterFormattingAt(after.start).italic ?? false).toBe(false);
+  });
+
+  it("closes the run with an objectless entry, the corpus run-end shape", () => {
+    const doc = PagesDocument.blank();
+    const first = doc.paragraph(doc.appendParagraph("Styled til enden", "Body")).range();
+    doc.applyCharacterFormatting(first.start, doc.body.text.length, { bold: true });
+    const boundary = doc.body.text.length;
+    doc.appendParagraph("Næste afsnit", "Body");
+
+    const runs = doc.body.characterStyleRuns();
+    const closing = runs.find((r) => r.start === boundary);
+    expect(closing !== undefined).toBe(true);
+    expect(closing!.objectId).toBe(undefined);
+  });
+
+  it("appending over no open run leaves the table alone", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Første", "Body");
+    const before = doc.body.characterStyleRuns().length;
+    doc.appendParagraph("Andet", "Body");
+    expect(doc.body.characterStyleRuns().length).toBe(before);
+  });
+
+  it("a mid-text range still resumes the surrounding style at its end", () => {
+    const doc = PagesDocument.blank();
+    const p = doc.paragraph(doc.appendParagraph("Et ord i midten fremhævet.", "Body")).range();
+    const at = doc.body.text.indexOf("midten");
+    const styleId = doc.applyCharacterFormatting(at, at + "midten".length, { bold: true });
+    expect(doc.body.characterStyleIdAt(at)).toBe(styleId);
+    expect(doc.body.characterStyleIdAt(at + "midten".length)).toBe(undefined);
+    expect(doc.body.characterStyleIdAt(p.end - 1)).toBe(undefined);
+  });
+
+  it("rejects a non-integer bound instead of writing it", () => {
+    // undefined and NaN pass every < comparison; without the integer
+    // check they die as a BigInt conversion deep in the wire layer.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Tekst", "Body");
+    expect(() => {
+      doc.body.setCharacterStyleRange(Number.NaN, 3, undefined);
+    }).toThrow(/invalid range/);
+    expect(() => {
+      doc.body.setCharacterStyleRange(0, Number.NaN, undefined);
+    }).toThrow(/invalid range/);
+  });
+});

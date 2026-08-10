@@ -64,7 +64,7 @@ function pagesFeedback(doc: PagesDocument): void {
 function pagesIntro(doc: PagesDocument, title: string, scope: string): void {
   doc.appendParagraph(title, "Title");
   doc.appendParagraph(
-    `${scope} Hvert punkt har et id, en beskrivelse af hvad biblioteket har gjort, og hvad appen derfor bør vise. Skriv hvad du ser på »→ Feedback:«-linjen under punktet (tomt = som forventet), eller sæt en kommentar. Arkivér til sidst og send filen retur.`,
+    `${scope} Hvert punkt har et id, en beskrivelse af hvad biblioteket har gjort, og hvad appen derfor bør vise. Skriv hvad du ser på »→ Feedback:«-linjen under punktet (tomt = som forventet), eller sæt en kommentar. Kun feedback-linjerne er grå kursiv — al anden brødtekst skal stå sort og opret; grå kursiv brødtekst er i sig selv en fejl. Arkivér til sidst og send filen retur.`,
     "Body",
   );
 }
@@ -750,6 +750,20 @@ interface Demo {
   check: (bytes: Uint8Array) => void;
 }
 
+/** The feedback line's grey-italic style must rule nothing past its own paragraph. */
+function assertNoFeedbackBleed(d: PagesDocument): void {
+  for (const p of d.paragraphs()) {
+    if (!p.text.startsWith("→ Feedback:")) continue;
+    const styleId = d.body.characterStyleIdAt(p.start);
+    if (styleId === undefined) throw new Error("feedback line lost its styling");
+    for (const run of d.body.characterStyleRuns()) {
+      if (run.objectId === styleId && run.start >= p.end) {
+        throw new Error(`feedback style bleeds to ${run.start}`);
+      }
+    }
+  }
+}
+
 const outDir = process.argv[2] ?? "out";
 mkdirSync(outDir, { recursive: true });
 
@@ -759,6 +773,7 @@ const demos: Demo[] = [
     bytes: demoText(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
+      assertNoFeedbackBleed(d);
       if (!d.bodyText.includes("T-14")) throw new Error("tekst: checks missing");
       if (d.paragraphStyles().every((s) => s.name !== "Demo Fremhævet")) throw new Error("tekst: created style missing");
       const rtl = d.paragraphs().findIndex((p) => /[֐-׿]/.test(p.text));
@@ -770,6 +785,7 @@ const demos: Demo[] = [
     bytes: demoFields(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
+      assertNoFeedbackBleed(d);
       if (d.sections().length !== 3) throw new Error("felter: expected 3 sections");
       if (d.placeholders().length !== 1) throw new Error("felter: expected 1 live placeholder");
       if (d.footnotes().length !== 1) throw new Error("felter: expected a footnote");
@@ -783,6 +799,7 @@ const demos: Demo[] = [
     bytes: demoMedia(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
+      assertNoFeedbackBleed(d);
       if (d.images().length < 4) throw new Error(`billeder: expected 4 images, got ${d.images().length}`);
       if (!d.images().some((i) => i.hasMask)) throw new Error("billeder: crop missing");
       const withImage = d.paragraphs().filter((p) => p.text.includes("￼"));
@@ -794,6 +811,7 @@ const demos: Demo[] = [
     bytes: demoChart(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
+      assertNoFeedbackBleed(d);
       const chart = d.charts()[0];
       if (!chart) throw new Error("diagram: chart missing");
       if (chart.rowNames()[0] !== "Serie 2025") throw new Error("diagram: data edit missing");

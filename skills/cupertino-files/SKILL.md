@@ -230,6 +230,11 @@ doc.insertText(pos, "inserted");                   // inherits the style ruling 
 doc.deleteRange(start, end);
 ```
 
+`appendParagraph` closes any character-style run open at the end of the
+text, so a styled last line never bleeds into later appends.
+`insertText` keeps the typing model: text inserted inside or at the edge
+of a run takes the run's style.
+
 ### More fluent calls
 
 ```ts
