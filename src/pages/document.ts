@@ -75,13 +75,20 @@ export interface PageSetup {
   paperId: string | undefined;
 }
 
-/** One of the up-to-three page-master variants of a section. */
+/**
+ * One of the up-to-three page-master variants of a section.
+ *
+ * Each master lists three header and three footer storages. Modern
+ * Pages draws slot 1 as one page-wide field — text written there
+ * renders with its own paragraph alignment — and leaves slots 0 and 2
+ * undrawn; they are the legacy three-field layout's outer slots, still
+ * carrying text in documents authored by old versions. Nearly all
+ * corpus header text sits in slot 1.
+ */
 export interface SectionTemplateInfo {
   role: "first" | "even" | "odd";
   templateId: bigint;
-  /** Header text boxes (left, center, right). */
   headers: TextStorage[];
-  /** Footer text boxes (left, center, right). */
   footers: TextStorage[];
 }
 
@@ -164,8 +171,10 @@ export class PagesSection {
   }
 
   /**
-   * Header/footer text of this section. `column` 0/1/2 = left/center/right.
-   * Reads from the odd-page master (the default variant Pages shows).
+   * Header/footer text of this section, from the odd-page master (the
+   * default variant Pages shows). Slot 1 — the default — is the field
+   * modern Pages draws, page-wide; 0 and 2 are the legacy layout's
+   * outer slots.
    */
   headerText(column = 1): string {
     const t = this.templates();
@@ -196,12 +205,14 @@ export class PagesSection {
   }
 
   /**
-   * Write header text into every page-master variant. `column` indexes
-   * the master's three storages (0/1/2). Text written into a
-   * previously-empty column copies the attribute shape of a non-empty
-   * sibling — its paragraph style, character-table and language
-   * entries — because a bare `setText` leaves the donor's empty-storage
-   * shape, which the app does not draw.
+   * Write header text into every page-master variant. The default slot
+   * 1 is the field modern Pages draws — one page-wide field whose text
+   * renders with its own paragraph alignment; slots 0 and 2 are the
+   * legacy layout's outer slots, preserved but not drawn in modern
+   * documents. Text written into a previously-empty slot copies the
+   * attribute shape of a non-empty sibling — its paragraph style,
+   * character-table and language entries — because a bare `setText`
+   * leaves the donor's empty-storage shape.
    */
   setHeaderText(text: string, column = 1): void {
     this.writeMasterText("headers", text, column);

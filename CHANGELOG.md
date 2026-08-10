@@ -19,7 +19,11 @@ history uses Conventional Commits, so the detail behind any entry is one
   adopts a non-empty sibling's shape — paragraph style, character and
   language entries — via the new `TextStorage.copyShapeFrom`. Header
   and footer column indexes outside 0..2 throw instead of silently
-  writing nowhere.
+  writing nowhere. App-measured, the slot model itself: modern Pages
+  draws one page-wide header field bound to slot 1 — the default —
+  with the text following the storage's own paragraph alignment;
+  slots 0 and 2 are the legacy three-field layout's outer slots,
+  preserved but not drawn in modern documents.
 - Added: `ruleOffset` on paragraph formatting — the distance between
   text and its border rules (`historical_rule_offset`). A number states
   both slots of the stored `TSP.Point`, agreeing with 8637 of the
