@@ -457,6 +457,38 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Text & styles",
+    name: "Paragraph rule offset (text-to-border distance)",
+    apps: "all",
+    status: "read+write",
+    probe: (c) =>
+      safe(() =>
+        c.doc
+          .stylesheets()
+          .some((sheet) =>
+            sheet.paragraphStyles().some((info) => sheet.style(info.id)?.paragraph().ruleOffset !== undefined),
+          ),
+      ),
+    note:
+      "historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a " +
+      "number writes both, a pair states them separately; non-zero corpus values are all negative " +
+      "(stock templates use −3) and the null flag is never used",
+    manualProof: {
+      claim: "ruleOffset moves the distance between text and its border rules, at the stored sign and scale.",
+      why:
+        "The field's shape is corpus-settled but its rendering was only ever observed at the " +
+        "defaults: bordered demo paragraphs write no offset and drew the app's default gap, " +
+        "and the stock templates' −3 was never compared against it. Which way negative moves " +
+        "the rule, and what one unit is, only a render can say.",
+      how:
+        "npm run demos -- out, open demo-01-tekst.pages, T-15: a line with rules above and below " +
+        "and ruleOffset −12, four times the templates' −3. Pass = the text-to-rule distance " +
+        "clearly differs from T-10's default gap. Whether it grew or shrank is the measurement — " +
+        "report the direction; shrunk means negative pulls the rule toward the text.",
+      risk: "low",
+    },
+  },
+  {
+    group: "Text & styles",
     name: "Shared style values (colour incl. P3, gradients, strokes, shadows, padding)",
     apps: "all",
     status: "read+write",

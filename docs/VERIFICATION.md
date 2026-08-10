@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -42,8 +42,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | ruleOffset moves the distance between text and its border rules, at the stored sign and scale. | manual |
+| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -277,7 +278,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 20. Paragraph rule offset (text-to-border distance)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Text & styles  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** ruleOffset moves the distance between text and its border rules, at the stored sign and scale.
+
+**Why the suite cannot settle it.** The field's shape is corpus-settled but its rendering was only ever observed at the defaults: bordered demo paragraphs write no offset and drew the app's default gap, and the stock templates' −3 was never compared against it. Which way negative moves the rule, and what one unit is, only a render can say.
+
+**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: a line with rules above and below and ruleOffset −12, four times the templates' −3. Pass = the text-to-rule distance clearly differs from T-10's default gap. Whether it grew or shrank is the measurement — report the direction; shrunk means negative pulls the rule toward the text.
+
+### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -289,7 +302,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 21. Table of contents (rules read + write, cached entries read)
+### 22. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  

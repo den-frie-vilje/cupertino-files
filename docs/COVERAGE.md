@@ -57,6 +57,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 46 | all |
 | Tab stops (position, alignment, leader) | all | ✅ read + write | 42 | all |
 | Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 27 | all |
+| Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; non-zero corpus values are all negative (stock templates use −3) and the null flag is never used</sub> | all | ✅ read + write | 46 | all |
 | Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 46 | all |
 | List styles | all | ✅ read + write | 25 | all |
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
@@ -157,7 +158,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-51 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+52 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -166,6 +167,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Text & styles → **Paragraph & character styles (by name, plus creation and editing)**
 - 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
 - 🟡 low — Text & styles → **Paragraph background & borders (rule stroke + positions)**
+- 🟡 low — Text & styles → **Paragraph rule offset (text-to-border distance)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
 - 🟡 low — Text & styles → **Hyperlinks**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**

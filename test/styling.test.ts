@@ -348,6 +348,44 @@ describe("character and paragraph formatting", () => {
     expect(props.getUint(ParaProps.DEPRECATED_BORDERS)).toBe(undefined);
   });
 
+  it("round-trips the rule offset, scalar and pair alike", () => {
+    // A number states both TSP.Point slots — they agree in 8637 of the
+    // corpus's 8638 instances — and a pair states them separately.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const sheet = doc.stylesheets()[0]!;
+    const scalar = sheet.createParagraphStyle({ paragraph: { ruleOffset: -12 } });
+    const props = sheet.style(scalar)!.object.message.getMessage(StyleArchive.PARA_PROPERTIES)!;
+    const point = props.getMessage(ParaProps.HISTORICAL_RULE_OFFSET)!;
+    expect(point.getFloat(1)).toBe(-12);
+    expect(point.getFloat(2)).toBe(-12);
+    expect(sheet.style(scalar)!.paragraph().ruleOffset).toBe(-12);
+
+    const pair = sheet.createParagraphStyle({ paragraph: { ruleOffset: { x: -5.5, y: -6 } } });
+    expect(sheet.style(pair)!.paragraph().ruleOffset).toEqual({ x: -5.5, y: -6 });
+
+    sheet.style(scalar)!.setParagraph({ ruleOffset: undefined });
+    const cleared = sheet.style(scalar)!.object.message.getMessage(StyleArchive.PARA_PROPERTIES)!;
+    expect(cleared.getMessage(ParaProps.HISTORICAL_RULE_OFFSET)).toBe(undefined);
+  });
+
+  it("reads the offsets Apple's own templates ship", () => {
+    // gomap's headings state the stock −3; picodocs' Title carries the
+    // corpus's one unequal pair, which is why the reader keeps both slots.
+    const gomap = PagesDocument.load(fixture("gomap-v26.1-newest-writer.pages"));
+    const heading = gomap
+      .stylesheets()
+      .flatMap((s) => s.paragraphStyles().map((i) => ({ s, i })))
+      .find(({ i }) => i.name === "Heading 2")!;
+    expect(heading.s.style(heading.i.id)!.paragraph().ruleOffset).toBe(-3);
+
+    const pico = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const title = pico
+      .stylesheets()
+      .flatMap((s) => s.paragraphStyles().map((i) => ({ s, i })))
+      .find(({ i }) => i.name === "Title")!;
+    expect(title.s.style(title.i.id)!.paragraph().ruleOffset).toEqual({ x: -5.5, y: -6 });
+  });
+
   it("reads positions from the historical value when the bitmask is absent", () => {
     for (const [historical, positions] of [
       [1, 1],

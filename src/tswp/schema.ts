@@ -280,6 +280,7 @@ export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
   SHOW_IN_TOC_NAVIGATOR: "show_in_toc_navigator",
   BORDER_POSITIONS: "border_positions",
   DEPRECATED_BORDERS: "deprecated_borders",
+  HISTORICAL_RULE_OFFSET: "historical_rule_offset",
   ROUNDED_CORNERS: "rounded_corners",
 });
 
