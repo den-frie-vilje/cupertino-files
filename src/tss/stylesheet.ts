@@ -130,6 +130,15 @@ export interface ParagraphFormatting {
   roundedCorners?: boolean;
   /** Historical rule width, kept in step with `border.width` by the apps. */
   ruleWidth?: number;
+  /**
+   * Distance between the text and its border rules, stored as a
+   * `TSP.Point`. A number writes both slots — they agree in 8637 of the
+   * corpus's 8638 instances — and a pair states them separately. Every
+   * non-zero corpus value is negative (the stock templates use −3);
+   * `undefined` clears the field, which is how "inherit" is stated —
+   * no corpus style uses the null flag.
+   */
+  ruleOffset?: number | { x: number; y: number };
   /** Explicit tab stops. An empty array clears them. */
   tabs?: TabStop[];
   /** Spacing of the implicit tab grid used beyond the last explicit stop. */
@@ -742,6 +751,16 @@ export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting):
     if (historical === undefined) m.remove(ParaProps.DEPRECATED_BORDERS);
     else m.setVarint(ParaProps.DEPRECATED_BORDERS, historical);
   }
+  if ("ruleOffset" in f) {
+    m.remove(ParaProps.HISTORICAL_RULE_OFFSET);
+    if (f.ruleOffset !== undefined) {
+      const o = f.ruleOffset;
+      const point = RawMessage.create();
+      point.setFloat(1, typeof o === "number" ? o : o.x);
+      point.setFloat(2, typeof o === "number" ? o : o.y);
+      m.setMessage(ParaProps.HISTORICAL_RULE_OFFSET, point);
+    }
+  }
   if ("backgroundColor" in f) {
     setNullable(
       m,
@@ -829,6 +848,12 @@ export function readParagraphProperties(m: RawMessage | undefined): ParagraphFor
   if (f.borderPositions === undefined) {
     const historical = m.getUint(ParaProps.DEPRECATED_BORDERS);
     if (historical !== undefined) f.borderPositions = bordersFromDeprecated(historical);
+  }
+  const ruleOffset = m.getMessage(ParaProps.HISTORICAL_RULE_OFFSET);
+  if (ruleOffset) {
+    const x = ruleOffset.getFloat(1) ?? 0;
+    const y = ruleOffset.getFloat(2) ?? 0;
+    f.ruleOffset = x === y ? x : { x, y };
   }
   const background = readColor(m.getMessage(ParaProps.FILL));
   if (background) f.backgroundColor = background;

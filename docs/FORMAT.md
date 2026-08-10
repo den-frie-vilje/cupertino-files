@@ -519,6 +519,12 @@ Three of these are easy to get wrong:
   only the bitmask shows unselected toggles and no border, and old
   documents carry only the enum — the library writes both and reads
   either.
+  The text-to-rule distance is `historical_rule_offset` (17), a
+  `TSP.Point` whose slots agree in 8637 of the corpus's 8638 instances
+  (the one exception, (−5.5, −6), shows they are stored independently).
+  Non-zero values are all negative — the stock templates use −3 — a
+  style without the field gets the app's default gap, and the paired
+  null flag (16) is never used.
 - **`left_indent` (11) travels with `first_line_indent` (7).** Of the
   8647 corpus paragraph styles that set the left indent, 8645 set the
   first line beside it — and a style carrying the left indent alone was

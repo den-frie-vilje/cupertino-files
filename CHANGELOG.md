@@ -7,6 +7,13 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Added: `ruleOffset` on paragraph formatting — the distance between
+  text and its border rules (`historical_rule_offset`). A number states
+  both slots of the stored `TSP.Point`, agreeing with 8637 of the
+  corpus's 8638 instances; a pair states them separately, which the one
+  exception shows the format allows. Non-zero corpus values are all
+  negative (stock templates use −3); rendering sign and scale await the
+  demo's app check.
 - Fixed: one RTL paragraph no longer turns the rest of a growing
   document RTL. `setParagraphDirection` writes a per-paragraph bidi
   table, but paragraphs appended afterwards fell into the last entry's
