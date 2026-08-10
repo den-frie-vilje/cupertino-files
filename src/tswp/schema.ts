@@ -279,6 +279,7 @@ export const ParaProps = protoFields("TSWP.ParagraphStylePropertiesArchive", {
   SHOW_IN_BOOKMARKS_LIST: "show_in_bookmarks_list",
   SHOW_IN_TOC_NAVIGATOR: "show_in_toc_navigator",
   BORDER_POSITIONS: "border_positions",
+  DEPRECATED_BORDERS: "deprecated_borders",
   ROUNDED_CORNERS: "rounded_corners",
 });
 
@@ -305,6 +306,36 @@ export const BorderPosition = {
   RIGHT: 8,
   ALL: 15,
 } as const;
+
+/**
+ * The historical value the border inspector keys on: the app writes
+ * `deprecated_borders` beside `border_positions` on every bordered
+ * style (17 of 17 corpus styles with non-zero positions carry both,
+ * 6474 more agree on 0·0), and a style with only the bitmask shows its
+ * position toggles unselected and draws nothing. The old enum keeps
+ * 1 top and 2 bottom, states top-and-bottom as 3 and all four as 4,
+ * and moves the sides to 8 leading and 16 trailing with the horizontal
+ * bits added on (9..11, 17..19). Measured pairs: 0·0, 1·1, 2·2, 4·8,
+ * 8·16. Leading beside trailing short of all four has no value —
+ * `undefined` here, and the field stays unwritten.
+ */
+export function deprecatedBorders(positions: number): number | undefined {
+  if (positions === BorderPosition.ALL) return 4;
+  const sides = positions & 12;
+  if (sides === 12) return undefined;
+  const horizontals = positions & 3;
+  if (sides === 4) return 8 + horizontals;
+  if (sides === 8) return 16 + horizontals;
+  return horizontals;
+}
+
+/** The inverse, for documents old enough to state only the historical value. */
+export function bordersFromDeprecated(value: number): number {
+  if (value === 4) return BorderPosition.ALL;
+  if (value >= 16) return 8 | (value - 16);
+  if (value >= 8) return 4 | (value - 8);
+  return value;
+}
 
 /** TSWP.TabsArchive: repeated TabArchive at 1. */
 export const TabsArchive = protoFields("TSWP.TabsArchive", { TABS: "tabs" });

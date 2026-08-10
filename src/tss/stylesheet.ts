@@ -24,7 +24,9 @@ import {
   writeStroke,
 } from "../tsd/style.ts";
 import {
+  bordersFromDeprecated,
   CharProps,
+  deprecatedBorders,
   LineSpacing,
   ParaProps,
   StyleArchive,
@@ -735,6 +737,11 @@ export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting):
     const value = f[key];
     if (value !== undefined) m.setVarint(field, value);
   }
+  if (f.borderPositions !== undefined) {
+    const historical = deprecatedBorders(f.borderPositions);
+    if (historical === undefined) m.remove(ParaProps.DEPRECATED_BORDERS);
+    else m.setVarint(ParaProps.DEPRECATED_BORDERS, historical);
+  }
   if ("backgroundColor" in f) {
     setNullable(
       m,
@@ -818,6 +825,10 @@ export function readParagraphProperties(m: RawMessage | undefined): ParagraphFor
   ] as const) {
     const value = m.getUint(field);
     if (value !== undefined) f[key] = value;
+  }
+  if (f.borderPositions === undefined) {
+    const historical = m.getUint(ParaProps.DEPRECATED_BORDERS);
+    if (historical !== undefined) f.borderPositions = bordersFromDeprecated(historical);
   }
   const background = readColor(m.getMessage(ParaProps.FILL));
   if (background) f.backgroundColor = background;

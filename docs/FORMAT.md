@@ -509,6 +509,16 @@ Three of these are easy to get wrong:
   and bottom, 15 all four) and 0 is none. The library names them
   `LEADING`/`TRAILING`, with `LEFT`/`RIGHT` as the left-to-right
   aliases, and exposes the raw integer alongside.
+  **The bitmask alone does not draw**: the app keys its border toggles
+  on `deprecated_borders` (15), the historical enum, and writes both on
+  every bordered style — 17 of 17 corpus styles with non-zero positions,
+  6474 more agreeing on 0·0. The old values keep 1 top and 2 bottom,
+  state top-and-bottom as 3 and all four as 4, and move the sides to
+  8 leading and 16 trailing with the horizontal bits added on (9–11,
+  17–19); measured pairs are 1·1, 2·2, 4·8 and 8·16. A style carrying
+  only the bitmask shows unselected toggles and no border, and old
+  documents carry only the enum — the library writes both and reads
+  either.
 - **`left_indent` (11) travels with `first_line_indent` (7).** Of the
   8647 corpus paragraph styles that set the left indent, 8645 set the
   first line beside it — and a style carrying the left indent alone was
