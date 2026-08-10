@@ -42,7 +42,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Pages → Headers & footers (3 columns × first/even/odd) | All three header/footer columns render — text in an always-empty column draws after shape completion — and the storage order maps to page positions as the demo measures. | manual |
+| 20 | 🟡 low | Pages → Headers & footers (3 columns × first/even/odd) | Header text written by the library renders in the page-wide field, with the alignment its storage's paragraph style states. | manual |
 | 21 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
 | 22 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
 | 23 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
@@ -285,11 +285,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Pages  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** All three header/footer columns render — text in an always-empty column draws after shape completion — and the storage order maps to page positions as the demo measures.
+**Claim.** Header text written by the library renders in the page-wide field, with the alignment its storage's paragraph style states.
 
-**Why the suite cannot settle it.** P05 settled the single-column write (2026-08-02). Demo-02 then showed the rest: text written bare into a master's always-empty storages never drew (the donor's blank default shape — no single storage field explains it, a DOCX-import header renders with a char-style table and no language table, an app-authored footer with the reverse), and sections created by the library shared master objects, so two sections' headers could never differ. Both are fixed — written-into-empty storages adopt a non-empty sibling's shape, and insertSectionBreak clones the masters — leaving the column↔position mapping open: the corpus puts nearly all header text at storage [1], and the checker measured [1] rendering at the left edge, against the assumed left/center/right order.
+**Why the suite cannot settle it.** Two demo rounds measured the model whole: modern Pages draws one page-wide header field bound to storage slot 1 — of SPALTE-A/B/C only B appeared, left-aligned at the page edge, while »Sektion 1« in the same slot rendered centred under its donor's centring style — and slots 0/2 are the legacy three-field layout's outer slots, whose mode switch no candidate byte survived (document 49, settings 13, section 28 all refuted). The same rounds verified the master-cloning fix (section 3's own header) and fields, bookmarks, footnotes, comments and placeholders silently.
 
-**How to settle it.** npm run demos -- out, open demo-02-felter.pages. S-01: section 2's header carries SPALTE-A / SPALTE-B / SPALTE-C in storages [0]/[1]/[2] — note the left-to-right order they render in; that one observation settles the mapping. S-07: section 3's header must say »Sektion 3«, independent of section 2. A column still missing means the shape completion is insufficient, and the next diff is the layout-style table.
+**How to settle it.** npm run demos -- out, open demo-02-felter.pages, S-01: section 1's header reads »Sektion 1« centred, section 2's »Sektion 2 · sidehoved« left-aligned — the difference is the point, alignment follows the field's own paragraph style. Failure = a header missing or misaligned names the storage's paragraph-style completion as the next measurement.
 
 ### 21. Paragraph rule offset (text-to-border distance)
 
