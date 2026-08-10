@@ -444,6 +444,14 @@ export const CAPABILITIES: Capability[] = [
         "one with a red leading edge, one with a blue trailing edge, and the position toggles " +
         "selected in the inspector. Failure = toggles selected but nothing drawn would point at " +
         "rule_width; toggles still unselected would mean the enum mapping is wrong for 3.",
+      settled:
+        "**Confirmed on the third round (2026-08-10, Pages macOS): all three border lines drew.** " +
+        "Two faults sat under each other, each named by in-document feedback — the abbreviated " +
+        "stroke read as «Ingen» (round one), then honoured colours/type/width with the side " +
+        "toggles unselected (round two), which identified deprecated_borders as the field the " +
+        "toggles key on. The rendered gap between text and horizontal rules is the app's default " +
+        "— neither we nor the app's own authored border styles write a rule offset. Settled as " +
+        "part of demo-01 whole: all fourteen checks, character formatting through decimal tabs.",
       risk: "low",
     },
   },

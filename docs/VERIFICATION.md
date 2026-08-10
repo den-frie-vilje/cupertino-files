@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -42,9 +42,8 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Paragraph background & borders (rule stroke + positions) | A border authored by this library draws in Pages: complete stroke, border_positions and deprecated_borders together. | manual |
-| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -278,19 +277,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Paragraph background & borders (rule stroke + positions)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** A border authored by this library draws in Pages: complete stroke, border_positions and deprecated_borders together.
-
-**Why the suite cannot settle it.** The positions bitmask is settled app knowledge, but every rung that drew a border had the app author the stroke. Two rounds of demo-01 T-10 found two faults under each other: an abbreviated stroke read as «Ingen» (fixed — the writer states the 167-of-167 corpus shape), and with the stroke honoured the side toggles stayed unselected — the inspector keys on deprecated_borders, the historical enum the app writes beside the bitmask on every bordered corpus style. The writer now states both.
-
-**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-10: one line with rules above and below, one with a red leading edge, one with a blue trailing edge, and the position toggles selected in the inspector. Failure = toggles selected but nothing drawn would point at rule_width; toggles still unselected would mean the enum mapping is wrong for 3.
-
-### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -302,7 +289,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 22. Table of contents (rules read + write, cached entries read)
+### 21. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -316,7 +303,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-29 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+30 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -462,6 +449,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** Nothing offline distinguishes a listed style from an unlisted one except by correlation with the corpus, and every correlation found so far has been necessary at best. Four rounds of guess-and-check is where guessing stops paying.
 
 **Outcome.** **Confirmed in Pages — "P15 works now".** A created style applies as asked and appears in the paragraph styles panel, on the current-format ladder base. What it took, cumulatively: a `super.name`; a `super.identifier` plus a matching `identifier_to_style_map` entry; both property bags; and an entry in `TSWP.ThemePresetsArchive.paragraph_style_presets` — the theme list the panel reads. The earlier failures were real: the first three alone left the style applying but unlisted. One fine point went unrecorded: the confirming report did not itemise the density pair (P15b, bags copied from Body, against P15c, three properties), so whether a sparse property bag alone lists is not established — `copyOf` exists either way
+
+### ✅ Paragraph background & borders (rule stroke + positions)
+
+**Was claimed.** A border authored by this library draws in Pages: complete stroke, border_positions and deprecated_borders together.
+
+**Why it needed an app.** The positions bitmask is settled app knowledge, but every rung that drew a border had the app author the stroke. Two rounds of demo-01 T-10 found two faults under each other: an abbreviated stroke read as «Ingen» (fixed — the writer states the 167-of-167 corpus shape), and with the stroke honoured the side toggles stayed unselected — the inspector keys on deprecated_borders, the historical enum the app writes beside the bitmask on every bordered corpus style. The writer now states both.
+
+**Outcome.** **Confirmed on the third round (2026-08-10, Pages macOS): all three border lines drew.** Two faults sat under each other, each named by in-document feedback — the abbreviated stroke read as «Ingen» (round one), then honoured colours/type/width with the side toggles unselected (round two), which identified deprecated_borders as the field the toggles key on. The rendered gap between text and horizontal rules is the app's default — neither we nor the app's own authored border styles write a rule offset. Settled as part of demo-01 whole: all fourteen checks, character formatting through decimal tabs.
 
 ### ✅ Paragraph writing direction (read + write)
 
