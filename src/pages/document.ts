@@ -195,18 +195,33 @@ export class PagesSection {
     });
   }
 
-  /** Write header text into every page-master variant (column 0/1/2). */
+  /**
+   * Write header text into every page-master variant. `column` indexes
+   * the master's three storages (0/1/2). Text written into a
+   * previously-empty column copies the attribute shape of a non-empty
+   * sibling — its paragraph style, character-table and language
+   * entries — because a bare `setText` leaves the donor's empty-storage
+   * shape, which the app does not draw.
+   */
   setHeaderText(text: string, column = 1): void {
-    for (const t of this.templates()) {
-      const storage = t.headers[column];
-      if (storage) storage.setText(text);
-    }
+    this.writeMasterText("headers", text, column);
   }
 
   setFooterText(text: string, column = 1): void {
+    this.writeMasterText("footers", text, column);
+  }
+
+  private writeMasterText(kind: "headers" | "footers", text: string, column: number): void {
+    if (column !== 0 && column !== 1 && column !== 2) {
+      throw new RangeError(`${kind} column ${column} out of range (0/1/2)`);
+    }
     for (const t of this.templates()) {
-      const storage = t.footers[column];
-      if (storage) storage.setText(text);
+      const storage = t[kind][column];
+      if (!storage) continue;
+      const sibling = t[kind].find((s) => s !== storage && s.text.length > 0);
+      const wasEmpty = storage.text.length === 0;
+      storage.setText(text);
+      if (wasEmpty && sibling) storage.copyShapeFrom(sibling);
     }
   }
 }
@@ -830,9 +845,12 @@ export class PagesDocument extends IWorkDocument {
 
   /**
    * Start a new section at the given body paragraph. The new section clones
-   * the enclosing section's configuration and shares its page masters
-   * (headers/footers), with `inherit_previous_header_footer` set — matching
-   * Pages' "Create a new section" default. Returns the new section.
+   * the enclosing section's configuration *and its page masters*: every
+   * section owns its three master variants and their header/footer
+   * storages — no two sections in the corpus's 25 sectioned documents
+   * share a master object — so the sections' headers stay independently
+   * editable. `inherit_previous_header_footer` is set, matching Pages'
+   * "Create a new section" default. Returns the new section.
    */
   insertSectionBreak(
     paragraphIndex: number,
@@ -865,6 +883,31 @@ export class PagesDocument extends IWorkDocument {
       cloneFrom: enclosing.object,
     });
     const m = section.message;
+    for (const field of [
+      Section.FIRST_PAGE_MASTER,
+      Section.EVEN_PAGE_MASTER,
+      Section.ODD_PAGE_MASTER,
+    ]) {
+      const masterId = refId(m, field);
+      const master = masterId !== undefined ? this.store.object(masterId) : undefined;
+      if (!master) continue;
+      const clone = this.store.createObject(TP_TYPE.SECTION_TEMPLATE, component, {
+        cloneFrom: master,
+      });
+      for (const listField of [SectionTemplate.HEADERS, SectionTemplate.FOOTERS]) {
+        const cloned = clone.message.getMessages(listField).map((ref) => {
+          const id = ref.getVarint(1);
+          const storage = id !== undefined ? this.store.object(id) : undefined;
+          if (!storage) return ref;
+          const copy = this.store.createObject(TSWP_TYPE.STORAGE, component, {
+            cloneFrom: storage,
+          });
+          return makeRef(copy.identifier);
+        });
+        clone.message.setMessages(listField, cloned);
+      }
+      m.setMessage(field, makeRef(clone.identifier));
+    }
     m.setBool(Section.INHERIT_PREVIOUS_HEADER_FOOTER, true);
     // The clone brings the enclosing section's name, and keeping it is the
     // point: all 47 sections in these fixtures carry one — the page

@@ -7,6 +7,19 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a section created by `insertSectionBreak` owns its page
+  masters. The insert cloned the section but shared the enclosing
+  section's master objects, so the two sections' headers could never
+  differ — writing one overwrote the other. No two sections in the
+  corpus's 25 sectioned documents share a master; the insert now clones
+  the three variants and their header/footer storages.
+- Fixed: header and footer text written into a master's always-empty
+  columns now draws. A bare `setText` left the donor's blank default
+  shape, which the app never renders from; the written storage now
+  adopts a non-empty sibling's shape — paragraph style, character and
+  language entries — via the new `TextStorage.copyShapeFrom`. Header
+  and footer column indexes outside 0..2 throw instead of silently
+  writing nowhere.
 - Added: `ruleOffset` on paragraph formatting — the distance between
   text and its border rules (`historical_rule_offset`). A number states
   both slots of the stored `TSP.Point`, agreeing with 8637 of the
