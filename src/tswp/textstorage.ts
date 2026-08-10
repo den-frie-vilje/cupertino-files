@@ -711,6 +711,13 @@ export class TextStorage {
    * after it. Raw {@link insertText}/{@link replaceRange} keep the
    * typing model — text inserted inside or at the edge of a run takes
    * the run's style.
+   *
+   * Writing direction is stated the same way: when the storage has a
+   * bidi table, the new paragraph gets its own pair, copying the
+   * baseline at position 0 — 2594 of the corpus's 2896 bidi-bearing
+   * storages cover every paragraph start, and an open-ended RTL entry
+   * appears only where no paragraph follows it. Without the statement
+   * one flipped paragraph turns every later append RTL.
    */
   appendParagraph(text: string, listStyle?: bigint): number {
     if (text.includes("\n")) throw new RangeError("appendParagraph: text must not contain \\n");
@@ -729,6 +736,14 @@ export class TextStorage {
     const list = listStyle ?? this.styleNamed("None", TSWP_TYPE.LIST_STYLE);
     if (list !== undefined || this.listStyleIdAt(index) !== undefined) {
       this.setListStyle(index, list);
+    }
+    const bidi = this.msg.getMessage(Storage.TABLE_PARA_BIDI)?.getMessages(ATTR_TABLE_ENTRIES);
+    if (bidi !== undefined && bidi.length > 0) {
+      const start = this.paragraphStarts()[index]!;
+      if (!bidi.some((e) => (e.getUint(ENTRY_CHARACTER_INDEX) ?? 0) === start)) {
+        const first = this.bidiPairAt(0)[0];
+        this.setParagraphDirection(index, first === 1 ? "rtl" : first === 0 ? "ltr" : "natural");
+      }
     }
     return index;
   }
