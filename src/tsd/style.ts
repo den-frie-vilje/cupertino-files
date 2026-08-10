@@ -287,18 +287,31 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
   return out;
 }
 
+/**
+ * Every app-written paragraph border stroke states cap, join, miter
+ * limit 4 and a complete pattern message — phase 0, count 0 and six
+ * pattern floats even for solid and empty types (167 of 167 in the
+ * corpus). A stroke stating only type renders as no border: the app
+ * shows the width but "None" for the stroke, draws nothing, and zeroes
+ * `border_positions` on resave.
+ */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
   if (stroke.color) message.setMessage(StrokeFields.COLOR, writeColor(stroke.color));
   if (stroke.width !== undefined) message.setFloat(StrokeFields.WIDTH, stroke.width);
-  if (stroke.cap !== undefined) message.setVarint(StrokeFields.CAP, stroke.cap);
-  if (stroke.join !== undefined) message.setVarint(StrokeFields.JOIN, stroke.join);
+  message.setVarint(StrokeFields.CAP, stroke.cap ?? 0);
+  message.setVarint(StrokeFields.JOIN, stroke.join ?? 0);
+  message.setFloat(StrokeFields.MITER_LIMIT, 4);
   if (stroke.pattern !== undefined) {
     const pattern = RawMessage.create();
-    if (stroke.pattern === "solid") {
-      pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.SOLID);
-    } else if (stroke.pattern === "none") {
-      pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.EMPTY);
+    if (stroke.pattern === "solid" || stroke.pattern === "none") {
+      pattern.setVarint(
+        StrokePatternFields.TYPE,
+        stroke.pattern === "solid" ? StrokePatternType.SOLID : StrokePatternType.EMPTY,
+      );
+      pattern.setFloat(StrokePatternFields.PHASE, 0);
+      pattern.setVarint(StrokePatternFields.COUNT, 0);
+      pattern.setFloats(StrokePatternFields.PATTERN, [0, 0, 0, 0, 0, 0]);
     } else {
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
       pattern.setVarint(StrokePatternFields.COUNT, stroke.pattern.length);

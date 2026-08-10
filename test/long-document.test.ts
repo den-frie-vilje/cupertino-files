@@ -14,7 +14,13 @@ import { PagesDocument } from "../src/index.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { Drawable, ExteriorTextWrap, Geometry, TEXT_WRAP_IN_FLOW, TEXT_WRAP_ON_PAGE } from "../src/tsd/schema.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
-import { ParaProps, Storage, StyleArchive } from "../src/tswp/schema.ts";
+import {
+  ATTR_TABLE_ENTRIES,
+  ENTRY_CHARACTER_INDEX,
+  ParaProps,
+  Storage,
+  StyleArchive,
+} from "../src/tswp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -336,5 +342,64 @@ describe("character styling ends where the range ends", () => {
     expect(() => {
       doc.body.setCharacterStyleRange(0, Number.NaN, undefined);
     }).toThrow(/invalid range/);
+  });
+});
+
+describe("appended paragraphs state their own writing direction", () => {
+  it("one RTL paragraph does not turn the rest of the document RTL", () => {
+    // The reported failure: a Hebrew line flipped with setDirection, and
+    // every paragraph appended after it rendered right-aligned with its
+    // punctuation at the line start and tabs measured from the right —
+    // the (1, 0) entry was the table's last, so its run never ended.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Brødtekst før.", "Body");
+    const hebrew = doc.appendParagraph("עברית מיושרת לימין", "Body");
+    doc.paragraph(hebrew).setDirection("rtl");
+    expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
+
+    const after = doc.appendParagraph("→ Feedback: ", "Body");
+    const later = doc.appendParagraph("Brødtekst efter.", "Body");
+    expect(doc.body.paragraphDirection(after)).toBe("ltr");
+    expect(doc.body.paragraphDirection(later)).toBe("ltr");
+    expect(doc.body.paragraphDirection(hebrew)).toBe("rtl");
+
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.body.paragraphDirection(later)).toBe("ltr");
+    expect(reloaded.body.paragraphDirection(hebrew)).toBe("rtl");
+  });
+
+  it("covers every paragraph start once a bidi table exists, like the corpus", () => {
+    // 2594 of 2896 bidi-bearing corpus storages give every paragraph its
+    // own entry; an open-ended RTL entry appears only where no paragraph
+    // follows it.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Første.", "Body");
+    doc.paragraph(doc.appendParagraph("שלום", "Body")).setDirection("rtl");
+    doc.appendParagraph("Anden.", "Body");
+    doc.appendParagraph("Tredje.", "Body");
+
+    const table = doc.body.object.message.getMessage(Storage.TABLE_PARA_BIDI)!;
+    const covered = new Set(
+      table.getMessages(ATTR_TABLE_ENTRIES).map((e) => Number(e.getUint(ENTRY_CHARACTER_INDEX) ?? 0)),
+    );
+    for (const start of doc.body.paragraphStarts()) {
+      expect(covered.has(start)).toBe(true);
+    }
+  });
+
+  it("appending into a natural-baseline storage states natural, not LTR", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Første.", "Body");
+    doc.body.setParagraphDirection(0, "natural");
+    const i = doc.appendParagraph("Anden.", "Body");
+    expect(doc.body.paragraphDirection(i)).toBe("natural");
+  });
+
+  it("appending never invents a bidi table where the storage has none", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Første.", "Body");
+    doc.body.object.message.remove(Storage.TABLE_PARA_BIDI);
+    doc.appendParagraph("Anden.", "Body");
+    expect(doc.body.object.message.getMessage(Storage.TABLE_PARA_BIDI)).toBe(undefined);
   });
 });

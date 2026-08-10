@@ -98,6 +98,22 @@ describe("style value codecs", () => {
     }
   });
 
+  it("writes the complete stroke the apps write, not just the type", () => {
+    // A solid stroke stating only its pattern type renders as no border:
+    // the app shows "None" for the stroke and zeroes border_positions on
+    // resave. Every corpus paragraph border states cap, join, miter 4 and
+    // the full pattern message — phase, count and six floats.
+    const m = RawMessage.parse(writeStroke(solidStroke({ r: 1, g: 0, b: 0 }, 3)).toBytes());
+    expect(m.getUint(3)).toBe(0); // cap, stated
+    expect(m.getUint(4)).toBe(0); // join, stated
+    expect(m.getFloat(5)).toBe(4); // miter limit
+    const pattern = m.getMessage(6)!;
+    expect(pattern.getUint(1)).toBe(1); // solid
+    expect(pattern.getFloat(2)).toBe(0); // phase
+    expect(pattern.getUint(3)).toBe(0); // count
+    expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
   it("round-trips shadows", () => {
     const shadow = {
       color: { r: 0, g: 0, b: 0, a: 0.35 },

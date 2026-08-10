@@ -424,26 +424,25 @@ export const CAPABILITIES: Capability[] = [
             }),
           ),
       ),
-    note: "border_positions decoded against the measured bitmask (1 top, 2 bottom, 4 left, 8 right)",
+    note:
+      "border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — " +
+      "app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern " +
+      "message, the shape of all 167 corpus paragraph border strokes",
     manualProof: {
-      claim: "border_positions 0/1/2/3/4 means none / top / bottom / top and bottom / all.",
-      settled:
-        "**Refuted, and replaced with the measured truth: a bitmask with logical side bits.** " +
-        "Three seed-borders rounds (2026-08-03, Pages, Danish UI): top/bottom/both/all carried " +
-        "1, 2, 3, 15 — the union proving flags — red left-only wrote 4 and blue right-only 8 in " +
-        "LTR paragraphs, and the closing round put a green left-edge border on a genuinely RTL " +
-        "paragraph (direction written by this library, accepted by the app) and stored **8**: " +
-        "the side bits are logical — 4 leading, 8 trailing — swapping visual sides with the " +
-        "paragraph's direction. The enum reading (ALL = 4) would have drawn one leading edge " +
-        "where a box was meant",
+      claim:
+        "A border authored by this library draws in Pages: the complete stroke plus border_positions.",
       why:
-        "The old mapping was inferred from the inspector's five choices and the deprecated " +
-        "enum's shape; every value in the corpus was 0, 1 or 2, so nothing could contradict it " +
-        "offline.",
+        "The positions bitmask is settled app knowledge, but every rung that drew a border had the " +
+        "app author the stroke. The first library-authored border ever opened (demo-01, T-10) drew " +
+        "nothing: the stroke stated only its pattern type, the app showed the width but «None» " +
+        "for the stroke and zeroed border_positions on resave. The writer now states the corpus " +
+        "shape — cap, join, miter 4, pattern with phase, count and six floats.",
       how:
-        "npm run seeds -- out, check the Hebrew paragraph renders right-aligned, give it a " +
-        "left-edge border, npm run probe — 4 means visual sides, 8 means logical.",
-      risk: "medium",
+        "npm run demos -- out, open demo-01-tekst.pages, T-10: one line with rules above and below, " +
+        "one with a red leading edge, one with a blue trailing edge. Failure = the stroke control " +
+        "still reads «Ingen» and no lines draw, which would point at the colour message's " +
+        "era fields as the remaining difference.",
+      risk: "low",
     },
   },
   {

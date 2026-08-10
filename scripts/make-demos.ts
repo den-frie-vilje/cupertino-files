@@ -778,6 +778,8 @@ const demos: Demo[] = [
       if (d.paragraphStyles().every((s) => s.name !== "Demo Fremhævet")) throw new Error("tekst: created style missing");
       const rtl = d.paragraphs().findIndex((p) => /[֐-׿]/.test(p.text));
       if (d.body.paragraphDirection(rtl) !== "rtl") throw new Error("tekst: rtl missing");
+      const rtlCount = d.paragraphs().filter((_, i) => d.body.paragraphDirection(i) === "rtl").length;
+      if (rtlCount !== 1) throw new Error(`tekst: rtl rules ${rtlCount} paragraphs, expected 1`);
     },
   },
   {

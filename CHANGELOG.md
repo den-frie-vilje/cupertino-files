@@ -7,6 +7,22 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: one RTL paragraph no longer turns the rest of a growing
+  document RTL. `setParagraphDirection` writes a per-paragraph bidi
+  table, but paragraphs appended afterwards fell into the last entry's
+  run — Latin text rendered right-aligned with its punctuation at the
+  line start and tabs measured from the right. Appending now states each
+  new paragraph's own direction pair, copying the storage's baseline;
+  2594 of 2896 bidi-bearing corpus storages cover every paragraph start
+  the same way.
+- Fixed: an authored paragraph border now draws. The stroke stated only
+  its pattern type where every app-written border (167 of 167 corpus
+  paragraph strokes) also states cap, join, miter limit 4 and the full
+  pattern message — phase, count and six floats — so Pages showed the
+  width but «None» for the stroke, drew nothing, and zeroed
+  `border_positions` on resave. `writeStroke` now writes the complete
+  corpus shape for every stroke, table borders and drawable outlines
+  included.
 - Fixed: character styling no longer bleeds past its range. Styling to
   the end of the text leaves the run open — correctly, as no corpus
   storage carries a character-table entry at `text.length` (0 of 2896) —

@@ -56,7 +56,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 46 | all |
 | Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 46 | all |
 | Tab stops (position, alignment, leader) | all | ✅ read + write | 42 | all |
-| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions decoded against the measured bitmask (1 top, 2 bottom, 4 left, 8 right)</sub> | all | ✅ read + write | 27 | all |
+| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 27 | all |
 | Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 46 | all |
 | List styles | all | ✅ read + write | 25 | all |
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
@@ -165,7 +165,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Container → **New document from nothing (blank)** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Text & styles → **Paragraph & character styles (by name, plus creation and editing)**
 - 🟡 low — Text & styles → **Character properties (font, colour, highlight, underline, strike, caps, shadow…)**
-- 🟠 medium — Text & styles → **Paragraph background & borders (rule stroke + positions)**
+- 🟡 low — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
 - 🟡 low — Text & styles → **Hyperlinks**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**
