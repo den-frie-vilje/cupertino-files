@@ -198,12 +198,12 @@ function demoText(): Uint8Array {
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Rammeafstand: linjen herunder har streg over og under med afstanden sat til −12 (skabelonerne bruger −3). Afstanden mellem tekst og streger skal afvige tydeligt fra T-10 — notér om den er større eller mindre.");
+  pagesCheck(doc, check(), "Rammeafstand: linjen herunder har streg over og under med afstanden sat til +12. Afstanden mellem tekst og streger skal være tydeligt større end i T-10. (Målt i forrige runde: minus trækker stregerne ind i teksten, 0 er standardafstanden.)");
   const off = doc.appendParagraph("Streg over og under, med eksplicit rammeafstand.", "Body");
   doc.paragraph(off).format({
     border: solidStroke({ r: 0.2, g: 0.2, b: 0.2 }, 1),
     borderPositions: BorderPosition.TOP_AND_BOTTOM,
-    ruleOffset: -12,
+    ruleOffset: 12,
   });
   pagesFeedback(doc);
 
@@ -786,7 +786,7 @@ const demos: Demo[] = [
       if (!d.bodyText.includes("T-15")) throw new Error("tekst: checks missing");
       const offIndex = d.paragraphs().findIndex((p) => p.text.startsWith("Streg over og under, med eksplicit"));
       const offStyle = d.body.sheet()!.style(d.paragraph(offIndex).styleId!)!;
-      if (offStyle.resolved().paragraph.ruleOffset !== -12) throw new Error("tekst: rammeafstand missing");
+      if (offStyle.resolved().paragraph.ruleOffset !== 12) throw new Error("tekst: rammeafstand missing");
       if (d.paragraphStyles().every((s) => s.name !== "Demo Fremhævet")) throw new Error("tekst: created style missing");
       const rtl = d.paragraphs().findIndex((p) => /[֐-׿]/.test(p.text));
       if (d.body.paragraphDirection(rtl) !== "rtl") throw new Error("tekst: rtl missing");

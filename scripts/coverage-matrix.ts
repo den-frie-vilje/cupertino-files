@@ -470,20 +470,23 @@ export const CAPABILITIES: Capability[] = [
       ),
     note:
       "historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a " +
-      "number writes both, a pair states them separately; non-zero corpus values are all negative " +
-      "(stock templates use −3) and the null flag is never used",
+      "number writes both, a pair states them separately; the null flag is never used. Rendering " +
+      "measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the " +
+      "rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app " +
+      "preserves values beyond what its inspector displays (−12 stored, −2 shown)",
     manualProof: {
-      claim: "ruleOffset moves the distance between text and its border rules, at the stored sign and scale.",
+      claim: "A positive ruleOffset moves the border rules away from the text.",
       why:
-        "The field's shape is corpus-settled but its rendering was only ever observed at the " +
-        "defaults: bordered demo paragraphs write no offset and drew the app's default gap, " +
-        "and the stock templates' −3 was never compared against it. Which way negative moves " +
-        "the rule, and what one unit is, only a render can say.",
+        "The negative direction is app-measured — −12 rendered the rules overlapping the " +
+        "paragraph — and zero is the app's own stated default. But every non-zero corpus value " +
+        "is negative, so outward movement is implied by symmetry, never shown; and the " +
+        "inspector displayed −2 for the stored −12, so the control and the archive are not the " +
+        "same scale, or the display clamps.",
       how:
-        "npm run demos -- out, open demo-01-tekst.pages, T-15: a line with rules above and below " +
-        "and ruleOffset −12, four times the templates' −3. Pass = the text-to-rule distance " +
-        "clearly differs from T-10's default gap. Whether it grew or shrank is the measurement — " +
-        "report the direction; shrunk means negative pulls the rule toward the text.",
+        "npm run demos -- out, open demo-01-tekst.pages, T-15: rules above and below with " +
+        "ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping " +
+        "= positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter " +
+        "instead; also note the inspector's displayed offset, which calibrates the UI scale.",
       risk: "low",
     },
   },

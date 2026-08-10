@@ -42,7 +42,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | ruleOffset moves the distance between text and its border rules, at the stored sign and scale. | manual |
+| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
 | 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
 | 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
@@ -284,11 +284,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Text & styles  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** ruleOffset moves the distance between text and its border rules, at the stored sign and scale.
+**Claim.** A positive ruleOffset moves the border rules away from the text.
 
-**Why the suite cannot settle it.** The field's shape is corpus-settled but its rendering was only ever observed at the defaults: bordered demo paragraphs write no offset and drew the app's default gap, and the stock templates' −3 was never compared against it. Which way negative moves the rule, and what one unit is, only a render can say.
+**Why the suite cannot settle it.** The negative direction is app-measured — −12 rendered the rules overlapping the paragraph — and zero is the app's own stated default. But every non-zero corpus value is negative, so outward movement is implied by symmetry, never shown; and the inspector displayed −2 for the stored −12, so the control and the archive are not the same scale, or the display clamps.
 
-**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: a line with rules above and below and ruleOffset −12, four times the templates' −3. Pass = the text-to-rule distance clearly differs from T-10's default gap. Whether it grew or shrank is the measurement — report the direction; shrunk means negative pulls the rule toward the text.
+**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: rules above and below with ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping = positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter instead; also note the inspector's displayed offset, which calibrates the UI scale.
 
 ### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 

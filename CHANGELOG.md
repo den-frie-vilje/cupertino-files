@@ -11,9 +11,12 @@ history uses Conventional Commits, so the detail behind any entry is one
   text and its border rules (`historical_rule_offset`). A number states
   both slots of the stored `TSP.Point`, agreeing with 8637 of the
   corpus's 8638 instances; a pair states them separately, which the one
-  exception shows the format allows. Non-zero corpus values are all
-  negative (stock templates use −3); rendering sign and scale await the
-  demo's app check.
+  exception shows the format allows. App-measured: zero is the default
+  gap (the app itself back-fills `(0, 0)` on resave), negative pulls
+  the rules toward and into the text — −12 renders overlapping, the
+  stock templates' −3 tightens — and the app preserves stored values
+  beyond what its inspector displays. The positive, outward direction
+  is in the demo for its check.
 - Fixed: one RTL paragraph no longer turns the rest of a growing
   document RTL. `setParagraphDirection` writes a per-paragraph bidi
   table, but paragraphs appended afterwards fell into the last entry's
