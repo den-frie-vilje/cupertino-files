@@ -949,12 +949,26 @@ export const CAPABILITIES: Capability[] = [
     apps: ["pages"],
     status: "read+write",
     manualProof: {
-      claim: "header and footer text written into the section masters renders on the page",
-      settled:
-        "**Confirmed in Pages — \"P05 pass\".** Centre-column header and footer text " +
-        "written into every page-master variant renders in the page chrome.",
-      why: "headers live on section page masters; only layout proves the storages are the ones drawn",
-      how: "`npm run pages:docs` emits P05-header-footer with the expectations in the body text",
+      claim:
+        "All three header/footer columns render — text in an always-empty column draws after " +
+        "shape completion — and the storage order maps to page positions as the demo measures.",
+      why:
+        "P05 settled the single-column write (2026-08-02). Demo-02 then showed the rest: text " +
+        "written bare into a master's always-empty storages never drew (the donor's blank " +
+        "default shape — no single storage field explains it, a DOCX-import header renders " +
+        "with a char-style table and no language table, an app-authored footer with the " +
+        "reverse), and sections created by the library shared master objects, so two " +
+        "sections' headers could never differ. Both are fixed — written-into-empty storages " +
+        "adopt a non-empty sibling's shape, and insertSectionBreak clones the masters — " +
+        "leaving the column↔position mapping open: the corpus puts nearly all header text at " +
+        "storage [1], and the checker measured [1] rendering at the left edge, against the " +
+        "assumed left/center/right order.",
+      how:
+        "npm run demos -- out, open demo-02-felter.pages. S-01: section 2's header carries " +
+        "SPALTE-A / SPALTE-B / SPALTE-C in storages [0]/[1]/[2] — note the left-to-right " +
+        "order they render in; that one observation settles the mapping. S-07: section 3's " +
+        "header must say »Sektion 3«, independent of section 2. A column still missing means " +
+        "the shape completion is insufficient, and the next diff is the layout-style table.",
       risk: "low",
     },
     probe: (c) =>

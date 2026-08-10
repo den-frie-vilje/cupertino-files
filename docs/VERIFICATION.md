@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 23 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -42,9 +42,10 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
-| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 20 | 🟡 low | Pages → Headers & footers (3 columns × first/even/odd) | All three header/footer columns render — text in an always-empty column draws after shape completion — and the storage order maps to page positions as the demo measures. | manual |
+| 21 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
+| 22 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 23 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -278,7 +279,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Paragraph rule offset (text-to-border distance)
+### 20. Headers & footers (3 columns × first/even/odd)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Pages  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** All three header/footer columns render — text in an always-empty column draws after shape completion — and the storage order maps to page positions as the demo measures.
+
+**Why the suite cannot settle it.** P05 settled the single-column write (2026-08-02). Demo-02 then showed the rest: text written bare into a master's always-empty storages never drew (the donor's blank default shape — no single storage field explains it, a DOCX-import header renders with a char-style table and no language table, an app-authored footer with the reverse), and sections created by the library shared master objects, so two sections' headers could never differ. Both are fixed — written-into-empty storages adopt a non-empty sibling's shape, and insertSectionBreak clones the masters — leaving the column↔position mapping open: the corpus puts nearly all header text at storage [1], and the checker measured [1] rendering at the left edge, against the assumed left/center/right order.
+
+**How to settle it.** npm run demos -- out, open demo-02-felter.pages. S-01: section 2's header carries SPALTE-A / SPALTE-B / SPALTE-C in storages [0]/[1]/[2] — note the left-to-right order they render in; that one observation settles the mapping. S-07: section 3's header must say »Sektion 3«, independent of section 2. A column still missing means the shape completion is insufficient, and the next diff is the layout-style table.
+
+### 21. Paragraph rule offset (text-to-border distance)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -290,7 +303,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: rules above and below with ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping = positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter instead; also note the inspector's displayed offset, which calibrates the UI scale.
 
-### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 22. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -302,7 +315,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 22. Table of contents (rules read + write, cached entries read)
+### 23. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -316,7 +329,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-30 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+29 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -398,14 +411,6 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive lists exactly the formula cells, with precedent edges — measured on the issue102 fixture), and setFormula does not update it: a replaced formula keeps stale edges, and a fresh formula cell is missing from the tracker entirely. A same-text replace is proven byte-identical and needs no app check; whether the engine rebuilds the tracker on open, or trusts it, only Numbers can say.
 
 **Outcome.** **Confirmed — Numbers recomputes.** The e2e recompute probe (2026-08-03, 17 of 17): a fresh formula written with a deliberately wrong cached value (`=B2*2` cached as 999 over B2 = 100) opened in Numbers reporting 200 — the recomputed truth, not our cache. So the engine does not trust the per-cell dependency tracker setFormula leaves stale; it rebuilds on open, and no tracker write is needed for app correctness. The probe runs on every e2e pass (test/e2e/authoring.e2e.test.ts), so a future Numbers that starts trusting the tracker fails loudly. Bisect rungs 19–21 are superseded
-
-### ✅ Headers & footers (3 columns × first/even/odd)
-
-**Was claimed.** header and footer text written into the section masters renders on the page
-
-**Why it needed an app.** headers live on section page masters; only layout proves the storages are the ones drawn
-
-**Outcome.** **Confirmed in Pages — "P05 pass".** Centre-column header and footer text written into every page-master variant renders in the page chrome.
 
 ### ✅ Hyperlinks
 

@@ -235,7 +235,7 @@ function demoFields(): Uint8Array {
   doc.paragraph(2).text = "Sektion 2 begynder her; alle punkterne herunder hører til den.";
   doc.paragraph(2).setStyle("Heading");
 
-  pagesCheck(doc, check(), "Sektion 1's sidehoved siger »Sektion 1« i midten; sektion 2's siger »Venstre / Midt / Højre« i sine tre spalter. Sektion 2's sidefod viser »Side N af M« med rigtige tal (levende felter).");
+  pagesCheck(doc, check(), "Sektion 1's sidehoved siger »Sektion 1« (skrevet i alle tre spalter — donorens gamle tekst er erstattet). Sektion 2's sidehoved har tre forskellige tekster, SPALTE-A/B/C: notér rækkefølgen fra venstre mod højre — den måler spalternes rækkefølge i arkivet. Sektion 2's sidefod viser »Side N af M« med rigtige tal (levende felter).");
   pagesFeedback(doc);
 
   pagesCheck(doc, check(), "Datofeltet i linjen herunder er et levende felt — klik på det, og Pages viser datovælgeren.");
@@ -259,7 +259,7 @@ function demoFields(): Uint8Array {
   const filled = doc.appendParagraph("B: Udfyldt af biblioteket — var en pladsholder.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Herunder begynder SEKTION 3, oprettet af biblioteket: den starter på en ny side, og dens sidehoved siger »Sektion 3«.");
+  pagesCheck(doc, check(), "Herunder begynder SEKTION 3, oprettet af biblioteket med sine egne klonede sidemastere: den starter på en ny side, og dens sidehoved siger »Sektion 3« — uafhængigt af sektion 2's spalte-tekster.");
   const s3 = doc.appendParagraph("Sektion 3 begynder med dette afsnit.", "Heading");
   pagesFeedback(doc);
   doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 2");
@@ -292,17 +292,24 @@ function demoFields(): Uint8Array {
   }
 
   const sectionThree = doc.insertSectionBreak(s3, { name: "Demo-sektion" });
-  sectionThree.setHeaderText("Sektion 3", 2);
+  for (const column of [0, 1, 2] as const) {
+    sectionThree.setHeaderText("Sektion 3", column);
+  }
   const [one, two] = doc.sections();
-  one!.setHeaderText("Sektion 1", 2);
-  two!.setHeaderText("Venstre", 1);
-  two!.setHeaderText("Midt", 2);
-  two!.setHeaderText("Højre", 3);
+  for (const column of [0, 1, 2] as const) {
+    one!.setHeaderText("Sektion 1", column);
+  }
+  two!.setHeaderText("SPALTE-A", 0);
+  two!.setHeaderText("SPALTE-B", 1);
+  two!.setHeaderText("SPALTE-C", 2);
   for (const template of two!.templates()) {
+    const filled = template.footers.find((f) => f.text.length > 0);
     for (const footer of template.footers) {
+      const wasEmpty = footer.text.length === 0;
       footer.setText("Side  af ");
       footer.insertPageNumber(5);
       footer.insertPageCount(footer.text.length);
+      if (wasEmpty && filled && filled !== footer) footer.copyShapeFrom(filled);
     }
   }
   return doc.save();

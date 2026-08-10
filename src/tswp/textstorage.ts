@@ -824,6 +824,35 @@ export class TextStorage {
   }
 
   /**
+   * Adopt a sibling storage's attribute shape: its paragraph style, and
+   * its character-table and language entries when it has them. This is
+   * how text written into one of a page master's always-empty
+   * header/footer storages becomes drawable — the bare default shape
+   * those storages carry is one the app never draws from, while every
+   * rendered corpus header/footer storage states its own paragraph
+   * style with the char-style table or the language table beside it.
+   */
+  copyShapeFrom(sibling: TextStorage): void {
+    const source = sibling.object.message;
+    const firstEntryRef = (tableField: number): bigint | undefined => {
+      const entry = source.getMessage(tableField)?.getMessages(ATTR_TABLE_ENTRIES)[0];
+      return entry?.getMessage(ENTRY_OBJECT)?.getVarint(1);
+    };
+    const paraStyle = firstEntryRef(Storage.TABLE_PARA_STYLE);
+    if (paraStyle !== undefined) this.setParagraphStyle(0, paraStyle);
+    const charStyle = firstEntryRef(Storage.TABLE_CHAR_STYLE);
+    if (charStyle !== undefined && this.text.length > 0) {
+      this.setCharacterStyleRange(0, this.text.length, charStyle);
+    }
+    const language = source.getMessage(Storage.TABLE_LANGUAGE)?.getMessages(ATTR_TABLE_ENTRIES)[0];
+    if (language) {
+      const table = RawMessage.create();
+      table.addMessage(ATTR_TABLE_ENTRIES, RawMessage.parse(language.toBytes()));
+      this.msg.setMessage(Storage.TABLE_LANGUAGE, table);
+    }
+  }
+
+  /**
    * End any character-style run open at `index` by writing an objectless
    * entry there — the shape that ends runs throughout the corpus (624 of
    * 2079 character-table entries carry no object; 459 sit directly after

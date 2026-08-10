@@ -403,3 +403,55 @@ describe("appended paragraphs state their own writing direction", () => {
     expect(doc.body.object.message.getMessage(Storage.TABLE_PARA_BIDI)).toBe(undefined);
   });
 });
+
+describe("each section owns its page masters", () => {
+  it("a section created by the library edits its headers without touching its neighbour", () => {
+    // The reported failure: insertSectionBreak shared the enclosing
+    // section's master objects, so writing the new section's header
+    // overwrote the old one's — the two could never differ. No two
+    // sections in the corpus's 25 sectioned documents share a master.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const paragraphs = doc.paragraphs().length;
+    const created = doc.insertSectionBreak(paragraphs - 1, { name: "Ny sektion" });
+
+    const ids = doc.sections().map((s) => s.templates().map((t) => t.templateId));
+    const flat = ids.flat();
+    expect(new Set(flat.map(String)).size).toBe(flat.length);
+
+    for (const column of [0, 1, 2] as const) created.setHeaderText("Egen tekst", column);
+    const [first] = doc.sections();
+    expect(first!.headerText(1).includes("Egen tekst")).toBe(false);
+    expect(created.headerText(1)).toBe("Egen tekst");
+
+    const reloaded = PagesDocument.load(doc.save());
+    const last = reloaded.sections().at(-1)!;
+    expect(last.headerText(1)).toBe("Egen tekst");
+    expect(reloaded.sections()[0]!.headerText(1).includes("Egen tekst")).toBe(false);
+  });
+
+  it("text written into an empty header column adopts the non-empty sibling's shape", () => {
+    // A bare setText leaves the donor's empty-storage shape, which the
+    // app does not draw: the storage keeps the blank default paragraph
+    // style and no character or language table.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const section = doc.sections()[0]!;
+    section.setHeaderText("Ny spalte", 2);
+
+    const t = section.templates().find((x) => x.role === "odd")!;
+    const sibling = t.headers[1]!;
+    const written = t.headers[2]!;
+    const firstRef = (s: typeof written, field: number) =>
+      s.object.message.getMessage(field)?.getMessages(ATTR_TABLE_ENTRIES)[0]
+        ?.getMessage(2)?.getVarint(1);
+    expect(firstRef(written, Storage.TABLE_PARA_STYLE)).toBe(firstRef(sibling, Storage.TABLE_PARA_STYLE));
+    expect(firstRef(written, Storage.TABLE_CHAR_STYLE)).toBe(firstRef(sibling, Storage.TABLE_CHAR_STYLE));
+  });
+
+  it("rejects a header column outside 0..2", () => {
+    // The silent no-op let a demo write its third column to nowhere.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    expect(() => {
+      doc.sections()[0]!.setHeaderText("Højre", 3);
+    }).toThrow(/column 3/);
+  });
+});
