@@ -967,6 +967,14 @@ export const CAPABILITIES: Capability[] = [
         "difference is the point, alignment follows the field's own paragraph style. " +
         "Failure = a header missing or misaligned names the storage's paragraph-style " +
         "completion as the next measurement.",
+      settled:
+        "**Confirmed on the third round (2026-08-11, Pages macOS): demo-02 settled whole.** " +
+        "Three rounds, each converting a fault into a model: round one found the shared " +
+        "masters and the undrawn empty-slot writes, round two measured the page-wide " +
+        "slot-1 field and the style-borne alignment, round three rendered the stated " +
+        "expectations. Sections, headers and footers with live page numbers, the date " +
+        "field, bookmark, footnote, comment, both placeholder behaviours and the cloned " +
+        "section masters all render as written.",
       risk: "low",
     },
     probe: (c) =>

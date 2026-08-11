@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 23 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -42,10 +42,9 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Pages → Headers & footers (3 columns × first/even/odd) | Header text written by the library renders in the page-wide field, with the alignment its storage's paragraph style states. | manual |
-| 21 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
-| 22 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 23 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
+| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -279,19 +278,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Headers & footers (3 columns × first/even/odd)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Pages  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Header text written by the library renders in the page-wide field, with the alignment its storage's paragraph style states.
-
-**Why the suite cannot settle it.** Two demo rounds measured the model whole: modern Pages draws one page-wide header field bound to storage slot 1 — of SPALTE-A/B/C only B appeared, left-aligned at the page edge, while »Sektion 1« in the same slot rendered centred under its donor's centring style — and slots 0/2 are the legacy three-field layout's outer slots, whose mode switch no candidate byte survived (document 49, settings 13, section 28 all refuted). The same rounds verified the master-cloning fix (section 3's own header) and fields, bookmarks, footnotes, comments and placeholders silently.
-
-**How to settle it.** npm run demos -- out, open demo-02-felter.pages, S-01: section 1's header reads »Sektion 1« centred, section 2's »Sektion 2 · sidehoved« left-aligned — the difference is the point, alignment follows the field's own paragraph style. Failure = a header missing or misaligned names the storage's paragraph-style completion as the next measurement.
-
-### 21. Paragraph rule offset (text-to-border distance)
+### 20. Paragraph rule offset (text-to-border distance)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -303,7 +290,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: rules above and below with ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping = positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter instead; also note the inspector's displayed offset, which calibrates the UI scale.
 
-### 22. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -315,7 +302,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 23. Table of contents (rules read + write, cached entries read)
+### 22. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -329,7 +316,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-29 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+30 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -411,6 +398,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The calc engine keeps a per-cell dependency tracker (TSCE.FormulaOwnerDependenciesArchive lists exactly the formula cells, with precedent edges — measured on the issue102 fixture), and setFormula does not update it: a replaced formula keeps stale edges, and a fresh formula cell is missing from the tracker entirely. A same-text replace is proven byte-identical and needs no app check; whether the engine rebuilds the tracker on open, or trusts it, only Numbers can say.
 
 **Outcome.** **Confirmed — Numbers recomputes.** The e2e recompute probe (2026-08-03, 17 of 17): a fresh formula written with a deliberately wrong cached value (`=B2*2` cached as 999 over B2 = 100) opened in Numbers reporting 200 — the recomputed truth, not our cache. So the engine does not trust the per-cell dependency tracker setFormula leaves stale; it rebuilds on open, and no tracker write is needed for app correctness. The probe runs on every e2e pass (test/e2e/authoring.e2e.test.ts), so a future Numbers that starts trusting the tracker fails loudly. Bisect rungs 19–21 are superseded
+
+### ✅ Headers & footers (3 columns × first/even/odd)
+
+**Was claimed.** Header text written by the library renders in the page-wide field, with the alignment its storage's paragraph style states.
+
+**Why it needed an app.** Two demo rounds measured the model whole: modern Pages draws one page-wide header field bound to storage slot 1 — of SPALTE-A/B/C only B appeared, left-aligned at the page edge, while »Sektion 1« in the same slot rendered centred under its donor's centring style — and slots 0/2 are the legacy three-field layout's outer slots, whose mode switch no candidate byte survived (document 49, settings 13, section 28 all refuted). The same rounds verified the master-cloning fix (section 3's own header) and fields, bookmarks, footnotes, comments and placeholders silently.
+
+**Outcome.** **Confirmed on the third round (2026-08-11, Pages macOS): demo-02 settled whole.** Three rounds, each converting a fault into a model: round one found the shared masters and the undrawn empty-slot writes, round two measured the page-wide slot-1 field and the style-borne alignment, round three rendered the stated expectations. Sections, headers and footers with live page numbers, the date field, bookmark, footnote, comment, both placeholder behaviours and the cloned section masters all render as written.
 
 ### ✅ Hyperlinks
 
