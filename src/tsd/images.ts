@@ -237,7 +237,9 @@ export class ImageModel extends DrawableModel {
     if (!component) {
       throw new RangeError(`image ${this.id} is not in a component; cannot add a mask`);
     }
-    const mask = buildRectangularMask(this.store, window, component);
+    const mask = buildRectangularMask(this.store, window, component, {
+      parentId: this.object.identifier,
+    });
     this.object.message.setMessage(Image.MASK, makeRef(mask.identifier));
     this.object.setObjectReferences([
       ...new Set([...this.object.getObjectReferences(), mask.identifier]),

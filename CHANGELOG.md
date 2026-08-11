@@ -7,6 +7,12 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a crop's mask is editable in the app. The mask node is a full
+  drawable — its `parent` is the image it masks (79 of 79 corpus
+  masks), it carries its own `exterior_text_wrap` and states the
+  locked/aspect-ratio/title/caption flags explicitly — where the
+  library wrote bare geometry: the crop rendered, and the app's mask
+  editor would not engage with it.
 - Fixed: a floating drawable now wraps text. A copy of an inline image
   kept the in-the-text-flow wrap, which on a floating object makes the
   app show automatic wrap while wrapping nothing; the floating

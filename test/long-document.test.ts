@@ -502,3 +502,27 @@ describe("media dimensions include PDF pages", () => {
     expect(reloaded.store.object(imageId) !== undefined).toBe(true);
   });
 });
+
+describe("a crop's mask node is a full drawable", () => {
+  it("carries the image as parent, a wrap and the explicit flags", () => {
+    // The reported failure: the crop rendered but the app's mask editor
+    // would not engage. App masks state parent (the image they mask,
+    // 79 of 79 in the corpus), their own wrap, and four explicit flags.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Foto:", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, PNG, { fileName: "s.png" });
+    const image = doc.images().find((i) => i.object.identifier === imageId)!;
+    image.setCrop({ x: 10, y: 5, width: 40, height: 30 });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const masked = reloaded.images().find((i) => i.object.identifier === imageId)!;
+    const maskId = masked.object.message.getMessage(5)!.getVarint(1)!;
+    const drawable = reloaded.store.object(maskId)!.message.getMessage(1)!;
+    expect(drawable.getMessage(Drawable.PARENT)?.getVarint(1)).toBe(imageId);
+    expect(drawable.getMessage(Drawable.EXTERIOR_TEXT_WRAP)?.getUint(ExteriorTextWrap.TYPE)).toBe(TEXT_WRAP_ON_PAGE);
+    expect(drawable.getBool(Drawable.LOCKED)).toBe(false);
+    expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(false);
+    expect(drawable.getBool(Drawable.TITLE_HIDDEN)).toBe(false);
+    expect(drawable.getBool(Drawable.CAPTION_HIDDEN)).toBe(false);
+  });
+});

@@ -26,6 +26,8 @@ export const Drawable = protoFields("TSD.DrawableArchive", {
   ACCESSIBILITY_DESCRIPTION: "accessibility_description",
   TITLE: "title",
   CAPTION: "caption",
+  TITLE_HIDDEN: "title_hidden",
+  CAPTION_HIDDEN: "caption_hidden",
 });
 
 /** TSD.GeometryArchive. */
