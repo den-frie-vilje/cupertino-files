@@ -43,9 +43,9 @@ import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { Point, SizeFields } from "../tsp/schema.ts";
+import { makeRef, Point, SizeFields } from "../tsp/schema.ts";
 import { DrawableModel } from "./drawables.ts";
-import { Drawable, Geometry, TSD_TYPE } from "./schema.ts";
+import { buildTextWrap, Drawable, Geometry, TSD_TYPE } from "./schema.ts";
 
 /** TSD.MaskArchive: super = 1, pathsource = 2. */
 export const MaskFields = protoFields("TSD.MaskArchive", { SUPER: "super", PATH_SOURCE: "pathsource" });
@@ -179,12 +179,19 @@ export class MaskModel extends DrawableModel {
  *
  * Reproduced field for field from the corpus, including the trailing
  * `moveTo(0,0)` after the closing element — a quirk present in all 79
- * masks examined, and cheap to keep.
+ * masks examined, and cheap to keep. The mask node is a full drawable:
+ * its `parent` is the image it masks (79 of 79 corpus masks carry the
+ * field, and never declare it — the container rule), it has its own
+ * `exterior_text_wrap`, and it states `locked`,
+ * `aspect_ratio_locked`, `title_hidden` and `caption_hidden`
+ * explicitly. A bare-geometry mask renders but the app's mask editor
+ * will not engage with it.
  */
 export function buildRectangularMask(
   store: ObjectStore,
   window: Rect,
   component: Component,
+  options: { parentId?: bigint } = {},
 ): IwaObject {
   const message = RawMessage.create();
 
@@ -203,6 +210,14 @@ export function buildRectangularMask(
   geometry.setVarint(Geometry.FLAGS, 3);
   geometry.setFloat(Geometry.ANGLE, 0);
   drawable.setMessage(Drawable.GEOMETRY, geometry);
+  if (options.parentId !== undefined) {
+    drawable.setMessage(Drawable.PARENT, makeRef(options.parentId));
+  }
+  drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap("page"));
+  drawable.setBool(Drawable.LOCKED, false);
+  drawable.setBool(Drawable.ASPECT_RATIO_LOCKED, false);
+  drawable.setBool(Drawable.TITLE_HIDDEN, false);
+  drawable.setBool(Drawable.CAPTION_HIDDEN, false);
   message.setMessage(MaskFields.SUPER, drawable);
 
   const pathSource = RawMessage.create();
