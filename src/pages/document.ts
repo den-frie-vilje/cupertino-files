@@ -25,8 +25,16 @@ import {
   TSWP_TYPE,
 } from "../tswp/schema.ts";
 import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
-import { buildTextWrap, Drawable, Geometry, Image, TSD_TYPE } from "../tsd/schema.ts";
-import { DrawableModel } from "../tsd/drawables.ts";
+import {
+  buildTextWrap,
+  Drawable,
+  ExteriorTextWrap,
+  Geometry,
+  Image,
+  TEXT_WRAP_IN_FLOW,
+  TSD_TYPE,
+} from "../tsd/schema.ts";
+import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { imageDimensions } from "../base/imagesize.ts";
@@ -1002,7 +1010,23 @@ export class PagesDocument extends IWorkDocument {
       undefined,
       group,
       DrawableEntry.DRAWABLE,
-      (id) => { this.addToZOrder(id); },
+      (id) => {
+        this.addToZOrder(id);
+        // A floating drawable carries the on-page wrap — type 4 with a
+        // 12 pt margin, the shape of 1136 corpus floating drawables. A
+        // copy of an inline image brings its in-the-text-flow wrap
+        // along, and the app then shows automatic wrap in the inspector
+        // while wrapping nothing.
+        const obj = this.store.object(id);
+        const core = obj ? findDrawableCore(obj.message) : undefined;
+        if (core) {
+          const wrap = core.getMessage(Drawable.EXTERIOR_TEXT_WRAP);
+          if (!wrap || wrap.getUint(ExteriorTextWrap.TYPE) === TEXT_WRAP_IN_FLOW) {
+            core.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap("page"));
+            obj!.message.markDirty();
+          }
+        }
+      },
     );
   }
 

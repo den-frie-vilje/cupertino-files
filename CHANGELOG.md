@@ -7,6 +7,11 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a floating drawable now wraps text. A copy of an inline image
+  kept the in-the-text-flow wrap, which on a floating object makes the
+  app show automatic wrap while wrapping nothing; the floating
+  container normalises an in-flow or missing wrap to the on-page shape
+  the corpus's 1136 floating drawables carry — type 4, 12 pt margin.
 - Fixed: a section created by `insertSectionBreak` owns its page
   masters. The insert cloned the section but shared the enclosing
   section's master objects, so the two sections' headers could never

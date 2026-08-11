@@ -455,3 +455,26 @@ describe("each section owns its page masters", () => {
     }).toThrow(/column 3/);
   });
 });
+
+describe("floating drawables carry the on-page wrap", () => {
+  it("a floating copy of an inline image sheds its in-flow wrap", () => {
+    // The reported failure: the copy kept the source's in-the-text-flow
+    // wrap, and the app showed automatic wrap in the inspector while
+    // wrapping nothing. Floating corpus drawables carry type 4 with a
+    // 12 pt margin.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Tekst.", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, PNG, { fileName: "s.png" });
+    const floating = doc.floatingDrawables(0, { create: true })!;
+    const copy = floating.addCopyOf(doc.store.object(imageId)!, { x: 100, y: 100 });
+
+    const core = findDrawableCore(copy.object.message)!;
+    const wrap = core.getMessage(Drawable.EXTERIOR_TEXT_WRAP)!;
+    expect(wrap.getUint(ExteriorTextWrap.TYPE)).toBe(TEXT_WRAP_ON_PAGE);
+    expect(wrap.getFloat(ExteriorTextWrap.MARGIN)).toBe(12);
+
+    const reloaded = PagesDocument.load(doc.save());
+    const again = findDrawableCore(reloaded.store.object(copy.object.identifier)!.message)!;
+    expect(again.getMessage(Drawable.EXTERIOR_TEXT_WRAP)!.getUint(ExteriorTextWrap.TYPE)).toBe(TEXT_WRAP_ON_PAGE);
+  });
+});
