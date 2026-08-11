@@ -34,10 +34,35 @@ export function blockPng(
   height: number,
   rgb: readonly [number, number, number] = [0xc0, 0x39, 0x2b],
 ): Uint8Array {
+  return pixelPng(width, height, () => rgb);
+}
+
+/**
+ * A PNG whose left and right halves differ, so a crop is visible: a
+ * centred window shows both colours with a vertical seam, while an
+ * uncropped (or squashed) render shows the halves at full width.
+ */
+export function splitPng(
+  width: number,
+  height: number,
+  left: readonly [number, number, number],
+  right: readonly [number, number, number],
+): Uint8Array {
+  return pixelPng(width, height, (x) => (x < width / 2 ? left : right));
+}
+
+function pixelPng(
+  width: number,
+  height: number,
+  colorAt: (x: number, y: number) => readonly [number, number, number],
+): Uint8Array {
   const raw: number[] = [];
   for (let y = 0; y < height; y++) {
     raw.push(0); // filter byte
-    for (let x = 0; x < width; x++) raw.push(rgb[0], rgb[1], rgb[2]);
+    for (let x = 0; x < width; x++) {
+      const rgb = colorAt(x, y);
+      raw.push(rgb[0], rgb[1], rgb[2]);
+    }
   }
   const ihdr = chunk("IHDR", [...be(width), ...be(height), 8, 2, 0, 0, 0]);
   const blocks: number[] = [];

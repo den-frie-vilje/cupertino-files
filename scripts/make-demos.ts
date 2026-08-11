@@ -26,7 +26,7 @@ import {
   solidStroke,
   TabAlignment,
 } from "../src/index.ts";
-import { blockPng } from "./png.ts";
+import { blockPng, splitPng } from "./png.ts";
 
 const TERRACOTTA = { r: 0.753, g: 0.224, b: 0.169 };
 const DARKBLUE = { r: 0.16, g: 0.29, b: 0.62 };
@@ -318,15 +318,16 @@ function demoMedia(): Uint8Array {
 
   // Build all paragraphs first; insert images after (appended empty
   // paragraphs are invisible to paragraphs() until they get content).
-  pagesCheck(doc, check(), "Billedet herunder står i TEKSTSPALTEN: afsnittet er indrykket 80 pt, og billedets venstre kant skal flugte med teksten over det.");
+  pagesCheck(doc, check(), "Linjen herunder og billedet under den er BEGGE indrykket 80 pt — billedets venstre kant skal flugte med tekstens.");
+  const ref1 = doc.appendParagraph("Denne linje er indrykket 80 pt, som billedet under den.", "Body");
   const img1 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Billedet herunder er sat med tilstanden »ved siden« — det skal starte ude ved sidens venstre MARGEN, selv om afsnittet er indrykket.");
+  pagesCheck(doc, check(), "Billedet herunder er sat med tilstanden »ved siden«: det skal starte ude ved sidens venstre MARGEN — til venstre for linjen ovenover — og teksten efter det må gerne flyde ved siden af det; det er tilstandens mening.");
   const img2 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Det grønne billede herunder er beskåret af biblioteket: kilden er 300×150, men kun et midterudsnit på 150×150 skal kunne ses (kvadratisk, ikke bredformat).");
+  pagesCheck(doc, check(), "Billedet herunder er beskåret af biblioteket: kilden er 300×150 med GRØN venstre halvdel og MØRKEBLÅ højre. Masken viser midterudsnittet 150×150, så du skal se en kvadratisk figur med lodret farveskift i midten. Kun én farve = masken viser det forkerte udsnit; hele det brede billede = masken ignoreres; begge farver i fuld bredde, sammentrykt = geometrien skalerer i stedet for at maskere.");
   const img3 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
@@ -336,10 +337,10 @@ function demoMedia(): Uint8Array {
   doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
 
   const indent = { leftIndent: 80 };
-  for (const i of [img1, img2, img3]) doc.paragraph(i).format(indent);
+  for (const i of [ref1, img1, img2, img3]) doc.paragraph(i).format(indent);
 
   const red = blockPng(240, 120);
-  const green = blockPng(300, 150, [0x4f, 0x99, 0x52]);
+  const green = splitPng(300, 150, [0x4f, 0x99, 0x52], [0x2a, 0x4d, 0x69]);
   const { imageId } = doc.insertInlineImage(doc.body.paragraphStarts()[img1]!, red, {
     fileName: "i-spalten.png",
     width: 200,
