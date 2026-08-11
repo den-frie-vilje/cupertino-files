@@ -1042,8 +1042,11 @@ export class PagesDocument extends IWorkDocument {
    * Insert an image inline at a body-text position. Registers the bytes
    * as a Data/ file (SHA-1 deduped), creates the TSD.ImageArchive +
    * attachment objects, anchors them at a U+FFFC character, and sizes
-   * the image from its intrinsic dimensions (PNG/JPEG/GIF) scaled to fit
-   * `maxWidth` (default 400 pt) unless explicit width/height are given.
+   * the image from its intrinsic dimensions — PNG/JPEG/GIF pixels, or a
+   * PDF's first-page MediaBox in points — scaled to fit `maxWidth`
+   * (default 400 pt) unless explicit width/height are given. A PDF is
+   * media like any raster image: the corpus's PDF figures use the same
+   * archive, and stay vector when the app scales them.
    * App-confirmed: ladder rung P11 renders at the size asked.
    *
    * The image rides the text: it sits in the text column and moves with

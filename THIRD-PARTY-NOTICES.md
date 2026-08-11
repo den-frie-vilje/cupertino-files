@@ -65,6 +65,23 @@ TypeScript from Apple's open-source
 © 2015-2016 Apple Inc., BSD-3-Clause
 ([`LICENSES/BSD-3-Clause-lzfse.txt`](LICENSES/BSD-3-Clause-lzfse.txt)).
 
+## `scripts/assets/` — demo media
+
+Real media used by the generated demo documents (`npm run demos`):
+
+- `earthrise.jpg` — *Earthrise*, Apollo 8, 24 December 1968 (NASA photo
+  AS8-14-2383, William Anders). Public domain as a work of NASA; scaled
+  copy via
+  [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:NASA-Apollo8-Dec24-Earthrise.jpg).
+- `great-wave.jpg` — Katsushika Hokusai, *Under the Wave off Kanagawa*
+  (1830–32), Metropolitan Museum of Art (JP1847), public domain
+  (PD-Art); scaled copy via
+  [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tsunami_by_hokusai_19th_century.jpg).
+- `pipeline.pdf` — vector figure extracted from the
+  `rougier-v13.1-image-filters-masks.pages` fixture already in this
+  repository; its license and provenance are recorded with that fixture
+  in `fixtures/ATTRIBUTION.md`.
+
 ## Licenses
 
 The license texts kept in [`LICENSES/`](LICENSES/) are `MIT.txt`,
