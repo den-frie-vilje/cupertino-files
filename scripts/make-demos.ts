@@ -26,7 +26,6 @@ import {
   solidStroke,
   TabAlignment,
 } from "../src/index.ts";
-import { blockPng, splitPng } from "./png.ts";
 
 const TERRACOTTA = { r: 0.753, g: 0.224, b: 0.169 };
 const DARKBLUE = { r: 0.16, g: 0.29, b: 0.62 };
@@ -318,20 +317,24 @@ function demoMedia(): Uint8Array {
 
   // Build all paragraphs first; insert images after (appended empty
   // paragraphs are invisible to paragraphs() until they get content).
-  pagesCheck(doc, check(), "Linjen herunder og billedet under den er BEGGE indrykket 80 pt — billedets venstre kant skal flugte med tekstens.");
-  const ref1 = doc.appendParagraph("Denne linje er indrykket 80 pt, som billedet under den.", "Body");
+  pagesCheck(doc, check(), "Fotoet herunder (Earthrise, NASA) og linjen over det er BEGGE indrykket 80 pt — fotoets venstre kant skal flugte med tekstens.");
+  const ref1 = doc.appendParagraph("Denne linje er indrykket 80 pt, som fotoet under den.", "Body");
   const img1 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Billedet herunder er sat med tilstanden »ved siden«: det skal starte ude ved sidens venstre MARGEN — til venstre for linjen ovenover — og teksten efter det må gerne flyde ved siden af det; det er tilstandens mening.");
+  pagesCheck(doc, check(), "Hokusais store bølge herunder er sat med tilstanden »ved siden«: den skal starte ude ved sidens venstre MARGEN — til venstre for linjen ovenover — og teksten efter må gerne flyde ved siden af den; det er tilstandens mening.");
   const img2 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Billedet herunder er beskåret af biblioteket: kilden er 300×150 med GRØN venstre halvdel og MØRKEBLÅ højre. Masken viser midterudsnittet 150×150, så du skal se en kvadratisk figur med lodret farveskift i midten. Kun én farve = masken viser det forkerte udsnit; hele det brede billede = masken ignoreres; begge farver i fuld bredde, sammentrykt = geometrien skalerer i stedet for at maskere.");
+  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, men beskåret af biblioteket til midterudsnittet: Fuji ses i midten af udsnittet, og den store bølges klo i venstre side er skåret VÆK. Ses hele billedet med kloen, ignoreres masken; ses motivet sammentrykt i fuld bredde, skalerer geometrien i stedet for at maskere.");
   const img3 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "En FLYDENDE kopi af det røde billede er sat øverst til højre på side 1 (60 % gennemsigtighed, mørk kant og slagskygge). Tekst skal flyde rundt om den.");
+  pagesCheck(doc, check(), "En FLYDENDE kopi af Earthrise-fotoet er sat øverst til højre på side 1 (60 % gennemsigtighed, mørk kant og slagskygge). Tekst skal flyde rundt om den.");
+  pagesFeedback(doc);
+
+  pagesCheck(doc, check(), "Grafikken herunder er en PDF (vektor, en videnskabelig pipeline-figur): zoom godt ind — stregerne og teksten i figuren skal forblive knivskarpe, ikke pixelerede.");
+  const img5 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
   doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
@@ -339,26 +342,29 @@ function demoMedia(): Uint8Array {
   const indent = { leftIndent: 80 };
   for (const i of [ref1, img1, img2, img3]) doc.paragraph(i).format(indent);
 
-  const red = blockPng(240, 120);
-  const green = splitPng(300, 150, [0x4f, 0x99, 0x52], [0x2a, 0x4d, 0x69]);
-  const { imageId } = doc.insertInlineImage(doc.body.paragraphStarts()[img1]!, red, {
-    fileName: "i-spalten.png",
-    width: 200,
-    height: 100,
+  const assets = new URL("./assets/", import.meta.url);
+  const earthrise = new Uint8Array(readFileSync(new URL("earthrise.jpg", assets)));
+  const wave = new Uint8Array(readFileSync(new URL("great-wave.jpg", assets)));
+  const pipeline = new Uint8Array(readFileSync(new URL("pipeline.pdf", assets)));
+  const { imageId } = doc.insertInlineImage(doc.body.paragraphStarts()[img1]!, earthrise, {
+    fileName: "earthrise.jpg",
+    maxWidth: 200,
   });
-  doc.insertInlineImage(doc.body.paragraphStarts()[img2]!, red, {
-    fileName: "ved-margenen.png",
-    width: 200,
-    height: 100,
+  doc.insertInlineImage(doc.body.paragraphStarts()[img2]!, wave, {
+    fileName: "great-wave.jpg",
+    maxWidth: 260,
     wrap: "page",
   });
-  doc.insertInlineImage(doc.body.paragraphStarts()[img3]!, green, {
-    fileName: "beskaaret.png",
-    width: 300,
-    height: 150,
+  const { imageId: croppedId } = doc.insertInlineImage(doc.body.paragraphStarts()[img3]!, wave, {
+    fileName: "great-wave.jpg",
+    maxWidth: 260,
   });
-  const greenImage = doc.images().find((image) => image.fileName?.includes("beskaaret"));
-  greenImage?.setCrop({ x: 75, y: 0, width: 150, height: 150 });
+  doc.insertInlineImage(doc.body.paragraphStarts()[img5]!, pipeline, {
+    fileName: "pipeline.pdf",
+    maxWidth: 220,
+  });
+  const cropped = doc.images().find((image) => image.object.identifier === croppedId);
+  cropped?.setCrop({ x: 240, y: 0, width: 480, height: 645 });
 
   const floating = doc.floatingDrawables(0, { create: true });
   const source = doc.store.object(imageId);
@@ -816,8 +822,9 @@ const demos: Demo[] = [
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
       assertNoFeedbackBleed(d);
-      if (d.images().length < 4) throw new Error(`billeder: expected 4 images, got ${d.images().length}`);
+      if (d.images().length < 5) throw new Error(`billeder: expected 5 images, got ${d.images().length}`);
       if (!d.images().some((i) => i.hasMask)) throw new Error("billeder: crop missing");
+      if (!d.images().some((i) => i.fileName?.endsWith(".pdf"))) throw new Error("billeder: pdf missing");
       const withImage = d.paragraphs().filter((p) => p.text.includes("￼"));
       if (withImage.some((p) => p.text.trim() !== "￼")) throw new Error("billeder: image shares a paragraph with text");
     },

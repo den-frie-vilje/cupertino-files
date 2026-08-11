@@ -1,12 +1,29 @@
-/** Intrinsic pixel dimensions of PNG/JPEG/GIF buffers (header sniffing only). */
+/**
+ * Intrinsic dimensions of PNG/JPEG/GIF/PDF buffers (header sniffing
+ * only). Raster formats report pixels; a PDF reports its first page's
+ * MediaBox, which is already in points — the natural size the image
+ * archive stores.
+ */
 
 export interface ImageDimensions {
   width: number;
   height: number;
-  format: "png" | "jpeg" | "gif";
+  format: "png" | "jpeg" | "gif" | "pdf";
 }
 
 export function imageDimensions(data: Uint8Array): ImageDimensions | undefined {
+  if (data.length > 8 && data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46) {
+    // %PDF: the first page's /MediaBox [x0 y0 x1 y1], points.
+    const text = new TextDecoder("latin1").decode(data);
+    const box = /MediaBox\s*\[\s*([\d.+-]+)\s+([\d.+-]+)\s+([\d.+-]+)\s+([\d.+-]+)\s*\]/.exec(text);
+    if (!box) return undefined;
+    const width = Number(box[3]) - Number(box[1]);
+    const height = Number(box[4]) - Number(box[2]);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+      return undefined;
+    }
+    return { width, height, format: "pdf" };
+  }
   if (data.length > 24 && data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47) {
     // PNG: IHDR is always the first chunk; width/height big-endian at 16/20.
     const width = (data[16]! << 24) | (data[17]! << 16) | (data[18]! << 8) | data[19]!;

@@ -14,6 +14,7 @@ import { PagesDocument } from "../src/index.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { Drawable, ExteriorTextWrap, Geometry, TEXT_WRAP_IN_FLOW, TEXT_WRAP_ON_PAGE } from "../src/tsd/schema.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
+import { imageDimensions } from "../src/base/imagesize.ts";
 import {
   ATTR_TABLE_ENTRIES,
   ENTRY_CHARACTER_INDEX,
@@ -476,5 +477,28 @@ describe("floating drawables carry the on-page wrap", () => {
     const reloaded = PagesDocument.load(doc.save());
     const again = findDrawableCore(reloaded.store.object(copy.object.identifier)!.message)!;
     expect(again.getMessage(Drawable.EXTERIOR_TEXT_WRAP)!.getUint(ExteriorTextWrap.TYPE)).toBe(TEXT_WRAP_ON_PAGE);
+  });
+});
+
+describe("media dimensions include PDF pages", () => {
+  it("sizes a PDF from its MediaBox, in points", () => {
+    const doc = PagesDocument.load(fixture("rougier-v13.1-image-filters-masks.pages"));
+    const pdf = doc.container.otherFiles().get("Data/iBAGS-pipeline-104.pdf")!;
+    const dims = imageDimensions(pdf)!;
+    expect(dims.format).toBe("pdf");
+    expect(dims.width).toBe(652);
+    expect(dims.height).toBe(1026);
+
+    // Inserted as media, the natural size is the MediaBox and the
+    // drawable scales within maxWidth like any raster image.
+    const target = PagesDocument.blank();
+    target.appendParagraph("PDF-grafik:", "Body");
+    const { imageId } = target.insertInlineImage(target.body.text.length, pdf, {
+      fileName: "pipeline.pdf",
+      maxWidth: 220,
+    });
+    const reloaded = PagesDocument.load(target.save());
+    expect(reloaded.images().some((i) => i.fileName === "pipeline.pdf")).toBe(true);
+    expect(reloaded.store.object(imageId) !== undefined).toBe(true);
   });
 });
