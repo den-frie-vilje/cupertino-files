@@ -487,6 +487,11 @@ export const CAPABILITIES: Capability[] = [
         "ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping " +
         "= positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter " +
         "instead; also note the inspector's displayed offset, which calibrates the UI scale.",
+      settled:
+        "**Confirmed (2026-08-12, Pages macOS): +12 renders the wider gap, and the two " +
+        "inspector readings calibrate the scale — stored 0 displays 6 pt, stored +12 displays " +
+        "18 pt, so the stored value is relative to the 6 pt default and the inspector shows " +
+        "the absolute offset. Demo-01 settled whole, all fifteen checks.**",
       risk: "low",
     },
   },

@@ -133,12 +133,12 @@ export interface ParagraphFormatting {
   /**
    * Distance between the text and its border rules, stored as a
    * `TSP.Point`. A number writes both slots — they agree in 8637 of the
-   * corpus's 8638 instances — and a pair states them separately. Zero
-   * is the default gap, which the app itself states as `(0, 0)` when it
-   * resaves a bordered style; negative pulls the rules toward and into
-   * the text (−12 renders overlapping, the stock templates' −3
-   * tightens), and the app preserves values beyond what its inspector
-   * displays. `undefined` clears the field — no corpus style uses the
+   * corpus's 8638 instances — and a pair states them separately. The
+   * value is relative to the app's 6 pt default gap, and the inspector
+   * shows the absolute number: stored 0 displays 6 pt, +12 displays
+   * 18 pt and renders the wider gap, negative pulls the rules toward
+   * and into the text (−12 overlaps, the stock templates' −3
+   * tightens). `undefined` clears the field — no corpus style uses the
    * null flag.
    */
   ruleOffset?: number | { x: number; y: number };
