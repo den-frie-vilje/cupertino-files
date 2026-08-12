@@ -383,6 +383,9 @@ export class RawMessage {
   }
 
   private setScalar(no: number, wire: WireType, value: FieldValue): void {
+    if (!Number.isInteger(no) || no <= 0) {
+      throw new RangeError(`field number ${no} is not a positive integer — pass the numeric constant, not a name`);
+    }
     const idx = this.fields.findIndex((f) => f.no === no);
     this.fields = this.fields.filter((f) => f.no !== no);
     const field: RawField = { no, wire, value };

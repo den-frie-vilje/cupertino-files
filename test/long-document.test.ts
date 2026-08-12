@@ -21,6 +21,7 @@ import {
   ParaProps,
   Storage,
   StyleArchive,
+  TSWP_TYPE,
 } from "../src/tswp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -524,5 +525,58 @@ describe("a crop's mask node is a full drawable", () => {
     expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(false);
     expect(drawable.getBool(Drawable.TITLE_HIDDEN)).toBe(false);
     expect(drawable.getBool(Drawable.CAPTION_HIDDEN)).toBe(false);
+  });
+});
+
+describe("field report 4: the unopenable-file class", () => {
+  it("wiping a body and appending keeps the phantom paragraph's entry", () => {
+    // The reported failure: text ends with a terminator but the
+    // paragraph-style table has no entry at text.length, and Pages
+    // refuses the file. 31 of 31 corpus body storages carry the entry.
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    doc.body.applyEdits([{ start: 0, end: doc.body.text.length, replacement: "" }]);
+    doc.appendParagraph("Ny brødtekst.", "Body");
+    doc.body.setText(doc.body.text + "\n");
+
+    const reloaded = PagesDocument.load(doc.save());
+    const text = reloaded.body.text;
+    expect(text.endsWith("\n")).toBe(true);
+    const table = reloaded.body.object.message.getMessage(Storage.TABLE_PARA_STYLE)!;
+    const atEnd = table
+      .getMessages(ATTR_TABLE_ENTRIES)
+      .some((e) => (e.getUint(ENTRY_CHARACTER_INDEX) ?? 0) === text.length);
+    expect(atEnd).toBe(true);
+  });
+
+  it("lists a character style in the character preset list, not the paragraph one", () => {
+    const doc = PagesDocument.blank();
+    const id = doc.stylesheet.createCharacterStyle({ name: "Code", character: { fontName: "Courier" } });
+    doc.listInThemeStyles(id);
+    const roundTripped = PagesDocument.load(doc.save());
+    // The paragraph list must hold only paragraph styles afterwards.
+    for (const info of roundTripped.listedParagraphStyles()) {
+      expect(roundTripped.store.object(info.id)?.type).toBe(TSWP_TYPE.PARAGRAPH_STYLE);
+    }
+  });
+
+  it("refuses to list a non-style object", () => {
+    const doc = PagesDocument.blank();
+    expect(() => {
+      doc.listInThemeStyles(doc.body.id);
+    }).toThrow(/not a paragraph, character or list style/);
+  });
+
+  it("formatTable applies formatting instead of silently returning a map", () => {
+    const doc = PagesDocument.load(fixture("picodocs-v14.4-headers-tables.pages"));
+    const table = doc.tables()[0]!;
+    table.formatTable({ bandedRows: false });
+    expect(table.tableStyle()!.table().bandedRows).toBe(false);
+  });
+
+  it("rejects a string field name at the wire layer", () => {
+    const m = RawMessage.create();
+    expect(() => {
+      m.setVarint(Number("header_row_border_stroke"), 1);
+    }).toThrow(/not a positive integer/);
   });
 });

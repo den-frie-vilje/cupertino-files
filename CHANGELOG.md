@@ -7,6 +7,19 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Field report fixes, the unopenable-file class first:
+  `listInThemeStyles` now routes a style to the preset list its type
+  belongs to — paragraph, character or list — and throws on anything
+  else; a character style in the paragraph list was a file Pages
+  refused. Editing keeps the phantom-paragraph invariant: every edit
+  restores the paragraph-style entry at `text.length` when the text
+  ends with a terminator (31 of 31 corpus bodies), which wiping a body
+  with `applyEdits` could silently drop. `formatTable(formatting)` is
+  now a real setter reaching `tableStyle().setTable` — it was a
+  private map getter that compiled and did nothing when called with an
+  argument. The wire layer rejects non-integer field numbers, so a
+  string field name fails at the call instead of as a BigInt error
+  inside save.
 - Fixed: a crop's mask is editable in the app. The mask node is a full
   drawable — its `parent` is the image it masks (79 of 79 corpus
   masks), it carries its own `exterior_text_wrap` and states the

@@ -588,14 +588,31 @@ export class PagesDocument extends IWorkDocument {
     this.store.declareReference(zorder, id);
   }
 
-  /** Append a paragraph style to the theme's panel list. */
-  private listInThemeStyles(styleId: bigint): void {
+  /**
+   * Append a style to the theme's panel list, in the preset list its
+   * type belongs to: `TSWP.ThemePresetsArchive` carries three —
+   * paragraph, character and list style presets — and the app refuses a
+   * document whose paragraph list holds a character style. A style of
+   * any other type throws.
+   */
+  listInThemeStyles(styleId: bigint): void {
+    const entriesField =
+      this.store.object(styleId)?.type === TSWP_TYPE.PARAGRAPH_STYLE
+        ? ThemeArchive.LIST_ENTRIES
+        : this.store.object(styleId)?.type === TSWP_TYPE.CHARACTER_STYLE
+          ? ThemeArchive.CHARACTER_ENTRIES
+          : this.store.object(styleId)?.type === TSWP_TYPE.LIST_STYLE
+            ? ThemeArchive.LIST_STYLE_ENTRIES
+            : undefined;
+    if (entriesField === undefined) {
+      throw new RangeError(`style ${styleId} is not a paragraph, character or list style`);
+    }
     const theme = this.store.resolve(refId(this.docObject.message, TPDocument.THEME));
     if (!theme) return;
     const sup = theme.message.getMessage(ThemeArchive.SUPER);
     const list = sup?.getMessage(ThemeArchive.PARAGRAPH_STYLE_LIST);
     if (!sup || !list) return; // a theme without the list is not one we can extend
-    list.addMessage(ThemeArchive.LIST_ENTRIES, makeRef(styleId));
+    list.addMessage(entriesField, makeRef(styleId));
     sup.setMessage(ThemeArchive.PARAGRAPH_STYLE_LIST, list);
     theme.message.setMessage(ThemeArchive.SUPER, sup);
     theme.message.markDirty();

@@ -24,7 +24,7 @@ import {
   VALUE_FLAGS,
 } from "./cellrecord.ts";
 import type { CellFormatting } from "./styles.ts";
-import { TableStyleHandle, TST_STYLE_TYPE } from "./styles.ts";
+import { TableStyleHandle, TST_STYLE_TYPE , type TableFormatting } from "./styles.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { StyleSuper } from "../tss/schema.ts";
 import {
@@ -690,7 +690,7 @@ export class TableModel {
   cellFormat(row: number, column: number): CellFormat | undefined {
     const record = this.recordAt(row, column);
     if (!record) return undefined;
-    const formats = this.formatTable();
+    const formats = this.numberFormats();
     for (const flag of Object.values(FORMAT_FLAG_BY_CATEGORY)) {
       const id = record.id(flag);
       if (id === undefined) continue;
@@ -744,7 +744,18 @@ export class TableModel {
   }
 
   /** key → TSK.FormatStructArchive from the data store's format table. */
-  private formatTable(): Map<number, RawMessage> {
+  /**
+   * Apply table-level formatting — the setter `tableStyle().setTable`
+   * reaches, surfaced here because a method named `formatTable` that
+   * silently does nothing was a reported trap.
+   */
+  formatTable(formatting: TableFormatting): void {
+    const style = this.tableStyle();
+    if (!style) throw new RangeError("table has no table style to format");
+    style.setTable(formatting);
+  }
+
+  private numberFormats(): Map<number, RawMessage> {
     const out = new Map<number, RawMessage>();
     const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMAT_TABLE));
     for (const entry of list?.message.getMessages(DataList.ENTRIES) ?? []) {
