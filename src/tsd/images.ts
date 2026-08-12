@@ -217,7 +217,12 @@ export class ImageModel extends DrawableModel {
   }
 
   /**
-   * Choose which part of the picture shows, in image-local points.
+   * Choose which part of the picture shows, in image-local points —
+   * the image's *drawn* geometry space, not source pixels: an image
+   * scaled to 260 pt wide crops with windows inside 260, wherever the
+   * source's pixel count landed. A window outside the drawn frame is
+   * one the app renders as a broken top-left crop and refuses to open
+   * the mask editor on.
    *
    * The visible rectangle moves with the window: cropping to `{x: 10, …}`
    * shifts what appears on the page 10pt right, because the window is
