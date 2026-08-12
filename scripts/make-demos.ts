@@ -364,7 +364,9 @@ function demoMedia(): Uint8Array {
     maxWidth: 220,
   });
   const cropped = doc.images().find((image) => image.object.identifier === croppedId);
-  cropped?.setCrop({ x: 240, y: 0, width: 480, height: 645 });
+  // The crop window lives in the image's drawn space: this copy is 260 pt
+  // wide (960 px scaled), so the centre half is x 65, width 130.
+  cropped?.setCrop({ x: 65, y: 0, width: 130, height: 260 * (645 / 960) });
 
   const floating = doc.floatingDrawables(0, { create: true });
   const source = doc.store.object(imageId);
