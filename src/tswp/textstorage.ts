@@ -504,6 +504,7 @@ export class TextStorage {
     for (const [f, values] of paraRebuilds) {
       this.writeParagraphTable(f, rebuildStarts, values);
     }
+    this.ensureTrailingParagraphEntry();
   }
 
   private shiftIndexedTable(
@@ -633,6 +634,25 @@ export class TextStorage {
       entries.push(entry);
     }
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
+  }
+
+  /**
+   * Restore the phantom-paragraph invariant: a text ending with a
+   * terminator carries a paragraph-style entry at `text.length` for the
+   * empty paragraph the app draws there (31 of 31 corpus body storages;
+   * the entry names no style). Pages refuses a file with the terminator
+   * and no entry. Idempotent; a no-op when the text ends mid-paragraph.
+   */
+  ensureTrailingParagraphEntry(): void {
+    const text = this.text;
+    if (!text.endsWith("\n") && !text.endsWith("\u0004")) return;
+    const table = this.msg.getMessage(Storage.TABLE_PARA_STYLE);
+    if (!table) return;
+    const entries = table.getMessages(ATTR_TABLE_ENTRIES);
+    if (entries.some((e) => (e.getUint(ENTRY_CHARACTER_INDEX) ?? 0) === text.length)) return;
+    const entry = RawMessage.create();
+    entry.setVarint(ENTRY_CHARACTER_INDEX, text.length);
+    table.addMessage(ATTR_TABLE_ENTRIES, entry);
   }
 
   insertText(pos: number, text: string): void {

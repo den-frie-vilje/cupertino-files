@@ -42,7 +42,11 @@ export const ThemeArchive = {
     /** Object titles and captions live in their own list. */
     OBJECT_STYLE_LIST: "TSA.ThemePresetsArchive",
   }),
-  ...protoFields("TSWP.ThemePresetsArchive", { LIST_ENTRIES: "paragraph_style_presets" }),
+  ...protoFields("TSWP.ThemePresetsArchive", {
+    LIST_ENTRIES: "paragraph_style_presets",
+    CHARACTER_ENTRIES: "character_style_presets",
+    LIST_STYLE_ENTRIES: "list_style_presets",
+  }),
 } as const;
 
 export const TPDocument = protoFields("TP.DocumentArchive", {
