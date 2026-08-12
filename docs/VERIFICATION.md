@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 22 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -42,9 +42,8 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
 | 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Paragraph rule offset (text-to-border distance) | A positive ruleOffset moves the border rules away from the text. | manual |
-| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -278,19 +277,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Paragraph rule offset (text-to-border distance)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** A positive ruleOffset moves the border rules away from the text.
-
-**Why the suite cannot settle it.** The negative direction is app-measured — −12 rendered the rules overlapping the paragraph — and zero is the app's own stated default. But every non-zero corpus value is negative, so outward movement is implied by symmetry, never shown; and the inspector displayed −2 for the stored −12, so the control and the archive are not the same scale, or the display clamps.
-
-**How to settle it.** npm run demos -- out, open demo-01-tekst.pages, T-15: rules above and below with ruleOffset +12. Pass = the gap is clearly larger than T-10's. Unchanged or overlapping = positive is ignored or clamped, and outward spacing would need spaceBefore/spaceAfter instead; also note the inspector's displayed offset, which calibrates the UI scale.
-
-### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -302,7 +289,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 22. Table of contents (rules read + write, cached entries read)
+### 21. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -316,7 +303,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-30 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+31 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -470,6 +457,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The positions bitmask is settled app knowledge, but every rung that drew a border had the app author the stroke. Two rounds of demo-01 T-10 found two faults under each other: an abbreviated stroke read as «Ingen» (fixed — the writer states the 167-of-167 corpus shape), and with the stroke honoured the side toggles stayed unselected — the inspector keys on deprecated_borders, the historical enum the app writes beside the bitmask on every bordered corpus style. The writer now states both.
 
 **Outcome.** **Confirmed on the third round (2026-08-10, Pages macOS): all three border lines drew.** Two faults sat under each other, each named by in-document feedback — the abbreviated stroke read as «Ingen» (round one), then honoured colours/type/width with the side toggles unselected (round two), which identified deprecated_borders as the field the toggles key on. The rendered gap between text and horizontal rules is the app's default — neither we nor the app's own authored border styles write a rule offset. Settled as part of demo-01 whole: all fourteen checks, character formatting through decimal tabs.
+
+### ✅ Paragraph rule offset (text-to-border distance)
+
+**Was claimed.** A positive ruleOffset moves the border rules away from the text.
+
+**Why it needed an app.** The negative direction is app-measured — −12 rendered the rules overlapping the paragraph — and zero is the app's own stated default. But every non-zero corpus value is negative, so outward movement is implied by symmetry, never shown; and the inspector displayed −2 for the stored −12, so the control and the archive are not the same scale, or the display clamps.
+
+**Outcome.** **Confirmed (2026-08-12, Pages macOS): +12 renders the wider gap, and the two inspector readings calibrate the scale — stored 0 displays 6 pt, stored +12 displays 18 pt, so the stored value is relative to the 6 pt default and the inspector shows the absolute offset. Demo-01 settled whole, all fifteen checks.**
 
 ### ✅ Paragraph writing direction (read + write)
 
