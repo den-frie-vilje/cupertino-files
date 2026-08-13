@@ -7,6 +7,19 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Cell borders write where the app reads them: the stroke sidecar
+  (`TableModelArchive.stroke_sidecar`), per-edge layers of runs each
+  carrying a complete stroke — none of the corpus's 4139 cell-style
+  bags holds a per-side stroke, and a bag-only border drew nothing.
+  `TableModel.cellBorders(row, column)` reads them back.
+- `CellFormatting.horizontalAlignment` — alignment rides the text
+  layer as an anonymous per-cell paragraph style, the corpus's own
+  mechanism; accepts the enum or the name, `null` restores the band
+  default.
+- App-confirmed this round: the mask editor's gate was the drawable's
+  arrangement all along (in-flow images render and reset their crops;
+  floating ones open the editor), chart data/appearance editing
+  (demo-04 pass, whole), and currency/percentage formats.
 - Fixed: a copy of a drawable inserted this session owns its children.
   The clone walk selected from declared references, which refresh only
   at save, so `addCopyOf` on a fresh image shared the original's

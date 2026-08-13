@@ -1066,6 +1066,25 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "item": 1,
     "tsce_item": 2,
   },
+  "TST.StrokeLayerArchive": {
+    "row_column_index": 1,
+    "stroke_runs": 2,
+  },
+  "TST.StrokeLayerArchive.StrokeRunArchive": {
+    "origin": 1,
+    "length": 2,
+    "stroke": 3,
+    "order": 4,
+  },
+  "TST.StrokeSidecarArchive": {
+    "max_order": 1,
+    "column_count": 2,
+    "row_count": 3,
+    "left_column_stroke_layers": 4,
+    "right_column_stroke_layers": 5,
+    "top_row_stroke_layers": 6,
+    "bottom_row_stroke_layers": 7,
+  },
   "TST.TableModelArchive": {
     "table_id": 1,
     "table_style": 3,

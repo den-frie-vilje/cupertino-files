@@ -23,8 +23,11 @@ import {
   FORMAT_FLAGS,
   VALUE_FLAGS,
 } from "./cellrecord.ts";
-import type { CellFormatting } from "./styles.ts";
+import type { CellBorders, CellFormatting } from "./styles.ts";
 import { TableStyleHandle, TST_STYLE_TYPE , type TableFormatting } from "./styles.ts";
+import { readStroke, writeStroke, type Stroke } from "../tsd/style.ts";
+import { applyParagraphProperties } from "../tss/stylesheet.ts";
+import { StyleArchive, TSWP_TYPE } from "../tswp/schema.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { StyleSuper } from "../tss/schema.ts";
 import {
@@ -113,7 +116,31 @@ export const TableModelFields = protoFields("TST.TableModelArchive", {
   REPEATING_HEADER_COLUMNS: "repeating_header_columns_enabled",
   MERGE_OWNER: "merge_owner",
   HIDDEN_STATES_OWNER: "hidden_states_owner",
+  STROKE_SIDECAR: "stroke_sidecar",
 });
+
+/** TST.StrokeSidecarArchive / .StrokeLayerArchive / .StrokeRunArchive. */
+const StrokeSidecar = protoFields("TST.StrokeSidecarArchive", {
+  MAX_ORDER: "max_order",
+  COLUMN_COUNT: "column_count",
+  ROW_COUNT: "row_count",
+  LEFT_COLUMN_LAYERS: "left_column_stroke_layers",
+  RIGHT_COLUMN_LAYERS: "right_column_stroke_layers",
+  TOP_ROW_LAYERS: "top_row_stroke_layers",
+  BOTTOM_ROW_LAYERS: "bottom_row_stroke_layers",
+});
+const StrokeLayer = protoFields("TST.StrokeLayerArchive", {
+  ROW_COLUMN_INDEX: "row_column_index",
+  STROKE_RUNS: "stroke_runs",
+});
+const StrokeRun = protoFields("TST.StrokeLayerArchive.StrokeRunArchive", {
+  ORIGIN: "origin",
+  LENGTH: "length",
+  STROKE: "stroke",
+  ORDER: "order",
+});
+const STROKE_SIDECAR_TYPE = 6305;
+const STROKE_LAYER_TYPE = 6306;
 
 /** TST.HiddenStatesOwnerArchive / .HiddenStatesArchive / .HiddenStateExtentArchive. */
 const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
@@ -2420,10 +2447,216 @@ export class TableModel {
     const styleId = this.createCellStyle(formatting, basedOn);
     record.setId(CellFlag.CELL_STYLE_ID, styleId);
 
+    // Horizontal alignment rides the text layer, not the cell style:
+    // corpus cell text styles are TSWP.ParagraphStyleArchives whose
+    // paragraph bag carries the alignment (127 cells left, 121 right).
+    if (formatting.horizontalAlignment !== undefined) {
+      if (formatting.horizontalAlignment === null) {
+        record.removeAll(CellFlag.TEXT_STYLE_ID);
+      } else {
+        const basedOn = record.id(CellFlag.TEXT_STYLE_ID);
+        record.setId(
+          CellFlag.TEXT_STYLE_ID,
+          this.createCellTextStyle(formatting.horizontalAlignment, basedOn),
+        );
+      }
+    }
+
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
     this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
     this.refreshTileTotals();
+    // Borders go to the stroke sidecar as well as the style bag: none of
+    // the corpus's 4139 cell-style bags carries a per-side stroke, and a
+    // bag-only border drew nothing — the app reads the sidecar.
+    if (formatting.borders) this.applyCellBorders(row, column, formatting.borders);
+  }
+
+  /**
+   * A paragraph style for a cell's text, interned into the style table.
+   *
+   * Cloned from the cell's current text style so everything but the
+   * alignment is inherited; identity is stripped the way
+   * {@link createCellStyle} strips it — an anonymous per-cell style, not
+   * a panel entry.
+   */
+  private createCellTextStyle(
+    alignment: NonNullable<CellFormatting["horizontalAlignment"]>,
+    basedOn?: number,
+  ): number {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
+    if (!list) throw new RangeError("table has no style table; cannot style cell text");
+    const component = this.store.componentOf(list.identifier);
+    if (!component) throw new RangeError("style table has no component");
+
+    const parentId = basedOn !== undefined ? this.styleTableEntry(basedOn) : undefined;
+    const parent = parentId !== undefined ? this.store.resolve(parentId) : undefined;
+    const created = this.store.createObject(TSWP_TYPE.PARAGRAPH_STYLE, component, {
+      ...(parent ? { cloneFrom: parent } : {}),
+    });
+    const sup = created.message.getMessage(STYLE_SUPER);
+    if (sup) {
+      sup.remove(StyleSuper.NAME);
+      sup.remove(StyleSuper.STYLE_IDENTIFIER);
+    } else {
+      const fresh = RawMessage.create();
+      const stylesheet = this.stylesheetReference();
+      if (stylesheet !== undefined) fresh.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheet));
+      created.message.setMessage(STYLE_SUPER, fresh);
+    }
+    const bag = created.message.getMessage(StyleArchive.PARA_PROPERTIES) ?? RawMessage.create();
+    applyParagraphProperties(bag, { alignment });
+    created.message.setMessage(StyleArchive.PARA_PROPERTIES, bag);
+    created.message.markDirty();
+
+    const m = list.message;
+    const key = m.getUint(DataList.NEXT_LIST_ID) ?? nextFreeKey(m);
+    const entry = RawMessage.create();
+    entry.setVarint(ListEntry.KEY, key);
+    entry.setVarint(ListEntry.REFCOUNT, 1);
+    entry.setMessage(ListEntry.REFERENCE, makeRef(created.identifier));
+    m.addMessage(DataList.ENTRIES, entry);
+    m.setVarint(DataList.NEXT_LIST_ID, key + 1);
+    this.refreshDataListReferences(list);
+    return key;
+  }
+
+  /**
+   * Write a cell's borders into the table's stroke sidecar
+   * (`TST.StrokeSidecarArchive`, `TableModelArchive.stroke_sidecar`) —
+   * where every corpus table keeps them. Layers for the left/right
+   * families are indexed by column with runs spanning rows; top/bottom
+   * by row spanning columns. Each run carries a complete stroke and a
+   * draw order above everything already there.
+   */
+  private applyCellBorders(
+    row: number,
+    column: number,
+    borders: NonNullable<CellFormatting["borders"]>,
+  ): void {
+    const sidecar = this.ensureStrokeSidecar();
+    if (!sidecar) return;
+    const edges: [keyof CellBorders, number, number, number][] = [
+      ["left", StrokeSidecar.LEFT_COLUMN_LAYERS, column, row],
+      ["right", StrokeSidecar.RIGHT_COLUMN_LAYERS, column, row],
+      ["top", StrokeSidecar.TOP_ROW_LAYERS, row, column],
+      ["bottom", StrokeSidecar.BOTTOM_ROW_LAYERS, row, column],
+    ];
+    for (const [side, family, index, origin] of edges) {
+      const stroke = borders[side];
+      if (stroke === undefined) continue;
+      this.writeEdgeRun(sidecar, family, index, origin, stroke === null ? null : stroke);
+    }
+    sidecar.message.markDirty();
+  }
+
+  /** The table's stroke sidecar, created at the table's size if absent. */
+  private ensureStrokeSidecar(): IwaObject | undefined {
+    const existing = this.store.resolve(
+      refId(this.object.message, TableModelFields.STROKE_SIDECAR),
+    );
+    if (existing) return existing;
+    const component = this.store.componentOf(this.object.identifier);
+    if (!component) return undefined;
+    const sidecar = this.store.createObject(STROKE_SIDECAR_TYPE, component);
+    sidecar.message.setVarint(StrokeSidecar.MAX_ORDER, 0);
+    sidecar.message.setVarint(StrokeSidecar.COLUMN_COUNT, this.columnCount);
+    sidecar.message.setVarint(StrokeSidecar.ROW_COUNT, this.rowCount);
+    this.object.message.setMessage(TableModelFields.STROKE_SIDECAR, makeRef(sidecar.identifier));
+    this.object.message.markDirty();
+    this.store.declareReference(this.object, sidecar.identifier);
+    return sidecar;
+  }
+
+  /** Add (or, with null, remove) a one-cell run on one edge layer. */
+  private writeEdgeRun(
+    sidecar: IwaObject,
+    family: number,
+    index: number,
+    origin: number,
+    stroke: Stroke | null,
+  ): void {
+    let layer: IwaObject | undefined;
+    for (const ref of sidecar.message.getMessages(family)) {
+      const candidate = this.store.resolve(ref);
+      if (candidate?.message.getUint(StrokeLayer.ROW_COLUMN_INDEX) === index) {
+        layer = candidate;
+        break;
+      }
+    }
+    if (!layer) {
+      if (stroke === null) return;
+      const component = this.store.componentOf(sidecar.identifier);
+      if (!component) return;
+      layer = this.store.createObject(STROKE_LAYER_TYPE, component);
+      layer.message.setVarint(StrokeLayer.ROW_COLUMN_INDEX, index);
+      sidecar.message.addMessage(family, makeRef(layer.identifier));
+      this.store.declareReference(sidecar, layer.identifier);
+    }
+    // One cell = one run of length 1. An existing run at this origin is
+    // replaced rather than stacked; order climbs so the newest edge wins.
+    const runs = layer.message
+      .getMessages(StrokeLayer.STROKE_RUNS)
+      .filter(
+        (run) =>
+          !((run.getUint(StrokeRun.ORIGIN) ?? 0) === origin && run.getUint(StrokeRun.LENGTH) === 1),
+      );
+    if (stroke !== null) {
+      const order = (sidecar.message.getUint(StrokeSidecar.MAX_ORDER) ?? 0) + 1;
+      sidecar.message.setVarint(StrokeSidecar.MAX_ORDER, order);
+      const run = RawMessage.create();
+      run.setVarint(StrokeRun.ORIGIN, origin);
+      run.setVarint(StrokeRun.LENGTH, 1);
+      run.setMessage(StrokeRun.STROKE, writeStroke(stroke));
+      run.setVarint(StrokeRun.ORDER, order);
+      runs.push(run);
+    }
+    layer.message.setMessages(StrokeLayer.STROKE_RUNS, runs);
+    layer.message.markDirty();
+  }
+
+  /**
+   * A cell's borders as the sidecar states them — the mechanism the app
+   * actually draws. The style bag's per-side strokes (older files, and
+   * this library's own pre-sidecar output) are the fallback.
+   */
+  cellBorders(row: number, column: number): CellBorders {
+    const out: CellBorders = {};
+    const sidecar = this.store.resolve(
+      refId(this.object.message, TableModelFields.STROKE_SIDECAR),
+    );
+    if (sidecar) {
+      const edges: [keyof CellBorders, number, number, number][] = [
+        ["left", StrokeSidecar.LEFT_COLUMN_LAYERS, column, row],
+        ["right", StrokeSidecar.RIGHT_COLUMN_LAYERS, column, row],
+        ["top", StrokeSidecar.TOP_ROW_LAYERS, row, column],
+        ["bottom", StrokeSidecar.BOTTOM_ROW_LAYERS, row, column],
+      ];
+      for (const [side, family, index, position] of edges) {
+        let best: { order: number; stroke: Stroke } | undefined;
+        for (const ref of sidecar.message.getMessages(family)) {
+          const layer = this.store.resolve(ref);
+          if (layer?.message.getUint(StrokeLayer.ROW_COLUMN_INDEX) !== index) continue;
+          for (const run of layer.message.getMessages(StrokeLayer.STROKE_RUNS)) {
+            const origin = run.getUint(StrokeRun.ORIGIN) ?? 0;
+            const length = run.getUint(StrokeRun.LENGTH) ?? 0;
+            if (position < origin || position >= origin + length) continue;
+            const order = run.getUint(StrokeRun.ORDER) ?? 0;
+            if (best && best.order >= order) continue;
+            const stroke = readStroke(run.getMessage(StrokeRun.STROKE));
+            if (stroke) best = { order, stroke };
+          }
+        }
+        if (best) out[side] = best.stroke;
+      }
+      if (Object.keys(out).length > 0) return out;
+    }
+    const fromBag = this.cellFormatting(row, column).borders;
+    for (const side of ["top", "right", "bottom", "left"] as const) {
+      const stroke = fromBag?.[side];
+      if (stroke) out[side] = stroke;
+    }
+    return out;
   }
 
   /**

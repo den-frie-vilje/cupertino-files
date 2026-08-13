@@ -179,7 +179,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Text & styles → **Table of contents (rules read + write, cached entries read)**
 - 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
-- 🟠 medium — Drawables & media → **Image cropping (set, move, remove a mask)**
+- 🟡 low — Drawables & media → **Image cropping (set, move, remove a mask)**
 - 🔴 high — Drawables & media → **Inline image insertion**
 - 🔴 high — Drawables & media → **Inline image placement in an indented column**
 - 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
@@ -199,9 +199,9 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Pop-up menu creation (TST.PopUpMenuModel)**
 - 🔴 high — Numbers & tables → **Formula writing (authoring an AST)**
 - 🟠 medium — Numbers & tables → **Add and remove tables on a sheet**
-- 🟠 medium — Numbers & tables → **Chart data editing (values, names, series, categories)**
+- 🟡 low — Numbers & tables → **Chart data editing (values, names, series, categories)**
 - 🟡 low — Numbers & tables → **Chart appearance: type and series colours**
-- 🟠 medium — Numbers & tables → **Chart appearance: axes, legend, gridlines**
+- 🟡 low — Numbers & tables → **Chart appearance: axes, legend, gridlines**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
 - 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**

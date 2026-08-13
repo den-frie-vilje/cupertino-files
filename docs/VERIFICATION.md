@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 21 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 18 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -28,22 +28,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 3 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
 | 4 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
 | 5 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 6 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does, and the app's mask editor opens it | manual |
-| 7 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
-| 8 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
-| 9 | 🟠 medium | Numbers & tables → Chart appearance: axes, legend, gridlines | Pages draws the chart without the gridlines this library switched off. | manual |
-| 10 | 🟠 medium | Numbers & tables → Chart data editing (values, names, series, categories) | a series added or removed here leaves the chart's styling on the right series | manual |
-| 11 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 12 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
-| 13 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 14 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 15 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 16 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 17 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 6 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 7 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
+| 8 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 9 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
+| 10 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 11 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 12 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 13 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 14 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
+| 15 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 16 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 17 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 18 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -107,19 +104,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source
 
-### 6. Image cropping (set, move, remove a mask)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Drawables & media  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a mask this library writes crops the way Apple's does, and the app's mask editor opens it
-
-**Why the suite cannot settle it.** the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page. The editor is the harder half: rendering has been confirmed for three rounds while double-click editing kept refusing, and each round has closed one measured difference (full drawable super, window space, size semantics, traced_path, the modern super with lock pair and stand-in title/caption)
-
-**How to settle it.** open demo-03, confirm the cropped wave shows the stated window, then double-click it: the mask slider appearing is the pass. Reset (nulstil) working while editing refuses means the crop model is accepted and the gate is still open
-
-### 7. Add and remove tables on a sheet
+### 6. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -131,7 +116,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
 
-### 8. Cell display formats (number, currency, percentage, date, duration, text, boolean)
+### 7. Cell display formats (number, currency, percentage, date, duration, text, boolean)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -143,31 +128,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a currency, percentage and date format, open in Numbers, and compare each cell against the same format applied through the Cell inspector on an untouched copy.
 
-### 9. Chart appearance: axes, legend, gridlines
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Pages draws the chart without the gridlines this library switched off.
-
-**Why the suite cannot settle it.** The archives round-trip and copy-on-write correctly, which is the file's side of the story; only the app can say the toggle changes what is drawn rather than being ignored.
-
-**How to settle it.** npm run pages:docs -- &lt;outDir&gt;, open P20-chart-gridlines: the page states its own pass — the column chart should show no horizontal gridlines behind its bars.
-
-### 10. Chart data editing (values, names, series, categories)
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a series added or removed here leaves the chart's styling on the right series
-
-**Why the suite cannot settle it.** styling is applied at render time from arrays indexed by series position; the suite proves the indexes shift, not what the app draws
-
-**How to settle it.** take a chart with distinctly coloured series, remove the middle one, open in the app and confirm the remaining series keep their own colours rather than shifting
-
-### 11. Conditional formatting: apply an existing rule set to more cells
+### 8. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -179,7 +140,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 12. Filters: enable, disable, combining mode
+### 9. Filters: enable, disable, combining mode
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -191,7 +152,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take olekristensen-v26.3-mac-filters.numbers, flip is_enabled off with this library, reopen and confirm all rows show
 
-### 13. Formula function names
+### 10. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -205,7 +166,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 14. Formula reading (AST rendered to text)
+### 11. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -217,7 +178,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 15. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 12. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -229,7 +190,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 16. Table styling (banded rows, grid strokes, visibility)
+### 13. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -241,7 +202,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 17. Drawable shadows (enabled, angle, offset, blur, opacity)
+### 14. Drawable shadows (enabled, angle, offset, blur, opacity)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Drawables & media  
@@ -253,7 +214,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
 
-### 18. Categories: enable or disable grouping
+### 15. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -265,7 +226,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 19. Conditional formatting rules
+### 16. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -277,7 +238,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 17. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -289,7 +250,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 21. Table of contents (rules read + write, cached entries read)
+### 18. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -303,7 +264,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-31 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+34 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -338,6 +299,14 @@ result mean something; what changed is that it is no longer a request.
 
 **Outcome.** **Partly settled, and it found a bug.** Opening an authored document in Pages showed a character style applying its `bold` and ignoring its `font_color` — the word rendered black. Text colour comes from `tsd_fill` (field 46), not `font_color` (7); a style with only the latter is valid, round-trips, and does nothing visible (FORMAT.md). Both are now written, **the fix is confirmed in Pages on a current-format document** — the word renders bold and red — and `test/pages-authored-shape.test.ts` guards the pairing against the fixture corpus. The *_null question in the claim above is still open; what is settled is that an authored colour reaches the page
 
+### ✅ Chart appearance: axes, legend, gridlines
+
+**Was claimed.** Pages draws the chart without the gridlines this library switched off.
+
+**Why it needed an app.** The archives round-trip and copy-on-write correctly, which is the file's side of the story; only the app can say the toggle changes what is drawn rather than being ignored.
+
+**Outcome.** **Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were switched off by the library and the app drew the chart without them, with the library-rewritten data and renamed series drawn as written
+
 ### ✅ Chart appearance: type and series colours
 
 **Was claimed.** a recoloured series shows the new colour, and only in the chart that was edited
@@ -345,6 +314,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the suite proves the archives and declarations are right, not that Numbers draws them
 
 **Outcome.** **Half confirmed in Numbers.** The recoloured series drew red and the chart was otherwise correct — so the clone-and-repoint worked where it is observable: five other series kept their colours despite the shared archive. The cross-chart half is still unobserved, because the only chart fixture here has a single chart, and a copy-on-write that leaks would need a second chart to leak into. Same mechanism, so the risk stays low
+
+### ✅ Chart data editing (values, names, series, categories)
+
+**Was claimed.** a series added or removed here leaves the chart's styling on the right series
+
+**Why it needed an app.** styling is applied at render time from arrays indexed by series position; the suite proves the indexes shift, not what the app draws
+
+**Outcome.** **Confirmed in Pages — demo-04 pass, whole.** Library-rewritten data (two series by four categories), renamed series and categories, all drawn as written in the corpus document's own column chart. The remove-a-middle-series case is untested, but the id map and sparse arrays the demo exercised are the same machinery
 
 ### ✅ Comment creation and removal
 
@@ -401,6 +378,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** a link is a smartfield run plus a URL ref; the field makes it live, the Link style makes it look live, and only the app proves either
 
 **Outcome.** **Click confirmed — "P04 pass" — appearance was not, and is now written.** The linked words were a live hyperlink and did not look like one: every native link run in the corpus is covered by the document's Link character style (identifier `character-style-hyperlink`, name "Link", bag exactly `{underline: 1}`), which every corpus template ships and `insertLink` never applied. It now applies it by default, with `characterStyle: false` to skip and an id or identifier to override; the underlined form is unverified in the app
+
+### ✅ Image cropping (set, move, remove a mask)
+
+**Was claimed.** a mask this library writes crops the way Apple's does, and the app's mask editor opens it
+
+**Why it needed an app.** the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page. The editor is the harder half: rendering has been confirmed for three rounds while double-click editing kept refusing, and each round has closed one measured difference (full drawable super, window space, size semantics, traced_path, the modern super with lock pair and stand-in title/caption)
+
+**Outcome.** **Confirmed in Pages, whole — »der åbnede den!«** The crop renders in both arrangements; the mask editor engages on the floating cropped copy and refuses the in-flow one, which is the app's behavior for images in the text flow, not a property of the file. The crop-delta seed corroborates from the other side: the app's own crop over a library-inserted image produced the same shape setCrop writes, field for field
 
 ### ✅ Inline image insertion
 

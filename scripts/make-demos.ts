@@ -326,8 +326,11 @@ function demoMedia(): Uint8Array {
   const img2 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, men beskåret af biblioteket til midterudsnittet: Fuji ses i midten af udsnittet, og den store bølges klo i venstre side er skåret VÆK. Prøv også at DOBBELTKLIKKE på billedet: maske-værktøjet (skyder og håndtag) skal åbne, så beskæringen kan justeres. Åbner det ikke, men »nulstil masken« virker, er beskæringen accepteret og kun editoren lukket — skriv da hvilken af de to.");
+  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, indsat i TEKSTFLOWET og beskåret af biblioteket til midterudsnittet: Fuji i midten, den store bølges klo skåret VÆK. Forventet for et billede »integreret med tekst«: beskæringen TEGNES, »nulstil masken« virker, men dobbeltklik åbner IKKE maske-værktøjet — det er appens adfærd for integrerede billeder, ikke en fejl. Åbner værktøjet alligevel, så skriv det.");
   const img3 = doc.appendParagraph(" ", "Body");
+  pagesFeedback(doc);
+
+  pagesCheck(doc, check(), "Samme beskæring på en FLYDENDE kopi af bølgen, placeret til højre herunder — den indstilling appens egen beskæring selv producerer. Her SKAL dobbeltklik åbne maske-værktøjet (skyder og håndtag). Åbner det ikke her, ligger forhindringen ikke i ombrydningen, og det er et vigtigt fund.");
   pagesFeedback(doc);
 
   pagesCheck(doc, check(), "En FLYDENDE kopi af Earthrise-fotoet er sat øverst til højre på side 1 (60 % gennemsigtighed, mørk kant og slagskygge). Tekst skal flyde rundt om den.");
@@ -375,6 +378,16 @@ function demoMedia(): Uint8Array {
     copy.setGeometry({ width: 140, height: 70 });
     copy.style()?.set({ opacity: 0.6, stroke: solidStroke({ r: 0.15, g: 0.15, b: 0.15 }, 2) });
     copy.style()?.setShadowEnabled(true);
+  }
+  // The floating cropped wave: the arrangement the app's own crop flow
+  // produces (the crop-delta seed converted to floating when the person
+  // cropped), so the mask editor is expected to engage here where the
+  // in-flow copy above only renders.
+  const croppedSource = doc.store.object(croppedId);
+  if (floating && croppedSource) {
+    const floatCrop = floating.addCopyOf(croppedSource, { x: 330, y: 420 });
+    const model = doc.images().find((image) => image.object.identifier === floatCrop.object.identifier);
+    model?.setCrop({ x: 65, y: 0, width: 130, height: 260 * (645 / 960) });
   }
   return doc.save();
 }
@@ -469,10 +482,10 @@ function demoCells(): Uint8Array {
   table.setCellFormat(row, 3, { kind: "number", decimals: 3 });
   row += 2;
 
-  head(check(), "Flettede celler: C og D i rækken herunder er flettet til én bred celle med centreret tekst.");
+  head(check(), "Flettede celler: C og D i rækken herunder er flettet til én bred celle med CENTRERET tekst.");
   table.mergeCells(row, 2, 1, 2);
   table.setCell(row, 2, "flettet C+D");
-  table.setCellFormatting(row, 2, { verticalAlignment: 1 });
+  table.setCellFormatting(row, 2, { verticalAlignment: 1, horizontalAlignment: "center" });
   row += 2;
 
   head(check(), "Cellestil: C herunder har mørkeblå fyldfarve, luft (padding) og en terrakotta ramme hele vejen rundt.");
