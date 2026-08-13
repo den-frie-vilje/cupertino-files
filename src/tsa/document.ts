@@ -42,7 +42,7 @@ import {
 import { SHARED_REFERENCE_EXTRACTORS } from "./extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
-import { TextStorage } from "../tswp/textstorage.ts";
+import { TextStorage, verifyTextStorageIntegrity } from "../tswp/textstorage.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
@@ -344,6 +344,10 @@ export class IWorkDocument {
     // whose storage changed this session, so loading and re-saving a
     // document costs nothing.
     verifyCellStorageIntegrity(this.store);
+    // Likewise a text storage whose attribute tables place entries where
+    // no app file does — the app repairs those with document-wide style
+    // loss. Scoped to storages edited this session.
+    verifyTextStorageIntegrity(this.store);
     return this.store.save();
   }
 }

@@ -7,6 +7,32 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a tail edit no longer strands run boundaries at `text.length`.
+  Deleting a final terminator kept the closing entries of any
+  character-style run or smart field that ended there — after the edit
+  they sat at exactly the text's length, a position zero of the corpus's
+  2921 storages use, and one the app answers with document-wide style
+  repair (a fifth field report's letterhead lost its title fonts to it;
+  the K02 subtitle incident was the same class from the other side).
+  The table law is now measured and enforced: no entry past the length
+  in any table, none at the length in the character-content tables, the
+  paragraph-family tables' entry at the length only over empty or
+  terminator-ending text. Saving refuses a storage that violates it.
+- `TextStorage.normalizeTail()` — delete a final trailing terminator so
+  the document ends the way typed text does, with every attribute table
+  kept lawful; the safe form of the `deleteRange(len - 1, len)` a
+  build-by-appending flow wants. Corpus-measured: both tail states are
+  the apps' own (15 of 26 bodies end bare, 8 with the terminator, 3
+  empty), and the `endsWithEmptyParagraph` docs now say so instead of
+  calling the terminator universal.
+- `fillPlaceholder` addresses placeholders stably: pass a
+  `placeholders()` entry (its `fieldId` pins the field, span resolved
+  live at the fill) or the bare field id — filling several from one
+  listing lands each in its own field no matter how earlier fills moved
+  the text. Plain `{start, end}` objects keep positional meaning; a
+  spent field id throws instead of editing whatever text now occupies
+  its old offsets.
+
 ## 0.3.0 — 2026-08-13
 
 - Demo-05 (cells and formats) is app-confirmed whole: cell types,

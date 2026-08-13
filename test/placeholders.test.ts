@@ -123,6 +123,60 @@ describe("defining placeholders", () => {
   });
 });
 
+describe("filling addressed by field", () => {
+  /** Three bracketed placeholders on separate lines. */
+  function template(): PagesDocument {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Navn: [navn]", "Body");
+    doc.appendParagraph("Emne: [emne]", "Body");
+    doc.appendParagraph("Dato: [dato]", "Body");
+    for (const needle of ["[navn]", "[emne]", "[dato]"]) {
+      const at = doc.body.text.indexOf(needle);
+      doc.body.defineAsPlaceholder(at, at + needle.length);
+    }
+    return doc;
+  }
+
+  it("fills several from one listing, each landing in its own field", () => {
+    const doc = template();
+    const listing = doc.body.placeholders();
+    expect(listing.length).toBe(3);
+    // Forward order with replacements of different lengths: every entry
+    // after the first has stale offsets, and only the fieldId can say
+    // where its field is now.
+    doc.body.fillPlaceholder(listing[0]!, "Ole Kristensen");
+    doc.body.fillPlaceholder(listing[1]!, "Årsregnskabet");
+    doc.body.fillPlaceholder(listing[2]!, "13. august 2026");
+    expect(doc.body.text).toBe(
+      "Navn: Ole Kristensen\nEmne: Årsregnskabet\nDato: 13. august 2026",
+    );
+    expect(doc.body.placeholders().length).toBe(0);
+  });
+
+  it("a bare field id fills, and a spent one throws instead of editing text", () => {
+    const doc = template();
+    const listing = doc.body.placeholders();
+    doc.body.fillPlaceholder(listing[1]!.fieldId, "Årsregnskabet");
+    expect(doc.body.text.includes("Emne: Årsregnskabet")).toBe(true);
+    const before = doc.body.text;
+    expect(() => doc.body.fillPlaceholder(listing[1]!.fieldId, "igen")).toThrow(
+      /not a placeholder in this storage/,
+    );
+    expect(doc.body.text).toBe(before);
+  });
+
+  it("document-level entries from one snapshot pin their fields across fills", () => {
+    const doc = template();
+    const listing = doc.placeholders();
+    doc.fillPlaceholder(listing[0]!, "Ole Kristensen");
+    doc.fillPlaceholder(listing[2]!, "13. august 2026");
+    doc.fillPlaceholder(listing[1]!, "Årsregnskabet");
+    expect(doc.body.text).toBe(
+      "Navn: Ole Kristensen\nEmne: Årsregnskabet\nDato: 13. august 2026",
+    );
+  });
+});
+
 describe("resolved formatting readers", () => {
   it("characterFormattingAt folds paragraph base and character overlay", () => {
     const doc = PagesDocument.blank();
