@@ -254,6 +254,25 @@ function writeRectanglePath(bezier: RawMessage, width: number, height: number): 
   bezier.setMessage(BezierPathSourceFields.PATH, path);
 }
 
+/**
+ * A bare `TSP.Path` rectangle — the shape `traced_path` carries on 30 of
+ * the corpus's 31 masked Pages images, sized to the image's natural
+ * (source) extent, with the same trailing moveTo as every mask path.
+ */
+export function rectanglePath(width: number, height: number): RawMessage {
+  const path = RawMessage.create();
+  const corners: [number, number, number][] = [
+    [PathElementType.MOVE_TO, 0, 0],
+    [PathElementType.LINE_TO, width, 0],
+    [PathElementType.LINE_TO, width, height],
+    [PathElementType.LINE_TO, 0, height],
+  ];
+  for (const [type, x, y] of corners) path.addMessage(PathFields.ELEMENTS, element(type, x, y));
+  path.addMessage(PathFields.ELEMENTS, element(PathElementType.CLOSE_SUBPATH));
+  path.addMessage(PathFields.ELEMENTS, element(PathElementType.MOVE_TO, 0, 0));
+  return path;
+}
+
 function element(type: number, x?: number, y?: number): RawMessage {
   const message = RawMessage.create();
   message.setVarint(PathElement.TYPE, type);

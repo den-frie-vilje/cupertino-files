@@ -35,6 +35,7 @@ import {
   TSD_TYPE,
 } from "../tsd/schema.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
+import { rectanglePath } from "../tsd/masks.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { imageDimensions } from "../base/imagesize.ts";
@@ -1139,6 +1140,9 @@ export class PagesDocument extends IWorkDocument {
       drawn.setFloat(SizeFields.WIDTH, width);
       drawn.setFloat(SizeFields.HEIGHT, height);
       image.message.setMessage(Image.ORIGINAL_SIZE, drawn);
+      // traced_path: the source-extent rectangle 30 of the corpus's 31
+      // masked Pages images carry, and the mask editor's outline.
+      image.message.setMessage(19, rectanglePath(dims.width, dims.height));
     }
     image.message.setMessage(Image.DATA, makeDataRef(dataId));
     // An image with no style is the same shape as a cell control with no

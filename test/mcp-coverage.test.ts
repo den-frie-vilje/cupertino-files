@@ -20,6 +20,14 @@ const PLUMBING = "plumbing the server performs itself (loading, saving, auto-det
 
 /** Public API that is deliberately not an MCP tool, and why. */
 const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
+  [
+    "PagesDocument.listInThemeStyles",
+    "reached through create_paragraph_style, which lists what it creates; listing an existing style by id is a library-level step",
+  ],
+  [
+    "TableModel.formatTable",
+    "the format_table tool reaches tableStyle().setTable already; this is the same setter surfaced under the name a field report tripped on",
+  ],
   // Loaders and savers — the server's own machinery.
   ["IWorkDocument.open", PLUMBING],
   ["IWorkDocument.save", PLUMBING],
