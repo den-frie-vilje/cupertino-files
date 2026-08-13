@@ -289,7 +289,7 @@ describe("every fixture survives an edit cycle", () => {
     // The one skip is the iWork '09 XML file, which is rejected by design.
     // Exact numbers on purpose — "more than thirty" would hide a fixture
     // quietly becoming uneditable.
-    expect(edited).toBe(46);
+    expect(edited).toBe(47);
     expect(skipped).toEqual(["tika-iwork09-testPages.pages"]);
   });
 

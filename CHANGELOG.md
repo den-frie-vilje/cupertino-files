@@ -7,6 +7,25 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: a copy of a drawable inserted this session owns its children.
+  The clone walk selected from declared references, which refresh only
+  at save, so `addCopyOf` on a fresh image shared the original's
+  title/caption stand-ins (and its mask, had it been cropped) — a state
+  no corpus file shows. Selection now computes references live.
+- Fixed: currency formats reach the app. A currency-formatted record
+  stores cell type 10 with extras 0x802, and the format archive states
+  its full tail (negative style, separator, accounting) — one missing
+  any of it read as the inspector's Automatic.
+- Fixed: `{ kind: "checkbox" }` writes the bare boolean format
+  (`format_type` 1) the corpus's checkbox cells carry; 263 remains
+  readable but drew as Automatic in current Numbers. Bool records carry
+  no extras bits.
+- `TableModel.nameVisible` — `table_name_enabled`, the flag behind
+  whether the app draws the table's name.
+- Fixture: `olekristensen-v26.3-seed-crop-returned.pages` — the app's
+  own crop over a library-inserted image. It matches `setCrop`'s output
+  field for field, confirms the mask editor engages on our images, and
+  shows paste-dedupe sharing one data object between drawables.
 - `TableFormatting` covers the full modern table-style surface: the
   divider flags, the header-border toggle and all sixteen band strokes
   (each on 286 of the corpus's 302 table-style bags). Every key is

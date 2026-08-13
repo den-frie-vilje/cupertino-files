@@ -501,6 +501,48 @@ export class ObjectStore {
   }
 
   /**
+   * The references an object holds *right now*, computed from its message
+   * rather than read from the declarations, which refresh only at save.
+   *
+   * The clone walk needs this: selecting from stale declarations made a
+   * copy of a just-inserted drawable share every owned child the original
+   * had — its title and caption stand-ins, and its mask had it been
+   * cropped — because none of them was declared yet. For an Apple-written
+   * object with no extractor the declarations *are* the truth, exactly as
+   * at save.
+   */
+  currentReferencesOf(obj: IwaObject): bigint[] {
+    const extractor = this.refExtractors.get(obj.type);
+    // An object we created has no history to fall back on: whatever it
+    // references, it references because this library put it there, and
+    // its archive type usually has no extractor. Scanning it is safe
+    // for the same reason it would be unsafe on an Apple archive — we
+    // know exactly what is in it.
+    //
+    // Getting this wrong is not a subtle failure. An undeclared
+    // reference into another component makes Numbers refuse the whole
+    // document as damaged, because external_references is how it
+    // decides which components to load.
+    //
+    // The scan does have one blind spot, and it is the container rule.
+    // A *clone* is not an object this library composed — it arrived
+    // whole, carrying whatever the original carried, including the
+    // `parent` back-edge that Apple writes into every drawable and
+    // declares in none. Left in, copying a grouped image gives the mask
+    // a declaration of the image it masks and each shape a declaration
+    // of its group. Subtracted here rather than by teaching the scan
+    // about supers, because the scan is deliberately shape-blind.
+    if (extractor) return dedupe(extractor(obj.message));
+    if (this.created.has(obj.identifier)) {
+      const container = this.containerParentOf(obj.type, obj.message);
+      return dedupe(
+        referencedIds(obj.message).filter((id) => this.index.has(id) && id !== container),
+      );
+    }
+    return obj.getObjectReferences();
+  }
+
+  /**
    * Serialize the document. Recomputes reference bookkeeping for dirty
    * objects, then rebuilds only the components that changed.
    */
@@ -510,37 +552,8 @@ export class ObjectStore {
     for (const component of this.components) {
       for (const obj of component.objects) {
         if (!obj.isDirty) continue;
-        const extractor = this.refExtractors.get(obj.type);
-        // An object we created has no history to fall back on: whatever it
-        // references, it references because this library put it there, and
-        // its archive type usually has no extractor. Scanning it is safe
-        // for the same reason it would be unsafe on an Apple archive — we
-        // know exactly what is in it.
-        //
-        // Getting this wrong is not a subtle failure. An undeclared
-        // reference into another component makes Numbers refuse the whole
-        // document as damaged, because external_references is how it
-        // decides which components to load.
-        //
-        // The scan does have one blind spot, and it is the container rule.
-        // A *clone* is not an object this library composed — it arrived
-        // whole, carrying whatever the original carried, including the
-        // `parent` back-edge that Apple writes into every drawable and
-        // declares in none. Left in, copying a grouped image gives the mask
-        // a declaration of the image it masks and each shape a declaration
-        // of its group. Subtracted here rather than by teaching the scan
-        // about supers, because the scan is deliberately shape-blind.
-        const container = this.containerParentOf(obj.type, obj.message);
-        const refs = extractor
-          ? dedupe(extractor(obj.message))
-          : this.created.has(obj.identifier)
-            ? dedupe(
-                referencedIds(obj.message).filter(
-                  (id) => this.index.has(id) && id !== container,
-                ),
-              )
-            : undefined;
-        if (!refs) continue;
+        if (!this.refExtractors.has(obj.type) && !this.created.has(obj.identifier)) continue;
+        const refs = this.currentReferencesOf(obj);
         obj.setObjectReferences(refs);
         for (const id of refs) {
           const target = this.index.get(id);

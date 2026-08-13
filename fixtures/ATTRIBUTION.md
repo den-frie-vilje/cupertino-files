@@ -977,6 +977,19 @@ only annotation author string is `cupertino-files`.
   trip: the library-defined placeholder consumed by clicking and typing
   ("Jeg skriver noget"), zero placeholder fields in the resave.
 
+### olekristensen-v26.3-seed-crop-returned.pages
+- 537,381 bytes, md5 `88fff560167af5c5f739c9450667c852`
+- Saved by macOS Pages (format 26.3.1). The crop-delta seed: one
+  library-inserted photo (Hokusai's Great Wave, public domain), cropped in
+  the app with its own mask editor and saved with no other change. The
+  app's crop flow left the original image object anchored, wrote a *new*
+  image beside it — z-ordered, wrap type 2, real page position, generated
+  thumbnail — and the new mask matches this library's `setCrop` output
+  field for field: window in the image's drawn space, parent back-pointer,
+  wrap type 4 with the 12 pt margin, the six-element rectangle path. The
+  file that confirmed the mask editor engages on a library-inserted image
+  and that the authored mask shape is the app's own.
+
 ## Fixture privacy policy
 
 A permissive licence makes a document *redistributable*; it does not make it *appropriate*

@@ -108,6 +108,7 @@ export const TableModelFields = protoFields("TST.TableModelArchive", {
   DEFAULT_ROW_HEIGHT: "default_row_height",
   DEFAULT_COLUMN_WIDTH: "default_column_width",
   REPEATING_HEADER_ROWS: "repeating_header_rows_enabled",
+  TABLE_NAME_ENABLED: "table_name_enabled",
   TABLE_NAME_STYLE: "table_name_style",
   REPEATING_HEADER_COLUMNS: "repeating_header_columns_enabled",
   MERGE_OWNER: "merge_owner",
@@ -553,6 +554,21 @@ export class TableModel {
     this.object.message.setString(TableModelFields.TABLE_NAME, value);
   }
 
+  /**
+   * Whether the app draws the table's name above it.
+   *
+   * `table_name_enabled` — true on 29 corpus tables, absent on 23; a
+   * renamed table with the flag unset keeps its new name in the file and
+   * shows nothing, which reads as the rename having failed.
+   */
+  get nameVisible(): boolean {
+    return this.object.message.getBool(TableModelFields.TABLE_NAME_ENABLED) ?? false;
+  }
+
+  set nameVisible(value: boolean) {
+    this.object.message.setBool(TableModelFields.TABLE_NAME_ENABLED, value);
+  }
+
   get rowCount(): number {
     return this.object.message.getUint(TableModelFields.NUMBER_OF_ROWS) ?? 0;
   }
@@ -719,6 +735,12 @@ export class TableModel {
     const record = CellRecord.decode(existing);
     record.removeAll(FORMAT_FLAGS);
     record.setId(flagForFormat(format), this.internFormat(format));
+    // A currency format changes the cell's *type*: every corpus
+    // currency-formatted record stores type 10, and one left at NUMBER
+    // shows as the inspector's Automatic with the format ignored.
+    if (format.kind === "currency" && record.type === CellType.NUMBER) {
+      record.type = CellType.CURRENCY;
+    }
 
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);

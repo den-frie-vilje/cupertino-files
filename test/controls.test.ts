@@ -399,12 +399,15 @@ describe("controls carry the format that draws them", () => {
       for (const entry of obj.message.getMessages(3)) {
         const format = entry.getMessage(6);
         const type = format?.getUint(1);
-        if (type === 263 || type === 267) {
+        if (type === 1 || type === 267) {
           seen.set(type, [...format!.toBytes()].map((b) => b.toString(16).padStart(2, "0")).join(" "));
         }
       }
     }
-    expect(seen.get(263)).toBe("08 87 02");
+    // The checkbox is a bare boolean format — `{ format_type: 1 }`, the
+    // shape the corpus's thirty checkbox cells carry. The star rating
+    // keeps its unpublished 267 from the borrowed documents.
+    expect(seen.get(1)).toBe("08 01");
     expect(seen.get(267)).toBe("08 8b 02");
   });
 

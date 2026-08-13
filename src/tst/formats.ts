@@ -288,10 +288,13 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
     case FormatType.TEXT:
       return { kind: "text" };
     case FormatType.BOOLEAN: {
-      const out: CellFormat = { kind: "boolean" };
       const yes = message.getString(FormatFields.BOOL_TRUE_STRING);
-      if (yes !== undefined) out.trueString = yes;
       const no = message.getString(FormatFields.BOOL_FALSE_STRING);
+      // A bare boolean format draws the checkbox control; custom
+      // true/false strings make it a worded boolean instead.
+      if (yes === undefined && no === undefined) return { kind: "checkbox" };
+      const out: CellFormat = { kind: "boolean" };
+      if (yes !== undefined) out.trueString = yes;
       if (no !== undefined) out.falseString = no;
       return out;
     }
@@ -351,9 +354,14 @@ export function writeFormat(format: CellFormat): RawMessage {
       m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CURRENCY);
       if (format.code !== undefined) m.setString(FormatFields.CURRENCY_CODE, format.code);
       numeric(format);
-      if (format.accountingStyle !== undefined) {
-        m.setBool(FormatFields.USE_ACCOUNTING_STYLE, format.accountingStyle);
+      // Negative style, separator and accounting are stated even at their
+      // defaults — the app's own currency formats carry all three
+      // ({1,2,3,4,5,6}), and one missing the tail read as Automatic.
+      if (format.negativeStyle === undefined) m.setVarint(FormatFields.NEGATIVE_STYLE, 0);
+      if (format.thousandsSeparator === undefined) {
+        m.setBool(FormatFields.SHOW_THOUSANDS_SEPARATOR, false);
       }
+      m.setBool(FormatFields.USE_ACCOUNTING_STYLE, format.accountingStyle ?? false);
       break;
     case "date":
       m.setVarint(FormatFields.FORMAT_TYPE, FormatType.DATE);
@@ -390,8 +398,14 @@ export function writeFormat(format: CellFormat): RawMessage {
       }
       break;
     case "checkbox":
-      // The whole body, in both documents that have one.
-      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CHECKBOX);
+      // A bare boolean format IS the checkbox in current files: the one
+      // corpus document with checkbox cells (30 of them, 26.0-era) draws
+      // them from `{ format_type: 1 }` and nothing else, and a cell
+      // formatted with 263 showed as the inspector's Automatic with the
+      // word SAND instead of a control. 263 remains readable — the two
+      // borrowed documents that measured it are real files — but it is
+      // no longer what gets written.
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.BOOLEAN);
       break;
     case "starRating":
       m.setVarint(FormatFields.FORMAT_TYPE, FormatType.STAR_RATING);
