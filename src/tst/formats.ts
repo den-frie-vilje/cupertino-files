@@ -398,14 +398,15 @@ export function writeFormat(format: CellFormat): RawMessage {
       }
       break;
     case "checkbox":
-      // A bare boolean format IS the checkbox in current files: the one
-      // corpus document with checkbox cells (30 of them, 26.0-era) draws
-      // them from `{ format_type: 1 }` and nothing else, and a cell
-      // formatted with 263 showed as the inspector's Automatic with the
-      // word SAND instead of a control. 263 remains readable — the two
-      // borrowed documents that measured it are real files — but it is
-      // no longer what gets written.
-      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.BOOLEAN);
+      // 263, as the app itself writes: the checkbox seed's one-delta
+      // toggle produced `{ format_type: 263 }` plus a control-spec entry
+      // (interaction_type 8) and the record's control id — the format
+      // alone, either as 263 or as a bare boolean, showed as the
+      // inspector's Automatic. `setCellFormat` routes checkbox through
+      // the control path for exactly that reason. The one corpus file
+      // with bare `{ format_type: 1 }` bool formats stays readable as a
+      // checkbox.
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CHECKBOX);
       break;
     case "starRating":
       m.setVarint(FormatFields.FORMAT_TYPE, FormatType.STAR_RATING);

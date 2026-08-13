@@ -753,6 +753,23 @@ export class TableModel {
    */
   setCellFormat(row: number, column: number, format: CellFormat): void {
     this.requireWritable();
+    // A checkbox is not a format alone: the app's own toggle writes the
+    // bool format (263), the record's control id, and a control-spec
+    // entry (interaction_type 8) together, and the format without the
+    // control showed as Automatic. Route through the control path, which
+    // writes the format via the core below.
+    if (format.kind === "checkbox") {
+      const current = this.cellValue(row, column);
+      let checked = false;
+      if (current !== undefined && current.type === "bool") checked = current.value;
+      this.setCellControl(row, column, { widget: "checkbox", value: checked });
+      return;
+    }
+    this.writeCellFormat(row, column, format);
+  }
+
+  /** The format write itself, shared by {@link setCellFormat} and the control path. */
+  private writeCellFormat(row: number, column: number, format: CellFormat): void {
     const located = this.locateRow(row);
     if (!located) throw new RangeError(`row ${row} has no cell storage to format`);
     const layout = readRowLayout(located.rowInfo, this.columnCount);
@@ -2550,12 +2567,27 @@ export class TableModel {
     sidecar.message.markDirty();
   }
 
-  /** The table's stroke sidecar, created at the table's size if absent. */
+  /**
+   * The table's stroke sidecar, created if absent — and always brought
+   * to the table's current size. The sidecar declares a grid, and the
+   * app clips runs outside it: a donor's sidecar declaring the donor's
+   * old 2×11 swallowed every run this library wrote at row 12.
+   */
   private ensureStrokeSidecar(): IwaObject | undefined {
     const existing = this.store.resolve(
       refId(this.object.message, TableModelFields.STROKE_SIDECAR),
     );
-    if (existing) return existing;
+    if (existing) {
+      if (
+        existing.message.getUint(StrokeSidecar.COLUMN_COUNT) !== this.columnCount ||
+        existing.message.getUint(StrokeSidecar.ROW_COUNT) !== this.rowCount
+      ) {
+        existing.message.setVarint(StrokeSidecar.COLUMN_COUNT, this.columnCount);
+        existing.message.setVarint(StrokeSidecar.ROW_COUNT, this.rowCount);
+        existing.message.markDirty();
+      }
+      return existing;
+    }
     const component = this.store.componentOf(this.object.identifier);
     if (!component) return undefined;
     const sidecar = this.store.createObject(STROKE_SIDECAR_TYPE, component);
@@ -3109,7 +3141,7 @@ export class TableModel {
               : { kind: "text" }
             : numberFormat;
     if (this.recordAt(row, column)?.id(flagForFormat(format)) !== undefined) return;
-    this.setCellFormat(row, column, format);
+    this.writeCellFormat(row, column, format);
   }
 
   /**

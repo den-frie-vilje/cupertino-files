@@ -411,6 +411,28 @@ describe("controls carry the format that draws them", () => {
     expect(seen.get(267)).toBe("08 8b 02");
   });
 
+  it("matches the app's own checkbox toggle, field for field", () => {
+    // The one-delta seed: a library TRUE cell, toggled to a checkbox in
+    // the app and saved with nothing else changed. Its record carries
+    // the control id, the bool format (263) and extras 0x20 together —
+    // and setCellFormat({kind:"checkbox"}) now routes through the
+    // control path to write the same trio.
+    const returned = NumbersDocument.load(
+      new Uint8Array(readFileSync(new URL("olekristensen-v26.3-seed-checkbox-returned.numbers", FIXTURES))),
+    );
+    const theirs = returned.tables()[0]!.cellControl(2, 2);
+    expect(theirs?.widget).toBe("checkbox");
+
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, true);
+    table.setCellFormat(1, 0, { kind: "checkbox" });
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.cellControl(1, 0)?.widget).toBe("checkbox");
+    expect(reloaded.cellFormat(1, 0)?.kind).toBe("checkbox");
+    expect(reloaded.cellValue(1, 0)?.type).toBe("bool");
+  });
+
   it("leaves a format the caller already chose alone", () => {
     // Choosing a percentage for a stepper must survive attaching it.
     const doc = load();

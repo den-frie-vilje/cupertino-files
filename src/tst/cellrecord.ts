@@ -95,16 +95,17 @@ export const FORMAT_FLAGS =
 /**
  * The 16-bit "extras" word at bytes 6-7 duplicates which format id is
  * present. Readers ignore it, but Apple writes it, so it is kept in
- * step — with the measured values: the dominant single-format words
- * across the corpus are number 0x01, currency 0x802 (1757 of 1966
- * currency records), date 0x08, string 0x80, and bool **nothing** —
- * all 90 bool-formatted records carry 0x0.
+ * step — with the measured values: number 0x01, currency 0x802 (1757
+ * of 1966 corpus currency records), date 0x08, string 0x80, and bool
+ * 0x20 — the app's own checkbox toggle writes it, though one corpus
+ * file's older bool records carry 0x0.
  */
 export const EXTRAS_BY_FLAG: ReadonlyMap<number, number> = new Map([
   [CellFlag.NUM_FORMAT_ID, 0x01],
   [CellFlag.CURRENCY_FORMAT_ID, 0x802],
   [CellFlag.DURATION_FORMAT_ID, 0x04],
   [CellFlag.DATE_FORMAT_ID, 0x08],
+  [CellFlag.BOOL_FORMAT_ID, 0x20],
   [CellFlag.STRING_ID, 0x80],
 ]);
 

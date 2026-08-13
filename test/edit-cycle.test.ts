@@ -289,7 +289,7 @@ describe("every fixture survives an edit cycle", () => {
     // The one skip is the iWork '09 XML file, which is rejected by design.
     // Exact numbers on purpose — "more than thirty" would hide a fixture
     // quietly becoming uneditable.
-    expect(edited).toBe(47);
+    expect(edited).toBe(48);
     expect(skipped).toEqual(["tika-iwork09-testPages.pages"]);
   });
 
@@ -325,9 +325,9 @@ describe("every fixture survives an edit cycle", () => {
       }
       written++;
     }
-    // 17 of the 46 carry a writable v5 table; the rest have no tables at
+    // 18 of the 48 carry a writable v5 table; the rest have no tables at
     // all, or only pre-BNC storage, which reads but does not write.
-    expect(written).toBe(17);
+    expect(written).toBe(18);
   });
 });
 
