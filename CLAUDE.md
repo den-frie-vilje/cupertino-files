@@ -49,6 +49,19 @@ the app, say so plainly, and put it in a `manualProof` block in
 been checked, add `settled:` to that block so the request moves off
 `docs/VERIFICATION.md` and keeps its reasoning.
 
+## Measured numbers in prose
+
+A count stated in README, docs/FORMAT.md or the skill was true the day
+it was written and silently stops being true when the corpus grows.
+Every such number gets an entry in `test/docs-claims.test.ts`, which
+re-measures it against the live fixtures — register the claim when you
+write it, and when the test fails, update the sentence to the number
+the failure names. Generated pages (coverage, verification,
+conformance, tool docs, blanks) are already gated by their own
+`--check` modes, and the site's API reference is rebuilt from the
+docblocks on every deploy; numbers in code docblocks are pinned by the
+invariant tests beside them, not here.
+
 ## Borrowed documents
 
 Measurements from documents that cannot be redistributed live as constants

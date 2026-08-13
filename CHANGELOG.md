@@ -7,6 +7,14 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Prose documentation is drift-gated: every measured number FORMAT.md
+  and the skill state is registered in `test/docs-claims.test.ts` and
+  re-measured against the live fixtures on every run, so the corpus
+  outgrowing a sentence fails the suite naming the file and both
+  numbers. The audit that installed it found FORMAT.md citing the
+  corpus two donations ago (25 IWA Pages fixtures for today's 26, 2896
+  storages for 2921, in four places — all refreshed); the generated
+  pages and the deploy-built API reference were already drift-proof.
 - Fixed: a tail edit no longer strands run boundaries at `text.length`.
   Deleting a final terminator kept the closing entries of any
   character-style run or smart field that ended there — after the edit
