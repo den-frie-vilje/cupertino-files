@@ -7,6 +7,18 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Fixed: editing a shadow this library wrote no longer aborts Pages.
+  Re-enabling demo-11's disabled shadow through the app's own popup
+  crashed the app in TSStyles' assert — the archive rendered but stated
+  six of the seven fields all 929 corpus shadows carry (`type` was
+  missing, the colour named no space), on an override style shaped like
+  no app file's. `writeShadow` now writes the archive whole, completing
+  absent fields from the fresh-shadow defaults, and the copy-on-write
+  clone takes the app's style-one-object shape: anonymous (a kept
+  `style_identifier` puts two styles behind one identifier — zero of
+  the corpus's 18554 identified styles share one), parented on the
+  identified source, and listed in its stylesheet with the reference
+  declared (183 of 183 drawable-referenced corpus styles are).
 - Prose documentation is drift-gated: every measured number FORMAT.md
   and the skill state is registered in `test/docs-claims.test.ts` and
   re-measured against the live fixtures on every run, so the corpus

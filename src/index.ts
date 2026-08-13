@@ -120,6 +120,7 @@ export {
   LineJoin,
   ShadowFields,
   ShadowType,
+  DEFAULT_SHADOW,
   PaddingFields,
 } from "./tsd/style.ts";
 export type {
@@ -137,7 +138,6 @@ export {
   DrawableStyleHandle,
   findDrawableCore,
   drawableStylesOf,
-  DEFAULT_SHADOW,
 } from "./tsd/drawables.ts";
 export type { DrawableStyle } from "./tsd/drawables.ts";
 export { ImageModel, imagesOf, ImageAdjustments } from "./tsd/images.ts";
