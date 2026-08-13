@@ -7,6 +7,21 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- `TableFormatting` covers the full modern table-style surface: the
+  divider flags, the header-border toggle and all sixteen band strokes
+  (each on 286 of the corpus's 302 table-style bags). Every key is
+  three-state — `null` removes the field so the style inherits again.
+- `insertRows`/`insertColumns` inherit the displaced row's or column's
+  cell and text styles as blank-but-styled records, Apple's own shape,
+  with style refcounts kept honest. `TableModel.textStyleId` and
+  `textStyle` join the existing cell-style pair.
+- `PagesDocument.insertInlineTable(pos, options)` clones a table
+  already in the document and anchors it inline at a body position —
+  clone-based like `NumbersDocument.addTable`, with document-unique
+  naming and `withContent: false` for a blank copy.
+- Paragraph `alignment` accepts the names (left/right/center/justified/
+  natural) beside the enum, and rejects anything else at the call —
+  a string there used to surface as a BigInt error inside save.
 - Saving refuses a table whose records reference strings absent from
   its own data list — the state behind "the cloned table reloads
   empty" (field report 4's first-ranked fault, reproduced: two tables

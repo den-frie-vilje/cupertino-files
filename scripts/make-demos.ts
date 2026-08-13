@@ -326,7 +326,7 @@ function demoMedia(): Uint8Array {
   const img2 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, men beskåret af biblioteket til midterudsnittet: Fuji ses i midten af udsnittet, og den store bølges klo i venstre side er skåret VÆK. Ses hele billedet med kloen, ignoreres masken; ses motivet sammentrykt i fuld bredde, skalerer geometrien i stedet for at maskere.");
+  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, men beskåret af biblioteket til midterudsnittet: Fuji ses i midten af udsnittet, og den store bølges klo i venstre side er skåret VÆK. Prøv også at DOBBELTKLIKKE på billedet: maske-værktøjet (skyder og håndtag) skal åbne, så beskæringen kan justeres. Åbner det ikke, men »nulstil masken« virker, er beskæringen accepteret og kun editoren lukket — skriv da hvilken af de to.");
   const img3 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 

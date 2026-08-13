@@ -58,12 +58,21 @@ export const TableStyleProps = protoFields("TST.TableStylePropertiesArchive", {
   TABLE_HEADER_BORDER_VISIBLE: "table_header_border_visible",
   MASTER_FONT_FAMILY: "master_font_family",
   WRITING_DIRECTION: "writing_direction",
+  HEADER_COLUMN_DIVIDER_VISIBLE: "table_hc_divider_visible",
+  HEADER_ROW_DIVIDER_VISIBLE: "table_hr_divider_visible",
+  FOOTER_DIVIDER_VISIBLE: "table_footer_divider_visible",
   HEADER_ROW_SEPARATOR_STROKE: "header_row_separator_stroke",
   HEADER_ROW_BORDER_STROKE: "header_row_border_stroke",
+  HEADER_ROW_HORIZONTAL_STROKE: "header_row_horizontal_stroke",
+  HEADER_ROW_VERTICAL_STROKE: "header_row_vertical_stroke",
   HEADER_COLUMN_BORDER_STROKE: "header_column_border_stroke",
   HEADER_COLUMN_SEPARATOR_STROKE: "header_column_separator_stroke",
+  HEADER_COLUMN_HORIZONTAL_STROKE: "header_column_horizontal_stroke",
+  HEADER_COLUMN_VERTICAL_STROKE: "header_column_vertical_stroke",
   FOOTER_ROW_SEPARATOR_STROKE: "footer_row_separator_stroke",
   FOOTER_ROW_BORDER_STROKE: "footer_row_border_stroke",
+  FOOTER_ROW_HORIZONTAL_STROKE: "footer_row_horizontal_stroke",
+  FOOTER_ROW_VERTICAL_STROKE: "footer_row_vertical_stroke",
   BODY_HORIZONTAL_BORDER_STROKE: "table_body_horizontal_border_stroke",
   BODY_VERTICAL_BORDER_STROKE: "table_body_vertical_border_stroke",
   BODY_HORIZONTAL_STROKE: "table_body_horizontal_stroke",
@@ -97,16 +106,32 @@ export interface CellFormatting {
   textWrap?: boolean;
 }
 
+/**
+ * Table-level formatting, mirroring `TST.TableStylePropertiesArchive`.
+ *
+ * Every key is three-state: a value sets the field, `undefined` leaves it
+ * as it is, and `null` removes it so the style inherits again — absent is
+ * not false, and a bag that never states a field defers to its parent.
+ * The divider flags and every band stroke here are corpus-standard: 286
+ * of 302 table-style bags carry each of them.
+ */
 export interface TableFormatting {
-  bandedRows?: boolean;
-  bandedFill?: Fill;
+  bandedRows?: boolean | null;
+  bandedFill?: Fill | null;
   /** Show the vertical grid lines of the table body. */
-  verticalStrokesVisible?: boolean;
-  horizontalStrokesVisible?: boolean;
-  tableBorderVisible?: boolean;
-  headerRowSeparatorVisible?: boolean;
-  headerColumnSeparatorVisible?: boolean;
-  footerSeparatorVisible?: boolean;
+  verticalStrokesVisible?: boolean | null;
+  horizontalStrokesVisible?: boolean | null;
+  tableBorderVisible?: boolean | null;
+  /** Border around the header bands, the inspector's second outline toggle. */
+  tableHeaderBorderVisible?: boolean | null;
+  headerRowSeparatorVisible?: boolean | null;
+  headerColumnSeparatorVisible?: boolean | null;
+  footerSeparatorVisible?: boolean | null;
+  /** The divider between header columns and body. */
+  headerColumnDividerVisible?: boolean | null;
+  /** The divider between header rows and body. */
+  headerRowDividerVisible?: boolean | null;
+  footerDividerVisible?: boolean | null;
   /** Grid line drawn between body rows. */
   bodyHorizontalStroke?: Stroke | null;
   /** Grid line drawn between body columns. */
@@ -114,9 +139,56 @@ export interface TableFormatting {
   /** Outer border of the table body. */
   bodyBorderStroke?: Stroke | null;
   headerRowSeparatorStroke?: Stroke | null;
-  behavesLikeSpreadsheet?: boolean;
-  autoResize?: boolean;
+  headerRowBorderStroke?: Stroke | null;
+  headerRowHorizontalStroke?: Stroke | null;
+  headerRowVerticalStroke?: Stroke | null;
+  headerColumnBorderStroke?: Stroke | null;
+  headerColumnSeparatorStroke?: Stroke | null;
+  headerColumnHorizontalStroke?: Stroke | null;
+  headerColumnVerticalStroke?: Stroke | null;
+  footerRowSeparatorStroke?: Stroke | null;
+  footerRowBorderStroke?: Stroke | null;
+  footerRowHorizontalStroke?: Stroke | null;
+  footerRowVerticalStroke?: Stroke | null;
+  behavesLikeSpreadsheet?: boolean | null;
+  autoResize?: boolean | null;
 }
+
+/** The boolean keys of {@link TableFormatting}, with their fields. */
+const TABLE_BOOL_FIELDS = [
+  ["bandedRows", TableStyleProps.BANDED_ROWS],
+  ["verticalStrokesVisible", TableStyleProps.VERTICAL_STROKES_VISIBLE],
+  ["horizontalStrokesVisible", TableStyleProps.HORIZONTAL_STROKES_VISIBLE],
+  ["tableBorderVisible", TableStyleProps.TABLE_BORDER_VISIBLE],
+  ["tableHeaderBorderVisible", TableStyleProps.TABLE_HEADER_BORDER_VISIBLE],
+  ["headerRowSeparatorVisible", TableStyleProps.HEADER_ROW_SEPARATOR_VISIBLE],
+  ["headerColumnSeparatorVisible", TableStyleProps.HEADER_COLUMN_SEPARATOR_VISIBLE],
+  ["footerSeparatorVisible", TableStyleProps.FOOTER_SEPARATOR_VISIBLE],
+  ["headerColumnDividerVisible", TableStyleProps.HEADER_COLUMN_DIVIDER_VISIBLE],
+  ["headerRowDividerVisible", TableStyleProps.HEADER_ROW_DIVIDER_VISIBLE],
+  ["footerDividerVisible", TableStyleProps.FOOTER_DIVIDER_VISIBLE],
+  ["behavesLikeSpreadsheet", TableStyleProps.BEHAVES_LIKE_SPREADSHEET],
+  ["autoResize", TableStyleProps.AUTO_RESIZE],
+] as const;
+
+/** The stroke keys of {@link TableFormatting}, with their fields. */
+const TABLE_STROKE_FIELDS = [
+  ["bodyHorizontalStroke", TableStyleProps.BODY_HORIZONTAL_STROKE],
+  ["bodyVerticalStroke", TableStyleProps.BODY_VERTICAL_STROKE],
+  ["bodyBorderStroke", TableStyleProps.BODY_HORIZONTAL_BORDER_STROKE],
+  ["headerRowSeparatorStroke", TableStyleProps.HEADER_ROW_SEPARATOR_STROKE],
+  ["headerRowBorderStroke", TableStyleProps.HEADER_ROW_BORDER_STROKE],
+  ["headerRowHorizontalStroke", TableStyleProps.HEADER_ROW_HORIZONTAL_STROKE],
+  ["headerRowVerticalStroke", TableStyleProps.HEADER_ROW_VERTICAL_STROKE],
+  ["headerColumnBorderStroke", TableStyleProps.HEADER_COLUMN_BORDER_STROKE],
+  ["headerColumnSeparatorStroke", TableStyleProps.HEADER_COLUMN_SEPARATOR_STROKE],
+  ["headerColumnHorizontalStroke", TableStyleProps.HEADER_COLUMN_HORIZONTAL_STROKE],
+  ["headerColumnVerticalStroke", TableStyleProps.HEADER_COLUMN_VERTICAL_STROKE],
+  ["footerRowSeparatorStroke", TableStyleProps.FOOTER_ROW_SEPARATOR_STROKE],
+  ["footerRowBorderStroke", TableStyleProps.FOOTER_ROW_BORDER_STROKE],
+  ["footerRowHorizontalStroke", TableStyleProps.FOOTER_ROW_HORIZONTAL_STROKE],
+  ["footerRowVerticalStroke", TableStyleProps.FOOTER_ROW_VERTICAL_STROKE],
+] as const;
 
 // ------------------------------------------------------------- cell styles
 
@@ -179,59 +251,36 @@ export function allBorders(stroke: Stroke | null): CellFormatting["borders"] {
 export function readTableFormatting(props: RawMessage | undefined): TableFormatting {
   const out: TableFormatting = {};
   if (!props) return out;
-  for (const [key, field] of [
-    ["bandedRows", TableStyleProps.BANDED_ROWS],
-    ["verticalStrokesVisible", TableStyleProps.VERTICAL_STROKES_VISIBLE],
-    ["horizontalStrokesVisible", TableStyleProps.HORIZONTAL_STROKES_VISIBLE],
-    ["tableBorderVisible", TableStyleProps.TABLE_BORDER_VISIBLE],
-    ["headerRowSeparatorVisible", TableStyleProps.HEADER_ROW_SEPARATOR_VISIBLE],
-    ["headerColumnSeparatorVisible", TableStyleProps.HEADER_COLUMN_SEPARATOR_VISIBLE],
-    ["footerSeparatorVisible", TableStyleProps.FOOTER_SEPARATOR_VISIBLE],
-    ["behavesLikeSpreadsheet", TableStyleProps.BEHAVES_LIKE_SPREADSHEET],
-    ["autoResize", TableStyleProps.AUTO_RESIZE],
-  ] as const) {
+  for (const [key, field] of TABLE_BOOL_FIELDS) {
     const value = props.getBool(field);
     if (value !== undefined) out[key] = value;
   }
   const banded = readFill(props.getMessage(TableStyleProps.BANDED_FILL));
   if (banded) out.bandedFill = banded;
-  for (const [key, field] of [
-    ["bodyHorizontalStroke", TableStyleProps.BODY_HORIZONTAL_STROKE],
-    ["bodyVerticalStroke", TableStyleProps.BODY_VERTICAL_STROKE],
-    ["bodyBorderStroke", TableStyleProps.BODY_HORIZONTAL_BORDER_STROKE],
-    ["headerRowSeparatorStroke", TableStyleProps.HEADER_ROW_SEPARATOR_STROKE],
-  ] as const) {
+  for (const [key, field] of TABLE_STROKE_FIELDS) {
     const stroke = readStroke(props.getMessage(field));
     if (stroke) out[key] = stroke;
   }
   return out;
 }
 
-/** Merge table formatting into a property bag, preserving unmodelled fields. */
+/**
+ * Merge table formatting into a property bag, preserving unmodelled
+ * fields. `null` removes a field — the style inherits again — and
+ * `undefined` leaves it alone; absent has never meant false here.
+ */
 export function applyTableFormatting(props: RawMessage, f: TableFormatting): void {
-  for (const [key, field] of [
-    ["bandedRows", TableStyleProps.BANDED_ROWS],
-    ["verticalStrokesVisible", TableStyleProps.VERTICAL_STROKES_VISIBLE],
-    ["horizontalStrokesVisible", TableStyleProps.HORIZONTAL_STROKES_VISIBLE],
-    ["tableBorderVisible", TableStyleProps.TABLE_BORDER_VISIBLE],
-    ["headerRowSeparatorVisible", TableStyleProps.HEADER_ROW_SEPARATOR_VISIBLE],
-    ["headerColumnSeparatorVisible", TableStyleProps.HEADER_COLUMN_SEPARATOR_VISIBLE],
-    ["footerSeparatorVisible", TableStyleProps.FOOTER_SEPARATOR_VISIBLE],
-    ["behavesLikeSpreadsheet", TableStyleProps.BEHAVES_LIKE_SPREADSHEET],
-    ["autoResize", TableStyleProps.AUTO_RESIZE],
-  ] as const) {
+  for (const [key, field] of TABLE_BOOL_FIELDS) {
     const value = f[key];
-    if (value !== undefined) props.setBool(field, value);
+    if (value === undefined) continue;
+    if (value === null) props.remove(field);
+    else props.setBool(field, value);
   }
   if (f.bandedFill !== undefined) {
-    props.setMessage(TableStyleProps.BANDED_FILL, writeFill(f.bandedFill));
+    if (f.bandedFill === null) props.remove(TableStyleProps.BANDED_FILL);
+    else props.setMessage(TableStyleProps.BANDED_FILL, writeFill(f.bandedFill));
   }
-  for (const [key, field] of [
-    ["bodyHorizontalStroke", TableStyleProps.BODY_HORIZONTAL_STROKE],
-    ["bodyVerticalStroke", TableStyleProps.BODY_VERTICAL_STROKE],
-    ["bodyBorderStroke", TableStyleProps.BODY_HORIZONTAL_BORDER_STROKE],
-    ["headerRowSeparatorStroke", TableStyleProps.HEADER_ROW_SEPARATOR_STROKE],
-  ] as const) {
+  for (const [key, field] of TABLE_STROKE_FIELDS) {
     const stroke = f[key];
     if (stroke === undefined) continue;
     if (stroke === null) props.remove(field);

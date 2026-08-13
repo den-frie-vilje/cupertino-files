@@ -575,6 +575,41 @@ describe("table styling", () => {
     expect(style.bodyHorizontalStroke?.width).toBe(0.5);
   });
 
+  it("edits divider visibility and the band border strokes", () => {
+    // The field report's missing keys: the header/footer divider flags
+    // (42/43/44) and the modern band strokes (46…) — carried by 286 of
+    // the corpus's 302 table-style bags.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    table.tableStyle()!.setTable({
+      headerRowDividerVisible: false,
+      headerColumnDividerVisible: true,
+      footerDividerVisible: false,
+      tableHeaderBorderVisible: true,
+      headerRowBorderStroke: solidStroke({ r: 0.2, g: 0.2, b: 0.2 }, 2),
+      footerRowSeparatorStroke: solidStroke({ r: 0.8, g: 0, b: 0 }, 1),
+    });
+    const style = NumbersDocument.load(doc.save()).tables()[0]!.tableStyle()!.table();
+    expect(style.headerRowDividerVisible).toBe(false);
+    expect(style.headerColumnDividerVisible).toBe(true);
+    expect(style.footerDividerVisible).toBe(false);
+    expect(style.tableHeaderBorderVisible).toBe(true);
+    expect(style.headerRowBorderStroke?.width).toBe(2);
+    expect(style.footerRowSeparatorStroke?.width).toBe(1);
+  });
+
+  it("null removes a field so the style inherits again", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const handle = table.tableStyle()!;
+    handle.setTable({ bandedRows: true, bandedFill: colorFill(0.9, 0.9, 0.9) });
+    expect(handle.table().bandedRows).toBe(true);
+    handle.setTable({ bandedRows: null, bandedFill: null });
+    // Absent is not false: the key disappears rather than flipping.
+    expect("bandedRows" in handle.table()).toBe(false);
+    expect("bandedFill" in handle.table()).toBe(false);
+  });
+
   it("exposes the per-band cell styles the themes ship", () => {
     const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
     const table = doc.tables()[0]!;
@@ -1371,6 +1406,82 @@ describe("tables() is document order", () => {
       .map((a) => a.drawableId);
     expect(anchored.length).toBe(3);
     expect(doc.tables().map((t) => t.infoObject?.identifier)).toEqual(anchored);
+  });
+});
+
+describe("Pages inline table insertion", () => {
+  it("clones a donor, anchors it in the text, and the copy is independent", () => {
+    const doc = PagesDocument.load(
+      new Uint8Array(readFileSync(new URL("picodocs-v14.4-headers-tables.pages", FIXTURES))),
+    );
+    const countBefore = doc.tables().length;
+    const sourceName = doc.tables()[0]!.name;
+    const pos = doc.body.text.length;
+    const added = doc.insertInlineTable(pos, { name: "Ny tabel", withContent: false });
+    added.setCell(1, 0, "egen celle");
+
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.tables().length).toBe(countBefore + 1);
+    const found = reloaded.tables().find((t) => t.name === "Ny tabel")!;
+    expect(found.cellText(1, 0)).toBe("egen celle");
+    // The donor kept its content and its name.
+    expect(reloaded.tables()[0]!.name).toBe(sourceName);
+    // Anchored: an attachment resolves to the new info, in text order last.
+    const anchors = reloaded.body
+      .attachments()
+      .filter((a) => a.drawableId !== undefined && reloaded.store.object(a.drawableId)?.type === 6000);
+    expect(anchors.length).toBe(countBefore + 1);
+    expect(reloaded.tables().map((t) => t.name).at(-1)).toBe("Ny tabel");
+  });
+
+  it("throws without a donor rather than inventing a table", () => {
+    const doc = PagesDocument.blank();
+    expect(() => doc.insertInlineTable(0)).toThrow(/no table to copy/);
+  });
+});
+
+describe("inserted rows and columns inherit band styling", () => {
+  it("a new row's cells carry the displaced row's style ids", () => {
+    // Apple's own shape: a blank-but-styled record — 2043 of the
+    // corpus's 2275 empty records carry a text style. Without it an
+    // inserted row loses the band's look, which is the field report's
+    // "insertRows does not inherit style" finding.
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const row = 2;
+    const sourceText = table.textStyleId(row, 0);
+    const sourceCell = table.cellStyleId(row, 0);
+    expect(sourceText !== undefined || sourceCell !== undefined).toBe(true);
+
+    table.insertRows(row, 1);
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.cellText(row, 0)).toBe("");
+    expect(reloaded.textStyleId(row, 0)).toBe(sourceText);
+    expect(reloaded.cellStyleId(row, 0)).toBe(sourceCell);
+    // The displaced row moved down intact.
+    expect(reloaded.textStyleId(row + 1, 0)).toBe(sourceText);
+  });
+
+  it("a new column inherits per row, and the style refcounts hold up", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const column = 1;
+    const sourceHeader = table.textStyleId(0, column);
+    table.insertColumns(column, 1);
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.textStyleId(0, column)).toBe(sourceHeader);
+    // Deleting the inserted column releases only its own references; the
+    // original column keeps its styles.
+    reloaded.deleteColumns(column, 1);
+    const again = NumbersDocument.load(reloaded.store.save()).tables()[0]!;
+    expect(again.textStyleId(0, column)).toBe(sourceHeader);
+  });
+
+  it("textStyle resolves to the same handle currency as cellStyle", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
+    const table = doc.tables()[0]!;
+    const handle = table.textStyle(0, 0);
+    expect(handle !== undefined).toBe(true);
   });
 });
 

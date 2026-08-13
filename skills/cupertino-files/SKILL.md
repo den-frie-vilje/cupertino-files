@@ -73,6 +73,9 @@ doc.isPageLayout;               // true ⇒ no body text flow; use textBoxes()
 doc.bodyText;                   // plain text; paragraphs end with \n, inline objects are U+FFFC
 doc.bodyOrUndefined;            // undefined for page-layout documents
 doc.paragraphs();               // [{ index, start, end, text, styleId, styleName }]
+doc.paragraph(n).styleName;     // named style of paragraph n, resolved through the
+                                // parent chain — direct formatting does not hide it
+                                // (.hasDirectFormatting says whether any is applied)
 doc.paragraphStyles();          // named styles: [{ id, name, identifier, parentId }]
 doc.listStyles();               // named list styles ("Bullet", "Numbered", "None", …)
 doc.sections();                 // [{ index, start, end, name, pageNumberStart, ... }]
@@ -360,6 +363,13 @@ solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1pt solid border
 ```
 
 ## Tables
+
+`doc.tables()` is document order on both apps — Numbers walks sheets in
+tab order, Pages the body's anchors by text position — so `tables()[0]`
+is the first table on the page even right after an `addTable`/
+`insertInlineTable`. Saving verifies every changed table's records
+resolve in its own data lists and refuses the file otherwise, naming
+the table and cells (`orphanReferences()` is the diagnostic behind it).
 
 ```ts
 const tables = doc.tables();                 // any app; numbersDoc.tables(sheetId) scopes to a sheet
@@ -787,6 +797,18 @@ changes nothing. Width and height are honoured. To fill the page's full
 measure rather than the text column, size to
 `pageWidth - leftMargin - rightMargin`.
 
+An inline picture is capped by the column it rides in: give it the full-
+measure width inside an indented paragraph and the app scales it back
+down to the column. The full-bleed recipe is a paragraph of its own with
+negative indents cancelling the body's, and the picture inside that:
+
+```ts
+doc.appendParagraph("", "Body");
+const p = doc.paragraphs().at(-1)!;
+doc.paragraph(p.index).range().formatParagraphs({ leftIndent: -56.7, firstLineIndent: -56.7 });
+doc.insertInlineImage(p.start, bytes, { fileName: "plate.png", width: fullMeasure });
+```
+
 ## Cropping images
 
 Cropping in iWork does not touch the media: the image keeps its full extent
@@ -910,3 +932,17 @@ CLI equivalents (after `npm i -g cupertino-files` or via npx):
    anything that matters. (Paragraph border positions are settled:
    measured logical — 4 leading, 8 trailing, swapping visual sides with
    the writing direction.)
+8. **Proto first.** When something cannot be deduced from diffing
+   documents, read `proto/current/*.proto` before guessing — a plain
+   text search there has settled field names, types and defaults that
+   hours of byte-diffing could not: what a mask's `pathsource` union
+   holds, that `traced_path` is a bare `TSP.Path`, which archive a
+   settings field belongs to. The schemas ship in the package; the
+   library's own field numbers resolve from them at build time
+   (`src/proto/vendored.ts`), so a name found there is a name the code
+   can use.
+9. Style-property bags are three-state. A field can be set, absent
+   (inherit from the parent style), or removed; absent never means
+   false. `applyTableFormatting` and friends take `null` to remove a
+   field and `undefined` to leave it alone — pass `false` only to
+   *store* false.

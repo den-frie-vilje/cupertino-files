@@ -36,6 +36,7 @@ import {
 } from "../tsd/schema.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
+import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { rectanglePath } from "../tsd/masks.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -1232,6 +1233,85 @@ export class PagesDocument extends IWorkDocument {
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
 
     return { imageId: image.identifier, dataId };
+  }
+
+  /**
+   * Insert a table inline at a body-text position, cloned from a table
+   * already in the document.
+   *
+   * Clone-based like `NumbersDocument.addTable`, because a table's object
+   * graph — model, data store, tiles, data lists, per-band styles — is
+   * far beyond what can be invented safely; every identity in the copy
+   * comes from an Apple-authored source. A document with no table has
+   * nothing to clone, and throws. The copy forks its data lists (the
+   * clone walk follows the whole table subtree), so filling it never
+   * touches the source — the save-time integrity gate would refuse the
+   * file if it did.
+   *
+   * The anchoring is the measured inline-table shape: the info's
+   * `parent` is the body storage, its geometry sits at the origin with
+   * the standard flags, and a five-field attachment ties it to a U+FFFC
+   * character.
+   */
+  insertInlineTable(
+    pos: number,
+    options: { copyOf?: bigint; name?: string; withContent?: boolean } = {},
+  ): TableModel {
+    const body = this.body;
+    const component = this.store.componentOf(body.id);
+    if (!component) throw new RangeError("body component not found");
+    const sourceId =
+      options.copyOf ?? this.tables().find((t) => t.infoObject !== undefined)?.infoObject?.identifier;
+    if (sourceId === undefined) {
+      throw new RangeError(
+        "no table to copy: this document contains none, and building one from nothing is not supported",
+      );
+    }
+    const source = this.store.object(sourceId);
+    if (source?.type !== TST_TYPE.TABLE_INFO) {
+      throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
+    }
+
+    const { clone } = deepCloneObject(this.store, source, {
+      component,
+      follow: (candidate, depth) =>
+        defaultFollow(candidate, this.store.typeNameOf(candidate)) && depth <= 8,
+    });
+    const core = findDrawableCore(clone.message);
+    if (core) {
+      core.setMessage(Drawable.PARENT, makeRef(body.id));
+      clone.message.markDirty();
+    }
+
+    const model = tablesOf(this.store, [clone.identifier])[0];
+    if (!model) throw new RangeError(`copied table ${clone.identifier} did not resolve`);
+    model.name = this.uniqueTableName(options.name, clone.identifier);
+    if (options.withContent === false) model.clearAllCells();
+
+    const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
+    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(clone.identifier));
+    attachment.message.setVarint(DrawableAttachment.H_OFFSET_TYPE, 0);
+    attachment.message.setFloat(DrawableAttachment.H_OFFSET, 0);
+    attachment.message.setVarint(DrawableAttachment.V_OFFSET_TYPE, 0);
+    attachment.message.setFloat(DrawableAttachment.V_OFFSET, 0);
+    body.insertAttachment(pos, attachment.identifier);
+    return model;
+  }
+
+  /** A table name no other table in the document uses. */
+  private uniqueTableName(preferred: string | undefined, exclude: bigint): string {
+    const used = new Set(
+      this.tables()
+        .filter((table) => table.infoObject?.identifier !== exclude)
+        .map((table) => table.name)
+        .filter((name): name is string => name !== undefined),
+    );
+    const base = preferred ?? "Table";
+    if (!used.has(base)) return base;
+    for (let n = 2; ; n++) {
+      const candidate = `${base} ${n}`;
+      if (!used.has(candidate)) return candidate;
+    }
   }
 }
 

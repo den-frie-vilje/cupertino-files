@@ -283,6 +283,28 @@ describe("character and paragraph formatting", () => {
     expect(paragraph.tabs![2]!.position).toBe(432);
   });
 
+  it("alignment accepts the name and rejects garbage at the call", () => {
+    // A string where the enum belongs used to surface as a BigInt
+    // conversion error deep inside save — the field report's "writes
+    // nothing" experience. Names resolve; anything else fails naming
+    // the parameter.
+    const doc = PagesDocument.blank();
+    const sheet = doc.stylesheets()[0]!;
+    const id = sheet.createParagraphStyle({ name: "Centreret", paragraph: { alignment: "center" } });
+    const reloaded = PagesDocument.load(doc.save());
+    const style = reloaded
+      .stylesheets()
+      .map((s) => s.style(id))
+      .find((s) => s !== undefined)!;
+    expect(style.paragraph().alignment).toBe(2);
+    expect(() =>
+      sheet.createParagraphStyle({ name: "X", paragraph: { alignment: "centre" as never } }),
+    ).toThrow(/unknown alignment/);
+    expect(() =>
+      sheet.createParagraphStyle({ name: "Y", paragraph: { alignment: 9 as never } }),
+    ).toThrow(/not a TextAlignment/);
+  });
+
   it("border_positions is the measured bitmask, not the refuted enum", () => {
     // 1 top, 2 bottom, 4 leading, 8 trailing — unions literal. The side
     // bits are logical: they swap visual sides in an RTL paragraph, so
