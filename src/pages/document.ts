@@ -1125,14 +1125,20 @@ export class PagesDocument extends IWorkDocument {
     drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap(wrap));
     image.message.setMessage(Image.SUPER, drawable);
     if (dims) {
+      // Both sizes are on 83 of 83 corpus images, and they answer
+      // different questions: `naturalSize` is the source's own extent
+      // (pixels, or a PDF's points), `originalSize` the uncropped
+      // drawn frame in parent points — the frame the mask editor
+      // exposes. Writing pixels into both wrapped a source-sized claim
+      // around a scaled geometry, and the editor refused the mask.
       const natural = RawMessage.create();
       natural.setFloat(SizeFields.WIDTH, dims.width);
       natural.setFloat(SizeFields.HEIGHT, dims.height);
-      image.message.setMessage(Image.ORIGINAL_SIZE, natural);
-      // `naturalSize` as well as `originalSize`: both are on 83 of 83
-      // corpus images, and they are different questions — what the file
-      // holds against what the layout should treat as unscaled.
-      image.message.setMessage(Image.NATURAL_SIZE, RawMessage.parse(natural.toBytes()));
+      image.message.setMessage(Image.NATURAL_SIZE, natural);
+      const drawn = RawMessage.create();
+      drawn.setFloat(SizeFields.WIDTH, width);
+      drawn.setFloat(SizeFields.HEIGHT, height);
+      image.message.setMessage(Image.ORIGINAL_SIZE, drawn);
     }
     image.message.setMessage(Image.DATA, makeDataRef(dataId));
     // An image with no style is the same shape as a cell control with no
