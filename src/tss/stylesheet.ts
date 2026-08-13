@@ -102,9 +102,12 @@ export interface TabStop {
   leader?: string;
 }
 
+/** Alignment by name, for callers not working from the enum. */
+export type TextAlignmentName = "left" | "right" | "center" | "justified" | "natural";
+
 export interface ParagraphFormatting {
-  /** 0 left, 1 right, 2 center, 3 justified, 4 natural. */
-  alignment?: TextAlignment;
+  /** 0 left, 1 right, 2 center, 3 justified, 4 natural — or the name. */
+  alignment?: TextAlignment | TextAlignmentName;
   spaceBefore?: number;
   spaceAfter?: number;
   firstLineIndent?: number;
@@ -708,8 +711,33 @@ export function readCharacterProperties(m: RawMessage | undefined): CharacterFor
  * paragraph means — while a bag that already states its own first line
  * keeps it, hanging indents included.
  */
+const ALIGNMENT_BY_NAME: Record<TextAlignmentName, TextAlignment> = {
+  left: TextAlignment.LEFT,
+  right: TextAlignment.RIGHT,
+  center: TextAlignment.CENTER,
+  justified: TextAlignment.JUSTIFIED,
+  natural: TextAlignment.NATURAL,
+};
+
+/** The enum value behind an alignment given either way, or a plain error. */
+function resolveAlignment(value: TextAlignment | TextAlignmentName): number {
+  if (typeof value === "string") {
+    const resolved = ALIGNMENT_BY_NAME[value];
+    if (resolved === undefined) {
+      throw new RangeError(
+        `unknown alignment ${JSON.stringify(value)}; use ${Object.keys(ALIGNMENT_BY_NAME).join("/")} or a TextAlignment value`,
+      );
+    }
+    return resolved;
+  }
+  if (!Number.isInteger(value) || value < 0 || value > 4) {
+    throw new RangeError(`alignment ${value} is not a TextAlignment (0-4) or a name`);
+  }
+  return value;
+}
+
 export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting): void {
-  if (f.alignment !== undefined) m.setVarint(ParaProps.ALIGNMENT, f.alignment);
+  if (f.alignment !== undefined) m.setVarint(ParaProps.ALIGNMENT, resolveAlignment(f.alignment));
   for (const [key, field] of [
     ["spaceBefore", ParaProps.SPACE_BEFORE],
     ["spaceAfter", ParaProps.SPACE_AFTER],

@@ -36,6 +36,18 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "TableModel.orphanReferences",
     "a diagnostic the save gate runs itself; agents meet it as the save error, not as a tool",
   ],
+  [
+    "PagesDocument.insertInlineTable",
+    "inline anchoring takes a body position, which the tool surface does not model yet — the same gap that keeps insertInlineImage library-level",
+  ],
+  [
+    "TableModel.textStyleId",
+    "read surface the inspect tools compose over; the style-table key is a library-level currency",
+  ],
+  [
+    "TableModel.textStyle",
+    "read surface the inspect tools compose over, resolving textStyleId to a handle",
+  ],
   // Loaders and savers — the server's own machinery.
   ["IWorkDocument.open", PLUMBING],
   ["IWorkDocument.save", PLUMBING],

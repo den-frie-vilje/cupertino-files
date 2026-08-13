@@ -915,6 +915,23 @@ export class TableModel {
   }
 
   /**
+   * `text_style_id` of a cell, if its record carries one — the style-table
+   * key, same currency as {@link cellStyleId}. {@link textStyle} resolves
+   * it to a handle.
+   */
+  textStyleId(row: number, column: number): number | undefined {
+    return this.recordAt(row, column)?.id(CellFlag.TEXT_STYLE_ID);
+  }
+
+  /** The `TSWP.CharacterStyleArchive` behind a cell's text, as a handle. */
+  textStyle(row: number, column: number): TableStyleHandle | undefined {
+    const key = this.textStyleId(row, column);
+    if (key === undefined) return undefined;
+    const obj = this.store.resolve(this.styleTableEntry(key));
+    return obj ? new TableStyleHandle(this.store, obj) : undefined;
+  }
+
+  /**
    * Every formula cell in the table, with its rendered text.
    *
    * Walks the row records for a formula id rather than going through
@@ -1940,17 +1957,52 @@ export class TableModel {
       throw new RangeError(`cannot insert at row ${at}: table has ${this.rowCount} rows`);
     }
     const rows = this.snapshotRows();
+    const template = rows[Math.min(at, rows.length - 1)];
     const blank = (): RowSnapshot => ({
-      records: new Array<Uint8Array | undefined>(this.columnCount).fill(undefined),
-      // A new row inherits the height of the one it displaces, so inserting
-      // into a table with sized rows does not leave a differently-sized gap.
-      height: rows[Math.min(at, rows.length - 1)]?.height ?? 0,
+      // A new cell inherits the displaced row's cell and text styles the
+      // way it inherits its height: a blank-but-styled record is Apple's
+      // own shape — 2043 of the corpus's 2275 empty records carry a text
+      // style — and without it an inserted row loses the band's look.
+      records: Array.from({ length: this.columnCount }, (_, column) =>
+        this.inheritedBlankRecord(template?.records[column]),
+      ),
+      height: template?.height ?? 0,
       hidden: 0,
     });
     rows.splice(at, 0, ...Array.from({ length: count }, blank));
     this.rewriteRows(rows);
     this.spliceUidMap("rows", at, 0, count);
     this.shiftMergesForRows(at, count);
+  }
+
+  /**
+   * An empty record carrying the style ids of the record it displaces,
+   * with the style table's refcounts bumped for the new references.
+   */
+  private inheritedBlankRecord(displaced: Uint8Array | undefined): Uint8Array | undefined {
+    if (!displaced) return undefined;
+    const source = CellRecord.decode(displaced);
+    const blank = new CellRecord(CellType.EMPTY);
+    let any = false;
+    for (const flag of [CellFlag.CELL_STYLE_ID, CellFlag.TEXT_STYLE_ID]) {
+      const key = source.id(flag);
+      if (key === undefined) continue;
+      blank.setId(flag, key);
+      this.retainStyleKey(key);
+      any = true;
+    }
+    return any ? blank.encode() : undefined;
+  }
+
+  /** Bump a style-table entry's refcount for one more referencing record. */
+  private retainStyleKey(key: number): void {
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.STYLE_TABLE));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      if (e.getUint(ListEntry.KEY) !== key) continue;
+      e.setVarint(ListEntry.REFCOUNT, (e.getUint(ListEntry.REFCOUNT) ?? 0) + 1);
+      list!.message.markDirty();
+      return;
+    }
   }
 
   /**
@@ -1987,8 +2039,16 @@ export class TableModel {
       throw new RangeError(`cannot insert at column ${at}: table has ${this.columnCount} columns`);
     }
     const rows = this.snapshotRows();
+    const sourceColumn = Math.min(at, this.columnCount - 1);
     for (const row of rows) {
-      row.records.splice(at, 0, ...new Array<Uint8Array | undefined>(count).fill(undefined));
+      // Style inheritance per row from the displaced column, like widths.
+      row.records.splice(
+        at,
+        0,
+        ...Array.from({ length: count }, () =>
+          this.inheritedBlankRecord(row.records[sourceColumn]),
+        ),
+      );
     }
     const widths = this.columnWidths();
     const width = widths[Math.min(at, widths.length - 1)] ?? 0;
