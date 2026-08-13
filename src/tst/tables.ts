@@ -806,6 +806,51 @@ export class TableModel {
     return raw ? CellRecord.decode(raw) : undefined;
   }
 
+  /**
+   * Records whose string or rich-text reference has no entry in this
+   * table's own data list. Empty on every corpus table (0 of 5019
+   * records); anything here reloads as an empty cell, so a save that
+   * would persist one is refused (`verifyCellStorageIntegrity`).
+   */
+  orphanReferences(): { row: number; column: number; kind: "string" | "richText"; key: number }[] {
+    const out: { row: number; column: number; kind: "string" | "richText"; key: number }[] = [];
+    if (this.storageGeneration !== "v5") return out;
+    // Key presence, not resolvability: an entry missing its text field is
+    // odd but present, and only a missing entry reloads as empty.
+    const strings = this.dataListKeys(DataStoreFields.STRING_TABLE);
+    const rich = this.dataListKeys(DataStoreFields.RICH_TEXT_TABLE);
+    for (let row = 0; row < this.rowCount; row++) {
+      const located = this.locateRow(row);
+      if (!located) continue;
+      const records = readRowLayout(located.rowInfo, this.columnCount).records;
+      for (let column = 0; column < records.length; column++) {
+        const raw = records[column];
+        if (!raw) continue;
+        const record = CellRecord.decode(raw);
+        const stringId = record.id(CellFlag.STRING_ID);
+        if (stringId !== undefined && !strings.has(stringId)) {
+          out.push({ row, column, kind: "string", key: stringId });
+        }
+        const richId = record.id(CellFlag.RICH_ID);
+        if (richId !== undefined && !rich.has(richId)) {
+          out.push({ row, column, kind: "richText", key: richId });
+        }
+      }
+    }
+    return out;
+  }
+
+  /** Keys present in one of the data store's lists. */
+  private dataListKeys(field: number): Set<number> {
+    const out = new Set<number>();
+    const list = this.store.resolve(refId(this.dataStore(), field));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = e.getUint(ListEntry.KEY);
+      if (key !== undefined) out.add(key);
+    }
+    return out;
+  }
+
   // ---------------------------------------------------------------- formulas
 
   /**
@@ -3374,7 +3419,18 @@ export function cellValueToString(v: CellValue): string {
   }
 }
 
-/** Enumerate the tables of a document, optionally scoped to a sheet's drawables. */
+/**
+ * Enumerate the tables of a document, optionally scoped to a sheet's
+ * drawables.
+ *
+ * With `drawableIds` the result follows that list's order. Without it the
+ * walk is *storage* order — the order archives sit in their components,
+ * which puts objects created this session before or after loaded ones
+ * arbitrarily. Callers that need document order (`[0]` meaning "the first
+ * table on the page") should go through the app document's `tables()`,
+ * which enumerates anchors first and falls back here for anything
+ * unreachable.
+ */
 export function tablesOf(store: ObjectStore, drawableIds?: readonly bigint[]): TableModel[] {
   const out: TableModel[] = [];
   const fromInfo = (info: IwaObject): void => {
@@ -3392,6 +3448,52 @@ export function tablesOf(store: ObjectStore, drawableIds?: readonly bigint[]): T
     }
   }
   return out;
+}
+
+/**
+ * Cell records whose string or rich-text reference resolves to nothing in
+ * the table's own data list — the state behind "the table reloads empty".
+ *
+ * No corpus record is orphaned (0 of 5019 across 52 tables), so any
+ * appearance is an authoring fault. The known way to make one: two tables
+ * sharing one string table — a state Apple never writes and a clone policy
+ * can produce — where each entry's refcount says one owner while two
+ * tables' records reference it, so the first overwrite in one table
+ * releases an entry the other still needs.
+ */
+export function verifyCellStorageIntegrity(store: ObjectStore): void {
+  for (const model of tablesOf(store)) {
+    if (model.storageGeneration !== "v5") continue;
+    if (!cellStorageTouched(store, model)) continue;
+    const orphans = model.orphanReferences();
+    if (orphans.length === 0) continue;
+    const name = model.name ?? String(model.object.identifier);
+    const sample = orphans
+      .slice(0, 3)
+      .map((o) => `(${o.row},${o.column}) ${o.kind} key ${o.key}`)
+      .join(", ");
+    throw new RangeError(
+      `table ${JSON.stringify(name)}: ${orphans.length} cell record(s) reference strings ` +
+        `absent from the table's data list — ${sample}. The file would reload with those ` +
+        `cells empty. This happens when two tables share one string table (a clone that ` +
+        `did not fork it): overwriting a cell in one releases entries the other still uses.`,
+    );
+  }
+}
+
+/** Whether a table's model, data lists or tiles changed this session. */
+function cellStorageTouched(store: ObjectStore, model: TableModel): boolean {
+  if (model.object.isDirty) return true;
+  const ds = model.object.message.getMessage(TableModelFields.BASE_DATA_STORE);
+  if (!ds) return false;
+  for (const field of [DataStoreFields.STRING_TABLE, DataStoreFields.RICH_TEXT_TABLE]) {
+    if (store.resolve(refId(ds, field))?.isDirty) return true;
+  }
+  const tiles = ds.getMessage(DataStoreFields.TILES);
+  for (const t of tiles?.getMessages(TileStorageFields.TILES) ?? []) {
+    if (store.resolve(refId(t, TileEntry.TILE))?.isDirty) return true;
+  }
+  return false;
 }
 
 // ------------------------------------------------------------ record decoder

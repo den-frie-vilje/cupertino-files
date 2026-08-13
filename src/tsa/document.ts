@@ -47,7 +47,7 @@ import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
-import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { tablesOf, verifyCellStorageIntegrity, type TableModel } from "../tst/tables.ts";
 
 /**
  * The container-parent rule, composed per app.
@@ -339,6 +339,11 @@ export class IWorkDocument {
   }
 
   save(): Uint8Array {
+    // Refuse to persist a record whose text reference resolves to nothing —
+    // the file would open, and those cells would be empty. Scoped to tables
+    // whose storage changed this session, so loading and re-saving a
+    // document costs nothing.
+    verifyCellStorageIntegrity(this.store);
     return this.store.save();
   }
 }

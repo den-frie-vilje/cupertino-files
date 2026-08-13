@@ -28,6 +28,14 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "TableModel.formatTable",
     "the format_table tool reaches tableStyle().setTable already; this is the same setter surfaced under the name a field report tripped on",
   ],
+  [
+    "PagesDocument.tables",
+    "same surface as IWorkDocument.tables, overridden for document order; the read tools already compose over it",
+  ],
+  [
+    "TableModel.orphanReferences",
+    "a diagnostic the save gate runs itself; agents meet it as the save error, not as a tool",
+  ],
   // Loaders and savers — the server's own machinery.
   ["IWorkDocument.open", PLUMBING],
   ["IWorkDocument.save", PLUMBING],
