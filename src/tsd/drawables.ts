@@ -358,10 +358,16 @@ export class DrawableStyleHandle {
 const REFLECTION_OPACITY = 1;
 const DRAWABLE_STYLE_OVERRIDE_COUNT = 10;
 
-/** The parameters Apple defaults a fresh drop shadow to. */
+/**
+ * The parameters Apple defaults a fresh drop shadow to. The inspector
+ * displays `360 − angle`: stored 45 is the standard down-right shadow
+ * the UI calls 315°, and stored 315 renders up-right as UI 45° — the
+ * proto's `[default = 315]` describes the legacy scale, not the
+ * inspector's.
+ */
 export const DEFAULT_SHADOW: Shadow = {
   color: { r: 0, g: 0, b: 0, a: 1 },
-  angle: 315,
+  angle: 45,
   offset: 5,
   radius: 1,
   opacity: 1,
