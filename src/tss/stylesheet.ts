@@ -722,13 +722,13 @@ const ALIGNMENT_BY_NAME: Record<TextAlignmentName, TextAlignment> = {
 /** The enum value behind an alignment given either way, or a plain error. */
 function resolveAlignment(value: TextAlignment | TextAlignmentName): number {
   if (typeof value === "string") {
-    const resolved = ALIGNMENT_BY_NAME[value];
-    if (resolved === undefined) {
+    // The type says the name is valid; a JS caller's typo still arrives.
+    if (!Object.hasOwn(ALIGNMENT_BY_NAME, value)) {
       throw new RangeError(
         `unknown alignment ${JSON.stringify(value)}; use ${Object.keys(ALIGNMENT_BY_NAME).join("/")} or a TextAlignment value`,
       );
     }
-    return resolved;
+    return ALIGNMENT_BY_NAME[value];
   }
   if (!Number.isInteger(value) || value < 0 || value > 4) {
     throw new RangeError(`alignment ${value} is not a TextAlignment (0-4) or a name`);
