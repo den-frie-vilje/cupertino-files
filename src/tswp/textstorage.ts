@@ -489,12 +489,27 @@ export class TextStorage {
     this.msg.setString(Storage.TEXT, newText);
 
     // 2. Character-indexed tables: shift/drop entries.
+    //
+    // Where an entry may land is table-class law, measured across the
+    // corpus's 2921 storages: no table carries an entry past text.length,
+    // and the character-content tables never carry one at text.length
+    // either — a run reaching the end of the text is left open (0 of 2079
+    // character-style entries, 0 of 220 smart-field entries sit at the
+    // length). The paragraph-family tables are the exception: they carry
+    // an entry at exactly text.length whenever a final empty paragraph
+    // exists to describe — empty text, or text ending with a terminator
+    // (the phantom paragraph; 1565–1597 such entries per table). A run
+    // boundary stranded at the length is a state no app file exhibits,
+    // and Pages answers attribute-table states it never writes with
+    // document-wide style repair.
+    const tailEntryLawful = newText.length === 0 || endsWithTerminator;
     for (const f of [...OBJECT_TABLE_FIELDS, ...STRING_TABLE_FIELDS]) {
       if (PARA_ALIGNED_OBJECT_TABLES.includes(f)) continue; // rebuilt below
-      this.shiftIndexedTable(f, start, end, delta, newText.length);
+      const paragraphFamily = f === Storage.TABLE_SECTION || f === Storage.TABLE_DROP_CAP_STYLE;
+      this.shiftIndexedTable(f, start, end, delta, newText.length, paragraphFamily && tailEntryLawful);
     }
     for (const f of PARA_DATA_TABLE_FIELDS) {
-      this.shiftIndexedTable(f, start, end, delta, newText.length);
+      this.shiftIndexedTable(f, start, end, delta, newText.length, tailEntryLawful);
     }
     for (const f of OVERLAP_TABLE_FIELDS) {
       this.shiftOverlapTable(f, start, end, delta);
@@ -513,6 +528,7 @@ export class TextStorage {
     end: number,
     delta: number,
     newLength: number,
+    mayEndAtLength: boolean,
   ): void {
     const table = this.msg.getMessage(tableField);
     if (!table) return;
@@ -527,11 +543,23 @@ export class TextStorage {
     for (const e of entries) {
       const idx = e.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
       if (anchored ? idx < start : idx <= start) {
+        // A deletion reaching the end of the text can leave a boundary at
+        // exactly the new length. Unless this table lawfully describes the
+        // position (see replaceRange), the entry closes nothing — the run
+        // is already bounded by the text end — and goes.
+        if (idx >= newLength && !mayEndAtLength) {
+          changed = true;
+          continue;
+        }
         kept.push(e);
       } else if (idx < end) {
         changed = true; // dropped
       } else {
         const shifted = Math.max(0, Math.min(idx + delta, newLength));
+        if (shifted >= newLength && !mayEndAtLength) {
+          changed = true;
+          continue;
+        }
         if (shifted !== idx) {
           e.setVarint(ENTRY_CHARACTER_INDEX, shifted);
           changed = true;
@@ -773,16 +801,37 @@ export class TextStorage {
    * draws one more, empty paragraph after the last one
    * {@link paragraphs} lists.
    *
-   * It is not a fault — 31 of 31 corpus body storages end this way, and
-   * the paragraph-style table carries an entry at `text.length` for
-   * exactly that paragraph — but it is invisible from the paragraph
-   * list, which is worth knowing when a document's last page looks one
-   * line longer than it was built to be. Deleting the final terminator
-   * removes it, at the price of departing from what the apps write.
+   * Both tail states are the apps' own. Of the corpus's 26 body
+   * storages, 15 end bare — the shape typing leaves, and what a
+   * current Pages saves for a document whose last paragraph was typed,
+   * not returned past — 8 end with a terminator and carry the
+   * paragraph-style entry at `text.length` for the phantom paragraph,
+   * and 3 are empty. A built document that should not show a stray
+   * final line wants the bare shape; {@link normalizeTail} produces
+   * it, keeping every attribute table lawful on the way.
    */
   get endsWithEmptyParagraph(): boolean {
     const text = this.text;
     return text.length > 0 && text.endsWith("\n");
+  }
+
+  /**
+   * Delete a final trailing `\n` terminator so the text ends the way
+   * typed text does — bare, with no empty paragraph drawn after the
+   * last line. The phantom paragraph's table entries go with it and
+   * any character-style run or smart field ending at the old
+   * terminator stays closed exactly where its text ends.
+   *
+   * Idempotent. A no-op on empty text, a bare tail, or a tail ending
+   * with a section, layout or page break — those characters carry
+   * structure this call must not remove, and no corpus storage ends
+   * with one (all 32 terminator-ending tails are U+000A). Returns
+   * whether a terminator was removed.
+   */
+  normalizeTail(): boolean {
+    if (!this.text.endsWith("\n")) return false;
+    this.deleteRange(this.text.length - 1, this.text.length);
+    return true;
   }
 
   /** Set (or clear) the paragraph style of one paragraph. */
@@ -1600,17 +1649,41 @@ export class TextStorage {
    * marking, which is what typing into one does in Pages. The replacement
    * keeps the placeholder's styling — a template styles its ghost text the
    * way the final content should look. Returns the filled span.
+   *
+   * Address the placeholder by its `fieldId` — the id
+   * {@link placeholders} reports, passed bare or on the listing's own
+   * entry — and the span is resolved live at this call: filling several
+   * from one listing lands each in its own field no matter how earlier
+   * fills moved the text. A filled or removed field throws rather than
+   * editing whatever text now occupies its old offsets. An entry
+   * carrying only `start`/`end` keeps positional meaning, offsets
+   * against the text as it is *now*.
    */
   fillPlaceholder(
-    placeholder: { start: number; end: number },
+    placeholder: bigint | { start: number; end: number; fieldId?: bigint },
     text: string,
   ): { start: number; end: number } {
+    let span: { start: number; end: number };
+    if (typeof placeholder === "bigint") span = this.placeholderSpan(placeholder);
+    else if (placeholder.fieldId !== undefined) span = this.placeholderSpan(placeholder.fieldId);
+    else span = placeholder;
     // Clear the field over the old span before the text moves: the
     // span-clearing write is exact, while a replacement keeps the run
     // boundary at `start` — which would leave the new text still marked.
-    this.spanObject(Storage.TABLE_SMARTFIELD, placeholder.start, placeholder.end, undefined);
-    this.replaceRange(placeholder.start, placeholder.end, text);
-    return { start: placeholder.start, end: placeholder.start + text.length };
+    this.spanObject(Storage.TABLE_SMARTFIELD, span.start, span.end, undefined);
+    this.replaceRange(span.start, span.end, text);
+    return { start: span.start, end: span.start + text.length };
+  }
+
+  /** The live span of a placeholder field, by id; throws when absent. */
+  private placeholderSpan(fieldId: bigint): { start: number; end: number } {
+    const live = this.placeholders().find((p) => p.fieldId === fieldId);
+    if (!live) {
+      throw new RangeError(
+        `fillPlaceholder: field ${fieldId} is not a placeholder in this storage (already filled, or another storage's?)`,
+      );
+    }
+    return { start: live.start, end: live.end };
   }
 
   /**
@@ -1783,5 +1856,82 @@ export class TextStorage {
       );
     }
     return true;
+  }
+
+  /**
+   * The first attribute-table entry outside its lawful positions, if any.
+   *
+   * The law, measured across the corpus's 2921 storages: no entry sits
+   * past `text.length` in any table, and an entry at exactly
+   * `text.length` occurs only in the paragraph-family tables — and only
+   * when a final empty paragraph exists to describe: empty text, or text
+   * ending with a terminator. The character-content tables (character
+   * styles, smart fields, anchors, language runs) leave a run reaching
+   * the end of the text open instead.
+   */
+  tablePositionViolation(): { table: string; position: number } | undefined {
+    const length = this.text.length;
+    const tailLawful =
+      length === 0 || isParagraphTerminator(this.text.charCodeAt(length - 1));
+    const check = (
+      field: number,
+      mayEndAtLength: boolean,
+    ): { table: string; position: number } | undefined => {
+      const table = this.msg.getMessage(field);
+      if (!table) return undefined;
+      for (const e of table.getMessages(ATTR_TABLE_ENTRIES)) {
+        const idx = e.getUint(ENTRY_CHARACTER_INDEX) ?? 0;
+        if (idx > length || (idx === length && !mayEndAtLength)) {
+          return { table: TABLE_FIELD_NAMES.get(field) ?? String(field), position: idx };
+        }
+      }
+      return undefined;
+    };
+    for (const f of [...OBJECT_TABLE_FIELDS, ...STRING_TABLE_FIELDS]) {
+      const paragraphFamily =
+        PARA_ALIGNED_OBJECT_TABLES.includes(f) ||
+        f === Storage.TABLE_SECTION ||
+        f === Storage.TABLE_DROP_CAP_STYLE;
+      const found = check(f, paragraphFamily && tailLawful);
+      if (found) return found;
+    }
+    for (const f of PARA_DATA_TABLE_FIELDS) {
+      const found = check(f, tailLawful);
+      if (found) return found;
+    }
+    return undefined;
+  }
+}
+
+/** Storage table field number → the proto field's short name, for errors. */
+const TABLE_FIELD_NAMES = new Map<number, string>(
+  Object.entries(Storage)
+    .filter(([key]) => key.startsWith("TABLE_"))
+    .map(([key, value]) => [value, key.slice("TABLE_".length).toLowerCase()]),
+);
+
+/**
+ * Refuse to persist a storage whose attribute tables place entries where
+ * no app-written storage does ({@link TextStorage#tablePositionViolation}).
+ * The app answers such a table with document-wide style repair, far from
+ * whatever edit produced it — a corrupted save is strictly worse than a
+ * refused one. Scoped to storages edited this session, so loading and
+ * re-saving a document costs nothing.
+ */
+export function verifyTextStorageIntegrity(store: ObjectStore): void {
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== TSWP_TYPE.STORAGE) continue;
+    const storage = new TextStorage(store, obj);
+    if (storage.revision === 0) continue;
+    const violation = storage.tablePositionViolation();
+    if (violation) {
+      throw new RangeError(
+        `text storage ${obj.identifier}: table_${violation.table} entry at position ` +
+          `${violation.position} with text length ${storage.text.length} — no app-written ` +
+          `storage places one there, and the app repairs such tables with document-wide ` +
+          `style loss. This is a table-maintenance fault in the edit sequence just run; ` +
+          `nothing was saved.`,
+      );
+    }
   }
 }

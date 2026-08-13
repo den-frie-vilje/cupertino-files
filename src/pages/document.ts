@@ -742,18 +742,34 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * Fill the body's `index`-th placeholder: real text in, placeholder
-   * marking off, styling kept — what typing into one does in Pages.
-   * Returns the filled span as a fluent range.
+   * Fill a body placeholder: real text in, placeholder marking off,
+   * styling kept — what typing into one does in Pages. Returns the
+   * filled span as a fluent range.
+   *
+   * A number indexes the listing *as of this call*: a fill removes its
+   * entry, so the indexes of the placeholders after it shift down by
+   * one — filling 0, 1, 2 from one remembered listing lands two of them
+   * in the wrong fields. To fill several, pass the entries of one
+   * {@link placeholders} snapshot (each carries the `fieldId` that pins
+   * it, resolved live at the fill), or pass field ids directly.
    */
-  fillPlaceholder(index: number, text: string): TextRange {
-    const placeholder = this.body.placeholders()[index];
-    if (!placeholder) {
-      throw new RangeError(
-        `no placeholder ${index}: the body has ${this.body.placeholders().length}`,
-      );
+  fillPlaceholder(
+    placeholder: number | bigint | { start: number; end: number; fieldId?: bigint },
+    text: string,
+  ): TextRange {
+    let target: bigint | { start: number; end: number; fieldId?: bigint };
+    if (typeof placeholder === "number") {
+      const entry = this.body.placeholders()[placeholder];
+      if (!entry) {
+        throw new RangeError(
+          `no placeholder ${placeholder}: the body has ${this.body.placeholders().length}`,
+        );
+      }
+      target = entry;
+    } else {
+      target = placeholder;
     }
-    const span = this.body.fillPlaceholder(placeholder, text);
+    const span = this.body.fillPlaceholder(target, text);
     return this.body.range(span.start, span.end);
   }
 

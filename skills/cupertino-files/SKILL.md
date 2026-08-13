@@ -182,9 +182,16 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 ```
 
 - **The app draws one more paragraph than `paragraphs()` lists** when the
-  text ends with a terminator, which is how the apps write it and what
-  appending preserves. `doc.body.endsWithEmptyParagraph` says so; delete
-  the final `\n` if the trailing blank matters more than matching Apple.
+  text ends with a terminator. That tail is *one* of the apps' shapes,
+  not the norm: of the corpus's 26 body storages, 15 end bare — what
+  typing leaves — 8 end with the terminator, 3 are empty. Appending
+  preserves whichever convention the document already has (a `blank()`
+  build ends bare), so check `doc.body.endsWithEmptyParagraph` rather
+  than assuming either state, and call `doc.body.normalizeTail()` when
+  a stray final line must not appear. Use `normalizeTail()`, not a raw
+  `deleteRange(len - 1, len)` — it is the same edit with every
+  attribute table kept lawful, which matters whenever the last
+  paragraph carries character styling or a placeholder field.
 - **Renaming a running header or footer**: `setFooterText` replaces the
   storage whole and takes the page-number fields with it. Edit in place
   instead, which any storage holding fields wants:
@@ -215,6 +222,20 @@ Filling sheds the placeholder marking the way typing into one does —
 programmatic content never stays flagged as ghost text. A placeholder
 spanning an image's object character is how a body document marks an
 image placeholder; the same calls read it.
+
+**Filling several: pass the listing's entries, not fresh indexes.** A
+fill removes its own entry, so the indexes of everything after it shift
+down — `fillPlaceholder(0); fillPlaceholder(1); fillPlaceholder(2)`
+lands two of the three in the wrong fields. Each entry of one
+`placeholders()` snapshot carries the `fieldId` that pins it, resolved
+live at the fill, so this is safe in any order:
+
+```ts
+const fields = doc.placeholders();
+doc.fillPlaceholder(fields[0], "Acme Corp");
+doc.fillPlaceholder(fields[1], "Ms. Jensen");   // offsets moved; the fieldId still lands it
+doc.fillPlaceholder(fields[2].fieldId, "2026"); // the bare id works too
+```
 
 Offset-based calls (offsets are UTF-16 code units, identical to JS string
 indexing, so `text.indexOf(...)` results are valid):
