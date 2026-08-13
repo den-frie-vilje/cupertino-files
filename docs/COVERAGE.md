@@ -188,11 +188,11 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Pages → **Page setup (size, margins, orientation)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
-- 🔴 high — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
+- 🟡 low — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
 - 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**
 - 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)**
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
-- 🟠 medium — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
+- 🟡 low — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**

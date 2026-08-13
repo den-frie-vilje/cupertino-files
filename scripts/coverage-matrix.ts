@@ -1127,7 +1127,13 @@ export const CAPABILITIES: Capability[] = [
         "Write a fill, four borders, padding and vertical alignment into a cell, open in Numbers, and compare " +
         "against the same formatting applied by hand in the inspector. Then re-save from the app and diff " +
         "our style object against what Numbers rewrote.",
-      risk: "high",
+      settled:
+        "**Confirmed in Numbers — demo-05, four rounds.** Fill, padding and vertical alignment " +
+        "drew from the first round; borders drew once they moved to the stroke sidecar with the " +
+        "grid brought to the table's size (»2pt terrakotta hele vejen rundt«); the centred merge " +
+        "confirmed horizontal alignment riding the cell's text style. The person's own " +
+        "app-written border in a returned round matched our runs byte for byte",
+      risk: "low",
     },
   },
   {
@@ -1221,7 +1227,13 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Write a currency, percentage and date format, open in Numbers, and compare each cell against " +
         "the same format applied through the Cell inspector on an untouched copy.",
-      risk: "medium",
+      settled:
+        "**Confirmed in Numbers — demo-05.** Currency (kr., two decimals, record type 10 with the " +
+        "full format tail), percentage, number decimals, date and duration all display as the " +
+        "inspector states them, and the checkbox draws once written as the app writes it — " +
+        "format 263 plus the record's control id plus the control-spec entry, the trio the " +
+        "returned one-delta seed measured (»Checkboks vist«). Custom formats remain read-only",
+      risk: "low",
     },
   },
   {
