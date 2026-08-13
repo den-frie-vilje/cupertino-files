@@ -7,6 +7,8 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+## 0.3.0 — 2026-08-13
+
 - Demo-05 (cells and formats) is app-confirmed whole: cell types,
   currency/percentage/number/date/duration formats, the checkbox
   control, merged-cell centring, cell fill/padding/borders, structure
