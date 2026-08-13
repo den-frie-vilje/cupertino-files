@@ -7,6 +7,10 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Demo-05 (cells and formats) is app-confirmed whole: cell types,
+  currency/percentage/number/date/duration formats, the checkbox
+  control, merged-cell centring, cell fill/padding/borders, structure
+  edits and the visible table name all render as written in Numbers.
 - A checkbox is written whole: bool format 263, the record's control
   id, a control-spec entry (interaction_type 8) and the extras bit,
   exactly as the app's own Dataformat toggle writes them (measured
