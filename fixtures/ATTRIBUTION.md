@@ -977,6 +977,15 @@ only annotation author string is `cupertino-files`.
   trip: the library-defined placeholder consumed by clicking and typing
   ("Jeg skriver noget"), zero placeholder fields in the resave.
 
+### olekristensen-v26.3-seed-checkbox-returned.numbers
+- 119,297 bytes, md5 `b8073d3b70cacf73aa1af7642a2fbd86`
+- Saved by macOS Numbers (format 26.3). The checkbox one-delta seed: a
+  library-written TRUE cell toggled to Dataformat ▸ Afkrydsningsfelt in the
+  app and saved with no other change. The app's write names the whole
+  mechanism: bool format `{format_type: 263}`, the record's control id, a
+  control-spec entry (`interaction_type` 8) in the type-12 list, and
+  extras 0x20 — the format without the control had shown as Automatic.
+
 ### olekristensen-v26.3-seed-crop-returned.pages
 - 537,381 bytes, md5 `88fff560167af5c5f739c9450667c852`
 - Saved by macOS Pages (format 26.3.1). The crop-delta seed: one

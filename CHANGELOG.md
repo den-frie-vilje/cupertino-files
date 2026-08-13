@@ -7,6 +7,16 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- A checkbox is written whole: bool format 263, the record's control
+  id, a control-spec entry (interaction_type 8) and the extras bit,
+  exactly as the app's own Dataformat toggle writes them (measured
+  from the returned one-delta seed, now a corpus fixture) — the format
+  alone showed as Automatic. `setCellFormat({kind:"checkbox"})` routes
+  through the control path.
+- The stroke sidecar is brought to the table's current size on every
+  border write: the app clips runs outside the declared grid, and a
+  donor's sidecar still declaring its old size swallowed every border
+  this library wrote.
 - Cell borders write where the app reads them: the stroke sidecar
   (`TableModelArchive.stroke_sidecar`), per-edge layers of runs each
   carrying a complete stroke — none of the corpus's 4139 cell-style
@@ -29,10 +39,6 @@ history uses Conventional Commits, so the detail behind any entry is one
   stores cell type 10 with extras 0x802, and the format archive states
   its full tail (negative style, separator, accounting) — one missing
   any of it read as the inspector's Automatic.
-- Fixed: `{ kind: "checkbox" }` writes the bare boolean format
-  (`format_type` 1) the corpus's checkbox cells carry; 263 remains
-  readable but drew as Automatic in current Numbers. Bool records carry
-  no extras bits.
 - `TableModel.nameVisible` — `table_name_enabled`, the flag behind
   whether the app draws the table's name.
 - Fixture: `olekristensen-v26.3-seed-crop-returned.pages` — the app's

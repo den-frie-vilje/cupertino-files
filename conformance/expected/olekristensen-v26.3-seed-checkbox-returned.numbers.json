@@ -1,0 +1,221 @@
+{
+  "file": "olekristensen-v26.3-seed-checkbox-returned.numbers",
+  "sha1": "0b2cd105e90313b76c9bac4c0bc30e799dfa502b",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 622,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 44
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000003.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000004.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000005.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000006.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000007.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000008.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000009.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000279.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 489
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 11,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "SEED · Afkrydsningsfelt med appens eget dataformat"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Gør præcis én ting: markér cellen C3 (den med SAND), vælg Formatér ▸ Celle ▸ Dataformat ▸ Afkrydsningsfelt, arkivér og send filen retur. Ret ikke andet."
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "TRUE"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
