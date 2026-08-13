@@ -91,14 +91,17 @@ export function deepCloneObject(
 
   // Pass 1: decide the set. Doing this before creating anything means the
   // rewrite in pass 3 knows every id that will be remapped, including ones
-  // reached later in the walk.
+  // reached later in the walk. References are computed live, not read from
+  // the declarations: those refresh only at save, so a drawable inserted
+  // this session declares nothing yet, and walking the stale list made a
+  // copy share every owned child the original had.
   const selected = new Map<bigint, IwaObject>();
   const queue: { object: IwaObject; depth: number }[] = [{ object: root, depth: 0 }];
   selected.set(root.identifier, root);
   while (queue.length > 0) {
     const { object, depth } = queue.shift()!;
     if (depth >= maxDepth) continue;
-    for (const id of object.getObjectReferences()) {
+    for (const id of store.currentReferencesOf(object)) {
       if (selected.has(id)) continue;
       const target = store.object(id);
       if (!target || !follow(target, depth + 1)) continue;

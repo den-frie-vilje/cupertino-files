@@ -401,6 +401,14 @@ function demoChart(): Uint8Array {
   chart.setColumnName(3, "Vest");
   chart.setAxisMajorGridlines("value", false);
 
+  // The donor anchors its chart in the body text (old-era file: no page
+  // groups, so the text anchor is the only thing that renders it), and
+  // wiping the text severed it — the returned round one reported no
+  // chart at all. Keep the chart's attachment object and re-anchor it
+  // after the rewrite.
+  const chartAttachment = doc.body
+    .attachments()
+    .find((a) => a.drawableId !== undefined && doc.store.typeNameOf(doc.store.object(a.drawableId)!) === "TSCH.ChartDrawableArchive")?.objectId;
   doc.body.setText("");
   const check = counter("D");
   pagesIntro(doc, "DEMO 4 · Diagram", "Diagramdata og -udseende, redigeret i et eksisterende dokuments søjlediagram (dokumentet her stammer fra testkorpusset).");
@@ -408,7 +416,11 @@ function demoChart(): Uint8Array {
   pagesFeedback(doc);
   pagesCheck(doc, check(), "Værdiaksens vandrette hjælpelinjer er SLÅET FRA af biblioteket — diagrammet skal stå uden vandrette linjer bag søjlerne.");
   pagesFeedback(doc);
+  const anchor = doc.appendParagraph(" ", "Body");
   doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
+  if (chartAttachment !== undefined) {
+    doc.body.insertAttachment(doc.body.paragraphStarts()[anchor]!, chartAttachment);
+  }
   return doc.save();
 }
 
@@ -493,7 +505,9 @@ function demoCells(): Uint8Array {
   table.setCellFormatting(row, 3, { textWrap: false });
   row += 2;
 
-  head(check(), "Strukturen selv: denne tabel fik sine rækker indsat af biblioteket (24 i alt), og tabellen hedder »Demotabel«.");
+  head(check(), "Strukturen selv: denne tabel fik sine rækker indsat af biblioteket (24 i alt), og tabellen hedder »Demotabel« — navnet skal stå SYNLIGT over tabellen.");
+  table.name = "Demotabel";
+  table.nameVisible = true;
   row += 2;
 
   return doc.save();

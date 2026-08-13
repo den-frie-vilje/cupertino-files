@@ -544,6 +544,39 @@ describe("a crop's mask node is a full drawable", () => {
   });
 });
 
+describe("a copy of a fresh drawable owns its children", () => {
+  it("clones the stand-ins and the mask, sharing neither", () => {
+    // The clone walk used to select from declared references, which
+    // refresh only at save — so a copy of a just-inserted image shared
+    // the original's title/caption stand-ins (and its mask, had it been
+    // cropped). No corpus stand-in has two owners (0 of 288 references).
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Foto:", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, PNG, { fileName: "s.png" });
+    const image = doc.images().find((i) => i.object.identifier === imageId)!;
+    image.setCrop({ x: 2, y: 2, width: 20, height: 20 });
+    const floating = doc.floatingDrawables(0, { create: true })!;
+    const copy = floating.addCopyOf(doc.store.object(imageId)!, { x: 100, y: 100 });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const childrenOf = (id: bigint) => {
+      const sup = reloaded.store.object(id)!.message.getMessage(1)!;
+      return {
+        title: sup.getMessage(Drawable.TITLE)?.getVarint(1),
+        caption: sup.getMessage(Drawable.CAPTION)?.getVarint(1),
+        mask: reloaded.store.object(id)!.message.getMessage(5)?.getVarint(1),
+      };
+    };
+    const source = childrenOf(imageId);
+    const cloned = childrenOf(copy.object.identifier);
+    expect(cloned.title !== undefined).toBe(true);
+    expect(cloned.mask !== undefined).toBe(true);
+    expect(cloned.title === source.title).toBe(false);
+    expect(cloned.caption === source.caption).toBe(false);
+    expect(cloned.mask === source.mask).toBe(false);
+  });
+});
+
 describe("an inserted image carries the modern drawable super", () => {
   it("states the lock pair and points title and caption at empty stand-ins", () => {
     // Every current-era corpus image (six across four fixtures) carries

@@ -1169,7 +1169,10 @@ describe("cell formats", () => {
     const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
     const table = doc.tables()[0]!;
     const cases: [number, number, CellFormat][] = [
-      [1, 0, { kind: "currency", code: "EUR", decimals: 2, thousandsSeparator: true, accountingStyle: true }],
+      // Currency reads back with its full corpus shape: the writer states
+      // negative style even at the default, because the app's own
+      // currency formats always do.
+      [1, 0, { kind: "currency", code: "EUR", decimals: 2, thousandsSeparator: true, accountingStyle: true, negativeStyle: 0 }],
       [1, 1, { kind: "percentage", decimals: 1 }],
       [2, 0, { kind: "date", pattern: "yyyy-MM-dd" }],
       [2, 1, { kind: "number", decimals: "auto", thousandsSeparator: false }],

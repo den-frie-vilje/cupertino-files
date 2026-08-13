@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-seed-crop-returned.pages",
+  "sha1": "7ace434e92a3dcd88156a18112b812a75b9e5ccb",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 580,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 61
+    },
+    {
+      "name": "Index/ViewState-2000032.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 493
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 841,
+      "text": "SEED · Beskæring med appens eget værktøj\nGør præcis én ting i denne fil: beskær fotoet herunder med Pages' egen maske-funktion (dobbeltklik på billedet, eller vælg Formatér ▸ Billede ▸ Rediger masken), træk beskæringen til et tydeligt udsnit — fx kun Fuji i midten — tryk Enter, arkivér (⌘S) og send filen retur. Skriv eller ret ikke andet.\nÅbner maske-værktøjet slet ikke på billedet, så gem og returnér filen alligevel med en linje her om det: så ligger forhindringen i selve billedet, før nogen maske overhovedet er skrevet — og det er lige så brugbart et svar.\n￼ \n\nJeg kan slet ikke maske billedet af, måske fordi det er sat til at være ‘integreret med tekst’\nNedenfor er en kopi, som jeg heller ikke kunne maske, før jeg satte det til ‘over og under’ ombrydning. Der er en maske og det afmaskede billede selv er blevet let forstørret.￼\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 7
+  }
+}

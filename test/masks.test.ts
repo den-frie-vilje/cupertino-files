@@ -250,3 +250,39 @@ describe("image masks", () => {
     expect(document.store).not.toBe(undefined);
   });
 });
+
+describe("the app's own crop over a library-inserted image", () => {
+  it("matches setCrop's shape field for field, and shares the pasted asset", () => {
+    // The crop-delta seed: one library-inserted photo, copy-pasted in the
+    // app, rewrapped, and cropped with the app's own mask editor. The
+    // measurements this file settled: the editor engages on our image;
+    // the app's mask carries the same shape setCrop writes (window in
+    // the image's drawn space, parent back-pointer, wrap type 4 with a
+    // 12 pt margin, six-element rectangle path); and the pasted copy
+    // shares the original's data object — one JPEG in the package, two
+    // drawables referencing it, one generated thumbnail shared too.
+    const doc = open("olekristensen-v26.3-seed-crop-returned.pages");
+    const images = imagesOf(doc.store).filter((i) => i.hasMask);
+    expect(images.length).toBe(1);
+    const image = images[0]!;
+    const mask = image.mask()!;
+    const drawable = mask.object.message.getMessage(1)!;
+    expect(drawable.getMessage(2)?.getVarint(1)).toBe(image.object.identifier);
+    const wrap = drawable.getMessage(3)!;
+    expect(wrap.getUint(1)).toBe(4);
+    expect(wrap.getFloat(4)).toBe(12);
+    expect(mask.isRectangular).toBe(true);
+    const crop = image.crop()!;
+    expect(crop.window.width).toBeGreaterThan(0);
+    expect(crop.window.width).toBeLessThan(crop.full.width);
+
+    // Asset dedupe on paste: both images, one data reference, one file.
+    const dataRefs = new Set(
+      imagesOf(doc.store).map((i) => i.object.message.getMessage(11)?.getVarint(1)),
+    );
+    expect(imagesOf(doc.store).length).toBe(2);
+    expect(dataRefs.size).toBe(1);
+    const waves = [...doc.container.otherFiles().keys()].filter((n) => /great-wave-\d+\.jpg$/.test(n));
+    expect(waves.length).toBe(1);
+  });
+});
