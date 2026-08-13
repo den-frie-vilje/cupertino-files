@@ -111,9 +111,29 @@ export class NumbersDocument extends IWorkDocument {
     return NumbersDocument.load(blankDonorBytes());
   }
 
-  /** Tables of one sheet, or of the whole document when no sheet is given. */
+  /**
+   * Tables of one sheet, or of the whole document when no sheet is given.
+   *
+   * Document order either way: sheets in tab order, each sheet's tables in
+   * its drawable order — so `tables()[0]` is the first sheet's first table
+   * whatever was added this session. Tables no sheet lists (an unattached
+   * clone mid-construction) come last, in storage order.
+   */
   override tables(sheetId?: bigint): TableModel[] {
-    if (sheetId === undefined) return tablesOf(this.store);
+    if (sheetId === undefined) {
+      const seen = new Set<bigint>();
+      const out: TableModel[] = [];
+      const take = (models: TableModel[]): void => {
+        for (const model of models) {
+          if (seen.has(model.object.identifier)) continue;
+          seen.add(model.object.identifier);
+          out.push(model);
+        }
+      };
+      for (const sheet of this.sheets()) take(this.tables(sheet.id));
+      take(tablesOf(this.store));
+      return out;
+    }
     const sheet = this.store.object(sheetId);
     if (!sheet) throw new RangeError(`sheet ${sheetId} not found`);
     const drawableIds: bigint[] = [];

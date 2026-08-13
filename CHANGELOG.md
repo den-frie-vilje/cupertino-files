@@ -7,6 +7,18 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Saving refuses a table whose records reference strings absent from
+  its own data list — the state behind "the cloned table reloads
+  empty" (field report 4's first-ranked fault, reproduced: two tables
+  sharing one string table undercount refcounts, and the first
+  overwrite in one releases entries the other still needs). The check
+  runs only over tables whose storage changed this session, and names
+  the table, cells and keys. `TableModel.orphanReferences()` is the
+  diagnostic behind it.
+- `tables()` is document order on both apps: Numbers walks sheets in
+  tab order and each sheet's drawables in order; Pages walks the
+  body's anchors by text position, then paint order. `tables()[0]`
+  is the first table on the page whatever was added this session.
 - Inserted images carry the full modern drawable super: the lock pair
   stated (`locked` false, `aspect_ratio_locked` true — the shape of 156
   of 171 corpus images and all 87 masked ones), and `title`/`caption`

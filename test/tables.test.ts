@@ -33,6 +33,7 @@ import {
 } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import { refId } from "../src/tsp/schema.ts";
+import { DataStoreFields, TableModelFields } from "../src/tst/tables.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -1295,6 +1296,81 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
+  });
+});
+
+describe("cell-storage integrity", () => {
+  it("refuses to persist a record whose string entry is gone", () => {
+    // The field report's first-ranked fault, reproduced: two tables
+    // sharing one string table undercount refcounts — each entry claims
+    // one owner while two tables' records reference it — so the first
+    // overwrite in one table releases entries the other still needs, and
+    // the file reloads with those cells empty. No corpus table shares a
+    // data list (0 of 52), so the save refuses instead.
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    const original = doc.tables()[0]!;
+    original.setCell(1, 0, "skabelon");
+    const clone = doc.addTable(sheet.id, { name: "Kopi" });
+    clone.setCell(1, 0, "skabelon");
+
+    const listRefOf = (m: TableModel) =>
+      m.object.message
+        .getMessage(TableModelFields.BASE_DATA_STORE)!
+        .getMessage(DataStoreFields.STRING_TABLE)!;
+    const originalList = listRefOf(original).getVarint(1)!;
+    const cloneList = listRefOf(clone).getVarint(1)!;
+    listRefOf(clone).setVarint(1, originalList);
+    clone.object.message.markDirty();
+    clone.object.setObjectReferences(
+      clone.object.getObjectReferences().map((id) => (id === cloneList ? originalList : id)),
+    );
+
+    // Overwriting the original's cell releases the entry the clone's
+    // record still references.
+    original.setCell(1, 0, "overskrevet");
+    expect(() => doc.save()).toThrow(/reference strings absent/);
+  });
+
+  it("addTable forks the data lists, so the loop the report ran stays intact", () => {
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    const original = doc.tables()[0]!;
+    original.setCell(1, 0, "skabelon");
+    const clone = doc.addTable(sheet.id, { name: "Kopi" });
+    const listIdOf = (m: TableModel) =>
+      refId(m.object.message.getMessage(TableModelFields.BASE_DATA_STORE), DataStoreFields.STRING_TABLE);
+    expect(listIdOf(original) === listIdOf(clone)).toBe(false);
+
+    original.setCell(1, 0, "dok 1");
+    clone.setCell(1, 0, "dok 2");
+    const reloaded = NumbersDocument.load(doc.save());
+    expect(reloaded.tables().find((t) => t.name === "Kopi")!.cellText(1, 0)).toBe("dok 2");
+    expect(reloaded.tables().find((t) => t.name !== "Kopi")!.cellText(1, 0)).toBe("dok 1");
+  });
+});
+
+describe("tables() is document order", () => {
+  it("Numbers keeps the sheet's own table first after addTable", () => {
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    const originalId = doc.tables()[0]!.object.identifier;
+    doc.addTable(sheet.id, { name: "Kopi A" });
+    doc.addTable(sheet.id, { name: "Kopi B" });
+    expect(doc.tables()[0]!.object.identifier).toBe(originalId);
+    expect(doc.tables().map((t) => t.name).slice(1)).toEqual(["Kopi A", "Kopi B"]);
+  });
+
+  it("Pages lists tables by their anchors in the text", () => {
+    const doc = PagesDocument.load(
+      new Uint8Array(readFileSync(new URL("picodocs-v14.4-headers-tables.pages", FIXTURES))),
+    );
+    const anchored = doc.body
+      .attachments()
+      .filter((a) => a.drawableId !== undefined && doc.store.object(a.drawableId)?.type === 6000)
+      .map((a) => a.drawableId);
+    expect(anchored.length).toBe(3);
+    expect(doc.tables().map((t) => t.infoObject?.identifier)).toEqual(anchored);
   });
 });
 

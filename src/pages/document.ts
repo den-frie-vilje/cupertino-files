@@ -35,6 +35,7 @@ import {
   TSD_TYPE,
 } from "../tsd/schema.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
+import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { rectanglePath } from "../tsd/masks.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -854,6 +855,42 @@ export class PagesDocument extends IWorkDocument {
   }
 
   // ---------------------------------------------------------- more features
+
+  /**
+   * Tables in document order: the body's anchored tables first, by their
+   * position in the text, then floating tables in paint order, then any
+   * the anchors do not reach (storage order). `tables()[0]` is the first
+   * table in the document whatever was added this session.
+   */
+  override tables(): TableModel[] {
+    const anchored: bigint[] = [];
+    for (const attachment of this.body.attachments()) {
+      const target =
+        attachment.drawableId !== undefined
+          ? this.store.object(attachment.drawableId)
+          : undefined;
+      if (target?.type === TST_TYPE.TABLE_INFO) anchored.push(target.identifier);
+    }
+    const zorder = this.store.resolve(refId(this.docObject.message, TPDocument.DRAWABLES_ZORDER));
+    for (const entry of zorder?.message.getMessages(DrawablesZOrder.DRAWABLES) ?? []) {
+      const id = refId(entry, DrawablesZOrder.DRAWABLES);
+      if (id !== undefined && this.store.object(id)?.type === TST_TYPE.TABLE_INFO) {
+        anchored.push(id);
+      }
+    }
+    const seen = new Set<bigint>();
+    const out: TableModel[] = [];
+    const take = (models: TableModel[]): void => {
+      for (const model of models) {
+        if (seen.has(model.object.identifier)) continue;
+        seen.add(model.object.identifier);
+        out.push(model);
+      }
+    };
+    take(tablesOf(this.store, anchored));
+    take(tablesOf(this.store));
+    return out;
+  }
 
   /** Document-wide settings (hyphenation, ligatures, footnote config …). */
   get settings(): PagesSettings {
