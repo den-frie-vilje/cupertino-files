@@ -835,9 +835,9 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.images().some((i) => i.hasMask)),
     manualProof: {
-      claim: "a mask this library writes crops the way Apple's does",
-      why: "the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page",
-      how: "crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says",
+      claim: "a mask this library writes crops the way Apple's does, and the app's mask editor opens it",
+      why: "the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page. The editor is the harder half: rendering has been confirmed for three rounds while double-click editing kept refusing, and each round has closed one measured difference (full drawable super, window space, size semantics, traced_path, the modern super with lock pair and stand-in title/caption)",
+      how: "open demo-03, confirm the cropped wave shows the stated window, then double-click it: the mask slider appearing is the pass. Reset (nulstil) working while editing refuses means the crop model is accepted and the gate is still open",
       risk: "medium",
     },
   },

@@ -12,6 +12,8 @@ export const TSD_TYPE = {
   IMAGE: 3005,
   MASK: 3006,
   COMMENT_STORAGE: 3056,
+  /** Empty placeholder a drawable's title/caption references point at. */
+  STANDIN_CAPTION: 3097,
 } as const;
 
 /** TSD.DrawableArchive. */

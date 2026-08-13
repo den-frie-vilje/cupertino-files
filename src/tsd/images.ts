@@ -13,7 +13,7 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
 import { DrawableModel } from "./drawables.ts";
-import { Image, TSD_TYPE } from "./schema.ts";
+import { Drawable, Image, TSD_TYPE } from "./schema.ts";
 import { buildRectangularMask, MaskModel, type ImageCrop, type Rect } from "./masks.ts";
 
 /** TSD.ImageArchive: imageAdjustments = 14, plus the media variants. */
@@ -246,6 +246,17 @@ export class ImageModel extends DrawableModel {
       parentId: this.object.identifier,
     });
     this.object.message.setMessage(Image.MASK, makeRef(mask.identifier));
+    // A masked image states its resize behavior: all 87 masked corpus
+    // images carry aspect_ratio_locked true, and locked is stated on each
+    // (false on 85). An already-locked image keeps its lock.
+    const drawable = this.object.message.getMessage(Image.SUPER);
+    if (drawable) {
+      if (drawable.getUint(Drawable.LOCKED) === undefined) {
+        drawable.setBool(Drawable.LOCKED, false);
+      }
+      drawable.setBool(Drawable.ASPECT_RATIO_LOCKED, true);
+      this.object.message.markDirty();
+    }
     this.object.setObjectReferences([
       ...new Set([...this.object.getObjectReferences(), mask.identifier]),
     ]);

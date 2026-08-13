@@ -1124,6 +1124,20 @@ export class PagesDocument extends IWorkDocument {
     // present on all 102, resolving to the TSWP.StorageArchive every time.
     drawable.setMessage(Drawable.PARENT, makeRef(body.id));
     drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap(wrap));
+    // Locked and aspect-ratio-locked are stated, not left absent: 156 of
+    // 171 corpus images carry exactly this pair, and all 87 masked ones
+    // state aspect_ratio_locked true — the resize behavior a photo gets.
+    drawable.setBool(Drawable.LOCKED, false);
+    drawable.setBool(Drawable.ASPECT_RATIO_LOCKED, true);
+    // Title and caption point at empty stand-in archives with both hidden
+    // flags stated: 88 corpus images carry the pair, all 176 targets are
+    // empty TSD.StandinCaptionArchives, and 87 of 88 state false/false.
+    const title = this.store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
+    const caption = this.store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
+    drawable.setMessage(Drawable.TITLE, makeRef(title.identifier));
+    drawable.setMessage(Drawable.CAPTION, makeRef(caption.identifier));
+    drawable.setBool(Drawable.TITLE_HIDDEN, false);
+    drawable.setBool(Drawable.CAPTION_HIDDEN, false);
     image.message.setMessage(Image.SUPER, drawable);
     if (dims) {
       // Both sizes are on 83 of 83 corpus images, and they answer

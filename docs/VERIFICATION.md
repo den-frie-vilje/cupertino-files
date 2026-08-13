@@ -28,7 +28,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 3 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
 | 4 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
 | 5 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 6 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does | manual |
+| 6 | 🟠 medium | Drawables & media → Image cropping (set, move, remove a mask) | a mask this library writes crops the way Apple's does, and the app's mask editor opens it | manual |
 | 7 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
 | 8 | 🟠 medium | Numbers & tables → Cell display formats (number, currency, percentage, date, duration, text, boolean) | A format we write makes Numbers display the value the way the inspector would. | manual |
 | 9 | 🟠 medium | Numbers & tables → Chart appearance: axes, legend, gridlines | Pages draws the chart without the gridlines this library switched off. | manual |
@@ -113,11 +113,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Drawables & media  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** a mask this library writes crops the way Apple's does
+**Claim.** a mask this library writes crops the way Apple's does, and the app's mask editor opens it
 
-**Why the suite cannot settle it.** the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page
+**Why the suite cannot settle it.** the crop is a rendering result; the suite proves the geometry and path round-trip, not what appears on the page. The editor is the harder half: rendering has been confirmed for three rounds while double-click editing kept refusing, and each round has closed one measured difference (full drawable super, window space, size semantics, traced_path, the modern super with lock pair and stand-in title/caption)
 
-**How to settle it.** crop an image to a known rectangle, open in Pages, and confirm the visible region matches — then drag the image inside the mask and re-read to check the window is where this library says
+**How to settle it.** open demo-03, confirm the cropped wave shows the stated window, then double-click it: the mask slider appearing is the pass. Reset (nulstil) working while editing refuses means the crop model is accepted and the gate is still open
 
 ### 7. Add and remove tables on a sheet
 

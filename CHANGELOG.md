@@ -7,6 +7,12 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Inserted images carry the full modern drawable super: the lock pair
+  stated (`locked` false, `aspect_ratio_locked` true — the shape of 156
+  of 171 corpus images and all 87 masked ones), and `title`/`caption`
+  references to empty stand-in archives with both hidden flags, as
+  every current-era corpus image has. `setCrop` states the lock pair
+  on any image it masks, keeping an existing lock.
 - Field report fixes, the unopenable-file class first:
   `listInThemeStyles` now routes a style to the preset list its type
   belongs to — paragraph, character or list — and throws on anything

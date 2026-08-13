@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { PagesDocument } from "../src/index.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
-import { Drawable, ExteriorTextWrap, Geometry, TEXT_WRAP_IN_FLOW, TEXT_WRAP_ON_PAGE } from "../src/tsd/schema.ts";
+import { Drawable, ExteriorTextWrap, Geometry, TEXT_WRAP_IN_FLOW, TEXT_WRAP_ON_PAGE, TSD_TYPE } from "../src/tsd/schema.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import { imageDimensions } from "../src/base/imagesize.ts";
 import {
@@ -257,7 +257,8 @@ describe("an inline image rides the text", () => {
 
     expect(doc.body.removeAttachment(attachmentId)).toBe(true);
     expect(doc.store.object(imageId) !== undefined).toBe(true);
-    expect(doc.compact()).toBe(2);
+    // Image, attachment, and the two title/caption stand-ins die together.
+    expect(doc.compact()).toBe(4);
     expect(doc.store.object(imageId)).toBe(undefined);
     expect(PagesDocument.load(doc.save()).images().length).toBe(0);
   });
@@ -525,6 +526,48 @@ describe("a crop's mask node is a full drawable", () => {
     expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(false);
     expect(drawable.getBool(Drawable.TITLE_HIDDEN)).toBe(false);
     expect(drawable.getBool(Drawable.CAPTION_HIDDEN)).toBe(false);
+  });
+
+  it("a masked image states its lock pair and keeps an existing lock", () => {
+    // All 87 masked corpus images carry aspect_ratio_locked true; locked
+    // is stated on each and stays what it was.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Foto:", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, PNG, { fileName: "s.png" });
+    const image = doc.images().find((i) => i.object.identifier === imageId)!;
+    image.setCrop({ x: 10, y: 5, width: 40, height: 30 });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const drawable = reloaded.store.object(imageId)!.message.getMessage(1)!;
+    expect(drawable.getBool(Drawable.LOCKED)).toBe(false);
+    expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(true);
+  });
+});
+
+describe("an inserted image carries the modern drawable super", () => {
+  it("states the lock pair and points title and caption at empty stand-ins", () => {
+    // Every current-era corpus image (six across four fixtures) carries
+    // locked, aspect_ratio_locked, title, caption and both hidden flags;
+    // all 176 title/caption targets are empty TSD.StandinCaptionArchives.
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Foto:", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, PNG, { fileName: "s.png" });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const drawable = reloaded.store.object(imageId)!.message.getMessage(1)!;
+    expect(drawable.getBool(Drawable.LOCKED)).toBe(false);
+    expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(true);
+    expect(drawable.getBool(Drawable.TITLE_HIDDEN)).toBe(false);
+    expect(drawable.getBool(Drawable.CAPTION_HIDDEN)).toBe(false);
+    for (const field of [Drawable.TITLE, Drawable.CAPTION]) {
+      const target = reloaded.store.resolve(drawable.getMessage(field)?.getVarint(1));
+      expect(target?.type).toBe(TSD_TYPE.STANDIN_CAPTION);
+      expect(target?.message.fields.length).toBe(0);
+    }
+    // Declared, like every corpus title and caption reference.
+    const declared = reloaded.store.object(imageId)!.getObjectReferences();
+    expect(declared.includes(drawable.getMessage(Drawable.TITLE)!.getVarint(1)!)).toBe(true);
+    expect(declared.includes(drawable.getMessage(Drawable.CAPTION)!.getVarint(1)!)).toBe(true);
   });
 });
 
