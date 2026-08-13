@@ -71,6 +71,7 @@ const EXPECTED_NAMES: Readonly<Record<string, string>> = {
   "TSD_TYPE.IMAGE": "TSD.ImageArchive",
   "TSD_TYPE.MASK": "TSD.MaskArchive",
   "TSD_TYPE.COMMENT_STORAGE": "TSD.CommentStorageArchive",
+  "TSD_TYPE.STANDIN_CAPTION": "TSD.StandinCaptionArchive",
   "TSWP_TYPE.STORAGE": "TSWP.StorageArchive",
   "TSWP_TYPE.DRAWABLE_ATTACHMENT": "TSWP.DrawableAttachmentArchive",
   "TSWP_TYPE.FOOTNOTE_REF_ATTACHMENT": "TSWP.FootnoteReferenceAttachmentArchive",
