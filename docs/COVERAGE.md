@@ -76,7 +76,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 31 | iwork16→current |
-| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all</sub> | all | ✅ read + write | 48 | all |
+| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all; writes copy a shared archive on first edit and repoint this drawable, the app's own one-object-styled behaviour</sub> | all | ✅ read + write | 48 | all |
 | Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 48 | all |
 | Geometry (enumerate, move, resize) | all | ✅ read + write | 40 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
@@ -158,7 +158,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-52 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+53 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -178,6 +178,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Text & styles → **Footnote creation and removal**
 - 🟡 low — Text & styles → **Table of contents (rules read + write, cached entries read)**
 - 🔴 high — Drawables & media → **Placement (copy onto a page/slide/sheet, remove, reorder in z)**
+- 🟡 low — Drawables & media → **Drawable style (fill, stroke, opacity, shadow, reflection)**
 - 🟡 low — Drawables & media → **Drawable shadows (enabled, angle, offset, blur, opacity)**
 - 🟡 low — Drawables & media → **Image cropping (set, move, remove a mask)**
 - 🔴 high — Drawables & media → **Inline image insertion**

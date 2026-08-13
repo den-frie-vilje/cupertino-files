@@ -794,7 +794,20 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     probe: (c) => safe(() => drawableStylesOf(c.doc.store).some((h) => h.read().stroke !== undefined)),
-    note: "where shadows live — cell and table styles have no shadow field at all",
+    note:
+      "where shadows live — cell and table styles have no shadow field at all; writes copy a shared " +
+      "archive on first edit and repoint this drawable, the app's own one-object-styled behaviour",
+    manualProof: {
+      claim: "a reflection this library writes renders as a fading mirror below the drawable",
+      why:
+        "reflection is a single opacity float on the style archive; the suite proves it round-trips, " +
+        "not that the app draws the mirror",
+      how:
+        "open demo-11, S-11: the dark-blue square should mirror below itself at half strength, with " +
+        "the inspector's Reflection ticked at 50%. No mirror = the float alone does not switch the " +
+        "effect on, and the delta against an app-made reflection is the next measurement",
+      risk: "low",
+    },
   },
   {
     group: "Drawables & media",
@@ -803,14 +816,19 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => drawableStylesOf(c.doc.store).some((h) => h.read().shadow?.enabled === true)),
     manualProof: {
-      claim: "A shadow we enable or re-parameterise renders in the app with the geometry we set.",
+      claim:
+        "A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and " +
+        "the contact and curved types draw as their kind.",
       why:
-        "Angle, offset and blur radius are rendering parameters. Fixtures prove we read Apple's values " +
-        "correctly and re-encode them identically, but not that a shadow we author from scratch on a " +
-        "shape that had none is picked up rather than ignored.",
+        "Angle, offset and blur radius are rendering parameters, and the type and enabled fields are " +
+        "pure app behaviour. Fixtures prove we read Apple's values and re-encode them identically; " +
+        "demo-03 confirmed the default drop shadow renders, and the angle scale is calibrated " +
+        "(inspector shows 360 − stored). What remains unseen is every parameter away from the default.",
       how:
-        "Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and " +
-        "compare with the Shadow section of the Style inspector.",
+        "open demo-11 (skygger): S-01 is the app-verified default as reference; S-02/S-03 move the " +
+        "angle (down, left), S-04 the offset, S-05 the blur, S-06 the opacity, S-07 the colour, " +
+        "S-08 is configured-but-disabled (no shadow may draw), S-09/S-10 are the contact and curved " +
+        "types. Each check names its square's colour and states the expected render",
       risk: "low",
     },
   },
