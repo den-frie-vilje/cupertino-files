@@ -1488,6 +1488,70 @@ describe("inserted rows and columns inherit band styling", () => {
   });
 });
 
+describe("cell borders live in the stroke sidecar", () => {
+  it("writes runs the app draws, and reads them back", () => {
+    // None of the corpus's 4139 cell-style bags carries a per-side
+    // stroke; every bordered corpus table keeps them in
+    // TableModelArchive.stroke_sidecar as per-edge layers of runs. A
+    // bag-only border rendered nothing in the returned demo.
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(2, 1, "kant");
+    table.setCellFormatting(2, 1, {
+      borders: {
+        top: solidStroke({ r: 0.75, g: 0.22, b: 0.17 }, 2),
+        bottom: solidStroke({ r: 0.75, g: 0.22, b: 0.17 }, 2),
+        left: solidStroke({ r: 0.75, g: 0.22, b: 0.17 }, 2),
+        right: solidStroke({ r: 0.75, g: 0.22, b: 0.17 }, 2),
+      },
+    });
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const borders = reloaded.cellBorders(2, 1);
+    expect(borders.top?.width).toBe(2);
+    expect(borders.left?.width).toBe(2);
+    expect(borders.right?.color?.r ?? 0).toBeCloseTo(0.75, 2);
+    // The sidecar exists, hangs off the model, and the neighbour cell
+    // shows no borders — runs are one cell long.
+    expect(Object.keys(reloaded.cellBorders(3, 1)).length).toBe(0);
+    const sidecarRef = reloaded.object.message.getMessage(TableModelFields.STROKE_SIDECAR);
+    expect(sidecarRef !== undefined).toBe(true);
+  });
+
+  it("horizontal alignment rides the cell's text style", () => {
+    // 127 corpus cells align left and 121 right through a
+    // TSWP.ParagraphStyleArchive named by the record's text_style_id;
+    // the cell style has no horizontal field at all.
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 1, "centreret");
+    table.setCellFormatting(1, 1, { horizontalAlignment: "center" });
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const styleObj = reloaded.textStyle(1, 1)!.object;
+    expect(reloaded.store.typeNameOf(styleObj)).toBe("TSWP.ParagraphStyleArchive");
+    expect(styleObj.message.getMessage(12)?.getUint(1)).toBe(2);
+    // null drops the cell's own text style so the band default rules.
+    reloaded.setCellFormatting(1, 1, { horizontalAlignment: null });
+    const again = NumbersDocument.load(reloaded.store.save()).tables()[0]!;
+    expect(again.textStyleId(1, 1)).toBe(undefined);
+  });
+
+  it("null removes an edge without touching the others", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 1, "x");
+    table.setCellFormatting(1, 1, {
+      borders: { top: solidStroke({ r: 0, g: 0, b: 0 }, 1), left: solidStroke({ r: 0, g: 0, b: 0 }, 1) },
+    });
+    table.setCellFormatting(1, 1, { borders: { top: null } });
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const borders = reloaded.cellBorders(1, 1);
+    expect(borders.top).toBe(undefined);
+    expect(borders.left?.width).toBe(1);
+  });
+});
+
 describe("cell input normalisation", () => {
   /**
    * The stakes: a bare value that falls through every `setCell` case

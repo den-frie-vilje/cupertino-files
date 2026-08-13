@@ -48,6 +48,10 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "TableModel.textStyle",
     "read surface the inspect tools compose over, resolving textStyleId to a handle",
   ],
+  [
+    "TableModel.cellBorders",
+    "read surface behind format_cells round-trips; the sidecar mechanics are a library-level concern",
+  ],
   // Loaders and savers — the server's own machinery.
   ["IWorkDocument.open", PLUMBING],
   ["IWorkDocument.save", PLUMBING],

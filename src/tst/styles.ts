@@ -13,6 +13,8 @@ import { RawMessage } from "../base/protobuf.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { Fill, Padding, Stroke } from "../tsd/style.ts";
+import type { TextAlignment } from "../tswp/schema.ts";
+import type { TextAlignmentName } from "../tss/stylesheet.ts";
 import { readFill, readPadding, readStroke, writeFill, writePadding, writeStroke } from "../tsd/style.ts";
 /**
  * Both TST style archives put their property bag at field 11 — the same
@@ -102,6 +104,13 @@ export interface CellFormatting {
   padding?: Padding;
   /** 0 top, 1 middle, 2 bottom — see {@link VerticalAlignment}. */
   verticalAlignment?: number;
+  /**
+   * Horizontal alignment of the cell's text — a `TextAlignment` value or
+   * its name. Rides the text layer: the cell gets an anonymous paragraph
+   * style carrying the alignment, which is where the corpus keeps it.
+   * `null` drops the cell's own text style so the band default applies.
+   */
+  horizontalAlignment?: TextAlignment | TextAlignmentName | null;
   /** Wrap text within the cell rather than clipping it. */
   textWrap?: boolean;
 }

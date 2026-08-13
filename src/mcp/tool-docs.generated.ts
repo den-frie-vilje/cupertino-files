@@ -118,6 +118,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "TableModel.bandStyle", tool: null },
   { api: "TableModel.bandTextStyle", tool: null },
   { api: "TableModel.categories", tool: null },
+  { api: "TableModel.cellBorders", tool: null },
   { api: "TableModel.cellControl", tool: null },
   { api: "TableModel.cellFormat", tool: null },
   { api: "TableModel.cellFormatting", tool: null },
