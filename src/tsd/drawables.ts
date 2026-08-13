@@ -12,7 +12,8 @@ import { typeName, type IWorkApp } from "../tsp/registry.ts";
 import { Drawable, Geometry } from "./schema.ts";
 import { makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
 import type { Fill, Shadow, Stroke } from "./style.ts";
-import { readFill, readShadow, readStroke, writeFill, writeShadow, writeStroke } from "./style.ts";
+import { DEFAULT_SHADOW, readFill, readShadow, readStroke, writeFill, writeShadow, writeStroke } from "./style.ts";
+import { protoFields } from "../proto/fields.ts";
 
 export interface GeometryInfo {
   x: number | undefined;
@@ -382,17 +383,43 @@ export class DrawableStyleHandle {
     return this.set({ shadow: { ...(existing ?? DEFAULT_SHADOW), enabled } });
   }
 
-  /** Give the owning drawable its own copy of a shared style archive. */
+  /**
+   * Give the owning drawable its own copy of a shared style archive.
+   *
+   * The clone takes the app's style-one-object shape whole: anonymous —
+   * no name, no `style_identifier`, since no two of the corpus's 18554
+   * identified styles share an identifier and a byte-copy keeping the
+   * source's would put two styles behind one — parented on the
+   * identified style it copies (30 of 183 drawable-referenced corpus
+   * styles are exactly that; the other 153 are the identified originals
+   * themselves), and listed in its stylesheet's `styles` list with the
+   * reference declared (183 of 183 are listed). The app's style
+   * machinery asserts over archives outside this shape when the
+   * inspector edits one, and the assert aborts the whole app.
+   */
   private privatise(): void {
     if (!this.ownedBy) return;
     const { drawable, field } = this.ownedBy;
     const others = this.store.referrers(this.id).filter((id) => id !== drawable.identifier);
     if (others.length === 0) return;
-    const component = this.store.componentOf(this.id);
+    const source = this.styleObject;
+    const component = this.store.componentOf(source.identifier);
     if (!component) throw new RangeError(`drawable style ${this.id} has no component`);
-    const clone = this.store.createObject(this.styleObject.type, component, {
-      cloneFrom: this.styleObject,
-    });
+    const clone = this.store.createObject(source.type, component, { cloneFrom: source });
+    const sup = clone.message.getMessage(1);
+    if (sup) {
+      sup.remove(StyleIdentity.NAME);
+      sup.remove(StyleIdentity.STYLE_IDENTIFIER);
+      sup.setMessage(StyleIdentity.PARENT, makeRef(source.identifier));
+      const sheetId = refId(sup, StyleIdentity.STYLESHEET);
+      const sheet = sheetId !== undefined ? this.store.object(sheetId) : undefined;
+      if (sheet) {
+        sheet.message.addMessage(SheetFields.STYLES, makeRef(clone.identifier));
+        sheet.setObjectReferences([
+          ...new Set([...sheet.getObjectReferences(), clone.identifier]),
+        ]);
+      }
+    }
     drawable.message.setMessage(field, makeRef(clone.identifier));
     this.store.retargetReference(drawable, this.id, clone.identifier);
     this.styleObject = clone;
@@ -404,20 +431,17 @@ const REFLECTION_OPACITY = 1;
 const DRAWABLE_STYLE_OVERRIDE_COUNT = 10;
 
 /**
- * The parameters Apple defaults a fresh drop shadow to. The inspector
- * displays `360 − angle`: stored 45 is the standard down-right shadow
- * the UI calls 315°, and stored 315 renders up-right as UI 45° — the
- * proto's `[default = 315]` describes the legacy scale, not the
- * inspector's.
+ * The style identity fields live on TSS.StyleArchive (`super` at field 1
+ * of every concrete style). Privatising needs them, and tsd sits below
+ * tss in the layer order, so they resolve here.
  */
-export const DEFAULT_SHADOW: Shadow = {
-  color: { r: 0, g: 0, b: 0, a: 1 },
-  angle: 45,
-  offset: 5,
-  radius: 1,
-  opacity: 1,
-  enabled: true,
-};
+const StyleIdentity = protoFields("TSS.StyleArchive", {
+  NAME: "name",
+  STYLE_IDENTIFIER: "style_identifier",
+  PARENT: "parent",
+  STYLESHEET: "stylesheet",
+});
+const SheetFields = protoFields("TSS.StylesheetArchive", { STYLES: "styles" });
 
 /** Every drawable in a document that carries a visual style. */
 export function drawableStylesOf(store: ObjectStore): DrawableStyleHandle[] {

@@ -34,7 +34,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 9 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and the contact and curved types draw as their kind. | manual |
+| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the contact and curved types draw as their kind — and the app survives editing our shadow in its own inspector. | manual |
 | 13 | 🟡 low | Drawables & media → Drawable style (fill, stroke, opacity, shadow, reflection) | a reflection this library writes renders as a fading mirror below the drawable | manual |
 | 14 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
 | 15 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
@@ -183,11 +183,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Drawables & media  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and the contact and curved types draw as their kind.
+**Claim.** A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the contact and curved types draw as their kind — and the app survives editing our shadow in its own inspector.
 
-**Why the suite cannot settle it.** Angle, offset and blur radius are rendering parameters, and the type and enabled fields are pure app behaviour. Fixtures prove we read Apple's values and re-encode them identically; demo-03 confirmed the default drop shadow renders, and the angle scale is calibrated (inspector shows 360 − stored). What remains unseen is every parameter away from the default.
+**Why the suite cannot settle it.** Angle, offset and blur radius are rendering parameters, and the type and enabled fields are pure app behaviour. The first round proved rendering (S-01–S-07, S-09, S-10 confirmed) and found the harder half: re-enabling the disabled shadow through the app's popup aborted Pages whole — the archive rendered but asserted under edit, missing the type field all 929 corpus shadows carry, on an override style shaped like no app file's. Both are rewritten to the measured shape; the toggle is the remaining check.
 
-**How to settle it.** open demo-11 (skygger): S-01 is the app-verified default as reference; S-02/S-03 move the angle (down, left), S-04 the offset, S-05 the blur, S-06 the opacity, S-07 the colour, S-08 is configured-but-disabled (no shadow may draw), S-09/S-10 are the contact and curved types. Each check names its square's colour and states the expected render
+**How to settle it.** open demo-11 (skygger): S-08, the black square — confirm no shadow draws, then re-enable the shadow via the popup (Slagskygge). The app surviving the switch and drawing the shadow is the pass; a crash again means the remaining delta is beyond the byte-visible set and the instructions in the document say so. The other rungs are confirmed
 
 ### 13. Drawable style (fill, stroke, opacity, shadow, reflection)
 

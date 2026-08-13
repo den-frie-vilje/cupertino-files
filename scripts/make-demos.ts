@@ -496,7 +496,7 @@ function demoShadows(): Uint8Array {
     {
       rgb: [30, 30, 30],
       text:
-        "Slået fra: den SORTE firkant har en konfigureret men SLÅET FRA skygge — der må INGEN skygge tegnes, og inspektørens skygge-felt bør stå slået fra. Tegnes der en skygge alligevel, respekteres enabled-flaget ikke — et vigtigt fund.",
+        "Slået fra: den SORTE firkant har en konfigureret men SLÅET FRA skygge — der må INGEN skygge tegnes, og inspektørens skygge-felt bør stå slået fra. Slå derefter skyggen TIL via popup'en (vælg Slagskygge): appen skal overleve skiftet og tegne skyggen. Denne fil er genopbygget efter at netop dét skifte fik Pages til at crashe; et nyt crash er derfor et vigtigt fund, og »skiftet virkede« er præcis det, punktet måler.",
       style: { shadow: { ...DEFAULT_SHADOW, enabled: false } },
     },
     {
@@ -1054,9 +1054,10 @@ const demos: Demo[] = [
       if (!d.bodyText.includes("S-11")) throw new Error("skygger: checks missing");
       if (d.images().length !== 22) throw new Error(`skygger: expected 22 images, got ${d.images().length}`);
       // The floats' own styles — the theme's presets carry shadows too.
-      const styles = [0, 1].flatMap(
-        (page) => d.floatingDrawables(page)?.drawables().map((f) => f.style()!.read()) ?? [],
+      const handles = [0, 1].flatMap(
+        (page) => d.floatingDrawables(page)?.drawables().map((f) => f.style()!) ?? [],
       );
+      const styles = handles.map((h) => h.read());
       if (styles.length !== 11) throw new Error(`skygger: expected 11 floats, got ${styles.length}`);
       const enabled = styles.filter((s) => s.shadow?.enabled === true).length;
       if (enabled !== 9) throw new Error(`skygger: expected 9 enabled shadows, got ${enabled}`);
@@ -1064,6 +1065,21 @@ const demos: Demo[] = [
       if (!styles.some((s) => s.shadow?.type === ShadowType.CONTACT)) throw new Error("skygger: contact type missing");
       if (!styles.some((s) => s.shadow?.type === ShadowType.CURVED)) throw new Error("skygger: curved type missing");
       if (!styles.some((s) => s.reflection === 0.5)) throw new Error("skygger: reflection missing");
+      // The crash laws: every shadow written whole, every override style
+      // anonymous and parented — the app aborts over anything less when
+      // its inspector edits one.
+      for (const s of styles) {
+        if (!s.shadow) continue;
+        for (const key of ["color", "angle", "offset", "radius", "opacity", "enabled", "type"] as const) {
+          if (s.shadow[key] === undefined) throw new Error(`skygger: shadow missing ${key}`);
+        }
+        if (s.shadow.color?.space === undefined) throw new Error("skygger: shadow colour names no space");
+      }
+      for (const h of handles) {
+        const sup = h.object.message.getMessage(1);
+        if (sup?.getString(2) !== undefined) throw new Error("skygger: override style kept an identifier");
+        if (sup?.getMessage(3) === undefined) throw new Error("skygger: override style has no parent");
+      }
     },
   },
 ];

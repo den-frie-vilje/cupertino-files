@@ -5,7 +5,7 @@
  * The value codecs are checked against real archives wherever the corpus
  * has them, so these tests fail if our field numbers drift from Apple's.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   BorderPosition,
@@ -672,6 +672,73 @@ describe("drawable styling", () => {
     expect(reloaded.compatibility().canRoundTrip).toBe(true);
   });
 
+  it("every corpus shadow is written whole, and so is ours", () => {
+    // All 929 parameter-carrying shadow archives in the corpus — 687
+    // disabled, 242 enabled — state all seven fields; the only other
+    // app-written state is the empty archive. A six-field shadow
+    // renders, but the app's shadow popup aborts the whole app over it
+    // (demo-11's S-08, re-enabled in the inspector).
+    let carrying = 0;
+    for (const name of readdirSync(FIXTURES)) {
+      if (!/\.(pages|numbers|key)$/.test(name)) continue;
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(fixture(name));
+      } catch {
+        continue;
+      }
+      for (const handle of drawableStylesOf(doc.store)) {
+        const shadow = handle.read().shadow;
+        if (!shadow || Object.keys(shadow).length === 0) continue;
+        carrying++;
+        const label = (missing: string) => `${name} style ${handle.id}: ${missing}`;
+        for (const key of ["color", "angle", "offset", "radius", "opacity", "enabled", "type"] as const) {
+          expect(shadow[key] === undefined ? label(`no ${key}`) : "whole").toBe("whole");
+        }
+      }
+    }
+    expect(carrying).toBeGreaterThan(900);
+
+    // The writer completes a partial shadow to the same shape, and its
+    // colour names its space — every current-era shadow colour does
+    // (822 of 822); the 107 without one all live in five 2013-class
+    // old-era files.
+    const written = readShadow(writeShadow({ enabled: false }))!;
+    for (const key of ["color", "angle", "offset", "radius", "opacity", "enabled", "type"] as const) {
+      expect(written[key] !== undefined).toBe(true);
+    }
+    expect(written.color?.space).toBe("srgb");
+    expect(written.enabled).toBe(false);
+  });
+
+  it("no two identified styles in any fixture share an identifier", () => {
+    // 18554 identified styles across the corpus, zero collisions — an
+    // identifier names exactly one style, and a clone keeping its
+    // source's would put two behind one: the corrupt-stylesheet state.
+    for (const name of readdirSync(FIXTURES)) {
+      if (!/\.(pages|numbers|key)$/.test(name)) continue;
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(fixture(name));
+      } catch {
+        continue;
+      }
+      const seen = new Map<string, bigint>();
+      for (const { obj } of doc.store.allObjects()) {
+        if (!/StyleArchive$/.test(doc.store.typeNameOf(obj) ?? "")) continue;
+        const identifier = obj.message.getMessage(1)?.getString(2);
+        if (identifier === undefined || identifier.length === 0) continue;
+        const holder = seen.get(identifier);
+        expect(
+          holder === undefined
+            ? "unique"
+            : `${name}: ${identifier} on both ${holder} and ${obj.identifier}`,
+        ).toBe("unique");
+        seen.set(identifier, obj.identifier);
+      }
+    }
+  });
+
   it("styling one drawable never restyles the others sharing its archive", () => {
     // Style archives are routinely shared — the theme lists one, and a
     // deep copy shares its source's — so a write through a shared archive
@@ -709,6 +776,22 @@ describe("drawable styling", () => {
     // The archive they shared — the inline source's — is untouched.
     const shared = drawableStylesOf(reloaded.store).find((s) => s.id === sharedId)!;
     expect(shared.read()).toEqual(baseline);
+    // The clones take the app's override shape whole: anonymous — a kept
+    // identifier would put two styles behind one, and no two of the
+    // corpus's 18554 identified styles share one — parented on the
+    // source, and listed in the stylesheet with the reference declared.
+    for (const style of styles) {
+      const sup = style.object.message.getMessage(1)!;
+      expect(sup.getString(2)).toBe(undefined);
+      expect(sup.getMessage(3)?.getVarint(1)).toBe(sharedId);
+      const sheetId = sup.getMessage(5)!.getVarint(1)!;
+      const sheet = reloaded.store.object(sheetId)!;
+      const listed = sheet.message
+        .getMessages(1)
+        .some((ref) => ref.getVarint(1) === style.id);
+      expect(listed).toBe(true);
+      expect(sheet.getObjectReferences().includes(style.id)).toBe(true);
+    }
   });
 
   it("distinguishes disabling a shadow from removing it", () => {

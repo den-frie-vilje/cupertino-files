@@ -817,18 +817,21 @@ export const CAPABILITIES: Capability[] = [
     probe: (c) => safe(() => drawableStylesOf(c.doc.store).some((h) => h.read().shadow?.enabled === true)),
     manualProof: {
       claim:
-        "A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and " +
-        "the contact and curved types draw as their kind.",
+        "A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the " +
+        "contact and curved types draw as their kind — and the app survives editing our shadow in " +
+        "its own inspector.",
       why:
         "Angle, offset and blur radius are rendering parameters, and the type and enabled fields are " +
-        "pure app behaviour. Fixtures prove we read Apple's values and re-encode them identically; " +
-        "demo-03 confirmed the default drop shadow renders, and the angle scale is calibrated " +
-        "(inspector shows 360 − stored). What remains unseen is every parameter away from the default.",
+        "pure app behaviour. The first round proved rendering (S-01–S-07, S-09, S-10 confirmed) and " +
+        "found the harder half: re-enabling the disabled shadow through the app's popup aborted " +
+        "Pages whole — the archive rendered but asserted under edit, missing the type field all 929 " +
+        "corpus shadows carry, on an override style shaped like no app file's. Both are rewritten " +
+        "to the measured shape; the toggle is the remaining check.",
       how:
-        "open demo-11 (skygger): S-01 is the app-verified default as reference; S-02/S-03 move the " +
-        "angle (down, left), S-04 the offset, S-05 the blur, S-06 the opacity, S-07 the colour, " +
-        "S-08 is configured-but-disabled (no shadow may draw), S-09/S-10 are the contact and curved " +
-        "types. Each check names its square's colour and states the expected render",
+        "open demo-11 (skygger): S-08, the black square — confirm no shadow draws, then re-enable " +
+        "the shadow via the popup (Slagskygge). The app surviving the switch and drawing the shadow " +
+        "is the pass; a crash again means the remaining delta is beyond the byte-visible set and " +
+        "the instructions in the document say so. The other rungs are confirmed",
       risk: "low",
     },
   },

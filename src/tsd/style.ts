@@ -376,15 +376,46 @@ export function readShadow(message: RawMessage | undefined): Shadow | undefined 
   return out;
 }
 
+/**
+ * The parameters Apple defaults a fresh drop shadow to. The inspector
+ * displays `360 − angle`: stored 45 is the standard down-right shadow
+ * the UI calls 315°, and stored 315 renders up-right as UI 45° — the
+ * proto's `[default = 315]` describes the legacy scale, not the
+ * inspector's.
+ */
+export const DEFAULT_SHADOW: Shadow = {
+  color: { r: 0, g: 0, b: 0, a: 1 },
+  angle: 45,
+  offset: 5,
+  radius: 1,
+  opacity: 1,
+  enabled: true,
+};
+
+/**
+ * A shadow archive is written whole. Every parameter-carrying shadow in
+ * the corpus — all 929, the 687 disabled ones included — states all
+ * seven fields, and every current-era shadow colour names its space
+ * (822 of 822; the 107 space-less ones live in five 2013-class files).
+ * The only other app-written state is the empty archive. Absent fields
+ * are completed from {@link DEFAULT_SHADOW}, the type as drop, the
+ * colour's space as sRGB: a six-field shadow renders, but the app's
+ * shadow machinery asserts over the archive when its popup edits one,
+ * and the assert aborts the whole app.
+ */
 export function writeShadow(shadow: Shadow): RawMessage {
   const message = RawMessage.create();
-  if (shadow.color) message.setMessage(ShadowFields.COLOR, writeColor(shadow.color));
-  if (shadow.angle !== undefined) message.setFloat(ShadowFields.ANGLE, shadow.angle);
-  if (shadow.offset !== undefined) message.setFloat(ShadowFields.OFFSET, shadow.offset);
-  if (shadow.radius !== undefined) message.setVarint(ShadowFields.RADIUS, shadow.radius);
-  if (shadow.opacity !== undefined) message.setFloat(ShadowFields.OPACITY, shadow.opacity);
-  if (shadow.enabled !== undefined) message.setBool(ShadowFields.IS_ENABLED, shadow.enabled);
-  if (shadow.type !== undefined) message.setVarint(ShadowFields.TYPE, shadow.type);
+  const color = shadow.color ?? DEFAULT_SHADOW.color!;
+  message.setMessage(
+    ShadowFields.COLOR,
+    writeColor(color.space ? color : { ...color, space: "srgb" }),
+  );
+  message.setFloat(ShadowFields.ANGLE, shadow.angle ?? DEFAULT_SHADOW.angle!);
+  message.setFloat(ShadowFields.OFFSET, shadow.offset ?? DEFAULT_SHADOW.offset!);
+  message.setVarint(ShadowFields.RADIUS, shadow.radius ?? DEFAULT_SHADOW.radius!);
+  message.setFloat(ShadowFields.OPACITY, shadow.opacity ?? DEFAULT_SHADOW.opacity!);
+  message.setBool(ShadowFields.IS_ENABLED, shadow.enabled ?? DEFAULT_SHADOW.enabled!);
+  message.setVarint(ShadowFields.TYPE, shadow.type ?? ShadowType.DROP);
   return message;
 }
 
