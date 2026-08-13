@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 16 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 17 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -34,11 +34,12 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 9 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we enable or re-parameterise renders in the app with the geometry we set. | manual |
-| 13 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 14 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 15 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 16 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and the contact and curved types draw as their kind. | manual |
+| 13 | 🟡 low | Drawables & media → Drawable style (fill, stroke, opacity, shadow, reflection) | a reflection this library writes renders as a fading mirror below the drawable | manual |
+| 14 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 15 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 16 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 17 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -182,13 +183,25 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Drawables & media  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** A shadow we enable or re-parameterise renders in the app with the geometry we set.
+**Claim.** A shadow we parameterise renders with the geometry we set, the enabled flag gates it, and the contact and curved types draw as their kind.
 
-**Why the suite cannot settle it.** Angle, offset and blur radius are rendering parameters. Fixtures prove we read Apple's values correctly and re-encode them identically, but not that a shadow we author from scratch on a shape that had none is picked up rather than ignored.
+**Why the suite cannot settle it.** Angle, offset and blur radius are rendering parameters, and the type and enabled fields are pure app behaviour. Fixtures prove we read Apple's values and re-encode them identically; demo-03 confirmed the default drop shadow renders, and the angle scale is calibrated (inspector shows 360 − stored). What remains unseen is every parameter away from the default.
 
-**How to settle it.** Enable a shadow at angle 90, offset 10, radius 20 on a shape, open in Keynote or Pages, and compare with the Shadow section of the Style inspector.
+**How to settle it.** open demo-11 (skygger): S-01 is the app-verified default as reference; S-02/S-03 move the angle (down, left), S-04 the offset, S-05 the blur, S-06 the opacity, S-07 the colour, S-08 is configured-but-disabled (no shadow may draw), S-09/S-10 are the contact and curved types. Each check names its square's colour and states the expected render
 
-### 13. Categories: enable or disable grouping
+### 13. Drawable style (fill, stroke, opacity, shadow, reflection)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Drawables & media  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** a reflection this library writes renders as a fading mirror below the drawable
+
+**Why the suite cannot settle it.** reflection is a single opacity float on the style archive; the suite proves it round-trips, not that the app draws the mirror
+
+**How to settle it.** open demo-11, S-11: the dark-blue square should mirror below itself at half strength, with the inspector's Reflection ticked at 50%. No mirror = the float alone does not switch the effect on, and the delta against an app-made reflection is the next measurement
+
+### 14. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -200,7 +213,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 14. Conditional formatting rules
+### 15. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -212,7 +225,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 15. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 16. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -224,7 +237,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 16. Table of contents (rules read + write, cached entries read)
+### 17. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  

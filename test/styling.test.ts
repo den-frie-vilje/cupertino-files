@@ -672,6 +672,45 @@ describe("drawable styling", () => {
     expect(reloaded.compatibility().canRoundTrip).toBe(true);
   });
 
+  it("styling one drawable never restyles the others sharing its archive", () => {
+    // Style archives are routinely shared — the theme lists one, and a
+    // deep copy shares its source's — so a write through a shared archive
+    // used to restyle every drawable holding it: eleven squares given
+    // eleven different shadows ended with five. The write now goes to a
+    // private clone with this drawable's reference repointed, the app's
+    // own behaviour.
+    const png = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0, 0, 0, 0x64, 0, 0, 0, 0x32, 8, 6, 0, 0, 0,
+    ]);
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Tekst.", "Body");
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, png, { fileName: "s.png" });
+    const floating = doc.floatingDrawables(0, { create: true })!;
+    const source = doc.store.object(imageId)!;
+    const a = floating.addCopyOf(source, { x: 100, y: 100 });
+    const b = floating.addCopyOf(source, { x: 100, y: 220 });
+    const sharedId = a.style()!.id;
+    const baseline = a.style()!.read();
+
+    a.style()!.set({ shadow: { angle: 90, offset: 25, radius: 3, opacity: 1, enabled: true } });
+    b.style()!.set({ opacity: 0.4 });
+
+    const reloaded = PagesDocument.load(doc.save());
+    const styles = reloaded
+      .floatingDrawables(0)!
+      .drawables()
+      .map((f) => f.style()!);
+    expect(styles[0]!.id === styles[1]!.id).toBe(false);
+    expect(styles.some((s) => s.id === sharedId)).toBe(false);
+    expect(styles[0]!.read().shadow?.offset).toBe(25);
+    expect(styles[1]!.read().shadow?.offset).toBe(baseline.shadow?.offset);
+    expect(styles[1]!.read().opacity).toBeCloseTo(0.4, 5);
+    // The archive they shared — the inline source's — is untouched.
+    const shared = drawableStylesOf(reloaded.store).find((s) => s.id === sharedId)!;
+    expect(shared.read()).toEqual(baseline);
+  });
+
   it("distinguishes disabling a shadow from removing it", () => {
     // Two different states: the apps keep a full parameter set with
     // is_enabled false, which is how the inspector remembers your settings

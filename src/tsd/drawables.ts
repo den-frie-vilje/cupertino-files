@@ -10,7 +10,7 @@ import { RawMessage, WireType } from "../base/protobuf.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { typeName, type IWorkApp } from "../tsp/registry.ts";
 import { Drawable, Geometry } from "./schema.ts";
-import { Point, refId, SizeFields } from "../tsp/schema.ts";
+import { makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
 import type { Fill, Shadow, Stroke } from "./style.ts";
 import { readFill, readShadow, readStroke, writeFill, writeShadow, writeStroke } from "./style.ts";
 
@@ -164,25 +164,32 @@ export class DrawableModel {
    * shape or image, not on its cells.
    */
   style(): DrawableStyleHandle | undefined {
-    const styleObject = this.styleObject();
-    return styleObject ? new DrawableStyleHandle(this.store, styleObject) : undefined;
+    const reference = this.styleReference();
+    return reference
+      ? new DrawableStyleHandle(this.store, reference.object, {
+          drawable: this.object,
+          field: reference.field,
+        })
+      : undefined;
   }
 
   /**
-   * Resolve the drawable's style object.
+   * Resolve the drawable's style object and the field referencing it.
    *
    * The field number differs per concrete archive (`ShapeArchive.style` is
    * 2, `ImageArchive.style` is 3, and so on), so rather than tabulate every
    * subclass we resolve each reference-shaped field and keep the one that
    * lands on a shape or media style.
    */
-  private styleObject(): IwaObject | undefined {
+  private styleReference(): { object: IwaObject; field: number } | undefined {
     for (const field of this.object.message.fields) {
       if (field.wire !== WireType.Bytes) continue;
       const id = refId(this.object.message, field.no);
       if (id === undefined) continue;
       const target = this.store.object(id);
-      if (target && isDrawableStyleType(target.type, this.store.app)) return target;
+      if (target && isDrawableStyleType(target.type, this.store.app)) {
+        return { object: target, field: field.no };
+      }
     }
     return undefined;
   }
@@ -242,15 +249,26 @@ export interface DrawableStyle {
 /** A live view of one drawable's visual style. */
 export class DrawableStyleHandle {
   readonly store: ObjectStore;
-  readonly object: IwaObject;
+  private styleObject: IwaObject;
+  /** Set when the handle came from a drawable, enabling copy-on-write. */
+  private readonly ownedBy?: { drawable: IwaObject; field: number };
 
-  constructor(store: ObjectStore, object: IwaObject) {
+  constructor(
+    store: ObjectStore,
+    object: IwaObject,
+    ownedBy?: { drawable: IwaObject; field: number },
+  ) {
     this.store = store;
-    this.object = object;
+    this.styleObject = object;
+    if (ownedBy) this.ownedBy = ownedBy;
+  }
+
+  get object(): IwaObject {
+    return this.styleObject;
   }
 
   get id(): bigint {
-    return this.object.identifier;
+    return this.styleObject.identifier;
   }
 
   /**
@@ -311,8 +329,19 @@ export class DrawableStyleHandle {
    * there. Note that a shadow with `enabled: false` is how the apps store
    * "shadow configured but switched off" — removing the archive and
    * disabling it are different states, and both are expressible.
+   *
+   * Copies on write: a style archive is routinely shared — the theme
+   * lists one, templates hand one to every drawable using them, and a
+   * deep copy shares its source's — so writing through a shared archive
+   * would restyle every drawable holding it. When the handle knows its
+   * drawable and the archive has other referrers, the write goes to a
+   * private clone with the drawable's reference repointed, which is the
+   * app's own behaviour: styling one object never edits the shared
+   * style. A handle from {@link drawableStylesOf} has no owning
+   * drawable and edits the archive in place.
    */
   set(style: DrawableStyle): this {
+    this.privatise();
     let props = this.properties();
     if (!props) {
       props = RawMessage.create();
@@ -351,6 +380,22 @@ export class DrawableStyleHandle {
   setShadowEnabled(enabled: boolean): this {
     const existing = this.read().shadow;
     return this.set({ shadow: { ...(existing ?? DEFAULT_SHADOW), enabled } });
+  }
+
+  /** Give the owning drawable its own copy of a shared style archive. */
+  private privatise(): void {
+    if (!this.ownedBy) return;
+    const { drawable, field } = this.ownedBy;
+    const others = this.store.referrers(this.id).filter((id) => id !== drawable.identifier);
+    if (others.length === 0) return;
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError(`drawable style ${this.id} has no component`);
+    const clone = this.store.createObject(this.styleObject.type, component, {
+      cloneFrom: this.styleObject,
+    });
+    drawable.message.setMessage(field, makeRef(clone.identifier));
+    this.store.retargetReference(drawable, this.id, clone.identifier);
+    this.styleObject = clone;
   }
 }
 

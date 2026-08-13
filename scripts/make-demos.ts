@@ -20,12 +20,16 @@ import { join } from "node:path";
 import {
   BorderPosition,
   colorFill,
+  DEFAULT_SHADOW,
+  type DrawableStyle,
   KeynoteDocument,
   NumbersDocument,
   PagesDocument,
+  ShadowType,
   solidStroke,
   TabAlignment,
 } from "../src/index.ts";
+import { blockPng } from "./png.ts";
 
 const TERRACOTTA = { r: 0.753, g: 0.224, b: 0.169 };
 const DARKBLUE = { r: 0.16, g: 0.29, b: 0.62 };
@@ -433,6 +437,115 @@ function demoChart(): Uint8Array {
   doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
   if (chartAttachment !== undefined) {
     doc.body.insertAttachment(doc.body.paragraphStarts()[anchor]!, chartAttachment);
+  }
+  return doc.save();
+}
+
+// ---------------------------------------------------- demo 11: shadows
+
+function demoShadows(): Uint8Array {
+  const doc = PagesDocument.blank();
+  const check = counter("S");
+  pagesIntro(
+    doc,
+    "DEMO 11 · Skygger, blur og refleksioner",
+    "Slagskyggens parametre (retning, afstand, blur, dækkraft, farve), enabled-flaget, de tre skyggetyper og spejling — elleve farvede firkanter, én ændring pr. firkant. Firkanterne flyder i højre side af side 1 og 2 i punkternes rækkefølge, og hvert punkt navngiver sin firkants farve; nederst står en farveprøve-række i samme rækkefølge. Inspektøren: Formatér → Stil → Skygge.",
+  );
+
+  // One delta per rung against S-01's stated baseline (the app-verified
+  // default: stored angle 45 = inspector 315°, offset 5, blur 1, black,
+  // full opacity, enabled).
+  const rungs: { rgb: [number, number, number]; text: string; style: DrawableStyle }[] = [
+    {
+      rgb: [192, 57, 43],
+      text:
+        "Referencen: den TERRAKOTTA firkant har standardskyggen — sort slagskygge NEDAD MOD HØJRE (inspektøren viser 315°), tæt på firkanten (afstand 5 pkt.) og med skarp kant (blur 1 pkt.). De næste punkter ændrer én ting hver i forhold til denne.",
+      style: { shadow: { ...DEFAULT_SHADOW } },
+    },
+    {
+      rgb: [41, 74, 158],
+      text: "Retning: den BLÅ firkants skygge peger LIGE NED (inspektøren viser 270°).",
+      style: { shadow: { ...DEFAULT_SHADOW, angle: 90 } },
+    },
+    {
+      rgb: [79, 153, 82],
+      text:
+        "Retning igen: den GRØNNE firkants skygge peger mod VENSTRE (inspektøren viser 180°). Peger den en anden vej, så skriv hvilken — retningsskalaen er præcis det, punktet måler.",
+      style: { shadow: { ...DEFAULT_SHADOW, angle: 180 } },
+    },
+    {
+      rgb: [230, 185, 50],
+      text: "Afstand: den GULE firkants skygge er rykket 25 pkt. væk — klart adskilt fra firkanten, samme retning som referencen.",
+      style: { shadow: { ...DEFAULT_SHADOW, offset: 25 } },
+    },
+    {
+      rgb: [125, 60, 152],
+      text: "Blur: den LILLA firkants skygge er meget blød (blur 20 pkt.) — en udtværet sky frem for en skarp kant.",
+      style: { shadow: { ...DEFAULT_SHADOW, radius: 20 } },
+    },
+    {
+      rgb: [230, 126, 34],
+      text: "Dækkraft: den ORANGE firkants skygge er svag (35 %). Sammenlign med referencens fulde sorte.",
+      style: { shadow: { ...DEFAULT_SHADOW, opacity: 0.35 } },
+    },
+    {
+      rgb: [150, 150, 150],
+      text: "Farve: den GRÅ firkants skygge er TERRAKOTTA-farvet, ikke sort.",
+      style: { shadow: { ...DEFAULT_SHADOW, color: { r: 0.753, g: 0.224, b: 0.169, a: 1 } } },
+    },
+    {
+      rgb: [30, 30, 30],
+      text:
+        "Slået fra: den SORTE firkant har en konfigureret men SLÅET FRA skygge — der må INGEN skygge tegnes, og inspektørens skygge-felt bør stå slået fra. Tegnes der en skygge alligevel, respekteres enabled-flaget ikke — et vigtigt fund.",
+      style: { shadow: { ...DEFAULT_SHADOW, enabled: false } },
+    },
+    {
+      rgb: [26, 188, 156],
+      text: "Type: den TURKISE firkant har en KONTAKT-skygge (popup'en »Kontakt«) — skyggen samler sig under firkantens fod, som om den står på en flade.",
+      style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CONTACT } },
+    },
+    {
+      rgb: [121, 85, 61],
+      text: "Type: den BRUNE firkant har en BUET skygge (popup'en »Buet«).",
+      style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CURVED } },
+    },
+    {
+      rgb: [24, 38, 74],
+      text: "Spejling: den MØRKEBLÅ firkant har INGEN skygge men en SPEJLING (50 %) — firkanten spejles under sig selv og fader ud. Inspektøren: Spejling slået til med skyderen på 50 %.",
+      style: { reflection: 0.5 },
+    },
+  ];
+
+  for (const [index, rung] of rungs.entries()) {
+    pagesCheck(doc, check(), rung.text);
+    pagesFeedback(doc);
+    // A page break after the sixth check puts S-07..S-11 beside their
+    // squares on page 2.
+    if (index === 5) doc.body.insertText(doc.body.text.length, "\f");
+  }
+  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
+  const legend = doc.appendParagraph("Farveprøver i rækkefølgen S-01…S-11: ", "Body");
+
+  // The legend chips are the sources; each floating square is a copy
+  // carrying its rung's one-delta style.
+  const sources: bigint[] = [];
+  for (const [index, rung] of rungs.entries()) {
+    const { imageId } = doc.insertInlineImage(doc.body.text.length, blockPng(40, 40, rung.rgb), {
+      fileName: `demo-skygge-${String(index + 1).padStart(2, "0")}.png`,
+      maxWidth: 14,
+    });
+    sources.push(imageId);
+  }
+  void legend;
+
+  for (const [index, rung] of rungs.entries()) {
+    const page = index < 6 ? 0 : 1;
+    const floating = doc.floatingDrawables(page, { create: true });
+    const source = doc.store.object(sources[index]!);
+    if (!floating || !source) throw new Error(`skygger: source ${index} missing`);
+    const slot = index < 6 ? index : index - 6;
+    const copy = floating.addCopyOf(source, { x: 452, y: 92 + slot * 112, width: 72, height: 72 });
+    copy.style()?.set(rung.style);
   }
   return doc.save();
 }
@@ -930,6 +1043,27 @@ const demos: Demo[] = [
       const info = d.slides()[0]!.builds()[0]!.read();
       if (info.duration !== 3 || info.delay !== 1) throw new Error("animationer: retime missing");
       if (d.slides()[1]!.builds().length !== 0) throw new Error("animationer: removal missing");
+    },
+  },
+  {
+    name: "demo-11-skygger.pages",
+    bytes: demoShadows(),
+    check: (bytes) => {
+      const d = PagesDocument.load(bytes);
+      assertNoFeedbackBleed(d);
+      if (!d.bodyText.includes("S-11")) throw new Error("skygger: checks missing");
+      if (d.images().length !== 22) throw new Error(`skygger: expected 22 images, got ${d.images().length}`);
+      // The floats' own styles — the theme's presets carry shadows too.
+      const styles = [0, 1].flatMap(
+        (page) => d.floatingDrawables(page)?.drawables().map((f) => f.style()!.read()) ?? [],
+      );
+      if (styles.length !== 11) throw new Error(`skygger: expected 11 floats, got ${styles.length}`);
+      const enabled = styles.filter((s) => s.shadow?.enabled === true).length;
+      if (enabled !== 9) throw new Error(`skygger: expected 9 enabled shadows, got ${enabled}`);
+      if (!styles.some((s) => s.shadow?.enabled === false)) throw new Error("skygger: disabled shadow missing");
+      if (!styles.some((s) => s.shadow?.type === ShadowType.CONTACT)) throw new Error("skygger: contact type missing");
+      if (!styles.some((s) => s.shadow?.type === ShadowType.CURVED)) throw new Error("skygger: curved type missing");
+      if (!styles.some((s) => s.reflection === 0.5)) throw new Error("skygger: reflection missing");
     },
   },
 ];
