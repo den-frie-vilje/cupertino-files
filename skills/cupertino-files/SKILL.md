@@ -554,9 +554,13 @@ Two things to know before relying on this:
 **Conditional rules write** for all six comparisons — `=`, `<>`, `>`,
 `>=`, `<`, `<=` via `setConditionalRules` — byte-identical to Apple's
 encoding; each code is measured from a real document's own formula, and
-filters share the encoding. **Filter rules do not write** — reading is
-measured from a real filter set, but authoring a rule also means
-recomputing which rows it hides, which needs the calc engine.
+filters share the encoding. Covered cells are also registered in the calc
+engine's dependency ledger: a rule is a formula, and one the engine has no
+record for shows in the inspector without ever drawing its fill — cell
+formulas are recomputed on open, rule formulas are not. **Filter rules do
+not write** — reading is measured from a real filter set, but authoring a
+rule also means recomputing which rows it hides, which needs the calc
+engine.
 
 ### Categories (row grouping)
 

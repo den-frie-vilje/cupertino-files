@@ -297,4 +297,26 @@ describe("owner identities", () => {
     expect(readOwnerUid(undefined)).toBe(undefined);
     expect(ownerKey(undefined)).toBe("");
   });
+
+  it("finds no two tables sharing a haunted identity, in any fixture", () => {
+    // The invariant clone re-minting exists to preserve: every table's
+    // derived owner family hangs off one base UUID, and two tables
+    // sharing it are one identity with two names — the calc engine
+    // resolves either name to whichever registered first.
+    const HAUNTED_OWNER = 84;
+    let tables = 0;
+    for (const name of fixtureNames) {
+      const doc = open(name);
+      if (!doc) continue;
+      const seen = new Set<string>();
+      for (const { obj } of doc.store.allObjects()) {
+        const uid = readOwnerUid(obj.message.getMessage(HAUNTED_OWNER)?.getMessage(1));
+        if (!uid) continue;
+        tables++;
+        expect(`${name}: ${seen.has(ownerKey(uid))}`).toBe(`${name}: false`);
+        seen.add(ownerKey(uid));
+      }
+    }
+    expect(tables).toBeGreaterThan(30);
+  });
 });

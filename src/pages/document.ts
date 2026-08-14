@@ -35,7 +35,7 @@ import {
   TSD_TYPE,
 } from "../tsd/schema.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
-import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
+import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { rectanglePath } from "../tsd/masks.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
@@ -1301,6 +1301,7 @@ export class PagesDocument extends IWorkDocument {
 
     const model = tablesOf(this.store, [clone.identifier])[0];
     if (!model) throw new RangeError(`copied table ${clone.identifier} did not resolve`);
+    remintTableIdentity(this.store, clone.identifier);
     model.name = this.uniqueTableName(options.name, clone.identifier);
     if (options.withContent === false) model.clearAllCells();
 

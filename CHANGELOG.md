@@ -7,6 +7,23 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+### Fixed
+
+- Conditional rules written by `setConditionalRules` showed in Numbers'
+  inspector but never drew their fills until each cell was manually
+  re-entered. Covered cells are now registered in the calc engine's
+  dependency ledger, which is what the app evaluates from.
+- A table copied with `addTable`, `addSheet` or `insertInlineTable`
+  shared its source's calc-engine identity, so cross-table formulas
+  naming the copy could silently read the original's cells. Copies now
+  get their own identity.
+
+### Added
+
+- `NumbersDocument.setActiveSheet(index)` — choose the sheet the
+  document opens on. Numbers keeps this in its stored selection state,
+  not in tab order, so reordering sheets alone does not change it.
+
 ## 0.4.0 — 2026-08-14
 
 ### Fixed

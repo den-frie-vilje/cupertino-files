@@ -986,6 +986,22 @@ only annotation author string is `cupertino-files`.
   control-spec entry (`interaction_type` 8) in the type-12 list, and
   extras 0x20 — the format without the control had shown as Automatic.
 
+### olekristensen-v26.3-demo07-rules-returned.numbers
+- 167,230 bytes, md5 `55e989d9ea78650abaa7274d5dfc6868`
+- Saved by macOS Numbers (26.3) after reviewing demo-07's conditional
+  rules and controls. The decisive measurement for the engine's
+  dependency ledger: the demo was written with rules on seven cells but
+  no `CellRecordTileArchive` records, and the app showed every rule in
+  the inspector without evaluating one until a cell was deleted and
+  re-typed. The file carries the aftermath — exactly the five
+  re-committed cells registered under the kind-3 owner, each record one
+  edge naming the cell itself in the table's kind-1 owner — proving
+  registration happens on commit, that partial ledgers are app-real,
+  and that a written rule needs its record before the app will draw a
+  fill. Also the app-side confirmation that pop-up menus this library
+  writes survive editing, and that library-written number cells
+  right-align only after the same re-commit.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.

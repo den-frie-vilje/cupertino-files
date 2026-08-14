@@ -1,0 +1,376 @@
+{
+  "file": "olekristensen-v26.3-demo07-rules-returned.numbers",
+  "sha1": "4ed660c7af6aa61cbd764b759a4d55a0070603c9",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 634,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000017.iwa",
+      "objects": 4
+    },
+    {
+      "name": "Index/Tables/DataList-1000018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000020.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-1000021.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000022.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001042.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 496
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 22,
+            "columns": 6,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "DEMO 7 · Betinget formatering og kontroller — svar med lokalmenuen i kolonne F ud for hvert punkt."
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "Din vurdering"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "R-01"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Betinget regel »> 5« med grøn fyldfarve på C-cellerne herunder: 3 (umarkeret), 7 (grøn), 9 (grøn)."
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "Afvigelse"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "Igen fyldfarver synlige, men reglerne var i UI’et for cellerne"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "Jeg skrev samme tal ind igen, og markeringen virkede, men fordi den automatiske formatering blev trigget. Der opdagede jeg at de andre numre i kolonnen var venstrestilede, selvom cellens UI viste automatisk med decimaler, og derfor havde fundet ud af at det var tal, men så nok uden at ‘køre’ formateringen, før jeg redigerede cellen (til samme værdi). Jeg skulle slette tallet, og skrive det igen. At blot åbne cellen og lukke den, virkede ikke."
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "9"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "R-02"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "Regel »= 4« gul og »<> 4« blå i C: 4 (gul), 5 (blå)."
+              },
+              {
+                "r": 7,
+                "c": 5,
+                "v": "Afvigelse"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 8,
+                "c": 5,
+                "v": "Samme som ovenfor"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "5"
+              },
+              {
+                "r": 9,
+                "c": 5,
+                "v": "Markeringerne virkede efter redigering af cellen, inkl. højrestilling af talværdi"
+              },
+              {
+                "r": 11,
+                "c": 0,
+                "v": "R-03"
+              },
+              {
+                "r": 11,
+                "c": 1,
+                "v": "Samme regelsæt genbrugt på flere celler: reglen fra første punkt (>5 grøn) er også lagt på de to C-celler herunder: 6 (grøn), 2 (umarkeret)."
+              },
+              {
+                "r": 11,
+                "c": 5,
+                "v": "— vælg —"
+              },
+              {
+                "r": 12,
+                "c": 2,
+                "v": "6"
+              },
+              {
+                "r": 12,
+                "c": 5,
+                "v": "Virkede efter redigering, inkl. højrestilling"
+              },
+              {
+                "r": 13,
+                "c": 2,
+                "v": "2"
+              },
+              {
+                "r": 13,
+                "c": 5,
+                "v": "Denne kunne jeg redigere, men idet 2 ikke trigger betinget markering, venstrestillet. Måske er det fordi markeringernes format er højrestillede. Cellerne er sat til venstrestillet. Som regel burde du sætte tal-celler til højrestillet, ikke?"
+              },
+              {
+                "r": 15,
+                "c": 0,
+                "v": "R-04"
+              },
+              {
+                "r": 15,
+                "c": 1,
+                "v": "Kontroller i C-cellerne herunder: afkrydsningsfelt (markeret), stjernebedømmelse (4 af 5), skyder (60 af 0–100), trinvælger (25, trin 5)."
+              },
+              {
+                "r": 15,
+                "c": 5,
+                "v": "OK"
+              },
+              {
+                "r": 16,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 17,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 18,
+                "c": 2,
+                "v": "60"
+              },
+              {
+                "r": 19,
+                "c": 2,
+                "v": "30"
+              },
+              {
+                "r": 21,
+                "c": 0,
+                "v": "R-05"
+              },
+              {
+                "r": 21,
+                "c": 1,
+                "v": "Lokalmenuerne i kolonne F (ud for hvert punkt-id) er selv skrevet af biblioteket — vælg »OK«, »Afvigelse« eller »Ved ikke« som din feedback."
+              },
+              {
+                "r": 21,
+                "c": 5,
+                "v": "OK"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

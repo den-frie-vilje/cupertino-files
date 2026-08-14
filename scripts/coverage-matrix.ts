@@ -1088,7 +1088,10 @@ export const CAPABILITIES: Capability[] = [
     apps: ["numbers"],
     status: "read+write",
     probe: (c) => safe(() => (c.numbers?.sheets().length ?? 0) > 0),
-    note: "a duplicated sheet deep-copies its tables, so the two tabs edit different cells",
+    note:
+      "a duplicated sheet deep-copies its tables, so the two tabs edit different cells. Tab order " +
+      "does not decide where the document opens — Numbers keeps the selected sheet in its UI " +
+      "state's TN.SheetSelectionArchive references, which setActiveSheet re-points",
     manualProof: {
       claim: "Numbers opens a document whose sheets we added, duplicated, renamed or reordered.",
       why:
@@ -1098,6 +1101,14 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Duplicate a sheet with formulas, rename and reorder, save, and open in Numbers: check the tab " +
         "bar, that the copy's formulas point within the copy, and that editing one tab leaves the other alone.",
+      settled:
+        "**The structural half is confirmed; where the document opens was the surprise.** A " +
+        "library-added sheet (cloned, renamed, moved first) opened alongside the original with " +
+        "both tabs named as written and the cloned table's cells intact. But the app opened on " +
+        "the *other* tab: tab order does not pick the active sheet — the UI state's stored sheet " +
+        "selections do, and the demo had left them pointing at the donor sheet. setActiveSheet " +
+        "re-points them; whether Numbers honours the re-pointed selection is the open rung of " +
+        "the next demo round.",
       risk: "high",
     },
   },
@@ -1342,13 +1353,13 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => c.doc.tables().some((t) => t.controls().size > 0)),
     note:
-      "NO FIXTURE in this repository: interaction_type was measured from public widget-demo " +
-      "documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, " +
-      "8 checkbox). setCellControl writes all five widgets, sharing one spec between cells that " +
-      "want the same one. The four range and toggle widgets are confirmed drawing in Numbers; a " +
-      "pop-up menu additionally builds its TST.PopUpMenuModel from the vendored schema and has " +
-      "NOT been seen working. Shape is still classified by populated fields, so an unrecognised " +
-      "code degrades rather than misreads",
+      "interaction_type was measured from public widget-demo documents, read and discarded " +
+      "(4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox); the corpus now carries " +
+      "one carrier, olekristensen-v26.3-demo07-rules-returned.numbers. setCellControl writes " +
+      "all five widgets, sharing one spec between cells that want the same one, and all five " +
+      "are confirmed drawing in Numbers — the menu's model on its own row below. Shape is " +
+      "still classified by populated fields, so an unrecognised code degrades rather than " +
+      "misreads",
     manualProof: {
       claim: "interaction_type 4 is the stepper and 5 the slider, rather than the other way round",
       why:
@@ -1456,7 +1467,12 @@ export const CAPABILITIES: Capability[] = [
     apps: ["numbers"],
     status: "read+write",
     probe: (c) => safe(() => (c.numbers?.sheets().length ?? 0) > 0),
-    note: "copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous",
+    note:
+      "copies an existing table and renames it — Numbers addresses tables by name, so a " +
+      "duplicate makes cross-table formulas ambiguous. The copy's calc-engine identity is " +
+      "re-minted too (the whole derived owner family off one fresh base UUID): a byte-copied " +
+      "identity is one table with two names, and the engine resolves either name to whichever " +
+      "registered first — measured when a formula naming a clone read the donor's cells instead",
     manualProof: {
       claim: "a table added this way is editable in Numbers as a table, not just present in the file",
       why: "the suite proves it reloads with its own cells and a unique name, not that the app treats it as a first-class table",
@@ -1582,7 +1598,29 @@ export const CAPABILITIES: Capability[] = [
       "measured 2026-08-03, closing the menu-order enum — codes were refused until observed " +
       "because a rule filed under a wrong code reads back correctly while showing the wrong " +
       "condition in the editor. A rule built for a condition Apple also wrote is byte-identical " +
-      "to Apple's, all 424 bytes",
+      "to Apple's, all 424 bytes. Every covered cell is also registered in the calc engine's " +
+      "dependency ledger — a CellRecordExpandedArchive under the table's kind-3 owner, one edge " +
+      "naming the cell itself — the shape 1973 corpus records state unanimously",
+    manualProof: {
+      claim: "a rule set this library authors draws its fills the moment Numbers opens the document",
+      why:
+        "The first demo round proved the halfway state: rules written without ledger records " +
+        "showed correctly in the inspector and never evaluated — no fill until a covered cell " +
+        "was deleted and re-typed, at which point the app registered exactly the re-typed cells " +
+        "(olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the " +
+        "opposite behaviour of cell formulas, which the engine recomputes on open with no " +
+        "tracker write at all — so the ledger cannot be assumed either way; each owner kind had " +
+        "to be measured. The registration now written matches the corpus shape offline; whether " +
+        "it is what the app was waiting for, only reopening decides. The same round observed " +
+        "library-written number cells rendering left-aligned until the same re-commit — " +
+        "plausibly the same cause, unproven.",
+      how:
+        "npm run demos, open demo-07-regler.numbers in Numbers: the C-column fills (green, " +
+        "yellow, blue) must be visible immediately, and the numbers right-aligned, without " +
+        "touching any cell. Having to re-type a value first means the registration is not " +
+        "sufficient — note which cells.",
+      risk: "high",
+    },
   },
   {
     group: "Numbers & tables",
@@ -1616,6 +1654,12 @@ export const CAPABILITIES: Capability[] = [
         "flipped by this library has never been reopened in the app — and hidden rows are " +
         "recomputed there, not here",
       how: "take olekristensen-v26.3-mac-filters.numbers, flip is_enabled off with this library, reopen and confirm all rows show",
+      settled:
+        "**Confirmed in Numbers, both directions.** The demo built on that very document — " +
+        "filter set disabled by this library — opened with all ten data rows visible, and " +
+        "re-enabling the filter through the app's own panel hid the non-matching rows " +
+        "(»Da jeg slog dem til fungerede det«). A library-flipped flag is one the app honours " +
+        "and can flip back.",
       risk: "medium",
     },
   },
