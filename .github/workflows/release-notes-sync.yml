@@ -1,0 +1,32 @@
+# Re-derive a published release's notes from CHANGELOG.md.
+#
+# Actions → Sync release notes → "Run workflow" with a version (e.g.
+# 0.4.0): the run regenerates RELEASE_NOTES.md from that version's
+# changelog section (scripts/release-notes.ts is idempotent per version)
+# and rewrites the GitHub release body to match. Use it after editing a
+# released section — the changelog is the source of truth for what a
+# release says, and the published page should never say something else.
+name: Sync release notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Released version whose notes to sync (e.g. 0.4.0 — no leading v)"
+        required: true
+
+permissions:
+  contents: write # gh release edit
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Regenerate and apply the notes
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --experimental-strip-types scripts/release-notes.ts "$VERSION"
+          gh release edit "v$VERSION" --notes-file RELEASE_NOTES.md
