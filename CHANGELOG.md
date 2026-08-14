@@ -7,6 +7,8 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+## 0.4.0 — 2026-08-14
+
 - Demo-11 (shadows, blur, reflections) is app-confirmed whole: every
   parameter renders as written on the calibrated angle scale, the
   contact and curved types draw as their kinds, the reflection mirrors,
