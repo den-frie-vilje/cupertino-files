@@ -137,6 +137,11 @@ export class ObjectStore {
    */
   private readonly created = new Set<bigint>();
 
+  /** True for an object this library created rather than read. */
+  isCreated(id: bigint): boolean {
+    return this.created.has(id);
+  }
+
   constructor(
     container: IWorkContainer,
     options: {

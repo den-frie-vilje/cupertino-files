@@ -54,12 +54,14 @@ import {
   CELL_RECORD_TILE,
   CellRecordExpandedFields,
   CellRecordTileFields,
+  ExpandedEdgesFields,
   FORMULA_OWNER_DEPENDENCIES,
   FormulaOwnerFields,
   FormulaOwnerRegistry,
   OwnerKind,
   readCfUid,
   readOwnerUid,
+  remintFormulaOwnerIdentity,
   TiledDependenciesFields,
 } from "../tsce/owners.ts";
 import {
@@ -117,6 +119,7 @@ export const TableModelFields = protoFields("TST.TableModelArchive", {
   MERGE_OWNER: "merge_owner",
   HIDDEN_STATES_OWNER: "hidden_states_owner",
   STROKE_SIDECAR: "stroke_sidecar",
+  CONDITIONAL_STYLE_OWNER: "conditional_style_formula_owner_id",
 });
 
 /** TST.StrokeSidecarArchive / .StrokeLayerArchive / .StrokeRunArchive. */
@@ -579,6 +582,11 @@ export class TableModel {
 
   set name(value: string) {
     this.object.message.setString(TableModelFields.TABLE_NAME, value);
+    // Cross-table formulas resolve names through the store's owner
+    // registry, which is memoised; a rename (including the one every
+    // newly added table gets) must invalidate it, or formulas written
+    // afterwards cannot see the table.
+    OWNER_REGISTRIES.delete(this.store);
   }
 
   /**
@@ -2923,6 +2931,135 @@ export class TableModel {
     }
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
+    if (key === undefined) this.removeConditionalLedgerRecord(row, column);
+    else this.addConditionalLedgerRecord(row, column);
+  }
+
+  /**
+   * The calc engine's dependency ledger entry for one rule-covered cell.
+   *
+   * A conditional rule is a formula, and the engine only evaluates
+   * formulas it has a dependency record for: a cell whose record is
+   * missing shows the rule in the inspector but never draws its fill
+   * until the app itself re-commits the cell. Every registered cell in
+   * the corpus — 1968 records across two documents — carries the same
+   * shape, one edge naming the very cell the rule styles, in the
+   * table's own kind-1 owner.
+   *
+   * Tiles are 32 columns wide and minted when first occupied, as the
+   * merge ledger's are. Idempotent, because re-applying a rule to a
+   * cell the ledger already lists must not duplicate the record.
+   */
+  private addConditionalLedgerRecord(row: number, column: number): void {
+    const found = this.conditionalDependenciesOwner();
+    if (!found) return;
+    const { owner, tableInternalId } = found;
+    const tiled =
+      owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES) ?? RawMessage.create();
+    const tileBegin = column - (column % 32);
+    let tile: IwaObject | undefined;
+    for (const ref of tiled.getMessages(TiledDependenciesFields.TILES)) {
+      const candidate = this.store.resolve(ref);
+      if (candidate?.message.getUint(CellRecordTileFields.TILE_COLUMN_BEGIN) === tileBegin) {
+        tile = candidate;
+        break;
+      }
+    }
+    if (!tile) {
+      const component = this.store.componentOf(owner.identifier);
+      if (!component) return;
+      tile = this.store.createObject(CELL_RECORD_TILE, component);
+      tile.message.setVarint(
+        CellRecordTileFields.INTERNAL_OWNER_ID,
+        owner.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0,
+      );
+      tile.message.setVarint(CellRecordTileFields.TILE_COLUMN_BEGIN, tileBegin);
+      tile.message.setVarint(CellRecordTileFields.TILE_ROW_BEGIN, 0);
+      tiled.addMessage(TiledDependenciesFields.TILES, makeRef(tile.identifier));
+      owner.message.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, tiled);
+      owner.message.markDirty();
+      // The owner is an Apple-authored object with no reference extractor,
+      // so this write's one new reference must be declared by hand, or the
+      // tile dangles and the shape audit (rightly) flags it.
+      this.store.declareReference(owner, tile.identifier);
+    }
+    const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+    if (
+      records.some(
+        (r) =>
+          r.getUint(CellRecordExpandedFields.COLUMN) === column &&
+          r.getUint(CellRecordExpandedFields.ROW) === row,
+      )
+    ) {
+      return;
+    }
+    const record = RawMessage.create();
+    record.setVarint(CellRecordExpandedFields.COLUMN, column);
+    record.setVarint(CellRecordExpandedFields.ROW, row);
+    const edges = RawMessage.create();
+    edges.setVarint(ExpandedEdgesFields.EDGE_WITH_OWNER_ROWS, row);
+    edges.setVarint(ExpandedEdgesFields.EDGE_WITH_OWNER_COLUMNS, column);
+    edges.setVarint(ExpandedEdgesFields.INTERNAL_OWNER_ID_FOR_EDGE, tableInternalId);
+    record.setMessage(CellRecordExpandedFields.EXPANDED_EDGES, edges);
+    tile.message.addMessage(CellRecordTileFields.CELL_RECORDS, record);
+    tile.message.markDirty();
+  }
+
+  /** Drop a cell's ledger record; the tile stays, like the merge ledger's. */
+  private removeConditionalLedgerRecord(row: number, column: number): void {
+    const found = this.conditionalDependenciesOwner();
+    const tiled = found?.owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES);
+    for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+      const tile = this.store.resolve(ref);
+      if (!tile) continue;
+      const records = tile.message.getMessages(CellRecordTileFields.CELL_RECORDS);
+      const kept = records.filter(
+        (r) =>
+          r.getUint(CellRecordExpandedFields.COLUMN) !== column ||
+          r.getUint(CellRecordExpandedFields.ROW) !== row,
+      );
+      if (kept.length !== records.length) {
+        tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, kept);
+        tile.message.markDirty();
+        return;
+      }
+    }
+  }
+
+  /**
+   * The kind-3 dependencies archive this table's model names, with the
+   * internal id its edges must name.
+   *
+   * `conditional_style_formula_owner_id` points at the owner the same way
+   * `merge_owner` does for merges. The edge target is the table's *own*
+   * owner — the kind-3 archive's base — because a rule formula reads the
+   * cell it styles, so the base archive's internal id comes back too.
+   */
+  private conditionalDependenciesOwner():
+    | { owner: IwaObject; tableInternalId: number }
+    | undefined {
+    const uid = readCfUid(
+      this.object.message.getMessage(TableModelFields.CONDITIONAL_STYLE_OWNER),
+    );
+    if (!uid) return undefined;
+    let owner: IwaObject | undefined;
+    const byUid = new Map<string, IwaObject>();
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+      const candidate = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
+      if (!candidate) continue;
+      byUid.set(`${candidate.lo}:${candidate.hi}`, obj);
+      if (candidate.lo === uid.lo && candidate.hi === uid.hi) owner = obj;
+    }
+    if (!owner) return undefined;
+    const base = readOwnerUid(owner.message.getMessage(FormulaOwnerFields.BASE_OWNER_UID));
+    const tableInternalId = base
+      ? byUid.get(`${base.lo}:${base.hi}`)?.message.getUint(
+          FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID,
+        )
+      : undefined;
+    if (tableInternalId === undefined) return undefined;
+    return { owner, tableInternalId };
   }
 
   // -------------------------------------------------------------- filtering
@@ -3808,6 +3945,39 @@ export function tablesOf(store: ObjectStore, drawableIds?: readonly bigint[]): T
  * tables' records reference it, so the first overwrite in one table
  * releases an entry the other still needs.
  */
+/**
+ * Give a just-cloned table its own calc-engine identity.
+ *
+ * Walks the clone's created subtree (shared boundaries — styles, themes,
+ * stylesheets — stay untouched) and re-mints every owner UUID derived
+ * from the donor's base, then drops the memoised owner registry so
+ * formulas written afterwards resolve the clone by its own name. Without
+ * this the copy answers to the donor's identity: a cross-table reference
+ * cannot address it, and the registry resolves its name to the donor's.
+ */
+export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): void {
+  const root = store.object(tableInfoId);
+  if (!root || !store.isCreated(tableInfoId)) return;
+  const seen = new Set<bigint>();
+  const objects: IwaObject[] = [];
+  const queue: IwaObject[] = [root];
+  while (queue.length > 0) {
+    const object = queue.pop()!;
+    if (seen.has(object.identifier)) continue;
+    seen.add(object.identifier);
+    objects.push(object);
+    for (const id of store.currentReferencesOf(object)) {
+      const target = store.object(id);
+      if (target && store.isCreated(id)) queue.push(target);
+    }
+  }
+  const model = tablesOf(store, [tableInfoId])[0];
+  if (!model) return;
+  if (remintFormulaOwnerIdentity(model.object, objects)) {
+    OWNER_REGISTRIES.delete(store);
+  }
+}
+
 export function verifyCellStorageIntegrity(store: ObjectStore): void {
   for (const model of tablesOf(store)) {
     if (model.storageGeneration !== "v5") continue;

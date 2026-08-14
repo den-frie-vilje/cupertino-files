@@ -39,6 +39,7 @@
  */
 import { protoFields } from "../proto/fields.ts";
 import type { ObjectStore } from "../tsp/store.ts";
+import type { IwaObject } from "../tsp/iwa.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { refId } from "../tsp/schema.ts";
 
@@ -78,6 +79,19 @@ export const CellRecordExpandedFields = protoFields("TSCE.CellRecordExpandedArch
   COLUMN: "column",
   ROW: "row",
   EXPANDED_EDGES: "expanded_edges",
+});
+/**
+ * One record's dependency edges, as parallel arrays: entry *i* of the row
+ * and column lists names a cell in the owner whose internal id is entry
+ * *i* of the id list. Every conditional-style record in the corpus — 1968
+ * across two documents — carries exactly one edge, pointing at the same
+ * `(row, column)` in the table's own kind-1 owner: the rule formula reads
+ * the cell it styles.
+ */
+export const ExpandedEdgesFields = protoFields("TSCE.ExpandedEdgesArchive", {
+  EDGE_WITH_OWNER_ROWS: "edge_with_owner_rows",
+  EDGE_WITH_OWNER_COLUMNS: "edge_with_owner_columns",
+  INTERNAL_OWNER_ID_FOR_EDGE: "internal_owner_id_for_edge",
 });
 
 /** TSCE.HauntedOwnerArchive, on TST.TableModelArchive.haunted_owner = 84. */
@@ -354,4 +368,107 @@ function tableNameOf(store: ObjectStore, id: bigint): string | undefined {
   // Owners point at the info archive; the name lives on the model below it.
   const model = store.resolve(refId(object.message, TABLE_INFO_MODEL)) ?? object;
   return model.message.getString(TABLE_MODEL_NAME);
+}
+
+// ------------------------------------------------------- clone identity
+
+const MASK64 = 0xffffffffffffffffn;
+/** Widest observed table-derived kind is 35; the window is generous. */
+const KIND_WINDOW = 256n;
+
+/**
+ * Give a cloned table a calc-engine identity of its own.
+ *
+ * Every owner of a table derives from one base UUID — the owner's kind
+ * added to the base — and a byte-clone copies each of them, so the copy
+ * and its donor answer to the same identity: a cross-table reference
+ * cannot tell the tables apart, and a name lookup resolves the clone to
+ * the donor. No two corpus tables share a base. This rewrites every
+ * UUID in the given objects that derives from the table's base to the
+ * same derivation from a fresh random base, in whichever of the two
+ * wire encodings it is stored (TSP.UUID's two varints, or the
+ * four-word/16-byte CFUUID shape formula internals use).
+ *
+ * Returns false when the table carries no identity to re-mint
+ * (pre-BNC storage generations).
+ */
+export function remintFormulaOwnerIdentity(
+  tableModel: IwaObject,
+  objects: Iterable<IwaObject>,
+): boolean {
+  const haunted = readOwnerUid(
+    tableModel.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
+  );
+  if (!haunted) return false;
+  const oldBase: OwnerUid = {
+    lo: (haunted.lo - BigInt(OwnerKind.HAUNTED)) & MASK64,
+    hi: haunted.hi,
+  };
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const view = new DataView(bytes.buffer);
+  const newBase: OwnerUid = { lo: view.getBigUint64(0, true), hi: view.getBigUint64(8, true) };
+
+  const derivation = (uid: OwnerUid): bigint | undefined => {
+    if (uid.hi !== oldBase.hi) return undefined;
+    const delta = (uid.lo - oldBase.lo) & MASK64;
+    return delta < KIND_WINDOW ? delta : undefined;
+  };
+
+  const visit = (message: RawMessage, depth: number): void => {
+    if (depth > 16) return;
+    // TSP.UUID: lower/upper varints at 1 and 2. Either probe throws on a
+    // message whose fields carry other wire types; that just means "not
+    // this shape".
+    let asUuid;
+    try {
+      asUuid = readOwnerUid(message);
+    } catch {
+      asUuid = undefined;
+    }
+    const uuidDelta = asUuid ? derivation(asUuid) : undefined;
+    if (uuidDelta !== undefined && message.has(1) && message.has(2)) {
+      message.setVarint(1, (newBase.lo + uuidDelta) & MASK64);
+      message.setVarint(2, newBase.hi);
+      return;
+    }
+    // CFUUID: 16 raw bytes at 1, or four uint32 words at 2..5.
+    let asCf;
+    try {
+      asCf = readCfUid(message);
+    } catch {
+      asCf = undefined;
+    }
+    const cfDelta = asCf ? derivation(asCf) : undefined;
+    if (cfDelta !== undefined) {
+      const lo = (newBase.lo + cfDelta) & MASK64;
+      if (message.has(1)) {
+        const raw = new Uint8Array(16);
+        const w = new DataView(raw.buffer);
+        w.setBigUint64(0, lo, true);
+        w.setBigUint64(8, newBase.hi, true);
+        message.setBytes(1, raw);
+        return;
+      }
+      const words = [lo & 0xffffffffn, lo >> 32n, newBase.hi & 0xffffffffn, newBase.hi >> 32n];
+      for (const [i, word] of words.entries()) message.setVarint(i + 2, word);
+      return;
+    }
+    for (const field of message.fields) {
+      if (field.wire !== 2) continue;
+      let children: RawMessage[];
+      try {
+        children = message.getMessages(field.no);
+      } catch {
+        continue;
+      }
+      for (const child of children) visit(child, depth + 1);
+    }
+  };
+
+  for (const object of objects) {
+    visit(object.message, 0);
+    object.message.markDirty();
+  }
+  return true;
 }

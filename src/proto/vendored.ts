@@ -448,6 +448,13 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "tile_row_begin": 3,
     "cell_records": 4,
   },
+  "TSCE.ExpandedEdgesArchive": {
+    "edge_without_owner_rows": 1,
+    "edge_without_owner_columns": 2,
+    "edge_with_owner_rows": 3,
+    "edge_with_owner_columns": 4,
+    "internal_owner_id_for_edge": 5,
+  },
   "TSCE.FormulaArchive": {
     "AST_node_array": 1,
     "host_column": 2,

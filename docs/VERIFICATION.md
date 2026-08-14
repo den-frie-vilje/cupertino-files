@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 15 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 14 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -24,20 +24,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
 | 1 | 🔴 high | Drawables & media → Inline image placement in an indented column | an inline image sits in the text column of an indented paragraph, not at the page margin | manual |
-| 2 | 🔴 high | Numbers & tables → Sheets (add, duplicate, rename, move, remove) | Numbers opens a document whose sheets we added, duplicated, renamed or reordered. | manual |
+| 2 | 🔴 high | Numbers & tables → Conditional formatting: authoring new rules | a rule set this library authors draws its fills the moment Numbers opens the document | manual |
 | 3 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
 | 4 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
 | 5 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
 | 6 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 7 | 🟠 medium | Numbers & tables → Filters: enable, disable, combining mode | enabling a filter set makes Numbers apply its rules | manual |
-| 8 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 9 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 12 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 13 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 14 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 15 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 7 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 8 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 9 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 10 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 11 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 12 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 13 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 14 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -51,17 +50,17 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** `npm run seeds -- out` writes seed-inline-image.pages: two pictures in a paragraph indented well in from the margin, one in-flow and one page-placed, each labelled with what it should look like. The in-flow picture starting where its own paragraph starts is the pass.
 
-### 2. Sheets (add, duplicate, rename, move, remove)
+### 2. Conditional formatting: authoring new rules
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** Numbers opens a document whose sheets we added, duplicated, renamed or reordered.
+**Claim.** a rule set this library authors draws its fills the moment Numbers opens the document
 
-**Why the suite cannot settle it.** A sheet is valid only in the context of the calc engine and the document's own bookkeeping. Our copies reload and round-trip, but whether Numbers accepts a duplicated tab — and whether its formulas still resolve against the copy rather than the original — only the app can say.
+**Why the suite cannot settle it.** The first demo round proved the halfway state: rules written without ledger records showed correctly in the inspector and never evaluated — no fill until a covered cell was deleted and re-typed, at which point the app registered exactly the re-typed cells (olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the opposite behaviour of cell formulas, which the engine recomputes on open with no tracker write at all — so the ledger cannot be assumed either way; each owner kind had to be measured. The registration now written matches the corpus shape offline; whether it is what the app was waiting for, only reopening decides. The same round observed library-written number cells rendering left-aligned until the same re-commit — plausibly the same cause, unproven.
 
-**How to settle it.** Duplicate a sheet with formulas, rename and reorder, save, and open in Numbers: check the tab bar, that the copy's formulas point within the copy, and that editing one tab leaves the other alone.
+**How to settle it.** npm run demos, open demo-07-regler.numbers in Numbers: the C-column fills (green, yellow, blue) must be visible immediately, and the numbers right-aligned, without touching any cell. Having to re-type a value first means the registration is not sufficient — note which cells.
 
 ### 3. Table cell writing (text, number, date, bool, duration)
 
@@ -113,19 +112,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 7. Filters: enable, disable, combining mode
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** enabling a filter set makes Numbers apply its rules
-
-**Why the suite cannot settle it.** the corpus now carries a populated, enabled set the app itself wrote, but a flag flipped by this library has never been reopened in the app — and hidden rows are recomputed there, not here
-
-**How to settle it.** take olekristensen-v26.3-mac-filters.numbers, flip is_enabled off with this library, reopen and confirm all rows show
-
-### 8. Formula function names
+### 7. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -139,7 +126,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 9. Formula reading (AST rendered to text)
+### 8. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -151,7 +138,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 10. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 9. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -163,7 +150,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 11. Table styling (banded rows, grid strokes, visibility)
+### 10. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -175,7 +162,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 12. Categories: enable or disable grouping
+### 11. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -187,7 +174,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 13. Conditional formatting rules
+### 12. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -199,7 +186,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 14. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 13. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -211,7 +198,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 15. Table of contents (rules read + write, cached entries read)
+### 14. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -225,7 +212,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-38 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+40 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -339,6 +326,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The offline suite proves self-consistency: we read back what we wrote. Only the apps can say whether they accept it.
 
 **Outcome.** **Confirmed for all three apps.** A current-format Pages document (file format 26.1.0) was edited, saved and opened with its formatting intact — appending a paragraph, applying character formatting, and applying a named paragraph style. Getting there took four separate defects, none of which any offline check could see, and each is now guarded: text colour must go in `tsd_fill` as well as `font_color`; a storage must not declare its stylesheet in `object_references`; paragraphs end at U+0004/U+0005/U+000C as well as U+000A but not at U+2028; and `table_para_style` is dense while the list and layout tables are sparse. Numbers is covered separately by the widget and regrouping checks — and directly on 2026-08-03, when the e2e suite's cell-write round-trip passed: Numbers opened a package whose cells we wrote and read our values back. Keynote joined the same day: the speaker-notes round-trip — our edit of the notes storage, opened and reported back by Keynote — passed on a current install, and Keynote also opened the deck whose transition we wrote
+
+### ✅ Filters: enable, disable, combining mode
+
+**Was claimed.** enabling a filter set makes Numbers apply its rules
+
+**Why it needed an app.** the corpus now carries a populated, enabled set the app itself wrote, but a flag flipped by this library has never been reopened in the app — and hidden rows are recomputed there, not here
+
+**Outcome.** **Confirmed in Numbers, both directions.** The demo built on that very document — filter set disabled by this library — opened with all ten data rows visible, and re-enabling the filter through the app's own panel hid the non-matching rows (»Da jeg slog dem til fungerede det«). A library-flipped flag is one the app honours and can flip back.
 
 ### ✅ Footnote creation and removal
 
@@ -491,6 +486,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** pagination is the app's; the table entry alone was well-formed, listed in the sidebar, and paginated nothing
 
 **Outcome.** **Confirmed in Pages — "P07 passed" — on the second round.** The first check failed ("not on a new page") and taught the rule: all 28 section boundaries across the five multi-section fixtures put U+0004 where the previous paragraph's newline was, and we wrote only the `table_section` entry — Pages listed the section and kept the text flowing, because the table names a section and the character breaks the page. With `insertSectionBreak` swapping the terminator (same length, so every attribute-table index survives) and keeping the clone's name, the second paragraph renders on its own page.
+
+### ✅ Sheets (add, duplicate, rename, move, remove)
+
+**Was claimed.** Numbers opens a document whose sheets we added, duplicated, renamed or reordered.
+
+**Why it needed an app.** A sheet is valid only in the context of the calc engine and the document's own bookkeeping. Our copies reload and round-trip, but whether Numbers accepts a duplicated tab — and whether its formulas still resolve against the copy rather than the original — only the app can say.
+
+**Outcome.** **The structural half is confirmed; where the document opens was the surprise.** A library-added sheet (cloned, renamed, moved first) opened alongside the original with both tabs named as written and the cloned table's cells intact. But the app opened on the *other* tab: tab order does not pick the active sheet — the UI state's stored sheet selections do, and the demo had left them pointing at the donor sheet. setActiveSheet re-points them; whether Numbers honours the re-pointed selection is the open rung of the next demo round.
 
 ### ✅ Skipped slides
 

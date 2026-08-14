@@ -29,6 +29,14 @@ import {
   solidStroke,
   TabAlignment,
 } from "../src/index.ts";
+import {
+  CellRecordExpandedFields,
+  CellRecordTileFields,
+  FORMULA_OWNER_DEPENDENCIES,
+  FormulaOwnerFields,
+  OwnerKind,
+  TiledDependenciesFields,
+} from "../src/tsce/owners.ts";
 import { blockPng } from "./png.ts";
 
 const TERRACOTTA = { r: 0.753, g: 0.224, b: 0.169 };
@@ -681,26 +689,28 @@ function demoFormulas(): Uint8Array {
   data.setFormula(firstNum + 3, 3, "=ROUND(3.7,0)");
   row += 5;
 
-  head(check(), "Krydstabel-reference: cellen i C henter værdien 7 fra den FØRSTE tabel via dens navn (=Tabel::C4-stil). Skal vise 7.");
+  head(check(), "Krydstabel-referencer begge veje: cellen i C herunder henter 5 fra tabellen »Krydstjek« nederst på arket — skal vise 5. Krydstjeks øverste række henter omvendt 7 fra denne tabel, og dens SUM over HELE kolonne B skal vise 30 i kolonne C.");
   const crossRow = row;
   row += 2;
 
-  // A second table on the same sheet holds the cross-table reference and
-  // a whole-column span over its own data.
+  // A clean second table: the cross-table reference each way, and a
+  // whole-column span. Column B holds only the three numbers the span
+  // sums, and both formulas sit in column C — a formula inside the
+  // column it spans would be a circular reference.
   const sheet = doc.sheets()[0]!;
-  const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 620 });
+  const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 620, withContent: false });
   if (second.rowCount < 6) second.insertRows(second.rowCount, 6 - second.rowCount);
+  second.setColumnWidth(0, 260);
   const dataName = data.name ?? "Tabel 1";
   second.setCell(0, 0, "Hentet fra hovedtabellen (skal vise 7):");
-  second.setFormula(0, 1, `=${dataName}::C${base + 1}`);
-  second.setCell(1, 0, "Egne tal:");
+  second.setFormula(0, 2, `=${dataName}::C${base + 1}`);
+  second.setCell(1, 0, "Egne tal i B: 5, 10 og 15");
   second.setCell(1, 1, 5);
   second.setCell(2, 1, 10);
   second.setCell(3, 1, 15);
   second.setCell(4, 0, "SUM over HELE kolonne B (skal vise 30):");
-  second.setFormula(4, 1, "=SUM(B)");
-  data.setCell(crossRow, 1, "(se tabellen »Krydstjek« nederst på arket — den henter 7 fra denne tabel med en krydstabel-reference og summer sin egen kolonne B til 30)");
-  data.setCellFormatting(crossRow, 1, { textWrap: true });
+  second.setFormula(4, 2, "=SUM(B)");
+  data.setFormula(crossRow, 2, "=Krydstjek::B2");
 
   return doc.save();
 }
@@ -712,7 +722,7 @@ function demoRules(): Uint8Array {
   const table = doc.tables()[0]!;
   const check = counter("R");
 
-  if (table.rowCount < 22) table.insertRows(table.rowCount, 22 - table.rowCount);
+  if (table.rowCount < 24) table.insertRows(table.rowCount, 24 - table.rowCount);
   if (table.columnCount < 6) table.insertColumns(table.columnCount, 6 - table.columnCount);
   table.setColumnWidth(0, 60);
   table.setColumnWidth(1, 300);
@@ -765,6 +775,7 @@ function demoRules(): Uint8Array {
   table.setCellControl(row + 3, 2, { widget: "stepper", minimum: 0, maximum: 100, increment: 5, value: 25 });
   row += 5;
 
+  head(check(), "Farvefyldningerne fra punkterne ovenfor skal stå der ALLEREDE når dokumentet åbner, og tallene i C skal være højrestillede med det samme — uden at du rører nogen celle. Skal du først slette og genindtaste et tal for at få farve eller højrestilling, er motor-registreringen ikke tilstrækkelig; skriv hvilke celler det gjaldt.");
   head(check(), "Lokalmenuerne i kolonne F (ud for hvert punkt-id) er selv skrevet af biblioteket — vælg »OK«, »Afvigelse« eller »Ved ikke« som din feedback.");
   row += 1;
 
@@ -789,9 +800,11 @@ function demoStructure(): Uint8Array {
   );
   const check = counter("N");
 
-  // The read-me sheet, moved first.
+  // The read-me sheet, moved first. Its table comes with the cloned
+  // sheet and is renamed, so the two tables never share a name.
   const readme = doc.addSheet({ name: "LÆS MIG" });
   const table = doc.tablesOnSheet(readme.id)[0] ?? doc.addTable(readme.id, { name: "Instruktioner" });
+  table.name = "Instruktioner";
   table.clearAllCells();
   if (table.rowCount < 12) table.insertRows(table.rowCount, 12 - table.rowCount);
   table.setColumnWidth(0, 60);
@@ -806,17 +819,30 @@ function demoStructure(): Uint8Array {
     table.setCellFormatting(row, 1, { textWrap: true });
     row++;
   };
-  head(check(), "Dette ark (»LÆS MIG«) er oprettet af biblioteket og flyttet FØRST i arkrækkefølgen.");
-  head(check(), "Arket med data er omdøbt til »Data (omdøbt)«.");
-  head(check(), "Datatabellens filter (B > 10 OG C indeholder »ko«) er SLÅET FRA af biblioteket — alle 10 datarækker skal derfor være synlige. Var filteret aktivt, ville kun få rækker vises.");
-  head(check(), "Denne tabel (»Instruktioner«) er tilføjet på det nye ark af biblioteket.");
+  head(check(), "Dokumentet skal ÅBNE på denne fane (»LÆS MIG«), som biblioteket har oprettet og flyttet først i arkrækkefølgen. Åbnede det på en anden fane, er den lagrede fanemarkering ikke ramt — skriv hvilken fane der åbnede.");
+  head(check(), "Arket med data er omdøbt til »Data (omdøbt)«, og dets tabel er omdøbt fra »Table 1« til »Måledata«. Denne tabel her hedder »Instruktioner«. Ser du stadig et gammelt navn, er omdøbningen ikke slået igennem.");
+  head(check(), "Datatabellens filter (B > 10 OG C indeholder »ko«) er SLÅET FRA af biblioteket — alle 10 datarækker skal derfor være synlige. Slår du filteret TIL igen, bør kun rækkerne koral, koks og kobolt vises.");
+  head(check(), "Kolonne A i »Måledata« er omskrevet af biblioteket. Står der stadig »SEED · filter rules« deroppe, er omskrivningen ikke slået igennem.");
 
-  doc.renameSheet(doc.sheets().findIndex((s) => s.id !== readme.id), "Data (omdøbt)");
+  const dataSheetIndex = doc.sheets().findIndex((s) => s.id !== readme.id);
+  doc.renameSheet(dataSheetIndex, "Data (omdøbt)");
+  const dataTable = doc.tablesOnSheet(doc.sheets()[dataSheetIndex]!.id)[0]!;
+  dataTable.name = "Måledata";
+  // The seed's send-back instructions are long gone; say what the column
+  // means now instead of letting them sit stale next to the data.
+  dataTable.setCell(0, 0, "noter");
+  dataTable.setCell(1, 0, "B og C er dine egne værdier fra målingerne, urørt.");
+  dataTable.setCell(2, 0, "Filteret (B > 10 og C indeholder »ko«) er slået fra.");
+  dataTable.setCell(3, 0, "Med filteret til: kun koral-, koks- og kobolt-rækkerne.");
+  for (let r = 4; r <= 8; r++) dataTable.setCell(r, 0, "");
+  for (const r of [1, 2, 3]) dataTable.setCellFormatting(r, 0, { textWrap: true });
+
   doc.moveSheet(doc.sheets().findIndex((s) => s.id === readme.id), 0);
+  doc.setActiveSheet(0);
 
   for (const sheet of doc.sheets()) {
-    for (const dataTable of doc.tablesOnSheet(sheet.id)) {
-      const rows = dataTable.filterSets().rows;
+    for (const t of doc.tablesOnSheet(sheet.id)) {
+      const rows = t.filterSets().rows;
       if (rows && rows.rules().length > 0) rows.setEnabled(false);
     }
   }
@@ -998,9 +1024,26 @@ const demos: Demo[] = [
     bytes: demoFormulas(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
-      const formulas = d.tables().flatMap((t) => t.formulas());
-      if (formulas.length < 7) throw new Error(`formler: expected 7+, got ${formulas.length}`);
-      if (!formulas.some((f) => f.formula.includes("::"))) throw new Error("formler: cross-table missing");
+      const formulas = d.tables().flatMap((t) => t.formulas().map((f) => ({ table: t, ...f })));
+      if (formulas.length < 8) throw new Error(`formler: expected 8+, got ${formulas.length}`);
+      const cross = formulas.filter((f) => f.formula.includes("::"));
+      if (cross.length !== 2) throw new Error(`formler: expected 2 cross-table references, got ${cross.length}`);
+      // A whole-column span from inside its own column is circular; the
+      // returned first round showed exactly that as #ERROR.
+      for (const f of formulas) {
+        const span = /\(([A-Z])\)/.exec(f.formula);
+        if (span && f.column === span[1]!.charCodeAt(0) - 65) {
+          throw new Error(`formler: ${f.formula} sits inside its own span column`);
+        }
+      }
+      // The second table is built clean, not as a content copy.
+      const krydstjek = d.tables().find((t) => t.name === "Krydstjek");
+      if (!krydstjek) throw new Error("formler: Krydstjek missing");
+      for (const cell of krydstjek.cells()) {
+        if (krydstjek.cellText(cell.row, cell.column).includes("F-0")) {
+          throw new Error("formler: Krydstjek carries copied check texts");
+        }
+      }
     },
   },
   {
@@ -1011,6 +1054,31 @@ const demos: Demo[] = [
       const t = d.tables()[0]!;
       if (t.conditionalStyleSets().size < 3) throw new Error("regler: conditional sets missing");
       if (t.controls().size < 4) throw new Error("regler: controls missing");
+      // Every rule-keyed cell must be in the engine's dependency ledger,
+      // or the app shows the rule but never evaluates it (round one).
+      const keyed = new Set<string>();
+      for (let r = 0; r < t.rowCount; r++) {
+        for (let c = 0; c < t.columnCount; c++) {
+          if (t.conditionalStyleKey(r, c) !== undefined) keyed.add(`${r},${c}`);
+        }
+      }
+      const registered = new Set<string>();
+      for (const { obj } of d.store.allObjects()) {
+        if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+        if (obj.message.getUint(FormulaOwnerFields.OWNER_KIND) !== OwnerKind.CONDITIONAL_STYLE) continue;
+        const tiled = obj.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES);
+        for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+          const tile = d.store.resolve(ref);
+          for (const rec of tile?.message.getMessages(CellRecordTileFields.CELL_RECORDS) ?? []) {
+            registered.add(
+              `${rec.getUint(CellRecordExpandedFields.ROW)},${rec.getUint(CellRecordExpandedFields.COLUMN)}`,
+            );
+          }
+        }
+      }
+      for (const cell of keyed) {
+        if (!registered.has(cell)) throw new Error(`regler: rule cell ${cell} not in engine ledger`);
+      }
     },
   },
   {
@@ -1023,6 +1091,23 @@ const demos: Demo[] = [
         .tables()
         .some((t) => (t.filterSets().rows?.rules().length ?? 0) > 0 && t.filterSets().rows!.enabled);
       if (anyEnabled) throw new Error("struktur: filter still enabled");
+      const names = d.tables().map((t) => t.name);
+      if (new Set(names).size !== names.length) {
+        throw new Error(`struktur: table names not distinct: ${names.join(", ")}`);
+      }
+      if (!names.includes("Måledata") || !names.includes("Instruktioner")) {
+        throw new Error(`struktur: expected renamed tables, got ${names.join(", ")}`);
+      }
+      const data = d.tables().find((t) => t.name === "Måledata")!;
+      for (let r = 0; r < data.rowCount; r++) {
+        if (data.cellText(r, 0).includes("SEED")) throw new Error("struktur: stale seed text");
+      }
+      const readmeId = d.sheets()[0]!.id;
+      for (const { obj } of d.store.allObjects()) {
+        if (d.store.typeNameOf(obj) !== "TN.SheetSelectionArchive") continue;
+        const ref = obj.message.getMessage(1)?.getVarint(1);
+        if (ref !== readmeId) throw new Error("struktur: a sheet selection still names another sheet");
+      }
     },
   },
   {

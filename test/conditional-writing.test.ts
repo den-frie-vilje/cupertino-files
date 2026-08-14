@@ -26,6 +26,15 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
 import type { CellFormatting } from "../src/tst/styles.ts";
+import {
+  CellRecordExpandedFields,
+  CellRecordTileFields,
+  ExpandedEdgesFields,
+  FORMULA_OWNER_DEPENDENCIES,
+  FormulaOwnerFields,
+  OwnerKind,
+  TiledDependenciesFields,
+} from "../src/tsce/owners.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const bytes = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -178,5 +187,124 @@ describe("writing conditional rules", () => {
       message = (error as Error).message;
     }
     expect(message).toContain("needs a rule");
+  });
+});
+
+/**
+ * A rule is a formula, and the engine only evaluates formulas its
+ * dependency ledger lists. A cell whose record is missing shows the rule
+ * in the inspector and never draws its fill: `demo07-rules-returned` is a
+ * document written that way, opened on a Mac, and its rules sat inert
+ * until cells were deleted and re-typed — at which point the app
+ * registered exactly those cells and their rules began to evaluate.
+ */
+describe("the engine's dependency ledger for rules", () => {
+  /** Registered (row, column) pairs under a document's kind-3 owners, with shape checks. */
+  function registrations(doc: NumbersDocument): Map<string, { edgeRow: number; edgeColumn: number; edgeOwner: number }> {
+    const out = new Map<string, { edgeRow: number; edgeColumn: number; edgeOwner: number }>();
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+      if (obj.message.getUint(FormulaOwnerFields.OWNER_KIND) !== OwnerKind.CONDITIONAL_STYLE) {
+        continue;
+      }
+      const tiled = obj.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES);
+      for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+        const tile = doc.store.resolve(ref)!;
+        const begin = tile.message.getUint(CellRecordTileFields.TILE_COLUMN_BEGIN)!;
+        expect(begin % 32).toBe(0);
+        for (const record of tile.message.getMessages(CellRecordTileFields.CELL_RECORDS)) {
+          const row = record.getUint(CellRecordExpandedFields.ROW)!;
+          const column = record.getUint(CellRecordExpandedFields.COLUMN)!;
+          expect(column >= begin && column < begin + 32).toBe(true);
+          const edges = record.getMessage(CellRecordExpandedFields.EXPANDED_EDGES)!;
+          out.set(`${row},${column}`, {
+            edgeRow: edges.getUint(ExpandedEdgesFields.EDGE_WITH_OWNER_ROWS)!,
+            edgeColumn: edges.getUint(ExpandedEdgesFields.EDGE_WITH_OWNER_COLUMNS)!,
+            edgeOwner: edges.getUint(ExpandedEdgesFields.INTERNAL_OWNER_ID_FOR_EDGE)!,
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  /** Every rule-keyed (row, column) across a document's tables. */
+  function keyedCells(doc: NumbersDocument): Set<string> {
+    const out = new Set<string>();
+    for (const table of doc.tables()) {
+      for (let row = 0; row < table.rowCount; row++) {
+        for (let column = 0; column < table.columnCount; column++) {
+          if (table.conditionalStyleKey(row, column) !== undefined) out.add(`${row},${column}`);
+        }
+      }
+    }
+    return out;
+  }
+
+  it("registers every covered cell in the Mac-authored rules fixture", () => {
+    const doc = NumbersDocument.load(bytes("olekristensen-v26.3-mac-conditional-rules.numbers"));
+    const registered = registrations(doc);
+    const keyed = keyedCells(doc);
+    expect(registered.size).toBe(30);
+    for (const cell of keyed) expect(registered.has(cell)).toBe(true);
+    // Every edge names the very cell the rule styles, in the table's own
+    // kind-1 owner (internal id 8 in this document).
+    for (const [cell, edge] of registered) {
+      expect(cell).toBe(`${edge.edgeRow},${edge.edgeColumn}`);
+      expect(edge.edgeOwner).toBe(8);
+    }
+  });
+
+  it("matches the app's own after-the-fact registration in the returned demo", () => {
+    // The reviewer re-typed five of the seven rule cells; the app
+    // registered exactly those five. Partial ledgers are app-real —
+    // registration happens on commit, not on load.
+    const doc = NumbersDocument.load(bytes("olekristensen-v26.3-demo07-rules-returned.numbers"));
+    const registered = registrations(doc);
+    const keyed = keyedCells(doc);
+    expect(registered.size).toBe(5);
+    for (const cell of registered.keys()) expect(keyed.has(cell)).toBe(true);
+    for (const [cell, edge] of registered) {
+      expect(cell).toBe(`${edge.edgeRow},${edge.edgeColumn}`);
+    }
+  });
+
+  it("registers what it writes, the shape the corpus is unanimous on", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    if (table.rowCount < 8) table.insertRows(table.rowCount, 8 - table.rowCount);
+    table.setConditionalRules(2, 1, [{ operator: ">", value: 5, cell: RED }], { rowCount: 3 });
+
+    const after = NumbersDocument.load(doc.save());
+    const registered = registrations(after);
+    const keyed = keyedCells(after);
+    expect([...registered.keys()].sort().join(" ")).toBe([...keyed].sort().join(" "));
+    expect(registered.size).toBe(3);
+    for (const [cell, edge] of registered) {
+      expect(cell).toBe(`${edge.edgeRow},${edge.edgeColumn}`);
+    }
+  });
+
+  it("splits tiles at column 32, where the xlsx-lineage document splits its own", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    if (table.columnCount < 36) table.insertColumns(table.columnCount, 36 - table.columnCount);
+    table.setConditionalRules(1, 30, [{ operator: "=", value: 1, cell: RED }], {
+      columnCount: 5,
+    });
+    const registered = registrations(NumbersDocument.load(doc.save()));
+    expect([...registered.keys()].sort().join(" ")).toBe(
+      ["1,30", "1,31", "1,32", "1,33", "1,34"].sort().join(" "),
+    );
+  });
+
+  it("drops the record with the key, and re-applies without duplicating", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    const key = table.setConditionalRules(1, 1, [{ operator: "<", value: 0, cell: RED }]);
+    table.setConditionalStyleKey(1, 1, key);
+    expect(registrations(doc).size).toBe(1);
+    table.setConditionalStyleKey(1, 1, undefined);
+    expect(registrations(doc).size).toBe(0);
   });
 });

@@ -10,8 +10,8 @@ import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
-import { makeRef } from "../tsp/schema.ts";
+import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 
@@ -22,6 +22,8 @@ const TN_DOCUMENT_SHEETS = 1;
 const TN_TYPE_SHEET = 2;
 const TN_SHEET_NAME = 1;
 const TN_SHEET_DRAWABLE_INFOS = 2;
+/** TN.SheetSelectionArchive: sheet = 1 (a TSP.Reference). */
+const TN_SHEET_SELECTION_SHEET = 1;
 
 export interface SheetInfo {
   id: bigint;
@@ -206,6 +208,13 @@ export class NumbersDocument extends IWorkDocument {
       sheet.message.remove(TN_SHEET_DRAWABLE_INFOS);
     }
     sheet.message.setString(TN_SHEET_NAME, this.uniqueSheetName(options.name, sheets));
+    if (withContent) {
+      // The duplicate's tables need identities of their own, like any
+      // cloned table.
+      for (const table of this.tables(sheet.identifier)) {
+        if (table.infoObject) remintTableIdentity(this.store, table.infoObject.identifier);
+      }
+    }
 
     const ids = sheets.map((s) => s.id);
     const at = options.at ?? ids.length;
@@ -265,6 +274,30 @@ export class NumbersDocument extends IWorkDocument {
     );
   }
 
+  /**
+   * Make a sheet the one the document opens on.
+   *
+   * Numbers remembers the selected tab in its UI state — every
+   * `TN.SheetSelectionArchive` names a sheet through a reference — and
+   * ignores tab order when deciding where to open, so a document
+   * rearranged with {@link moveSheet} still opens on whatever sheet was
+   * active at the last save. This re-points every stored sheet
+   * selection at the given sheet.
+   *
+   * @agentTool manage_sheets
+   */
+  setActiveSheet(index: number): void {
+    const sheet = this.sheets()[index];
+    if (!sheet) throw new RangeError(`no sheet at index ${index}`);
+    for (const { obj } of this.store.allObjects()) {
+      if (this.store.typeNameOf(obj) !== "TN.SheetSelectionArchive") continue;
+      const previous = refId(obj.message, TN_SHEET_SELECTION_SHEET);
+      if (previous === undefined || previous === sheet.id) continue;
+      obj.message.setMessage(TN_SHEET_SELECTION_SHEET, makeRef(sheet.id));
+      this.store.retargetReference(obj, previous, sheet.id);
+    }
+  }
+
   // ------------------------------------------------------ table management
 
   /** The tables on one sheet, in the order the sheet lists them. */
@@ -320,6 +353,7 @@ export class NumbersDocument extends IWorkDocument {
     const table = tablesOf(this.store, [copy.id])[0];
     if (!table) throw new RangeError(`copied table ${copy.id} did not resolve`);
 
+    remintTableIdentity(this.store, copy.id);
     table.name = this.uniqueTableName(options.name, sheetId, copy.id);
     if (options.withContent === false) table.clearAllCells();
     return table;

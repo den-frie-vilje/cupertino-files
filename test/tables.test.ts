@@ -1335,6 +1335,25 @@ describe("adding and removing tables", () => {
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
   });
+
+  it("gives a copy its own calc-engine identity, so names resolve", () => {
+    // A clone byte-copies the donor's owner UUIDs, and the calc engine
+    // then sees one identity with two names: cross-table references to
+    // either table resolve to whichever registered first. The copy's
+    // whole derived family is re-minted instead, which is what lets a
+    // formula name it the moment it exists.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const source = document.tablesOnSheet(sheet.id)[0]!;
+    const copy = document.addTable(sheet.id, { name: "Krydstjek" });
+    copy.setCell(1, 1, { type: "number", value: 42 });
+    source.setFormula(2, 1, "=Krydstjek::B2");
+
+    const reloaded = NumbersDocument.load(document.save());
+    const tables = reloaded.tablesOnSheet(sheet.id);
+    const original = tables.find((t) => t.name !== "Krydstjek")!;
+    expect(original.cellFormula(2, 1)).toContain("Krydstjek::B2");
+  });
 });
 
 describe("cell-storage integrity", () => {
