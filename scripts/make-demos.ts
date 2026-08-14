@@ -459,13 +459,13 @@ function demoShadows(): Uint8Array {
     {
       rgb: [192, 57, 43],
       text:
-        "Referencen: den TERRAKOTTA firkant har standardskyggen — sort slagskygge NEDAD MOD HØJRE (inspektøren viser 315°), tæt på firkanten (afstand 5 pkt.) og med skarp kant (blur 1 pkt.). De næste punkter ændrer én ting hver i forhold til denne.",
+        "Referencen: den TERRAKOTTA firkant har appens egen standardskygge — den popup'en »Slagskygge« selv sætter: sort, LIGE NED (inspektøren viser 270°), tæt på (afstand 2 pkt.), let blødgjort (blur 5 pkt.), 50 % dækkraft. De næste punkter ændrer én ting hver i forhold til denne.",
       style: { shadow: { ...DEFAULT_SHADOW } },
     },
     {
       rgb: [41, 74, 158],
-      text: "Retning: den BLÅ firkants skygge peger LIGE NED (inspektøren viser 270°).",
-      style: { shadow: { ...DEFAULT_SHADOW, angle: 90 } },
+      text: "Retning: den BLÅ firkants skygge peger NEDAD MOD HØJRE (inspektøren viser 315°), den klassiske retning.",
+      style: { shadow: { ...DEFAULT_SHADOW, angle: 45 } },
     },
     {
       rgb: [79, 153, 82],
@@ -485,8 +485,8 @@ function demoShadows(): Uint8Array {
     },
     {
       rgb: [230, 126, 34],
-      text: "Dækkraft: den ORANGE firkants skygge er svag (35 %). Sammenlign med referencens fulde sorte.",
-      style: { shadow: { ...DEFAULT_SHADOW, opacity: 0.35 } },
+      text: "Dækkraft: den ORANGE firkants skygge er næsten fuld (90 %) — tydeligt mørkere end referencens 50 %.",
+      style: { shadow: { ...DEFAULT_SHADOW, opacity: 0.9 } },
     },
     {
       rgb: [150, 150, 150],
@@ -501,8 +501,8 @@ function demoShadows(): Uint8Array {
     },
     {
       rgb: [26, 188, 156],
-      text: "Type: den TURKISE firkant har en KONTAKT-skygge (popup'en »Kontakt«) — skyggen samler sig under firkantens fod, som om den står på en flade.",
-      style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CONTACT } },
+      text: "Type: den TURKISE firkant har en KONTAKT-skygge (popup'en »Kontakt«) med 40 pkt. blur — skyggen samler sig blødt under firkantens fod, som om den står på en flade.",
+      style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CONTACT, radius: 40 } },
     },
     {
       rgb: [121, 85, 61],

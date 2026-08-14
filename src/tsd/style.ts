@@ -338,6 +338,13 @@ export const ShadowFields = protoFields("TSD.ShadowArchive", {
   OPACITY: "opacity",
   IS_ENABLED: "is_enabled",
   TYPE: "type",
+  // Per-type sub-archives the app writes when a type's own knobs are
+  // touched: the corpus's contact shadows carry one float at sub-field
+  // 2, and an inspector's curve adjustment writes one at sub-field 1
+  // (negative curves inward).
+  DROP_SHADOW: "dropShadow",
+  CONTACT_SHADOW: "contactShadow",
+  CURVED_SHADOW: "curvedShadow",
 });
 export const ShadowType = protoEnum("TSD.ShadowArchive.ShadowType", { DROP: "TSDDropShadow", CONTACT: "TSDContactShadow", CURVED: "TSDCurvedShadow" });
 
@@ -377,18 +384,25 @@ export function readShadow(message: RawMessage | undefined): Shadow | undefined 
 }
 
 /**
- * The parameters Apple defaults a fresh drop shadow to. The inspector
- * displays `360 − angle`: stored 45 is the standard down-right shadow
- * the UI calls 315°, and stored 315 renders up-right as UI 45° — the
- * proto's `[default = 315]` describes the legacy scale, not the
- * inspector's.
+ * What "add a shadow" writes in the app itself — the popup's fresh
+ * drop-shadow preset, measured from the app writing it over one of
+ * this library's archives (`olekristensen-v26.3-demo11-shadows-
+ * returned.pages`): stored angle 90, which the inspector displays as
+ * 270° (the UI shows `360 − angle`; the proto's `[default = 315]` is
+ * the legacy scale), offset 2, blur 5, half opacity, black.
+ *
+ * This library's defaults are the app's, here and throughout styling:
+ * a user of either expects "add a shadow" to look the same. The
+ * archive-level idle defaults untouched theme shadows carry (315, 5,
+ * 1, full opacity) are a different, also-measured shape — what a
+ * shadow nobody added looks like, not what adding one produces.
  */
 export const DEFAULT_SHADOW: Shadow = {
   color: { r: 0, g: 0, b: 0, a: 1 },
-  angle: 45,
-  offset: 5,
-  radius: 1,
-  opacity: 1,
+  angle: 90,
+  offset: 2,
+  radius: 5,
+  opacity: 0.5,
   enabled: true,
 };
 

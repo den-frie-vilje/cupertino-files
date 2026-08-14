@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 17 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 15 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -34,12 +34,10 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 9 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 12 | 🟡 low | Drawables & media → Drawable shadows (enabled, angle, offset, blur, opacity) | A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the contact and curved types draw as their kind — and the app survives editing our shadow in its own inspector. | manual |
-| 13 | 🟡 low | Drawables & media → Drawable style (fill, stroke, opacity, shadow, reflection) | a reflection this library writes renders as a fading mirror below the drawable | manual |
-| 14 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 15 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 16 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 17 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 12 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 13 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 14 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 15 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -177,31 +175,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 12. Drawable shadows (enabled, angle, offset, blur, opacity)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Drawables & media  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the contact and curved types draw as their kind — and the app survives editing our shadow in its own inspector.
-
-**Why the suite cannot settle it.** Angle, offset and blur radius are rendering parameters, and the type and enabled fields are pure app behaviour. The first round proved rendering (S-01–S-07, S-09, S-10 confirmed) and found the harder half: re-enabling the disabled shadow through the app's popup aborted Pages whole — the archive rendered but asserted under edit, missing the type field all 929 corpus shadows carry, on an override style shaped like no app file's. Both are rewritten to the measured shape; the toggle is the remaining check.
-
-**How to settle it.** open demo-11 (skygger): S-08, the black square — confirm no shadow draws, then re-enable the shadow via the popup (Slagskygge). The app surviving the switch and drawing the shadow is the pass; a crash again means the remaining delta is beyond the byte-visible set and the instructions in the document say so. The other rungs are confirmed
-
-### 13. Drawable style (fill, stroke, opacity, shadow, reflection)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Drawables & media  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a reflection this library writes renders as a fading mirror below the drawable
-
-**Why the suite cannot settle it.** reflection is a single opacity float on the style archive; the suite proves it round-trips, not that the app draws the mirror
-
-**How to settle it.** open demo-11, S-11: the dark-blue square should mirror below itself at half strength, with the inspector's Reflection ticked at 50%. No mirror = the float alone does not switch the effect on, and the delta against an app-made reflection is the next measurement
-
-### 14. Categories: enable or disable grouping
+### 12. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -213,7 +187,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 15. Conditional formatting rules
+### 13. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -225,7 +199,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 16. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 14. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -237,7 +211,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 17. Table of contents (rules read + write, cached entries read)
+### 15. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -251,7 +225,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-36 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+38 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -341,6 +315,22 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** both are attachments whose meaning comes from the app resolving them; the suite proves the archive and the anchor round-trip, not that the app treats them as fields
 
 **Outcome.** **Confirmed, and the bookmark half found a bug.** The date field renders set to 1 January and is editable. The bookmark rung marked a 13-character phrase and Pages bookmarked one character — "the B character is a bookmark" — because the writer derived `ranged` from the *name* and wrote `ranged=false` over a 13-character run, a combination no corpus bookmark has. The corpus ties the flag to run length (true at 13 and 46 characters, false at exactly 1) with the name orthogonal, and Pages resolved our contradiction in the flag's favour. `ranged` now derives from the run, and the corrected form is confirmed: the re-emitted named bookmark with `ranged=true` spans its full 13-character phrase in Pages — a name-plus-range combination the corpus itself never shows, accepted by the app
+
+### ✅ Drawable shadows (enabled, angle, offset, blur, opacity)
+
+**Was claimed.** A shadow we parameterise renders with the geometry we set, the enabled flag gates it, the contact and curved types draw as their kind — and the app survives editing our shadow in its own inspector.
+
+**Why it needed an app.** Angle, offset and blur radius are rendering parameters, and the type and enabled fields are pure app behaviour. The first round proved rendering (S-01–S-07, S-09, S-10 confirmed) and found the harder half: re-enabling the disabled shadow through the app's popup aborted Pages whole — the archive rendered but asserted under edit, missing the type field all 929 corpus shadows carry, on an override style shaped like no app file's. Both are rewritten to the measured shape; the toggle is the remaining check.
+
+**Outcome.** **Confirmed in Pages, whole — »det virkede«.** Every parameter renders as written (both angle checks on the calibrated scale, offset, blur, opacity, colour, the disabled state, contact and curved types), and the seven-field rewrite survived the app's own popup where the six-field archive aborted it. The toggle wrote the app's fresh preset over our archive — stored angle 90/inspector 270°, offset 2, blur 5, 50 % — and the round's returned file is a corpus fixture carrying the popup preset, the contact sub-archive and the first curvedShadow sub-archive
+
+### ✅ Drawable style (fill, stroke, opacity, shadow, reflection)
+
+**Was claimed.** a reflection this library writes renders as a fading mirror below the drawable
+
+**Why it needed an app.** reflection is a single opacity float on the style archive; the suite proves it round-trips, not that the app draws the mirror
+
+**Outcome.** **Confirmed in Pages — »ja, det virker«.** The single reflection float mirrors the square below itself; demo-11 S-11, second round
 
 ### ✅ Edit cycle: open → edit → save → reopen
 

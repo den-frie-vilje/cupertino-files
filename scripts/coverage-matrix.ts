@@ -806,6 +806,9 @@ export const CAPABILITIES: Capability[] = [
         "open demo-11, S-11: the dark-blue square should mirror below itself at half strength, with " +
         "the inspector's Reflection ticked at 50%. No mirror = the float alone does not switch the " +
         "effect on, and the delta against an app-made reflection is the next measurement",
+      settled:
+        "**Confirmed in Pages — »ja, det virker«.** The single reflection float mirrors the " +
+        "square below itself; demo-11 S-11, second round",
       risk: "low",
     },
   },
@@ -832,6 +835,14 @@ export const CAPABILITIES: Capability[] = [
         "the shadow via the popup (Slagskygge). The app surviving the switch and drawing the shadow " +
         "is the pass; a crash again means the remaining delta is beyond the byte-visible set and " +
         "the instructions in the document say so. The other rungs are confirmed",
+      settled:
+        "**Confirmed in Pages, whole — »det virkede«.** Every parameter renders as written (both " +
+        "angle checks on the calibrated scale, offset, blur, opacity, colour, the disabled state, " +
+        "contact and curved types), and the seven-field rewrite survived the app's own popup where " +
+        "the six-field archive aborted it. The toggle wrote the app's fresh preset over our " +
+        "archive — stored angle 90/inspector 270°, offset 2, blur 5, 50 % — and the round's " +
+        "returned file is a corpus fixture carrying the popup preset, the contact sub-archive and " +
+        "the first curvedShadow sub-archive",
       risk: "low",
     },
   },

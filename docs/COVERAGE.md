@@ -11,12 +11,12 @@ zero fixtures” at the same time — which is exactly the thing worth knowing.
 
 | App | iwork13 | iwork16 | iwork19 | modern | current | Total | Newest format | Newest build |
 |---|---:|---:|---:|---:|---:|---:|---|---|
-| **Pages** | 1 | 4 | 5 | 7 | 9 | 26 | 26.3.1 | `M15.3.1-7050.1.1-2` |
+| **Pages** | 1 | 4 | 5 | 7 | 10 | 27 | 26.3.1 | `M15.3.1-7050.1.1-2` |
 | **Numbers** | · | 1 | · | 3 | 9 | 13 | 26.3.1 | `M15.3.1-7050.1.1-2` |
 | **Keynote** | · | 2 | 1 | 2 | 4 | 9 | 26.3.1 | `M15.3-7050.0.24-2` |
 
 Eras are classified from `fileFormatVersion`; see `docs/FORMAT.md` §11. 
-Corpus: **48 documents**. Every one round-trips byte-identically.
+Corpus: **49 documents**. Every one round-trips byte-identically.
 
 ## Feature coverage
 
@@ -26,14 +26,14 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Flat zip layout | all | ✅ read + write | 46 | all |
+| Flat zip layout | all | ✅ read + write | 47 | all |
 | Nested Index.zip layout | all | ✅ read + write | 2 | iwork19→iwork19 |
 | Wrapper-directory layout | all | ✅ read + write | **0** | — |
-| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 48 | all |
-| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 48 | all |
-| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 48 | all |
-| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 48 | all |
-| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 48 | all |
+| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 49 | all |
+| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 49 | all |
+| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 49 | all |
+| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 49 | all |
+| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 49 | all |
 | Mixed-codec packages (LZFSE component beside Snappy)<br><sub>decodeLzfseStream reads the container (raw and LZVN blocks; FSE blocks refused precisely) and the probe reports its reading of any opaque component; the document model keeps such components opaque and byte-preserved because no redistributable specimen exists to measure the payload against — see docs/BLOCKERS.md</sub> | all | 🔍 read only | **0** | — |
 | iWork '09 XML documents<br><sub>detected and rejected with a clear error</sub> | all | ✗ out of scope | n/a | — |
 | Password-protected documents<br><sub>detected via .iwph and rejected</sub> | all | ✗ out of scope | n/a | — |
@@ -43,27 +43,27 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Unknown type IDs preserved across edits<br><sub>forward compatibility; registerTypes() can name them at runtime</sub> | all | ✅ read + write | 1 | iwork13→iwork13 |
-| Multi-payload archives | all | 🔍 read only | 38 | iwork19→current |
+| Multi-payload archives | all | 🔍 read only | 39 | iwork19→current |
 | Older-reader compatibility diffs (type-0 patches)<br><sub>preserved verbatim; not recomputed when the base message changes</sub> | all | 🔍 read only | 12 | modern→current |
-| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 34 | modern→current |
+| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 35 | modern→current |
 
 ### Text & styles
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Text read/edit with full attribute-table fixup | all | ✅ read + write | 48 | all |
-| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 48 | all |
-| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 48 | all |
-| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 48 | all |
-| Tab stops (position, alignment, leader) | all | ✅ read + write | 44 | all |
-| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 28 | all |
-| Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; the null flag is never used. Rendering measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app preserves values beyond what its inspector displays (−12 stored, −2 shown)</sub> | all | ✅ read + write | 48 | all |
-| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 48 | all |
-| List styles | all | ✅ read + write | 26 | all |
+| Text read/edit with full attribute-table fixup | all | ✅ read + write | 49 | all |
+| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 49 | all |
+| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 49 | all |
+| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 49 | all |
+| Tab stops (position, alignment, leader) | all | ✅ read + write | 45 | all |
+| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 29 | all |
+| Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; the null flag is never used. Rendering measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app preserves values beyond what its inspector displays (−12 stored, −2 shown)</sub> | all | ✅ read + write | 49 | all |
+| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 49 | all |
+| List styles | all | ✅ read + write | 27 | all |
 | Hyperlinks | all | ✅ read + write | 9 | iwork16→current |
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 27 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 13 | iwork16→current |
-| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 48 | all |
+| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 49 | all |
 | Placeholder text (list, fill, define)<br><sub>the template tap-to-replace mechanism. Filling sheds the marking the way typing does; defineAsPlaceholder writes the measured shape (smart-field super + varint 1, uniform across 73 app-written instances). A placeholder over an attachment's U+FFFC is a body document's image placeholder — same field, no drawable archive</sub> | Pages | ✅ read + write | 5 | iwork19→current |
 | Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 5 | iwork16→modern |
 | Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 5 | iwork16→current |
@@ -75,16 +75,16 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 31 | iwork16→current |
-| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all; writes copy a shared archive on first edit and repoint this drawable, the app's own one-object-styled behaviour</sub> | all | ✅ read + write | 48 | all |
-| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 48 | all |
-| Geometry (enumerate, move, resize) | all | ✅ read + write | 40 | iwork16→current |
+| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 32 | iwork16→current |
+| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all; writes copy a shared archive on first edit and repoint this drawable, the app's own one-object-styled behaviour</sub> | all | ✅ read + write | 49 | all |
+| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 49 | all |
+| Geometry (enumerate, move, resize) | all | ✅ read + write | 41 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
 | Image cropping (set, move, remove a mask) | all | ✅ read + write | 17 | iwork16→current |
 | Media variant resolution (unmaterialized originals) | all | 🔍 read only | 11 | iwork16→current |
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves with its indent</sub> | Pages | ✅ read + write | n/a | — |
 | Inline image placement in an indented column<br><sub>exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and on none of its 175 floating drawables; the other values place the drawable against the page and are unnamed in any published schema</sub> | Pages | ✅ read + write | n/a | — |
-| Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 9 | iwork16→current |
+| Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 10 | iwork16→current |
 
 ### Pages
 
@@ -93,10 +93,10 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Sections (read + insert)<br><sub>validation counts multi-section documents only</sub> | Pages | ✅ read + write | 5 | iwork19→current |
 | Headers & footers (3 columns × first/even/odd) | Pages | ✅ read + write | 6 | iwork19→modern |
 | Master-page drawables | Pages | 🔍 read only | 2 | iwork19→modern |
-| Page setup (size, margins, orientation) | Pages | ✅ read + write | 26 | all |
+| Page setup (size, margins, orientation) | Pages | ✅ read + write | 27 | all |
 | Page-layout (body-less) documents | Pages | ✅ read + write | 2 | iwork16→modern |
 | Text boxes | Pages | ✅ read + write | 9 | iwork16→current |
-| Document settings (hyphenation, ligatures, footnote config) | Pages | ✅ read + write | 26 | all |
+| Document settings (hyphenation, ligatures, footnote config) | Pages | ✅ read + write | 27 | all |
 
 ### Numbers & tables
 
@@ -271,6 +271,7 @@ correctly. They are listed with their reasoning and repro steps in
 | `numbers-parser-v26.1-form-sheet.numbers` | Numbers | current | 26.1.0 | `M15.2-7046.0.71-2` |
 | `numbers-parser-v26.1-xlsx-lineage.numbers` | Numbers | current | 26.1.0 | `M15.2.1-7048.0.3-2` |
 | `olekristensen-v14.4-placeholders-image.pages` | Pages | modern | 14.4.1 | `M14.4-7043.0.93-4` |
+| `olekristensen-v26.3-demo11-shadows-returned.pages` | Pages | current | 26.3.1 | `M15.3.1-7050.1.1-2` |
 | `olekristensen-v26.3-ios-borders-logical.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
 | `olekristensen-v26.3-ios-placeholder-consumed.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
 | `olekristensen-v26.3-ios-rtl-direction.pages` | Pages | current | 26.3.1 | `T15.3 (7375.0.54)` |
