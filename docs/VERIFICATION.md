@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 14 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 13 claims, **2** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -24,19 +24,18 @@ person to look at a rendered document, because the scripting dictionaries expose
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
 | 1 | 🔴 high | Drawables & media → Inline image placement in an indented column | an inline image sits in the text column of an indented paragraph, not at the page margin | manual |
-| 2 | 🔴 high | Numbers & tables → Conditional formatting: authoring new rules | a rule set this library authors draws its fills the moment Numbers opens the document | manual |
-| 3 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
-| 4 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 5 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
-| 6 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 7 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
-| 8 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 9 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 10 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 11 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 12 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 13 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 14 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 2 | 🔴 high | Numbers & tables → Table cell writing (text, number, date, bool, duration) | Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote. | `test:e2e` |
+| 3 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
+| 4 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 5 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 6 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
+| 7 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 8 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 9 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 10 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 11 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 12 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 13 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -50,19 +49,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** `npm run seeds -- out` writes seed-inline-image.pages: two pictures in a paragraph indented well in from the margin, one in-flow and one page-placed, each labelled with what it should look like. The in-flow picture starting where its own paragraph starts is the pass.
 
-### 2. Conditional formatting: authoring new rules
-
-**Risk if wrong:** 🔴 high  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** a rule set this library authors draws its fills the moment Numbers opens the document
-
-**Why the suite cannot settle it.** The first demo round proved the halfway state: rules written without ledger records showed correctly in the inspector and never evaluated — no fill until a covered cell was deleted and re-typed, at which point the app registered exactly the re-typed cells (olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the opposite behaviour of cell formulas, which the engine recomputes on open with no tracker write at all — so the ledger cannot be assumed either way; each owner kind had to be measured. The registration now written matches the corpus shape offline; whether it is what the app was waiting for, only reopening decides. The same round observed library-written number cells rendering left-aligned until the same re-commit — plausibly the same cause, unproven.
-
-**How to settle it.** npm run demos, open demo-07-regler.numbers in Numbers: the C-column fills (green, yellow, blue) must be visible immediately, and the numbers right-aligned, without touching any cell. Having to re-type a value first means the registration is not sufficient — note which cells.
-
-### 3. Table cell writing (text, number, date, bool, duration)
+### 2. Table cell writing (text, number, date, bool, duration)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Numbers & tables  
@@ -72,11 +59,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** Every offline check is self-referential: our encoder round-trips through our decoder. Apple's reader is the only authority on whether the rebuilt row buffers, offset array, cell counts and legacy stubs are all acceptable together.
 
-**How to settle it.** npm run test:e2e on a Mac — 'writes cells that Numbers itself reads back' asserts the app reports our text and number. Then open the file by hand and check the edited cells look normal (no red triangle, no reformatting) and that undo/redo behaves.
+**How to settle it.** npm run test:e2e on a Mac — 'writes cells that Numbers itself reads back' asserts the app reports our text and number. Then open the file by hand and check the edited cells look normal (no red triangle, no reformatting) and that undo/redo behaves — numbers right-aligned without touching any cell.
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 4. Floating (non-inline) drawable placement
+### 3. Floating (non-inline) drawable placement
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Drawables & media  
@@ -88,7 +75,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source
 
-### 5. Add and remove tables on a sheet
+### 4. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -100,7 +87,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
 
-### 6. Conditional formatting: apply an existing rule set to more cells
+### 5. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -112,7 +99,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 7. Formula function names
+### 6. Formula function names
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -126,7 +113,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 > Already exercised by `npm run test:e2e` on a Mac with the app installed.
 
-### 8. Formula reading (AST rendered to text)
+### 7. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -138,7 +125,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 9. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 8. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -150,7 +137,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 10. Table styling (banded rows, grid strokes, visibility)
+### 9. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -162,7 +149,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 11. Categories: enable or disable grouping
+### 10. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -174,7 +161,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 12. Conditional formatting rules
+### 11. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -186,7 +173,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 13. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 12. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -198,7 +185,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 14. Table of contents (rules read + write, cached entries read)
+### 13. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -212,7 +199,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-40 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+41 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -294,6 +281,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the suite proves the three archives and the highlight run round-trip; what an author must carry before the comment UI will draw at all took three app rounds
 
 **Outcome.** **Confirmed — "P08 Comment works" — on the third round, each round a distinct finding.** Round one (Pages for iOS): unreadable placeholder — the comment carried no author where every corpus comment references one. Round two: with a name-only author, Pages crashed on open — both corpus authors carry the identical comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, and the round-one fix had made ours declare the author — the container rule reintroduced by our own repair. Round three, with the author byte-for-byte Apple's shape and the roster declaring nothing: readable and attributed.
+
+### ✅ Conditional formatting: authoring new rules
+
+**Was claimed.** a rule set this library authors draws its fills the moment Numbers opens the document
+
+**Why it needed an app.** The first demo round proved the halfway state: rules written without ledger records showed correctly in the inspector and never evaluated — no fill until a covered cell was deleted and re-typed, at which point the app registered exactly the re-typed cells (olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the opposite behaviour of cell formulas, which the engine recomputes on open with no tracker write at all — so the ledger cannot be assumed either way; each owner kind had to be measured.
+
+**Outcome.** **Confirmed on open, and the app keeps our ledger.** The rebuilt demo drew every fill with no cell touched — the rung that asks for missing cells came back without one — and the app's save preserved all seven library-written records intact (olekristensen-v26.3-demo07-rules-round2.numbers). The reviewer's remaining notes (numbers still left-aligned, but only where no rule matched, plus the slider and stepper) isolated a separate omission: value cells were written without their type's default format, which every app cell carries — fixed on the cell-writing row.
 
 ### ✅ Date fields and bookmarks (read + create)
 

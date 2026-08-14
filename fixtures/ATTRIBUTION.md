@@ -1002,6 +1002,20 @@ only annotation author string is `cupertino-files`.
   writes survive editing, and that library-written number cells
   right-align only after the same re-commit.
 
+### olekristensen-v26.3-demo07-rules-round2.numbers
+- 161,113 bytes, md5 `f913adbb4ef40fdd9b8c52211b7f2f81`
+- Saved by macOS Numbers (26.3) after reviewing the rebuilt demo-07 —
+  the round that confirmed library-written ledger registration end to
+  end. All seven rule cells drew their fills on open with no cell
+  touched, and the app's save kept every one of the seven
+  library-written `CellRecordExpandedArchive`s intact under the kind-3
+  owner. The same save shows the app's record normalization: every
+  value cell gains its type's format id, `suggest_id`, and (on rule
+  cells) `cond_rule_style_id`. The reviewer's remaining notes — »Ikke
+  højrestillet« on exactly the number cells no rule matched plus the
+  slider and stepper cells — are what isolated the missing default
+  format as its own fault, separate from rule evaluation.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.

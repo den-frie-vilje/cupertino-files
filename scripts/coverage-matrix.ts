@@ -1138,7 +1138,13 @@ export const CAPABILITIES: Capability[] = [
     apps: "all",
     status: "read+write",
     probe: (c) => c.report.probe.cellStorage === "v5",
-    note: "string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the cell preserved",
+    note:
+      "string-table refcounting, offsets and legacy stubs rebuilt; formats and styles on the " +
+      "cell preserved. A fresh value is stamped with its type's default format — the automatic " +
+      "number, text, boolean or date archive the app writes for a typed value, none missing " +
+      "across every plain value cell in the corpus — because a number cell without one renders " +
+      "left-aligned while the inspector calls its alignment automatic, until the cell is " +
+      "manually re-entered",
     manualProof: {
       claim: "Numbers, Pages and Keynote open a package whose cells we rewrote, and display the values we wrote.",
       why:
@@ -1148,7 +1154,8 @@ export const CAPABILITIES: Capability[] = [
       how:
         "npm run test:e2e on a Mac — 'writes cells that Numbers itself reads back' asserts the app " +
         "reports our text and number. Then open the file by hand and check the edited cells look " +
-        "normal (no red triangle, no reformatting) and that undo/redo behaves.",
+        "normal (no red triangle, no reformatting) and that undo/redo behaves — numbers " +
+        "right-aligned without touching any cell.",
       e2e: true,
       risk: "high",
     },
@@ -1610,15 +1617,20 @@ export const CAPABILITIES: Capability[] = [
         "(olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the " +
         "opposite behaviour of cell formulas, which the engine recomputes on open with no " +
         "tracker write at all — so the ledger cannot be assumed either way; each owner kind had " +
-        "to be measured. The registration now written matches the corpus shape offline; whether " +
-        "it is what the app was waiting for, only reopening decides. The same round observed " +
-        "library-written number cells rendering left-aligned until the same re-commit — " +
-        "plausibly the same cause, unproven.",
+        "to be measured.",
       how:
         "npm run demos, open demo-07-regler.numbers in Numbers: the C-column fills (green, " +
         "yellow, blue) must be visible immediately, and the numbers right-aligned, without " +
         "touching any cell. Having to re-type a value first means the registration is not " +
         "sufficient — note which cells.",
+      settled:
+        "**Confirmed on open, and the app keeps our ledger.** The rebuilt demo drew every fill " +
+        "with no cell touched — the rung that asks for missing cells came back without one — " +
+        "and the app's save preserved all seven library-written records intact " +
+        "(olekristensen-v26.3-demo07-rules-round2.numbers). The reviewer's remaining notes " +
+        "(numbers still left-aligned, but only where no rule matched, plus the slider and " +
+        "stepper) isolated a separate omission: value cells were written without their type's " +
+        "default format, which every app cell carries — fixed on the cell-writing row.",
       risk: "high",
     },
   },
