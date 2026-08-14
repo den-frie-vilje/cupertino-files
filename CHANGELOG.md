@@ -7,6 +7,17 @@ history uses Conventional Commits, so the detail behind any entry is one
 
 ## Unreleased
 
+- Demo-11 (shadows, blur, reflections) is app-confirmed whole: every
+  parameter renders as written on the calibrated angle scale, the
+  contact and curved types draw as their kinds, the reflection mirrors,
+  and the seven-field rewrite survives the app's shadow popup where the
+  six-field archive aborted it. The round's returned file is a corpus
+  fixture carrying the popup's fresh preset (stored angle 90 =
+  inspector 270°, offset 2, blur 5, 50 %), the `contactShadow`
+  sub-archive, and the corpus's first `curvedShadow` sub-archive (one
+  float, negative for inward). Rewriting a shadow now carries per-type
+  sub-archives forward when the type is unchanged, so
+  re-parameterising an app-edited shadow keeps its curve.
 - Fixed: editing a shadow this library wrote no longer aborts Pages.
   Re-enabling demo-11's disabled shadow through the app's own popup
   crashed the app in TSStyles' assert — the archive rendered but stated

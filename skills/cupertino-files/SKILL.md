@@ -183,7 +183,7 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 
 - **The app draws one more paragraph than `paragraphs()` lists** when the
   text ends with a terminator. That tail is *one* of the apps' shapes,
-  not the norm: of the corpus's 26 body storages, 15 end bare — what
+  not the norm: of the corpus's 27 body storages, 16 end bare — what
   typing leaves — 8 end with the terminator, 3 are empty. Appending
   preserves whichever convention the document already has (a `blank()`
   build ends bare), so check `doc.body.endsWithEmptyParagraph` rather

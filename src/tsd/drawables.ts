@@ -12,8 +12,23 @@ import { typeName, type IWorkApp } from "../tsp/registry.ts";
 import { Drawable, Geometry } from "./schema.ts";
 import { makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
 import type { Fill, Shadow, Stroke } from "./style.ts";
-import { DEFAULT_SHADOW, readFill, readShadow, readStroke, writeFill, writeShadow, writeStroke } from "./style.ts";
+import {
+  DEFAULT_SHADOW,
+  readFill,
+  readShadow,
+  readStroke,
+  ShadowFields,
+  writeFill,
+  writeShadow,
+  writeStroke,
+} from "./style.ts";
 import { protoFields } from "../proto/fields.ts";
+
+const SHADOW_SUBARCHIVE_FIELDS = [
+  ShadowFields.DROP_SHADOW,
+  ShadowFields.CONTACT_SHADOW,
+  ShadowFields.CURVED_SHADOW,
+] as const;
 
 export interface GeometryInfo {
   x: number | undefined;
@@ -363,7 +378,29 @@ export class DrawableStyleHandle {
     if (style.opacity !== undefined) props.setFloat(fields.OPACITY, style.opacity);
     if (style.shadow !== undefined) {
       if (style.shadow === null) props.remove(fields.SHADOW);
-      else props.setMessage(fields.SHADOW, writeShadow(style.shadow));
+      else {
+        // The app hangs a per-type sub-archive off the shadow when its
+        // type-specific knobs are touched — `contactShadow` (9) holding
+        // the corpus's one measured float, `curvedShadow` (10) holding
+        // the curvature an inspector edit writes. Rewriting the shadow
+        // carries an existing sub-archive forward when the type is
+        // unchanged, so re-parameterising an app-edited shadow keeps
+        // its curvature; a type change drops it, since a sub-archive
+        // for another type is a shape no corpus shadow has.
+        const previous = props.getMessage(fields.SHADOW);
+        const next = writeShadow(style.shadow);
+        if (previous) {
+          const previousType = previous.getUint(ShadowFields.TYPE) ?? 0;
+          const nextType = next.getUint(ShadowFields.TYPE) ?? 0;
+          if (previousType === nextType) {
+            for (const no of SHADOW_SUBARCHIVE_FIELDS) {
+              const sub = previous.getMessage(no);
+              if (sub) next.setMessage(no, sub);
+            }
+          }
+        }
+        props.setMessage(fields.SHADOW, next);
+      }
     }
     if (style.reflection !== undefined) {
       if (style.reflection === null) props.remove(fields.REFLECTION);

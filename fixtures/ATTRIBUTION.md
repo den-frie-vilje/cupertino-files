@@ -986,6 +986,19 @@ only annotation author string is `cupertino-files`.
   control-spec entry (`interaction_type` 8) in the type-12 list, and
   extras 0x20 — the format without the control had shown as Automatic.
 
+### olekristensen-v26.3-demo11-shadows-returned.pages
+- 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
+- Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.
+  Carries three app-written shadow states beside this library's own:
+  the popup's fresh drop-shadow preset (stored angle 90 = inspector
+  270°, offset 2, blur 5, 50 % opacity — written over our disabled
+  archive when the reviewer re-enabled it), a contact shadow with the
+  reviewer's 40 pt blur and its `contactShadow` sub-archive (one float
+  at sub-field 2), and a curved shadow adjusted inward, the corpus's
+  first `curvedShadow` sub-archive (one float at sub-field 1,
+  negative). The file is also the app-side confirmation that a shadow
+  this library writes survives the app's own shadow popup.
+
 ### olekristensen-v26.3-seed-crop-returned.pages
 - 537,381 bytes, md5 `88fff560167af5c5f739c9450667c852`
 - Saved by macOS Pages (format 26.3.1). The crop-delta seed: one

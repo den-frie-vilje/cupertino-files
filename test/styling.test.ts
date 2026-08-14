@@ -711,6 +711,85 @@ describe("drawable styling", () => {
     expect(written.enabled).toBe(false);
   });
 
+  it("reads the app's own shadow states from the returned demo round", () => {
+    // The returned demo-11 carries three app-written shadow states over
+    // this library's archives: the popup's fresh drop preset written
+    // where the disabled shadow stood, a contact shadow with its
+    // sub-archive, and the corpus's first curvedShadow sub-archive —
+    // the inspector's inward curve, a negative float.
+    const doc = PagesDocument.load(fixture("olekristensen-v26.3-demo11-shadows-returned.pages"));
+    const floats = [0, 1].flatMap((page) => doc.floatingDrawables(page)?.drawables() ?? []);
+    const shadows = floats.map((f) => {
+      const style = f.style()!;
+      const raw = (() => {
+        let node = style.object.message;
+        let props = node.getMessage(11);
+        for (let depth = 0; depth < 4; depth++) {
+          const child = node.getMessage(1);
+          const childProps = child?.getMessage(11);
+          if (!child || !childProps) break;
+          node = child;
+          props = childProps;
+        }
+        return props?.getMessage(style.isMedia ? 3 : 4);
+      })();
+      return { read: style.read().shadow, raw };
+    });
+
+    // The popup preset: stored angle 90 = inspector 270°, offset 2,
+    // blur 5, half opacity — enabled over what was the disabled rung.
+    // (The half opacity is what tells it from the round's angle rung.)
+    const preset = shadows.find(
+      (s) =>
+        s.read?.enabled === true &&
+        s.read.type === 0 &&
+        s.read.opacity !== undefined &&
+        Math.abs(s.read.opacity - 0.5) < 1e-6,
+    )!;
+    expect(preset.read!.angle).toBe(90);
+    expect(preset.read!.offset).toBe(2);
+    expect(preset.read!.radius).toBe(5);
+
+    const contact = shadows.find((s) => s.read?.type === 1)!;
+    expect(contact.read!.radius).toBe(40);
+    const contactSub = contact.raw!.getMessage(9)!;
+    expect(contactSub.getFloat(2)! > 0).toBe(true);
+
+    const curved = shadows.find((s) => s.read?.type === 2)!;
+    const curvedSub = curved.raw!.getMessage(10)!;
+    expect(curvedSub.getFloat(1)! < 0).toBe(true);
+  });
+
+  it("re-parameterising a shadow keeps its per-type sub-archive", () => {
+    // The sub-archive holds what the inspector's type-specific knobs
+    // wrote — dropping it on a rewrite would silently discard the
+    // user's curve. A type change drops it, the corpus shape.
+    const doc = PagesDocument.load(fixture("olekristensen-v26.3-demo11-shadows-returned.pages"));
+    const floats = [0, 1].flatMap((page) => doc.floatingDrawables(page)?.drawables() ?? []);
+    const curved = floats.find((f) => f.style()!.read().shadow?.type === 2)!;
+    const style = curved.style()!;
+    const rawShadow = (handle: typeof style) => {
+      let node = handle.object.message;
+      let props = node.getMessage(11);
+      for (let depth = 0; depth < 4; depth++) {
+        const child = node.getMessage(1);
+        const childProps = child?.getMessage(11);
+        if (!child || !childProps) break;
+        node = child;
+        props = childProps;
+      }
+      return props?.getMessage(handle.isMedia ? 3 : 4);
+    };
+    const before = rawShadow(style)!.getMessage(10)!.getFloat(1);
+
+    style.set({ shadow: { ...style.read().shadow!, radius: 12 } });
+    expect(rawShadow(style)!.getMessage(10)!.getFloat(1)).toBe(before);
+    expect(style.read().shadow!.radius).toBe(12);
+
+    style.set({ shadow: { ...style.read().shadow!, type: 0 } });
+    expect(rawShadow(style)!.getMessage(10)).toBe(undefined);
+  });
+
   it("no two identified styles in any fixture share an identifier", () => {
     // 18554 identified styles across the corpus, zero collisions — an
     // identifier names exactly one style, and a clone keeping its

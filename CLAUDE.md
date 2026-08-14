@@ -49,6 +49,18 @@ the app, say so plainly, and put it in a `manualProof` block in
 been checked, add `settled:` to that block so the request moves off
 `docs/VERIFICATION.md` and keeps its reasoning.
 
+## Defaults are Apple's
+
+Where this library supplies a default — a fresh shadow's parameters, a
+stroke's shape, anything a user gets without asking — the default is
+what the app itself writes for the same action, measured, never a
+value we find reasonable. People reaching for cupertino-files expect
+"add a shadow" to look like Pages' "add a shadow"; deviating hands
+them styling nobody chose. When the app's own default has not been
+measured yet, say so in the docblock rather than inventing one, and
+prefer measuring it (a returned one-delta file settles it) over
+shipping a guess.
+
 ## Measured numbers in prose
 
 A count stated in README, docs/FORMAT.md or the skill was true the day

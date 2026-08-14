@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-demo11-shadows-returned.pages",
+  "sha1": "430abb8224fcc7164672ecfe52d079db9fc0f6b3",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 685,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 130
+    },
+    {
+      "name": "Index/ViewState-2000141.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 8
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 529
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 2992,
+      "text": "DEMO 11 · Skygger, blur og refleksioner\nSlagskyggens parametre (retning, afstand, blur, dækkraft, farve), enabled-flaget, de tre skyggetyper og spejling — elleve farvede firkanter, én ændring pr. firkant. Firkanterne flyder i højre side af side 1 og 2 i punkternes rækkefølge, og hvert punkt navngiver sin firkants farve; nederst står en farveprøve-række i samme rækkefølge. Inspektøren: Formatér → Stil → Skygge. Hvert punkt har et id, en beskrivelse af hvad biblioteket har gjort, og hvad appen derfor bør vise. Skriv hvad du ser på »→ Feedback:«-linjen under punktet (tomt = som forventet), eller sæt en kommentar. Kun feedback-linjerne er grå kursiv — al anden brødtekst skal stå sort og opret; grå kursiv brødtekst er i sig selv en fejl. Arkivér til sidst og send filen retur.\nS-01 · Referencen: den TERRAKOTTA firkant har standardskyggen — sort slagskygge NEDAD MOD HØJRE (inspektøren viser 315°), tæt på firkanten (afstand 5 pkt.) og med skarp kant (blur 1 pkt.). De næste punkter ændrer én ting hver i forhold til denne.\n→ Feedback: \nS-02 · Retning: den BLÅ firkants skygge peger LIGE NED (inspektøren viser 270°).\n→ Feedback: \nS-03 · Retning igen: den GRØNNE firkants skygge peger mod VENSTRE (inspektøren viser 180°). Peger den en anden vej, så skriv hvilken — retningsskalaen er præcis det, punktet måler.\n→ Feedback: \nS-04 · Afstand: den GULE firkants skygge er rykket 25 pkt. væk — klart adskilt fra firkanten, samme retning som referencen.\n→ Feedback: \nS-05 · Blur: den LILLA firkants skygge er meget blød (blur 20 pkt.) — en udtværet sky frem for en skarp kant.\n→ Feedback: \nS-06 · Dækkraft: den ORANGE firkants skygge er svag (35 %). Sammenlign med referencens fulde sorte.\n→ Feedback: \f\nS-07 · Farve: den GRÅ firkants skygge er TERRAKOTTA-farvet, ikke sort.\n→ Feedback: \nS-08 · Slået fra: den SORTE firkant har en konfigureret men SLÅET FRA skygge — der må INGEN skygge tegnes, og inspektørens skygge-felt bør stå slået fra. Slå derefter skyggen TIL via popup'en (vælg Slagskygge): appen skal overleve skiftet og tegne skyggen. Denne fil er genopbygget efter at netop dét skifte fik Pages til at crashe; et nyt crash er derfor et vigtigt fund, og »skiftet virkede« er præcis det, punktet måler.\n→ Feedback: det virkede og der kom en 50% skygge 270 grader, 2pkt afstand og 5pkt blu.\nS-09 · Type: den TURKISE firkant har en KONTAKT-skygge (popup'en »Kontakt«) — skyggen samler sig under firkantens fod, som om den står på en flade.\n→ Feedback: ja, det var der, men den havde for lidt blur. ui tillader ikke blur under 10pkt og 40 pkt gav mening\nS-10 · Type: den BRUNE firkant har en BUET skygge (popup'en »Buet«).\n→ Feedback: ja, men den var alt for meget udad, nu er den mere indad\nS-11 · Spejling: den MØRKEBLÅ firkant har INGEN skygge men en SPEJLING (50 %) — firkanten spejles under sig selv og fader ud. Inspektøren: Spejling slået til med skyderen på 50 %.\n→ Feedback: ja, det virker\nTak! Arkivér (⌘S) og send filen retur.\nFarveprøver i rækkefølgen S-01…S-11: ￼￼￼￼￼￼￼￼￼￼￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 27
+  }
+}
