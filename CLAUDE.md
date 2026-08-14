@@ -49,6 +49,18 @@ the app, say so plainly, and put it in a `manualProof` block in
 been checked, add `settled:` to that block so the request moves off
 `docs/VERIFICATION.md` and keeps its reasoning.
 
+## Changelog and release notes face downstream
+
+The changelog and the release notes it generates are read by people
+who install the package, not by people who watch this repository.
+Entries describe bug fixes, API changes and new features — what
+changed for a user, in a sentence or two each, under Fixed/Added/
+Changed headings. They never mention demo files, review rounds, field
+reports, corpus counts or how a finding was made: maintainers have
+git history, pull requests and `docs/BLOCKERS.md` for all of that.
+After editing a released section, run Actions → Sync release notes
+for that version so the published page matches the changelog.
+
 ## Defaults are Apple's
 
 Where this library supplies a default — a fresh shadow's parameters, a

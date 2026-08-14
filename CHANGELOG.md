@@ -1,411 +1,178 @@
 # Changelog
 
 Notable changes, kept in the spirit of [Keep a Changelog](https://keepachangelog.com/).
-The package follows [semantic versioning](https://semver.org/); commit
-history uses Conventional Commits, so the detail behind any entry is one
-`git log` away.
+The package follows [semantic versioning](https://semver.org/). Entries are
+user-facing — bug fixes, API changes and new features; the how and why live
+in commit messages and pull requests.
 
 ## Unreleased
 
 ## 0.4.0 — 2026-08-14
 
-- Demo-11 (shadows, blur, reflections) is app-confirmed whole: every
-  parameter renders as written on the calibrated angle scale, the
-  contact and curved types draw as their kinds, the reflection mirrors,
-  and the seven-field rewrite survives the app's shadow popup where the
-  six-field archive aborted it. The round's returned file is a corpus
-  fixture carrying the popup's fresh preset (stored angle 90 =
-  inspector 270°, offset 2, blur 5, 50 %), the `contactShadow`
-  sub-archive, and the corpus's first `curvedShadow` sub-archive (one
-  float, negative for inward). Rewriting a shadow now carries per-type
-  sub-archives forward when the type is unchanged, so
-  re-parameterising an app-edited shadow keeps its curve.
-- Fixed: editing a shadow this library wrote no longer aborts Pages.
-  Re-enabling demo-11's disabled shadow through the app's own popup
-  crashed the app in TSStyles' assert — the archive rendered but stated
-  six of the seven fields all 929 corpus shadows carry (`type` was
-  missing, the colour named no space), on an override style shaped like
-  no app file's. `writeShadow` now writes the archive whole, completing
-  absent fields from the fresh-shadow defaults, and the copy-on-write
-  clone takes the app's style-one-object shape: anonymous (a kept
-  `style_identifier` puts two styles behind one identifier — zero of
-  the corpus's 18554 identified styles share one), parented on the
-  identified source, and listed in its stylesheet with the reference
-  declared (183 of 183 drawable-referenced corpus styles are).
-- Prose documentation is drift-gated: every measured number FORMAT.md
-  and the skill state is registered in `test/docs-claims.test.ts` and
-  re-measured against the live fixtures on every run, so the corpus
-  outgrowing a sentence fails the suite naming the file and both
-  numbers. The audit that installed it found FORMAT.md citing the
-  corpus two donations ago (25 IWA Pages fixtures for today's 26, 2896
-  storages for 2921, in four places — all refreshed); the generated
-  pages and the deploy-built API reference were already drift-proof.
-- Fixed: a tail edit no longer strands run boundaries at `text.length`.
-  Deleting a final terminator kept the closing entries of any
-  character-style run or smart field that ended there — after the edit
-  they sat at exactly the text's length, a position zero of the corpus's
-  2921 storages use, and one the app answers with document-wide style
-  repair (a fifth field report's letterhead lost its title fonts to it;
-  the K02 subtitle incident was the same class from the other side).
-  The table law is now measured and enforced: no entry past the length
-  in any table, none at the length in the character-content tables, the
-  paragraph-family tables' entry at the length only over empty or
-  terminator-ending text. Saving refuses a storage that violates it.
-- `TextStorage.normalizeTail()` — delete a final trailing terminator so
-  the document ends the way typed text does, with every attribute table
-  kept lawful; the safe form of the `deleteRange(len - 1, len)` a
-  build-by-appending flow wants. Corpus-measured: both tail states are
-  the apps' own (15 of 26 bodies end bare, 8 with the terminator, 3
-  empty), and the `endsWithEmptyParagraph` docs now say so instead of
-  calling the terminator universal.
-- `fillPlaceholder` addresses placeholders stably: pass a
-  `placeholders()` entry (its `fieldId` pins the field, span resolved
-  live at the fill) or the bare field id — filling several from one
-  listing lands each in its own field no matter how earlier fills moved
-  the text. Plain `{start, end}` objects keep positional meaning; a
-  spent field id throws instead of editing whatever text now occupies
-  its old offsets.
+### Fixed
+
+- Shadows written by this library could crash Pages when edited in the
+  app's Shadow inspector. Shadow archives are now written with the
+  complete field set the apps require, and styling one drawable no
+  longer writes through a style archive shared with other drawables —
+  the write goes to a private override style, as the apps do.
+- Deleting a document's final paragraph terminator could leave style
+  tables in a state the apps repair with document-wide style loss.
+  Tail edits now keep every attribute table valid, and `save()` refuses
+  to persist a text storage that violates the invariant rather than
+  writing a corrupted file.
+- Filling several placeholders from one `placeholders()` listing could
+  put text in the wrong fields, because indexes shift as fills are
+  applied.
+- Editing a shadow dropped the app's type-specific settings (a curved
+  shadow's curvature, a contact shadow's profile). They now survive any
+  edit that keeps the shadow's type.
+
+### Added
+
+- `TextStorage.normalizeTail()` — remove a trailing paragraph
+  terminator safely, so a built document ends without a stray empty
+  paragraph.
+- `fillPlaceholder` accepts a `placeholders()` entry or a bare field
+  id; the span is resolved at call time, making any fill order safe. A
+  field id that no longer exists throws instead of editing whatever
+  text now occupies its old offsets.
+
+### Changed
+
+- `DEFAULT_SHADOW` now matches the app's own "add a shadow" preset
+  (270° in inspector terms, offset 2, blur 5, 50 % opacity). Library
+  defaults follow the apps' defaults.
 
 ## 0.3.0 — 2026-08-13
 
-- Demo-05 (cells and formats) is app-confirmed whole: cell types,
-  currency/percentage/number/date/duration formats, the checkbox
-  control, merged-cell centring, cell fill/padding/borders, structure
-  edits and the visible table name all render as written in Numbers.
-- A checkbox is written whole: bool format 263, the record's control
-  id, a control-spec entry (interaction_type 8) and the extras bit,
-  exactly as the app's own Dataformat toggle writes them (measured
-  from the returned one-delta seed, now a corpus fixture) — the format
-  alone showed as Automatic. `setCellFormat({kind:"checkbox"})` routes
-  through the control path.
-- The stroke sidecar is brought to the table's current size on every
-  border write: the app clips runs outside the declared grid, and a
-  donor's sidecar still declaring its old size swallowed every border
-  this library wrote.
-- Cell borders write where the app reads them: the stroke sidecar
-  (`TableModelArchive.stroke_sidecar`), per-edge layers of runs each
-  carrying a complete stroke — none of the corpus's 4139 cell-style
-  bags holds a per-side stroke, and a bag-only border drew nothing.
-  `TableModel.cellBorders(row, column)` reads them back.
-- `CellFormatting.horizontalAlignment` — alignment rides the text
-  layer as an anonymous per-cell paragraph style, the corpus's own
-  mechanism; accepts the enum or the name, `null` restores the band
-  default.
-- App-confirmed this round: the mask editor's gate was the drawable's
-  arrangement all along (in-flow images render and reset their crops;
-  floating ones open the editor), chart data/appearance editing
-  (demo-04 pass, whole), and currency/percentage formats.
-- Fixed: a copy of a drawable inserted this session owns its children.
-  The clone walk selected from declared references, which refresh only
-  at save, so `addCopyOf` on a fresh image shared the original's
-  title/caption stand-ins (and its mask, had it been cropped) — a state
-  no corpus file shows. Selection now computes references live.
-- Fixed: currency formats reach the app. A currency-formatted record
-  stores cell type 10 with extras 0x802, and the format archive states
-  its full tail (negative style, separator, accounting) — one missing
-  any of it read as the inspector's Automatic.
-- `TableModel.nameVisible` — `table_name_enabled`, the flag behind
-  whether the app draws the table's name.
-- Fixture: `olekristensen-v26.3-seed-crop-returned.pages` — the app's
-  own crop over a library-inserted image. It matches `setCrop`'s output
-  field for field, confirms the mask editor engages on our images, and
-  shows paste-dedupe sharing one data object between drawables.
-- `TableFormatting` covers the full modern table-style surface: the
-  divider flags, the header-border toggle and all sixteen band strokes
-  (each on 286 of the corpus's 302 table-style bags). Every key is
-  three-state — `null` removes the field so the style inherits again.
+### Fixed
+
+- Currency-formatted cells showed as "Automatic" in Numbers; the full
+  format is now written.
+- Checkbox formats showed as "Automatic"; a checkbox is now written as
+  the app writes it. `setCellFormat({ kind: "checkbox" })` covers it.
+- Cell borders did not draw; they are now written where the apps render
+  from, and `cellBorders(row, column)` reads them back.
+- Image crops written by the library render but refused the app's mask
+  editor; masks are now complete drawables and the editor engages.
+  (For images in the text flow the editor stays closed by app design;
+  floating images open it.)
+- A drawable copied with `addCopyOf` shared child objects (titles,
+  captions, masks) with its source; copies own their children.
+- Saving refuses a table whose records reference strings missing from
+  its own data list — the state behind cloned tables reloading empty.
+  `TableModel.orphanReferences()` is the diagnostic.
+- A floating copy of an inline image did not wrap text.
+- `insertSectionBreak` shared page masters between the new section and
+  its neighbour, so their headers could never differ.
+- Header or footer text written into a previously empty column did not
+  draw; column indexes outside 0..2 now throw.
+- One right-to-left paragraph no longer turns paragraphs appended after
+  it right-to-left.
+- Authored paragraph borders did not draw; strokes are written complete
+  and the legacy positions field the inspector reads is written beside
+  the bitmask.
+- Character styling no longer bleeds into paragraphs appended after a
+  styled ending.
+- An edit touching a section's first character no longer destroys the
+  document's section list.
+- `formulas()` now lists formulas authored by this library, not only
+  ones the app has computed.
+- A paragraph with direct formatting no longer loses its style's name:
+  names resolve through the parent chain, as in the apps.
+  `hasDirectFormatting` tells the two apart.
+- An appended paragraph no longer inherits the previous paragraph's
+  list membership; pass a list style to `appendParagraph` to opt in.
+- A lone `leftIndent` now indents in the app.
+- Inline images are placed in the text column instead of at the page
+  margin; `wrap: "page"` selects the other mode.
+
+### Added
+
+- `CellFormatting.horizontalAlignment` — cell text alignment, enum or
+  name; `null` restores the band default.
+- `TableFormatting` covers the full modern table-style surface
+  (dividers, header border, all sixteen band strokes); every key is
+  three-state, `null` clearing the field so the style inherits.
 - `insertRows`/`insertColumns` inherit the displaced row's or column's
-  cell and text styles as blank-but-styled records, Apple's own shape,
-  with style refcounts kept honest. `TableModel.textStyleId` and
-  `textStyle` join the existing cell-style pair.
-- `PagesDocument.insertInlineTable(pos, options)` clones a table
-  already in the document and anchors it inline at a body position —
-  clone-based like `NumbersDocument.addTable`, with document-unique
-  naming and `withContent: false` for a blank copy.
-- Paragraph `alignment` accepts the names (left/right/center/justified/
-  natural) beside the enum, and rejects anything else at the call —
-  a string there used to surface as a BigInt error inside save.
-- Saving refuses a table whose records reference strings absent from
-  its own data list — the state behind "the cloned table reloads
-  empty" (field report 4's first-ranked fault, reproduced: two tables
-  sharing one string table undercount refcounts, and the first
-  overwrite in one releases entries the other still needs). The check
-  runs only over tables whose storage changed this session, and names
-  the table, cells and keys. `TableModel.orphanReferences()` is the
-  diagnostic behind it.
-- `tables()` is document order on both apps: Numbers walks sheets in
-  tab order and each sheet's drawables in order; Pages walks the
-  body's anchors by text position, then paint order. `tables()[0]`
-  is the first table on the page whatever was added this session.
-- Inserted images carry the full modern drawable super: the lock pair
-  stated (`locked` false, `aspect_ratio_locked` true — the shape of 156
-  of 171 corpus images and all 87 masked ones), and `title`/`caption`
-  references to empty stand-in archives with both hidden flags, as
-  every current-era corpus image has. `setCrop` states the lock pair
-  on any image it masks, keeping an existing lock.
-- Field report fixes, the unopenable-file class first:
-  `listInThemeStyles` now routes a style to the preset list its type
-  belongs to — paragraph, character or list — and throws on anything
-  else; a character style in the paragraph list was a file Pages
-  refused. Editing keeps the phantom-paragraph invariant: every edit
-  restores the paragraph-style entry at `text.length` when the text
-  ends with a terminator (31 of 31 corpus bodies), which wiping a body
-  with `applyEdits` could silently drop. `formatTable(formatting)` is
-  now a real setter reaching `tableStyle().setTable` — it was a
-  private map getter that compiled and did nothing when called with an
-  argument. The wire layer rejects non-integer field numbers, so a
-  string field name fails at the call instead of as a BigInt error
-  inside save.
-- Fixed: a crop's mask is editable in the app. The mask node is a full
-  drawable — its `parent` is the image it masks (79 of 79 corpus
-  masks), it carries its own `exterior_text_wrap` and states the
-  locked/aspect-ratio/title/caption flags explicitly — where the
-  library wrote bare geometry: the crop rendered, and the app's mask
-  editor would not engage with it.
-- Fixed: a floating drawable now wraps text. A copy of an inline image
-  kept the in-the-text-flow wrap, which on a floating object makes the
-  app show automatic wrap while wrapping nothing; the floating
-  container normalises an in-flow or missing wrap to the on-page shape
-  the corpus's 1136 floating drawables carry — type 4, 12 pt margin.
-- Fixed: a section created by `insertSectionBreak` owns its page
-  masters. The insert cloned the section but shared the enclosing
-  section's master objects, so the two sections' headers could never
-  differ — writing one overwrote the other. No two sections in the
-  corpus's 25 sectioned documents share a master; the insert now clones
-  the three variants and their header/footer storages.
-- Fixed: header and footer text written into a master's always-empty
-  columns now draws. A bare `setText` left the donor's blank default
-  shape, which the app never renders from; the written storage now
-  adopts a non-empty sibling's shape — paragraph style, character and
-  language entries — via the new `TextStorage.copyShapeFrom`. Header
-  and footer column indexes outside 0..2 throw instead of silently
-  writing nowhere. App-measured, the slot model itself: modern Pages
-  draws one page-wide header field bound to slot 1 — the default —
-  with the text following the storage's own paragraph alignment;
-  slots 0 and 2 are the legacy three-field layout's outer slots,
-  preserved but not drawn in modern documents.
-- Added: `ruleOffset` on paragraph formatting — the distance between
-  text and its border rules (`historical_rule_offset`). A number states
-  both slots of the stored `TSP.Point`, agreeing with 8637 of the
-  corpus's 8638 instances; a pair states them separately, which the one
-  exception shows the format allows. App-measured: zero is the default
-  gap (the app itself back-fills `(0, 0)` on resave), negative pulls
-  the rules toward and into the text — −12 renders overlapping, the
-  stock templates' −3 tightens — and the app preserves stored values
-  beyond what its inspector displays. The positive, outward direction
-  is in the demo for its check.
-- Fixed: one RTL paragraph no longer turns the rest of a growing
-  document RTL. `setParagraphDirection` writes a per-paragraph bidi
-  table, but paragraphs appended afterwards fell into the last entry's
-  run — Latin text rendered right-aligned with its punctuation at the
-  line start and tabs measured from the right. Appending now states each
-  new paragraph's own direction pair, copying the storage's baseline;
-  2594 of 2896 bidi-bearing corpus storages cover every paragraph start
-  the same way.
-- Fixed: an authored paragraph border now draws. Two faults, found one
-  under the other. The stroke stated only its pattern type where every
-  app-written border (167 of 167 corpus paragraph strokes) also states
-  cap, join, miter limit 4 and the full pattern message — phase, count
-  and six floats — so Pages showed the width but «None» for the stroke;
-  `writeStroke` now writes the complete corpus shape for every stroke,
-  table borders and drawable outlines included. With the stroke
-  honoured, the position toggles still sat unselected: the inspector
-  keys on `deprecated_borders`, the historical enum the app writes
-  beside the bitmask on all 17 bordered corpus styles (1·1, 2·2, 4·8,
-  8·16 — old top/bottom values kept, sides moved to 8 leading and
-  16 trailing, top-and-bottom 3, all four 4). The writer now states
-  both fields, and the reader takes positions from the enum in old
-  documents that carry only it.
-- Fixed: character styling no longer bleeds past its range. Styling to
-  the end of the text leaves the run open — correctly, as no corpus
-  storage carries a character-table entry at `text.length` (0 of 2896) —
-  but every later `appendParagraph` then landed inside the run, so one
-  grey-italic line turned the rest of a growing document grey and
-  italic. Appending now closes an open run first, with the objectless
-  boundary entry that ends runs throughout the corpus (624 of 2079
-  character-table entries), so `applyCharacterFormatting(start, end)`
-  styles exactly `[start, end)` no matter what is appended afterwards.
-  `insertText` keeps the typing model and inherits the run at its
-  position. A non-integer range bound now throws a `RangeError` instead
-  of surfacing as a wire-layer BigInt error.
-- Fixed: an edit touching a section's first character no longer destroys
-  the document's section list. The section table was classified with the
-  point-anchored tables (whose entry dies with its character), but a
-  section entry marks where a section *begins* — all 25 sectioned corpus
-  bodies keep their first entry at 0 — so rewriting paragraph 0 of a
-  sectioned template silently removed its pagination.
-- Fixed: `formulas()` now lists formulas this library authored. The
-  sweep went through the value-bearing cells, and a freshly written
-  formula has no cached value until the app recomputes — so the library
-  could not see its own output. It walks the row records instead.
-- Fixed: `PagesDocument.paragraphs()` reports the chain-resolved style
-  name, like `paragraph(i).styleName` — a directly formatted heading no
-  longer reads as unnamed in the listing.
-- A demo suite: `npm run demos` generates ten self-describing documents
-  covering every write capability — text and styles, structure and
-  fields, images, charts, cells and formats, formulas, conditional rules
-  and controls, sheets and filters, slides, animations — each check
-  numbered, stating what the library did and what the app should
-  render, with feedback space in the document itself.
-- Documentation drift audit against the code: 41 findings fixed across
-  README, FORMAT.md, the skill, THIRD-PARTY-NOTICES (fixture licenses
-  now enumerated; keynote proto dumps correctly attributed to
-  psobot/keynote-parser) and proto/README — stale corpus counts
-  refreshed, border-position and filter sections rewritten to the
-  measured state, donor style names corrected in skill examples, and
-  the measured transition-effect identifier scheme
-  (`apple:transition/dissolve`) documented.
-- Fixed: a left indent now indents in the app. A paragraph style setting
-  `left_indent` alone read back correctly and rendered flush at the
-  margin; Apple pairs it with `first_line_indent` in 8645 of the 8647
-  corpus styles that set it, so an unaccompanied left indent gains a
-  matching first line — a block indent — while a bag stating its own
-  first line keeps it, hanging indents included.
-- Fixed: an inline image is drawn in the text column instead of at the
-  page margin. The drawable carried no `exterior_text_wrap` — the
-  archive every one of the corpus's 102 inline attachments has — so the
-  app placed it against the page, which in a document with indented body
-  styles left the picture out of line with its own paragraph and the
-  next paragraph flowing up beside it. Images now ride the text by
-  default, with `wrap: "page"` for the other mode, and carry the
-  geometry flags, angle and storage back-pointer the corpus shows.
-- Fixed: a paragraph given direct formatting no longer loses its style's
-  name. Formatting parents the paragraph on an anonymous child of the
-  named style — as the apps themselves do, on 644 of 644 anonymous-style
-  corpus paragraphs — so names now resolve through the parent chain.
-  A heading formatted in place stays a heading, which is what a table of
-  contents collects by; `hasDirectFormatting` tells the two apart. This
-  also fixes reading app-written documents, where direct formatting is
-  the norm rather than the exception.
-- Fixed: an appended paragraph no longer inherits the previous one's
-  list membership, which silently turned every paragraph after a bullet
-  into a list item while its paragraph style still read "Body". Each
-  appended paragraph states its own, the way Apple does (222 of 222
-  corpus list entries name a style, 82 of them "None"); pass a list
-  style to `appendParagraph` to opt in.
-- `paragraphStyles()` lists only styles that have names, instead of the
-  hundreds of anonymous ones direct formatting creates; new
-  `paragraphStylesInUse()` reports what the body actually uses, which is
-  the shorter and more interesting list. New
-  `body.endsWithEmptyParagraph` discloses the paragraph the app draws
-  after a trailing terminator but `paragraphs()` does not list.
-- `findDrawableCore` returns `undefined` for an archive that is not a
-  drawable instead of throwing, so a survey over mixed attachments no
-  longer dies on the first footnote mark.
-- The LZFSE container that collaboration-mode components use
-  (`Index/OperationStorage.iwa` beside Snappy components) now decodes:
-  `decodeLzfseStream` reads raw and LZVN blocks (the LZVN decoder is
-  ported from Apple's published lzfse reference, BSD-3-Clause) and
-  refuses FSE-coded blocks precisely. The probe reports its reading of
-  any opaque component; the document model still keeps such components
-  opaque and byte-preserved, because the decoded payload's meaning
-  awaits a redistributable specimen — a collaboration seed is staged
-  for exactly that.
-- New end-to-end rungs (macOS): paragraph direction, a defined
-  placeholder, paragraph borders, a retimed build and a disabled filter
-  set each survive the app rewriting the package.
-- Keynote build effects and timing are decoded: `effect` (an identifier
-  string in two schemes, `apple:dissolve character` /
-  `com.apple.iWork.Keynote.BUKAnvil`), `animationType`, `duration` and
-  `delay` now read from `KN.AnimationAttributesArchive` with the legacy
-  `database_*` fields as fallback, and retiming writes the same fields —
-  measured against the corpus's first animated deck, whose three
-  app-authored builds are pinned in tests.
-- Filter-rule reading is pinned against the corpus's first populated
-  filter set: columns, per-rule switches, combining mode and predicate
-  formulas, including the type-3 "text contains" compilation. The
-  conditional-formatting comparisons `>5`, `>=7`, text-contains and
-  is-blank gain corpus evidence in a second fixture.
-- The fixture corpus grows 41 → 46 with five macOS iWork 15.3-written
-  documents (the first M15.3 writer files in the corpus), covering
-  builds, filters, conditional rules, and macOS agreement on the border
-  side bits, paragraph direction and placeholder consumption measured
-  on iOS. All measurement seeds are banked; `npm run seeds` keeps the
-  scaffolding with an empty registry for the next question that needs
-  a person in an app.
-- The border bitmask's side bits are measured *logical*: 4 is the
-  leading edge and 8 the trailing edge, swapping visual sides with the
-  paragraph's writing direction (a left-edge border on an RTL paragraph
-  stores 8). `BorderPosition` gains `LEADING`/`TRAILING`;
-  `LEFT`/`RIGHT` remain as the left-to-right aliases.
-- Paragraph base direction reads and writes:
-  `setParagraphDirection(i, "rtl" | "ltr" | "natural")` and
-  `doc.paragraph(i).setDirection(...)` write the pair the app itself
-  writes when its ⇄ control flips a paragraph — the storage's bidi
-  `(1, 0)` for RTL, measured from an app-flipped document. The
-  style-bag `writingDirection` is confirmed vestigial (the app leaves
-  it untouched) and its docblock points at the real mechanism.
+  cell and text styling. `TableModel.textStyleId` and `textStyle` join
+  the cell-style pair.
+- `PagesDocument.insertInlineTable(pos, options)` — anchor a copy of an
+  existing table inline in body text.
+- `TableModel.nameVisible` — whether the app draws the table's name.
+- Paragraph `alignment` accepts names (`left`, `right`, `center`,
+  `justified`, `natural`) beside the enum, and rejects anything else at
+  the call.
+- `ruleOffset` on paragraph formatting — the distance between text and
+  its border rules; negative pulls the rules toward the text.
+- `setParagraphDirection(i, "rtl" | "ltr" | "natural")` and
+  `paragraph(i).setDirection(...)`.
+- `BorderPosition.LEADING`/`TRAILING`: border side bits are logical and
+  swap sides with the paragraph's writing direction; `LEFT`/`RIGHT`
+  remain as the left-to-right aliases.
+- `paragraphStylesInUse()` — the styles a body actually uses;
+  `paragraphStyles()` lists only named styles.
+- `body.endsWithEmptyParagraph` — whether the app will draw an empty
+  final paragraph after the text.
+- `TextStorage.copyShapeFrom` — adopt a sibling storage's table shape
+  so written text renders.
+- Keynote build effects and timing read (`effect`, `animationType`,
+  `duration`, `delay`), and retiming writes.
+- Filter-rule reading: columns, per-rule switches, combining mode and
+  predicate formulas.
+- Collaboration-mode components (LZFSE/LZVN containers) decode for
+  inspection; the document model preserves them byte-for-byte.
+- `findDrawableCore` returns `undefined` for a non-drawable instead of
+  throwing.
+
+### Changed
+
+- `tables()` returns document order in both apps (Numbers: sheet tab
+  order, then each sheet's drawables; Pages: body anchors by text
+  position, then paint order).
+- Inserted images carry the full modern drawable metadata (lock flags,
+  title and caption stand-ins), matching current app output.
 
 ## 0.2.0 — 2026-08-03
 
-- Pages placeholder text — the template tap-to-replace mechanism — is a
-  first-class feature: `placeholders()` lists the ghost-text spans,
-  `fillPlaceholder()` puts real content in and sheds the marking the way
-  typing does, and `defineAsPlaceholder()` /
-  `find(...)[0].asPlaceholder()` create one, writing the shape measured
-  across 73 app-written instances. An image placeholder in a body
-  document is the same field over the image's object character, so the
-  same calls cover it.
-- Verification readers: `characterFormattingAt(pos)` answers "what
-  formatting really applies here" with inheritance folded in;
-  `characterStyleRuns()` (which existed) is now documented as the
+### Added
+
+- Placeholder text — the template tap-to-replace mechanism — as a
+  first-class feature: `placeholders()` lists the spans,
+  `fillPlaceholder()` fills one and sheds the marking the way typing
+  does, `defineAsPlaceholder()` / `find(...)[0].asPlaceholder()`
+  create one. An image placeholder is the same field over the image's
+  object character.
+- `characterFormattingAt(pos)` — the formatting in effect at a
+  position, inheritance folded in; `characterStyleRuns()` is the
   whole-document sweep.
-- Fixed: text edits reaching the end of a storage no longer smear
-  styling document-wide. The paragraph-style table's entry at
-  `text.length` is the final empty paragraph's entry, present exactly
-  when the text ends with a terminator (measured: 31 of 31 vs 0 of 1270
-  corpus storages); the writer now derives it from the new text instead
-  of preserving whatever the old table had. Found by an agent's field
-  report editing a real letterhead template.
-- Safer editing by construction: a `TextRange` made stale by an
-  earlier-offset edit now throws instead of silently editing the wrong
-  span (edits after a range never invalidate it, so the descending-order
-  idiom still works); new `applyEdits([...])` applies many
-  non-overlapping edits from one snapshot with no ordering discipline;
-  new `characterStyleIdAt(pos)` reads the ruling character style without
-  schema imports; `effectiveObjectAt` rejects a non-numeric table
-  argument loudly. The skill now leads with the safe path and states the
-  delete-plus-insert semantics once.
-- One-click releases: Actions → Release with a version number cuts the
-  changelog, bumps, tags, creates the GitHub release and publishes to
-  npm via trusted publishing — no tokens anywhere.
-- Fixed: inserting rows or columns now keeps the table's identity map
-  (`base_column_row_uids`) in lockstep with the grid. Numbers renders a
-  table at the map's size, so columns inserted by earlier versions were
-  invisible in the app; surviving positions keep their UIDs, new ones
-  mint fresh identities in Apple's sort order (measured 2026-08-03 on a
-  seed document, Danish-locale Numbers).
-- `border_positions` is a measured bitmask — 1 top, 2 bottom, 4 left,
-  8 right, unions literal — replacing the refuted enum reading (whose
-  `ALL = 4` would have drawn one left edge). `BorderPosition.LEFT`/
-  `RIGHT` replace the interim `VERTICAL_BIT_A`/`B`; sides measured in
-  LTR paragraphs (two seed-borders runs, 2026-08-03), RTL semantics
-  still open.
-- The conditional-formatting comparison enum is complete: predicate
-  codes 7 (`>`) and 8 (`>=`) measured 2026-08-03 — 7 from both a
-  conditional rule and the first non-empty filter set anywhere —
-  confirming the menu-order prediction whole, so `setConditionalRules`
-  now writes all six comparisons.
-- Filter-rule reading is measured against a real filter set for the
-  first time; "text contains" compiles to `NOT(ISERROR(f(needle,
-  cell)))` with `f` an unnamed function index 296.
-- Keynote builds, first contact: the slide↔build graph and delivery
-  reads confirmed (delivery is an English display string on any locale);
-  the `database_*` effect/timing fields are absent from modern builds —
-  effect and timing live in the undecoded `animationAttributes` — so
-  those read `undefined` on modern decks, and the probe now prints
-  chunks, triggers and the field-18 shape to close in on them.
-- Paragraph styles can set `writingDirection`, though measurement shows
-  the field is vestigial (styled 0/1/2 all render left-to-right; no
-  corpus style carries it). Per-paragraph direction evidence lives in
-  the storage's `table_para_bidi` pairs — 0 = LTR and 65535 = natural
-  observed, the RTL value under measurement via the borders seed — and
-  the probe now prints any bidi table that departs from the baseline.
+- `applyEdits([...])` — apply many non-overlapping edits from one
+  snapshot, no ordering discipline required.
+- `characterStyleIdAt(pos)`.
+- One-click releases for maintainers (Actions → Release), publishing
+  to npm via trusted publishing.
+
+### Fixed
+
+- Text edits reaching the end of a storage no longer smear styling
+  document-wide.
+- A `TextRange` invalidated by an earlier edit throws instead of
+  silently editing the wrong span; edits after a range never
+  invalidate it.
+- Inserting rows or columns keeps the table's identity map in step
+  with the grid; columns inserted by earlier versions were invisible
+  in Numbers.
+- `border_positions` reads and writes as the bitmask it is (1 top,
+  2 bottom, 4 left, 8 right); the previous enum reading was wrong.
+  `BorderPosition.LEFT`/`RIGHT` replace the interim names.
+- `setConditionalRules` writes all six comparison operators.
+
+### Changed
+
 - Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
-- Toolchain refresh: TypeScript 6, `strictTypeChecked` linting,
-  `noImplicitReturns` and `verbatimModuleSyntax`, patched vite via
-  override, and an `npm audit` gate in CI.
-- npm-normalized `bin` paths, so `npm publish` has nothing to correct.
+- Toolchain refresh: TypeScript 6, `strictTypeChecked` linting, and an
+  `npm audit` gate in CI.
 
 ## 0.1.0 — 2026-08-03
 
