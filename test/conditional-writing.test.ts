@@ -269,6 +269,21 @@ describe("the engine's dependency ledger for rules", () => {
     }
   });
 
+  it("keeps library-written registrations through the app's own save", () => {
+    // The round-two file: seven cells registered by this library, rules
+    // drawing on open, and the app's save preserving all seven records —
+    // the end-to-end confirmation that written registration is what the
+    // engine evaluates from.
+    const doc = NumbersDocument.load(bytes("olekristensen-v26.3-demo07-rules-round2.numbers"));
+    const registered = registrations(doc);
+    const keyed = keyedCells(doc);
+    expect(registered.size).toBe(7);
+    expect([...registered.keys()].sort().join(" ")).toBe([...keyed].sort().join(" "));
+    for (const [cell, edge] of registered) {
+      expect(cell).toBe(`${edge.edgeRow},${edge.edgeColumn}`);
+    }
+  });
+
   it("registers what it writes, the shape the corpus is unanimous on", () => {
     const doc = NumbersDocument.blank();
     const table = doc.tables()[0]!;

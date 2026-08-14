@@ -1215,6 +1215,9 @@ describe("cell formats", () => {
   it("shares one format-table entry between cells formatted alike", () => {
     const doc = NumbersDocument.load(fixture("numbers-parser-v26.0-issue102.numbers"));
     const table = doc.tables()[0]!;
+    // The first write may intern the automatic default a fresh number is
+    // stamped with; count from there so only the explicit format is measured.
+    table.setCell(1, 0, { type: "number", value: 1 }, { allowCovered: true });
     const entriesBefore = formatEntries(doc, table).length;
     for (const row of [1, 2, 3]) {
       // allowCovered: this fixture merges rows 2..5 of column 0, and the

@@ -288,12 +288,13 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
     case FormatType.TEXT:
       return { kind: "text" };
     case FormatType.BOOLEAN: {
+      // The plain TRUE/FALSE display every app-typed boolean carries —
+      // 60 of 60 in the corpus, none of them controls. The checkbox is
+      // its own format (263); whether a widget draws is the control
+      // spec's business, never this archive's.
+      const out: CellFormat = { kind: "boolean" };
       const yes = message.getString(FormatFields.BOOL_TRUE_STRING);
       const no = message.getString(FormatFields.BOOL_FALSE_STRING);
-      // A bare boolean format draws the checkbox control; custom
-      // true/false strings make it a worded boolean instead.
-      if (yes === undefined && no === undefined) return { kind: "checkbox" };
-      const out: CellFormat = { kind: "boolean" };
       if (yes !== undefined) out.trueString = yes;
       if (no !== undefined) out.falseString = no;
       return out;

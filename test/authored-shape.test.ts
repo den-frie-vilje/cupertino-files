@@ -31,11 +31,11 @@
  * boolean format and no number format, which is what proves the number
  * format is optional and the boolean one is not.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { NumbersDocument } from "../src/index.ts";
+import { IWorkDocument, NumbersDocument } from "../src/index.ts";
 import { CellFlag } from "../src/tst/cellrecord.ts";
-import type { TableModel } from "../src/tst/tables.ts";
+import { tablesOf, type TableModel } from "../src/tst/tables.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const TEMPLATE = new Uint8Array(
@@ -167,11 +167,87 @@ describe("an authored cell has what a real one has", () => {
     const table = doc.tables()[0]!;
     table.setCellControl(1, 0, { widget: "checkbox", value: true });
     expect(flagsOn(table, 1, 0).has("BOOL_FORMAT_ID")).toBe(true);
+    expect(table.cellFormat(1, 0)?.kind).toBe("checkbox");
 
-    // A plain boolean with no control has no such format — so the flag is
-    // genuinely coming from setCellControl and not from the template.
+    // A plain boolean carries the *boolean* format (every app-typed bool
+    // in the corpus does), so presence alone cannot distinguish the two —
+    // the archive can: the widget draws only through the checkbox format,
+    // and a control cell left on the plain boolean one is the
+    // widget-never-draws fault again.
     const plain = load();
     plain.tables()[0]!.setCell(1, 0, true);
-    expect(flagsOn(plain.tables()[0]!, 1, 0).has("BOOL_FORMAT_ID")).toBe(false);
+    expect(plain.tables()[0]!.cellFormat(1, 0)?.kind).toBe("boolean");
+  });
+
+  it("gives every plain value the format its type always carries", () => {
+    // The fourth of the omission class: every plain value cell in the
+    // corpus states its type's format — none missing across numbers,
+    // texts, dates and booleans — and a number without one rendered
+    // left-aligned in Numbers until manually re-entered, while the
+    // inspector insisted its alignment was automatic.
+    const doc = load();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, 42);
+    table.setCell(1, 1, "text");
+    table.setCell(1, 2, true);
+    table.setCell(1, 3, { type: "date", value: new Date("2026-08-14T00:00:00Z") });
+
+    const after = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(after.cellFormat(1, 0)?.kind).toBe("number");
+    expect(after.cellFormat(1, 1)?.kind).toBe("text");
+    expect(after.cellFormat(1, 2)?.kind).toBe("boolean");
+    expect(after.cellFormat(1, 3)?.kind).toBe("date");
+    // The number's is the app's automatic default, not an invention.
+    const format = after.cellFormat(1, 0);
+    expect(format?.kind === "number" && format.decimals).toBe("auto");
+    // A caller's explicit choice survives a value rewrite.
+    table.setCellFormat(1, 0, { kind: "number", decimals: 2 });
+    table.setCell(1, 0, 43);
+    const kept = table.cellFormat(1, 0);
+    expect(kept?.kind === "number" && kept.decimals).toBe(2);
+  });
+
+  it("finds no plain value cell without its type's format, in any fixture", () => {
+    // The corpus law the stamp exists to satisfy, held as a ratchet:
+    // a writer path that forgets the stamp reintroduces cells no app
+    // ever writes, and this sweep names the file.
+    const names = readdirSync(FIXTURES).filter((n) => /\.(pages|numbers|key)$/.test(n));
+    const FORMAT_FLAG_FOR: Record<number, number> = {
+      2: CellFlag.NUM_FORMAT_ID,
+      3: CellFlag.TEXT_FORMAT_ID,
+      5: CellFlag.DATE_FORMAT_ID,
+      6: CellFlag.BOOL_FORMAT_ID,
+      9: CellFlag.TEXT_FORMAT_ID,
+    };
+    let checked = 0;
+    for (const name of names) {
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const table of tablesOf(doc.store)) {
+        if (table.storageGeneration !== "v5") continue;
+        for (let r = 0; r < table.rowCount; r++) {
+          for (let c = 0; c < table.columnCount; c++) {
+            const record = (
+              table as unknown as {
+                recordAt(r: number, c: number): { flags: number; encode(): Uint8Array } | undefined;
+              }
+            ).recordAt(r, c);
+            if (!record) continue;
+            const flag = FORMAT_FLAG_FOR[record.encode()[1]!];
+            if (flag === undefined) continue;
+            if (record.flags & (CellFlag.FORMULA_ID | CellFlag.CONTROL_ID)) continue;
+            checked++;
+            expect(`${name} ${r},${c} formatted: ${(record.flags & flag) !== 0}`).toBe(
+              `${name} ${r},${c} formatted: true`,
+            );
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(1500);
   });
 });

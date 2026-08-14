@@ -89,6 +89,21 @@ import {
   type CellFormat,
 } from "./formats.ts";
 
+/**
+ * The format a freshly written value is stamped with, per cell type —
+ * the app's own default for a freshly typed value, measured as the
+ * dominant archive per type across every plain value cell in the
+ * corpus. Durations are absent deliberately: no plain duration cell
+ * exists in the corpus to measure one from.
+ */
+const DEFAULT_STAMP_FORMAT_BY_TYPE: ReadonlyMap<number, CellFormat> = new Map<number, CellFormat>([
+  [CellType.NUMBER, { kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false }],
+  [CellType.TEXT, { kind: "text" }],
+  [CellType.DATE, { kind: "date", pattern: "d MMM yyyy" }],
+  [CellType.BOOL, { kind: "boolean" }],
+]);
+const DEFAULT_STAMP_FORMATS: readonly CellFormat[] = [...DEFAULT_STAMP_FORMAT_BY_TYPE.values()];
+
 export const TST_TYPE = {
   TABLE_INFO: 6000,
   TABLE_MODEL: 6001,
@@ -3248,7 +3263,10 @@ export class TableModel {
    * the boolean format and no number format at all.
    *
    * A format the caller already set is left alone, so choosing a percentage
-   * for a stepper survives.
+   * for a stepper survives. The one exception is the default a value write
+   * stamps ({@link stampDefaultFormat}): that is this library's bookkeeping,
+   * not a caller's choice, and a checkbox left holding the plain boolean
+   * format instead of its own is the widget-never-draws fault again.
    */
   private ensureControlFormat(
     row: number,
@@ -3277,8 +3295,19 @@ export class TableModel {
               ? numberFormat
               : { kind: "text" }
             : numberFormat;
-    if (this.recordAt(row, column)?.id(flagForFormat(format)) !== undefined) return;
+    const existing = this.recordAt(row, column)?.id(flagForFormat(format));
+    if (existing !== undefined && !this.isDefaultStampFormat(existing)) return;
     this.writeCellFormat(row, column, format);
+  }
+
+  /** True when a format-table key holds one of {@link stampDefaultFormat}'s archives. */
+  private isDefaultStampFormat(key: number): boolean {
+    const archive = this.numberFormats().get(key);
+    if (!archive) return false;
+    const bytes = archive.toBytes();
+    return DEFAULT_STAMP_FORMATS.some((format) =>
+      bytesEqual(bytes, writeFormat(format).toBytes()),
+    );
   }
 
   /**
@@ -3679,6 +3708,27 @@ export class TableModel {
     // Formats are per-type; keeping a date format on a number is worse than
     // losing it, so drop them whenever the type actually changes.
     if (record.type !== previousType) record.removeAll(FORMAT_FLAGS);
+    this.stampDefaultFormat(record);
+  }
+
+  /**
+   * Give a value cell the format id its type always carries.
+   *
+   * Not decoration: every plain value cell in the corpus states its
+   * format — 449 of 449 numbers, 736 of 736 texts, 108 of 108 dates,
+   * 60 of 60 booleans, none missing — and a cell without one is
+   * app-real only as this library's own output. The archives written
+   * are the app's defaults for a freshly typed value, measured as the
+   * dominant shape per type; a duration's is unmeasured (no plain
+   * duration cell exists in the corpus) and is left unwritten rather
+   * than guessed. A format already on the record is kept: a rewrite
+   * must not flatten the cell's chosen presentation to the default.
+   */
+  private stampDefaultFormat(record: CellRecord): void {
+    const format = DEFAULT_STAMP_FORMAT_BY_TYPE.get(record.type);
+    if (!format) return;
+    if (record.flags & FORMAT_FLAGS) return;
+    record.setId(flagForFormat(format), this.internFormat(format));
   }
 
   /** Add or reuse a string-table entry, returning its key. */
