@@ -167,6 +167,119 @@ function remapReferences(message: RawMessage, map: ReadonlyMap<bigint, bigint>, 
   }
 }
 
+/**
+ * Import a self-contained region of another document's graph.
+ *
+ * A cross-store copy cannot share anything: a reference into the source
+ * document would name an id the target never allocated. So the walk
+ * follows every reference, and a reference that resolves in the source
+ * but escapes the imported set is an error rather than a share — it
+ * means the chosen root's closure was not self-contained, and importing
+ * it would plant a dangling pointer in the target.
+ */
+export function deepCloneObjectInto(
+  target: ObjectStore,
+  source: ObjectStore,
+  root: IwaObject,
+  options: {
+    component: Component;
+    /**
+     * Source ids rewritten to target ids instead of being imported —
+     * the containment boundary. A drawable's parent names its sheet;
+     * importing the sheet would drag the whole document, so the caller
+     * rebinds it to the target's own sheet instead.
+     */
+    rebind?: ReadonlyMap<bigint, bigint>;
+    /**
+     * Additional walk seeds for subtrees reached only through fields
+     * the curated extractors skip — a model's style preset among them.
+     */
+    extraRoots?: readonly bigint[];
+    maxObjects?: number;
+    maxDepth?: number;
+  },
+): CloneResult {
+  const maxObjects = options.maxObjects ?? 512;
+  const maxDepth = options.maxDepth ?? 24;
+  const rebind = options.rebind ?? new Map<bigint, bigint>();
+
+  // The walk is the curated one — extractor plus declarations — because
+  // a shape-blind walk mistakes cell-record varints for pointers and
+  // drags the whole document. Fields the extractors deliberately skip
+  // (a model's style preset) are the caller's to seed via extraRoots;
+  // the guard below names anything missed.
+  const selected = new Map<bigint, IwaObject>();
+  const queue: { object: IwaObject; depth: number }[] = [{ object: root, depth: 0 }];
+  selected.set(root.identifier, root);
+  for (const extra of options.extraRoots ?? []) {
+    const object = source.object(extra);
+    if (object && !selected.has(extra)) {
+      selected.set(extra, object);
+      queue.push({ object, depth: 0 });
+    }
+  }
+  while (queue.length > 0) {
+    const { object, depth } = queue.shift()!;
+    if (depth >= maxDepth) continue;
+    const reachable = new Set([
+      ...source.currentReferencesOf(object),
+      ...object.getObjectReferences(),
+    ]);
+    for (const id of reachable) {
+      if (selected.has(id) || rebind.has(id)) continue;
+      const referenced = source.object(id);
+      if (!referenced) continue;
+      if (selected.size >= maxObjects) {
+        throw new RangeError(
+          `import of object ${root.identifier} exceeded ${maxObjects} objects — ` +
+            `the chosen root's closure is larger than an importable subgraph`,
+        );
+      }
+      selected.set(id, referenced);
+      queue.push({ object: referenced, depth: depth + 1 });
+    }
+  }
+
+  const map = new Map<bigint, bigint>();
+  const clones = new Map<bigint, IwaObject>();
+  for (const [id, object] of selected) {
+    const clone = target.createObject(object.type, options.component, { cloneFrom: object });
+    map.set(id, clone.identifier);
+    clones.set(id, clone);
+  }
+  const rewrite = new Map<bigint, bigint>([...map, ...rebind]);
+
+  for (const clone of clones.values()) {
+    remapReferences(clone.message, rewrite);
+    clone.setObjectReferences(clone.getObjectReferences().map((id) => rewrite.get(id) ?? id));
+  }
+
+  // The self-containment guard, over the curated reach: every reference
+  // the source-side skeleton names must land on an import or a rebound
+  // target. (The shape-blind scan is not consulted here — it flags
+  // cell-record varints that merely resemble ids.)
+  const mapped = new Set([...map.keys(), ...rebind.keys()]);
+  for (const [sourceId, object] of selected) {
+    const reachable = new Set([
+      ...source.currentReferencesOf(object),
+      ...object.getObjectReferences(),
+    ]);
+    for (const id of reachable) {
+      if (!mapped.has(id) && source.object(id)) {
+        const typeName = source.typeNameOf(object) ?? `type${object.type}`;
+        throw new RangeError(
+          `import is not self-contained: ${typeName} (source ${sourceId}) references ` +
+            `${id}, which was neither imported nor rebound`,
+        );
+      }
+    }
+  }
+
+  const clone = clones.get(root.identifier);
+  if (!clone) throw new RangeError("import produced no root");
+  return { clone, map };
+}
+
 function materialize(field: { no: number; value: unknown }): RawMessage {
   if (field.value instanceof RawMessage) return field.value;
   return RawMessage.parse(field.value as Uint8Array);

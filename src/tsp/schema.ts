@@ -99,3 +99,20 @@ export function pushRef(out: bigint[], container: RawMessage | undefined, fieldN
     // Field number reused for a non-reference payload — not a reference list.
   }
 }
+
+/**
+ * A submessage, or undefined when the field is absent, carries a
+ * different wire type, or does not parse as a message.
+ *
+ * Extractors run over every object of a type, real files included, and
+ * a field number reused for a scalar in some era must read as "no
+ * submessage" rather than throw.
+ */
+export function messageAt(container: RawMessage, fieldNo: number): RawMessage | undefined {
+  if (container.fieldWire(fieldNo) !== WireType.Bytes) return undefined;
+  try {
+    return container.getMessage(fieldNo);
+  } catch {
+    return undefined;
+  }
+}
