@@ -491,6 +491,16 @@ Setting a border side to `null` removes it; omitting a side leaves it. A
 per-cell style is created based on the cell's current one, so unspecified
 properties are inherited rather than lost, and neighbours are unaffected.
 
+**Long text needs `textWrap: true`, values need width.** A cell's text
+does not wrap by itself, and a table with long text cells (row notes, a
+description column) ships with silently truncated contents unless every
+such cell wraps — this shipped once, in Pages. The apps then fit the
+row's height to the wrapped text on open; there is no auto-height flag
+to set. The rule runs the other way for numbers, dates and booleans:
+never wrap those — make the column wide enough with `setColumnWidth`
+instead, or the value clips. And keep header labels to a word or two; a
+sentence in a narrow column grows the row for the whole table.
+
 ### Structure
 
 ```ts
@@ -522,6 +532,15 @@ synthesising tiles, header buckets, data lists and a calc-engine owner. The
 copy is always renamed, because Numbers addresses tables by name and two
 "Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
 is per sheet, so a copy onto another sheet may keep the original name.
+
+**A clone keeps everything its donor had, and none of it fits by
+default.** `withContent: false` clears the values, not the shape: the
+copy still has the donor's row and column count, column widths, and
+per-cell styling (a wrap style from a prose column lands on your number
+cells, cell by cell). Size it with `deleteRows`/`deleteColumns` and
+`insertRows`, set its widths, and reset formatting where the donor's
+shows through — a reader who opens a mostly-empty table at someone
+else's widths sees a mistake, and no offline check will catch it.
 
 ### Conditional formatting and filters
 

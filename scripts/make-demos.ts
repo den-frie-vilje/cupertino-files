@@ -7,7 +7,7 @@
  * did and what the app should therefore show, and leaves room for
  * feedback in the document itself: a "→ Feedback:" line in Pages, a
  * feedback column in Numbers, the presenter notes in Keynote. A check
- * whose render differs from its FORVENTET line is a finding, and often
+ * whose render differs from its EXPECTED line is a finding, and often
  * the more useful outcome.
  *
  *   npm run demos -- <outDir>          (default: out)
@@ -53,6 +53,56 @@ function counter(prefix: string): () => string {
 }
 
 /**
+ * The layout law the checker's phone taught us: tables stay narrow
+ * enough to read on a phone, prose wraps in a column built for it, and
+ * value cells never wrap — their column is wide enough instead. Runs in
+ * every Numbers demo's self-check so a rung cannot regress it.
+ */
+function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): void {
+  for (const table of doc.tables()) {
+    let total = 0;
+    for (let c = 0; c < table.columnCount; c++) total += table.columnWidth(c);
+    if (total > maxWidth) {
+      throw new Error(`${name}: table ${table.name} is ${Math.round(total)} pt wide (max ${maxWidth})`);
+    }
+    const usedRows = new Set<number>();
+    const usedColumns = new Set<number>();
+    for (let r = 0; r < table.rowCount; r++) {
+      for (let c = 0; c < table.columnCount; c++) {
+        const value = table.cellValue(r, c);
+        if (!value) continue;
+        usedRows.add(r);
+        usedColumns.add(c);
+        const wrap = table.cellFormatting(r, c).textWrap === true;
+        if (value.type === "text" && value.value.length > 40 && !wrap) {
+          throw new Error(`${name}: ${table.name} r${r}c${c} holds long text without wrap`);
+        }
+        if ((value.type === "number" || value.type === "bool" || value.type === "date") && wrap) {
+          throw new Error(`${name}: ${table.name} r${r}c${c} is a ${value.type} cell with wrap on`);
+        }
+      }
+    }
+    // A clone must be sized on purpose, never shipped as the donor's
+    // husk: a reader opening a mostly-empty table sees a mistake.
+    const lastRow = Math.max(-1, ...usedRows);
+    const lastColumn = Math.max(-1, ...usedColumns);
+    if (table.rowCount - 1 - lastRow > 3) {
+      throw new Error(`${name}: ${table.name} has ${table.rowCount - 1 - lastRow} empty trailing rows`);
+    }
+    if (table.columnCount - 1 - lastColumn > 1) {
+      throw new Error(
+        `${name}: ${table.name} has ${table.columnCount - 1 - lastColumn} empty trailing columns`,
+      );
+    }
+    if (usedRows.size > 0 && usedRows.size / table.rowCount < 0.5) {
+      throw new Error(
+        `${name}: ${table.name} uses ${usedRows.size} of ${table.rowCount} rows — a mostly empty table`,
+      );
+    }
+  }
+}
+
+/**
  * A Pages check: one paragraph "«id» · what to look at", demo content in
  * between is appended by the caller, and `feedback()` closes it with the
  * line the reader answers on.
@@ -75,7 +125,7 @@ function pagesFeedback(doc: PagesDocument): void {
 function pagesIntro(doc: PagesDocument, title: string, scope: string): void {
   doc.appendParagraph(title, "Title");
   doc.appendParagraph(
-    `${scope} Hvert punkt har et id, en beskrivelse af hvad biblioteket har gjort, og hvad appen derfor bør vise. Skriv hvad du ser på »→ Feedback:«-linjen under punktet (tomt = som forventet), eller sæt en kommentar. Kun feedback-linjerne er grå kursiv — al anden brødtekst skal stå sort og opret; grå kursiv brødtekst er i sig selv en fejl. Arkivér til sidst og send filen retur.`,
+    `${scope} Each check has an id, a description of what the library did, and what the app should therefore show. Write what you see on the "→ Feedback:" line below the check (empty = as expected), or add a comment. Only the feedback lines are grey italic — all other body text must be black and upright; grey italic body text is itself a finding. When done, save and return the file.`,
     "Body",
   );
 }
@@ -85,44 +135,44 @@ function pagesIntro(doc: PagesDocument, title: string, scope: string): void {
 function demoText(): Uint8Array {
   const doc = PagesDocument.blank();
   const check = counter("T");
-  pagesIntro(doc, "DEMO 1 · Tekst og typografi", "Tegn- og afsnitsformatering, navngivne typografier, lister, indrykninger, rammer og skriveretning.");
+  pagesIntro(doc, "DEMO 1 · Text and typography", "Character and paragraph formatting, named styles, lists, indents, borders and writing direction.");
 
-  pagesCheck(doc, check(), "Ordene herunder skal stå med fed, kursiv og understreget — ét ord hver.");
-  const t1 = doc.appendParagraph("Dette ord er fedt, dette er kursivt, og dette er understreget.", "Body");
+  pagesCheck(doc, check(), "The words below must appear bold, italic and underlined — one word each.");
+  const t1 = doc.appendParagraph("This word is bold, this one is italic, and this one is underlined.", "Body");
   {
     const p = doc.paragraphs()[t1]!;
     const at = (word: string) => p.start + p.text.indexOf(word);
-    doc.applyCharacterFormatting(at("fedt"), at("fedt") + 4, { bold: true });
-    doc.applyCharacterFormatting(at("kursivt"), at("kursivt") + 7, { italic: true });
-    doc.applyCharacterFormatting(at("understreget"), at("understreget") + 12, { underline: 1 });
+    doc.applyCharacterFormatting(at("bold"), at("bold") + 4, { bold: true });
+    doc.applyCharacterFormatting(at("italic"), at("italic") + 6, { italic: true });
+    doc.applyCharacterFormatting(at("underlined"), at("underlined") + 10, { underline: 1 });
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Ét ord i 21 pt terrakotta, ét ord med gul fremhævning, ét ord gennemstreget, og ét ord i Courier.");
-  const t2 = doc.appendParagraph("Stort og rødt · fremhævet · gennemstreget · skrivemaskine.", "Body");
+  pagesCheck(doc, check(), "One phrase in 21 pt terracotta, one word with a yellow highlight, one word struck through, and one word in Courier.");
+  const t2 = doc.appendParagraph("Big and red · highlighted · struck through · typewriter.", "Body");
   {
     const p = doc.paragraphs()[t2]!;
     const at = (word: string) => p.start + p.text.indexOf(word);
-    doc.applyCharacterFormatting(at("Stort og rødt"), at("Stort og rødt") + 13, { fontSize: 21, fontColor: TERRACOTTA });
-    doc.applyCharacterFormatting(at("fremhævet"), at("fremhævet") + 9, { backgroundColor: SOFTYELLOW });
-    doc.applyCharacterFormatting(at("gennemstreget"), at("gennemstreget") + 13, { strikethru: 1 });
-    doc.applyCharacterFormatting(at("skrivemaskine"), at("skrivemaskine") + 13, { fontName: "Courier" });
+    doc.applyCharacterFormatting(at("Big and red"), at("Big and red") + 11, { fontSize: 21, fontColor: TERRACOTTA });
+    doc.applyCharacterFormatting(at("highlighted"), at("highlighted") + 11, { backgroundColor: SOFTYELLOW });
+    doc.applyCharacterFormatting(at("struck through"), at("struck through") + 14, { strikethru: 1 });
+    doc.applyCharacterFormatting(at("typewriter"), at("typewriter") + 10, { fontName: "Courier" });
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "»forsalede« i kapitæler, »x2« med 2 i hævet skrift, »H2O« med 2 i sænket skrift.");
-  const t3 = doc.appendParagraph("Ordet forsalede · x2 · H2O.", "Body");
+  pagesCheck(doc, check(), "\"varnished\" in small caps, \"x2\" with the 2 in superscript, \"H2O\" with the 2 in subscript.");
+  const t3 = doc.appendParagraph("The word varnished · x2 · H2O.", "Body");
   {
     const p = doc.paragraphs()[t3]!;
     const at = (s: string) => p.start + p.text.indexOf(s);
-    doc.applyCharacterFormatting(at("forsalede"), at("forsalede") + 9, { capitalization: 2 });
+    doc.applyCharacterFormatting(at("varnished"), at("varnished") + 9, { capitalization: 2 });
     doc.applyCharacterFormatting(at("x2") + 1, at("x2") + 2, { superscript: 1 });
     doc.applyCharacterFormatting(at("H2O") + 1, at("H2O") + 2, { superscript: 2 });
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Linket herunder skal være klikbart og pege på den frie viljes hjemmeside.");
-  const t4 = doc.appendParagraph("Besøg den frie vilje for at læse mere.", "Body");
+  pagesCheck(doc, check(), "The link below must be clickable and point to den frie vilje's website.");
+  const t4 = doc.appendParagraph("Visit den frie vilje to read more.", "Body");
   {
     const p = doc.paragraphs()[t4]!;
     const at = p.start + p.text.indexOf("den frie vilje");
@@ -130,26 +180,26 @@ function demoText(): Uint8Array {
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "En ny typografi »Demo Fremhævet« (kursiv, terrakotta) er oprettet, brugt på linjen herunder — og skal stå i typografi-panelet.");
+  pagesCheck(doc, check(), "A new style \"Demo Emphasis\" (italic, terracotta) has been created and used on the line below — and it must appear in the styles panel.");
   doc.createParagraphStyle({
-    name: "Demo Fremhævet",
+    name: "Demo Emphasis",
     basedOn: "Body",
     character: { italic: true, fontColor: TERRACOTTA },
   });
-  doc.appendParagraph("Denne linje bruger typografien Demo Fremhævet.", "Demo Fremhævet");
+  doc.appendParagraph("This line uses the Demo Emphasis style.", "Demo Emphasis");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Typografien »Heading 2« er redigeret til mørkeblå — så BEGGE overskrifter herunder skal være blå.");
+  pagesCheck(doc, check(), "The \"Heading 2\" style has been edited to dark blue — so BOTH headings below must be blue.");
   doc.stylesheet.style("Heading 2")?.setCharacter({ fontColor: DARKBLUE });
-  doc.appendParagraph("Første mellemrubrik", "Heading 2");
-  doc.appendParagraph("Anden mellemrubrik", "Heading 2");
+  doc.appendParagraph("First subheading", "Heading 2");
+  doc.appendParagraph("Second subheading", "Heading 2");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Tre linjer: venstrestillet, centreret, højrestillet.");
+  pagesCheck(doc, check(), "Three lines: left-aligned, centered, right-aligned.");
   const align = [
-    ["Denne linje er venstrestillet.", 0],
-    ["Denne linje er centreret.", 2],
-    ["Denne linje er højrestillet.", 1],
+    ["This line is left-aligned.", 0],
+    ["This line is centered.", 2],
+    ["This line is right-aligned.", 1],
   ] as const;
   for (const [text, alignment] of align) {
     const i = doc.appendParagraph(text, "Body");
@@ -157,60 +207,60 @@ function demoText(): Uint8Array {
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "To punkttegn, to nummererede (1., 2.) — og derefter almindelig brødtekst UDEN punkttegn.");
-  doc.appendParagraph("Første punkt", "Body", "Bullet");
-  doc.appendParagraph("Andet punkt", "Body", "Bullet");
-  doc.appendParagraph("Første nummererede", "Body", "Numbered");
-  doc.appendParagraph("Andet nummererede", "Body", "Numbered");
-  doc.appendParagraph("Denne brødtekst må ikke have fået et punkttegn.", "Body");
+  pagesCheck(doc, check(), "Two bullet items, two numbered ones (1., 2.) — and then plain body text WITHOUT a bullet.");
+  doc.appendParagraph("First bullet item", "Body", "Bullet");
+  doc.appendParagraph("Second bullet item", "Body", "Bullet");
+  doc.appendParagraph("First numbered item", "Body", "Numbered");
+  doc.appendParagraph("Second numbered item", "Body", "Numbered");
+  doc.appendParagraph("This body text must not have been given a bullet.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "En blok-indrykket linje (60 pt) og en hængende indrykning (første linje længere ude end resten).");
-  const ind1 = doc.appendParagraph("Denne linje er blok-indrykket 60 pt fra margenen.", "Body");
+  pagesCheck(doc, check(), "A block-indented line (60 pt) and a hanging indent (first line further out than the rest).");
+  const ind1 = doc.appendParagraph("This line is block-indented 60 pt from the margin.", "Body");
   doc.paragraph(ind1).format({ leftIndent: 60 });
   const ind2 = doc.appendParagraph(
-    "Hængende indrykning: første linje starter her, og de følgende linjer i samme afsnit rykker længere ind — skriv nok tekst, og ombrydningen viser det. Denne sætning er kun med for at tvinge et linjeskift frem i afsnittet.",
+    "Hanging indent: the first line starts here, and the following lines of the same paragraph sit further in — write enough text, and the wrapping shows it. This sentence is only here to force a line break in the paragraph.",
     "Body",
   );
   doc.paragraph(ind2).format({ leftIndent: 60, firstLineIndent: 20 });
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Afsnitsrammer: linje med streg over og under; linje med rød streg kun i venstre side; linje med blå streg kun i højre side.");
-  const b1 = doc.appendParagraph("Streg over og under dette afsnit.", "Body");
+  pagesCheck(doc, check(), "Paragraph borders: a line with a rule above and below; a line with a red rule on the left side only; a line with a blue rule on the right side only.");
+  const b1 = doc.appendParagraph("A rule above and below this paragraph.", "Body");
   doc.paragraph(b1).format({ border: solidStroke({ r: 0.2, g: 0.2, b: 0.2 }, 1), borderPositions: BorderPosition.TOP_AND_BOTTOM });
-  const b2 = doc.appendParagraph("Rød streg i venstre side.", "Body");
+  const b2 = doc.appendParagraph("A red rule on the left side.", "Body");
   doc.paragraph(b2).format({ border: solidStroke(TERRACOTTA, 3), borderPositions: BorderPosition.LEADING });
-  const b3 = doc.appendParagraph("Blå streg i højre side.", "Body");
+  const b3 = doc.appendParagraph("A blue rule on the right side.", "Body");
   doc.paragraph(b3).format({ border: solidStroke(DARKBLUE, 3), borderPositions: BorderPosition.TRAILING });
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Et afsnit med lysegul baggrundsfarve.");
-  const bg = doc.appendParagraph("Dette afsnit har sin egen baggrundsfarve.", "Body");
+  pagesCheck(doc, check(), "A paragraph with a light yellow background color.");
+  const bg = doc.appendParagraph("This paragraph has its own background color.", "Body");
   doc.paragraph(bg).format({ backgroundColor: SOFTYELLOW });
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Den hebraiske linje herunder skal stå højrestillet af sig selv (skriveretning højre-mod-venstre).");
+  pagesCheck(doc, check(), "The Hebrew line below must align right on its own (right-to-left writing direction).");
   const rtl = doc.appendParagraph("עברית מיושרת לימין", "Body");
   doc.paragraph(rtl).setDirection("rtl");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Dobbelt linjeafstand og 18 pt luft før/efter i afsnittet herunder — det skal stå tydeligt mere luftigt end resten.");
+  pagesCheck(doc, check(), "Double line spacing and 18 pt of space before/after in the paragraph below — it must look clearly airier than the rest.");
   const sp = doc.appendParagraph(
-    "Dette afsnit har dobbelt linjeafstand. Denne anden sætning er med, så afsnittet ombrydes over flere linjer og afstanden kan ses.",
+    "This paragraph has double line spacing. This second sentence is here so the paragraph wraps across several lines and the spacing can be seen.",
     "Body",
   );
   doc.paragraph(sp).format({ lineSpacing: 2, spaceBefore: 18, spaceAfter: 18 });
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Decimaltabulator ved 200 pt: de to beløb herunder skal stå med kommaerne præcist under hinanden.");
+  pagesCheck(doc, check(), "Decimal tab at 200 pt: the two amounts below must have their commas exactly aligned, one under the other.");
   for (const line of ["Netto\t1.234,56", "Moms\t308,64"]) {
     const i = doc.appendParagraph(line, "Body");
     doc.paragraph(i).format({ tabs: [{ position: 200, alignment: TabAlignment.DECIMAL }], decimalTab: "," });
   }
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Rammeafstand: linjen herunder har streg over og under med afstanden sat til +12. Afstanden mellem tekst og streger skal være tydeligt større end i T-10. (Målt i forrige runde: minus trækker stregerne ind i teksten, 0 er standardafstanden.)");
-  const off = doc.appendParagraph("Streg over og under, med eksplicit rammeafstand.", "Body");
+  pagesCheck(doc, check(), "Rule offset: the line below has rules above and below with the offset set to +12. The distance between text and rules must be clearly larger than in T-10. (Measured in the previous round: negative pulls the rules into the text, 0 is the default distance.)");
+  const off = doc.appendParagraph("A rule above and below, with an explicit rule offset.", "Body");
   doc.paragraph(off).format({
     border: solidStroke({ r: 0.2, g: 0.2, b: 0.2 }, 1),
     borderPositions: BorderPosition.TOP_AND_BOTTOM,
@@ -218,7 +268,7 @@ function demoText(): Uint8Array {
   });
   pagesFeedback(doc);
 
-  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
+  doc.appendParagraph("Thanks! Save (⌘S) and return the file.", "Heading 3");
   return doc.save();
 }
 
@@ -240,78 +290,78 @@ function demoFields(): Uint8Array {
     doc.paragraph(i).delete();
   }
   doc.paragraph(0).text =
-    "DEMO 2 · Struktur og felter — sektioner, sidehoved og -fod, sidetal, datofelter, bogmærker, fodnoter, kommentarer og pladsholdere. (Basisdokumentet stammer fra testkorpusset; resten af dets indhold er slettet af biblioteket.) Skriv hvad du ser på »→ Feedback:«-linjen under hvert punkt — tomt = som forventet — eller sæt en kommentar. Arkivér til sidst og send filen retur.";
+    "DEMO 2 · Structure and fields — sections, headers and footers, page numbers, date fields, bookmarks, footnotes, comments and placeholders. (The base document comes from the test corpus; the rest of its content was deleted by the library.) Write what you see on the \"→ Feedback:\" line below each check — empty = as expected — or add a comment. When done, save and return the file.";
   doc.paragraph(0).setStyle("Title");
-  doc.paragraph(1).text = "Dette er sektion 1's sidste afsnit — sektion 2 begynder på næste side.";
-  doc.paragraph(2).text = "Sektion 2 begynder her; alle punkterne herunder hører til den.";
+  doc.paragraph(1).text = "This is section 1's last paragraph — section 2 begins on the next page.";
+  doc.paragraph(2).text = "Section 2 begins here; all the checks below belong to it.";
   doc.paragraph(2).setStyle("Heading");
 
-  pagesCheck(doc, check(), "Sektion 1's sidehoved siger »Sektion 1« — centreret, for feltets typografi centrerer. Sektion 2's siger »Sektion 2 · sidehoved« — venstrestillet, for dén typografi venstrestiller: sidehovedet er ét sidebredt felt, og teksten følger feltets egen afsnitstypografi. Sektion 2's sidefod viser »Side N af M« med rigtige tal (levende felter).");
+  pagesCheck(doc, check(), "Section 1's header says \"Section 1\" — centered, because the field's style centers. Section 2's says \"Section 2 · header\" — left-aligned, because that style left-aligns: the header is one page-wide field, and the text follows the field's own paragraph style. Section 2's footer shows \"Page N of M\" with real numbers (live fields).");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Datofeltet i linjen herunder er et levende felt — klik på det, og Pages viser datovælgeren.");
-  const dateLine = doc.appendParagraph("Dokumentet er bygget: ", "Body");
+  pagesCheck(doc, check(), "The date field in the line below is a live field — click it, and Pages shows the date picker.");
+  const dateLine = doc.appendParagraph("The document was built: ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Ordet »ankerpunkt« herunder bærer et bogmærke ved navn »Demo-bogmærke« — det skal stå i listen, når du indsætter et link og vælger bogmærke.");
-  const bm = doc.appendParagraph("Dette afsnit indeholder et ankerpunkt for bogmærket.", "Body");
+  pagesCheck(doc, check(), "The word \"anchor\" below carries a bookmark named \"Demo bookmark\" — it must appear in the list when you insert a link and choose bookmark.");
+  const bm = doc.appendParagraph("This paragraph contains an anchor for the bookmark.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Ordet »fodnote« herunder har et notetegn, og selve noten står nederst på siden.");
-  const fn = doc.appendParagraph("Denne sætning har en fodnote efter ordet fodnote.", "Body");
+  pagesCheck(doc, check(), "The word \"footnote\" below has a note mark, and the note itself sits at the bottom of the page.");
+  const fn = doc.appendParagraph("This sentence has a footnote after the word footnote.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Sætningen herunder bærer en kommentar (forfatter »cupertino-files«) — svar gerne på den som feedback.");
-  const cm = doc.appendParagraph("Denne sætning har en kommentar hæftet på sig.", "Body");
+  pagesCheck(doc, check(), "The sentence below carries a comment (author \"cupertino-files\") — feel free to answer it as feedback.");
+  const cm = doc.appendParagraph("This sentence has a comment attached to it.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Linje A herunder er en pladsholder: ét tryk skal markere HELE spannet, og det du skriver, erstatter det hele. Linje B var en pladsholder, som biblioteket selv har udfyldt — den skal opføre sig som helt almindelig tekst.");
-  doc.appendParagraph("A: «SKRIV KUNDENS NAVN HER»", "Body");
-  const filled = doc.appendParagraph("B: Udfyldt af biblioteket — var en pladsholder.", "Body");
+  pagesCheck(doc, check(), "Line A below is a placeholder: a single click must select the WHOLE span, and what you type replaces all of it. Line B was a placeholder that the library itself filled in — it must behave like completely ordinary text.");
+  doc.appendParagraph("A: «TYPE CUSTOMER NAME HERE»", "Body");
+  const filled = doc.appendParagraph("B: Filled in by the library — was a placeholder.", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Herunder begynder SEKTION 3, oprettet af biblioteket med sine egne klonede sidemastere: den starter på en ny side, og dens sidehoved siger »Sektion 3« — uafhængigt af sektion 2's.");
-  const s3 = doc.appendParagraph("Sektion 3 begynder med dette afsnit.", "Heading");
+  pagesCheck(doc, check(), "Below, SECTION 3 begins, created by the library with its own cloned page masters: it starts on a new page, and its header says \"Section 3\" — independent of section 2's.");
+  const s3 = doc.appendParagraph("Section 3 begins with this paragraph.", "Heading");
   pagesFeedback(doc);
-  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 2");
+  doc.appendParagraph("Thanks! Save (⌘S) and return the file.", "Heading 2");
 
   // Fields and marks, after all text is in place (offsets are stable now).
   {
     const p = doc.paragraphs()[dateLine]!;
-    doc.body.insertDateField(p.end, "9. august 2026");
+    doc.body.insertDateField(p.end, "August 9, 2026");
   }
   {
     const p = doc.paragraphs()[bm]!;
-    const at = p.start + p.text.indexOf("ankerpunkt");
-    doc.body.addBookmark(at, at + 10, "Demo-bogmærke");
+    const at = p.start + p.text.indexOf("anchor");
+    doc.body.addBookmark(at, at + 6, "Demo bookmark");
   }
   {
     const p = doc.paragraphs()[fn]!;
-    const at = p.start + p.text.indexOf("fodnote.") + "fodnote".length;
-    doc.body.addFootnote(at, "Fodnoten er skrevet af biblioteket, med dokumentets egen notetypografi.");
+    const at = p.start + p.text.indexOf("footnote.") + "footnote".length;
+    doc.body.addFootnote(at, "The footnote was written by the library, in the document's own footnote style.");
   }
   {
     const p = doc.paragraphs()[cm]!;
-    doc.body.addComment(p.start, p.end, "Hej! Denne kommentar er skrevet af biblioteket. Svar gerne på den som feedback.");
+    doc.body.addComment(p.start, p.end, "Hi! This comment was written by the library. Feel free to answer it as feedback.");
   }
-  doc.find("«SKRIV KUNDENS NAVN HER»")[0]!.asPlaceholder();
+  doc.find("«TYPE CUSTOMER NAME HERE»")[0]!.asPlaceholder();
   {
     const p = doc.paragraphs()[filled]!;
     const start = p.start + "B: ".length;
     doc.defineAsPlaceholder(start, p.end);
-    doc.body.fillPlaceholder({ start, end: p.end }, "Udfyldt af biblioteket — var en pladsholder.");
+    doc.body.fillPlaceholder({ start, end: p.end }, "Filled in by the library — was a placeholder.");
   }
 
-  const sectionThree = doc.insertSectionBreak(s3, { name: "Demo-sektion" });
-  sectionThree.setHeaderText("Sektion 3");
+  const sectionThree = doc.insertSectionBreak(s3, { name: "Demo section" });
+  sectionThree.setHeaderText("Section 3");
   const [one, two] = doc.sections();
-  one!.setHeaderText("Sektion 1");
-  two!.setHeaderText("Sektion 2 · sidehoved");
+  one!.setHeaderText("Section 1");
+  two!.setHeaderText("Section 2 · header");
   for (const template of two!.templates()) {
     const filled = template.footers.find((f) => f.text.length > 0);
     for (const footer of template.footers) {
       const wasEmpty = footer.text.length === 0;
-      footer.setText("Side  af ");
+      footer.setText("Page  of ");
       footer.insertPageNumber(5);
       footer.insertPageCount(footer.text.length);
       if (wasEmpty && filled && filled !== footer) footer.copyShapeFrom(filled);
@@ -325,34 +375,34 @@ function demoFields(): Uint8Array {
 function demoMedia(): Uint8Array {
   const doc = PagesDocument.blank();
   const check = counter("M");
-  pagesIntro(doc, "DEMO 3 · Billeder og objekter", "Indsatte billeder (i tekstspalten og ved sidemargenen), flydende kopier, objektstil, beskæring.");
+  pagesIntro(doc, "DEMO 3 · Images and objects", "Inserted images (in the text column and at the page margin), floating copies, object style, cropping.");
 
   // Build all paragraphs first; insert images after (appended empty
   // paragraphs are invisible to paragraphs() until they get content).
-  pagesCheck(doc, check(), "Fotoet herunder (Earthrise, NASA) og linjen over det er BEGGE indrykket 80 pt — fotoets venstre kant skal flugte med tekstens.");
-  const ref1 = doc.appendParagraph("Denne linje er indrykket 80 pt, som fotoet under den.", "Body");
+  pagesCheck(doc, check(), "The photo below (Earthrise, NASA) and the line above it are BOTH indented 80 pt — the photo's left edge must line up with the text's.");
+  const ref1 = doc.appendParagraph("This line is indented 80 pt, like the photo below it.", "Body");
   const img1 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Hokusais store bølge herunder er sat med tilstanden »ved siden«: den skal starte ude ved sidens venstre MARGEN — til venstre for linjen ovenover — og teksten efter må gerne flyde ved siden af den; det er tilstandens mening.");
+  pagesCheck(doc, check(), "Hokusai's Great Wave below is set with the \"beside\" arrangement: it must start out at the page's left MARGIN — to the left of the line above — and the text after it may flow beside it; that is the point of the arrangement.");
   const img2 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Endnu en kopi af bølge-træsnittet, indsat i TEKSTFLOWET og beskåret af biblioteket til midterudsnittet: Fuji i midten, den store bølges klo skåret VÆK. Forventet for et billede »integreret med tekst«: beskæringen TEGNES, »nulstil masken« virker, men dobbeltklik åbner IKKE maske-værktøjet — det er appens adfærd for integrerede billeder, ikke en fejl. Åbner værktøjet alligevel, så skriv det.");
+  pagesCheck(doc, check(), "Another copy of the wave woodcut, inserted in the TEXT FLOW and cropped by the library to the middle cut: Fuji in the center, the great wave's claw cropped AWAY. Expected for an image \"inline with text\": the crop IS DRAWN, \"reset mask\" works, but double-click does NOT open the mask editor — that is the app's behavior for inline images, not a bug. If the editor opens anyway, write that.");
   const img3 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Samme beskæring på en FLYDENDE kopi af bølgen, placeret til højre herunder — den indstilling appens egen beskæring selv producerer. Her SKAL dobbeltklik åbne maske-værktøjet (skyder og håndtag). Åbner det ikke her, ligger forhindringen ikke i ombrydningen, og det er et vigtigt fund.");
+  pagesCheck(doc, check(), "The same crop on a FLOATING copy of the wave, placed to the right below — the arrangement the app's own cropping itself produces. Here double-click MUST open the mask editor (slider and handles). If it does not open here, the obstacle is not the text wrap, and that is an important finding.");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "En FLYDENDE kopi af Earthrise-fotoet er sat øverst til højre på side 1 (60 % gennemsigtighed, mørk kant og slagskygge). Tekst skal flyde rundt om den.");
+  pagesCheck(doc, check(), "A FLOATING copy of the Earthrise photo sits at the top right of page 1 (60 % transparency, dark border and drop shadow). Text must flow around it.");
   pagesFeedback(doc);
 
-  pagesCheck(doc, check(), "Grafikken herunder er en PDF (vektor, en videnskabelig pipeline-figur): zoom godt ind — stregerne og teksten i figuren skal forblive knivskarpe, ikke pixelerede.");
+  pagesCheck(doc, check(), "The graphic below is a PDF (vector, a scientific pipeline figure): zoom in close — the lines and text in the figure must stay razor-sharp, not pixelated.");
   const img5 = doc.appendParagraph(" ", "Body");
   pagesFeedback(doc);
 
-  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
+  doc.appendParagraph("Thanks! Save (⌘S) and return the file.", "Heading 3");
 
   const indent = { leftIndent: 80 };
   for (const i of [ref1, img1, img2, img3]) doc.paragraph(i).format(indent);
@@ -418,12 +468,12 @@ function demoChart(): Uint8Array {
     [n(12), n(19), n(31), n(24)],
     [n(28), n(14), n(22), n(17)],
   ]);
-  chart.setRowName(0, "Serie 2025");
-  chart.setRowName(1, "Serie 2026");
-  chart.setColumnName(0, "Nord");
-  chart.setColumnName(1, "Syd");
-  chart.setColumnName(2, "Øst");
-  chart.setColumnName(3, "Vest");
+  chart.setRowName(0, "Series 2025");
+  chart.setRowName(1, "Series 2026");
+  chart.setColumnName(0, "North");
+  chart.setColumnName(1, "South");
+  chart.setColumnName(2, "East");
+  chart.setColumnName(3, "West");
   chart.setAxisMajorGridlines("value", false);
 
   // The donor anchors its chart in the body text (old-era file: no page
@@ -436,13 +486,13 @@ function demoChart(): Uint8Array {
     .find((a) => a.drawableId !== undefined && doc.store.typeNameOf(doc.store.object(a.drawableId)!) === "TSCH.ChartDrawableArchive")?.objectId;
   doc.body.setText("");
   const check = counter("D");
-  pagesIntro(doc, "DEMO 4 · Diagram", "Diagramdata og -udseende, redigeret i et eksisterende dokuments søjlediagram (dokumentet her stammer fra testkorpusset).");
-  pagesCheck(doc, check(), "Diagrammet skal vise fire kategorier — Nord (12/28), Syd (19/14), Øst (31/22), Vest (24/17) — to søjler pr. kategori, serierne hedder »Serie 2025« og »Serie 2026«.");
+  pagesIntro(doc, "DEMO 4 · Chart", "Chart data and appearance, edited in an existing document's column chart (this document comes from the test corpus).");
+  pagesCheck(doc, check(), "The chart must show four categories — North (12/28), South (19/14), East (31/22), West (24/17) — two columns per category, and the series are named \"Series 2025\" and \"Series 2026\".");
   pagesFeedback(doc);
-  pagesCheck(doc, check(), "Værdiaksens vandrette hjælpelinjer er SLÅET FRA af biblioteket — diagrammet skal stå uden vandrette linjer bag søjlerne.");
+  pagesCheck(doc, check(), "The value axis's horizontal gridlines are TURNED OFF by the library — the chart must stand without horizontal lines behind the columns.");
   pagesFeedback(doc);
   const anchor = doc.appendParagraph(" ", "Body");
-  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
+  doc.appendParagraph("Thanks! Save (⌘S) and return the file.", "Heading 3");
   if (chartAttachment !== undefined) {
     doc.body.insertAttachment(doc.body.paragraphStarts()[anchor]!, chartAttachment);
   }
@@ -456,8 +506,8 @@ function demoShadows(): Uint8Array {
   const check = counter("S");
   pagesIntro(
     doc,
-    "DEMO 11 · Skygger, blur og refleksioner",
-    "Slagskyggens parametre (retning, afstand, blur, dækkraft, farve), enabled-flaget, de tre skyggetyper og spejling — elleve farvede firkanter, én ændring pr. firkant. Firkanterne flyder i højre side af side 1 og 2 i punkternes rækkefølge, og hvert punkt navngiver sin firkants farve; nederst står en farveprøve-række i samme rækkefølge. Inspektøren: Formatér → Stil → Skygge.",
+    "DEMO 11 · Shadows, blur and reflections",
+    "The drop shadow's parameters (direction, distance, blur, opacity, color), the enabled flag, the three shadow types and reflection — eleven colored squares, one change per square. The squares float on the right side of pages 1 and 2 in check order, and each check names its square's color; at the bottom sits a row of color swatches in the same order. The inspector: Format → Style → Shadow (Formatér → Stil → Skygge).",
   );
 
   // One delta per rung against S-01's stated baseline (the app-verified
@@ -467,59 +517,59 @@ function demoShadows(): Uint8Array {
     {
       rgb: [192, 57, 43],
       text:
-        "Referencen: den TERRAKOTTA firkant har appens egen standardskygge — den popup'en »Slagskygge« selv sætter: sort, LIGE NED (inspektøren viser 270°), tæt på (afstand 2 pkt.), let blødgjort (blur 5 pkt.), 50 % dækkraft. De næste punkter ændrer én ting hver i forhold til denne.",
+        "The reference: the TERRACOTTA square has the app's own default shadow — the one the \"Drop Shadow\" (Slagskygge) pop-up itself sets: black, STRAIGHT DOWN (the inspector shows 270°), close (offset 2 pt), slightly softened (blur 5 pt), 50 % opacity. The next checks each change one thing relative to this one.",
       style: { shadow: { ...DEFAULT_SHADOW } },
     },
     {
       rgb: [41, 74, 158],
-      text: "Retning: den BLÅ firkants skygge peger NEDAD MOD HØJRE (inspektøren viser 315°), den klassiske retning.",
+      text: "Direction: the BLUE square's shadow points DOWN TO THE RIGHT (the inspector shows 315°), the classic direction.",
       style: { shadow: { ...DEFAULT_SHADOW, angle: 45 } },
     },
     {
       rgb: [79, 153, 82],
       text:
-        "Retning igen: den GRØNNE firkants skygge peger mod VENSTRE (inspektøren viser 180°). Peger den en anden vej, så skriv hvilken — retningsskalaen er præcis det, punktet måler.",
+        "Direction again: the GREEN square's shadow points LEFT (the inspector shows 180°). If it points another way, write which — the direction scale is exactly what this check measures.",
       style: { shadow: { ...DEFAULT_SHADOW, angle: 180 } },
     },
     {
       rgb: [230, 185, 50],
-      text: "Afstand: den GULE firkants skygge er rykket 25 pkt. væk — klart adskilt fra firkanten, samme retning som referencen.",
+      text: "Distance: the YELLOW square's shadow is moved 25 pt away — clearly separated from the square, same direction as the reference.",
       style: { shadow: { ...DEFAULT_SHADOW, offset: 25 } },
     },
     {
       rgb: [125, 60, 152],
-      text: "Blur: den LILLA firkants skygge er meget blød (blur 20 pkt.) — en udtværet sky frem for en skarp kant.",
+      text: "Blur: the PURPLE square's shadow is very soft (blur 20 pt) — a smeared cloud rather than a sharp edge.",
       style: { shadow: { ...DEFAULT_SHADOW, radius: 20 } },
     },
     {
       rgb: [230, 126, 34],
-      text: "Dækkraft: den ORANGE firkants skygge er næsten fuld (90 %) — tydeligt mørkere end referencens 50 %.",
+      text: "Opacity: the ORANGE square's shadow is nearly full (90 %) — clearly darker than the reference's 50 %.",
       style: { shadow: { ...DEFAULT_SHADOW, opacity: 0.9 } },
     },
     {
       rgb: [150, 150, 150],
-      text: "Farve: den GRÅ firkants skygge er TERRAKOTTA-farvet, ikke sort.",
+      text: "Color: the GREY square's shadow is TERRACOTTA-colored, not black.",
       style: { shadow: { ...DEFAULT_SHADOW, color: { r: 0.753, g: 0.224, b: 0.169, a: 1 } } },
     },
     {
       rgb: [30, 30, 30],
       text:
-        "Slået fra: den SORTE firkant har en konfigureret men SLÅET FRA skygge — der må INGEN skygge tegnes, og inspektørens skygge-felt bør stå slået fra. Slå derefter skyggen TIL via popup'en (vælg Slagskygge): appen skal overleve skiftet og tegne skyggen. Denne fil er genopbygget efter at netop dét skifte fik Pages til at crashe; et nyt crash er derfor et vigtigt fund, og »skiftet virkede« er præcis det, punktet måler.",
+        "Turned off: the BLACK square has a configured but TURNED OFF shadow — NO shadow may be drawn, and the inspector's shadow field should read as off. Then turn the shadow ON via the pop-up (choose Drop Shadow): the app must survive the switch and draw the shadow. This file was rebuilt after exactly that switch made Pages crash; a new crash is therefore an important finding, and \"the switch worked\" is exactly what this check measures.",
       style: { shadow: { ...DEFAULT_SHADOW, enabled: false } },
     },
     {
       rgb: [26, 188, 156],
-      text: "Type: den TURKISE firkant har en KONTAKT-skygge (popup'en »Kontakt«) med 40 pkt. blur — skyggen samler sig blødt under firkantens fod, som om den står på en flade.",
+      text: "Type: the TURQUOISE square has a CONTACT shadow (the \"Contact\" (Kontakt) pop-up item) with 40 pt blur — the shadow gathers softly under the square's foot, as if it stands on a surface.",
       style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CONTACT, radius: 40 } },
     },
     {
       rgb: [121, 85, 61],
-      text: "Type: den BRUNE firkant har en BUET skygge (popup'en »Buet«).",
+      text: "Type: the BROWN square has a CURVED shadow (the \"Curved\" (Buet) pop-up item).",
       style: { shadow: { ...DEFAULT_SHADOW, type: ShadowType.CURVED } },
     },
     {
       rgb: [24, 38, 74],
-      text: "Spejling: den MØRKEBLÅ firkant har INGEN skygge men en SPEJLING (50 %) — firkanten spejles under sig selv og fader ud. Inspektøren: Spejling slået til med skyderen på 50 %.",
+      text: "Reflection: the DARK BLUE square has NO shadow but a REFLECTION (50 %) — the square mirrors below itself and fades out. The inspector: Reflection turned on with the slider at 50 %.",
       style: { reflection: 0.5 },
     },
   ];
@@ -531,8 +581,8 @@ function demoShadows(): Uint8Array {
     // squares on page 2.
     if (index === 5) doc.body.insertText(doc.body.text.length, "\f");
   }
-  doc.appendParagraph("Tak! Arkivér (⌘S) og send filen retur.", "Heading 3");
-  const legend = doc.appendParagraph("Farveprøver i rækkefølgen S-01…S-11: ", "Body");
+  doc.appendParagraph("Thanks! Save (⌘S) and return the file.", "Heading 3");
+  const legend = doc.appendParagraph("Color swatches in the order S-01…S-11: ", "Body");
 
   // The legend chips are the sources; each floating square is a copy
   // carrying its rung's one-delta style.
@@ -580,19 +630,20 @@ function demoCells(): Uint8Array {
     table.setCellFormatting(row, 1, { textWrap: true });
     row++;
   };
-  table.setCell(row, 0, "DEMO 5 · Celler og formater — skriv feedback i kolonne E ud for hvert punkt (tomt = som forventet). Arkivér og send retur.");
-  table.setCellFormatting(row, 0, { textWrap: true });
+  table.setCell(row, 0, "DEMO 5");
+  table.setCell(row, 1, "Cells and formats — write feedback in column E next to each check (empty = as expected). Save and return.");
+  table.setCellFormatting(row, 1, { textWrap: true });
   table.setCell(row, 4, "Feedback");
   row += 2;
 
-  head(check(), "Celletyper — C: tekst, D: tal. Rækken under: C: dato (skal vise en dato), D: varighed (skal vise 1t 30m).");
-  table.setCell(row - 1, 2, "en tekst");
+  head(check(), "Cell types — C: text, D: number. The row below: C: date (must show a date), D: duration (must show 1h 30m — on a Danish system 1t 30m).");
+  table.setCell(row - 1, 2, "some text");
   table.setCell(row - 1, 3, 1234.5);
   table.setCell(row, 2, { type: "date", value: new Date(Date.UTC(2026, 7, 9, 12, 0, 0)) });
   table.setCell(row, 3, { type: "duration", seconds: 5400 });
   row += 2;
 
-  head(check(), "Formater — C: valuta (kr., to decimaler), D: procent. Rækken under: C: afkrydsning (sand = flueben), D: tal med 3 decimaler.");
+  head(check(), "Formats — C: currency (kr., two decimals), D: percentage. The row below: C: checkbox (true = check mark), D: number with 3 decimals.");
   table.setCell(row - 1, 2, 1234.5);
   table.setCellFormat(row - 1, 2, { kind: "currency", code: "DKK", decimals: 2 });
   table.setCell(row - 1, 3, 0.125);
@@ -603,14 +654,14 @@ function demoCells(): Uint8Array {
   table.setCellFormat(row, 3, { kind: "number", decimals: 3 });
   row += 2;
 
-  head(check(), "Flettede celler: C og D i rækken herunder er flettet til én bred celle med CENTRERET tekst.");
+  head(check(), "Merged cells: C and D in the row below are merged into one wide cell with CENTERED text.");
   table.mergeCells(row, 2, 1, 2);
-  table.setCell(row, 2, "flettet C+D");
+  table.setCell(row, 2, "merged C+D");
   table.setCellFormatting(row, 2, { verticalAlignment: 1, horizontalAlignment: "center" });
   row += 2;
 
-  head(check(), "Cellestil: C herunder har mørkeblå fyldfarve, luft (padding) og en terrakotta ramme hele vejen rundt.");
-  table.setCell(row, 2, "stilet celle");
+  head(check(), "Cell style: C below has a dark blue fill, padding and a terracotta border all the way around.");
+  table.setCell(row, 2, "styled cell");
   table.setCellFormatting(row, 2, {
     fill: colorFill(DARKBLUE.r, DARKBLUE.g, DARKBLUE.b),
     padding: { left: 8, right: 8, top: 6, bottom: 6 },
@@ -623,24 +674,24 @@ function demoCells(): Uint8Array {
   });
   row += 2;
 
-  head(check(), "Kolonne C er sat smal (120 pt) og E bred (170 pt); rækken herunder er 40 pt høj.");
+  head(check(), "Column C is set narrow (120 pt) and E wide (170 pt); the row below is 40 pt tall.");
   table.setRowHeight(row, 40);
-  table.setCell(row, 2, "høj række");
+  table.setCell(row, 2, "tall row");
   row += 2;
 
-  head(check(), "Tabellen har fået skiftevis-farvede rækker (banded rows) — hver anden datarække let tonet.");
+  head(check(), "The table has been given alternating row colors (banded rows) — every other data row lightly tinted.");
   table.tableStyle()?.setTable({ bandedRows: true });
   row += 2;
 
-  head(check(), "Ombrydning: C herunder ombryder sin lange tekst inde i cellen; D klipper den.");
-  table.setCell(row, 2, "denne tekst er for lang til cellen og skal ombrydes over flere linjer");
+  head(check(), "Wrapping: C below wraps its long text inside the cell; D clips it.");
+  table.setCell(row, 2, "this text is too long for the cell and must wrap across several lines");
   table.setCellFormatting(row, 2, { textWrap: true });
-  table.setCell(row, 3, "denne tekst er også for lang, men må ikke ombrydes");
+  table.setCell(row, 3, "this text is also too long, but must not wrap");
   table.setCellFormatting(row, 3, { textWrap: false });
   row += 2;
 
-  head(check(), "Strukturen selv: denne tabel fik sine rækker indsat af biblioteket (24 i alt), og tabellen hedder »Demotabel« — navnet skal stå SYNLIGT over tabellen.");
-  table.name = "Demotabel";
+  head(check(), "The structure itself: this table had its rows inserted by the library (24 in total), and the table is named \"Demo Table\" — the name must be VISIBLE above the table.");
+  table.name = "Demo Table";
   table.nameVisible = true;
   row += 2;
 
@@ -655,14 +706,18 @@ function demoFormulas(): Uint8Array {
   const check = counter("F");
 
   if (data.columnCount < 5) data.insertColumns(data.columnCount, 5 - data.columnCount);
-  if (data.rowCount < 14) data.insertRows(data.rowCount, 14 - data.rowCount);
-  data.setColumnWidth(0, 60);
-  data.setColumnWidth(1, 320);
+  if (data.rowCount < 22) data.insertRows(data.rowCount, 22 - data.rowCount);
+  data.setColumnWidth(0, 44);
+  data.setColumnWidth(1, 250);
+  data.setColumnWidth(2, 75);
+  data.setColumnWidth(3, 75);
+  data.setColumnWidth(4, 100);
 
   let row = 0;
-  data.setCell(row, 0, "DEMO 6 · Formler — alle formler er skrevet som AST af biblioteket; Numbers regner selv ved åbning. Viser en celle fejl eller ingenting, er dét fundet. Feedback i kolonne E.");
-  data.setCellFormatting(row, 0, { textWrap: true });
-  data.setCell(row, 4, "Feedback");
+  data.setCell(row, 0, "DEMO 6");
+  data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Notes in column E.");
+  data.setCellFormatting(row, 1, { textWrap: true });
+  data.setCell(row, 4, "Notes");
   row += 2;
 
   const head = (id: string, text: string): void => {
@@ -672,7 +727,7 @@ function demoFormulas(): Uint8Array {
     row++;
   };
 
-  head(check(), "Grunddata: C=7, D=3. Rækken under: C skal vise 10 (=SUM), D skal vise 21 (=produkt af 7 og 3).");
+  head(check(), "Base data: C=7, D=3. The row below: C must show 10 (sum), D must show 21 (product).");
   data.setCell(row - 1, 2, 7);
   data.setCell(row - 1, 3, 3);
   const base = row - 1;
@@ -680,7 +735,7 @@ function demoFormulas(): Uint8Array {
   data.setFormula(row, 3, `=C${base + 1}*D${base + 1}`);
   row += 2;
 
-  head(check(), "Talrække i C (2, 4, 6, 8) — D ud for hver: SUM=20, AVERAGE=5, MAX=8, ROUND(3,7)=4 — i den rækkefølge.");
+  head(check(), "Number series in C (2, 4, 6, 8) — D next to each: SUM=20, AVERAGE=5, MAX=8, ROUND(3.7)=4 — in that order.");
   const firstNum = row;
   for (const [i, v] of [2, 4, 6, 8].entries()) data.setCell(row + i, 2, v);
   data.setFormula(firstNum, 3, `=SUM(C${firstNum + 1}:C${firstNum + 4})`);
@@ -689,28 +744,58 @@ function demoFormulas(): Uint8Array {
   data.setFormula(firstNum + 3, 3, "=ROUND(3.7,0)");
   row += 5;
 
-  head(check(), "Krydstabel-referencer begge veje: cellen i C herunder henter 5 fra tabellen »Krydstjek« nederst på arket — skal vise 5. Krydstjeks øverste række henter omvendt 7 fra denne tabel, og dens SUM over HELE kolonne B skal vise 30 i kolonne C.");
+  head(check(), "Cross-references both ways: C below fetches 5 from the \"CrossCheck\" table at the bottom of the sheet. CrossCheck's top row conversely fetches 7 from here, and its SUM over the whole of column B must show 30.");
   const crossRow = row;
   row += 2;
+
+  // The comparative slots: the checker authors the same constructions
+  // with the app, right under ours, and the returned file carries
+  // Apple's formula bytes next to this library's for the same ask.
+  head(
+    check(),
+    `YOUR TURN — formula: type =SUM(C${row + 2}:C${row + 3}) yourself in the yellow D cell next to the numbers below (must show 9). Then the app's formula can be compared with the library's, field by field.`,
+  );
+  data.setCell(row, 2, 4);
+  data.setCell(row + 1, 2, 5);
+  data.setCellFormatting(row, 3, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
+  row += 3;
+
+  head(check(), "YOUR TURN — cross-reference: type =CrossCheck::B3 yourself in the yellow C cell below (must show 10).");
+  data.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
+  row += 2;
+  if (data.rowCount > row) data.deleteRows(row, data.rowCount - row);
 
   // A clean second table: the cross-table reference each way, and a
   // whole-column span. Column B holds only the three numbers the span
   // sums, and both formulas sit in column C — a formula inside the
   // column it spans would be a circular reference.
+  // A clone is a structure donor, nothing more: size, widths and
+  // formatting are all chosen here, or the donor's leak through and a
+  // reader opens a mostly-empty husk with someone else's styling.
   const sheet = doc.sheets()[0]!;
-  const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 620, withContent: false });
+  const second = doc.addTable(sheet.id, { name: "CrossCheck", x: 40, y: 700, withContent: false });
+  if (second.rowCount > 6) second.deleteRows(6, second.rowCount - 6);
   if (second.rowCount < 6) second.insertRows(second.rowCount, 6 - second.rowCount);
-  second.setColumnWidth(0, 260);
-  const dataName = data.name ?? "Tabel 1";
-  second.setCell(0, 0, "Hentet fra hovedtabellen (skal vise 7):");
+  if (second.columnCount > 3) second.deleteColumns(3, second.columnCount - 3);
+  second.setColumnWidth(0, 220);
+  second.setColumnWidth(1, 75);
+  second.setColumnWidth(2, 75);
+  const dataName = data.name ?? "Table 1";
+  second.setCell(0, 0, "Fetched from the main table (must show 7):");
+  second.setCellFormatting(0, 0, { textWrap: true });
   second.setFormula(0, 2, `=${dataName}::C${base + 1}`);
-  second.setCell(1, 0, "Egne tal i B: 5, 10 og 15");
+  second.setCell(1, 0, "Its own numbers in B: 5, 10 and 15");
+  second.setCellFormatting(1, 0, { textWrap: true });
   second.setCell(1, 1, 5);
   second.setCell(2, 1, 10);
   second.setCell(3, 1, 15);
-  second.setCell(4, 0, "SUM over HELE kolonne B (skal vise 30):");
+  // The clone inherits the donor's wrapped prose styles cell by cell;
+  // value cells must not keep them.
+  for (const r of [1, 2, 3]) second.setCellFormatting(r, 1, { textWrap: false });
+  second.setCell(4, 0, "SUM over the whole of column B (must show 30):");
+  second.setCellFormatting(4, 0, { textWrap: true });
   second.setFormula(4, 2, "=SUM(B)");
-  data.setFormula(crossRow, 2, "=Krydstjek::B2");
+  data.setFormula(crossRow, 2, "=CrossCheck::B2");
 
   return doc.save();
 }
@@ -722,15 +807,18 @@ function demoRules(): Uint8Array {
   const table = doc.tables()[0]!;
   const check = counter("R");
 
-  if (table.rowCount < 24) table.insertRows(table.rowCount, 24 - table.rowCount);
-  if (table.columnCount < 6) table.insertColumns(table.columnCount, 6 - table.columnCount);
-  table.setColumnWidth(0, 60);
-  table.setColumnWidth(1, 300);
+  if (table.rowCount < 32) table.insertRows(table.rowCount, 32 - table.rowCount);
+  if (table.columnCount < 4) table.insertColumns(table.columnCount, 4 - table.columnCount);
+  table.setColumnWidth(0, 44);
+  table.setColumnWidth(1, 270);
+  table.setColumnWidth(2, 80);
+  table.setColumnWidth(3, 120);
 
   let row = 0;
-  table.setCell(row, 0, "DEMO 7 · Betinget formatering og kontroller — svar med lokalmenuen i kolonne F ud for hvert punkt.");
-  table.setCellFormatting(row, 0, { textWrap: true });
-  table.setCell(row, 5, "Din vurdering");
+  table.setCell(row, 0, "DEMO 7");
+  table.setCell(row, 1, "Conditional formatting and controls — answer with the pop-up menu in column D next to each check, and feel free to write notes in free D cells.");
+  table.setCellFormatting(row, 1, { textWrap: true });
+  table.setCell(row, 3, "Your verdict");
   row += 2;
 
   const verdictRows: number[] = [];
@@ -742,19 +830,19 @@ function demoRules(): Uint8Array {
     row++;
   };
 
-  head(check(), "Betinget regel »> 5« med grøn fyldfarve på C-cellerne herunder: 3 (umarkeret), 7 (grøn), 9 (grøn).");
+  head(check(), "Conditional rule \"> 5\" with green fill on the C cells below: 3 (unmarked), 7 (green), 9 (green).");
   for (const [i, v] of [3, 7, 9].entries()) table.setCell(row + i, 2, v);
   table.setConditionalRules(row, 2, [{ operator: ">", value: 5, cell: { fill: colorFill(SOFTGREEN.r, SOFTGREEN.g, SOFTGREEN.b) } }], { rowCount: 3 });
   row += 4;
 
-  head(check(), "Regel »= 4« gul og »<> 4« blå i C: 4 (gul), 5 (blå).");
+  head(check(), "Rule \"= 4\" yellow and \"<> 4\" blue in C: 4 (yellow), 5 (blue).");
   table.setCell(row, 2, 4);
   table.setConditionalRules(row, 2, [{ operator: "=", value: 4, cell: { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) } }]);
   table.setCell(row + 1, 2, 5);
   table.setConditionalRules(row + 1, 2, [{ operator: "<>", value: 4, cell: { fill: colorFill(0.62, 0.76, 0.95) } }]);
   row += 3;
 
-  head(check(), "Samme regelsæt genbrugt på flere celler: reglen fra første punkt (>5 grøn) er også lagt på de to C-celler herunder: 6 (grøn), 2 (umarkeret).");
+  head(check(), "The same rule set reused: the rule from the first check (>5 green) is also applied to the two C cells below: 6 (green), 2 (unmarked).");
   table.setCell(row, 2, 6);
   table.setCell(row + 1, 2, 2);
   const key = table.conditionalStyleKey(verdictRows[0]! + 1, 2);
@@ -764,7 +852,7 @@ function demoRules(): Uint8Array {
   }
   row += 3;
 
-  head(check(), "Kontroller i C-cellerne herunder: afkrydsningsfelt (markeret), stjernebedømmelse (4 af 5), skyder (60 af 0–100), trinvælger (25, trin 5).");
+  head(check(), "Controls in C below: checkbox (checked), star rating (4 of 5), slider (60 of 0–100), stepper (25, step 5).");
   table.setCell(row, 2, true);
   table.setCellControl(row, 2, { widget: "checkbox", value: true });
   table.setCell(row + 1, 2, 4);
@@ -775,18 +863,29 @@ function demoRules(): Uint8Array {
   table.setCellControl(row + 3, 2, { widget: "stepper", minimum: 0, maximum: 100, increment: 5, value: 25 });
   row += 5;
 
-  head(check(), "Farvefyldningerne fra punkterne ovenfor skal stå der ALLEREDE når dokumentet åbner, og tallene i C skal være højrestillede med det samme — uden at du rører nogen celle. Skal du først slette og genindtaste et tal for at få farve eller højrestilling, er motor-registreringen ikke tilstrækkelig; skriv hvilke celler det gjaldt.");
-  head(check(), "Lokalmenuerne i kolonne F (ud for hvert punkt-id) er selv skrevet af biblioteket — vælg »OK«, »Afvigelse« eller »Ved ikke« som din feedback.");
+  // The comparative slots: the same feature authored by the app, right
+  // under this library's, so the returned file carries both archives.
+  head(check(), "YOUR TURN — rule: apply the rule \"greater than 5 → green fill\" yourself to the three C cells below with Conditional Highlighting (Betinget fremhævning). Then the app's rule can be compared with the library's, field by field.");
+  for (const [i, v] of [3, 7, 9].entries()) table.setCell(row + i, 2, v);
+  row += 4;
+
+  head(check(), "YOUR TURN — pop-up menu: give the yellow C cell below a pop-up menu yourself with the items Red, Green and Blue, via Format → Cell → Pop-Up Menu (Formatér → Celle → Lokalmenu).");
+  table.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
+  row += 2;
+
+  head(check(), "The colors from the checks above must be there ALREADY when the document opens, and the numbers in C must be RIGHT-ALIGNED immediately — including 3, 2, 60 and 25 — without you touching any cell. Otherwise: write which cells were affected.");
+  head(check(), "The pop-up menus in column D were themselves written by the library — choose \"OK\", \"Deviation\" or \"Not sure\" next to each check.");
   row += 1;
 
   for (const r of verdictRows) {
-    table.setCell(r, 5, "— vælg —");
-    table.setCellControl(r, 5, {
+    table.setCell(r, 3, "— choose —");
+    table.setCellControl(r, 3, {
       widget: "popupMenu",
-      items: ["— vælg —", "OK", "Afvigelse", "Ved ikke"],
-      value: "— vælg —",
+      items: ["— choose —", "OK", "Deviation", "Not sure"],
+      value: "— choose —",
     });
   }
+  if (table.rowCount > row) table.deleteRows(row, table.rowCount - row);
   return doc.save();
 }
 
@@ -802,16 +901,19 @@ function demoStructure(): Uint8Array {
 
   // The read-me sheet, moved first. Its table comes with the cloned
   // sheet and is renamed, so the two tables never share a name.
-  const readme = doc.addSheet({ name: "LÆS MIG" });
-  const table = doc.tablesOnSheet(readme.id)[0] ?? doc.addTable(readme.id, { name: "Instruktioner" });
-  table.name = "Instruktioner";
+  const readme = doc.addSheet({ name: "READ ME" });
+  const table = doc.tablesOnSheet(readme.id)[0] ?? doc.addTable(readme.id, { name: "Instructions" });
+  table.name = "Instructions";
   table.clearAllCells();
   if (table.rowCount < 12) table.insertRows(table.rowCount, 12 - table.rowCount);
-  table.setColumnWidth(0, 60);
-  table.setColumnWidth(1, 480);
+  table.setColumnWidth(0, 44);
+  table.setColumnWidth(1, 300);
+  table.setColumnWidth(2, 120);
   let row = 0;
-  table.setCell(row, 0, "DEMO 8 · Ark, tabeller og filtre — dette er dit eget filter-dokument fra målingerne, redigeret af biblioteket. Feedback i kolonne C.");
-  table.setCellFormatting(row, 0, { textWrap: true });
+  table.setCell(row, 0, "DEMO 8");
+  table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Notes in column C.");
+  table.setCellFormatting(row, 1, { textWrap: true });
+  table.setCell(row, 2, "Notes");
   row += 2;
   const head = (id: string, text: string): void => {
     table.setCell(row, 0, id);
@@ -819,21 +921,29 @@ function demoStructure(): Uint8Array {
     table.setCellFormatting(row, 1, { textWrap: true });
     row++;
   };
-  head(check(), "Dokumentet skal ÅBNE på denne fane (»LÆS MIG«), som biblioteket har oprettet og flyttet først i arkrækkefølgen. Åbnede det på en anden fane, er den lagrede fanemarkering ikke ramt — skriv hvilken fane der åbnede.");
-  head(check(), "Arket med data er omdøbt til »Data (omdøbt)«, og dets tabel er omdøbt fra »Table 1« til »Måledata«. Denne tabel her hedder »Instruktioner«. Ser du stadig et gammelt navn, er omdøbningen ikke slået igennem.");
-  head(check(), "Datatabellens filter (B > 10 OG C indeholder »ko«) er SLÅET FRA af biblioteket — alle 10 datarækker skal derfor være synlige. Slår du filteret TIL igen, bør kun rækkerne koral, koks og kobolt vises.");
-  head(check(), "Kolonne A i »Måledata« er omskrevet af biblioteket. Står der stadig »SEED · filter rules« deroppe, er omskrivningen ikke slået igennem.");
+  head(check(), "The document must OPEN on this tab (\"READ ME\"), which the library created and moved first in the sheet order. If it opened on another tab, the stored tab selection did not take — write which tab opened.");
+  head(check(), "The sheet with the data has been renamed to \"Data (renamed)\", and its table renamed from \"Table 1\" to \"Measurements\". This table here is named \"Instructions\". If you still see an old name, the rename did not go through.");
+  head(check(), "The data table's filter (B > 10 AND C contains \"ko\") is TURNED OFF by the library — all 10 data rows must therefore be visible.");
+  head(check(), "Column A in \"Measurements\" has been rewritten by the library. If it still says \"SEED · filter rules\" up there, the rewrite did not go through.");
+  head(check(), "YOUR TURN — sheet: create a new sheet yourself with ⊕, rename it to \"Your sheet\", and LEAVE IT AS THE ACTIVE sheet when you save. Then the file shows how the app itself writes a sheet and remembers the selected tab.");
+  head(check(), "YOUR TURN — filter: turn the filter in \"Measurements\" back ON via Organize → Filter (Organisér → Filtrér) before you save — only the koral, koks and kobolt rows should be visible. Then the file shows the app's own enabled filter state.");
+  if (table.rowCount > row + 1) table.deleteRows(row + 1, table.rowCount - row - 1);
 
   const dataSheetIndex = doc.sheets().findIndex((s) => s.id !== readme.id);
-  doc.renameSheet(dataSheetIndex, "Data (omdøbt)");
+  doc.renameSheet(dataSheetIndex, "Data (renamed)");
   const dataTable = doc.tablesOnSheet(doc.sheets()[dataSheetIndex]!.id)[0]!;
-  dataTable.name = "Måledata";
+  dataTable.name = "Measurements";
+  // The seed-era instructions once needed a very wide A column; the
+  // rewritten notes do not, and the table has to read on a phone.
+  dataTable.setColumnWidth(0, 280);
+  dataTable.setColumnWidth(1, 70);
+  dataTable.setColumnWidth(2, 90);
   // The seed's send-back instructions are long gone; say what the column
   // means now instead of letting them sit stale next to the data.
-  dataTable.setCell(0, 0, "noter");
-  dataTable.setCell(1, 0, "B og C er dine egne værdier fra målingerne, urørt.");
-  dataTable.setCell(2, 0, "Filteret (B > 10 og C indeholder »ko«) er slået fra.");
-  dataTable.setCell(3, 0, "Med filteret til: kun koral-, koks- og kobolt-rækkerne.");
+  dataTable.setCell(0, 0, "notes");
+  dataTable.setCell(1, 0, "B and C are your own values from the measurements, untouched.");
+  dataTable.setCell(2, 0, "The filter (B > 10 and C contains \"ko\") is turned off.");
+  dataTable.setCell(3, 0, "With the filter on: only the koral, koks and kobolt rows.");
   for (let r = 4; r <= 8; r++) dataTable.setCell(r, 0, "");
   for (const r of [1, 2, 3]) dataTable.setCellFormatting(r, 0, { textWrap: true });
 
@@ -862,32 +972,32 @@ function demoSlides(): Uint8Array {
   const slides = doc.slides();
   const content: { title: string; body: string; notes: string }[] = [
     {
-      title: "DEMO 9 · Lysbilleder",
-      body: "Fem lysbilleder, alle bygget af biblioteket.\nInstruktionerne står i præsentationsnoterne — skriv din feedback dér.",
-      notes: `${ids[0]} · Dette dias' titel og brødtekst er sat af biblioteket, på et dias der er dyb-kopieret fra layoutet. FORVENTET: titel + to linjer brødtekst, husets typografi. Skriv feedback her i noterne.`,
+      title: "DEMO 9 · Slides",
+      body: "Five slides, all built by the library.\nThe instructions are in the presenter notes — write your feedback there.",
+      notes: `${ids[0]} · This slide's title and body text were set by the library, on a slide deep-copied from the layout. EXPECTED: a title + two lines of body text, in the theme's typography. Write feedback here in the notes.`,
     },
     {
-      title: "Dias 2 · kopieret indhold",
-      body: "Dette dias og det næste er ens i opbygning.",
-      notes: `${ids[1]} · Dias 3 er en DUBLET af dette dias, lavet med duplicateSlide — de to skal se ens ud (pånær titlerne, der er rettet bagefter). FORVENTET: ingen synlig forskel i layout.`,
+      title: "Slide 2 · copied content",
+      body: "This slide and the next are built identically.",
+      notes: `${ids[1]} · Slide 3 is a DUPLICATE of this slide, made with duplicateSlide — the two must look identical (apart from the titles, which were edited afterwards). EXPECTED: no visible difference in layout.`,
     },
     {
-      title: "Dias 3 · dubletten",
-      body: "Dette dias og det forrige er ens i opbygning.",
-      notes: `${ids[2]} · Denne dublet fik sin titel rettet efter kopieringen. FORVENTET: identisk med dias 2 bortset fra titlen.`,
+      title: "Slide 3 · the duplicate",
+      body: "This slide and the previous one are built identically.",
+      notes: `${ids[2]} · This duplicate had its title edited after the copy. EXPECTED: identical to slide 2 apart from the title.`,
     },
     {
-      title: "Dias 4 · overspringes",
-      body: "Dette dias er markeret som overspring (skip).",
-      notes: `${ids[3]} · Dias 4 er markeret overspring: i navigatoren skal det stå sammenklappet/overstreget, og det må IKKE vises, når du afspiller showet.`,
+      title: "Slide 4 · skipped",
+      body: "This slide is marked as skipped.",
+      notes: `${ids[3]} · Slide 4 is marked as skipped: in the navigator it must appear collapsed/struck through, and it must NOT be shown when you play the show.`,
     },
     {
-      title: "Dias 5 · flyttet hertil",
-      body: "Dette dias blev oprettet som nummer 2 og flyttet til sidst med moveSlide.",
-      notes: `${ids[4]} · Dette dias blev oprettet som nummer 2 og flyttet sidst af biblioteket. FORVENTET: præcis denne rækkefølge — Demo-forsiden først, dette dias sidst. Tak! Arkivér og send filen retur.`,
+      title: "Slide 5 · moved here",
+      body: "This slide was created as number 2 and moved last with moveSlide.",
+      notes: `${ids[4]} · This slide was created as number 2 and moved last by the library. EXPECTED: exactly this order — the demo title slide first, this slide last. Thanks! Save and return the file.`,
     },
   ];
-  // Authoring order: [forside, dias5(!), dias2, dias3=dublet af dias2, dias4].
+  // Authoring order: [title slide, slide5(!), slide2, slide3=duplicate of slide2, slide4].
   const order = [0, 4, 1, 2, 3];
   for (const [at, slide] of slides.entries()) {
     const c = content[order[at]!]!;
@@ -914,16 +1024,16 @@ function demoBuilds(): Uint8Array {
   const build = slides[0]!.builds()[0]!;
   build.set({ duration: 3, delay: 1 });
   slides[0]!.notes =
-    `${check()} · Dette er dit eget animations-dokument fra målingerne. Biblioteket har RETIMET dette dias' Opløs-animation: varighed 3 s, forsinkelse 1 s (før: 1 s / 0 s). FORVENTET: Animer-panelet viser de nye tal, og afspilningen føles langsommere.`;
+    `${check()} · This is your own animation document from the measurements. The library has RETIMED this slide's Dissolve (Opløs) build: duration 3 s, delay 1 s (before: 1 s / 0 s). EXPECTED: the Animate panel shows the new numbers, and playback feels slower.`;
 
   const second = slides[1]!;
   const removed = second.builds()[0];
   if (removed) second.removeBuild(removed.id);
   second.notes =
-    `${check()} · Biblioteket har FJERNET dette dias' Flyt ind-animation. FORVENTET: teksten står der stadig, men Animer-panelet viser ingen effekt, og den kommer uden animation når du afspiller.`;
+    `${check()} · The library has REMOVED this slide's Move In (Flyt ind) build. EXPECTED: the text is still there, but the Animate panel shows no effect, and it appears without animation when you play.`;
 
   slides[2]!.notes =
-    `${check()} · Dette dias er urørt (Ambolt, pr. afsnit, to trin). FORVENTET: alt som da du byggede det. Tak! Arkivér og send filen retur.`;
+    `${check()} · This slide is untouched (Anvil (Ambolt), by paragraph, two steps). EXPECTED: everything as you built it. Thanks! Save and return the file.`;
   return doc.save();
 }
 
@@ -960,10 +1070,10 @@ const demos: Demo[] = [
       const d = PagesDocument.load(bytes);
       assertNoFeedbackBleed(d);
       if (!d.bodyText.includes("T-15")) throw new Error("tekst: checks missing");
-      const offIndex = d.paragraphs().findIndex((p) => p.text.startsWith("Streg over og under, med eksplicit"));
+      const offIndex = d.paragraphs().findIndex((p) => p.text.startsWith("A rule above and below, with an explicit"));
       const offStyle = d.body.sheet()!.style(d.paragraph(offIndex).styleId!)!;
-      if (offStyle.resolved().paragraph.ruleOffset !== 12) throw new Error("tekst: rammeafstand missing");
-      if (d.paragraphStyles().every((s) => s.name !== "Demo Fremhævet")) throw new Error("tekst: created style missing");
+      if (offStyle.resolved().paragraph.ruleOffset !== 12) throw new Error("tekst: ruleOffset missing");
+      if (d.paragraphStyles().every((s) => s.name !== "Demo Emphasis")) throw new Error("tekst: created style missing");
       const rtl = d.paragraphs().findIndex((p) => /[֐-׿]/.test(p.text));
       if (d.body.paragraphDirection(rtl) !== "rtl") throw new Error("tekst: rtl missing");
       const rtlCount = d.paragraphs().filter((_, i) => d.body.paragraphDirection(i) === "rtl").length;
@@ -1005,7 +1115,7 @@ const demos: Demo[] = [
       assertNoFeedbackBleed(d);
       const chart = d.charts()[0];
       if (!chart) throw new Error("diagram: chart missing");
-      if (chart.rowNames()[0] !== "Serie 2025") throw new Error("diagram: data edit missing");
+      if (chart.rowNames()[0] !== "Series 2025") throw new Error("diagram: data edit missing");
       if (!d.bodyText.includes("D-01")) throw new Error("diagram: checks missing");
     },
   },
@@ -1024,6 +1134,7 @@ const demos: Demo[] = [
     bytes: demoFormulas(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertPhoneLayout(d, "formler");
       const formulas = d.tables().flatMap((t) => t.formulas().map((f) => ({ table: t, ...f })));
       if (formulas.length < 8) throw new Error(`formler: expected 8+, got ${formulas.length}`);
       const cross = formulas.filter((f) => f.formula.includes("::"));
@@ -1037,11 +1148,11 @@ const demos: Demo[] = [
         }
       }
       // The second table is built clean, not as a content copy.
-      const krydstjek = d.tables().find((t) => t.name === "Krydstjek");
-      if (!krydstjek) throw new Error("formler: Krydstjek missing");
-      for (const cell of krydstjek.cells()) {
-        if (krydstjek.cellText(cell.row, cell.column).includes("F-0")) {
-          throw new Error("formler: Krydstjek carries copied check texts");
+      const crossCheck = d.tables().find((t) => t.name === "CrossCheck");
+      if (!crossCheck) throw new Error("formler: CrossCheck missing");
+      for (const cell of crossCheck.cells()) {
+        if (crossCheck.cellText(cell.row, cell.column).includes("F-0")) {
+          throw new Error("formler: CrossCheck carries copied check texts");
         }
       }
     },
@@ -1051,6 +1162,7 @@ const demos: Demo[] = [
     bytes: demoRules(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertPhoneLayout(d, "regler");
       const t = d.tables()[0]!;
       if (t.conditionalStyleSets().size < 3) throw new Error("regler: conditional sets missing");
       if (t.controls().size < 4) throw new Error("regler: controls missing");
@@ -1086,7 +1198,8 @@ const demos: Demo[] = [
     bytes: demoStructure(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
-      if (d.sheets()[0]!.name !== "LÆS MIG") throw new Error("struktur: readme sheet not first");
+      assertPhoneLayout(d, "struktur");
+      if (d.sheets()[0]!.name !== "READ ME") throw new Error("struktur: readme sheet not first");
       const anyEnabled = d
         .tables()
         .some((t) => (t.filterSets().rows?.rules().length ?? 0) > 0 && t.filterSets().rows!.enabled);
@@ -1095,10 +1208,10 @@ const demos: Demo[] = [
       if (new Set(names).size !== names.length) {
         throw new Error(`struktur: table names not distinct: ${names.join(", ")}`);
       }
-      if (!names.includes("Måledata") || !names.includes("Instruktioner")) {
+      if (!names.includes("Measurements") || !names.includes("Instructions")) {
         throw new Error(`struktur: expected renamed tables, got ${names.join(", ")}`);
       }
-      const data = d.tables().find((t) => t.name === "Måledata")!;
+      const data = d.tables().find((t) => t.name === "Measurements")!;
       for (let r = 0; r < data.rowCount; r++) {
         if (data.cellText(r, 0).includes("SEED")) throw new Error("struktur: stale seed text");
       }

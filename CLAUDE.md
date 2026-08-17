@@ -1,5 +1,64 @@
 # Working notes for Claude
 
+## The repository speaks English
+
+Everything checked in — code, docs, demo builders and the documents
+they generate — is English: this is an open-source project, and text
+only one language community can read walls the rest out. The demos
+began in Danish because the checker reviews on a Danish-UI Mac and
+phone; that was a locale courtesy, not a requirement, and it is over.
+Where an instruction names a menu the checker must find in a Danish
+UI, give the English path with the Danish label in parentheses once.
+The checker's own words stay verbatim in whatever language they
+arrive in — quotes in the ledger are evidence, and evidence is not
+translated away.
+
+## Verification documents are comparisons, not questionnaires
+
+The review loop began as "does this render?" and taught us more every
+time the checker *authored* something than when they only looked. Build
+that in: beside or below each feature this library writes, leave a
+clearly labelled empty slot — values pre-filled where that saves work —
+asking the checker to build the same thing with the app's own controls.
+The returned file then carries Apple's construction next to ours, and
+the diff answers questions no visual check can: not "did it draw" but
+"what does the app write that we do not". A rung that passes visually
+and returns an authored twin is still a measurement; a rung that only
+passes is a dead end the moment something subtler goes wrong.
+
+## A clone is a structure donor, nothing more
+
+Tables, sheets and slides are created by copying because a from-scratch
+build would omit state only the app knows about. That dependency cuts
+both ways: everything the donor carries arrives too, and nothing about
+it fits the clone by default. So cloning is followed by deliberate
+choice, every time — row and column count cut to what the new table
+uses, column widths set, formats and per-cell styling reset where the
+donor's leak through, contents cleared where they linger. The failure
+mode is not a broken file and no automated check sees it: a person
+opens a mostly-empty husk, someone else's column widths, wrap styles
+on number cells, or stale values, and reads carelessness. What is
+kept from a donor is a decision, never a default.
+
+## Documents get reviewed on a phone
+
+The checker works from an iPhone as often as a Mac, and Numbers
+documents especially must read on a phone screen without horizontal
+scrolling: keep a table's total width modest, put instructions in one
+wrapped column rather than many, and never assume a wide canvas.
+
+Layout rules that have already bitten:
+
+- **Headers are short.** A sentence in a 60 pt column grows the row to
+  absurd heights. Column headers get a word or two; sentences go in a
+  wide column built for them.
+- **Long text wraps; values do not.** Any cell holding prose gets
+  `textWrap: true` and its row left to fit itself. Number, date and
+  boolean cells never wrap — their column is made wide enough for the
+  content instead. A Pages table with long row notes shipped with
+  truncated cells because nothing set the wrap; that is the failure
+  this rule exists to prevent.
+
 ## Asking for manual verification
 
 Anything in this project that touches an iWork app for real has to be
