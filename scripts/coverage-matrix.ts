@@ -1090,8 +1090,9 @@ export const CAPABILITIES: Capability[] = [
     probe: (c) => safe(() => (c.numbers?.sheets().length ?? 0) > 0),
     note:
       "a duplicated sheet deep-copies its tables, so the two tabs edit different cells. Tab order " +
-      "does not decide where the document opens — Numbers keeps the selected sheet in its UI " +
-      "state's TN.SheetSelectionArchive references, which setActiveSheet re-points",
+      "does not decide where the document opens, and neither do the UI state's " +
+      "TN.SheetSelectionArchive references alone — a build with every selection re-pointed still " +
+      "opened elsewhere, so setActiveSheet is best-effort until the deciding state is found",
     manualProof: {
       claim: "Numbers opens a document whose sheets we added, duplicated, renamed or reordered.",
       why:
@@ -1107,8 +1108,9 @@ export const CAPABILITIES: Capability[] = [
         "both tabs named as written and the cloned table's cells intact. But the app opened on " +
         "the *other* tab: tab order does not pick the active sheet — the UI state's stored sheet " +
         "selections do, and the demo had left them pointing at the donor sheet. setActiveSheet " +
-        "re-points them; whether Numbers honours the re-pointed selection is the open rung of " +
-        "the next demo round.",
+        "re-points them; one later round opened on the re-pointed sheet and a still later round " +
+        "did not, so the re-pointed selections are necessary at most, not sufficient — the " +
+        "deciding state is an open question again.",
       risk: "high",
     },
   },

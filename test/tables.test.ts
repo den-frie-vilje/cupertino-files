@@ -1813,16 +1813,18 @@ describe("stored hidden states follow the filter", () => {
     return n;
   };
 
-  it("setEnabled(false) drops the stored row states the filter produced", () => {
+  it("setEnabled(false) flips the flag and leaves the state list alone", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.3-mac-filters.numbers"));
     const table = doc.tables()[0]!;
     expect(storedRowStates(table)).toBe(7);
     table.filterSets().rows!.setEnabled(false);
     table.filterSets().columns!.setEnabled(false);
-    expect(storedRowStates(table)).toBe(0);
     const reloaded = NumbersDocument.load(doc.save());
     const again = reloaded.tables()[0]!;
-    expect(storedRowStates(again)).toBe(0);
+    // The list is the machinery a later enable engages: the app keeps
+    // it across toggles and never rebuilds a missing one from the
+    // panel, so removing it would leave the filter permanently inert.
+    expect(storedRowStates(again)).toBe(7);
     expect(again.filterSets().rows!.enabled).toBe(false);
     expect(reloaded.audit().length).toBe(0);
   });
@@ -1836,11 +1838,12 @@ describe("stored hidden states follow the filter", () => {
     expect(storedRowStates(donor)).toBe(7);
   });
 
-  it("audit names the stale states the returned round-two file preserved", () => {
+  it("audit stays silent on stored states beside a disabled filter", () => {
+    // The pairing is the app's own working state — a filtered table
+    // whose set was switched off — and a check that flagged it once
+    // shipped and was withdrawn by measurement.
     const doc = NumbersDocument.load(fixture("olekristensen-v26.3-demo08-structure-round2.numbers"));
-    const stale = doc.audit().filter((f) => f.code === "table/hidden-states-stale");
-    expect(stale.length).toBe(1);
-    expect(stale[0]!.message.includes("Instructions")).toBe(true);
+    expect(doc.audit().filter((f) => f.code === "table/hidden-states-stale").length).toBe(0);
   });
 });
 
