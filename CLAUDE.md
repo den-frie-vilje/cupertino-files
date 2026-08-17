@@ -1,5 +1,37 @@
 # Working notes for Claude
 
+## Verification documents are comparisons, not questionnaires
+
+The review loop began as "does this render?" and taught us more every
+time the checker *authored* something than when they only looked. Build
+that in: beside or below each feature this library writes, leave a
+clearly labelled empty slot — values pre-filled where that saves work —
+asking the checker to build the same thing with the app's own controls.
+The returned file then carries Apple's construction next to ours, and
+the diff answers questions no visual check can: not "did it draw" but
+"what does the app write that we do not". A rung that passes visually
+and returns an authored twin is still a measurement; a rung that only
+passes is a dead end the moment something subtler goes wrong.
+
+## Documents get reviewed on a phone
+
+The checker works from an iPhone as often as a Mac, and Numbers
+documents especially must read on a phone screen without horizontal
+scrolling: keep a table's total width modest, put instructions in one
+wrapped column rather than many, and never assume a wide canvas.
+
+Layout rules that have already bitten:
+
+- **Headers are short.** A sentence in a 60 pt column grows the row to
+  absurd heights. Column headers get a word or two; sentences go in a
+  wide column built for them.
+- **Long text wraps; values do not.** Any cell holding prose gets
+  `textWrap: true` and its row left to fit itself. Number, date and
+  boolean cells never wrap — their column is made wide enough for the
+  content instead. A Pages table with long row notes shipped with
+  truncated cells because nothing set the wrap; that is the failure
+  this rule exists to prevent.
+
 ## Asking for manual verification
 
 Anything in this project that touches an iWork app for real has to be

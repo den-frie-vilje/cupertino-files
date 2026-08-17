@@ -53,6 +53,35 @@ function counter(prefix: string): () => string {
 }
 
 /**
+ * The layout law the checker's phone taught us: tables stay narrow
+ * enough to read on a phone, prose wraps in a column built for it, and
+ * value cells never wrap — their column is wide enough instead. Runs in
+ * every Numbers demo's self-check so a rung cannot regress it.
+ */
+function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): void {
+  for (const table of doc.tables()) {
+    let total = 0;
+    for (let c = 0; c < table.columnCount; c++) total += table.columnWidth(c);
+    if (total > maxWidth) {
+      throw new Error(`${name}: table ${table.name} is ${Math.round(total)} pt wide (max ${maxWidth})`);
+    }
+    for (let r = 0; r < table.rowCount; r++) {
+      for (let c = 0; c < table.columnCount; c++) {
+        const value = table.cellValue(r, c);
+        if (!value) continue;
+        const wrap = table.cellFormatting(r, c).textWrap === true;
+        if (value.type === "text" && value.value.length > 40 && !wrap) {
+          throw new Error(`${name}: ${table.name} r${r}c${c} holds long text without wrap`);
+        }
+        if ((value.type === "number" || value.type === "bool" || value.type === "date") && wrap) {
+          throw new Error(`${name}: ${table.name} r${r}c${c} is a ${value.type} cell with wrap on`);
+        }
+      }
+    }
+  }
+}
+
+/**
  * A Pages check: one paragraph "«id» · what to look at", demo content in
  * between is appended by the caller, and `feedback()` closes it with the
  * line the reader answers on.
@@ -580,8 +609,9 @@ function demoCells(): Uint8Array {
     table.setCellFormatting(row, 1, { textWrap: true });
     row++;
   };
-  table.setCell(row, 0, "DEMO 5 · Celler og formater — skriv feedback i kolonne E ud for hvert punkt (tomt = som forventet). Arkivér og send retur.");
-  table.setCellFormatting(row, 0, { textWrap: true });
+  table.setCell(row, 0, "DEMO 5");
+  table.setCell(row, 1, "Celler og formater — skriv feedback i kolonne E ud for hvert punkt (tomt = som forventet). Arkivér og send retur.");
+  table.setCellFormatting(row, 1, { textWrap: true });
   table.setCell(row, 4, "Feedback");
   row += 2;
 
@@ -655,14 +685,18 @@ function demoFormulas(): Uint8Array {
   const check = counter("F");
 
   if (data.columnCount < 5) data.insertColumns(data.columnCount, 5 - data.columnCount);
-  if (data.rowCount < 14) data.insertRows(data.rowCount, 14 - data.rowCount);
-  data.setColumnWidth(0, 60);
-  data.setColumnWidth(1, 320);
+  if (data.rowCount < 22) data.insertRows(data.rowCount, 22 - data.rowCount);
+  data.setColumnWidth(0, 44);
+  data.setColumnWidth(1, 250);
+  data.setColumnWidth(2, 75);
+  data.setColumnWidth(3, 75);
+  data.setColumnWidth(4, 100);
 
   let row = 0;
-  data.setCell(row, 0, "DEMO 6 · Formler — alle formler er skrevet som AST af biblioteket; Numbers regner selv ved åbning. Viser en celle fejl eller ingenting, er dét fundet. Feedback i kolonne E.");
-  data.setCellFormatting(row, 0, { textWrap: true });
-  data.setCell(row, 4, "Feedback");
+  data.setCell(row, 0, "DEMO 6");
+  data.setCell(row, 1, "Formler — alle er skrevet som AST af biblioteket; Numbers regner selv ved åbning. Viser en celle fejl eller ingenting, er dét fundet. Noter i kolonne E.");
+  data.setCellFormatting(row, 1, { textWrap: true });
+  data.setCell(row, 4, "Noter");
   row += 2;
 
   const head = (id: string, text: string): void => {
@@ -672,7 +706,7 @@ function demoFormulas(): Uint8Array {
     row++;
   };
 
-  head(check(), "Grunddata: C=7, D=3. Rækken under: C skal vise 10 (=SUM), D skal vise 21 (=produkt af 7 og 3).");
+  head(check(), "Grunddata: C=7, D=3. Rækken under: C skal vise 10 (sum), D skal vise 21 (produkt).");
   data.setCell(row - 1, 2, 7);
   data.setCell(row - 1, 3, 3);
   const base = row - 1;
@@ -689,8 +723,24 @@ function demoFormulas(): Uint8Array {
   data.setFormula(firstNum + 3, 3, "=ROUND(3.7,0)");
   row += 5;
 
-  head(check(), "Krydstabel-referencer begge veje: cellen i C herunder henter 5 fra tabellen »Krydstjek« nederst på arket — skal vise 5. Krydstjeks øverste række henter omvendt 7 fra denne tabel, og dens SUM over HELE kolonne B skal vise 30 i kolonne C.");
+  head(check(), "Krydsreferencer begge veje: C herunder henter 5 fra tabellen »Krydstjek« nederst på arket. Krydstjeks øverste række henter omvendt 7 herfra, og dens SUM over hele kolonne B skal vise 30.");
   const crossRow = row;
+  row += 2;
+
+  // The comparative slots: the checker authors the same constructions
+  // with the app, right under ours, and the returned file carries
+  // Apple's formula bytes next to this library's for the same ask.
+  head(
+    check(),
+    `DIN TUR — formel: skriv selv =SUM(C${row + 2}:C${row + 3}) i den gule D-celle ud for tallene herunder (skal vise 9). Så kan appens formel sammenlignes med bibliotekets, felt for felt.`,
+  );
+  data.setCell(row, 2, 4);
+  data.setCell(row + 1, 2, 5);
+  data.setCellFormatting(row, 3, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
+  row += 3;
+
+  head(check(), "DIN TUR — krydsreference: skriv selv =Krydstjek::B3 i den gule C-celle herunder (skal vise 10).");
+  data.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 2;
 
   // A clean second table: the cross-table reference each way, and a
@@ -698,17 +748,25 @@ function demoFormulas(): Uint8Array {
   // sums, and both formulas sit in column C — a formula inside the
   // column it spans would be a circular reference.
   const sheet = doc.sheets()[0]!;
-  const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 620, withContent: false });
+  const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 700, withContent: false });
   if (second.rowCount < 6) second.insertRows(second.rowCount, 6 - second.rowCount);
-  second.setColumnWidth(0, 260);
+  second.setColumnWidth(0, 220);
+  second.setColumnWidth(1, 75);
+  second.setColumnWidth(2, 75);
   const dataName = data.name ?? "Tabel 1";
   second.setCell(0, 0, "Hentet fra hovedtabellen (skal vise 7):");
+  second.setCellFormatting(0, 0, { textWrap: true });
   second.setFormula(0, 2, `=${dataName}::C${base + 1}`);
   second.setCell(1, 0, "Egne tal i B: 5, 10 og 15");
+  second.setCellFormatting(1, 0, { textWrap: true });
   second.setCell(1, 1, 5);
   second.setCell(2, 1, 10);
   second.setCell(3, 1, 15);
-  second.setCell(4, 0, "SUM over HELE kolonne B (skal vise 30):");
+  // The clone inherits the donor's wrapped prose styles cell by cell;
+  // value cells must not keep them.
+  for (const r of [1, 2, 3]) second.setCellFormatting(r, 1, { textWrap: false });
+  second.setCell(4, 0, "SUM over hele kolonne B (skal vise 30):");
+  second.setCellFormatting(4, 0, { textWrap: true });
   second.setFormula(4, 2, "=SUM(B)");
   data.setFormula(crossRow, 2, "=Krydstjek::B2");
 
@@ -722,15 +780,18 @@ function demoRules(): Uint8Array {
   const table = doc.tables()[0]!;
   const check = counter("R");
 
-  if (table.rowCount < 24) table.insertRows(table.rowCount, 24 - table.rowCount);
-  if (table.columnCount < 6) table.insertColumns(table.columnCount, 6 - table.columnCount);
-  table.setColumnWidth(0, 60);
-  table.setColumnWidth(1, 300);
+  if (table.rowCount < 32) table.insertRows(table.rowCount, 32 - table.rowCount);
+  if (table.columnCount < 4) table.insertColumns(table.columnCount, 4 - table.columnCount);
+  table.setColumnWidth(0, 44);
+  table.setColumnWidth(1, 270);
+  table.setColumnWidth(2, 80);
+  table.setColumnWidth(3, 120);
 
   let row = 0;
-  table.setCell(row, 0, "DEMO 7 · Betinget formatering og kontroller — svar med lokalmenuen i kolonne F ud for hvert punkt.");
-  table.setCellFormatting(row, 0, { textWrap: true });
-  table.setCell(row, 5, "Din vurdering");
+  table.setCell(row, 0, "DEMO 7");
+  table.setCell(row, 1, "Betinget formatering og kontroller — svar med lokalmenuen i kolonne D ud for hvert punkt, og skriv gerne noter i frie D-celler.");
+  table.setCellFormatting(row, 1, { textWrap: true });
+  table.setCell(row, 3, "Din vurdering");
   row += 2;
 
   const verdictRows: number[] = [];
@@ -754,7 +815,7 @@ function demoRules(): Uint8Array {
   table.setConditionalRules(row + 1, 2, [{ operator: "<>", value: 4, cell: { fill: colorFill(0.62, 0.76, 0.95) } }]);
   row += 3;
 
-  head(check(), "Samme regelsæt genbrugt på flere celler: reglen fra første punkt (>5 grøn) er også lagt på de to C-celler herunder: 6 (grøn), 2 (umarkeret).");
+  head(check(), "Samme regelsæt genbrugt: reglen fra første punkt (>5 grøn) er også lagt på de to C-celler herunder: 6 (grøn), 2 (umarkeret).");
   table.setCell(row, 2, 6);
   table.setCell(row + 1, 2, 2);
   const key = table.conditionalStyleKey(verdictRows[0]! + 1, 2);
@@ -764,7 +825,7 @@ function demoRules(): Uint8Array {
   }
   row += 3;
 
-  head(check(), "Kontroller i C-cellerne herunder: afkrydsningsfelt (markeret), stjernebedømmelse (4 af 5), skyder (60 af 0–100), trinvælger (25, trin 5).");
+  head(check(), "Kontroller i C herunder: afkrydsningsfelt (markeret), stjerner (4 af 5), skyder (60 af 0–100), trinvælger (25, trin 5).");
   table.setCell(row, 2, true);
   table.setCellControl(row, 2, { widget: "checkbox", value: true });
   table.setCell(row + 1, 2, 4);
@@ -775,13 +836,23 @@ function demoRules(): Uint8Array {
   table.setCellControl(row + 3, 2, { widget: "stepper", minimum: 0, maximum: 100, increment: 5, value: 25 });
   row += 5;
 
-  head(check(), "Farvefyldningerne fra punkterne ovenfor skal stå der ALLEREDE når dokumentet åbner, og tallene i C skal være højrestillede med det samme — uden at du rører nogen celle. Skal du først slette og genindtaste et tal for at få farve eller højrestilling, er motor-registreringen ikke tilstrækkelig; skriv hvilke celler det gjaldt.");
-  head(check(), "Lokalmenuerne i kolonne F (ud for hvert punkt-id) er selv skrevet af biblioteket — vælg »OK«, »Afvigelse« eller »Ved ikke« som din feedback.");
+  // The comparative slots: the same feature authored by the app, right
+  // under this library's, so the returned file carries both archives.
+  head(check(), "DIN TUR — regel: læg selv reglen »større end 5 → grønt fyld« på de tre C-celler herunder med Betinget fremhævning. Så kan appens regel sammenlignes med bibliotekets, felt for felt.");
+  for (const [i, v] of [3, 7, 9].entries()) table.setCell(row + i, 2, v);
+  row += 4;
+
+  head(check(), "DIN TUR — lokalmenu: giv selv den gule C-celle herunder en lokalmenu med valgene Rød, Grøn og Blå (Formatér → Celle → Lokalmenu).");
+  table.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
+  row += 2;
+
+  head(check(), "Farverne fra punkterne ovenfor skal stå der ALLEREDE når dokumentet åbner, og tallene i C skal være HØJRESTILLEDE med det samme — også 3, 2, 60 og 25 — uden at du rører nogen celle. Ellers: skriv hvilke celler det gjaldt.");
+  head(check(), "Lokalmenuerne i kolonne D er selv skrevet af biblioteket — vælg »OK«, »Afvigelse« eller »Ved ikke« ud for hvert punkt.");
   row += 1;
 
   for (const r of verdictRows) {
-    table.setCell(r, 5, "— vælg —");
-    table.setCellControl(r, 5, {
+    table.setCell(r, 3, "— vælg —");
+    table.setCellControl(r, 3, {
       widget: "popupMenu",
       items: ["— vælg —", "OK", "Afvigelse", "Ved ikke"],
       value: "— vælg —",
@@ -807,11 +878,14 @@ function demoStructure(): Uint8Array {
   table.name = "Instruktioner";
   table.clearAllCells();
   if (table.rowCount < 12) table.insertRows(table.rowCount, 12 - table.rowCount);
-  table.setColumnWidth(0, 60);
-  table.setColumnWidth(1, 480);
+  table.setColumnWidth(0, 44);
+  table.setColumnWidth(1, 300);
+  table.setColumnWidth(2, 120);
   let row = 0;
-  table.setCell(row, 0, "DEMO 8 · Ark, tabeller og filtre — dette er dit eget filter-dokument fra målingerne, redigeret af biblioteket. Feedback i kolonne C.");
-  table.setCellFormatting(row, 0, { textWrap: true });
+  table.setCell(row, 0, "DEMO 8");
+  table.setCell(row, 1, "Ark, tabeller og filtre — dette er dit eget filter-dokument fra målingerne, redigeret af biblioteket. Noter i kolonne C.");
+  table.setCellFormatting(row, 1, { textWrap: true });
+  table.setCell(row, 2, "Noter");
   row += 2;
   const head = (id: string, text: string): void => {
     table.setCell(row, 0, id);
@@ -821,13 +895,20 @@ function demoStructure(): Uint8Array {
   };
   head(check(), "Dokumentet skal ÅBNE på denne fane (»LÆS MIG«), som biblioteket har oprettet og flyttet først i arkrækkefølgen. Åbnede det på en anden fane, er den lagrede fanemarkering ikke ramt — skriv hvilken fane der åbnede.");
   head(check(), "Arket med data er omdøbt til »Data (omdøbt)«, og dets tabel er omdøbt fra »Table 1« til »Måledata«. Denne tabel her hedder »Instruktioner«. Ser du stadig et gammelt navn, er omdøbningen ikke slået igennem.");
-  head(check(), "Datatabellens filter (B > 10 OG C indeholder »ko«) er SLÅET FRA af biblioteket — alle 10 datarækker skal derfor være synlige. Slår du filteret TIL igen, bør kun rækkerne koral, koks og kobolt vises.");
+  head(check(), "Datatabellens filter (B > 10 OG C indeholder »ko«) er SLÅET FRA af biblioteket — alle 10 datarækker skal derfor være synlige.");
   head(check(), "Kolonne A i »Måledata« er omskrevet af biblioteket. Står der stadig »SEED · filter rules« deroppe, er omskrivningen ikke slået igennem.");
+  head(check(), "DIN TUR — ark: opret selv et nyt ark med ⊕, omdøb det til »Dit ark«, og LAD DET VÆRE DET AKTIVE ark når du gemmer. Så viser filen hvordan appen selv skriver et ark og husker den valgte fane.");
+  head(check(), "DIN TUR — filter: slå filteret i »Måledata« TIL igen (Organisér → Filtrér) før du gemmer — kun rækkerne koral, koks og kobolt bør vises. Så viser filen appens egen tændte filtertilstand.");
 
   const dataSheetIndex = doc.sheets().findIndex((s) => s.id !== readme.id);
   doc.renameSheet(dataSheetIndex, "Data (omdøbt)");
   const dataTable = doc.tablesOnSheet(doc.sheets()[dataSheetIndex]!.id)[0]!;
   dataTable.name = "Måledata";
+  // The seed-era instructions once needed a very wide A column; the
+  // rewritten notes do not, and the table has to read on a phone.
+  dataTable.setColumnWidth(0, 280);
+  dataTable.setColumnWidth(1, 70);
+  dataTable.setColumnWidth(2, 90);
   // The seed's send-back instructions are long gone; say what the column
   // means now instead of letting them sit stale next to the data.
   dataTable.setCell(0, 0, "noter");
@@ -1024,6 +1105,7 @@ const demos: Demo[] = [
     bytes: demoFormulas(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertPhoneLayout(d, "formler");
       const formulas = d.tables().flatMap((t) => t.formulas().map((f) => ({ table: t, ...f })));
       if (formulas.length < 8) throw new Error(`formler: expected 8+, got ${formulas.length}`);
       const cross = formulas.filter((f) => f.formula.includes("::"));
@@ -1051,6 +1133,7 @@ const demos: Demo[] = [
     bytes: demoRules(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertPhoneLayout(d, "regler");
       const t = d.tables()[0]!;
       if (t.conditionalStyleSets().size < 3) throw new Error("regler: conditional sets missing");
       if (t.controls().size < 4) throw new Error("regler: controls missing");
@@ -1086,6 +1169,7 @@ const demos: Demo[] = [
     bytes: demoStructure(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertPhoneLayout(d, "struktur");
       if (d.sheets()[0]!.name !== "LÆS MIG") throw new Error("struktur: readme sheet not first");
       const anyEnabled = d
         .tables()
