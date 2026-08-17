@@ -2095,14 +2095,12 @@ export class TableModel {
       m.setMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, bag);
     }
 
-    // The owner-side uuid-references index stays unwritten (its one
-    // outing coincided with the relocation misreading and it is not the
-    // gate). What the engine itself consults is its document-level
-    // uuid_reference_map — the one registration site that stayed
-    // unwritten through seven rounds while every app-typed cross-table
-    // formula appeared in it. Each cross-reference is indexed there
-    // under the target's base uid, as an owner-entry for this table's
-    // internal id carrying the referring cell.
+    // The owner-side uuid-references index (field 14) stays unwritten;
+    // what the engine consults is its document-level uuid_reference_map.
+    // Each cross-reference is indexed there under the target's base uid,
+    // as an owner-entry for the referring table's internal id carrying
+    // the referring cell — the shape the app writes for its own
+    // formulas, pinned against a returned file's bytes.
     if (crossCells.length > 0 && engine && engineMap) {
       for (const { uid } of crossCells) {
         let entry = engineMap.getMessages(1).find((e) => {

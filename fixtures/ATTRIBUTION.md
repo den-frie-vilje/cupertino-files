@@ -1075,6 +1075,20 @@ only annotation author string is `cupertino-files`.
   for every surviving formula: the cell-record, range, spanning and
   uuid-reference shapes the library now writes at setFormula.
 
+### olekristensen-v26.3-demo06-formulas-round8.numbers
+- 206,226 bytes, md5 `735a9ff9e475a4cc67b3806efc9fb0fe`
+- Saved by macOS Numbers (26.3) over the build whose engine carried the
+  populated `uuid_reference_map` — every stored registration site
+  written. The first comments-protocol return: three reviewer cell
+  comments name the verdicts in place. Carries the app's own
+  reference-map entry for the reviewer's surviving `=CrossCheck::B4`
+  (target uid → referring owner internal + cells — the same shape this
+  library writes, confirming the map semantics), the app's fresh
+  re-registrations of both formula-touched tables as full owner
+  families beside the library's aliased uids, the library's reverse
+  cross-reference rewritten to a self-reference, and its outbound
+  cross-references flattened to cached values.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.
