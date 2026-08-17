@@ -402,8 +402,15 @@ t.grid();         // dense (CellValue | null)[][]
 t.merges();       // [{ row, column, rowCount, columnCount }] anchored top-left
 t.mergeAt(0, 1);  // the merge covering a cell, if any
 t.isCovered(0, 1);// true when a merge anchored elsewhere swallows this cell
+t.cellComments(); // the app's cell comments: [{ row, column, text, authorName, created, replies }]
+t.cellComment(87, 3); // one cell's comment, or undefined
 cellValueToString(cell.value);
 ```
+
+Cell comments are read-only: the library reads and preserves them, only
+the app writes them. On a returned review file, dump `cellComments()`
+alongside `cells()` before anything else — reviewers answer as comments
+on the cells themselves.
 
 `CellValue` is a discriminated union on `.type`: `empty | number | text |
 richText | date | bool | duration | error`, each with `isFormula` (formula

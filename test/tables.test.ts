@@ -1769,3 +1769,77 @@ describe("cell input normalisation", () => {
     expect(table.cellText(1, 0)).toBe(before);
   });
 });
+
+describe("cell comments", () => {
+  it("reads the app's comment whole: place, text, author, date", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const table = doc.tables().find((t) => t.name === "Table 1")!;
+    const comments = table.cellComments();
+    expect(comments.length).toBe(1);
+    const comment = comments[0]!;
+    expect(comment.row).toBe(87);
+    expect(comment.column).toBe(3);
+    expect(comment.text).toBe("Bug: numbers padding with zero not spaces");
+    expect(comment.authorName).toBe("Jon Connell");
+    expect(comment.created?.toISOString().slice(0, 10)).toBe("2022-11-15");
+    expect(comment.replies.length).toBe(0);
+    expect(table.cellComment(87, 3)?.text).toBe(comment.text);
+    expect(table.cellComment(0, 0)).toBe(undefined);
+  });
+
+  it("keeps a comment through unrelated edits and a save", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const table = doc.tables().find((t) => t.name === "Table 1")!;
+    table.setCell(0, 1, "edited elsewhere");
+    const reloaded = NumbersDocument.load(doc.save());
+    const again = reloaded.tables().find((t) => t.name === "Table 1")!;
+    expect(again.cellComment(87, 3)?.text).toBe("Bug: numbers padding with zero not spaces");
+  });
+
+  it("reads no comments from a table without a populated list", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const dates = doc.tables().find((t) => t.name === "Dates")!;
+    expect(dates.cellComments().length).toBe(0);
+  });
+});
+
+describe("stored hidden states follow the filter", () => {
+  const storedRowStates = (t: TableModel): number => {
+    const owner = t.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    let n = 0;
+    for (const states of owner?.getMessages(2) ?? []) {
+      n += states.getMessage(3)?.getMessages(2).length ?? 0;
+    }
+    return n;
+  };
+
+  it("setEnabled(false) drops the stored row states the filter produced", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-mac-filters.numbers"));
+    const table = doc.tables()[0]!;
+    expect(storedRowStates(table)).toBe(7);
+    table.filterSets().rows!.setEnabled(false);
+    table.filterSets().columns!.setEnabled(false);
+    expect(storedRowStates(table)).toBe(0);
+    const reloaded = NumbersDocument.load(doc.save());
+    const again = reloaded.tables()[0]!;
+    expect(storedRowStates(again)).toBe(0);
+    expect(again.filterSets().rows!.enabled).toBe(false);
+    expect(reloaded.audit().length).toBe(0);
+  });
+
+  it("a copied table starts with no stored states while the donor keeps its own", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-mac-filters.numbers"));
+    const donor = doc.tables()[0]!;
+    const sheet = doc.addSheet({ name: "Copy" });
+    const copy = doc.tablesOnSheet(sheet.id)[0]!;
+    expect(storedRowStates(copy)).toBe(0);
+    expect(storedRowStates(donor)).toBe(7);
+  });
+
+  it("audit names the stale states the returned round-two file preserved", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-demo08-structure-round2.numbers"));
+    const stale = doc.audit().filter((f) => f.code === "table/hidden-states-stale");
+    expect(stale.length).toBe(1);
+    expect(stale[0]!.message.includes("Instructions")).toBe(true);
+  });
+});

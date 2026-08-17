@@ -34,9 +34,21 @@ in commit messages and pull requests.
 - A table copied with `withContent: false` kept its source's
   conditional-formatting rules — visible in the inspector, never
   evaluated. A content-less copy now starts without them.
+- A document whose filter the library disabled could still open
+  filtered, and the app's filter toggle then died after one use. The
+  app's own shape is that a disabled filter stores no hidden row
+  states; the library left the states the filter had produced, and a
+  copied table inherited its donor's states naming the donor's rows.
+  `setEnabled(false)` now drops the stored states, a fresh copy starts
+  without any, and `audit()` reports the stale shape
+  (`table/hidden-states-stale`).
 
 ### Added
 
+- Cell comments can now be read: `table.cellComments()` lists every
+  comment the app has on a table's cells — position, text, author,
+  date and replies — and `table.cellComment(row, column)` reads one.
+  Comments are preserved on edit; writing one stays the app's job.
 - `NumbersDocument.setActiveSheet(index)` — choose the sheet the
   document opens on. Numbers keeps this in its stored selection state,
   not in tab order, so reordering sheets alone does not change it.

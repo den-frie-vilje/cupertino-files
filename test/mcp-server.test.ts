@@ -111,6 +111,7 @@ describe("the MCP server over stdio", () => {
         "format_cells",
         "format_text",
         "insert_link",
+        "list_comments",
         "list_formulas",
         "manage_sheets",
         "manage_slides",

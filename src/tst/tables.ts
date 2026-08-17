@@ -28,6 +28,7 @@ import { TableStyleHandle, TST_STYLE_TYPE , type TableFormatting } from "./style
 import { readStroke, writeStroke, type Stroke } from "../tsd/style.ts";
 import { applyParagraphProperties } from "../tss/stylesheet.ts";
 import { StyleArchive, TSWP_TYPE } from "../tswp/schema.ts";
+import { COMMENT_TYPE, CommentStorageFields, readCommentStorage } from "../tswp/comments.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { StyleSuper } from "../tss/schema.ts";
 import {
@@ -189,7 +190,7 @@ const STROKE_LAYER_TYPE = 6306;
 /** TST.HiddenStatesOwnerArchive / .HiddenStatesArchive / .HiddenStateExtentArchive. */
 const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
 const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
-const HiddenStateExtent = { FILTER_SET: 8 } as const;
+const HiddenStateExtent = { STATES: 2, FILTER_SET: 8 } as const;
 /** TST.DataStore. */
 export const DataStoreFields = protoFields("TST.DataStore", {
   ROW_HEADERS: "rowHeaders",
@@ -202,6 +203,7 @@ export const DataStoreFields = protoFields("TST.DataStore", {
   MERGE_REGION_MAP: "merge_region_map",
   RICH_TEXT_TABLE: "rich_text_table",
   CONDITIONAL_STYLE_TABLE: "conditionalstyletable",
+  COMMENT_STORAGE_TABLE: "commentStorageTable",
   FORMAT_TABLE: "format_table",
 });
 /** TST.TileStorage / .Tile / .TileRowInfo. */
@@ -350,6 +352,8 @@ const ListEntry = {
   FORMULA: 5,
   FORMAT: 6,
   RICH_TEXT_PAYLOAD: 9,
+  /** Comment entries reference their `TSD.CommentStorageArchive` here. */
+  COMMENT_REFERENCE: 10,
 } as const;
 /** TST.RichTextPayloadArchive: storage = 1. */
 const RichTextPayload = { STORAGE: 1 } as const;
@@ -461,6 +465,20 @@ export interface CellInfo {
   row: number;
   column: number;
   value: CellValue;
+}
+
+/** One comment thread's entry: what was said, by whom, when. */
+export interface CellCommentEntry {
+  text: string;
+  authorName: string | undefined;
+  created: Date | undefined;
+}
+
+/** An app-made comment on a cell, replies in stored order. */
+export interface CellComment extends CellCommentEntry {
+  row: number;
+  column: number;
+  replies: CellCommentEntry[];
 }
 
 /**
@@ -700,6 +718,86 @@ export class TableModel {
       const storage = this.store.resolve(refId(payload?.message, RichTextPayload.STORAGE));
       return storage?.message.getStrings(Storage.TEXT)[0];
     });
+  }
+
+  /**
+   * Comment storages by list key. A modern entry references its
+   * `TSD.CommentStorageArchive` directly; a
+   * `TST.CommentStorageWrapperArchive` is followed when one is
+   * interposed.
+   */
+  private commentStorages(): Map<number, IwaObject> {
+    const out = new Map<number, IwaObject>();
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.COMMENT_STORAGE_TABLE));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = e.getUint(ListEntry.KEY);
+      if (key === undefined) continue;
+      let target = this.store.resolve(
+        refId(e, ListEntry.COMMENT_REFERENCE) ?? refId(e, ListEntry.REFERENCE),
+      );
+      if (target && target.type !== COMMENT_TYPE.COMMENT_STORAGE) {
+        target = this.store.resolve(refId(target.message, 1));
+      }
+      if (target?.type === COMMENT_TYPE.COMMENT_STORAGE) out.set(key, target);
+    }
+    return out;
+  }
+
+  private readCellComment(row: number, column: number, storage: IwaObject): CellComment {
+    const info = readCommentStorage(this.store, storage);
+    const replies: CellCommentEntry[] = [];
+    for (const ref of storage.message.getMessages(CommentStorageFields.REPLIES)) {
+      const replyObject = this.store.resolve(ref.getVarint(1));
+      const reply = replyObject ? readCommentStorage(this.store, replyObject) : undefined;
+      if (reply) {
+        replies.push({ text: reply.text, authorName: reply.authorName, created: reply.created });
+      }
+    }
+    return {
+      row,
+      column,
+      text: info?.text ?? "",
+      authorName: info?.authorName,
+      created: info?.created,
+      replies,
+    };
+  }
+
+  /**
+   * Every comment on this table's cells, in row-major order.
+   *
+   * Comments are the app's own annotation channel and the review loop's
+   * reply channel: a returned file carries its findings here, so a
+   * reading that skips them reads a clean file where the verdict sits.
+   * The library reads and preserves them — writing one is the app's job.
+   *
+   * @agentTool list_comments
+   */
+  cellComments(): CellComment[] {
+    const storages = this.commentStorages();
+    if (storages.size === 0) return [];
+    const out: CellComment[] = [];
+    for (let row = 0; row < this.rowCount; row++) {
+      for (let column = 0; column < this.columnCount; column++) {
+        const key = this.recordAt(row, column)?.id(CellFlag.COMMENT_ID);
+        if (key === undefined) continue;
+        const storage = storages.get(key);
+        if (storage) out.push(this.readCellComment(row, column, storage));
+      }
+    }
+    return out;
+  }
+
+  /**
+   * The comment on one cell, if the app left one there.
+   *
+   * @agentTool list_comments
+   */
+  cellComment(row: number, column: number): CellComment | undefined {
+    const key = this.recordAt(row, column)?.id(CellFlag.COMMENT_ID);
+    if (key === undefined) return undefined;
+    const storage = this.commentStorages().get(key);
+    return storage ? this.readCellComment(row, column, storage) : undefined;
   }
 
   /**
@@ -981,6 +1079,32 @@ export class TableModel {
           `table "${name}" cell ${orphan.row},${orphan.column}: its ${orphan.kind} key ` +
           `${orphan.key} has no entry in the data list — the cell reloads empty`,
       });
+    }
+
+    // Stored hiding states while the filter is off contradict the app's
+    // own disabled shape (44 of 44 corpus tables store none), and the
+    // app displays the table filtered against its own flags.
+    const hiddenOwner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    for (const states of hiddenOwner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
+      for (const [axis, field] of [
+        ["column", HiddenStates.COLUMN_EXTENT],
+        ["row", HiddenStates.ROW_EXTENT],
+      ] as const) {
+        const extent = states.getMessage(field);
+        const stored = extent?.getMessages(HiddenStateExtent.STATES).length ?? 0;
+        if (stored === 0) continue;
+        const set = this.store.resolve(refId(extent, HiddenStateExtent.FILTER_SET));
+        const enabled = set ? new FilterSet(this.store, set).enabled : false;
+        if (!enabled) {
+          findings.push({
+            severity: "error",
+            code: "table/hidden-states-stale",
+            message:
+              `table "${name}" stores ${stored} hidden ${axis} state(s) while its filter ` +
+              `is off — the app displays the table filtered against its own flags`,
+          });
+        }
+      }
     }
 
     if (this.storageGeneration === "v5") {
@@ -3696,16 +3820,36 @@ export class TableModel {
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
     for (const states of owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
       const resolve = (field: number): FilterSet | undefined => {
-        const target = this.store.resolve(
-          refId(states.getMessage(field), HiddenStateExtent.FILTER_SET),
-        );
-        return target ? new FilterSet(this.store, target) : undefined;
+        const extent = states.getMessage(field);
+        const target = this.store.resolve(refId(extent, HiddenStateExtent.FILTER_SET));
+        return target ? new FilterSet(this.store, target, extent) : undefined;
       };
       const rows = resolve(HiddenStates.ROW_EXTENT);
       const columns = resolve(HiddenStates.COLUMN_EXTENT);
       if (rows || columns) return { rows, columns };
     }
     return { rows: undefined, columns: undefined };
+  }
+
+  /**
+   * Drop the table's stored hidden row/column states.
+   *
+   * An extent stores per-row `RowOrColumnState` entries only while its
+   * filter actively hides — 44 of 44 corpus tables with a disabled
+   * filter carry none. The counter-example was this library's own: a
+   * copied table inherited its donor's states, naming the donor's rows,
+   * and Numbers preserved the contradiction and broke the document's
+   * filter toggle on it. A table whose filter turns off — and a fresh
+   * copy above all — stores none; the app recomputes what a filter
+   * hides at open.
+   */
+  clearStoredHiddenStates(): void {
+    const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    for (const states of owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
+      for (const field of [HiddenStates.COLUMN_EXTENT, HiddenStates.ROW_EXTENT]) {
+        states.getMessage(field)?.remove(HiddenStateExtent.STATES);
+      }
+    }
   }
 
   /**
@@ -4675,6 +4819,10 @@ export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): vo
   }
   const model = tablesOf(store, [tableInfoId])[0];
   if (!model) return;
+  // A fresh identity has no hiding history: the donor's stored states
+  // name the donor's rows, and two tables declaring hidden state over
+  // the same rows broke the app's filter toggle on the whole document.
+  model.clearStoredHiddenStates();
   const newBase = remintFormulaOwnerIdentity(model.object, objects);
   if (newBase) {
     mintTableOwnerArchive(store, tableInfoId, newBase, {

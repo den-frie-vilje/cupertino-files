@@ -197,6 +197,8 @@ export type {
   CellInput,
   TaggedCellInput,
   CellInfo,
+  CellComment,
+  CellCommentEntry,
   MergeRange,
   TableBand,
   WriteOptions,

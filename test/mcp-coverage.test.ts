@@ -161,6 +161,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["TableModel.setRow", "set_cells expresses a row as cells with a shared row index"],
   ["TableModel.setCellFormatting", "format_cells wraps the range variant; a 1x1 block is the single-cell form"],
   ["TableModel.clearFormula", "writing a value over the cell (set_cells) is the app's own convert-to-value"],
+  ["TableModel.clearStoredHiddenStates", "hygiene the library applies itself — setEnabled(false) and table copies call it; an agent never needs to"],
   ["PagesDocument.insertText", "replace_text and append_paragraph cover agent-shaped text edits; raw offsets do not travel well over JSON"],
   ["PagesDocument.deleteRange", "same offset-addressing concern as insertText; replace_text with an empty replacement deletes"],
 
