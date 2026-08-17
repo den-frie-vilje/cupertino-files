@@ -40,7 +40,7 @@ import {
   StyleArchive,
   TSWP_TYPE,
 } from "../src/tswp/schema.ts";
-import { readParagraphProperties } from "../src/tss/stylesheet.ts";
+import { applyParagraphProperties, readParagraphProperties } from "../src/tss/stylesheet.ts";
 import { readCellFormatting, readTableFormatting } from "../src/tst/styles.ts";
 import { messageAt } from "../src/tsp/schema.ts";
 
@@ -152,6 +152,18 @@ describe("style value codecs", () => {
     expect(pattern.getFloat(2)).toBe(0); // phase
     expect(pattern.getUint(3)).toBe(0); // count
     expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("writes line spacing the way the app does: amount only", () => {
+    // Every multiple-spacing archive the corpus's apps wrote states just
+    // the amount, leaving the mode to its proto default; an explicit
+    // mode appears only on the rare exact-height spacings.
+    const bag = RawMessage.create();
+    applyParagraphProperties(bag, { lineSpacing: 1.5 });
+    const spacing = bag.getMessage(ParaProps.LINE_SPACING)!;
+    expect(spacing.getFloat(2)).toBe(1.5);
+    expect(spacing.getUint(1)).toBe(undefined);
+    expect(readParagraphProperties(bag).lineSpacing).toBe(1.5);
   });
 
   it("reads a corpus dashed border as its dash pattern, not the padding", () => {

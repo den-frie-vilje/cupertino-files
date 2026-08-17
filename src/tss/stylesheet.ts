@@ -751,8 +751,11 @@ export function applyParagraphProperties(m: RawMessage, f: ParagraphFormatting):
     if (value !== undefined) m.setFloat(field, value);
   }
   if (f.lineSpacing !== undefined) {
+    // Amount only: the app leaves the mode to its proto default for the
+    // inspector's "Lines" spacing — every multiple-spacing archive in
+    // the corpus states just the amount, and an explicit mode appears
+    // only on the rare exact-height spacings (mode 1).
     const ls = RawMessage.create();
-    ls.setVarint(LineSpacing.MODE, 0);
     ls.setFloat(LineSpacing.AMOUNT, f.lineSpacing);
     m.remove(ParaProps.LINE_SPACING_NULL);
     m.setMessage(ParaProps.LINE_SPACING, ls);

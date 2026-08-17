@@ -26,6 +26,9 @@ in commit messages and pull requests.
   shape — full opacity, simple mode, top-to-bottom — and `Gradient`
   gains optional `angle` (radians) and `advanced` fields, both read
   back from documents that state them.
+- `lineSpacing` wrote an explicit mode field the apps leave to its
+  default; a written spacing now states the amount alone, the shape
+  every app-written multiple-line spacing has.
 
 - Conditional rules written by `setConditionalRules` showed in Numbers'
   inspector but never drew their fills until each cell was manually
