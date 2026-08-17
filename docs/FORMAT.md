@@ -1393,6 +1393,18 @@ on the roadmap, because which rows a filter hides is stored separately,
 in `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
+#### Formula tracking ids and the TableInfo uid shorthand
+
+Two engine-adjacent details resolved from an app save over a library
+build: `TSCE.NamedReferenceManagerArchive` is a single reference to a
+document-level `TSCE.TrackedReferenceStoreArchive` whose entries pair a
+node type (36, the reference node) with a monotonically allocated id —
+the app allocates one per formula while recompiling a table it
+re-registers, so the store grows as a *consequence* of adoption. And
+`TST.TableInfoArchive` fields 7 and 8 carry the table's +8 and +4
+derived-owner uid *lows* as bare varints — a shorthand a uid rewriter
+must handle separately from the message-shaped uid fields.
+
 #### The header-word index: TST.HeaderNameMgrArchive
 
 A Numbers document keeps a document-level index of the words in header
