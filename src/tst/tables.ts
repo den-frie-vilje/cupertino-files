@@ -1813,7 +1813,8 @@ export class TableModel {
         1,
         spanningCols.getMessages(1).filter((r) => {
           const cell = r.getMessage(1);
-          return !(cell?.getUint(2) === column && cell?.getUint(3) === row);
+          if (!cell) return true;
+          return !(cell.getUint(2) === column && cell.getUint(3) === row);
         }),
       );
     }
