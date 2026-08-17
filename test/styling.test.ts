@@ -40,15 +40,18 @@ import {
   StyleArchive,
   TSWP_TYPE,
 } from "../src/tswp/schema.ts";
-import { readParagraphProperties } from "../src/tss/stylesheet.ts";
+import { applyParagraphProperties, readParagraphProperties } from "../src/tss/stylesheet.ts";
+import { readCellFormatting, readTableFormatting } from "../src/tst/styles.ts";
+import { messageAt } from "../src/tsp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
 
 describe("style value codecs", () => {
   it("round-trips colours including the display-P3 space", () => {
-    // 26.x documents tag essentially every colour with an explicit rgbspace.
-    // Dropping it on write would silently shift a P3 colour to sRGB.
+    // From iWork 19 on the apps name a space on every colour they write,
+    // so a space-less colour is stamped sRGB rather than left bare; an
+    // explicit space is kept as given.
     for (const color of [
       { r: 1, g: 0, b: 0 },
       { r: 0.2, g: 0.4, b: 0.6, a: 0.5 },
@@ -59,7 +62,7 @@ describe("style value codecs", () => {
       expect(back.r).toBeCloseTo(color.r, 5);
       expect(back.g).toBeCloseTo(color.g, 5);
       expect(back.b).toBeCloseTo(color.b, 5);
-      expect(back.space).toBe(color.space);
+      expect(back.space).toBe(color.space ?? "srgb");
     }
   });
 
@@ -91,6 +94,27 @@ describe("style value codecs", () => {
     expect(back.gradient.opacity).toBeCloseTo(0.8, 5);
   });
 
+  it("completes a gradient to the app's fresh shape", () => {
+    // The app's own gradients state opacity, the advanced flag and a
+    // direction on every fresh one; a written gradient gets the same
+    // shape — full opacity, simple mode, 3π/2 (top to bottom).
+    const fill = linearGradient({ r: 1, g: 1, b: 1 }, { r: 0, g: 0, b: 1 });
+    const back = readFill(RawMessage.parse(writeFill(fill).toBytes()))!;
+    if (back.kind !== "gradient") throw new Error("expected a gradient");
+    expect(back.gradient.opacity).toBe(1);
+    expect(back.gradient.advanced).toBe(false);
+    expect(back.gradient.angle).toBeCloseTo((3 * Math.PI) / 2, 5);
+
+    // A caller's own direction and mode are kept.
+    const steep = writeFill({
+      kind: "gradient",
+      gradient: { type: "linear", stops: fill.kind === "gradient" ? fill.gradient.stops : [], angle: Math.PI / 2 },
+    });
+    const steepBack = readFill(RawMessage.parse(steep.toBytes()))!;
+    if (steepBack.kind !== "gradient") throw new Error("expected a gradient");
+    expect(steepBack.gradient.angle).toBeCloseTo(Math.PI / 2, 5);
+  });
+
   it("round-trips dashed strokes as repeated floats, not varints", () => {
     // StrokePatternArchive.pattern is `repeated float`; encoding it as a
     // packed varint list would produce a stroke the apps cannot read.
@@ -103,6 +127,15 @@ describe("style value codecs", () => {
       const round = readStroke(RawMessage.parse(writeStroke({ pattern }).toBytes()))!;
       expect(round.pattern).toBe(pattern);
     }
+
+    // On the wire a dashed pattern has the app's whole shape: phase 0,
+    // the run count, and the float list padded to six.
+    const m = RawMessage.parse(writeStroke(dashed).toBytes());
+    const pattern = m.getMessage(6)!;
+    expect(pattern.getUint(1)).toBe(0); // TSDPattern
+    expect(pattern.getFloat(2)).toBe(0); // phase
+    expect(pattern.getUint(3)).toBe(4); // count
+    expect(pattern.getFloats(4)).toEqual([4, 2, 1, 2, 0, 0]);
   });
 
   it("writes the complete stroke the apps write, not just the type", () => {
@@ -119,6 +152,66 @@ describe("style value codecs", () => {
     expect(pattern.getFloat(2)).toBe(0); // phase
     expect(pattern.getUint(3)).toBe(0); // count
     expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("writes line spacing the way the app does: amount only", () => {
+    // Every multiple-spacing archive the corpus's apps wrote states just
+    // the amount, leaving the mode to its proto default; an explicit
+    // mode appears only on the rare exact-height spacings.
+    const bag = RawMessage.create();
+    applyParagraphProperties(bag, { lineSpacing: 1.5 });
+    const spacing = bag.getMessage(ParaProps.LINE_SPACING)!;
+    expect(spacing.getFloat(2)).toBe(1.5);
+    expect(spacing.getUint(1)).toBe(undefined);
+    expect(readParagraphProperties(bag).lineSpacing).toBe(1.5);
+  });
+
+  it("reads a corpus dashed border as its dash pattern, not the padding", () => {
+    // An app-written dashed table stroke stores count 2 with six floats
+    // [2,2,0,0,0,0]; only the counted prefix is the pattern.
+    const doc = PagesDocument.load(fixture("draftjs-v2.3-comments.pages"));
+    const style = doc.store.object(3308n)!;
+    const stroke = readTableFormatting(messageAt(style.message, 11)).bodyHorizontalStroke!;
+    expect(stroke.width).toBe(0.5);
+    expect(stroke.pattern).toEqual([2, 2]);
+  });
+
+  it("reads an empty reflection archive as the 0.5 the app renders", () => {
+    // The app's usual reflection is the empty archive — presence means
+    // on, opacity from the proto default. Styles with no archive still
+    // read as no reflection.
+    const doc = IWorkDocument.open(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    let empty = 0;
+    let absent = 0;
+    for (const handle of drawableStylesOf(doc.store)) {
+      if (handle.object.type !== 3015 && handle.object.type !== 3016) continue;
+      const field = handle.object.type === 3016 ? 4 : 5;
+      const archive = handle.object.message.getMessage(11)?.getMessage(field);
+      if (archive && archive.fields.length === 0) {
+        expect(handle.read().reflection).toBe(0.5);
+        empty++;
+      } else if (!archive) {
+        expect(handle.read().reflection).toBe(undefined);
+        absent++;
+      }
+    }
+    expect(empty).toBeGreaterThan(0);
+    expect(absent).toBeGreaterThan(0);
+  });
+
+  it("finds a space on every current-era cell-fill colour", () => {
+    // The measurement behind writeColor's sRGB stamping: colours the
+    // current-era app writes always name their space.
+    const doc = IWorkDocument.open(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    let fills = 0;
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== 6004) continue;
+      const fill = readCellFormatting(messageAt(obj.message, 11)).fill;
+      if (fill?.kind !== "color") continue;
+      expect(typeof fill.color.space).toBe("string");
+      fills++;
+    }
+    expect(fills).toBeGreaterThan(0);
   });
 
   it("round-trips shadows", () => {

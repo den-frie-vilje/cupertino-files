@@ -329,8 +329,8 @@ export class DrawableStyleHandle {
     if (opacity !== undefined) out.opacity = opacity;
     const shadow = readShadow(props.getMessage(fields.SHADOW));
     if (shadow) out.shadow = shadow;
-    const reflection = props.getMessage(fields.REFLECTION)?.getFloat(REFLECTION_OPACITY);
-    if (reflection !== undefined) out.reflection = reflection;
+    const reflection = props.getMessage(fields.REFLECTION);
+    if (reflection) out.reflection = reflection.getFloat(REFLECTION_OPACITY) ?? 0.5;
     return out;
   }
 
@@ -463,7 +463,12 @@ export class DrawableStyleHandle {
   }
 }
 
-/** TSD.ReflectionArchive holds only its opacity. */
+/**
+ * TSD.ReflectionArchive holds only its opacity, proto default 0.5. The
+ * archive's presence is what "reflection on" means, and the app's usual
+ * written state is the empty archive — 377 of the corpus's 495 — so an
+ * absent float reads as the default, not as no reflection.
+ */
 const REFLECTION_OPACITY = 1;
 const DRAWABLE_STYLE_OVERRIDE_COUNT = 10;
 

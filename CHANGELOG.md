@@ -9,6 +9,27 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- Colours written without an explicit `space` now carry sRGB, the way
+  the apps have written every colour since iWork 19; bare colours are a
+  2013/2016-era shape. An explicit `space` (P3 included) is unchanged.
+- A dashed border read from an app-written document reported six dash
+  lengths — the real ones plus the format's zero padding. The dash
+  count field is now honoured both ways: reading slices to the counted
+  dashes, and writing states phase, count and the padded float list the
+  apps write.
+- A reflection stored as an empty archive — the app's usual state, where
+  presence alone means "on at 50%" — read back as no reflection at all.
+  It now reads as opacity 0.5, the archive's documented default.
+- Gradients written by `setFill` and friends omitted the opacity,
+  advanced-mode flag and direction fields the apps state on every
+  gradient. A written gradient now carries the app's fresh-gradient
+  shape — full opacity, simple mode, top-to-bottom — and `Gradient`
+  gains optional `angle` (radians) and `advanced` fields, both read
+  back from documents that state them.
+- `lineSpacing` wrote an explicit mode field the apps leave to its
+  default; a written spacing now states the amount alone, the shape
+  every app-written multiple-line spacing has.
+
 - Conditional rules written by `setConditionalRules` showed in Numbers'
   inspector but never drew their fills until each cell was manually
   re-entered. Covered cells are now registered in the calc engine's
