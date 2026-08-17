@@ -1393,6 +1393,20 @@ on the roadmap, because which rows a filter hides is stored separately,
 in `TST.HiddenStateExtentArchive`, and computing it means evaluating the
 predicates.
 
+#### The header-word index: TST.HeaderNameMgrArchive
+
+A Numbers document keeps a document-level index of the words in header
+cells, resolved from returned app saves: `TST.HeaderNameMgrArchive`
+holds one entry per adopted table — the table's owner base UUID (1), a
+slot counter (2), and an anchor row/column UUID (5, a second one at 6
+for tables off the first sheet) — and its
+`TST.HeaderNameMgrTileArchive` maps each lowercased header word (1) to
+occurrence records (2) and location chains (3) that walk table UUID →
+header row/column UUID. The app rebuilds the index when it adopts
+tables at open; a table this library adds is not enrolled until then,
+which leaves name-based header references stale but does not affect
+UUID-addressed references.
+
 #### The paragraph-aligned run tables do not share a density rule
 
 `table_para_style` (5), `table_list_style` (7) and `table_layout_style` (12)
