@@ -1436,9 +1436,14 @@ describe("adding and removing tables", () => {
         kind === 1 ? "1,2,3,4,5,6,7,8,9,10,11,13,14,15,16" : "1,2,3,4,5,6,7,8,9,10,12,13,14,15,16";
       expect(`kind ${kind}: ${fields}`).toBe(`kind ${kind}: ${expected}`);
       const spanning = obj.message.getMessage(7)!.getMessage(2)!;
-      expect(
-        [1, 2, 3, 4].map((n) => spanning.getVarint(n)).join(","),
-      ).toBe("32767,2147483647,32767,2147483647");
+      const spanningShape = [1, 2, 3, 4].map((n) => spanning.getVarint(n)).join(",");
+      if (kind === 1) {
+        // The table's own owner states the real extent (the donor-sized
+        // clone at mint time); derived kinds state the no-extent sentinels.
+        expect(spanningShape.endsWith(",10")).toBe(true);
+      } else {
+        expect(spanningShape).toBe("32767,2147483647,32767,2147483647");
+      }
       if (kind === 1) {
         // The empty dependency tile beside the table's own owner.
         const tileRef = obj.message.getMessage(13)!.getMessage(1)!.getVarint(1)!;

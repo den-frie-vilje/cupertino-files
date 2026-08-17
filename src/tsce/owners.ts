@@ -571,10 +571,33 @@ export function ownerRegistrationState(
   return { archive: archiveId !== undefined, tracked, mapped };
 }
 
+/** The internal id the engine's map gives an owner uid, if any archive carries it. */
+export function ownerInternalId(store: ObjectStore, uid: OwnerUid): number | undefined {
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+    const u = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
+    if (u && u.lo === uid.lo && u.hi === uid.hi) {
+      return obj.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID);
+    }
+  }
+  return undefined;
+}
+
+/** The kind-1 owner archive carrying this uid, if present. */
+export function ownerArchiveByUid(store: ObjectStore, uid: OwnerUid): IwaObject | undefined {
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+    const u = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
+    if (u && u.lo === uid.lo && u.hi === uid.hi) return obj;
+  }
+  return undefined;
+}
+
 export function mintTableOwnerArchive(
   store: ObjectStore,
   tableInfoId: bigint,
   base: OwnerUid,
+  extent?: { rows: number; columns: number },
 ): void {
   const engine = store.findByType(CALCULATION_ENGINE);
   const component = engine ? store.componentOf(engine.identifier) : undefined;
@@ -661,6 +684,26 @@ export function mintTableOwnerArchive(
     m.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, internal);
     m.setVarint(FormulaOwnerFields.OWNER_KIND, kind);
     writeEmptyPayload(m);
+    // The table's own owner states the real extent where derived kinds
+    // state the no-extent sentinels — every accepted kind-1 specimen
+    // carries {0..columns-1, 0..rows-1} in both spanning slots.
+    if (kind === OwnerKind.TABLE && extent) {
+      for (const field of [
+        PayloadFields.SPANNING_COLUMN_DEPENDENCIES,
+        PayloadFields.SPANNING_ROW_DEPENDENCIES,
+      ]) {
+        const spanning = RawMessage.create();
+        for (const [slot, second] of [[2, 0], [3, 1]] as const) {
+          const range = RawMessage.create();
+          range.setVarint(1, 0);
+          range.setVarint(2, second);
+          range.setVarint(3, Math.max(0, extent.columns - 1));
+          range.setVarint(4, Math.max(0, extent.rows - 1));
+          spanning.setMessage(slot, range);
+        }
+        m.setMessage(field, spanning);
+      }
+    }
     if (kind === OwnerKind.TABLE) {
       const owner = RawMessage.create();
       owner.setVarint(1, tableInfoId);
