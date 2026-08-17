@@ -42,6 +42,7 @@ describe("formula owner registry", () => {
   it("resolves owners to tables, and only to tables", () => {
     let resolved = 0;
     let total = 0;
+    let dangling = 0;
     for (const name of fixtureNames) {
       const document = open(name);
       if (!document) continue;
@@ -56,8 +57,16 @@ describe("formula owner registry", () => {
       for (const owner of registry.all()) {
         total++;
         if (owner.ownerId === undefined) continue;
+        if (document.store.object(owner.ownerId) === undefined) {
+          // Pages keeps a table's whole owner family — mapped in the
+          // engine's owner registry, dangling `formula_owner` and all —
+          // after the table itself is deleted. The wrap-delta seed
+          // carries eleven such owners naming one absent object.
+          dangling++;
+          continue;
+        }
         resolved++;
-        // Every owner that names anything names a table.
+        // Every owner that names an object that exists names a table.
         expect(`${name}: owner ${owner.ownerId} is a table`).toBe(
           tableIds.has(owner.ownerId)
             ? `${name}: owner ${owner.ownerId} is a table`
@@ -67,6 +76,7 @@ describe("formula owner registry", () => {
     }
     expect(total).toBeGreaterThan(400);
     expect(resolved).toBeGreaterThan(400);
+    expect(dangling).toBe(11);
   });
 
   it("names every table that owns formulas", () => {

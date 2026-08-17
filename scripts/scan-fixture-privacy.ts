@@ -25,6 +25,8 @@ const FIXTURES = new URL("../fixtures/", import.meta.url);
 const REVIEWED: Readonly<Record<string, string>> = {
   "rougier-v13.1-image-filters-masks.pages":
     "institutional academic addresses printed on a published scholarly poster",
+  "olekristensen-v26.3-seed-picture-wrap-returned.pages":
+    "the studio's own published contact address, on its own letterhead template, contributed by its owner",
 };
 
 const EMAIL = /[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi;
