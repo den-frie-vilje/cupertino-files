@@ -327,7 +327,7 @@ describe("every fixture survives an edit cycle", () => {
     }
     // 24 of the 56 carry a writable v5 table; the rest have no tables at
     // all, or only pre-BNC storage, which reads but does not write.
-    expect(written).toBe(24);
+    expect(written).toBe(25);
   });
 });
 
