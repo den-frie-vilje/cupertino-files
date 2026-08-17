@@ -1371,6 +1371,33 @@ describe("adding and removing tables", () => {
     void copy;
   });
 
+  it("mints only identity — no empty bags whose archetypes have required fields", () => {
+    // The decoration the app writes beside a fresh registration nests
+    // messages with required fields (an empty RangeCoordinateArchive is
+    // malformed), and a round of demo documents shipped exactly that
+    // and opened as damaged. Omitting an optional field can never be.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    document.addTable(sheet.id, { name: "MinimalMint" });
+    const reloaded = NumbersDocument.load(document.save());
+    const registry = new FormulaOwnerRegistry(reloaded.store);
+    const entry = registry
+      .all()
+      .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "MinimalMint")!;
+    for (const { obj } of reloaded.store.allObjects()) {
+      if (obj.type !== 4008) continue;
+      const uidMessage = obj.message.getMessage(1);
+      const lo = uidMessage?.getVarint(1);
+      if (lo === undefined) continue;
+      const delta = (lo - entry.uid.lo) & 0xffffffffffffffffn;
+      if (delta >= 256n) continue; // another table's family
+      const fields = obj.message.fields.map((f) => f.no).sort((a, b) => a - b);
+      const kind = obj.message.getUint(3);
+      const expected = kind === 1 ? [1, 2, 3, 11] : [1, 2, 3, 12];
+      expect(`kind ${kind}: ${fields.join(",")}`).toBe(`kind ${kind}: ${expected.join(",")}`);
+    }
+  });
+
   it("drops the template's do-nothing text style from written values", () => {
     // Automatic alignment is the absence of the per-cell text style —
     // the app's own re-align write removes the id — and the template's
