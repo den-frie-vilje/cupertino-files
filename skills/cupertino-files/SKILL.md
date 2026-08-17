@@ -409,8 +409,8 @@ cellValueToString(cell.value);
 
 Cell comments are read-only: the library reads and preserves them, only
 the app writes them. On a returned review file, dump `cellComments()`
-alongside `cells()` before anything else — reviewers answer in comments
-as often as in a notes column.
+alongside `cells()` before anything else — reviewers answer as comments
+on the cells themselves.
 
 `CellValue` is a discriminated union on `.type`: `empty | number | text |
 richText | date | bool | duration | error`, each with `isFormula` (formula

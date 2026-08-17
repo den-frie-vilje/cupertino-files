@@ -624,14 +624,14 @@ function demoCells(): Uint8Array {
   const doc = NumbersDocument.blank();
   const table = doc.tables()[0]!;
   const check = counter("C");
-  if (table.columnCount < 5) table.insertColumns(table.columnCount, 5 - table.columnCount);
+  if (table.columnCount < 4) table.insertColumns(table.columnCount, 4 - table.columnCount);
+  if (table.columnCount > 4) table.deleteColumns(4, table.columnCount - 4);
   const need = 25;
   if (table.rowCount < need) table.insertRows(table.rowCount, need - table.rowCount);
   table.setColumnWidth(0, 60);
   table.setColumnWidth(1, 330);
   table.setColumnWidth(2, 120);
   table.setColumnWidth(3, 120);
-  table.setColumnWidth(4, 170);
 
   let row = 0;
   const head = (id: string, text: string): void => {
@@ -644,10 +644,9 @@ function demoCells(): Uint8Array {
   // one-word headers; the intro is an ordinary content row that scrolls.
   table.setCell(row, 0, "ID");
   table.setCell(row, 1, "Check");
-  table.setCell(row, 4, "Feedback");
   row++;
   table.setCell(row, 0, "DEMO 5");
-  table.setCell(row, 1, "Cells and formats — comment on the cell itself if something is off (column E works too; empty = as expected). Save and return.");
+  table.setCell(row, 1, "Cells and formats — if something is off, comment on the cell itself with the app's comment function (no comment = as expected). Save and return.");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
@@ -720,21 +719,20 @@ function demoFormulas(): Uint8Array {
   const data = doc.tables()[0]!;
   const check = counter("F");
 
-  if (data.columnCount < 5) data.insertColumns(data.columnCount, 5 - data.columnCount);
+  if (data.columnCount < 4) data.insertColumns(data.columnCount, 4 - data.columnCount);
+  if (data.columnCount > 4) data.deleteColumns(4, data.columnCount - 4);
   if (data.rowCount < 26) data.insertRows(data.rowCount, 26 - data.rowCount);
   data.setColumnWidth(0, 44);
   data.setColumnWidth(1, 250);
   data.setColumnWidth(2, 75);
   data.setColumnWidth(3, 75);
-  data.setColumnWidth(4, 100);
 
   let row = 0;
   data.setCell(row, 0, "ID");
   data.setCell(row, 1, "Check");
-  data.setCell(row, 4, "Notes");
   row++;
   data.setCell(row, 0, "DEMO 6");
-  data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Comment on the cell itself — column E works too.");
+  data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding — comment on the cell itself with the app's comment function.");
   data.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
@@ -854,29 +852,28 @@ function demoRules(): Uint8Array {
   const check = counter("R");
 
   if (table.rowCount < 33) table.insertRows(table.rowCount, 33 - table.rowCount);
-  if (table.columnCount < 4) table.insertColumns(table.columnCount, 4 - table.columnCount);
+  if (table.columnCount < 3) table.insertColumns(table.columnCount, 3 - table.columnCount);
+  if (table.columnCount > 3) table.deleteColumns(3, table.columnCount - 3);
   table.setColumnWidth(0, 44);
   table.setColumnWidth(1, 270);
   table.setColumnWidth(2, 80);
-  table.setColumnWidth(3, 120);
 
   let row = 0;
   table.setCell(row, 0, "ID");
   table.setCell(row, 1, "Check");
   table.setCell(row, 2, "Value");
-  table.setCell(row, 3, "Verdict");
   row++;
   table.setCell(row, 0, "DEMO 7");
-  table.setCell(row, 1, "Conditional formatting and controls — answer with the pop-up menu in column D next to each check; comment on a cell for anything longer.");
+  table.setCell(row, 1, "Conditional formatting and controls — give feedback with the app's comment function on the cell itself (no comment = as expected).");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
-  const verdictRows: number[] = [];
+  const checkRows: number[] = [];
   const head = (id: string, text: string): void => {
     table.setCell(row, 0, id);
     table.setCell(row, 1, text);
     table.setCellFormatting(row, 1, { textWrap: true });
-    verdictRows.push(row);
+    checkRows.push(row);
     row++;
   };
 
@@ -895,14 +892,14 @@ function demoRules(): Uint8Array {
   head(check(), "The same rule set reused: the rule from the first check (>5 green) is also applied to the two C cells below: 6 (green), 2 (unmarked).");
   table.setCell(row, 2, 6);
   table.setCell(row + 1, 2, 2);
-  const key = table.conditionalStyleKey(verdictRows[0]! + 1, 2);
+  const key = table.conditionalStyleKey(checkRows[0]! + 1, 2);
   if (key !== undefined) {
     table.setConditionalStyleKey(row, 2, key);
     table.setConditionalStyleKey(row + 1, 2, key);
   }
   row += 3;
 
-  head(check(), "Controls in C below: checkbox (checked), star rating (4 of 5), slider (60 of 0–100), stepper (25, step 5).");
+  head(check(), "Controls in C below: checkbox (checked), star rating (4 of 5), slider (60 of 0–100), stepper (25, step 5), pop-up menu (Green of Red/Green/Blue).");
   table.setCell(row, 2, true);
   table.setCellControl(row, 2, { widget: "checkbox", value: true });
   table.setCell(row + 1, 2, 4);
@@ -911,7 +908,9 @@ function demoRules(): Uint8Array {
   table.setCellControl(row + 2, 2, { widget: "slider", minimum: 0, maximum: 100, increment: 5, value: 60 });
   table.setCell(row + 3, 2, 25);
   table.setCellControl(row + 3, 2, { widget: "stepper", minimum: 0, maximum: 100, increment: 5, value: 25 });
-  row += 5;
+  table.setCell(row + 4, 2, "Green");
+  table.setCellControl(row + 4, 2, { widget: "popupMenu", items: ["Red", "Green", "Blue"], value: "Green" });
+  row += 6;
 
   // The comparative slots: the same feature authored by the app, right
   // under this library's, so the returned file carries both archives.
@@ -923,18 +922,9 @@ function demoRules(): Uint8Array {
   table.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 2;
 
-  head(check(), "The colors from the checks above must be there ALREADY when the document opens, and the numbers in C must be RIGHT-ALIGNED immediately — including 3, 2, 60 and 25 — without you touching any cell. Otherwise: write which cells were affected.");
-  head(check(), "The pop-up menus in column D were themselves written by the library — choose \"OK\", \"Deviation\" or \"Not sure\" next to each check.");
+  head(check(), "The colors from the checks above must be there ALREADY when the document opens, and the numbers in C must be RIGHT-ALIGNED immediately — including 3, 2, 60 and 25 — without you touching any cell. Otherwise: comment on the affected cells.");
   row += 1;
 
-  for (const r of verdictRows) {
-    table.setCell(r, 3, "— choose —");
-    table.setCellControl(r, 3, {
-      widget: "popupMenu",
-      items: ["— choose —", "OK", "Deviation", "Not sure"],
-      value: "— choose —",
-    });
-  }
   if (table.rowCount > row) table.deleteRows(row, table.rowCount - row);
   return doc.save();
 }
@@ -956,16 +946,15 @@ function demoStructure(): Uint8Array {
   table.name = "Instructions";
   table.clearAllCells();
   if (table.rowCount < 13) table.insertRows(table.rowCount, 13 - table.rowCount);
+  if (table.columnCount > 2) table.deleteColumns(2, table.columnCount - 2);
   table.setColumnWidth(0, 44);
   table.setColumnWidth(1, 300);
-  table.setColumnWidth(2, 120);
   let row = 0;
   table.setCell(row, 0, "ID");
   table.setCell(row, 1, "Check");
-  table.setCell(row, 2, "Notes");
   row++;
   table.setCell(row, 0, "DEMO 8");
-  table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Comment on the cell itself — column C works too.");
+  table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Give feedback with the app's comment function on the cell itself.");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
   const head = (id: string, text: string): void => {
@@ -993,7 +982,7 @@ function demoStructure(): Uint8Array {
   dataTable.setColumnWidth(2, 90);
   // The seed's send-back instructions are long gone; say what the column
   // means now instead of letting them sit stale next to the data.
-  dataTable.setCell(0, 0, "notes");
+  dataTable.setCell(0, 0, "about");
   dataTable.setCell(1, 0, "B and C are your own values from the measurements, untouched.");
   dataTable.setCell(2, 0, "The filter (B > 10 and C contains \"ko\") is turned off.");
   dataTable.setCell(3, 0, "With the filter on: only the koral, koks and kobolt rows.");

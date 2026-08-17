@@ -117,11 +117,13 @@ the machine cannot do. Make it as cheap as possible to act on:
   that was never there, and a graphic that failed to appear looks exactly
   like a blank page. Put the expected result *in* the document — a line
   that says what the line below should say — rather than in the message.
-- **Ask for comments on the cells themselves.** The checker's preferred
-  reply channel is the app's comment function, which works on the exact
-  cell in question and costs nothing on a phone. Instructions invite a
-  comment on whatever is off; a notes column may exist beside that, but
-  it is the fallback, not the ask.
+- **Feedback is the app's comment function, never a column.** The
+  checker replies as a comment on the exact cell (`cellComments()`
+  reads them back, replies included), and has declined typed-in
+  feedback columns explicitly — twice. Demo tables carry no notes,
+  feedback or verdict columns; they cost table width on a phone and
+  ask the checker to type where a comment is cheaper. Instructions
+  say: comment on the cell itself; no comment means as expected.
 
 ## What counts as verified
 
