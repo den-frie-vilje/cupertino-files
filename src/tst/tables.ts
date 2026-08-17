@@ -1933,7 +1933,14 @@ export class TableModel {
       m.setMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, bag);
     }
 
-    for (const { uid } of crossCells) {
+    // The uuid-references index is deliberately NOT written: in the one
+    // round that carried library-written entries — byte-shaped exactly
+    // like the app's own — the app relocated precisely the two formulas
+    // that had them one column right, leaving their cached values
+    // behind. Every other record survives and keeps the formulas alive;
+    // the app rebuilds this index itself on re-registration.
+    void crossCells;
+    for (const { uid } of [] as { uid: OwnerUid }[]) {
       const bag = m.getMessage(FormulaOwnerFields.UUID_REFERENCES) ?? RawMessage.create();
       let entry = bag.getMessages(1).find((e) => {
         const u = readOwnerUid(e.getMessage(1));
