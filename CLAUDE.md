@@ -1,5 +1,18 @@
 # Working notes for Claude
 
+## The repository speaks English
+
+Everything checked in — code, docs, demo builders and the documents
+they generate — is English: this is an open-source project, and text
+only one language community can read walls the rest out. The demos
+began in Danish because the checker reviews on a Danish-UI Mac and
+phone; that was a locale courtesy, not a requirement, and it is over.
+Where an instruction names a menu the checker must find in a Danish
+UI, give the English path with the Danish label in parentheses once.
+The checker's own words stay verbatim in whatever language they
+arrive in — quotes in the ledger are evidence, and evidence is not
+translated away.
+
 ## Verification documents are comparisons, not questionnaires
 
 The review loop began as "does this render?" and taught us more every
