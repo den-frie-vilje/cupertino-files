@@ -96,6 +96,11 @@ the machine cannot do. Make it as cheap as possible to act on:
 
 - **Attach the files again, every time.** Never say "the file from before"
   or "rungs 11 and 12" or "the three I sent". Regenerate and re-send.
+- **The files are the last thing sent before waiting.** Whenever a turn
+  ends in a state that depends on the checker acting, the files ride
+  that final message — after every measurement and deliberation, never
+  above them. The checker acts from the bottom of the conversation and
+  must never scroll back to find what to open.
 - **Write instructions that stand alone.** Someone reading only the latest
   message should know what to open, what to look at, and what a pass and a
   failure each look like. No pointing back up the conversation.
