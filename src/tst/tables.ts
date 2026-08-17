@@ -544,6 +544,13 @@ export interface WriteOptions {
    * a value is stored but never displayed.
    */
   allowCovered?: boolean;
+  /**
+   * Keep a bare inherited text style on a value write. The control path
+   * sets this: control cells carry their text style in every measured
+   * document, where a plain value cell's bare style pins the alignment
+   * the app calls automatic.
+   */
+  keepBareTextStyle?: boolean;
 }
 
 
@@ -1326,7 +1333,7 @@ export class TableModel {
     const previousStringId = record.id(CellFlag.STRING_ID);
     const previousFormulaId = record.id(CellFlag.FORMULA_ID);
 
-    this.applyValue(record, value);
+    this.applyValue(record, value, options.keepBareTextStyle === true);
 
     // A literal supersedes whatever formula produced the old value.
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
@@ -3234,7 +3241,9 @@ export class TableModel {
       }
     }
 
-    if (control.value !== undefined) this.setCell(row, column, control.value, options);
+    if (control.value !== undefined) {
+      this.setCell(row, column, control.value, { ...options, keepBareTextStyle: true });
+    }
     const key = this.internControl(spec);
     this.attachControl(row, column, key);
     this.ensureControlFormat(
@@ -3678,7 +3687,7 @@ export class TableModel {
   }
 
   /** Set the value-carrying fields of a record for a new value. */
-  private applyValue(record: CellRecord, value: TaggedCellInput): void {
+  private applyValue(record: CellRecord, value: TaggedCellInput, keepBareTextStyle = false): void {
     const previousType = record.type;
     record.removeAll(VALUE_FLAGS);
     switch (value.type) {
@@ -3710,6 +3719,32 @@ export class TableModel {
     // losing it, so drop them whenever the type actually changes.
     if (record.type !== previousType) record.removeAll(FORMAT_FLAGS);
     this.stampDefaultFormat(record);
+    // A value cell with a per-cell text style is one the app renders as
+    // an explicit alignment choice: "automatic" is the absence of the
+    // style, and the app's own fix for a left-pinned number — measured
+    // from the checker re-aligning three cells in the inspector — is to
+    // remove the id outright. Rows inserted by this library inherit the
+    // template's bare per-cell styles, so a fresh value write drops a
+    // style that says nothing; one carrying actual formatting is a
+    // caller's choice and stays.
+    if (!keepBareTextStyle && value.type !== "empty" && value.type !== "text") {
+      const key = record.id(CellFlag.TEXT_STYLE_ID);
+      if (key !== undefined && this.textStyleIsBare(key)) {
+        record.remove(CellFlag.TEXT_STYLE_ID);
+      }
+    }
+  }
+
+  /** True when a style-table key resolves to a style stating nothing. */
+  private textStyleIsBare(key: number): boolean {
+    const obj = this.store.resolve(this.styleTableEntry(key));
+    if (!obj) return false;
+    const character = obj.message.getMessage(10);
+    const paragraph = obj.message.getMessage(11);
+    return (
+      (character === undefined || character.fields.length === 0) &&
+      (paragraph === undefined || paragraph.fields.length === 0)
+    );
   }
 
   /**
