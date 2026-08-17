@@ -49,9 +49,12 @@ wrapped column rather than many, and never assume a wide canvas.
 
 Layout rules that have already bitten:
 
-- **Headers are short.** A sentence in a 60 pt column grows the row to
-  absurd heights. Column headers get a word or two; sentences go in a
-  wide column built for them.
+- **Headers are short.** The header band is *pinned* while scrolling,
+  on the phone too, so whatever sits in row 0 rides along on every
+  screen. It gets one-word labels only; the document's title and intro
+  go in the first content row, which scrolls away, or in a comment. A
+  sentence in a narrow header column once grew a permanent five-line
+  band across the whole review.
 - **Long text wraps; values do not.** Any cell holding prose gets
   `textWrap: true` and its row left to fit itself. Number, date and
   boolean cells never wrap — their column is made wide enough for the

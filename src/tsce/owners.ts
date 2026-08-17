@@ -40,7 +40,7 @@
 import { protoFields } from "../proto/fields.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import { refId } from "../tsp/schema.ts";
 
 /** TSCE.FormulaOwnerDependenciesArchive. */
@@ -53,6 +53,16 @@ export const FormulaOwnerFields = protoFields("TSCE.FormulaOwnerDependenciesArch
   FORMULA_OWNER: "formula_owner",
   BASE_OWNER_UID: "base_owner_uid",
   TILED_CELL_DEPENDENCIES: "tiled_cell_dependencies",
+  CELL_DEPENDENCIES: "cell_dependencies",
+  RANGE_DEPENDENCIES: "range_dependencies",
+  VOLATILE_DEPENDENCIES: "volatile_dependencies",
+  SPANNING_COLUMN_DEPENDENCIES: "spanning_column_dependencies",
+  SPANNING_ROW_DEPENDENCIES: "spanning_row_dependencies",
+  WHOLE_OWNER_DEPENDENCIES: "whole_owner_dependencies",
+  CELL_ERRORS: "cell_errors",
+  UUID_REFERENCES: "uuid_references",
+  TILED_RANGE_DEPENDENCIES: "tiled_range_dependencies",
+  SPILL_RANGE_SIZES: "spill_range_sizes",
 });
 
 /**
@@ -281,6 +291,17 @@ export class FormulaOwnerRegistry {
         existing.tableName = name;
         existing.ownerId ??= obj.identifier;
       } else if (!existing) {
+        // An archive-backed entry for this same table wins outright: a
+        // second TABLE identity under the haunted uid would make the
+        // table's name ambiguous to every cross-table compile.
+        let registered = false;
+        for (const entry of this.byUid.values()) {
+          if (entry.kind !== OwnerKind.TABLE || entry.ownerId === undefined) continue;
+          if (entry.ownerId === obj.identifier) { registered = true; break; }
+          const info = store.object(entry.ownerId);
+          if (info && refId(info.message, TABLE_INFO_MODEL) === obj.identifier) { registered = true; break; }
+        }
+        if (registered) continue;
         this.byUid.set(ownerKey(uid), {
           uid,
           kind: OwnerKind.TABLE,
@@ -370,6 +391,107 @@ function tableNameOf(store: ObjectStore, id: bigint): string | undefined {
   return model.message.getString(TABLE_MODEL_NAME);
 }
 
+/**
+ * Register a table with the calc engine: the kind-1
+ * `FormulaOwnerDependenciesArchive` that carries its identity.
+ *
+ * A cloned table without one is a table the engine has never heard of.
+ * Numbers re-registers such a table under a brand-new UUID on open and
+ * discards stray archives, so every cross-table reference compiled
+ * against the clone's written identity dangles — measured when a
+ * library-written `=CrossCheck::B2` opened as a ref error while the
+ * checker's own `=CrossCheck::B3`, typed in the app a minute later,
+ * resolved against the app's replacement identity.
+ *
+ * The shape mirrors the archive the app minted in that file, empties
+ * stated rather than absent, dependency sections empty — app-real for
+ * a table whose formulas the engine has not journalled, and the e2e
+ * recompute probe pins that the engine rebuilds those on open. The
+ * internal id is one past the file's maximum; the app's own allocator
+ * skipped further ahead than that in the measured file, but nothing
+ * ties behaviour to the gap and uniqueness is what the structure needs.
+ */
+export function mintTableOwnerArchive(
+  store: ObjectStore,
+  tableInfoId: bigint,
+  base: OwnerUid,
+): void {
+  let maxInternal = 0;
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+    const internal = obj.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0;
+    if (internal > maxInternal) maxInternal = internal;
+    const uid = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
+    if (uid && uid.lo === base.lo && uid.hi === base.hi) return; // already registered
+  }
+  const engine = [...store.allObjects()].find(
+    ({ obj }) => obj.type === FORMULA_OWNER_DEPENDENCIES,
+  )?.obj;
+  const component = engine ? store.componentOf(engine.identifier) : undefined;
+  if (!component) return;
+
+  const archive = store.createObject(FORMULA_OWNER_DEPENDENCIES, component);
+  const m = archive.message;
+  const uid = RawMessage.create();
+  uid.setVarint(1, base.lo);
+  uid.setVarint(2, base.hi);
+  m.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, uid);
+  m.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, maxInternal + 1);
+  m.setVarint(FormulaOwnerFields.OWNER_KIND, OwnerKind.TABLE);
+  for (const no of [FormulaOwnerFields.CELL_DEPENDENCIES, FormulaOwnerFields.RANGE_DEPENDENCIES, FormulaOwnerFields.CELL_ERRORS, FormulaOwnerFields.TILED_RANGE_DEPENDENCIES, FormulaOwnerFields.SPILL_RANGE_SIZES]) m.setMessage(no, RawMessage.create());
+  const volatile = RawMessage.create();
+  for (const no of [1, 2, 3, 4, 5, 7]) volatile.setMessage(no, RawMessage.create());
+  m.setMessage(FormulaOwnerFields.VOLATILE_DEPENDENCIES, volatile);
+  for (const no of [FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, FormulaOwnerFields.SPANNING_ROW_DEPENDENCIES]) m.setMessage(no, RawMessage.create());
+  const whole = RawMessage.create();
+  whole.setMessage(1, RawMessage.create());
+  m.setMessage(FormulaOwnerFields.WHOLE_OWNER_DEPENDENCIES, whole);
+  const owner = RawMessage.create();
+  owner.setVarint(1, tableInfoId);
+  m.setMessage(FormulaOwnerFields.FORMULA_OWNER, owner);
+  m.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, RawMessage.create());
+  const uuidRefs = RawMessage.create();
+  const self = RawMessage.create();
+  self.setVarint(1, base.lo);
+  self.setVarint(2, base.hi);
+  uuidRefs.setMessage(1, self);
+  m.setMessage(FormulaOwnerFields.UUID_REFERENCES, uuidRefs);
+  store.declareReference(archive, tableInfoId);
+
+  // The app registers the commonly derived owners beside the table's own
+  // — conditional styles, hidden rows, hidden columns — as bare entries
+  // carrying only identity, kind and base. Written here so a feature
+  // added to a clone later (a rule, a filter) finds its owner archive
+  // the way it does on a template table.
+  let nextInternal = maxInternal + 2;
+  for (const kind of [OwnerKind.CONDITIONAL_STYLE, OwnerKind.HIDDEN_STATE_ROWS, OwnerKind.HIDDEN_STATE_COLUMNS]) {
+    const derived = store.createObject(FORMULA_OWNER_DEPENDENCIES, component);
+    const dm = derived.message;
+    const duid = RawMessage.create();
+    duid.setVarint(1, (base.lo + BigInt(kind)) & 0xffffffffffffffffn);
+    duid.setVarint(2, base.hi);
+    dm.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, duid);
+    dm.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, nextInternal++);
+    dm.setVarint(FormulaOwnerFields.OWNER_KIND, kind);
+    for (const no of [FormulaOwnerFields.CELL_DEPENDENCIES, FormulaOwnerFields.RANGE_DEPENDENCIES, FormulaOwnerFields.CELL_ERRORS, FormulaOwnerFields.TILED_CELL_DEPENDENCIES, FormulaOwnerFields.UUID_REFERENCES, FormulaOwnerFields.TILED_RANGE_DEPENDENCIES, FormulaOwnerFields.SPILL_RANGE_SIZES]) dm.setMessage(no, RawMessage.create());
+    const dvol = RawMessage.create();
+    for (const no of [1, 2, 3, 4, 5, 7]) dvol.setMessage(no, RawMessage.create());
+    dm.setMessage(FormulaOwnerFields.VOLATILE_DEPENDENCIES, dvol);
+    for (const no of [FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, FormulaOwnerFields.SPANNING_ROW_DEPENDENCIES]) {
+      const span = RawMessage.create();
+      for (const g of [2, 3]) span.setMessage(g, RawMessage.create());
+      dm.setMessage(no, span);
+    }
+    const dwhole = RawMessage.create();
+    dwhole.setMessage(1, RawMessage.create());
+    dm.setMessage(FormulaOwnerFields.WHOLE_OWNER_DEPENDENCIES, dwhole);
+    const dbase = RawMessage.create();
+    dbase.setVarint(1, base.lo);
+    dbase.setVarint(2, base.hi);
+    dm.setMessage(FormulaOwnerFields.BASE_OWNER_UID, dbase);
+  }
+}
+
 // ------------------------------------------------------- clone identity
 
 const MASK64 = 0xffffffffffffffffn;
@@ -389,17 +511,17 @@ const KIND_WINDOW = 256n;
  * wire encodings it is stored (TSP.UUID's two varints, or the
  * four-word/16-byte CFUUID shape formula internals use).
  *
- * Returns false when the table carries no identity to re-mint
- * (pre-BNC storage generations).
+ * Returns the fresh base identity, or `undefined` when the table
+ * carries none to re-mint (pre-BNC storage generations).
  */
 export function remintFormulaOwnerIdentity(
   tableModel: IwaObject,
   objects: Iterable<IwaObject>,
-): boolean {
+): OwnerUid | undefined {
   const haunted = readOwnerUid(
     tableModel.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
   );
-  if (!haunted) return false;
+  if (!haunted) return undefined;
   const oldBase: OwnerUid = {
     lo: (haunted.lo - BigInt(OwnerKind.HAUNTED)) & MASK64,
     hi: haunted.hi,
@@ -470,5 +592,5 @@ export function remintFormulaOwnerIdentity(
     visit(object.message, 0);
     object.message.markDirty();
   }
-  return true;
+  return newBase;
 }

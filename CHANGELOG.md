@@ -13,16 +13,19 @@ in commit messages and pull requests.
   inspector but never drew their fills until each cell was manually
   re-entered. Covered cells are now registered in the calc engine's
   dependency ledger, which is what the app evaluates from.
-- Numbers rendered values written by `setCell` left-aligned (while
-  reporting their alignment as automatic) until each cell was manually
-  re-entered. Written values now carry the default display format the
-  app itself gives a typed value — automatic number, text, boolean, or
-  date. A bare boolean format also now reads back as `boolean`; only a
-  checkbox control's own format reads as `checkbox`.
+- Numbers rendered values written by `setCell` left-aligned instead of
+  with automatic alignment. Two causes, both fixed: written values now
+  carry the default display format the app gives a typed value
+  (automatic number, text, boolean, or date), and they no longer carry
+  the template's do-nothing text style, whose stated left alignment
+  pinned them. A style carrying any real formatting is kept. A bare
+  boolean format also now reads back as `boolean`; only a checkbox
+  control's own format reads as `checkbox`.
 - A table copied with `addTable`, `addSheet` or `insertInlineTable`
-  shared its source's calc-engine identity, so cross-table formulas
-  naming the copy could silently read the original's cells. Copies now
-  get their own identity.
+  shared its source's calc-engine identity, and cross-table references
+  naming the copy could open in Numbers as ref errors. Copies now get
+  their own identity and are registered with the calc engine the way
+  the app registers a new table.
 
 ### Added
 

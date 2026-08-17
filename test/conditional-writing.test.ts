@@ -269,6 +269,37 @@ describe("the engine's dependency ledger for rules", () => {
     }
   });
 
+  it("shows automatic alignment as the absence of the cell's text style", () => {
+    // The round-three file: the reviewer set three number cells to
+    // automatic alignment in the inspector, and the app's write removed
+    // their per-cell text style ids — while an untouched library cell
+    // one screen up still carries the template's do-nothing style. The
+    // same file holds the reviewer's app-authored rule on those rows.
+    const doc = NumbersDocument.load(bytes("olekristensen-v26.3-demo07-rules-round3.numbers"));
+    const table = doc.tables()[0]!;
+    for (const row of [22, 23, 24]) {
+      expect(`r${row} style: ${table.textStyleId(row, 2)}`).toBe(`r${row} style: undefined`);
+      expect(table.conditionalStyleKey(row, 2) !== undefined).toBe(true);
+    }
+    expect(table.textStyleId(3, 2) !== undefined).toBe(true);
+  });
+
+  it("registers a cloned table's rules through its minted owner family", () => {
+    // Before the mint, a clone had no kind-3 owner to hang records on,
+    // so rules on cloned tables silently skipped the engine ledger.
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    const copy = doc.addTable(sheet.id, { name: "CloneRules", withContent: false });
+    if (copy.rowCount < 4) copy.insertRows(copy.rowCount, 4 - copy.rowCount);
+    copy.setCell(1, 1, 9);
+    copy.setConditionalRules(1, 1, [
+      { operator: ">", value: 5, cell: { fill: { kind: "color", color: { r: 0, g: 1, b: 0 } } } },
+    ]);
+    const after = NumbersDocument.load(doc.save());
+    const registered = registrations(after);
+    expect(registered.has("1,1")).toBe(true);
+  });
+
   it("keeps library-written registrations through the app's own save", () => {
     // The round-two file: seven cells registered by this library, rules
     // drawing on open, and the app's save preserving all seven records —
