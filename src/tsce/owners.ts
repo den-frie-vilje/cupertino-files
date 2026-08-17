@@ -483,21 +483,27 @@ function writePayloadTail(m: RawMessage): void {
 }
 
 /**
- * The owner kinds a table's family comprises, base + kind each. Both
- * app-minted families available for measurement — the blank template's
- * own table and the family Numbers minted while re-registering a
- * library clone — carry exactly this set.
+ * The owner kinds this library mints for a table copy, base + kind each.
+ *
+ * An app-minted family carries eleven kinds — these nine plus the two
+ * hidden-state kinds (4 rows, 11 columns). The mint leaves those two
+ * out: a library-minted hidden-state owner beside the copy's model
+ * chain broke Numbers' document-wide hidden-state pass in three review
+ * rounds (documents opening filtered against their flags, the filter
+ * toggle dying after one use), while the same documents behaved with
+ * no engine hidden-state owners at all. Whatever the app creates
+ * alongside its own kind-4/11 owners to make them work is unmeasured;
+ * until it is, the copy's hidden-state registration is the app's to
+ * make.
  */
 const TABLE_FAMILY_KINDS = [
   OwnerKind.TABLE,
   OwnerKind.CONDITIONAL_STYLE,
-  OwnerKind.HIDDEN_STATE_ROWS,
   OwnerKind.MERGE,
   6,
   OwnerKind.CATEGORIES,
   OwnerKind.SUMMARY_AGGREGATES,
   10,
-  OwnerKind.HIDDEN_STATE_COLUMNS,
   12,
   OwnerKind.HAUNTED,
 ] as const;

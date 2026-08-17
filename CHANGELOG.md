@@ -35,13 +35,15 @@ in commit messages and pull requests.
   conditional-formatting rules — visible in the inspector, never
   evaluated. A content-less copy now starts without them.
 - A document whose filter the library disabled could open filtered
-  with a toggle that died after one use, when a copied table had
-  inherited its donor's hidden-row state list — entries naming the
-  donor's rows. A fresh copy now starts with no state list.
-  `setEnabled(false)` flips the flag and leaves the list alone: the
-  app keeps it across enable/disable and never rebuilds a missing one
-  from a panel toggle, so removing it would leave the filter
-  permanently inert.
+  with a toggle that died after one use. Two causes, both in the
+  library's copies: a copied table inherited its donor's hidden-row
+  state list (entries naming the donor's rows), and the copy's engine
+  registration minted hidden-state owners that broke the app's
+  document-wide filter pass. A fresh copy now starts with no state
+  list and its registration leaves the hidden-state owners to the
+  app. `setEnabled(false)` flips the flag and leaves the list alone:
+  the app keeps it across enable/disable, and removing it left the
+  filter permanently inert.
 
 ### Added
 
