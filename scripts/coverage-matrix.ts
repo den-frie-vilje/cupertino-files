@@ -1156,6 +1156,12 @@ export const CAPABILITIES: Capability[] = [
         "reports our text and number. Then open the file by hand and check the edited cells look " +
         "normal (no red triangle, no reformatting) and that undo/redo behaves — numbers " +
         "right-aligned without touching any cell.",
+      settled:
+        "**Right-alignment confirmed on open.** Three review rounds triangulated the mechanism — " +
+        "automatic alignment is the absence of the per-cell text style, and the template's " +
+        "do-nothing style (alignment: 0) was the left-pin — and the round after the writer began " +
+        "dropping that style came back all green, every number right-aligned with no cell " +
+        "touched, resaved clean by the app.",
       e2e: true,
       risk: "high",
     },
