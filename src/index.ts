@@ -192,6 +192,7 @@ export {
   TableModelFields,
 } from "./tst/tables.ts";
 export type {
+  AuditFinding,
   CellValue,
   CellInput,
   TaggedCellInput,

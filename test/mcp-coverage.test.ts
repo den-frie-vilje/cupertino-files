@@ -37,6 +37,14 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "a diagnostic the save gate runs itself; agents meet it as the save error, not as a tool",
   ],
   [
+    "TableModel.audit",
+    "audit_document serves the whole-document sweep, which aggregates every table's findings",
+  ],
+  [
+    "TableModel.clearConditionalStyles",
+    "clone hygiene addTable runs itself for content-less copies; rule editing has its own tools",
+  ],
+  [
     "PagesDocument.insertInlineTable",
     "inline anchoring takes a body position, which the tool surface does not model yet — the same gap that keeps insertInlineImage library-level",
   ],

@@ -436,8 +436,21 @@ Two honest gaps, both visible in the output rather than papered over:
 
 Writing formulas: `t.setFormula(row, col, "=SUM(B2:B9)", { value: 1500 })`
 — text in, Apple's exact AST encoding out. Nothing evaluates, so pass the
-cached display value. Writing a literal over a formula cell correctly
-clears the formula.
+cached display value: the app recomputes on open either way, but only the
+cached value gives the cell its type's display format before then, and a
+review round found format-less formula results rendering left-aligned
+beside properly automatic plain values. Writing a literal over a formula
+cell correctly clears the formula.
+
+A cross-table reference to a table that came from `addTable` or
+`insertInlineTable` is honest about its standing: the clone is fully
+registered at all three of the engine's sites (owner archives, the
+dependency tracker's list, the owner-id map), which two review rounds
+measured as the difference between the app keeping an identity and
+re-registering it — but the app *keeping* a library-minted identity has
+not yet come back confirmed, and until it does, a reference to a clone
+may open as a ref error where a reference to an original table works.
+`doc.audit()` names any reference that is already dead in the file.
 
 ### Writing cells
 
@@ -937,6 +950,25 @@ for (const obj of objects) {
 
 CLI equivalents (after `npm i -g cupertino-files` or via npx):
 `cupertino-dump info|ls|text|styles|sections|object|extract <file>`.
+
+## Auditing a document
+
+```ts
+doc.audit();   // [{ severity: "error" | "warning", code, message }]
+```
+
+The offline stand-in for opening the file: every code names a state a
+review round watched an app refuse, repair destructively, or render
+against the author's intent. Errors (`text/table-position`,
+`table/unregistered`, `cell/cross-ref-dangling`, `table/orphan-string`)
+are states the app rejects or mangles; warnings (`cell/rule-unregistered`,
+`cell/format-missing`) open fine and render wrong. A document built through this API audits clean — a finding on one
+is a library bug — so its real use is documents from anywhere else:
+app-edited files, other tools, raw-layer edits.
+
+`save()` enforces the other half by itself: an archive missing a proto2
+`required` field (the class Numbers reports as *damaged*) makes `save()`
+throw, naming the object and field, rather than produce the file.
 
 ## Rules of thumb
 
