@@ -1016,6 +1016,20 @@ only annotation author string is `cupertino-files`.
   slider and stepper cells — are what isolated the missing default
   format as its own fault, separate from rule evaluation.
 
+### olekristensen-v26.3-demo07-rules-round3.numbers
+- 189,337 bytes, md5 `2ed26cbf92d631db4647b5e320012dce`
+- Saved by macOS Numbers (26.3) after the third demo-07 review — the
+  file that named the alignment mechanism. The reviewer set three
+  number cells to automatic alignment in the inspector, and the app's
+  write removed their per-cell text style ids outright: automatic
+  alignment is the absence of the style, and the blank template's
+  do-nothing style (`para_properties {alignment: 0}`) is the left-pin
+  everywhere it survives. Also carries the reviewer's own authored
+  twins beside the library's — a conditional rule applied through the
+  app's Conditional Highlighting on three cells, and an app-built
+  pop-up menu — plus the app's second save-through of library-written
+  rule registrations.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.

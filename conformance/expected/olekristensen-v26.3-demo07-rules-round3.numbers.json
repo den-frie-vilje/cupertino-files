@@ -1,0 +1,430 @@
+{
+  "file": "olekristensen-v26.3-demo07-rules-round3.numbers",
+  "sha1": "2ef2ac0f684e61092fcf101286f3f2540794262a",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 643,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000020.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000021.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000022.iwa",
+      "objects": 5
+    },
+    {
+      "name": "Index/Tables/DataList-1000023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000025.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/Tables/DataList-1000026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001271.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 500
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 32,
+            "columns": 4,
+            "truncated": true,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "DEMO 7"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Conditional formatting and controls — answer with the pop-up menu in column D next to each check, and feel free to write notes in free D cells."
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "Your verdict"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "R-01"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Conditional rule \"> 5\" with green fill on the C cells below: 3 (unmarked), 7 (green), 9 (green)."
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "Still you’ve set a cell with a number to left-aligned. Usually a column with numbers should be formatted right-aligned, and the conditionals below carry that right-alignment "
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "9"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "R-02"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "Rule \"= 4\" yellow and \"<> 4\" blue in C: 4 (yellow), 5 (blue)."
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "5"
+              },
+              {
+                "r": 11,
+                "c": 0,
+                "v": "R-03"
+              },
+              {
+                "r": 11,
+                "c": 1,
+                "v": "The same rule set reused: the rule from the first check (>5 green) is also applied to the two C cells below: 6 (green), 2 (unmarked)."
+              },
+              {
+                "r": 11,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 12,
+                "c": 2,
+                "v": "6"
+              },
+              {
+                "r": 13,
+                "c": 2,
+                "v": "2"
+              },
+              {
+                "r": 13,
+                "c": 3,
+                "v": "Again, not formatted right aligned"
+              },
+              {
+                "r": 15,
+                "c": 0,
+                "v": "R-04"
+              },
+              {
+                "r": 15,
+                "c": 1,
+                "v": "Controls in C below: checkbox (checked), star rating (4 of 5), slider (60 of 0–100), stepper (25, step 5)."
+              },
+              {
+                "r": 15,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 16,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 17,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 18,
+                "c": 2,
+                "v": "60"
+              },
+              {
+                "r": 18,
+                "c": 3,
+                "v": "Not right aligned"
+              },
+              {
+                "r": 19,
+                "c": 2,
+                "v": "25"
+              },
+              {
+                "r": 19,
+                "c": 3,
+                "v": "Not right aligned"
+              },
+              {
+                "r": 21,
+                "c": 0,
+                "v": "R-05"
+              },
+              {
+                "r": 21,
+                "c": 1,
+                "v": "YOUR TURN — rule: apply the rule \"greater than 5 → green fill\" yourself to the three C cells below with Conditional Highlighting (Betinget fremhævning). Then the app's rule can be compared with the library's, field by field."
+              },
+              {
+                "r": 21,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 22,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 22,
+                "c": 3,
+                "v": "Also not right-alined, because the column’s default was left. I’ve made the three cells here automatic alignment in the UI under Text -> Alignment"
+              },
+              {
+                "r": 23,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 24,
+                "c": 2,
+                "v": "9"
+              },
+              {
+                "r": 26,
+                "c": 0,
+                "v": "R-06"
+              },
+              {
+                "r": 26,
+                "c": 1,
+                "v": "YOUR TURN — pop-up menu: give the yellow C cell below a pop-up menu yourself with the items Red, Green and Blue, via Format → Cell → Pop-Up Menu (Formatér → Celle → Lokalmenu)."
+              },
+              {
+                "r": 26,
+                "c": 3,
+                "v": "OK"
+              },
+              {
+                "r": 27,
+                "c": 2,
+                "v": "Red"
+              },
+              {
+                "r": 29,
+                "c": 0,
+                "v": "R-07"
+              },
+              {
+                "r": 29,
+                "c": 1,
+                "v": "The colors from the checks above must be there ALREADY when the document opens, and the numbers in C must be RIGHT-ALIGNED immediately — including 3, 2, 60 and 25 — without you touching any cell. Otherwise: write which cells were affected."
+              },
+              {
+                "r": 29,
+                "c": 3,
+                "v": "Deviation"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

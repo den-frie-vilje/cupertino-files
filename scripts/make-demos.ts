@@ -65,6 +65,16 @@ function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): 
     if (total > maxWidth) {
       throw new Error(`${name}: table ${table.name} is ${Math.round(total)} pt wide (max ${maxWidth})`);
     }
+    // The header band is pinned while scrolling, on a phone too: a
+    // sentence there rides along on every screen. One-word labels only.
+    for (let r = 0; r < table.headerRowCount; r++) {
+      for (let c = 0; c < table.columnCount; c++) {
+        const text = table.cellText(r, c);
+        if (text.length > 24) {
+          throw new Error(`${name}: ${table.name} header r${r}c${c} is ${text.length} chars`);
+        }
+      }
+    }
     const usedRows = new Set<number>();
     const usedColumns = new Set<number>();
     for (let r = 0; r < table.rowCount; r++) {
@@ -615,7 +625,7 @@ function demoCells(): Uint8Array {
   const table = doc.tables()[0]!;
   const check = counter("C");
   if (table.columnCount < 5) table.insertColumns(table.columnCount, 5 - table.columnCount);
-  const need = 24;
+  const need = 25;
   if (table.rowCount < need) table.insertRows(table.rowCount, need - table.rowCount);
   table.setColumnWidth(0, 60);
   table.setColumnWidth(1, 330);
@@ -630,10 +640,15 @@ function demoCells(): Uint8Array {
     table.setCellFormatting(row, 1, { textWrap: true });
     row++;
   };
+  // Header rows stay pinned while scrolling, so row 0 holds nothing but
+  // one-word headers; the intro is an ordinary content row that scrolls.
+  table.setCell(row, 0, "ID");
+  table.setCell(row, 1, "Check");
+  table.setCell(row, 4, "Feedback");
+  row++;
   table.setCell(row, 0, "DEMO 5");
   table.setCell(row, 1, "Cells and formats — write feedback in column E next to each check (empty = as expected). Save and return.");
   table.setCellFormatting(row, 1, { textWrap: true });
-  table.setCell(row, 4, "Feedback");
   row += 2;
 
   head(check(), "Cell types — C: text, D: number. The row below: C: date (must show a date), D: duration (must show 1h 30m — on a Danish system 1t 30m).");
@@ -706,7 +721,7 @@ function demoFormulas(): Uint8Array {
   const check = counter("F");
 
   if (data.columnCount < 5) data.insertColumns(data.columnCount, 5 - data.columnCount);
-  if (data.rowCount < 22) data.insertRows(data.rowCount, 22 - data.rowCount);
+  if (data.rowCount < 23) data.insertRows(data.rowCount, 23 - data.rowCount);
   data.setColumnWidth(0, 44);
   data.setColumnWidth(1, 250);
   data.setColumnWidth(2, 75);
@@ -714,10 +729,13 @@ function demoFormulas(): Uint8Array {
   data.setColumnWidth(4, 100);
 
   let row = 0;
+  data.setCell(row, 0, "ID");
+  data.setCell(row, 1, "Check");
+  data.setCell(row, 4, "Notes");
+  row++;
   data.setCell(row, 0, "DEMO 6");
   data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Notes in column E.");
   data.setCellFormatting(row, 1, { textWrap: true });
-  data.setCell(row, 4, "Notes");
   row += 2;
 
   const head = (id: string, text: string): void => {
@@ -760,7 +778,7 @@ function demoFormulas(): Uint8Array {
   data.setCellFormatting(row, 3, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 3;
 
-  head(check(), "YOUR TURN — cross-reference: type =CrossCheck::B3 yourself in the yellow C cell below (must show 10).");
+  head(check(), "YOUR TURN — cross-reference: type =CrossCheck::B4 yourself in the yellow C cell below (must show 10).");
   data.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 2;
   if (data.rowCount > row) data.deleteRows(row, data.rowCount - row);
@@ -774,28 +792,31 @@ function demoFormulas(): Uint8Array {
   // reader opens a mostly-empty husk with someone else's styling.
   const sheet = doc.sheets()[0]!;
   const second = doc.addTable(sheet.id, { name: "CrossCheck", x: 40, y: 700, withContent: false });
-  if (second.rowCount > 6) second.deleteRows(6, second.rowCount - 6);
-  if (second.rowCount < 6) second.insertRows(second.rowCount, 6 - second.rowCount);
+  if (second.rowCount > 7) second.deleteRows(7, second.rowCount - 7);
+  if (second.rowCount < 7) second.insertRows(second.rowCount, 7 - second.rowCount);
   if (second.columnCount > 3) second.deleteColumns(3, second.columnCount - 3);
   second.setColumnWidth(0, 220);
   second.setColumnWidth(1, 75);
   second.setColumnWidth(2, 75);
   const dataName = data.name ?? "Table 1";
-  second.setCell(0, 0, "Fetched from the main table (must show 7):");
-  second.setCellFormatting(0, 0, { textWrap: true });
-  second.setFormula(0, 2, `=${dataName}::C${base + 1}`);
-  second.setCell(1, 0, "Its own numbers in B: 5, 10 and 15");
+  second.setCell(0, 0, "Check");
+  second.setCell(0, 1, "Data");
+  second.setCell(0, 2, "Result");
+  second.setCell(1, 0, "Fetched from the main table (must show 7):");
   second.setCellFormatting(1, 0, { textWrap: true });
-  second.setCell(1, 1, 5);
-  second.setCell(2, 1, 10);
-  second.setCell(3, 1, 15);
+  second.setFormula(1, 2, `=${dataName}::C${base + 1}`);
+  second.setCell(2, 0, "Its own numbers in B: 5, 10 and 15");
+  second.setCellFormatting(2, 0, { textWrap: true });
+  second.setCell(2, 1, 5);
+  second.setCell(3, 1, 10);
+  second.setCell(4, 1, 15);
   // The clone inherits the donor's wrapped prose styles cell by cell;
   // value cells must not keep them.
-  for (const r of [1, 2, 3]) second.setCellFormatting(r, 1, { textWrap: false });
-  second.setCell(4, 0, "SUM over the whole of column B (must show 30):");
-  second.setCellFormatting(4, 0, { textWrap: true });
-  second.setFormula(4, 2, "=SUM(B)");
-  data.setFormula(crossRow, 2, "=CrossCheck::B2");
+  for (const r of [2, 3, 4]) second.setCellFormatting(r, 1, { textWrap: false });
+  second.setCell(5, 0, "SUM over the whole of column B (must show 30):");
+  second.setCellFormatting(5, 0, { textWrap: true });
+  second.setFormula(5, 2, "=SUM(B)");
+  data.setFormula(crossRow, 2, "=CrossCheck::B3");
 
   return doc.save();
 }
@@ -807,7 +828,7 @@ function demoRules(): Uint8Array {
   const table = doc.tables()[0]!;
   const check = counter("R");
 
-  if (table.rowCount < 32) table.insertRows(table.rowCount, 32 - table.rowCount);
+  if (table.rowCount < 33) table.insertRows(table.rowCount, 33 - table.rowCount);
   if (table.columnCount < 4) table.insertColumns(table.columnCount, 4 - table.columnCount);
   table.setColumnWidth(0, 44);
   table.setColumnWidth(1, 270);
@@ -815,10 +836,14 @@ function demoRules(): Uint8Array {
   table.setColumnWidth(3, 120);
 
   let row = 0;
+  table.setCell(row, 0, "ID");
+  table.setCell(row, 1, "Check");
+  table.setCell(row, 2, "Value");
+  table.setCell(row, 3, "Verdict");
+  row++;
   table.setCell(row, 0, "DEMO 7");
   table.setCell(row, 1, "Conditional formatting and controls — answer with the pop-up menu in column D next to each check, and feel free to write notes in free D cells.");
   table.setCellFormatting(row, 1, { textWrap: true });
-  table.setCell(row, 3, "Your verdict");
   row += 2;
 
   const verdictRows: number[] = [];
@@ -905,15 +930,18 @@ function demoStructure(): Uint8Array {
   const table = doc.tablesOnSheet(readme.id)[0] ?? doc.addTable(readme.id, { name: "Instructions" });
   table.name = "Instructions";
   table.clearAllCells();
-  if (table.rowCount < 12) table.insertRows(table.rowCount, 12 - table.rowCount);
+  if (table.rowCount < 13) table.insertRows(table.rowCount, 13 - table.rowCount);
   table.setColumnWidth(0, 44);
   table.setColumnWidth(1, 300);
   table.setColumnWidth(2, 120);
   let row = 0;
+  table.setCell(row, 0, "ID");
+  table.setCell(row, 1, "Check");
+  table.setCell(row, 2, "Notes");
+  row++;
   table.setCell(row, 0, "DEMO 8");
   table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Notes in column C.");
   table.setCellFormatting(row, 1, { textWrap: true });
-  table.setCell(row, 2, "Notes");
   row += 2;
   const head = (id: string, text: string): void => {
     table.setCell(row, 0, id);
@@ -1126,7 +1154,7 @@ const demos: Demo[] = [
       const d = NumbersDocument.load(bytes);
       const t = d.tables()[0]!;
       if (t.merges().length !== 1) throw new Error("celler: merge missing");
-      if (!t.cellText(0, 0).includes("DEMO 5")) throw new Error("celler: intro missing");
+      if (!t.cellText(1, 0).includes("DEMO 5")) throw new Error("celler: intro missing");
     },
   },
   {
