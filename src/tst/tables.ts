@@ -1842,6 +1842,43 @@ export class TableModel {
         uuidRefs.getMessages(1).filter((entry) => (entry.getMessage(2)?.getMessages(1).length ?? 0) > 0),
       );
     }
+    const engine = this.store.findByType(4000);
+    const engineMap = engine?.message.getMessage(7);
+    if (engineMap) {
+      let changed = false;
+      for (const entry of engineMap.getMessages(1)) {
+        const set = entry.getMessage(3);
+        if (!set) continue;
+        for (const ownerEntry of set.getMessages(1)) {
+          if (ownerEntry.getUint(1) !== m.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID)) continue;
+          const coords = ownerEntry.getMessage(2);
+          if (!coords) continue;
+          for (const colEntry of coords.getMessages(1)) {
+            if (colEntry.getUint(1) !== column) continue;
+            const rows = colEntry.getMessage(2);
+            if (!rows) continue;
+            const kept = rows.getMessages(1).filter((r) => r.getUint(1) !== row);
+            if (kept.length !== rows.getMessages(1).length) {
+              rows.setMessages(1, kept);
+              changed = true;
+            }
+          }
+          coords.setMessages(
+            1,
+            coords.getMessages(1).filter((c) => (c.getMessage(2)?.getMessages(1).length ?? 0) > 0),
+          );
+        }
+        set.setMessages(
+          1,
+          set.getMessages(1).filter((o) => (o.getMessage(2)?.getMessages(1).length ?? 0) > 0),
+        );
+      }
+      engineMap.setMessages(
+        1,
+        engineMap.getMessages(1).filter((e) => (e.getMessage(3)?.getMessages(1).length ?? 0) > 0),
+      );
+      if (changed) engine!.message.markDirty();
+    }
     if (expression === undefined) {
       m.markDirty();
       return;
@@ -1934,43 +1971,57 @@ export class TableModel {
       m.setMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, bag);
     }
 
-    // The uuid-references index is deliberately NOT written: in the one
-    // round that carried library-written entries — byte-shaped exactly
-    // like the app's own — the app relocated precisely the two formulas
-    // that had them one column right, leaving their cached values
-    // behind. Every other record survives and keeps the formulas alive;
-    // the app rebuilds this index itself on re-registration.
-    void crossCells;
-    for (const { uid } of [] as { uid: OwnerUid }[]) {
-      const bag = m.getMessage(FormulaOwnerFields.UUID_REFERENCES) ?? RawMessage.create();
-      let entry = bag.getMessages(1).find((e) => {
-        const u = readOwnerUid(e.getMessage(1));
-        return u !== undefined && u.lo === uid.lo && u.hi === uid.hi;
-      });
-      if (!entry) {
-        entry = RawMessage.create();
-        const uidMsg = RawMessage.create();
-        uidMsg.setVarint(1, uid.lo);
-        uidMsg.setVarint(2, uid.hi);
-        entry.setMessage(1, uidMsg);
-        entry.setMessage(2, RawMessage.create());
-        bag.addMessage(1, entry);
+    // The owner-side uuid-references index stays unwritten (its one
+    // outing coincided with the relocation misreading and it is not the
+    // gate). What the engine itself consults is its document-level
+    // uuid_reference_map — the one registration site that stayed
+    // unwritten through seven rounds while every app-typed cross-table
+    // formula appeared in it. Each cross-reference is indexed there
+    // under the target's base uid, as an owner-entry for this table's
+    // internal id carrying the referring cell.
+    if (crossCells.length > 0 && engine && engineMap) {
+      for (const { uid } of crossCells) {
+        let entry = engineMap.getMessages(1).find((e) => {
+          const u = readOwnerUid(e.getMessage(1));
+          return u !== undefined && u.lo === uid.lo && u.hi === uid.hi;
+        });
+        if (!entry) {
+          entry = RawMessage.create();
+          const uidMsg = RawMessage.create();
+          uidMsg.setVarint(1, uid.lo);
+          uidMsg.setVarint(2, uid.hi);
+          entry.setMessage(1, uidMsg);
+          entry.setMessage(3, RawMessage.create());
+          engineMap.addMessage(1, entry);
+        }
+        let set = entry.getMessage(3);
+        if (!set) {
+          set = RawMessage.create();
+          entry.setMessage(3, set);
+        }
+        let ownerEntry = set.getMessages(1).find((o) => o.getUint(1) === ownInternal);
+        if (!ownerEntry) {
+          ownerEntry = RawMessage.create();
+          ownerEntry.setVarint(1, ownInternal);
+          ownerEntry.setMessage(2, RawMessage.create());
+          set.addMessage(1, ownerEntry);
+        }
+        const coords = ownerEntry.getMessage(2)!;
+        let colEntry = coords.getMessages(1).find((c) => c.getUint(1) === column);
+        if (!colEntry) {
+          colEntry = RawMessage.create();
+          colEntry.setVarint(1, column);
+          colEntry.setMessage(2, RawMessage.create());
+          coords.addMessage(1, colEntry);
+        }
+        const rows = colEntry.getMessage(2)!;
+        if (!rows.getMessages(1).some((r) => r.getUint(1) === row)) {
+          const rowEntry = RawMessage.create();
+          rowEntry.setVarint(1, row);
+          rows.addMessage(1, rowEntry);
+        }
       }
-      const refs = entry.getMessage(2)!;
-      let colEntry = refs.getMessages(1).find((c) => c.getUint(1) === column);
-      if (!colEntry) {
-        colEntry = RawMessage.create();
-        colEntry.setVarint(1, column);
-        colEntry.setMessage(2, RawMessage.create());
-        refs.addMessage(1, colEntry);
-      }
-      const rows = colEntry.getMessage(2)!;
-      if (!rows.getMessages(1).some((r) => r.getUint(1) === row)) {
-        const rowEntry = RawMessage.create();
-        rowEntry.setVarint(1, row);
-        rows.addMessage(1, rowEntry);
-      }
-      m.setMessage(FormulaOwnerFields.UUID_REFERENCES, bag);
+      engine.message.markDirty();
     }
 
     m.markDirty();
