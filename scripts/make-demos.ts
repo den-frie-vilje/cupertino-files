@@ -721,7 +721,7 @@ function demoFormulas(): Uint8Array {
   const check = counter("F");
 
   if (data.columnCount < 5) data.insertColumns(data.columnCount, 5 - data.columnCount);
-  if (data.rowCount < 23) data.insertRows(data.rowCount, 23 - data.rowCount);
+  if (data.rowCount < 26) data.insertRows(data.rowCount, 26 - data.rowCount);
   data.setColumnWidth(0, 44);
   data.setColumnWidth(1, 250);
   data.setColumnWidth(2, 75);
@@ -781,6 +781,13 @@ function demoFormulas(): Uint8Array {
   head(check(), "YOUR TURN — cross-reference: type =CrossCheck::B4 yourself in the yellow C cell below (must show 10).");
   data.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 2;
+
+  head(
+    check(),
+    "Control: the NoCalc table at the very bottom holds plain values and no formulas. C below fetches 8 from it. If this computes while F-03 errors, the difference is the formula records; if both error, registration needs more than the owner archives; if both compute, cross-references are settled.",
+  );
+  const controlRow = row;
+  row += 2;
   if (data.rowCount > row) data.deleteRows(row, data.rowCount - row);
 
   // A clean second table: the cross-table reference each way, and a
@@ -817,6 +824,24 @@ function demoFormulas(): Uint8Array {
   second.setCellFormatting(5, 0, { textWrap: true });
   second.setFormula(5, 2, "=SUM(B)", { value: 30 });
   data.setFormula(crossRow, 2, "=CrossCheck::B3", { value: 5 });
+
+  // The control: a second clone with values only. Whether the app
+  // accepts a fully-payloaded registration may depend on the table
+  // carrying formulas the owner has no records of; this one has none.
+  const control = doc.addTable(sheet.id, { name: "NoCalc", x: 40, y: 900, withContent: false });
+  if (control.rowCount > 3) control.deleteRows(3, control.rowCount - 3);
+  if (control.rowCount < 3) control.insertRows(control.rowCount, 3 - control.rowCount);
+  if (control.columnCount > 3) control.deleteColumns(3, control.columnCount - 3);
+  control.setColumnWidth(0, 220);
+  control.setColumnWidth(1, 75);
+  control.setColumnWidth(2, 75);
+  control.setCell(0, 0, "Check");
+  control.setCell(0, 1, "Data");
+  control.setCell(1, 0, "Its only value, fetched by the main table:");
+  control.setCellFormatting(1, 0, { textWrap: true });
+  control.setCell(1, 1, 8);
+  control.setCellFormatting(1, 1, { textWrap: false });
+  data.setFormula(controlRow, 2, "=NoCalc::B2", { value: 8 });
 
   return doc.save();
 }
@@ -978,10 +1003,15 @@ function demoStructure(): Uint8Array {
   doc.moveSheet(doc.sheets().findIndex((s) => s.id === readme.id), 0);
   doc.setActiveSheet(0);
 
+  // Every set on every table, both axes: the seed's columns set is empty
+  // with is_enabled defaulting true, and one enabled set — rules or not —
+  // shows the document's filter as on. A rules-only condition here once
+  // skipped it and the demo opened contradicting its own N-03 rung.
   for (const sheet of doc.sheets()) {
     for (const t of doc.tablesOnSheet(sheet.id)) {
-      const rows = t.filterSets().rows;
-      if (rows && rows.rules().length > 0) rows.setEnabled(false);
+      const { rows, columns } = t.filterSets();
+      rows?.setEnabled(false);
+      columns?.setEnabled(false);
     }
   }
   return doc.save();
@@ -1166,7 +1196,7 @@ const demos: Demo[] = [
       const formulas = d.tables().flatMap((t) => t.formulas().map((f) => ({ table: t, ...f })));
       if (formulas.length < 8) throw new Error(`formler: expected 8+, got ${formulas.length}`);
       const cross = formulas.filter((f) => f.formula.includes("::"));
-      if (cross.length !== 2) throw new Error(`formler: expected 2 cross-table references, got ${cross.length}`);
+      if (cross.length !== 3) throw new Error(`formler: expected 3 cross-table references, got ${cross.length}`);
       // A whole-column span from inside its own column is circular; the
       // returned first round showed exactly that as #ERROR.
       for (const f of formulas) {

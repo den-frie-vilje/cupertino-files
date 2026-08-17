@@ -418,6 +418,69 @@ const MapEntryFields = protoFields("TSCE.OwnerIDMapArchive.OwnerIDMapArchiveEntr
   INTERNAL: "internal_owner_id",
   OWNER_ID: "owner_id",
 });
+const PayloadFields = protoFields("TSCE.FormulaOwnerDependenciesArchive", {
+  CELL_DEPENDENCIES: "cell_dependencies",
+  RANGE_DEPENDENCIES: "range_dependencies",
+  VOLATILE_DEPENDENCIES: "volatile_dependencies",
+  SPANNING_COLUMN_DEPENDENCIES: "spanning_column_dependencies",
+  SPANNING_ROW_DEPENDENCIES: "spanning_row_dependencies",
+  WHOLE_OWNER_DEPENDENCIES: "whole_owner_dependencies",
+  CELL_ERRORS: "cell_errors",
+  TILED_CELL_DEPENDENCIES_BAG: "tiled_cell_dependencies",
+  UUID_REFERENCES: "uuid_references",
+  TILED_RANGE_DEPENDENCIES: "tiled_range_dependencies",
+  SPILL_RANGE_SIZES: "spill_range_sizes",
+});
+/** `TSCE.CellRecordTileArchive`. */
+const CELL_RECORD_TILE_TYPE = 4009;
+const TileArchiveFields = protoFields("TSCE.CellRecordTileArchive", {
+  INTERNAL_OWNER_ID: "internal_owner_id",
+  TILE_COLUMN_BEGIN: "tile_column_begin",
+  TILE_ROW_BEGIN: "tile_row_begin",
+});
+
+/**
+ * The empty-state payload every owner archive carries beside its
+ * identity, measured twice from the app itself: its own fresh family for
+ * a re-registered table, and — field for field the same — the upgrade it
+ * wrote onto a library-minted identity-only archive it kept. The
+ * spanning extents hold int16/int32 sentinels meaning "no extent"; every
+ * message with required fields states them, which is what separates this
+ * decoration from the malformed empties that once shipped.
+ */
+function writeEmptyPayload(m: RawMessage): void {
+  m.setBytes(PayloadFields.CELL_DEPENDENCIES, new Uint8Array(0));
+  m.setBytes(PayloadFields.RANGE_DEPENDENCIES, new Uint8Array(0));
+  const volatile = RawMessage.create();
+  for (const field of [1, 2, 3, 4, 5, 7]) volatile.setBytes(field, new Uint8Array(0));
+  m.setMessage(PayloadFields.VOLATILE_DEPENDENCIES, volatile);
+  for (const field of [
+    PayloadFields.SPANNING_COLUMN_DEPENDENCIES,
+    PayloadFields.SPANNING_ROW_DEPENDENCIES,
+  ]) {
+    const spanning = RawMessage.create();
+    for (const slot of [2, 3]) {
+      const extent = RawMessage.create();
+      extent.setVarint(1, 32767);
+      extent.setVarint(2, 2147483647);
+      extent.setVarint(3, 32767);
+      extent.setVarint(4, 2147483647);
+      spanning.setMessage(slot, extent);
+    }
+    m.setMessage(field, spanning);
+  }
+  const whole = RawMessage.create();
+  whole.setBytes(1, new Uint8Array(0));
+  m.setMessage(PayloadFields.WHOLE_OWNER_DEPENDENCIES, whole);
+  m.setBytes(PayloadFields.CELL_ERRORS, new Uint8Array(0));
+}
+
+/** The payload fields that follow the owner-specific ones, in field order. */
+function writePayloadTail(m: RawMessage): void {
+  m.setBytes(PayloadFields.UUID_REFERENCES, new Uint8Array(0));
+  m.setBytes(PayloadFields.TILED_RANGE_DEPENDENCIES, new Uint8Array(0));
+  m.setBytes(PayloadFields.SPILL_RANGE_SIZES, new Uint8Array(0));
+}
 
 /**
  * The owner kinds a table's family comprises, base + kind each. Both
@@ -597,17 +660,33 @@ export function mintTableOwnerArchive(
     m.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, uidMsg);
     m.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, internal);
     m.setVarint(FormulaOwnerFields.OWNER_KIND, kind);
+    writeEmptyPayload(m);
     if (kind === OwnerKind.TABLE) {
       const owner = RawMessage.create();
       owner.setVarint(1, tableInfoId);
       m.setMessage(FormulaOwnerFields.FORMULA_OWNER, owner);
       store.declareReference(archive, tableInfoId);
+      // The one payload only the table's own owner carries: a dependency
+      // tile of its formula cells, empty for a fresh table — the app
+      // minted exactly this beside the kind-1 it kept.
+      const tile = store.createObject(CELL_RECORD_TILE_TYPE, component);
+      tile.message.setVarint(TileArchiveFields.INTERNAL_OWNER_ID, internal);
+      tile.message.setVarint(TileArchiveFields.TILE_COLUMN_BEGIN, 0);
+      tile.message.setVarint(TileArchiveFields.TILE_ROW_BEGIN, 0);
+      const tiled = RawMessage.create();
+      const ref = RawMessage.create();
+      ref.setVarint(1, tile.identifier);
+      tiled.addMessage(1, ref);
+      m.setMessage(PayloadFields.TILED_CELL_DEPENDENCIES_BAG, tiled);
+      store.declareReference(archive, tile.identifier);
     } else {
       const baseUid = RawMessage.create();
       baseUid.setVarint(1, base.lo);
       baseUid.setVarint(2, base.hi);
       m.setMessage(FormulaOwnerFields.BASE_OWNER_UID, baseUid);
+      m.setBytes(PayloadFields.TILED_CELL_DEPENDENCIES_BAG, new Uint8Array(0));
     }
+    writePayloadTail(m);
     enroll(archive, uid, internal);
   }
 }

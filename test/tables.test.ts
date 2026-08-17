@@ -1406,11 +1406,13 @@ describe("adding and removing tables", () => {
     expect(new Set(internals).size).toBe(internals.length);
   });
 
-  it("mints only identity — no empty bags whose archetypes have required fields", () => {
-    // The decoration the app writes beside a fresh registration nests
-    // messages with required fields (an empty RangeCoordinateArchive is
-    // malformed), and a round of demo documents shipped exactly that
-    // and opened as damaged. Omitting an optional field can never be.
+  it("mints the app's empty-payload shape, stated fields and sentinel extents", () => {
+    // Measured twice from the app itself: its fresh family for a
+    // re-registered table, and the identical upgrade it wrote onto a
+    // library identity-only archive it kept. Every nested message with
+    // required fields states them — the sentinel extents carry all four
+    // coordinates — which is what separates this decoration from the
+    // malformed empties that once opened as damaged.
     const document = load();
     const sheet = document.sheets()[0]!;
     document.addTable(sheet.id, { name: "MinimalMint" });
@@ -1419,6 +1421,7 @@ describe("adding and removing tables", () => {
     const entry = registry
       .all()
       .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "MinimalMint")!;
+    let seen = 0;
     for (const { obj } of reloaded.store.allObjects()) {
       if (obj.type !== 4008) continue;
       const uidMessage = obj.message.getMessage(1);
@@ -1426,11 +1429,27 @@ describe("adding and removing tables", () => {
       if (lo === undefined) continue;
       const delta = (lo - entry.uid.lo) & 0xffffffffffffffffn;
       if (delta >= 256n) continue; // another table's family
-      const fields = obj.message.fields.map((f) => f.no).sort((a, b) => a - b);
+      seen++;
+      const fields = obj.message.fields.map((f) => f.no).join(",");
       const kind = obj.message.getUint(3);
-      const expected = kind === 1 ? [1, 2, 3, 11] : [1, 2, 3, 12];
-      expect(`kind ${kind}: ${fields.join(",")}`).toBe(`kind ${kind}: ${expected.join(",")}`);
+      const expected =
+        kind === 1 ? "1,2,3,4,5,6,7,8,9,10,11,13,14,15,16" : "1,2,3,4,5,6,7,8,9,10,12,13,14,15,16";
+      expect(`kind ${kind}: ${fields}`).toBe(`kind ${kind}: ${expected}`);
+      const spanning = obj.message.getMessage(7)!.getMessage(2)!;
+      expect(
+        [1, 2, 3, 4].map((n) => spanning.getVarint(n)).join(","),
+      ).toBe("32767,2147483647,32767,2147483647");
+      if (kind === 1) {
+        // The empty dependency tile beside the table's own owner.
+        const tileRef = obj.message.getMessage(13)!.getMessage(1)!.getVarint(1)!;
+        const tile = reloaded.store.object(tileRef)!;
+        expect(reloaded.store.typeNameOf(tile)).toBe("TSCE.CellRecordTileArchive");
+        expect(Number(tile.message.getVarint(1))).toBe(
+          Number(obj.message.getVarint(2)),
+        );
+      }
     }
+    expect(seen).toBe(11);
   });
 
   it("drops the template's do-nothing text style from written values", () => {
