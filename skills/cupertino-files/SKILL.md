@@ -443,14 +443,19 @@ beside properly automatic plain values. Writing a literal over a formula
 cell correctly clears the formula.
 
 A cross-table reference to a table that came from `addTable` or
-`insertInlineTable` is honest about its standing: the clone is fully
+`insertInlineTable` is honest about its standing. The clone is fully
 registered at all three of the engine's sites (owner archives, the
-dependency tracker's list, the owner-id map), which two review rounds
-measured as the difference between the app keeping an identity and
-re-registering it — but the app *keeping* a library-minted identity has
-not yet come back confirmed, and until it does, a reference to a clone
-may open as a ref error where a reference to an original table works.
-`doc.audit()` names any reference that is already dead in the file.
+dependency tracker's list, the owner-id map), its owner carries
+dependency records for every formula written into it, and six review
+rounds measured what each layer buys: without records Numbers
+re-registers formula-bearing tables and flattens library cross-table
+formulas to their cached values; with them the formulas survive and
+the app translates their targets across its own re-registration. A
+formula-less clone keeps its library identity outright. What has not
+yet come back app-confirmed is the final anchor: one round saw the
+surviving formulas relocated a column before the reference index was
+withdrawn from the write set. `doc.audit()` names any reference that
+is already dead in the file.
 
 ### Writing cells
 

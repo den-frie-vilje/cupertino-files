@@ -70,7 +70,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** the clone itself is first-class — two rounds opened it, showed its cells, and the checker's own formula referencing it by name computed — but both rounds the app discarded the written identity and re-registered, tombstoning the library's stored references into ref errors. The mint now enrolls the full owner family at all three engine sites (archives, tracker list, owner map, internals past the map's max); whether that is the whole acceptance test only an open can say.
 
-**How to settle it.** npm run demos -- out, open demo-06-formler.numbers, F-03: the fetch under it must show 5 and the CrossCheck table's top row 7, with no ref error anywhere. A ref error means the three sites are still not sufficient and the remaining difference is the per-kind dependency payloads the app writes and we omit.
+**How to settle it.** npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with =NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it, or a formula sitting one column right of its value, names the next single difference — the write set is down to cell, range and spanning records after the reference index was measured as the relocation trigger and withdrawn.
 
 ### 4. Conditional formatting: apply an existing rule set to more cells
 
