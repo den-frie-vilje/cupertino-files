@@ -1,5 +1,19 @@
 # Working notes for Claude
 
+## After a context compaction, read the manual
+
+A compaction keeps the laws and loses the fingertips: the first
+minutes after one have produced probes that guessed at method names
+this repository defines, re-implemented printers `src/cli.ts` already
+ships, and shelled out to python for listings `cupertino-dump ls`
+prints. Before the first probe after a compaction, re-read the
+surfaces: `skills/cupertino-files/SKILL.md` for the API, the CLI's
+usage line for the tooling, and the relevant `docs/` page for the
+domain. One read costs less than one failed guess, and the guesses
+are visible to the person watching. Dog-food the library and its CLI
+for inspection work — friction found that way is API evidence, which
+python one-liners never produce.
+
 ## The repository speaks English
 
 Everything checked in — code, docs, demo builders and the documents

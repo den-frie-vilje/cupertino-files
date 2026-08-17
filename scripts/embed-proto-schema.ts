@@ -38,6 +38,13 @@
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { loadVendoredSchema, type VendoredFile } from "./proto-schema.ts";
+import {
+  SHARED_TYPES,
+  PAGES_TYPES,
+  KEYNOTE_TYPES,
+  NUMBERS_TYPES,
+} from "../src/tsp/registry.ts";
+import type { ProtoSchema } from "../src/tsp/required.ts";
 import { sha1 } from "../src/base/sha1.ts";
 import { utf8Encode } from "../src/base/bytes.ts";
 
@@ -72,11 +79,69 @@ function referencedArchives(): Set<string> {
   return out;
 }
 
+/**
+ * The subset of the schema that `missingRequired` needs at runtime: every
+ * message reachable from an archive the registry can name, keeping only
+ * its `required` fields and its message-typed fields (the walker recurses
+ * through whichever of those are present). Scalar optional and repeated
+ * fields carry no validation signal and are dropped — that is what keeps
+ * the embedded form a fraction of the 237 KiB full dump.
+ */
+function requiredSubset(detailed: ProtoSchema, referenced: Set<string>): ProtoSchema {
+  // Rooted at every archive the registry can name plus everything the
+  // writers declare: any object the session dirties gets validated, no
+  // matter which path touched it. The size cost is accepted — this
+  // library's primary target is server-side.
+  const roots = new Set<string>(referenced);
+  for (const table of [SHARED_TYPES, PAGES_TYPES, KEYNOTE_TYPES, NUMBERS_TYPES]) {
+    for (const name of Object.values(table)) roots.add(name);
+  }
+
+  // A message whose whole reachable subgraph declares no `required` field
+  // can never fail validation, so neither it nor the fields leading to it
+  // need embedding. Fixpoint: a message matters if it has a required field
+  // or any message-typed field reaching one that does.
+  const matters = new Set<string>();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [name, message] of detailed) {
+      if (matters.has(name)) continue;
+      for (const field of message.values()) {
+        if (field.label === "required" || matters.has(field.type)) {
+          matters.add(name);
+          grew = true;
+          break;
+        }
+      }
+    }
+  }
+
+  const out: ProtoSchema = new Map();
+  const queue = [...roots].filter((name) => detailed.has(name) && matters.has(name));
+  while (queue.length > 0) {
+    const name = queue.pop()!;
+    if (out.has(name)) continue;
+    const message = detailed.get(name);
+    if (!message) continue;
+    const kept = new Map<number, (typeof message extends Map<number, infer F> ? F : never)>();
+    for (const [no, field] of message) {
+      const follow = detailed.has(field.type) && matters.has(field.type);
+      if (field.label !== "required" && !follow) continue;
+      kept.set(no, field);
+      if (follow && !out.has(field.type)) queue.push(field.type);
+    }
+    out.set(name, kept);
+  }
+  return out;
+}
+
 function render(
   files: readonly VendoredFile[],
   messages: Map<string, Map<string, number>>,
   enums: Map<string, Map<string, number>>,
   referenced: Set<string>,
+  required: ProtoSchema,
 ): string {
   const wanted = [...referenced].sort();
   const present = wanted.filter((a) => (messages.get(a)?.size ?? 0) > 0);
@@ -129,14 +194,44 @@ function render(
   }
   lines.push("};");
   lines.push("");
+  lines.push("/**");
+  lines.push(" * What save-time validation needs from the schema: per message, the");
+  lines.push(" * `required` fields and the message-typed fields the required-walker");
+  lines.push(" * recurses through. Tuples are [number, name, label, type] with label");
+  lines.push(' * "r" | "o" | "p" for required | optional | repeated. The name is kept');
+  lines.push(" * only where an error message would print it (required fields), and the");
+  lines.push(" * type only where the walker follows it (message-typed fields) — both");
+  lines.push(' * fall back to "" to keep the embedded form small.');
+  lines.push(" */");
+  lines.push(
+    "export const REQUIRED_SCHEMA: Readonly<Record<string, readonly (readonly [number, string, string, string])[]>> = {",
+  );
+  const label = { required: "r", optional: "o", repeated: "p" } as const;
+  for (const name of [...required.keys()].sort()) {
+    const fields = [...required.get(name)!.values()].sort((a, b) => a.number - b.number);
+    if (fields.length === 0) {
+      lines.push(`  ${JSON.stringify(name)}: [],`);
+      continue;
+    }
+    const tuples = fields
+      .map((f) => {
+        const fieldName = f.label === "required" ? f.name : "";
+        const type = required.has(f.type) ? f.type : "";
+        return `[${f.number}, ${JSON.stringify(fieldName)}, "${label[f.label]}", ${JSON.stringify(type)}]`;
+      })
+      .join(", ");
+    lines.push(`  ${JSON.stringify(name)}: [${tuples}],`);
+  }
+  lines.push("};");
+  lines.push("");
   return lines.join("\n");
 }
 
 export function generate(): { text: string; conflicts: string[]; archives: number } {
-  const { files, messages, enums, conflicts } = loadVendoredSchema();
+  const { files, messages, detailed, enums, conflicts } = loadVendoredSchema();
   const referenced = referencedArchives();
   return {
-    text: render(files, messages, enums, referenced),
+    text: render(files, messages, enums, referenced, requiredSubset(detailed, referenced)),
     conflicts,
     archives: referenced.size,
   };

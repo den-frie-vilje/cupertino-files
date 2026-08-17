@@ -250,6 +250,24 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "audit_document",
+    description: apiDoc(
+      "audit_document",
+      "Findings come back as { severity, code, message } — 'error' names a state the app " +
+        "refuses or repairs destructively, 'warning' one it renders against the author's " +
+        "intent. An empty list is the pass.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: { path: PATH_PROP },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      return JSON.stringify({ path, findings: open(path).audit() }, null, 2);
+    },
+  },
+  {
     name: "list_formulas",
     description: apiDoc(
       "list_formulas",

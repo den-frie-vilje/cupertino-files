@@ -1161,7 +1161,10 @@ export const CAPABILITIES: Capability[] = [
         "automatic alignment is the absence of the per-cell text style, and the template's " +
         "do-nothing style (alignment: 0) was the left-pin — and the round after the writer began " +
         "dropping that style came back all green, every number right-aligned with no cell " +
-        "touched, resaved clean by the app.",
+        "touched, resaved clean by the app. One write path had missed the drop: setFormula " +
+        "without a cached value left formula results left-pinned beside right-aligned plain " +
+        "values, named cell by cell in the next returned demo — the drop now runs on every " +
+        "formula write, with app verification riding the next demo-06 round.",
       e2e: true,
       risk: "high",
     },
@@ -1487,9 +1490,21 @@ export const CAPABILITIES: Capability[] = [
       "identity is one table with two names, and the engine resolves either name to whichever " +
       "registered first — measured when a formula naming a clone read the donor's cells instead",
     manualProof: {
-      claim: "a table added this way is editable in Numbers as a table, not just present in the file",
-      why: "the suite proves it reloads with its own cells and a unique name, not that the app treats it as a first-class table",
-      how: "add a blank table, open in Numbers, type into it and reference it from a formula on another table",
+      claim:
+        "the app keeps a library-minted registration, so a cross-table reference to the clone " +
+        "computes on first open",
+      why:
+        "the clone itself is first-class — two rounds opened it, showed its cells, and the " +
+        "checker's own formula referencing it by name computed — but both rounds the app " +
+        "discarded the written identity and re-registered, tombstoning the library's stored " +
+        "references into ref errors. The mint now enrolls the full owner family at all three " +
+        "engine sites (archives, tracker list, owner map, internals past the map's max); " +
+        "whether that is the whole acceptance test only an open can say.",
+      how:
+        "npm run demos -- out, open demo-06-formler.numbers, F-03: the fetch under it must " +
+        "show 5 and the CrossCheck table's top row 7, with no ref error anywhere. A ref " +
+        "error means the three sites are still not sufficient and the remaining difference " +
+        "is the per-kind dependency payloads the app writes and we omit.",
       risk: "medium",
     },
   },

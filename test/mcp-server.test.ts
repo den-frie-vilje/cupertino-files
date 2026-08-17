@@ -105,6 +105,7 @@ describe("the MCP server over stdio", () => {
       const names = (listed.tools as { name: string }[]).map((t) => t.name).sort();
       expect(names).toEqual([
         "append_paragraph",
+        "audit_document",
         "create_document",
         "describe_document",
         "format_cells",

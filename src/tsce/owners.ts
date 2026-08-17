@@ -139,6 +139,15 @@ const TABLE_MODEL_NAME = 8;
  * same way the others were found.
  */
 export const OwnerKind = {
+  /**
+   * The owner Numbers mints for a uid it cannot resolve while opening a
+   * document: the uid keeps an internal id, parked on the owner map's
+   * `unregistered_internal_owner_id` list, and every formula referencing
+   * it opens as a ref error. Two review rounds produced one each, both
+   * for cross-table references to a clone whose written identity the
+   * app had discarded.
+   */
+  TOMBSTONE: 0,
   /** The table itself. Carries the `formula_owner` reference. */
   TABLE: 1,
   /** Formulas backing conditional-formatting rules. */
@@ -169,6 +178,7 @@ export const OwnerKind = {
 
 /** Human-readable names for the kinds evidence has established. */
 export const OWNER_KIND_NAMES: ReadonlyMap<number, string> = new Map([
+  [OwnerKind.TOMBSTONE, "tombstone"],
   [OwnerKind.TABLE, "table"],
   [OwnerKind.CONDITIONAL_STYLE, "conditional style"],
   [OwnerKind.HIDDEN_STATE_ROWS, "hidden state (rows)"],
@@ -391,79 +401,293 @@ function tableNameOf(store: ObjectStore, id: bigint): string | undefined {
   return model.message.getString(TABLE_MODEL_NAME);
 }
 
+/** `TSCE.CalculationEngineArchive`. */
+const CALCULATION_ENGINE = 4000;
+const EngineFields = protoFields("TSCE.CalculationEngineArchive", {
+  DEPENDENCY_TRACKER: "dependency_tracker",
+});
+const TrackerFields = protoFields("TSCE.DependencyTrackerArchive", {
+  OWNER_ID_MAP: "owner_id_map",
+  FORMULA_OWNER_DEPENDENCIES: "formula_owner_dependencies",
+});
+const OwnerIdMapFields = protoFields("TSCE.OwnerIDMapArchive", {
+  MAP_ENTRY: "map_entry",
+  UNREGISTERED: "unregistered_internal_owner_id",
+});
+const MapEntryFields = protoFields("TSCE.OwnerIDMapArchive.OwnerIDMapArchiveEntry", {
+  INTERNAL: "internal_owner_id",
+  OWNER_ID: "owner_id",
+});
+const PayloadFields = protoFields("TSCE.FormulaOwnerDependenciesArchive", {
+  CELL_DEPENDENCIES: "cell_dependencies",
+  RANGE_DEPENDENCIES: "range_dependencies",
+  VOLATILE_DEPENDENCIES: "volatile_dependencies",
+  SPANNING_COLUMN_DEPENDENCIES: "spanning_column_dependencies",
+  SPANNING_ROW_DEPENDENCIES: "spanning_row_dependencies",
+  WHOLE_OWNER_DEPENDENCIES: "whole_owner_dependencies",
+  CELL_ERRORS: "cell_errors",
+  TILED_CELL_DEPENDENCIES_BAG: "tiled_cell_dependencies",
+  UUID_REFERENCES: "uuid_references",
+  TILED_RANGE_DEPENDENCIES: "tiled_range_dependencies",
+  SPILL_RANGE_SIZES: "spill_range_sizes",
+});
+/** `TSCE.CellRecordTileArchive`. */
+const CELL_RECORD_TILE_TYPE = 4009;
+const TileArchiveFields = protoFields("TSCE.CellRecordTileArchive", {
+  INTERNAL_OWNER_ID: "internal_owner_id",
+  TILE_COLUMN_BEGIN: "tile_column_begin",
+  TILE_ROW_BEGIN: "tile_row_begin",
+});
+
 /**
- * Register a table with the calc engine: the kind-1
- * `FormulaOwnerDependenciesArchive` that carries its identity, plus the
- * derived owners the app mints beside it (conditional styles, hidden
- * rows, hidden columns).
- *
- * A cloned table without one is a table the engine has never heard of.
- * Numbers re-registers such a table under a brand-new UUID on open and
- * discards stray archives, so every cross-table reference compiled
- * against the clone's written identity dangles — measured when a
- * library-written `=CrossCheck::B2` opened as a ref error while the
- * checker's own `=CrossCheck::B3`, typed in the app a minute later,
- * resolved against the app's replacement identity.
- *
- * Only identity is written: uid, internal id, kind, and the
- * `formula_owner` reference (the base uid on derived entries). The
- * app's own fresh archives carry a decoration of empty dependency
- * bags as well, but several of those nest messages whose fields are
- * `required` — an *empty* `RangeCoordinateArchive` is malformed, and
- * one round of demo documents shipped exactly that and opened as
- * damaged. Omitting an optional field can never be malformed, and the
- * e2e recompute probe pins that the engine rebuilds dependency state
- * on open. The internal id is one past the file's maximum; the app's
- * own allocator skipped further ahead in the measured file, but
- * nothing ties behaviour to the gap and uniqueness is what the
- * structure needs.
+ * The empty-state payload every owner archive carries beside its
+ * identity, measured twice from the app itself: its own fresh family for
+ * a re-registered table, and — field for field the same — the upgrade it
+ * wrote onto a library-minted identity-only archive it kept. The
+ * spanning extents hold int16/int32 sentinels meaning "no extent"; every
+ * message with required fields states them, which is what separates this
+ * decoration from the malformed empties that once shipped.
  */
+function writeEmptyPayload(m: RawMessage): void {
+  m.setBytes(PayloadFields.CELL_DEPENDENCIES, new Uint8Array(0));
+  m.setBytes(PayloadFields.RANGE_DEPENDENCIES, new Uint8Array(0));
+  const volatile = RawMessage.create();
+  for (const field of [1, 2, 3, 4, 5, 7]) volatile.setBytes(field, new Uint8Array(0));
+  m.setMessage(PayloadFields.VOLATILE_DEPENDENCIES, volatile);
+  for (const field of [
+    PayloadFields.SPANNING_COLUMN_DEPENDENCIES,
+    PayloadFields.SPANNING_ROW_DEPENDENCIES,
+  ]) {
+    const spanning = RawMessage.create();
+    for (const slot of [2, 3]) {
+      const extent = RawMessage.create();
+      extent.setVarint(1, 32767);
+      extent.setVarint(2, 2147483647);
+      extent.setVarint(3, 32767);
+      extent.setVarint(4, 2147483647);
+      spanning.setMessage(slot, extent);
+    }
+    m.setMessage(field, spanning);
+  }
+  const whole = RawMessage.create();
+  whole.setBytes(1, new Uint8Array(0));
+  m.setMessage(PayloadFields.WHOLE_OWNER_DEPENDENCIES, whole);
+  m.setBytes(PayloadFields.CELL_ERRORS, new Uint8Array(0));
+}
+
+/** The payload fields that follow the owner-specific ones, in field order. */
+function writePayloadTail(m: RawMessage): void {
+  m.setBytes(PayloadFields.UUID_REFERENCES, new Uint8Array(0));
+  m.setBytes(PayloadFields.TILED_RANGE_DEPENDENCIES, new Uint8Array(0));
+  m.setBytes(PayloadFields.SPILL_RANGE_SIZES, new Uint8Array(0));
+}
+
+/**
+ * The owner kinds a table's family comprises, base + kind each. Both
+ * app-minted families available for measurement — the blank template's
+ * own table and the family Numbers minted while re-registering a
+ * library clone — carry exactly this set.
+ */
+const TABLE_FAMILY_KINDS = [
+  OwnerKind.TABLE,
+  OwnerKind.CONDITIONAL_STYLE,
+  OwnerKind.HIDDEN_STATE_ROWS,
+  OwnerKind.MERGE,
+  6,
+  OwnerKind.CATEGORIES,
+  OwnerKind.SUMMARY_AGGREGATES,
+  10,
+  OwnerKind.HIDDEN_STATE_COLUMNS,
+  12,
+  OwnerKind.HAUNTED,
+] as const;
+
+/**
+ * Register a table with the calc engine, at every site the engine
+ * consults.
+ *
+ * Registration is three things, and a table is only registered when it
+ * has all of them:
+ *
+ * 1. A `FormulaOwnerDependenciesArchive` per owner kind — the full
+ *    family the app mints for a fresh table, each uid `base + kind`.
+ * 2. A `TSP.Reference` to each archive from the engine's
+ *    `dependency_tracker.formula_owner_dependencies` list. An archive
+ *    the list does not name is never loaded.
+ * 3. An `owner_id_map` entry per owner — internal id ↔ uid, the uid in
+ *    its four-word CFUUID shape. The map is the engine's registry: a
+ *    uid absent here is a table the engine has never heard of, and
+ *    Numbers re-registers it under a brand-new identity on open,
+ *    re-pointing stray references at a kind-0 tombstone owner it parks
+ *    on the map's `unregistered_internal_owner_id` list — measured as
+ *    the `#ERROR` a library-written cross-table reference opened to
+ *    while the checker's own, typed a minute later, computed.
+ *
+ * Internal ids allocate one past the map's maximum — the map knows
+ * owners that have no archive in the file, so the archives' maximum
+ * runs low and colliding with a mapped id would alias two owners.
+ *
+ * Only identity is written per archive: uid, internal id, kind, and
+ * the `formula_owner` reference (base uid on derived entries). The
+ * app's own archives carry dependency payloads as well, but several
+ * nest messages whose fields are `required` — an *empty*
+ * `RangeCoordinateArchive` is malformed, and one round of demo
+ * documents shipped exactly that and opened as damaged. Omitting an
+ * optional field can never be malformed, and the engine rebuilds
+ * dependency state on open.
+ */
+/**
+ * Where a table's base identity stands against the three registration
+ * sites the engine consults. `audit()` reports any gap: a partial
+ * registration is exactly the state Numbers repairs by re-minting the
+ * table's identity, which strands every stored reference to it.
+ */
+export function ownerRegistrationState(
+  store: ObjectStore,
+  base: OwnerUid,
+): { archive: boolean; tracked: boolean; mapped: boolean } {
+  let archiveId: bigint | undefined;
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
+    const uid = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
+    if (uid && uid.lo === base.lo && uid.hi === base.hi) {
+      archiveId = obj.identifier;
+      break;
+    }
+  }
+  const engine = store.findByType(CALCULATION_ENGINE);
+  const tracker = engine?.message.getMessage(EngineFields.DEPENDENCY_TRACKER);
+  const tracked =
+    archiveId !== undefined &&
+    (tracker?.getMessages(TrackerFields.FORMULA_OWNER_DEPENDENCIES) ?? []).some(
+      (r) => r.getVarint(1) === archiveId,
+    );
+  const mapped = (tracker?.getMessage(TrackerFields.OWNER_ID_MAP)?.getMessages(OwnerIdMapFields.MAP_ENTRY) ?? []).some(
+    (e) => {
+      const uid = readCfUid(e.getMessage(MapEntryFields.OWNER_ID));
+      return uid !== undefined && uid.lo === base.lo && uid.hi === base.hi;
+    },
+  );
+  return { archive: archiveId !== undefined, tracked, mapped };
+}
+
 export function mintTableOwnerArchive(
   store: ObjectStore,
   tableInfoId: bigint,
   base: OwnerUid,
 ): void {
+  const engine = store.findByType(CALCULATION_ENGINE);
+  const component = engine ? store.componentOf(engine.identifier) : undefined;
+  if (!engine || !component) return;
+  const tracker = engine.message.getMessage(EngineFields.DEPENDENCY_TRACKER);
+  if (!tracker) return;
+  let map = tracker.getMessage(TrackerFields.OWNER_ID_MAP);
+  if (!map) {
+    map = RawMessage.create();
+    tracker.setMessage(TrackerFields.OWNER_ID_MAP, map);
+  }
+
+  const mapEntries = map.getMessages(OwnerIdMapFields.MAP_ENTRY);
+  const mappedUids = new Set(
+    mapEntries
+      .map((e) => readCfUid(e.getMessage(MapEntryFields.OWNER_ID)))
+      .filter((uid): uid is OwnerUid => uid !== undefined)
+      .map(ownerKey),
+  );
   let maxInternal = 0;
+  for (const entry of mapEntries) {
+    const internal = entry.getUint(MapEntryFields.INTERNAL) ?? 0;
+    if (internal > maxInternal) maxInternal = internal;
+  }
+  for (const field of map.fields) {
+    if (field.no === OwnerIdMapFields.UNREGISTERED && typeof field.value === "bigint") {
+      const internal = Number(field.value);
+      if (internal > maxInternal) maxInternal = internal;
+    }
+  }
+  const existing = new Map<string, { archive: IwaObject; internal: number }>();
   for (const { obj } of store.allObjects()) {
     if (obj.type !== FORMULA_OWNER_DEPENDENCIES) continue;
     const internal = obj.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0;
     if (internal > maxInternal) maxInternal = internal;
     const uid = readOwnerUid(obj.message.getMessage(FormulaOwnerFields.FORMULA_OWNER_UID));
-    if (uid && uid.lo === base.lo && uid.hi === base.hi) return; // already registered
+    if (uid) existing.set(ownerKey(uid), { archive: obj, internal });
   }
-  const engine = [...store.allObjects()].find(
-    ({ obj }) => obj.type === FORMULA_OWNER_DEPENDENCIES,
-  )?.obj;
-  const component = engine ? store.componentOf(engine.identifier) : undefined;
-  if (!component) return;
+  const trackedIds = new Set(
+    tracker
+      .getMessages(TrackerFields.FORMULA_OWNER_DEPENDENCIES)
+      .map((r) => r.getVarint(1))
+      .filter((id): id is bigint => id !== undefined),
+  );
 
-  const mint = (kind: number, internal: number): RawMessage => {
+  const enroll = (archive: IwaObject, uid: OwnerUid, internal: number): void => {
+    if (!trackedIds.has(archive.identifier)) {
+      const ref = RawMessage.create();
+      ref.setVarint(1, archive.identifier);
+      tracker.addMessage(TrackerFields.FORMULA_OWNER_DEPENDENCIES, ref);
+      store.declareReference(engine, archive.identifier);
+      engine.message.markDirty();
+    }
+    if (!mappedUids.has(ownerKey(uid))) {
+      const entry = RawMessage.create();
+      entry.setVarint(MapEntryFields.INTERNAL, internal);
+      const cf = RawMessage.create();
+      const words = [uid.lo & 0xffffffffn, uid.lo >> 32n, uid.hi & 0xffffffffn, uid.hi >> 32n];
+      for (const [i, word] of words.entries()) cf.setVarint(i + 2, word);
+      entry.setMessage(MapEntryFields.OWNER_ID, cf);
+      map.addMessage(OwnerIdMapFields.MAP_ENTRY, entry);
+      mappedUids.add(ownerKey(uid));
+      engine.message.markDirty();
+    }
+  };
+
+  for (const kind of TABLE_FAMILY_KINDS) {
+    const uid: OwnerUid = {
+      lo: kind === OwnerKind.TABLE ? base.lo : (base.lo + BigInt(kind)) & 0xffffffffffffffffn,
+      hi: base.hi,
+    };
+    const present = existing.get(ownerKey(uid));
+    if (present) {
+      enroll(present.archive, uid, present.internal);
+      continue;
+    }
+    const internal = ++maxInternal;
     const archive = store.createObject(FORMULA_OWNER_DEPENDENCIES, component);
     const m = archive.message;
-    const uid = RawMessage.create();
-    uid.setVarint(1, (kind === OwnerKind.TABLE ? base.lo : (base.lo + BigInt(kind)) & 0xffffffffffffffffn));
-    uid.setVarint(2, base.hi);
-    m.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, uid);
+    const uidMsg = RawMessage.create();
+    uidMsg.setVarint(1, uid.lo);
+    uidMsg.setVarint(2, uid.hi);
+    m.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, uidMsg);
     m.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, internal);
     m.setVarint(FormulaOwnerFields.OWNER_KIND, kind);
+    writeEmptyPayload(m);
     if (kind === OwnerKind.TABLE) {
       const owner = RawMessage.create();
       owner.setVarint(1, tableInfoId);
       m.setMessage(FormulaOwnerFields.FORMULA_OWNER, owner);
       store.declareReference(archive, tableInfoId);
+      // The one payload only the table's own owner carries: a dependency
+      // tile of its formula cells, empty for a fresh table — the app
+      // minted exactly this beside the kind-1 it kept.
+      const tile = store.createObject(CELL_RECORD_TILE_TYPE, component);
+      tile.message.setVarint(TileArchiveFields.INTERNAL_OWNER_ID, internal);
+      tile.message.setVarint(TileArchiveFields.TILE_COLUMN_BEGIN, 0);
+      tile.message.setVarint(TileArchiveFields.TILE_ROW_BEGIN, 0);
+      const tiled = RawMessage.create();
+      const ref = RawMessage.create();
+      ref.setVarint(1, tile.identifier);
+      tiled.addMessage(1, ref);
+      m.setMessage(PayloadFields.TILED_CELL_DEPENDENCIES_BAG, tiled);
+      store.declareReference(archive, tile.identifier);
     } else {
       const baseUid = RawMessage.create();
       baseUid.setVarint(1, base.lo);
       baseUid.setVarint(2, base.hi);
       m.setMessage(FormulaOwnerFields.BASE_OWNER_UID, baseUid);
+      m.setBytes(PayloadFields.TILED_CELL_DEPENDENCIES_BAG, new Uint8Array(0));
     }
-    return m;
-  };
-
-  mint(OwnerKind.TABLE, maxInternal + 1);
-  let next = maxInternal + 2;
-  for (const kind of [OwnerKind.CONDITIONAL_STYLE, OwnerKind.HIDDEN_STATE_ROWS, OwnerKind.HIDDEN_STATE_COLUMNS]) {
-    mint(kind, next++);
+    writePayloadTail(m);
+    enroll(archive, uid, internal);
   }
 }
 
