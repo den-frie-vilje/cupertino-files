@@ -320,7 +320,10 @@ export class NumbersDocument extends IWorkDocument {
    *
    * `withContent: false` clears the cells but keeps the shape, styling and
    * header bands — a blank table laid out like its source, which is what
-   * you want far more often than a duplicate of the data.
+   * you want far more often than a duplicate of the data. Everything the
+   * source had and the new table does not need is the caller's to remove:
+   * row and column count, widths, and per-cell styling all arrive from
+   * the donor and rarely fit the clone as they are.
    * @agentTool manage_sheets
    */
   addTable(

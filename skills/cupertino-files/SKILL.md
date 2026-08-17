@@ -533,6 +533,15 @@ copy is always renamed, because Numbers addresses tables by name and two
 "Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
 is per sheet, so a copy onto another sheet may keep the original name.
 
+**A clone keeps everything its donor had, and none of it fits by
+default.** `withContent: false` clears the values, not the shape: the
+copy still has the donor's row and column count, column widths, and
+per-cell styling (a wrap style from a prose column lands on your number
+cells, cell by cell). Size it with `deleteRows`/`deleteColumns` and
+`insertRows`, set its widths, and reset formatting where the donor's
+shows through — a reader who opens a mostly-empty table at someone
+else's widths sees a mistake, and no offline check will catch it.
+
 ### Conditional formatting and filters
 
 Both are the same archive underneath — a *predicate* — so they read alike.

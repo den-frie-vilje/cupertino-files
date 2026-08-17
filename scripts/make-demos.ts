@@ -65,10 +65,14 @@ function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): 
     if (total > maxWidth) {
       throw new Error(`${name}: table ${table.name} is ${Math.round(total)} pt wide (max ${maxWidth})`);
     }
+    const usedRows = new Set<number>();
+    const usedColumns = new Set<number>();
     for (let r = 0; r < table.rowCount; r++) {
       for (let c = 0; c < table.columnCount; c++) {
         const value = table.cellValue(r, c);
         if (!value) continue;
+        usedRows.add(r);
+        usedColumns.add(c);
         const wrap = table.cellFormatting(r, c).textWrap === true;
         if (value.type === "text" && value.value.length > 40 && !wrap) {
           throw new Error(`${name}: ${table.name} r${r}c${c} holds long text without wrap`);
@@ -77,6 +81,23 @@ function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): 
           throw new Error(`${name}: ${table.name} r${r}c${c} is a ${value.type} cell with wrap on`);
         }
       }
+    }
+    // A clone must be sized on purpose, never shipped as the donor's
+    // husk: a reader opening a mostly-empty table sees a mistake.
+    const lastRow = Math.max(-1, ...usedRows);
+    const lastColumn = Math.max(-1, ...usedColumns);
+    if (table.rowCount - 1 - lastRow > 3) {
+      throw new Error(`${name}: ${table.name} has ${table.rowCount - 1 - lastRow} empty trailing rows`);
+    }
+    if (table.columnCount - 1 - lastColumn > 1) {
+      throw new Error(
+        `${name}: ${table.name} has ${table.columnCount - 1 - lastColumn} empty trailing columns`,
+      );
+    }
+    if (usedRows.size > 0 && usedRows.size / table.rowCount < 0.5) {
+      throw new Error(
+        `${name}: ${table.name} uses ${usedRows.size} of ${table.rowCount} rows — a mostly empty table`,
+      );
     }
   }
 }
@@ -742,14 +763,20 @@ function demoFormulas(): Uint8Array {
   head(check(), "DIN TUR — krydsreference: skriv selv =Krydstjek::B3 i den gule C-celle herunder (skal vise 10).");
   data.setCellFormatting(row, 2, { fill: colorFill(SOFTYELLOW.r, SOFTYELLOW.g, SOFTYELLOW.b) });
   row += 2;
+  if (data.rowCount > row) data.deleteRows(row, data.rowCount - row);
 
   // A clean second table: the cross-table reference each way, and a
   // whole-column span. Column B holds only the three numbers the span
   // sums, and both formulas sit in column C — a formula inside the
   // column it spans would be a circular reference.
+  // A clone is a structure donor, nothing more: size, widths and
+  // formatting are all chosen here, or the donor's leak through and a
+  // reader opens a mostly-empty husk with someone else's styling.
   const sheet = doc.sheets()[0]!;
   const second = doc.addTable(sheet.id, { name: "Krydstjek", x: 40, y: 700, withContent: false });
+  if (second.rowCount > 6) second.deleteRows(6, second.rowCount - 6);
   if (second.rowCount < 6) second.insertRows(second.rowCount, 6 - second.rowCount);
+  if (second.columnCount > 3) second.deleteColumns(3, second.columnCount - 3);
   second.setColumnWidth(0, 220);
   second.setColumnWidth(1, 75);
   second.setColumnWidth(2, 75);
@@ -858,6 +885,7 @@ function demoRules(): Uint8Array {
       value: "— vælg —",
     });
   }
+  if (table.rowCount > row) table.deleteRows(row, table.rowCount - row);
   return doc.save();
 }
 
@@ -899,6 +927,7 @@ function demoStructure(): Uint8Array {
   head(check(), "Kolonne A i »Måledata« er omskrevet af biblioteket. Står der stadig »SEED · filter rules« deroppe, er omskrivningen ikke slået igennem.");
   head(check(), "DIN TUR — ark: opret selv et nyt ark med ⊕, omdøb det til »Dit ark«, og LAD DET VÆRE DET AKTIVE ark når du gemmer. Så viser filen hvordan appen selv skriver et ark og husker den valgte fane.");
   head(check(), "DIN TUR — filter: slå filteret i »Måledata« TIL igen (Organisér → Filtrér) før du gemmer — kun rækkerne koral, koks og kobolt bør vises. Så viser filen appens egen tændte filtertilstand.");
+  if (table.rowCount > row + 1) table.deleteRows(row + 1, table.rowCount - row - 1);
 
   const dataSheetIndex = doc.sheets().findIndex((s) => s.id !== readme.id);
   doc.renameSheet(dataSheetIndex, "Data (omdøbt)");

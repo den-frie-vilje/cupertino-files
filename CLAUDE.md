@@ -13,6 +13,20 @@ the diff answers questions no visual check can: not "did it draw" but
 and returns an authored twin is still a measurement; a rung that only
 passes is a dead end the moment something subtler goes wrong.
 
+## A clone is a structure donor, nothing more
+
+Tables, sheets and slides are created by copying because a from-scratch
+build would omit state only the app knows about. That dependency cuts
+both ways: everything the donor carries arrives too, and nothing about
+it fits the clone by default. So cloning is followed by deliberate
+choice, every time — row and column count cut to what the new table
+uses, column widths set, formats and per-cell styling reset where the
+donor's leak through, contents cleared where they linger. The failure
+mode is not a broken file and no automated check sees it: a person
+opens a mostly-empty husk, someone else's column widths, wrap styles
+on number cells, or stale values, and reads carelessness. What is
+kept from a donor is a decision, never a default.
+
 ## Documents get reviewed on a phone
 
 The checker works from an iPhone as often as a Mac, and Numbers
