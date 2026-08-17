@@ -290,6 +290,29 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "list_comments",
+    description: apiDoc(
+      "list_comments",
+      "Omit table to list every table. Reviewers answer as comments on cells, so read " +
+        "these before anything else on a returned file. Coordinates are 0-based.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: { type: "string", description: "Table name; omit for every table" },
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const doc = open(requirePath(args));
+      const name = str(args.table);
+      const tables = name ? [tableIn(doc, name)] : tablesOf(doc.store);
+      const out = tables.map((t) => ({ table: t.name, comments: t.cellComments() }));
+      return JSON.stringify(out, null, 2);
+    },
+  },
+  {
     name: "set_cells",
     description: apiDoc(
       "set_cells",
