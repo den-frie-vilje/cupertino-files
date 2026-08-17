@@ -53,6 +53,16 @@ export const FormulaOwnerFields = protoFields("TSCE.FormulaOwnerDependenciesArch
   FORMULA_OWNER: "formula_owner",
   BASE_OWNER_UID: "base_owner_uid",
   TILED_CELL_DEPENDENCIES: "tiled_cell_dependencies",
+  CELL_DEPENDENCIES: "cell_dependencies",
+  RANGE_DEPENDENCIES: "range_dependencies",
+  VOLATILE_DEPENDENCIES: "volatile_dependencies",
+  SPANNING_COLUMN_DEPENDENCIES: "spanning_column_dependencies",
+  SPANNING_ROW_DEPENDENCIES: "spanning_row_dependencies",
+  WHOLE_OWNER_DEPENDENCIES: "whole_owner_dependencies",
+  CELL_ERRORS: "cell_errors",
+  UUID_REFERENCES: "uuid_references",
+  TILED_RANGE_DEPENDENCIES: "tiled_range_dependencies",
+  SPILL_RANGE_SIZES: "spill_range_sizes",
 });
 
 /**
@@ -428,14 +438,14 @@ export function mintTableOwnerArchive(
   m.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, uid);
   m.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, maxInternal + 1);
   m.setVarint(FormulaOwnerFields.OWNER_KIND, OwnerKind.TABLE);
-  for (const no of [4, 5, 10, 15, 16]) m.setMessage(no, RawMessage.create());
+  for (const no of [FormulaOwnerFields.CELL_DEPENDENCIES, FormulaOwnerFields.RANGE_DEPENDENCIES, FormulaOwnerFields.CELL_ERRORS, FormulaOwnerFields.TILED_RANGE_DEPENDENCIES, FormulaOwnerFields.SPILL_RANGE_SIZES]) m.setMessage(no, RawMessage.create());
   const volatile = RawMessage.create();
   for (const no of [1, 2, 3, 4, 5, 7]) volatile.setMessage(no, RawMessage.create());
-  m.setMessage(6, volatile);
-  for (const no of [7, 8]) m.setMessage(no, RawMessage.create());
+  m.setMessage(FormulaOwnerFields.VOLATILE_DEPENDENCIES, volatile);
+  for (const no of [FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, FormulaOwnerFields.SPANNING_ROW_DEPENDENCIES]) m.setMessage(no, RawMessage.create());
   const whole = RawMessage.create();
   whole.setMessage(1, RawMessage.create());
-  m.setMessage(9, whole);
+  m.setMessage(FormulaOwnerFields.WHOLE_OWNER_DEPENDENCIES, whole);
   const owner = RawMessage.create();
   owner.setVarint(1, tableInfoId);
   m.setMessage(FormulaOwnerFields.FORMULA_OWNER, owner);
@@ -445,7 +455,7 @@ export function mintTableOwnerArchive(
   self.setVarint(1, base.lo);
   self.setVarint(2, base.hi);
   uuidRefs.setMessage(1, self);
-  m.setMessage(14, uuidRefs);
+  m.setMessage(FormulaOwnerFields.UUID_REFERENCES, uuidRefs);
   store.declareReference(archive, tableInfoId);
 
   // The app registers the commonly derived owners beside the table's own
@@ -463,18 +473,18 @@ export function mintTableOwnerArchive(
     dm.setMessage(FormulaOwnerFields.FORMULA_OWNER_UID, duid);
     dm.setVarint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID, nextInternal++);
     dm.setVarint(FormulaOwnerFields.OWNER_KIND, kind);
-    for (const no of [4, 5, 10, 13, 14, 15, 16]) dm.setMessage(no, RawMessage.create());
+    for (const no of [FormulaOwnerFields.CELL_DEPENDENCIES, FormulaOwnerFields.RANGE_DEPENDENCIES, FormulaOwnerFields.CELL_ERRORS, FormulaOwnerFields.TILED_CELL_DEPENDENCIES, FormulaOwnerFields.UUID_REFERENCES, FormulaOwnerFields.TILED_RANGE_DEPENDENCIES, FormulaOwnerFields.SPILL_RANGE_SIZES]) dm.setMessage(no, RawMessage.create());
     const dvol = RawMessage.create();
     for (const no of [1, 2, 3, 4, 5, 7]) dvol.setMessage(no, RawMessage.create());
-    dm.setMessage(6, dvol);
-    for (const no of [7, 8]) {
+    dm.setMessage(FormulaOwnerFields.VOLATILE_DEPENDENCIES, dvol);
+    for (const no of [FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, FormulaOwnerFields.SPANNING_ROW_DEPENDENCIES]) {
       const span = RawMessage.create();
       for (const g of [2, 3]) span.setMessage(g, RawMessage.create());
       dm.setMessage(no, span);
     }
     const dwhole = RawMessage.create();
     dwhole.setMessage(1, RawMessage.create());
-    dm.setMessage(9, dwhole);
+    dm.setMessage(FormulaOwnerFields.WHOLE_OWNER_DEPENDENCIES, dwhole);
     const dbase = RawMessage.create();
     dbase.setVarint(1, base.lo);
     dbase.setVarint(2, base.hi);

@@ -115,6 +115,12 @@ export const TST_TYPE = {
 /** TST.TableInfoArchive. */
 const TableInfo = { SUPER: 1, TABLE_MODEL: 2 } as const;
 /** TST.TableModelArchive (reader-relevant fields). */
+/** TSWP.ParagraphStyleArchive's two property bags (field 10 is override_count). */
+const ParagraphStyleBags = protoFields("TSWP.ParagraphStyleArchive", {
+  CHAR_PROPERTIES: "char_properties",
+  PARA_PROPERTIES: "para_properties",
+});
+
 export const TableModelFields = protoFields("TST.TableModelArchive", {
   BASE_DATA_STORE: "base_data_store",
   NUMBER_OF_ROWS: "number_of_rows",
@@ -3735,15 +3741,34 @@ export class TableModel {
     }
   }
 
-  /** True when a style-table key resolves to a style stating nothing. */
+  /**
+   * True when a style-table key resolves to the template's do-nothing
+   * cell text style: `char_properties` (11) empty or absent, and
+   * `para_properties` (12) empty, absent, or stating only
+   * `alignment: 0` — the shape the blank template stamps on every cell
+   * and row inserts inherit. A value cell carrying it renders
+   * left-pinned where the same value without it renders as the
+   * inspector's Automatic; the app's own re-align write removes the id
+   * outright. A style stating anything else is a choice and stays.
+   * (Field 10 is `override_count`, not a property bag.)
+   */
   private textStyleIsBare(key: number): boolean {
     const obj = this.store.resolve(this.styleTableEntry(key));
     if (!obj) return false;
-    const character = obj.message.getMessage(10);
-    const paragraph = obj.message.getMessage(11);
+    let character: RawMessage | undefined;
+    let paragraph: RawMessage | undefined;
+    try {
+      character = obj.message.getMessage(ParagraphStyleBags.CHAR_PROPERTIES);
+      paragraph = obj.message.getMessage(ParagraphStyleBags.PARA_PROPERTIES);
+    } catch {
+      return false;
+    }
+    if (character !== undefined && character.fields.length > 0) return false;
+    if (paragraph === undefined || paragraph.fields.length === 0) return true;
     return (
-      (character === undefined || character.fields.length === 0) &&
-      (paragraph === undefined || paragraph.fields.length === 0)
+      paragraph.fields.length === 1 &&
+      paragraph.fields[0]!.no === 1 &&
+      paragraph.getUint(1) === 0
     );
   }
 
