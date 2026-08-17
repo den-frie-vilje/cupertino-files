@@ -1250,11 +1250,14 @@ describe("adding and removing tables", () => {
   const load = (): NumbersDocument =>
     NumbersDocument.load(new Uint8Array(readFileSync(new URL(FILE, FIXTURES))));
 
-  it("adds a blank table laid out like its source", () => {
+  it("adds a blank table laid out like a named source", () => {
     const document = load();
     const sheet = document.sheets()[0]!;
     const source = document.tablesOnSheet(sheet.id)[0]!;
-    const blank = document.addTable(sheet.id, { withContent: false });
+    const blank = document.addTable(sheet.id, {
+      copyOf: source.infoObject!.identifier,
+      withContent: false,
+    });
 
     // Same shape and bands, no data.
     expect(blank.rowCount).toBe(source.rowCount);
@@ -1264,14 +1267,36 @@ describe("adding and removing tables", () => {
     expect(blank.headerRowCount).toBe(source.headerRowCount);
   });
 
-  it("duplicates a table with its data when asked", () => {
+  it("duplicates a table with its data when a source is named", () => {
     const document = load();
     const sheet = document.sheets()[0]!;
     const source = document.tablesOnSheet(sheet.id)[0]!;
-    const copy = document.addTable(sheet.id, { name: "Copy" });
+    const copy = document.addTable(sheet.id, {
+      name: "Copy",
+      copyOf: source.infoObject!.identifier,
+    });
 
     expect(copy.name).toBe("Copy");
     expect(copy.cellText(0, 0)).toBe(source.cellText(0, 0));
+  });
+
+  it("a table added without a source is the embedded neutral one", () => {
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const neutral = document.addTable(sheet.id, { name: "Neutral" });
+
+    // Empty, and shaped by the embedded Apple-made blank donor rather
+    // than by whatever table the document happens to contain.
+    const donor = NumbersDocument.blank().tables()[0]!;
+    expect(neutral.cells().length).toBe(0);
+    expect(neutral.rowCount).toBe(donor.rowCount);
+    expect(neutral.columnCount).toBe(donor.columnCount);
+    expect(neutral.columnWidth(0)).toBe(donor.columnWidth(0));
+
+    const reloaded = NumbersDocument.load(document.save());
+    const again = reloaded.tables().find((t) => t.name === "Neutral")!;
+    expect(again.cells().length).toBe(0);
+    expect(reloaded.audit().length).toBe(0);
   });
 
   it("never leaves two tables on a sheet sharing a name", () => {

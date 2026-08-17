@@ -12,8 +12,9 @@ import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
-import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
+import { deepCloneObject, deepCloneObjectInto, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
+import { drawableById } from "../tsd/placement.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -306,24 +307,25 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
-   * Add a table to a sheet by copying an existing one.
+   * Add a table to a sheet.
    *
    * Building a table from nothing means synthesising tiles, header buckets,
    * data lists and a calc-engine owner — the same reason sheets and slides
-   * are created by copying. The source defaults to the first table on the
-   * target sheet, falling back to any table in the document.
+   * are created by copying. Without `copyOf`, the source is the **embedded
+   * Apple-made blank table** (the same donor `blank()` documents are born
+   * with): the new table arrives empty and neutrally styled, inheriting
+   * nobody's widths, fills or wrap styles. Pass `copyOf` to duplicate a
+   * table already in the document instead.
    *
    * The copy is renamed, because **Numbers addresses tables by name**: two
    * tables called "Table 1" on one sheet make every cross-table formula
    * ambiguous. Names must be unique per sheet, not per document, so a copy
    * onto a different sheet can keep the original's name.
    *
-   * `withContent: false` clears the cells but keeps the shape, styling and
-   * header bands — a blank table laid out like its source, which is what
-   * you want far more often than a duplicate of the data. Everything the
-   * source had and the new table does not need is the caller's to remove:
-   * row and column count, widths, and per-cell styling all arrive from
-   * the donor and rarely fit the clone as they are.
+   * `withContent: false` clears a `copyOf` duplicate's cells but keeps the
+   * shape, styling and header bands. Either way, what the new table keeps
+   * is the caller's decision: row and column count and widths arrive at
+   * the donor's shape and rarely fit the new table as they are.
    * @agentTool manage_sheets
    */
   addTable(
@@ -337,27 +339,26 @@ export class NumbersDocument extends IWorkDocument {
     } = {},
   ): TableModel {
     const container = this.sheetContainer(sheetId);
-    const sourceId = options.copyOf ?? this.defaultTableSource(sheetId);
-    if (sourceId === undefined) {
-      throw new RangeError(
-        "no table to copy: this document contains none, and building one from nothing is not supported",
-      );
-    }
-    const source = this.store.object(sourceId);
-    if (source?.type !== TST_TYPE.TABLE_INFO) {
-      throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
-    }
-
     const placement: { x?: number; y?: number } = {};
     if (options.x !== undefined) placement.x = options.x;
     if (options.y !== undefined) placement.y = options.y;
-    const copy = container.addCopyOf(source, placement);
 
-    const table = tablesOf(this.store, [copy.id])[0];
-    if (!table) throw new RangeError(`copied table ${copy.id} did not resolve`);
+    let copyId: bigint;
+    if (options.copyOf !== undefined) {
+      const source = this.store.object(options.copyOf);
+      if (source?.type !== TST_TYPE.TABLE_INFO) {
+        throw new RangeError(`object ${options.copyOf} is not a TST.TableInfoArchive`);
+      }
+      copyId = container.addCopyOf(source, placement).id;
+    } else {
+      copyId = this.importNeutralTable(sheetId, placement);
+    }
 
-    remintTableIdentity(this.store, copy.id);
-    table.name = this.uniqueTableName(options.name, sheetId, copy.id);
+    const table = tablesOf(this.store, [copyId])[0];
+    if (!table) throw new RangeError(`copied table ${copyId} did not resolve`);
+
+    remintTableIdentity(this.store, copyId);
+    table.name = this.uniqueTableName(options.name, sheetId, copyId);
     if (options.withContent === false) {
       table.clearAllCells();
       // The donor's conditional rules ride along on the copied records,
@@ -366,6 +367,35 @@ export class NumbersDocument extends IWorkDocument {
       table.clearConditionalStyles();
     }
     return table;
+  }
+
+  /**
+   * Graft the embedded Apple-made blank table onto a sheet.
+   *
+   * The donor closure is fully self-contained (its per-object styles ride
+   * along; nothing references the donor document's singletons), which is
+   * what makes a cross-document import safe — {@link deepCloneObjectInto}
+   * refuses any closure that is not.
+   */
+  private importNeutralTable(sheetId: bigint, placement: { x?: number; y?: number }): bigint {
+    const donor = neutralTableDonor();
+    const component = this.store.componentOf(sheetId);
+    if (!component) throw new RangeError(`sheet ${sheetId} has no component`);
+    // The one reference allowed to escape the donor closure is the
+    // drawable's parent — its sheet — rebound to the sheet gaining the
+    // table. The style preset is seeded explicitly: the model reaches
+    // it through a field the curated extractor skips.
+    const { clone } = deepCloneObjectInto(this.store, donor.store, donor.info, {
+      component,
+      rebind: new Map([[donor.sheetId, sheetId]]),
+      ...(donor.presetId !== undefined ? { extraRoots: [donor.presetId] } : {}),
+    });
+    const container = this.sheetContainer(sheetId);
+    container.attach(clone.identifier);
+    if (Object.keys(placement).length > 0) {
+      drawableById(this.store, clone.identifier)?.setGeometry(placement);
+    }
+    return clone.identifier;
   }
 
   /**
@@ -422,4 +452,35 @@ export class NumbersDocument extends IWorkDocument {
       if (!used.has(candidate)) return candidate;
     }
   }
+}
+
+/**
+ * The embedded Apple-made blank table, loaded once per process and only
+ * ever read: imports copy out of this store, nothing writes into it.
+ */
+/** TST.TableModelArchive field 48: the table-style preset reference. */
+const TABLE_MODEL_STYLE_PRESET = 48;
+
+let cachedNeutralDonor:
+  | { store: ObjectStore; info: IwaObject; sheetId: bigint; presetId: bigint | undefined }
+  | undefined;
+
+function neutralTableDonor(): {
+  store: ObjectStore;
+  info: IwaObject;
+  sheetId: bigint;
+  presetId: bigint | undefined;
+} {
+  if (!cachedNeutralDonor) {
+    const donor = NumbersDocument.load(blankDonorBytes());
+    const table = donor.tables()[0];
+    const info = table?.infoObject;
+    const sheetId = donor.sheets()[0]?.id;
+    if (!table || !info || sheetId === undefined) {
+      throw new RangeError("the embedded blank donor has no table");
+    }
+    const presetId = refId(table.object.message, TABLE_MODEL_STYLE_PRESET);
+    cachedNeutralDonor = { store: donor.store, info, sheetId, presetId };
+  }
+  return cachedNeutralDonor;
 }

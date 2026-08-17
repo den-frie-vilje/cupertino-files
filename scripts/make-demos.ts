@@ -807,6 +807,7 @@ function demoFormulas(): Uint8Array {
   const second = doc.addTable(sheet.id, { name: "CrossCheck", x: 40, y: 700, withContent: false });
   if (second.rowCount > 7) second.deleteRows(7, second.rowCount - 7);
   if (second.rowCount < 7) second.insertRows(second.rowCount, 7 - second.rowCount);
+  if (second.columnCount < 3) second.insertColumns(second.columnCount, 3 - second.columnCount);
   if (second.columnCount > 3) second.deleteColumns(3, second.columnCount - 3);
   second.setColumnWidth(0, 220);
   second.setColumnWidth(1, 75);
@@ -837,6 +838,7 @@ function demoFormulas(): Uint8Array {
   const control = doc.addTable(sheet.id, { name: "NoCalc", x: 40, y: 900, withContent: false });
   if (control.rowCount > 3) control.deleteRows(3, control.rowCount - 3);
   if (control.rowCount < 3) control.insertRows(control.rowCount, 3 - control.rowCount);
+  if (control.columnCount < 3) control.insertColumns(control.columnCount, 3 - control.columnCount);
   if (control.columnCount > 3) control.deleteColumns(3, control.columnCount - 3);
   control.setColumnWidth(0, 220);
   control.setColumnWidth(1, 75);

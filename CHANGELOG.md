@@ -48,6 +48,13 @@ in commit messages and pull requests.
 
 ### Added
 
+- `NumbersDocument.addTable` without `copyOf` now grafts the embedded
+  Apple-made blank table instead of cloning whatever table the document
+  contains: the new table arrives empty and neutrally styled,
+  inheriting nobody's widths, fills or wrap styles. Passing `copyOf`
+  keeps the duplicate behavior. The graft rides a new cross-document
+  import (`deepCloneObjectInto`) that refuses any subgraph it cannot
+  carry whole.
 - Cell comments can now be read: `table.cellComments()` lists every
   comment the app has on a table's cells — position, text, author,
   date and replies — and `table.cellComment(row, column)` reads one.

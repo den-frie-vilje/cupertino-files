@@ -6,7 +6,7 @@
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
-import { pushRef } from "../tsp/schema.ts";
+import { messageAt, pushRef } from "../tsp/schema.ts";
 
 export const TSWP_TYPE = {
   STORAGE: 2001,
@@ -422,14 +422,14 @@ export const storageExtractor: ReferenceExtractor = (m) => {
   // re-serialized, so a one-character change triggers it as surely as
   // appending a paragraph.
   for (const tableField of OBJECT_TABLE_FIELDS) {
-    const table = m.getMessage(tableField);
+    const table = messageAt(m, tableField);
     if (!table) continue;
     for (const entry of table.getMessages(ATTR_TABLE_ENTRIES)) {
       pushRef(out, entry, ENTRY_OBJECT);
     }
   }
   for (const tableField of OVERLAP_TABLE_FIELDS) {
-    const table = m.getMessage(tableField);
+    const table = messageAt(m, tableField);
     if (!table) continue;
     for (const entry of table.getMessages(ATTR_TABLE_ENTRIES)) {
       pushRef(out, entry, OVERLAP_FIELD);
@@ -440,13 +440,16 @@ export const storageExtractor: ReferenceExtractor = (m) => {
 
 export const styleExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];
-  const sup = m.getMessage(StyleArchive.SUPER);
+  // Extractors run over every object that shares a type id, and some
+  // archives reuse these field numbers for scalars — read them
+  // wire-tolerantly rather than assume the style shape.
+  const sup = messageAt(m, StyleArchive.SUPER);
   pushRef(out, sup, 3); // TSS.StyleArchive.parent
   // Not field 5, the owning stylesheet — see storageExtractor. The same
   // rule holds here: Apple declares what a style *resolves through* (its
   // parent, its list style, its following style) and never the stylesheet
   // that contains it.
-  const para = m.getMessage(StyleArchive.PARA_PROPERTIES);
+  const para = messageAt(m, StyleArchive.PARA_PROPERTIES);
   pushRef(out, para, ParaProps.LIST_STYLE);
   pushRef(out, para, ParaProps.FOLLOWING_STYLE);
   return out;
