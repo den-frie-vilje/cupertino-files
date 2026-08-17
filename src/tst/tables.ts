@@ -61,6 +61,7 @@ import {
   OwnerKind,
   readCfUid,
   readOwnerUid,
+  mintTableOwnerArchive,
   remintFormulaOwnerIdentity,
   TiledDependenciesFields,
 } from "../tsce/owners.ts";
@@ -4023,7 +4024,9 @@ export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): vo
   }
   const model = tablesOf(store, [tableInfoId])[0];
   if (!model) return;
-  if (remintFormulaOwnerIdentity(model.object, objects)) {
+  const newBase = remintFormulaOwnerIdentity(model.object, objects);
+  if (newBase) {
+    mintTableOwnerArchive(store, tableInfoId, newBase);
     OWNER_REGISTRIES.delete(store);
   }
 }
