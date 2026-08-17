@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { FormulaOwnerRegistry, OwnerKind } from "../src/tsce/owners.ts";
 import { describe, expect, it } from "./harness.ts";
 import {
   allBorders,
@@ -1337,6 +1338,51 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
+  });
+
+  it("registers a copy with the calc engine, the way the app registers a new table", () => {
+    // A clone without a kind-1 FormulaOwnerDependenciesArchive is a
+    // table the engine has never heard of: the app re-registers it
+    // under a brand-new UUID on open and every reference compiled
+    // against the written identity dangles as a ref error.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const copy = document.addTable(sheet.id, { name: "Registered" });
+    const reloaded = NumbersDocument.load(document.save());
+    const registry = new FormulaOwnerRegistry(reloaded.store);
+    const entry = registry
+      .all()
+      .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "Registered");
+    expect(entry !== undefined).toBe(true);
+    expect(entry!.ownerId !== undefined).toBe(true);
+    // The derived owners the app mints beside it exist too, sharing the base.
+    for (const kind of [3, 4, 11]) {
+      const derived = registry
+        .all()
+        .find(
+          (o) =>
+            o.kind === kind &&
+            o.base !== undefined &&
+            o.base.lo === entry!.uid.lo &&
+            o.base.hi === entry!.uid.hi,
+        );
+      expect(`kind ${kind}: ${derived !== undefined}`).toBe(`kind ${kind}: true`);
+    }
+    void copy;
+  });
+
+  it("drops the template's do-nothing text style from written values", () => {
+    // Automatic alignment is the absence of the per-cell text style —
+    // the app's own re-align write removes the id — and the template's
+    // inherited style (para_properties {alignment: 0}) is the left-pin.
+    const document = NumbersDocument.blank();
+    const table = document.tables()[0]!;
+    if (table.rowCount < 6) table.insertRows(table.rowCount, 6 - table.rowCount);
+    table.setCell(2, 1, 42);
+    table.setCell(3, 1, "text keeps the template style");
+    const after = NumbersDocument.load(document.save()).tables()[0]!;
+    expect(after.textStyleId(2, 1)).toBe(undefined);
+    expect(after.textStyleId(3, 1) !== undefined).toBe(true);
   });
 
   it("gives a copy its own calc-engine identity, so names resolve", () => {
