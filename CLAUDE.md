@@ -34,10 +34,13 @@ were read, and both times the notes column already contained the
 answer — once naming the fault, once refuting a hypothesis an hour of
 archive-diffing then rebuilt wrong (»I've done the right formula in
 D«, misread as the app relocating library formulas). The protocol is
-mechanical: on any returned file, dump every table's cells first,
-quote the checker's notes into the analysis verbatim, and only then
-open the archives. The notes are the measurement; the archives are
-the explanation.
+mechanical: on any returned file, dump every table's cells *and its
+cell comments* first — the checker prefers answering as comments on
+the cells themselves (`cellComments()`), so a dump that skips them
+reads a clean file where the verdict sits — quote the checker's words
+into the analysis verbatim, and only then open the archives. The
+notes and comments are the measurement; the archives are the
+explanation.
 
 ## Verification documents are comparisons, not questionnaires
 
@@ -114,6 +117,11 @@ the machine cannot do. Make it as cheap as possible to act on:
   that was never there, and a graphic that failed to appear looks exactly
   like a blank page. Put the expected result *in* the document — a line
   that says what the line below should say — rather than in the message.
+- **Ask for comments on the cells themselves.** The checker's preferred
+  reply channel is the app's comment function, which works on the exact
+  cell in question and costs nothing on a phone. Instructions invite a
+  comment on whatever is off; a notes column may exist beside that, but
+  it is the fallback, not the ask.
 
 ## What counts as verified
 

@@ -647,7 +647,7 @@ function demoCells(): Uint8Array {
   table.setCell(row, 4, "Feedback");
   row++;
   table.setCell(row, 0, "DEMO 5");
-  table.setCell(row, 1, "Cells and formats — write feedback in column E next to each check (empty = as expected). Save and return.");
+  table.setCell(row, 1, "Cells and formats — comment on the cell itself if something is off (column E works too; empty = as expected). Save and return.");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
@@ -734,7 +734,7 @@ function demoFormulas(): Uint8Array {
   data.setCell(row, 4, "Notes");
   row++;
   data.setCell(row, 0, "DEMO 6");
-  data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Notes in column E.");
+  data.setCell(row, 1, "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Comment on the cell itself — column E works too.");
   data.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
@@ -867,7 +867,7 @@ function demoRules(): Uint8Array {
   table.setCell(row, 3, "Verdict");
   row++;
   table.setCell(row, 0, "DEMO 7");
-  table.setCell(row, 1, "Conditional formatting and controls — answer with the pop-up menu in column D next to each check, and feel free to write notes in free D cells.");
+  table.setCell(row, 1, "Conditional formatting and controls — answer with the pop-up menu in column D next to each check; comment on a cell for anything longer.");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
 
@@ -965,7 +965,7 @@ function demoStructure(): Uint8Array {
   table.setCell(row, 2, "Notes");
   row++;
   table.setCell(row, 0, "DEMO 8");
-  table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Notes in column C.");
+  table.setCell(row, 1, "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Comment on the cell itself — column C works too.");
   table.setCellFormatting(row, 1, { textWrap: true });
   row += 2;
   const head = (id: string, text: string): void => {

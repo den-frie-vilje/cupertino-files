@@ -1769,3 +1769,36 @@ describe("cell input normalisation", () => {
     expect(table.cellText(1, 0)).toBe(before);
   });
 });
+
+describe("cell comments", () => {
+  it("reads the app's comment whole: place, text, author, date", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const table = doc.tables().find((t) => t.name === "Table 1")!;
+    const comments = table.cellComments();
+    expect(comments.length).toBe(1);
+    const comment = comments[0]!;
+    expect(comment.row).toBe(87);
+    expect(comment.column).toBe(3);
+    expect(comment.text).toBe("Bug: numbers padding with zero not spaces");
+    expect(comment.authorName).toBe("Jon Connell");
+    expect(comment.created?.toISOString().slice(0, 10)).toBe("2022-11-15");
+    expect(comment.replies.length).toBe(0);
+    expect(table.cellComment(87, 3)?.text).toBe(comment.text);
+    expect(table.cellComment(0, 0)).toBe(undefined);
+  });
+
+  it("keeps a comment through unrelated edits and a save", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const table = doc.tables().find((t) => t.name === "Table 1")!;
+    table.setCell(0, 1, "edited elsewhere");
+    const reloaded = NumbersDocument.load(doc.save());
+    const again = reloaded.tables().find((t) => t.name === "Table 1")!;
+    expect(again.cellComment(87, 3)?.text).toBe("Bug: numbers padding with zero not spaces");
+  });
+
+  it("reads no comments from a table without a populated list", () => {
+    const doc = NumbersDocument.load(fixture("numbers-parser-v26.1-custom-formats.numbers"));
+    const dates = doc.tables().find((t) => t.name === "Dates")!;
+    expect(dates.cellComments().length).toBe(0);
+  });
+});

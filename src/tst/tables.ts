@@ -28,6 +28,7 @@ import { TableStyleHandle, TST_STYLE_TYPE , type TableFormatting } from "./style
 import { readStroke, writeStroke, type Stroke } from "../tsd/style.ts";
 import { applyParagraphProperties } from "../tss/stylesheet.ts";
 import { StyleArchive, TSWP_TYPE } from "../tswp/schema.ts";
+import { COMMENT_TYPE, CommentStorageFields, readCommentStorage } from "../tswp/comments.ts";
 import { StyleHandle } from "../tss/stylesheet.ts";
 import { StyleSuper } from "../tss/schema.ts";
 import {
@@ -202,6 +203,7 @@ export const DataStoreFields = protoFields("TST.DataStore", {
   MERGE_REGION_MAP: "merge_region_map",
   RICH_TEXT_TABLE: "rich_text_table",
   CONDITIONAL_STYLE_TABLE: "conditionalstyletable",
+  COMMENT_STORAGE_TABLE: "commentStorageTable",
   FORMAT_TABLE: "format_table",
 });
 /** TST.TileStorage / .Tile / .TileRowInfo. */
@@ -350,6 +352,8 @@ const ListEntry = {
   FORMULA: 5,
   FORMAT: 6,
   RICH_TEXT_PAYLOAD: 9,
+  /** Comment entries reference their `TSD.CommentStorageArchive` here. */
+  COMMENT_REFERENCE: 10,
 } as const;
 /** TST.RichTextPayloadArchive: storage = 1. */
 const RichTextPayload = { STORAGE: 1 } as const;
@@ -461,6 +465,20 @@ export interface CellInfo {
   row: number;
   column: number;
   value: CellValue;
+}
+
+/** One comment thread's entry: what was said, by whom, when. */
+export interface CellCommentEntry {
+  text: string;
+  authorName: string | undefined;
+  created: Date | undefined;
+}
+
+/** An app-made comment on a cell, replies in stored order. */
+export interface CellComment extends CellCommentEntry {
+  row: number;
+  column: number;
+  replies: CellCommentEntry[];
 }
 
 /**
@@ -700,6 +718,81 @@ export class TableModel {
       const storage = this.store.resolve(refId(payload?.message, RichTextPayload.STORAGE));
       return storage?.message.getStrings(Storage.TEXT)[0];
     });
+  }
+
+  /**
+   * Comment storages by list key. A modern entry references its
+   * `TSD.CommentStorageArchive` directly; a
+   * `TST.CommentStorageWrapperArchive` is followed when one is
+   * interposed.
+   */
+  private commentStorages(): Map<number, IwaObject> {
+    const out = new Map<number, IwaObject>();
+    const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.COMMENT_STORAGE_TABLE));
+    for (const e of list?.message.getMessages(DataList.ENTRIES) ?? []) {
+      const key = e.getUint(ListEntry.KEY);
+      if (key === undefined) continue;
+      let target = this.store.resolve(
+        refId(e, ListEntry.COMMENT_REFERENCE) ?? refId(e, ListEntry.REFERENCE),
+      );
+      if (target && target.type !== COMMENT_TYPE.COMMENT_STORAGE) {
+        target = this.store.resolve(refId(target.message, 1));
+      }
+      if (target?.type === COMMENT_TYPE.COMMENT_STORAGE) out.set(key, target);
+    }
+    return out;
+  }
+
+  private readCellComment(row: number, column: number, storage: IwaObject): CellComment {
+    const info = readCommentStorage(this.store, storage);
+    const replies: CellCommentEntry[] = [];
+    for (const ref of storage.message.getMessages(CommentStorageFields.REPLIES)) {
+      const replyObject = this.store.resolve(ref.getVarint(1));
+      const reply = replyObject ? readCommentStorage(this.store, replyObject) : undefined;
+      if (reply) {
+        replies.push({ text: reply.text, authorName: reply.authorName, created: reply.created });
+      }
+    }
+    return {
+      row,
+      column,
+      text: info?.text ?? "",
+      authorName: info?.authorName,
+      created: info?.created,
+      replies,
+    };
+  }
+
+  /**
+   * Every comment on this table's cells, in row-major order.
+   *
+   * Comments are the app's own annotation channel and the review loop's
+   * reply channel: a returned file carries its findings here as often as
+   * in a notes column, so a reading that skips them reads a clean file
+   * where the verdict sits. The library reads and preserves them —
+   * writing one is the app's job.
+   */
+  cellComments(): CellComment[] {
+    const storages = this.commentStorages();
+    if (storages.size === 0) return [];
+    const out: CellComment[] = [];
+    for (let row = 0; row < this.rowCount; row++) {
+      for (let column = 0; column < this.columnCount; column++) {
+        const key = this.recordAt(row, column)?.id(CellFlag.COMMENT_ID);
+        if (key === undefined) continue;
+        const storage = storages.get(key);
+        if (storage) out.push(this.readCellComment(row, column, storage));
+      }
+    }
+    return out;
+  }
+
+  /** The comment on one cell, if the app left one there. */
+  cellComment(row: number, column: number): CellComment | undefined {
+    const key = this.recordAt(row, column)?.id(CellFlag.COMMENT_ID);
+    if (key === undefined) return undefined;
+    const storage = this.commentStorages().get(key);
+    return storage ? this.readCellComment(row, column, storage) : undefined;
   }
 
   /**

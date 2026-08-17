@@ -37,6 +37,10 @@ in commit messages and pull requests.
 
 ### Added
 
+- Cell comments can now be read: `table.cellComments()` lists every
+  comment the app has on a table's cells — position, text, author,
+  date and replies — and `table.cellComment(row, column)` reads one.
+  Comments are preserved on edit; writing one stays the app's job.
 - `NumbersDocument.setActiveSheet(index)` — choose the sheet the
   document opens on. Numbers keeps this in its stored selection state,
   not in tab order, so reordering sheets alone does not change it.
