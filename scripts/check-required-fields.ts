@@ -105,6 +105,22 @@ export function authoredDocuments(): { name: string; bytes: Uint8Array }[] {
       t.regroupCategories();
     } },
     { name: "insert-rows", build: (d) => { d.tables()[0]!.insertRows(2, 2); } },
+    // The clone paths mint calc-engine registration archives; the round
+    // that shipped them decorated with empty required-bearing bags was
+    // the round Numbers called the documents damaged. Never again
+    // unchecked.
+    { name: "add-table", build: (d) => {
+      const sheet = d.sheets()[0]!;
+      const copy = d.addTable(sheet.id, { name: "Adopted", withContent: false });
+      if (copy.rowCount < 4) copy.insertRows(copy.rowCount, 4 - copy.rowCount);
+      copy.setCell(1, 1, 42);
+      d.tables()[0]!.setFormula(9, 1, "=Adopted::B2", { value: 42 });
+      copy.setConditionalRules(1, 1, [{ operator: ">", value: 5, cell: RED }]);
+    } },
+    { name: "add-sheet", build: (d) => {
+      d.addSheet({ name: "Second" });
+      d.setActiveSheet(d.sheets().length - 1);
+    } },
   ];
 
   const out = cases.map(({ name, build }) => {
