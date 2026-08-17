@@ -443,14 +443,19 @@ beside properly automatic plain values. Writing a literal over a formula
 cell correctly clears the formula.
 
 A cross-table reference to a table that came from `addTable` or
-`insertInlineTable` is honest about its standing: the clone is fully
+`insertInlineTable` is honest about its standing. The clone is fully
 registered at all three of the engine's sites (owner archives, the
-dependency tracker's list, the owner-id map), which two review rounds
-measured as the difference between the app keeping an identity and
-re-registering it — but the app *keeping* a library-minted identity has
-not yet come back confirmed, and until it does, a reference to a clone
-may open as a ref error where a reference to an original table works.
-`doc.audit()` names any reference that is already dead in the file.
+dependency tracker's list, the owner-id map) and its owner carries
+dependency records for every formula written into it — but Numbers has
+so far reduced library-written cross-table references to their cached
+values on first open in every measured round, records or not. Two
+things are app-confirmed: a formula-less clone keeps its library
+identity outright, and a cross-table formula the *app* authors against
+a library-registered clone computes. So the working pattern today is to
+let the person add the cross-reference in the app, and the open lead is
+the engine's `uuid_reference_map`, the one registration site this
+library does not yet write. `doc.audit()` names any reference that
+is already dead in the file.
 
 ### Writing cells
 

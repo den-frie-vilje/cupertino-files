@@ -61,8 +61,11 @@ import {
   FormulaOwnerFields,
   FormulaOwnerRegistry,
   OwnerKind,
+  ownerArchiveByUid,
+  ownerInternalId,
   ownerKey,
   ownerRegistrationState,
+  type OwnerUid,
   readCfUid,
   readOwnerUid,
   mintTableOwnerArchive,
@@ -1512,7 +1515,10 @@ export class TableModel {
 
     // A literal supersedes whatever formula produced the old value.
     record.removeAll(CellFlag.FORMULA_ID | CellFlag.FORMULA_ERROR_ID);
-    if (previousFormulaId !== undefined) this.releaseFormula(previousFormulaId);
+    if (previousFormulaId !== undefined) {
+      this.releaseFormula(previousFormulaId);
+      this.updateFormulaDependencies(row, column);
+    }
     if (previousStringId !== undefined && record.id(CellFlag.STRING_ID) !== previousStringId) {
       this.releaseString(previousStringId);
     }
@@ -1634,6 +1640,9 @@ export class TableModel {
     this.writeRowLayout(located.rowInfo, layout);
     this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
     this.refreshTileTotals();
+    // A same-recipe replace reuses the stored entry and leaves whatever
+    // dependency records the file already carries — Apple's included.
+    if (!reuse) this.updateFormulaDependencies(row, column, expression);
   }
 
   /**
@@ -1657,7 +1666,314 @@ export class TableModel {
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
     this.refreshTileTotals();
+    this.updateFormulaDependencies(row, column);
     return true;
+  }
+
+  /** This table's kind-1 owner archive: uid = the haunted owner minus 35. */
+  private tableOwnerArchive(): IwaObject | undefined {
+    const haunted = readOwnerUid(
+      this.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
+    );
+    if (!haunted) return undefined;
+    return ownerArchiveByUid(this.store, {
+      lo: (haunted.lo - 35n) & 0xffffffffffffffffn,
+      hi: haunted.hi,
+    });
+  }
+
+  /** The cell-dependency record a formula compiles to, or undefined without an owner. */
+  private buildDependencyRecord(
+    row: number,
+    column: number,
+    expression: FormulaExpression,
+  ): RawMessage | undefined {
+    const sameRows: number[] = [];
+    const sameCols: number[] = [];
+    const crossRows: number[] = [];
+    const crossCols: number[] = [];
+    const crossInternals: number[] = [];
+    const registry = this.owners();
+    const walk = (e: FormulaExpression): void => {
+      switch (e.kind) {
+        case "ref":
+          sameRows.push(e.row.value);
+          sameCols.push(e.column.value);
+          break;
+        case "crossRef": {
+          const uid = registry.tableUid(e.table);
+          const internal = uid ? ownerInternalId(this.store, uid) : undefined;
+          if (uid && internal !== undefined) {
+            crossRows.push(e.row.value);
+            crossCols.push(e.column.value);
+            crossInternals.push(internal);
+          }
+          break;
+        }
+        case "call":
+          for (const arg of e.args) walk(arg);
+          break;
+        case "binary":
+          walk(e.left);
+          walk(e.right);
+          break;
+        case "unary":
+          walk(e.operand);
+          break;
+        default:
+          break;
+      }
+    };
+    walk(expression);
+    const record = RawMessage.create();
+    record.setVarint(1, column);
+    record.setVarint(2, row);
+    const edges = RawMessage.create();
+    if (sameRows.length) edges.setVarints(1, sameRows);
+    if (sameCols.length) edges.setVarints(2, sameCols);
+    if (crossRows.length) edges.setVarints(3, crossRows);
+    if (crossCols.length) edges.setVarints(4, crossCols);
+    if (crossInternals.length) edges.setVarints(5, crossInternals);
+    record.setMessage(6, edges);
+    return record;
+  }
+
+  /**
+   * Keep the calc engine's dependency records in step with a formula
+   * write: one cell record per formula cell on the table's own owner
+   * (same-table precedents as parallel row/column edge arrays,
+   * cross-table ones with the target owner's internal id), a range
+   * record per finite rectangle, a spanning record per whole-column
+   * reference, and a uuid-references entry per referenced table.
+   *
+   * The engine rebuilds all of this to *compute* — measured by the e2e
+   * recompute probe — but consults it to decide whether an owner still
+   * describes its table: a formula-bearing table whose owner has no
+   * record of its formulas is re-registered on open, and the app
+   * flattens the library's cross-table formulas to their cached values
+   * on the way. A formula-less clone with the same decoration was kept.
+   */
+  private updateFormulaDependencies(
+    row: number,
+    column: number,
+    expression?: FormulaExpression,
+  ): void {
+    const owner = this.tableOwnerArchive();
+    if (!owner) return;
+    const m = owner.message;
+
+    // A same-recipe replace must stay a byte-level no-op — the strongest
+    // proof formula writing has — so the new records are built first and
+    // compared; the owner is only touched when something changed.
+    if (expression !== undefined) {
+      const current = m
+        .getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)
+        ?.getMessages(1)
+        .find((r) => r.getUint(1) === column && r.getUint(2) === row);
+      if (current) {
+        const preview = this.buildDependencyRecord(row, column, expression);
+        if (preview && bytesEqual(preview.toBytes(), current.toBytes())) return;
+      }
+    }
+
+    // Removal first, so a rewrite never doubles a record.
+    const cellDeps = m.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES);
+    if (cellDeps) {
+      cellDeps.setMessages(
+        1,
+        cellDeps.getMessages(1).filter(
+          (r) => !(r.getUint(1) === column && r.getUint(2) === row),
+        ),
+      );
+    }
+    const tiledRef = m
+      .getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)
+      ?.getMessages(TiledDependenciesFields.TILES)[0];
+    const tile = tiledRef ? this.store.resolve(tiledRef) : undefined;
+    if (tile) {
+      tile.message.setMessages(
+        CellRecordTileFields.CELL_RECORDS,
+        tile.message
+          .getMessages(CellRecordTileFields.CELL_RECORDS)
+          .filter((r) => !(r.getUint(1) === column && r.getUint(2) === row)),
+      );
+    }
+    const rangeDeps = m.getMessage(FormulaOwnerFields.RANGE_DEPENDENCIES);
+    if (rangeDeps) {
+      rangeDeps.setMessages(
+        2,
+        rangeDeps.getMessages(2).filter(
+          (r) => !(r.getUint(1) === row && r.getUint(2) === column),
+        ),
+      );
+    }
+    const spanningCols = m.getMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES);
+    if (spanningCols) {
+      spanningCols.setMessages(
+        1,
+        spanningCols.getMessages(1).filter((r) => {
+          const cell = r.getMessage(1);
+          if (!cell) return true;
+          return !(cell.getUint(2) === column && cell.getUint(3) === row);
+        }),
+      );
+    }
+    const uuidRefs = m.getMessage(FormulaOwnerFields.UUID_REFERENCES);
+    if (uuidRefs) {
+      for (const entry of uuidRefs.getMessages(1)) {
+        const refs = entry.getMessage(2);
+        if (!refs) continue;
+        refs.setMessages(
+          1,
+          refs.getMessages(1).flatMap((colEntry) => {
+            if (colEntry.getUint(1) !== column) return [colEntry];
+            const rows = colEntry.getMessage(2);
+            if (!rows) return [colEntry];
+            rows.setMessages(
+              1,
+              rows.getMessages(1).filter((r) => r.getUint(1) !== row),
+            );
+            return rows.getMessages(1).length > 0 ? [colEntry] : [];
+          }),
+        );
+      }
+      uuidRefs.setMessages(
+        1,
+        uuidRefs.getMessages(1).filter((entry) => (entry.getMessage(2)?.getMessages(1).length ?? 0) > 0),
+      );
+    }
+    if (expression === undefined) {
+      m.markDirty();
+      return;
+    }
+
+    // Collect the non-cell precedents; the cell record itself comes from
+    // the shared builder.
+    const crossCells: { uid: OwnerUid }[] = [];
+    const ranges: { c1: number; r1: number; c2: number; r2: number }[] = [];
+    const spans: number[] = [];
+    const registry = this.owners();
+    const walk = (e: FormulaExpression): void => {
+      switch (e.kind) {
+        case "crossRef": {
+          const uid = registry.tableUid(e.table);
+          if (uid && ownerInternalId(this.store, uid) !== undefined) {
+            crossCells.push({ uid });
+          }
+          break;
+        }
+        case "columnRef":
+          spans.push(e.column.value);
+          break;
+        case "range":
+          ranges.push({
+            c1: e.from.column.value,
+            r1: e.from.row.value,
+            c2: e.to.column.value,
+            r2: e.to.row.value,
+          });
+          break;
+        case "call":
+          for (const arg of e.args) walk(arg);
+          break;
+        case "binary":
+          walk(e.left);
+          walk(e.right);
+          break;
+        case "unary":
+          walk(e.operand);
+          break;
+        default:
+          break;
+      }
+    };
+    walk(expression);
+
+    const ownInternal = m.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0;
+
+    const record = this.buildDependencyRecord(row, column, expression)!;
+    const cellBag = m.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES) ?? RawMessage.create();
+    cellBag.addMessage(1, record.clone());
+    m.setMessage(FormulaOwnerFields.CELL_DEPENDENCIES, cellBag);
+    if (tile) tile.message.addMessage(CellRecordTileFields.CELL_RECORDS, record);
+
+    for (const range of ranges) {
+      const bag = m.getMessage(FormulaOwnerFields.RANGE_DEPENDENCIES) ?? RawMessage.create();
+      const rec = RawMessage.create();
+      rec.setVarint(1, row);
+      rec.setVarint(2, column);
+      const target = RawMessage.create();
+      target.setVarint(1, ownInternal);
+      const rect = RawMessage.create();
+      rect.setVarint(1, range.c1);
+      rect.setVarint(2, range.r1);
+      rect.setVarint(3, range.c2);
+      rect.setVarint(4, range.r2);
+      target.setMessage(2, rect);
+      rec.setMessage(4, target);
+      bag.addMessage(2, rec);
+      m.setMessage(FormulaOwnerFields.RANGE_DEPENDENCIES, bag);
+    }
+
+    for (const spannedColumn of spans) {
+      const bag =
+        m.getMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES) ?? RawMessage.create();
+      const rec = RawMessage.create();
+      const cell = RawMessage.create();
+      cell.setVarint(2, column);
+      cell.setVarint(3, row);
+      rec.setMessage(1, cell);
+      const info = RawMessage.create();
+      info.setVarint(1, ownInternal);
+      info.setVarint(2, 0);
+      const cols = RawMessage.create();
+      cols.setVarint(1, spannedColumn);
+      info.setMessage(3, cols);
+      rec.setMessage(2, info);
+      bag.addMessage(1, rec);
+      m.setMessage(FormulaOwnerFields.SPANNING_COLUMN_DEPENDENCIES, bag);
+    }
+
+    // The uuid-references index is deliberately NOT written: in the one
+    // round that carried library-written entries — byte-shaped exactly
+    // like the app's own — the app relocated precisely the two formulas
+    // that had them one column right, leaving their cached values
+    // behind. Every other record survives and keeps the formulas alive;
+    // the app rebuilds this index itself on re-registration.
+    void crossCells;
+    for (const { uid } of [] as { uid: OwnerUid }[]) {
+      const bag = m.getMessage(FormulaOwnerFields.UUID_REFERENCES) ?? RawMessage.create();
+      let entry = bag.getMessages(1).find((e) => {
+        const u = readOwnerUid(e.getMessage(1));
+        return u !== undefined && u.lo === uid.lo && u.hi === uid.hi;
+      });
+      if (!entry) {
+        entry = RawMessage.create();
+        const uidMsg = RawMessage.create();
+        uidMsg.setVarint(1, uid.lo);
+        uidMsg.setVarint(2, uid.hi);
+        entry.setMessage(1, uidMsg);
+        entry.setMessage(2, RawMessage.create());
+        bag.addMessage(1, entry);
+      }
+      const refs = entry.getMessage(2)!;
+      let colEntry = refs.getMessages(1).find((c) => c.getUint(1) === column);
+      if (!colEntry) {
+        colEntry = RawMessage.create();
+        colEntry.setVarint(1, column);
+        colEntry.setMessage(2, RawMessage.create());
+        refs.addMessage(1, colEntry);
+      }
+      const rows = colEntry.getMessage(2)!;
+      if (!rows.getMessages(1).some((r) => r.getUint(1) === row)) {
+        const rowEntry = RawMessage.create();
+        rowEntry.setVarint(1, row);
+        rows.addMessage(1, rowEntry);
+      }
+      m.setMessage(FormulaOwnerFields.UUID_REFERENCES, bag);
+    }
+
+    m.markDirty();
   }
 
   /**
@@ -4310,7 +4626,10 @@ export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): vo
   if (!model) return;
   const newBase = remintFormulaOwnerIdentity(model.object, objects);
   if (newBase) {
-    mintTableOwnerArchive(store, tableInfoId, newBase);
+    mintTableOwnerArchive(store, tableInfoId, newBase, {
+      rows: model.rowCount,
+      columns: model.columnCount,
+    });
     OWNER_REGISTRIES.delete(store);
   }
 }

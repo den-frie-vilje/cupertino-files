@@ -1501,10 +1501,12 @@ export const CAPABILITIES: Capability[] = [
         "engine sites (archives, tracker list, owner map, internals past the map's max); " +
         "whether that is the whole acceptance test only an open can say.",
       how:
-        "npm run demos -- out, open demo-06-formler.numbers, F-03: the fetch under it must " +
-        "show 5 and the CrossCheck table's top row 7, with no ref error anywhere. A ref " +
-        "error means the three sites are still not sufficient and the remaining difference " +
-        "is the per-kind dependency payloads the app writes and we omit.",
+        "npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung " +
+        "shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with " +
+        "=NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it means " +
+        "the app again reduced the reference to its cached value, and the next site to write " +
+        "is the engine's uuid_reference_map, populated in the round-five return by the " +
+        "checker's own typed twins.",
       risk: "medium",
     },
   },

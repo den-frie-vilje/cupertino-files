@@ -27,6 +27,18 @@ The checker's own words stay verbatim in whatever language they
 arrive in — quotes in the ledger are evidence, and evidence is not
 translated away.
 
+## A returned file is read notes-first
+
+Twice now a returned demo was diffed structurally before its cells
+were read, and both times the notes column already contained the
+answer — once naming the fault, once refuting a hypothesis an hour of
+archive-diffing then rebuilt wrong (»I've done the right formula in
+D«, misread as the app relocating library formulas). The protocol is
+mechanical: on any returned file, dump every table's cells first,
+quote the checker's notes into the analysis verbatim, and only then
+open the archives. The notes are the measurement; the archives are
+the explanation.
+
 ## Verification documents are comparisons, not questionnaires
 
 The review loop began as "does this render?" and taught us more every

@@ -1062,6 +1062,19 @@ only annotation author string is `cupertino-files`.
   the app wrote the *base* uid into the model's haunted field, so
   that table's haunted lookup resolves to the kind-1 owner.
 
+### olekristensen-v26.3-demo06-formulas-round4.numbers
+- 217,281 bytes, md5 `3802ee7f9acd52762cb326cdb0d2b937`
+- Saved by macOS Numbers (26.3) over the build whose clone families
+  carried the full empty-payload decoration at all three registration
+  sites. The measurement that named the adoption gate: the formula-less
+  NoCalc clone kept its library identity (model uids intact, derived
+  kinds mapped), while both formula-bearing tables — the CrossCheck
+  clone and the template's own Table 1 — were re-registered, their
+  library-written cross-table formulas flattened to cached values, the
+  reviewer's notes naming each. Carries the app's dependency records
+  for every surviving formula: the cell-record, range, spanning and
+  uuid-reference shapes the library now writes at setFormula.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.
