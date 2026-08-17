@@ -1525,7 +1525,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 2952 of 2952 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 2971 of 2971 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1611,7 +1611,7 @@ And registration in the stylesheet is still not the panel. The paragraph
 style list the app shows lives on the **theme**:
 `TP.ThemeArchive.super.110.7` — `TSWP.ThemePresetsArchive` extension 110,
 `paragraph_style_presets` — holding one reference per listed style. Present
-in all 27 IWA-format Pages fixtures (the corpus's one remaining `.pages` file is
+in all 28 IWA-format Pages fixtures (the corpus's one remaining `.pages` file is
 iWork '09 XML, a different format entirely), always field 7, and its contents are exactly the
 panel's entries, localised with the document so a German template lists
 Titel and Überschrift. Its length tracks what the user sees: twelve in a
@@ -1687,7 +1687,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 2952 storages carry the field and **zero** declare it. What
+fixtures here, 2971 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to* — the paragraph, list and
 column styles — plus same-component placeholders.
 
@@ -1724,7 +1724,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 2952 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 2971 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal — always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
