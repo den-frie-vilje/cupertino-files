@@ -445,16 +445,16 @@ cell correctly clears the formula.
 A cross-table reference to a table that came from `addTable` or
 `insertInlineTable` is honest about its standing. The clone is fully
 registered at all three of the engine's sites (owner archives, the
-dependency tracker's list, the owner-id map), its owner carries
-dependency records for every formula written into it, and six review
-rounds measured what each layer buys: without records Numbers
-re-registers formula-bearing tables and flattens library cross-table
-formulas to their cached values; with them the formulas survive and
-the app translates their targets across its own re-registration. A
-formula-less clone keeps its library identity outright. What has not
-yet come back app-confirmed is the final anchor: one round saw the
-surviving formulas relocated a column before the reference index was
-withdrawn from the write set. `doc.audit()` names any reference that
+dependency tracker's list, the owner-id map) and its owner carries
+dependency records for every formula written into it — but Numbers has
+so far reduced library-written cross-table references to their cached
+values on first open in every measured round, records or not. Two
+things are app-confirmed: a formula-less clone keeps its library
+identity outright, and a cross-table formula the *app* authors against
+a library-registered clone computes. So the working pattern today is to
+let the person add the cross-reference in the app, and the open lead is
+the engine's `uuid_reference_map`, the one registration site this
+library does not yet write. `doc.audit()` names any reference that
 is already dead in the file.
 
 ### Writing cells

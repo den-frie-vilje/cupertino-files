@@ -1503,10 +1503,10 @@ export const CAPABILITIES: Capability[] = [
       how:
         "npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung " +
         "shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with " +
-        "=NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it, or a " +
-        "formula sitting one column right of its value, names the next single difference — " +
-        "the write set is down to cell, range and spanning records after the reference index " +
-        "was measured as the relocation trigger and withdrawn.",
+        "=NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it means " +
+        "the app again reduced the reference to its cached value, and the next site to write " +
+        "is the engine's uuid_reference_map, populated in the round-five return by the " +
+        "checker's own typed twins.",
       risk: "medium",
     },
   },
