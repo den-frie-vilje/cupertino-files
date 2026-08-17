@@ -1,0 +1,139 @@
+{
+  "file": "olekristensen-v26.3-seed-picture-wrap-returned.pages",
+  "sha1": "298d7f9e1ea17230cc9cebe2ce590860fe7ddda0",
+  "app": "pages",
+  "fileFormatVersion": "26.3.1",
+  "objects": 453,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 74
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 21
+    },
+    {
+      "name": "Index/DocumentStylesheet-3169.iwa",
+      "objects": 343
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 3
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 740,
+      "text": "￼\nden frie vilje aps kronprinsesse sofies vej 21, 2.th 2000 frederiksberg\ncvr dk 39578549\nhej@denfrievilje.dk https://denfrievilje.dk\n+4522566677\n13-05-2026\n\n\nPicture placement test\n\nFix PICTURE ONE, leave PICTURE TWO alone, save.\nThen I compare the two inside this one file.\nThis line of text shows where the body column starts and ends. Both pictures below should line up with it on the left, and be no wider than it.\n\nPICTURE ONE — change this one so it sits in the text column, the way you want it. Then save.\n ￼ \nPICTURE TWO — do not touch this one. It is the control, left exactly as the script made it.\n￼\n\nWhen both are as they should be, save and tell me. I read the file and take the difference between picture one and picture two."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 48,
+      "text": "den frie vilje - picture placement test  \t￼ of ￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 20
+  }
+}

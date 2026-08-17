@@ -1101,6 +1101,28 @@ only annotation author string is `cupertino-files`.
   file that confirmed the mask editor engages on a library-inserted image
   and that the authored mask shape is the app's own.
 
+### olekristensen-v26.3-seed-picture-wrap-returned.pages
+- 209,645 bytes, md5 `645fad3da9356e0cc32f12624a9fbefe`
+- Saved by macOS Pages (last writer `M15.3.1-7050.1.1-2`, the same build as
+  the other v26.3 seeds). The wrap-delta seed, and the document that settled
+  the inline-image placement fault reported on 2026-08-03 (`docs/BLOCKERS.md`)
+  and closed as the wrap law in #65: **two identical library-inserted
+  pictures, one corrected by hand in the app, then diffed field by field
+  against the untouched one.** The entire difference was
+  `exterior_text_wrap`. A picture this library inserts carries none, so the
+  app supplies its own on first save and that default floats the drawable,
+  drawn from the page margin, ignoring the paragraph's indent, with the next
+  paragraph running up its side. No width and no geometry moves it, because
+  the wrap is what decides.
+- It is a *negative* control as much as a positive one: the untouched picture
+  is preserved in the file, so the fault and its fix sit in one document and
+  the question is repeatable rather than re-derivable.
+- Provenance: built while typesetting a client manual with this library, in
+  `den-frie-vilje/gosscounselling.co.uk`. Moved here because the evidence for
+  a library law belongs with the library, not in the site repository that
+  happened to hit it. Contains only Den Frie Vilje's own logo and two
+  generated probe images; no client content.
+
 ## Fixture privacy policy
 
 A permissive licence makes a document *redistributable*; it does not make it *appropriate*
