@@ -1089,6 +1089,19 @@ only annotation author string is `cupertino-files`.
   cross-reference rewritten to a self-reference, and its outbound
   cross-references flattened to cached values.
 
+### olekristensen-v26.3-demo08-structure-round6.numbers
+- 250,804 bytes, md5 `bd0583a6c160ba1f01aa65a7fe52123a`
+- Saved by macOS Numbers (26.3) over the build whose disable pass had
+  removed the seed table's hidden-row state list. Carries the
+  inert-enable specimen: `is_enabled = true` on both of the data
+  table's filter sets with zero `RowOrColumnState` entries — the
+  reviewer enabled the filter, nothing hid, and the app saved the flag
+  without rebuilding the list. Also carries an app-made fresh sheet
+  with its default table (disabled sets, no state list) and two
+  reviewer cell comments, and documents the open-tab refutation: every
+  stored sheet selection names the read-me sheet, and the app opened
+  on the data tab.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.

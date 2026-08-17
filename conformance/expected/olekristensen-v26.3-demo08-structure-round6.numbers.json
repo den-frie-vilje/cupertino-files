@@ -1,0 +1,741 @@
+{
+  "file": "olekristensen-v26.3-demo08-structure-round6.numbers",
+  "sha1": "cf415453d6c394581479d291fabe3d0d5045b244",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 830,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 56
+    },
+    {
+      "name": "Index/ViewState-1000087.iwa",
+      "objects": 50
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 102
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/Tile-916217.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916218.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916219.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916220.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916221.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916222.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916223.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916224.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916225.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916226.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916227.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916229.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-916552.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000020-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000021-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000023-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000024-2.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/Tables/DataList-1000025-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000026-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000027-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000028-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000029-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000030-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000040-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000041.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000042.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000043-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000044-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000045-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000046-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000047-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000048-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000049-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000050-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000051-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000052-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000053-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000054-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001760.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001761.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001762.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001763.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001764.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001765.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001766.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001767.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001768.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001769.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001770.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001771.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001790.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001791.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001792.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001793.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001794.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001795.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001796.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001797.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001798.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001799.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001800.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001801.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1001879.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1001880.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001881.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1001890.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1001891.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001892.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 497
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "READ ME",
+        "tables": [
+          {
+            "name": "Instructions",
+            "rows": 10,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "ID"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Check"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "DEMO 8"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Sheets, tables and filters — this is your own filter document from the measurements, edited by the library. Give feedback with the app's comment function on the cell itself."
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "N-01"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "The document must OPEN on this tab (\"READ ME\"), which the library created and moved first in the sheet order. If it opened on another tab, the stored tab selection did not take — write which tab opened."
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "N-02"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "The sheet with the data has been renamed to \"Data (renamed)\", and its table renamed from \"Table 1\" to \"Measurements\". This table here is named \"Instructions\". If you still see an old name, the rename did not go through."
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "N-03"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "The data table's filter (B > 10 AND C contains \"ko\") is TURNED OFF by the library — all 10 data rows must therefore be visible."
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "N-04"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Column A in \"Measurements\" has been rewritten by the library. If it still says \"SEED · filter rules\" up there, the rewrite did not go through."
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "N-05"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "YOUR TURN — sheet: create a new sheet yourself with ⊕, rename it to \"Your sheet\", and LEAVE IT AS THE ACTIVE sheet when you save. Then the file shows how the app itself writes a sheet and remembers the selected tab."
+              },
+              {
+                "r": 8,
+                "c": 0,
+                "v": "N-06"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "YOUR TURN — filter: turn the filter in \"Measurements\" back ON via Organize → Filter (Organisér → Filtrér) before you save — only the koral, koks and kobolt rows should be visible. Then the file shows the app's own enabled filter state."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Your sheet",
+        "tables": [
+          {
+            "name": "Tabel 1",
+            "rows": 10,
+            "columns": 5,
+            "truncated": false,
+            "cells": []
+          }
+        ]
+      },
+      {
+        "name": "Data (renamed)",
+        "tables": [
+          {
+            "name": "Measurements",
+            "rows": 11,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "about"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "numbers"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "text"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "B and C are your own values from the measurements, untouched."
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "4"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "kobber"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "The filter (B > 10 and C contains \"ko\") is turned off."
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "sten"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "With the filter on: only the koral, koks and kobolt rows."
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "11"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "koral"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "14"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "birk"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "kork"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "18"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "lind"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "9"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "skov"
+              },
+              {
+                "r": 8,
+                "c": 1,
+                "v": "21"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "koks"
+              },
+              {
+                "r": 9,
+                "c": 1,
+                "v": "6"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "eg"
+              },
+              {
+                "r": 10,
+                "c": 1,
+                "v": "25"
+              },
+              {
+                "r": 10,
+                "c": 2,
+                "v": "kobolt"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

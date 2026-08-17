@@ -1081,31 +1081,12 @@ export class TableModel {
       });
     }
 
-    // Stored hiding states while the filter is off contradict the app's
-    // own disabled shape (44 of 44 corpus tables store none), and the
-    // app displays the table filtered against its own flags.
-    const hiddenOwner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
-    for (const states of hiddenOwner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
-      for (const [axis, field] of [
-        ["column", HiddenStates.COLUMN_EXTENT],
-        ["row", HiddenStates.ROW_EXTENT],
-      ] as const) {
-        const extent = states.getMessage(field);
-        const stored = extent?.getMessages(HiddenStateExtent.STATES).length ?? 0;
-        if (stored === 0) continue;
-        const set = this.store.resolve(refId(extent, HiddenStateExtent.FILTER_SET));
-        const enabled = set ? new FilterSet(this.store, set).enabled : false;
-        if (!enabled) {
-          findings.push({
-            severity: "error",
-            code: "table/hidden-states-stale",
-            message:
-              `table "${name}" stores ${stored} hidden ${axis} state(s) while its filter ` +
-              `is off — the app displays the table filtered against its own flags`,
-          });
-        }
-      }
-    }
+    // No check flags stored hiding states beside a disabled filter: that
+    // pairing is the app's own working state (a filtered table whose set
+    // was switched off opens unfiltered and re-enables correctly), and
+    // the once-shipped table/hidden-states-stale check mistook it for
+    // damage. The harmful shape — a copy inheriting its donor's states —
+    // is prevented at the copy instead.
 
     if (this.storageGeneration === "v5") {
       const haunted = readOwnerUid(
@@ -3818,9 +3799,10 @@ export class TableModel {
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
     for (const states of owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES) ?? []) {
       const resolve = (field: number): FilterSet | undefined => {
-        const extent = states.getMessage(field);
-        const target = this.store.resolve(refId(extent, HiddenStateExtent.FILTER_SET));
-        return target ? new FilterSet(this.store, target, extent) : undefined;
+        const target = this.store.resolve(
+          refId(states.getMessage(field), HiddenStateExtent.FILTER_SET),
+        );
+        return target ? new FilterSet(this.store, target) : undefined;
       };
       const rows = resolve(HiddenStates.ROW_EXTENT);
       const columns = resolve(HiddenStates.COLUMN_EXTENT);
@@ -3832,14 +3814,13 @@ export class TableModel {
   /**
    * Drop the table's stored hidden row/column states.
    *
-   * An extent stores per-row `RowOrColumnState` entries only while its
-   * filter actively hides — 44 of 44 corpus tables with a disabled
-   * filter carry none. The counter-example was this library's own: a
-   * copied table inherited its donor's states, naming the donor's rows,
-   * and Numbers preserved the contradiction and broke the document's
-   * filter toggle on it. A table whose filter turns off — and a fresh
-   * copy above all — stores none; the app recomputes what a filter
-   * hides at open.
+   * For a fresh copy only: a copy inheriting its donor's state list —
+   * entries naming the donor's rows — made Numbers open the document
+   * filtered against its own flags and killed the filter toggle after
+   * one use. A copy starts as a filter that never ran: no states. On a
+   * table whose filter has run, the list stays — it is the machinery a
+   * later enable engages, and the app never rebuilds a missing one from
+   * a panel toggle.
    */
   clearStoredHiddenStates(): void {
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);

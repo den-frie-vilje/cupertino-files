@@ -473,7 +473,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** A sheet is valid only in the context of the calc engine and the document's own bookkeeping. Our copies reload and round-trip, but whether Numbers accepts a duplicated tab — and whether its formulas still resolve against the copy rather than the original — only the app can say.
 
-**Outcome.** **The structural half is confirmed; where the document opens was the surprise.** A library-added sheet (cloned, renamed, moved first) opened alongside the original with both tabs named as written and the cloned table's cells intact. But the app opened on the *other* tab: tab order does not pick the active sheet — the UI state's stored sheet selections do, and the demo had left them pointing at the donor sheet. setActiveSheet re-points them; whether Numbers honours the re-pointed selection is the open rung of the next demo round.
+**Outcome.** **The structural half is confirmed; where the document opens was the surprise.** A library-added sheet (cloned, renamed, moved first) opened alongside the original with both tabs named as written and the cloned table's cells intact. But the app opened on the *other* tab: tab order does not pick the active sheet — the UI state's stored sheet selections do, and the demo had left them pointing at the donor sheet. setActiveSheet re-points them; one later round opened on the re-pointed sheet and a still later round did not, so the re-pointed selections are necessary at most, not sufficient — the deciding state is an open question again.
 
 ### ✅ Skipped slides
 

@@ -158,8 +158,8 @@ describe("reference extractors agree with Apple", () => {
     // not declare its stylesheet, a drawable must not declare its parent —
     // and this comparison is exactly what catches a violation of either.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=232: ${disagree <= 232} (${disagree})`).toBe(
-      `disagree<=232: true (${disagree})`,
+    expect(`disagree<=233: ${disagree <= 233} (${disagree})`).toBe(
+      `disagree<=233: true (${disagree})`,
     );
   });
 
