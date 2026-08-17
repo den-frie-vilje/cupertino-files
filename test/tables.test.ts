@@ -1355,10 +1355,12 @@ describe("adding and removing tables", () => {
       .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "Registered");
     expect(entry !== undefined).toBe(true);
     expect(entry!.ownerId !== undefined).toBe(true);
-    // The derived owners the app mints beside it exist too, sharing the
-    // base: the full family, kind for kind, as both app-minted specimens
-    // carry it.
-    for (const kind of [3, 4, 5, 6, 8, 9, 10, 11, 12, 35]) {
+    // The derived owners minted beside it share the base — the app's
+    // family minus the two hidden-state kinds (4 rows, 11 columns),
+    // which a library mint leaves for the app: minted hidden-state
+    // owners beside the copy's model chain broke the app's hidden-state
+    // pass in three review rounds.
+    for (const kind of [3, 5, 6, 8, 9, 10, 12, 35]) {
       const derived = registry
         .all()
         .find(
@@ -1454,7 +1456,7 @@ describe("adding and removing tables", () => {
         );
       }
     }
-    expect(seen).toBe(11);
+    expect(seen).toBe(9);
   });
 
   it("drops the template's do-nothing text style from written values", () => {
