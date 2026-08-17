@@ -1802,3 +1802,44 @@ describe("cell comments", () => {
     expect(dates.cellComments().length).toBe(0);
   });
 });
+
+describe("stored hidden states follow the filter", () => {
+  const storedRowStates = (t: TableModel): number => {
+    const owner = t.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    let n = 0;
+    for (const states of owner?.getMessages(2) ?? []) {
+      n += states.getMessage(3)?.getMessages(2).length ?? 0;
+    }
+    return n;
+  };
+
+  it("setEnabled(false) drops the stored row states the filter produced", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-mac-filters.numbers"));
+    const table = doc.tables()[0]!;
+    expect(storedRowStates(table)).toBe(7);
+    table.filterSets().rows!.setEnabled(false);
+    table.filterSets().columns!.setEnabled(false);
+    expect(storedRowStates(table)).toBe(0);
+    const reloaded = NumbersDocument.load(doc.save());
+    const again = reloaded.tables()[0]!;
+    expect(storedRowStates(again)).toBe(0);
+    expect(again.filterSets().rows!.enabled).toBe(false);
+    expect(reloaded.audit().length).toBe(0);
+  });
+
+  it("a copied table starts with no stored states while the donor keeps its own", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-mac-filters.numbers"));
+    const donor = doc.tables()[0]!;
+    const sheet = doc.addSheet({ name: "Copy" });
+    const copy = doc.tablesOnSheet(sheet.id)[0]!;
+    expect(storedRowStates(copy)).toBe(0);
+    expect(storedRowStates(donor)).toBe(7);
+  });
+
+  it("audit names the stale states the returned round-two file preserved", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.3-demo08-structure-round2.numbers"));
+    const stale = doc.audit().filter((f) => f.code === "table/hidden-states-stale");
+    expect(stale.length).toBe(1);
+    expect(stale[0]!.message.includes("Instructions")).toBe(true);
+  });
+});

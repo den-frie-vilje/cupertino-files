@@ -34,6 +34,14 @@ in commit messages and pull requests.
 - A table copied with `withContent: false` kept its source's
   conditional-formatting rules — visible in the inspector, never
   evaluated. A content-less copy now starts without them.
+- A document whose filter the library disabled could still open
+  filtered, and the app's filter toggle then died after one use. The
+  app's own shape is that a disabled filter stores no hidden row
+  states; the library left the states the filter had produced, and a
+  copied table inherited its donor's states naming the donor's rows.
+  `setEnabled(false)` now drops the stored states, a fresh copy starts
+  without any, and `audit()` reports the stale shape
+  (`table/hidden-states-stale`).
 
 ### Added
 

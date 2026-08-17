@@ -112,6 +112,14 @@ function assertPhoneLayout(doc: NumbersDocument, name: string, maxWidth = 560): 
   }
 }
 
+/** A demo that ships with an offline-detectable fault does not ship. */
+function assertCleanAudit(doc: NumbersDocument, name: string): void {
+  const findings = doc.audit();
+  if (findings.length > 0) {
+    throw new Error(`${name}: audit reports ${findings.length} finding(s) — ${findings[0]!.message}`);
+  }
+}
+
 /**
  * A Pages check: one paragraph "«id» · what to look at", demo content in
  * between is appended by the caller, and `feedback()` closes it with the
@@ -1171,6 +1179,7 @@ const demos: Demo[] = [
     bytes: demoCells(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertCleanAudit(d, "celler");
       const t = d.tables()[0]!;
       if (t.merges().length !== 1) throw new Error("celler: merge missing");
       if (!t.cellText(1, 0).includes("DEMO 5")) throw new Error("celler: intro missing");
@@ -1181,6 +1190,7 @@ const demos: Demo[] = [
     bytes: demoFormulas(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertCleanAudit(d, "formler");
       assertPhoneLayout(d, "formler");
       const formulas = d.tables().flatMap((t) => t.formulas().map((f) => ({ table: t, ...f })));
       if (formulas.length < 8) throw new Error(`formler: expected 8+, got ${formulas.length}`);
@@ -1209,6 +1219,7 @@ const demos: Demo[] = [
     bytes: demoRules(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertCleanAudit(d, "regler");
       assertPhoneLayout(d, "regler");
       const t = d.tables()[0]!;
       if (t.conditionalStyleSets().size < 3) throw new Error("regler: conditional sets missing");
@@ -1245,6 +1256,7 @@ const demos: Demo[] = [
     bytes: demoStructure(),
     check: (bytes) => {
       const d = NumbersDocument.load(bytes);
+      assertCleanAudit(d, "struktur");
       assertPhoneLayout(d, "struktur");
       if (d.sheets()[0]!.name !== "READ ME") throw new Error("struktur: readme sheet not first");
       const anyEnabled = d

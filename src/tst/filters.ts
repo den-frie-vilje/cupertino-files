@@ -27,13 +27,15 @@
  *
  * Filtering also *hides rows*, and that is stored separately, in
  * `TST.HiddenStateExtentArchive` — a filter set says which rows should be
- * hidden, the hidden-state extent records which ones are. This module does
- * not recompute the latter, so toggling a filter set here changes the rule,
- * not the visible row set, until the app re-evaluates.
+ * hidden, the hidden-state extent records which ones are. This module never
+ * computes the latter: turning a set off drops the stored states, which is
+ * the app's own disabled shape, and turning one on leaves them absent for
+ * the app to compute at open.
  */
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
+import type { RawMessage } from "../base/protobuf.ts";
 import { readPredicate, type Predicate, type ReadPredicateOptions } from "./predicates.ts";
 import { columnName } from "./formulas.ts";
 
@@ -77,13 +79,23 @@ export interface FilterRule {
   legacy: boolean;
 }
 
+/** `TST.HiddenStateExtentArchive`: the per-row hiding states a filter produced. */
+const EXTENT_STATES = 2;
+
 export class FilterSet {
   readonly store: ObjectStore;
   readonly object: IwaObject;
+  /**
+   * The hidden-state extent this set belongs to, when the handle was
+   * reached through a table (`TableModel.filterSets`). A bare handle has
+   * none and `setEnabled(false)` then only flips the flag.
+   */
+  private readonly extent: RawMessage | undefined;
 
-  constructor(store: ObjectStore, object: IwaObject) {
+  constructor(store: ObjectStore, object: IwaObject, extent?: RawMessage) {
     this.store = store;
     this.object = object;
+    this.extent = extent;
   }
 
   get id(): bigint {
@@ -97,8 +109,19 @@ export class FilterSet {
     return this.object.message.getBool(FilterSetFields.IS_ENABLED) ?? true;
   }
 
+  /**
+   * Turn the set on or off.
+   *
+   * Turning it off also drops the extent's stored hiding states, because
+   * that is the app's own disabled shape — 44 of 44 corpus tables with a
+   * disabled filter store none, and stale states left behind made Numbers
+   * open a document filtered against its own flags. Turning it on writes
+   * only the flag: which rows to hide is the app's computation, run at
+   * open, and this library never invents it.
+   */
   setEnabled(enabled: boolean): void {
     this.object.message.setBool(FilterSetFields.IS_ENABLED, enabled);
+    if (!enabled) this.extent?.remove(EXTENT_STATES);
   }
 
   get mode(): FilterMode {
