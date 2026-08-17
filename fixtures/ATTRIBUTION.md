@@ -1030,6 +1030,38 @@ only annotation author string is `cupertino-files`.
   pop-up menu — plus the app's second save-through of library-written
   rule registrations.
 
+### olekristensen-v26.3-demo06-formulas-returned.numbers
+- 182,070 bytes, md5 `63dc04d51397389ec6d347fc1c774129`
+- Saved by macOS Numbers (26.3) after the first comparative demo-06
+  review. Carries the reviewer's own `=SUM(C16:C17)` and
+  `=CrossCheck::B3` computing beside the library's, the ref-error note
+  on the library's cross-table reference, and the app's re-registration
+  of the then-unregistered clone: a fresh 11-kind owner family at
+  internals 57–67 plus the corpus's first kind-0 tombstone owner,
+  holding the dangling uid on the owner map's unregistered list.
+
+### olekristensen-v26.3-demo06-formulas-round2.numbers
+- 195,577 bytes, md5 `3fec1b272811817dcd75a53898bb6b3a`
+- Saved by macOS Numbers (26.3) one round later, over the build whose
+  clone carried an identity-only registration. The app discarded that
+  identity and re-registered anyway — same 11-kind family shape, same
+  tombstone mechanism — which is the measurement that named the two
+  registration sites the mint had not written: the dependency
+  tracker's `formula_owner_dependencies` list and the engine's
+  `owner_id_map` (whose max internal, not the archives', is what the
+  app allocates from). Also carries the alignment notes on formula
+  result cells and the reviewer's typed twins for both.
+
+### olekristensen-v26.3-demo08-structure-round2.numbers
+- 157,809 bytes, md5 `c88068663acf78337de156315702adb0`
+- Saved by macOS Numbers (26.3): the demo-08 round that opened clean
+  after the malformed-mint repair, passing its four library rungs
+  silently (opened on the read-me sheet, renames, disabled filter,
+  rewritten column). Second specimen of the app re-registering a
+  library clone, with one deviation the suite pins: re-registering,
+  the app wrote the *base* uid into the model's haunted field, so
+  that table's haunted lookup resolves to the kind-1 owner.
+
 ### olekristensen-v26.3-demo11-shadows-returned.pages
 - 334,274 bytes, md5 `1d96fb972ebbad30416079be06aacea1`
 - Saved by macOS Pages (15.3.1) after reviewing demo-11's shadow rungs.

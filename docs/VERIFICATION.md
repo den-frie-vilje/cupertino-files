@@ -25,7 +25,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 |---:|---|---|---|---|
 | 1 | 🔴 high | Drawables & media → Inline image placement in an indented column | an inline image sits in the text column of an indented paragraph, not at the page margin | manual |
 | 2 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 3 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | a table added this way is editable in Numbers as a table, not just present in the file | manual |
+| 3 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
 | 4 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
 | 5 | 🟠 medium | Numbers & tables → Formula function names | The function-index table is incomplete, and every unnamed id is visible rather than guessed. | `test:e2e` |
 | 6 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
@@ -66,11 +66,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Numbers & tables  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** a table added this way is editable in Numbers as a table, not just present in the file
+**Claim.** the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open
 
-**Why the suite cannot settle it.** the suite proves it reloads with its own cells and a unique name, not that the app treats it as a first-class table
+**Why the suite cannot settle it.** the clone itself is first-class — two rounds opened it, showed its cells, and the checker's own formula referencing it by name computed — but both rounds the app discarded the written identity and re-registered, tombstoning the library's stored references into ref errors. The mint now enrolls the full owner family at all three engine sites (archives, tracker list, owner map, internals past the map's max); whether that is the whole acceptance test only an open can say.
 
-**How to settle it.** add a blank table, open in Numbers, type into it and reference it from a formula on another table
+**How to settle it.** npm run demos -- out, open demo-06-formler.numbers, F-03: the fetch under it must show 5 and the CrossCheck table's top row 7, with no ref error anywhere. A ref error means the three sites are still not sufficient and the remaining difference is the per-kind dependency payloads the app writes and we omit.
 
 ### 4. Conditional formatting: apply an existing rule set to more cells
 
@@ -513,7 +513,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** Every offline check is self-referential: our encoder round-trips through our decoder. Apple's reader is the only authority on whether the rebuilt row buffers, offset array, cell counts and legacy stubs are all acceptable together.
 
-**Outcome.** **Right-alignment confirmed on open.** Three review rounds triangulated the mechanism — automatic alignment is the absence of the per-cell text style, and the template's do-nothing style (alignment: 0) was the left-pin — and the round after the writer began dropping that style came back all green, every number right-aligned with no cell touched, resaved clean by the app.
+**Outcome.** **Right-alignment confirmed on open.** Three review rounds triangulated the mechanism — automatic alignment is the absence of the per-cell text style, and the template's do-nothing style (alignment: 0) was the left-pin — and the round after the writer began dropping that style came back all green, every number right-aligned with no cell touched, resaved clean by the app. One write path had missed the drop: setFormula without a cached value left formula results left-pinned beside right-aligned plain values, named cell by cell in the next returned demo — the drop now runs on every formula write, with app verification riding the next demo-06 round.
 
 ### ✅ Transitions
 

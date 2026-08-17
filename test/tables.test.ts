@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { FormulaOwnerRegistry, OwnerKind } from "../src/tsce/owners.ts";
+import { FormulaOwnerRegistry, OwnerKind, ownerRegistrationState } from "../src/tsce/owners.ts";
 import { describe, expect, it } from "./harness.ts";
 import {
   allBorders,
@@ -1355,8 +1355,10 @@ describe("adding and removing tables", () => {
       .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "Registered");
     expect(entry !== undefined).toBe(true);
     expect(entry!.ownerId !== undefined).toBe(true);
-    // The derived owners the app mints beside it exist too, sharing the base.
-    for (const kind of [3, 4, 11]) {
+    // The derived owners the app mints beside it exist too, sharing the
+    // base: the full family, kind for kind, as both app-minted specimens
+    // carry it.
+    for (const kind of [3, 4, 5, 6, 8, 9, 10, 11, 12, 35]) {
       const derived = registry
         .all()
         .find(
@@ -1369,6 +1371,39 @@ describe("adding and removing tables", () => {
       expect(`kind ${kind}: ${derived !== undefined}`).toBe(`kind ${kind}: true`);
     }
     void copy;
+  });
+
+  it("registers a copy at all three engine sites: archive, tracker list, owner map", () => {
+    // The engine only loads owner archives its dependency tracker lists,
+    // and only trusts identities its owner_id_map carries. A mint that
+    // wrote the archives alone shipped in a review round: the app
+    // discarded the whole identity on open, re-registered the table, and
+    // tombstoned a cross-table reference into a ref error.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    document.addTable(sheet.id, { name: "Enrolled" });
+    const reloaded = NumbersDocument.load(document.save());
+    const registry = new FormulaOwnerRegistry(reloaded.store);
+    const entry = registry
+      .all()
+      .find((o) => o.kind === OwnerKind.TABLE && o.tableName === "Enrolled")!;
+    const state = ownerRegistrationState(reloaded.store, entry.uid);
+    expect(JSON.stringify(state)).toBe(
+      JSON.stringify({ archive: true, tracked: true, mapped: true }),
+    );
+
+    // Internal ids allocate past the owner map's own maximum — the map
+    // knows owners that have no archive in the file, and the app's next
+    // allocation follows the map (measured: template map max 54, the
+    // app's own re-registration started at 55).
+    let engine;
+    for (const { obj } of reloaded.store.allObjects()) {
+      if (reloaded.store.typeNameOf(obj) === "TSCE.CalculationEngineArchive") engine = obj;
+    }
+    if (!engine) throw new Error("no calculation engine archive in the saved document");
+    const map = engine.message.getMessage(2)!.getMessage(3)!;
+    const internals = map.getMessages(1).map((e) => Number(e.getVarint(1)));
+    expect(new Set(internals).size).toBe(internals.length);
   });
 
   it("mints only identity — no empty bags whose archetypes have required fields", () => {

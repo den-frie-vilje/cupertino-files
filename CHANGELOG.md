@@ -25,13 +25,30 @@ in commit messages and pull requests.
   shared its source's calc-engine identity, and cross-table references
   naming the copy could open in Numbers as ref errors. Copies now get
   their own identity and are registered with the calc engine the way
-  the app registers a new table.
+  the app registers a new table: the full owner family, listed in the
+  engine's dependency tracker and mapped in its owner-id registry.
+- Formula results written by `setFormula` without a cached value
+  rendered left-aligned in Numbers where plain values were already
+  automatic. The write now sheds the template's pinning text style
+  whether or not a cached value is passed.
+- A table copied with `withContent: false` kept its source's
+  conditional-formatting rules — visible in the inspector, never
+  evaluated. A content-less copy now starts without them.
 
 ### Added
 
 - `NumbersDocument.setActiveSheet(index)` — choose the sheet the
   document opens on. Numbers keeps this in its stored selection state,
   not in tab order, so reordering sheets alone does not change it.
+- `doc.audit()` — an offline check for the faults a person otherwise
+  finds by opening the document: malformed table anchors, missing
+  calc-engine registration, cross-table references whose target no
+  table carries, conditional rules the engine never evaluates, and
+  values without display formats. Each finding names the cell or table
+  and what the app would do.
+- `save()` now refuses to write a document containing an archive with
+  a missing `required` field — the class the apps report as damaged —
+  naming the object and field instead of producing the file.
 
 ## 0.4.0 — 2026-08-14
 

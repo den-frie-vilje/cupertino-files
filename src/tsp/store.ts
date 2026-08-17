@@ -23,6 +23,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
 import { typeName, type IWorkApp } from "./registry.ts";
+import { embeddedRequiredSchema, missingRequired } from "./required.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -552,6 +553,35 @@ export class ObjectStore {
    * objects, then rebuilds only the components that changed.
    */
   save(): Uint8Array {
+    // Pass 0: refuse to serialize a malformed archive. A message missing a
+    // proto2 `required` field is not a smaller message — Numbers reports
+    // the whole document damaged — and only archives this session touched
+    // can have acquired the fault, so only dirty objects are swept.
+    const schema = embeddedRequiredSchema();
+    const malformed: string[] = [];
+    for (const component of this.components) {
+      for (const obj of component.objects) {
+        if (!obj.isDirty) continue;
+        const name = this.typeNameOf(obj);
+        if (!name || !schema.has(name)) continue;
+        for (const problem of missingRequired(obj.message, name, schema)) {
+          malformed.push(
+            `object ${obj.identifier}: ${problem.path} is missing required ` +
+              `${problem.field} (${problem.number})`,
+          );
+          if (malformed.length >= 8) break;
+        }
+        if (malformed.length >= 8) break;
+      }
+      if (malformed.length >= 8) break;
+    }
+    if (malformed.length > 0) {
+      throw new RangeError(
+        "refusing to save: the document would not open — required fields are missing:\n  " +
+          malformed.join("\n  "),
+      );
+    }
+
     // Pass 1: refresh object_references + external references for dirty
     // objects of known types. (Doing this may dirty Metadata.iwa.)
     for (const component of this.components) {

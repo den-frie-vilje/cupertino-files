@@ -358,7 +358,13 @@ export class NumbersDocument extends IWorkDocument {
 
     remintTableIdentity(this.store, copy.id);
     table.name = this.uniqueTableName(options.name, sheetId, copy.id);
-    if (options.withContent === false) table.clearAllCells();
+    if (options.withContent === false) {
+      table.clearAllCells();
+      // The donor's conditional rules ride along on the copied records,
+      // keyed into copied rule sets the fresh engine owner never
+      // evaluates. Content-less means without those too.
+      table.clearConditionalStyles();
+    }
     return table;
   }
 

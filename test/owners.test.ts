@@ -174,9 +174,14 @@ describe("owner kinds", () => {
         note("merge", registry.lookup(readCfUid(model.getMessage(47)?.getMessage(1)))?.kind);
       }
     }
-    const only = (label: string): number[] => [...(usage.get(label) ?? new Map<number, number>()).keys()];
+    const only = (label: string): number[] =>
+      [...(usage.get(label) ?? new Map<number, number>()).keys()].sort((a, b) => a - b);
     expect(only("conditionalStyle")).toEqual([OwnerKind.CONDITIONAL_STYLE]);
-    expect(only("haunted")).toEqual([OwnerKind.HAUNTED]);
+    // Nearly every model resolves its haunted field to the kind-35 owner.
+    // The one exception is app-authored: re-registering a clone, Numbers
+    // wrote the *base* uid into the model's haunted field, so it resolves
+    // to the kind-1 owner in that fixture.
+    expect(only("haunted")).toEqual([OwnerKind.TABLE, OwnerKind.HAUNTED]);
     expect(only("merge")).toEqual([OwnerKind.MERGE]);
   });
 
@@ -210,7 +215,7 @@ describe("owner kinds", () => {
         (owner.kindName === undefined ? unnamed : named).add(owner.kind);
       }
     }
-    expect([...named].sort((a, b) => a - b)).toEqual([1, 3, 4, 5, 8, 9, 11, 35, 200]);
+    expect([...named].sort((a, b) => a - b)).toEqual([0, 1, 3, 4, 5, 8, 9, 11, 35, 200]);
     // Four kinds occur with no field in the protos pointing at them. They
     // stay unnamed rather than guessed — see src/tsce/owners.ts.
     expect([...unnamed].sort((a, b) => a - b)).toEqual([6, 7, 10, 12]);
@@ -247,7 +252,11 @@ describe("cross-table formula references", () => {
       }
     }
     expect(named).toBeGreaterThan(1000);
-    expect(unnamed).toBe(0);
+    // The two returned demo fixtures each carry one reference the app
+    // tombstoned: it points at a kind-0 owner, not a table, and renders
+    // with the OTHER_TABLE:: fallback. That is the measured state
+    // `cell/cross-ref-dangling` exists to catch — evidence, not a gap.
+    expect(unnamed).toBe(2);
   });
 
   it("quotes a table name that would not parse bare", () => {

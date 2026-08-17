@@ -749,17 +749,17 @@ function demoFormulas(): Uint8Array {
   data.setCell(row - 1, 2, 7);
   data.setCell(row - 1, 3, 3);
   const base = row - 1;
-  data.setFormula(row, 2, `=C${base + 1}+D${base + 1}`);
-  data.setFormula(row, 3, `=C${base + 1}*D${base + 1}`);
+  data.setFormula(row, 2, `=C${base + 1}+D${base + 1}`, { value: 10 });
+  data.setFormula(row, 3, `=C${base + 1}*D${base + 1}`, { value: 21 });
   row += 2;
 
   head(check(), "Number series in C (2, 4, 6, 8) — D next to each: SUM=20, AVERAGE=5, MAX=8, ROUND(3.7)=4 — in that order.");
   const firstNum = row;
   for (const [i, v] of [2, 4, 6, 8].entries()) data.setCell(row + i, 2, v);
-  data.setFormula(firstNum, 3, `=SUM(C${firstNum + 1}:C${firstNum + 4})`);
-  data.setFormula(firstNum + 1, 3, `=AVERAGE(C${firstNum + 1}:C${firstNum + 4})`);
-  data.setFormula(firstNum + 2, 3, `=MAX(C${firstNum + 1}:C${firstNum + 4})`);
-  data.setFormula(firstNum + 3, 3, "=ROUND(3.7,0)");
+  data.setFormula(firstNum, 3, `=SUM(C${firstNum + 1}:C${firstNum + 4})`, { value: 20 });
+  data.setFormula(firstNum + 1, 3, `=AVERAGE(C${firstNum + 1}:C${firstNum + 4})`, { value: 5 });
+  data.setFormula(firstNum + 2, 3, `=MAX(C${firstNum + 1}:C${firstNum + 4})`, { value: 8 });
+  data.setFormula(firstNum + 3, 3, "=ROUND(3.7,0)", { value: 4 });
   row += 5;
 
   head(check(), "Cross-references both ways: C below fetches 5 from the \"CrossCheck\" table at the bottom of the sheet. CrossCheck's top row conversely fetches 7 from here, and its SUM over the whole of column B must show 30.");
@@ -804,7 +804,7 @@ function demoFormulas(): Uint8Array {
   second.setCell(0, 2, "Result");
   second.setCell(1, 0, "Fetched from the main table (must show 7):");
   second.setCellFormatting(1, 0, { textWrap: true });
-  second.setFormula(1, 2, `=${dataName}::C${base + 1}`);
+  second.setFormula(1, 2, `=${dataName}::C${base + 1}`, { value: 7 });
   second.setCell(2, 0, "Its own numbers in B: 5, 10 and 15");
   second.setCellFormatting(2, 0, { textWrap: true });
   second.setCell(2, 1, 5);
@@ -815,8 +815,8 @@ function demoFormulas(): Uint8Array {
   for (const r of [2, 3, 4]) second.setCellFormatting(r, 1, { textWrap: false });
   second.setCell(5, 0, "SUM over the whole of column B (must show 30):");
   second.setCellFormatting(5, 0, { textWrap: true });
-  second.setFormula(5, 2, "=SUM(B)");
-  data.setFormula(crossRow, 2, "=CrossCheck::B3");
+  second.setFormula(5, 2, "=SUM(B)", { value: 30 });
+  data.setFormula(crossRow, 2, "=CrossCheck::B3", { value: 5 });
 
   return doc.save();
 }

@@ -47,7 +47,7 @@ import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
-import { tablesOf, verifyCellStorageIntegrity, type TableModel } from "../tst/tables.ts";
+import { tablesOf, verifyCellStorageIntegrity, type AuditFinding, type TableModel } from "../tst/tables.ts";
 
 /**
  * The container-parent rule, composed per app.
@@ -222,6 +222,37 @@ export class IWorkDocument {
    */
   tables(): TableModel[] {
     return tablesOf(this.store);
+  }
+
+  /**
+   * Every fault this library knows how to recognise offline, across the
+   * whole document — the checks a person otherwise performs by opening
+   * the file in an app. Each finding names a state some review round
+   * has already watched an app refuse, repair destructively, or render
+   * against the author's intent. `save()` refuses the `error` classes
+   * it can see; `audit()` reports them without saving, warnings
+   * included, so a builder can ask "what would a person object to?"
+   * before shipping a document.
+   *
+   * @agentTool audit_document
+   */
+  audit(): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    for (const storage of this.textStorages()) {
+      const violation = storage.tablePositionViolation();
+      if (violation) {
+        findings.push({
+          severity: "error",
+          code: "text/table-position",
+          message:
+            `text storage ${storage.object.identifier}: table_${violation.table} entry at ` +
+            `position ${violation.position} with text length ${storage.text.length} — the app ` +
+            `repairs this with document-wide style loss`,
+        });
+      }
+    }
+    for (const table of this.tables()) findings.push(...table.audit());
+    return findings;
   }
 
   /** Concatenated plain text of all in-document storages (reading order approximation). */

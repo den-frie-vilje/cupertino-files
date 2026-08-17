@@ -1,0 +1,529 @@
+{
+  "file": "olekristensen-v26.3-demo06-formulas-returned.numbers",
+  "sha1": "d1b034325aac9fc570b672ff0ef306038161e2f3",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 700,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 35
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 79
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000040.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000041.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000065.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000066.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000067.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000068.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000070.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000071.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000072.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000073.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000074.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000075.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000077.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000078.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000079.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000080.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000081.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000082.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000083.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000084.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000085.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000086.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000087.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000088.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000090.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000107.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000108.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000109.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000110.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000111.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000112.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000113.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000117.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000118.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000588.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000589.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000590.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 501
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 21,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "DEMO 6"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Notes in column E."
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "Notes"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "F-01"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Base data: C=7, D=3. The row below: C must show 10 (sum), D must show 21 (product)."
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "21"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "F-02"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "Number series in C (2, 4, 6, 8) — D next to each: SUM=20, AVERAGE=5, MAX=8, ROUND(3.7)=4 — in that order."
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "20"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "5"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "6"
+              },
+              {
+                "r": 8,
+                "c": 3,
+                "v": "8"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "8"
+              },
+              {
+                "r": 9,
+                "c": 3,
+                "v": "4"
+              },
+              {
+                "r": 11,
+                "c": 0,
+                "v": "F-03"
+              },
+              {
+                "r": 11,
+                "c": 1,
+                "v": "Cross-references both ways: C below fetches 5 from the \"CrossCheck\" table at the bottom of the sheet. CrossCheck's top row conversely fetches 7 from here, and its SUM over the whole of column B must show 30."
+              },
+              {
+                "r": 12,
+                "c": 2,
+                "v": "#ERROR"
+              },
+              {
+                "r": 12,
+                "c": 4,
+                "v": "There’s a ref error"
+              },
+              {
+                "r": 14,
+                "c": 0,
+                "v": "F-04"
+              },
+              {
+                "r": 14,
+                "c": 1,
+                "v": "YOUR TURN — formula: type =SUM(C16:C17) yourself in the yellow D cell next to the numbers below (must show 9). Then the app's formula can be compared with the library's, field by field."
+              },
+              {
+                "r": 15,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 15,
+                "c": 3,
+                "v": "9"
+              },
+              {
+                "r": 16,
+                "c": 2,
+                "v": "5"
+              },
+              {
+                "r": 18,
+                "c": 0,
+                "v": "F-05"
+              },
+              {
+                "r": 18,
+                "c": 1,
+                "v": "YOUR TURN — cross-reference: type =CrossCheck::B3 yourself in the yellow C cell below (must show 10)."
+              },
+              {
+                "r": 19,
+                "c": 2,
+                "v": "10"
+              }
+            ]
+          },
+          {
+            "name": "CrossCheck",
+            "rows": 6,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Fetched from the main table (must show 7):"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "0"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Its own numbers in B: 5, 10 and 15"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "5"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "10"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "15"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "SUM over the whole of column B (must show 30):"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "30"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

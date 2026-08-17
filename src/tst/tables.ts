@@ -56,9 +56,13 @@ import {
   CellRecordTileFields,
   ExpandedEdgesFields,
   FORMULA_OWNER_DEPENDENCIES,
+  HAUNTED_OWNER,
+  HauntedOwnerFields,
   FormulaOwnerFields,
   FormulaOwnerRegistry,
   OwnerKind,
+  ownerKey,
+  ownerRegistrationState,
   readCfUid,
   readOwnerUid,
   mintTableOwnerArchive,
@@ -104,6 +108,18 @@ const DEFAULT_STAMP_FORMAT_BY_TYPE: ReadonlyMap<number, CellFormat> = new Map<nu
   [CellType.BOOL, { kind: "boolean" }],
 ]);
 const DEFAULT_STAMP_FORMATS: readonly CellFormat[] = [...DEFAULT_STAMP_FORMAT_BY_TYPE.values()];
+
+/**
+ * One thing {@link TableModel.audit} (or a document's `audit()`) found.
+ * `error` names a state an app refuses or repairs destructively;
+ * `warning` one it opens but renders against the author's evident
+ * intent. Codes are stable `area/what` slugs.
+ */
+export interface AuditFinding {
+  severity: "error" | "warning";
+  code: string;
+  message: string;
+}
 
 export const TST_TYPE = {
   TABLE_INFO: 6000,
@@ -943,6 +959,137 @@ export class TableModel {
     return out;
   }
 
+  /**
+   * The faults a person finds only by opening the document, checked
+   * offline: each entry names a state some review round has already
+   * watched an app reject, ignore, or render wrong. An `error` is a
+   * state Numbers refuses or repairs destructively; a `warning` is one
+   * it opens but renders against the author's evident intent.
+   */
+  audit(): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const name = this.name ?? String(this.object.identifier);
+
+    for (const orphan of this.orphanReferences()) {
+      findings.push({
+        severity: "error",
+        code: "table/orphan-string",
+        message:
+          `table "${name}" cell ${orphan.row},${orphan.column}: its ${orphan.kind} key ` +
+          `${orphan.key} has no entry in the data list — the cell reloads empty`,
+      });
+    }
+
+    if (this.storageGeneration === "v5") {
+      const haunted = readOwnerUid(
+        this.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
+      );
+      if (haunted) {
+        const base = { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi };
+        const state = ownerRegistrationState(this.store, base);
+        if (!state.archive || !state.tracked || !state.mapped) {
+          const gaps = [
+            state.archive ? undefined : "no owner archive",
+            state.tracked ? undefined : "not in the tracker's owner list",
+            state.mapped ? undefined : "no owner_id_map entry",
+          ]
+            .filter((g) => g !== undefined)
+            .join(", ");
+          findings.push({
+            severity: "error",
+            code: "table/unregistered",
+            message:
+              `table "${name}" is not fully registered with the calc engine (${gaps}) — ` +
+              `the app re-registers it under a new identity on open and cross-table ` +
+              `references to it become ref errors`,
+          });
+        }
+      }
+
+      // A cross-table reference names its target by owner uid. One that
+      // resolves to no TABLE-kind owner is already dead in the file:
+      // the app opens it as a ref error and parks the uid on a kind-0
+      // tombstone owner.
+      const tableUids = new Set<string>();
+      for (const owner of this.owners().all()) {
+        if (owner.kind === OwnerKind.TABLE) tableUids.add(ownerKey(owner.uid));
+      }
+      for (const { row, column, ast } of this.formulaArchives()) {
+        for (const node of ast.getMessage(Formula.AST_NODE_ARRAY)?.getMessages(1) ?? []) {
+          const target = readCfUid(node.getMessage(AstNode.CROSS_TABLE_INFO)?.getMessage(1));
+          if (target && !tableUids.has(ownerKey(target))) {
+            findings.push({
+              severity: "error",
+              code: "cell/cross-ref-dangling",
+              message:
+                `table "${name}" cell ${row},${column}: its formula references a table ` +
+                `identity no table carries — the app opens it as a ref error`,
+            });
+          }
+        }
+      }
+
+      const ledger = new Set<string>();
+      const conditional = this.conditionalDependenciesOwner();
+      const tiled = conditional?.owner.message.getMessage(
+        FormulaOwnerFields.TILED_CELL_DEPENDENCIES,
+      );
+      for (const ref of tiled?.getMessages(TiledDependenciesFields.TILES) ?? []) {
+        const tile = this.store.resolve(ref);
+        for (const record of tile?.message.getMessages(CellRecordTileFields.CELL_RECORDS) ?? []) {
+          ledger.add(
+            `${record.getUint(CellRecordExpandedFields.ROW)},${record.getUint(CellRecordExpandedFields.COLUMN)}`,
+          );
+        }
+      }
+
+      for (let row = 0; row < this.rowCount; row++) {
+        for (let column = 0; column < this.columnCount; column++) {
+          const record = this.recordAt(row, column);
+          if (!record) continue;
+          if (
+            record.id(CellFlag.COND_STYLE_ID) !== undefined &&
+            !ledger.has(`${row},${column}`)
+          ) {
+            findings.push({
+              severity: "warning",
+              code: "cell/rule-unregistered",
+              message:
+                `table "${name}" cell ${row},${column}: its conditional rule is not in the ` +
+                `engine's dependency ledger — the app shows the rule but never evaluates it`,
+            });
+          }
+          const type = record.type;
+          const formatFlag = DEFAULT_STAMP_FORMAT_BY_TYPE.has(type);
+          // Formula cells hold their cached result to the same law: of
+          // 1266 formula cells across the corpus, none with a value-typed
+          // cache lacks a display format.
+          if (
+            formatFlag &&
+            record.id(CellFlag.CONTROL_ID) === undefined &&
+            (record.flags & FORMAT_FLAGS) === 0
+          ) {
+            findings.push({
+              severity: "warning",
+              code: "cell/format-missing",
+              message:
+                `table "${name}" cell ${row},${column}: a plain value without its type's ` +
+                `display format — every app-written value cell carries one`,
+            });
+          }
+          // No bare-text-style check, deliberately: the do-nothing style
+          // was measured as the left-pin on cells this library wrote, but
+          // a corpus sweep found 1071 value cells in app-authored files
+          // carrying the same record state as their normal condition. The
+          // offline discriminator between the two is unmeasured, so the
+          // writers guarantee the state is never produced here and the
+          // audit stays silent about documents from elsewhere.
+        }
+      }
+    }
+    return findings;
+  }
+
   /** Keys present in one of the data store's lists. */
   private dataListKeys(field: number): Set<number> {
     const out = new Set<number>();
@@ -1059,6 +1206,28 @@ export class TableModel {
         if (CellRecord.decode(raw).id(CellFlag.FORMULA_ID) === undefined) continue;
         const formula = this.cellFormula(row, column);
         if (formula) out.push({ row, column, formula });
+      }
+    }
+    return out;
+  }
+
+  /** Every formula-bearing cell with its raw AST archive. */
+  private formulaArchives(): { row: number; column: number; ast: RawMessage }[] {
+    const out: { row: number; column: number; ast: RawMessage }[] = [];
+    if (this.storageGeneration !== "v5") return out;
+    const table = this.formulaTable();
+    if (table.size === 0) return out;
+    for (let row = 0; row < this.rowCount; row++) {
+      const located = this.locateRow(row);
+      if (!located) continue;
+      const records = readRowLayout(located.rowInfo, this.columnCount).records;
+      for (let column = 0; column < records.length; column++) {
+        const raw = records[column];
+        if (!raw) continue;
+        const id = CellRecord.decode(raw).id(CellFlag.FORMULA_ID);
+        if (id === undefined) continue;
+        const ast = table.get(id);
+        if (ast) out.push({ row, column, ast });
       }
     }
     return out;
@@ -1450,6 +1619,17 @@ export class TableModel {
     const record = existing ? CellRecord.decode(existing) : new CellRecord();
     record.setId(CellFlag.FORMULA_ID, key);
     record.remove(CellFlag.FORMULA_ERROR_ID);
+    // Automatic alignment is the absence of a per-cell text style, and a
+    // formula's result wants it as much as a typed value does. The cached
+    // value's write above drops the do-nothing style when there is one;
+    // without a cached value the record would keep the pin and the app
+    // would compute a right-alignable number into a left-pinned cell.
+    if (options.keepBareTextStyle !== true) {
+      const styleKey = record.id(CellFlag.TEXT_STYLE_ID);
+      if (styleKey !== undefined && this.textStyleIsBare(styleKey)) {
+        record.remove(CellFlag.TEXT_STYLE_ID);
+      }
+    }
     layout.records[column] = record.encode();
     this.writeRowLayout(located.rowInfo, layout);
     this.refreshRowHeader(row, layout.records.filter((r) => r !== undefined).length);
@@ -2895,6 +3075,50 @@ export class TableModel {
   /** Key into {@link conditionalStyleSets} carried by a cell's record. */
   conditionalStyleKey(row: number, column: number): number | undefined {
     return this.recordAt(row, column)?.id(CellFlag.COND_STYLE_ID);
+  }
+
+  /**
+   * Remove every conditional-formatting rule from the table: the keys on
+   * cell records, the ledger records behind them, and the rule sets they
+   * name.
+   *
+   * The content-less clone path calls this. A clone keeps its donor's
+   * cell records, and clearing a cell's *value* deliberately keeps its
+   * rule — the same edit in the app does — so the donor's rules arrive
+   * keyed into copied rule sets the clone's fresh engine owner has no
+   * ledger records for: the inspector shows them, nothing ever
+   * evaluates them.
+   */
+  clearConditionalStyles(): void {
+    this.requireWritable();
+    for (let row = 0; row < this.rowCount; row++) {
+      const located = this.locateRow(row);
+      if (!located) continue;
+      const layout = readRowLayout(located.rowInfo, this.columnCount);
+      let changed = false;
+      for (let column = 0; column < layout.records.length; column++) {
+        const raw = layout.records[column];
+        if (!raw) continue;
+        const record = CellRecord.decode(raw);
+        if (
+          record.id(CellFlag.COND_STYLE_ID) === undefined &&
+          record.id(CellFlag.COND_RULE_STYLE_ID) === undefined
+        ) {
+          continue;
+        }
+        this.removeConditionalLedgerRecord(row, column);
+        record.removeAll(CellFlag.COND_STYLE_ID | CellFlag.COND_RULE_STYLE_ID);
+        layout.records[column] = record.encode();
+        changed = true;
+      }
+      if (changed) this.writeRowLayout(located.rowInfo, layout);
+    }
+    const list = this.store.resolve(
+      refId(this.dataStore(), DataStoreFields.CONDITIONAL_STYLE_TABLE),
+    );
+    if (list && list.message.getMessages(DataList.ENTRIES).length > 0) {
+      list.message.setMessages(DataList.ENTRIES, []);
+    }
   }
 
   /**
