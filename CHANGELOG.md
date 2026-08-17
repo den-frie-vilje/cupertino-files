@@ -49,6 +49,11 @@ in commit messages and pull requests.
 - `save()` now refuses to write a document containing an archive with
   a missing `required` field — the class the apps report as damaged —
   naming the object and field instead of producing the file.
+- Formulas written by `setFormula` now carry the calc engine's
+  dependency records on their table's owner — cell, range and
+  whole-column records matching the app's own — so Numbers keeps
+  library-written formulas through its re-registration instead of
+  flattening them to their cached values.
 
 ## 0.4.0 — 2026-08-14
 
