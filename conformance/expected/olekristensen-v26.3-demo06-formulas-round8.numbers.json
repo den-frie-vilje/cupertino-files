@@ -1,0 +1,712 @@
+{
+  "file": "olekristensen-v26.3-demo06-formulas-round8.numbers",
+  "sha1": "81c3dd293a55c26edd22f4e343d63dddfcf2f206",
+  "app": "numbers",
+  "fileFormatVersion": "26.3.1",
+  "objects": 784,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 36
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 115
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000041.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000042.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000085.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000086.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000108.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000109.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000110.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000111.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000112.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000113.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000117.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000118.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000119.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000120.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000121.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000122.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000142.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000143.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000144.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000145.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000146.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000147.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000148.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000149.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000150.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000151.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/Tables/DataList-1000152.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000154.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000155.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000156.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000157.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000158.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000159.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000160.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000161.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000162.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000163.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000164.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-1000165.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000167.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000168.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000169.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000170.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000171.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000172.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000173.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000176.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000177.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000178.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000180.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000193.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000194.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000195.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000196.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000197.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000198.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000199.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000200.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000201.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000202.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000203.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000204.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000205.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000206.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000207.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000208.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000209.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000210.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000211.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000212.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000213.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000214.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000215.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000216.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000288.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000289.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000290.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000291.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000292.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 504
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Table 1",
+            "rows": 25,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "ID"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Check"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "Notes"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "DEMO 6"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Formulas — all written as AST by the library; Numbers computes them itself on open. If a cell shows an error or nothing, that is the finding. Notes in column E."
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "F-01"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Base data: C=7, D=3. The row below: C must show 10 (sum), D must show 21 (product)."
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "21"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "F-02"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Number series in C (2, 4, 6, 8) — D next to each: SUM=20, AVERAGE=5, MAX=8, ROUND(3.7)=4 — in that order."
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "2"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "20"
+              },
+              {
+                "r": 8,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 8,
+                "c": 3,
+                "v": "5"
+              },
+              {
+                "r": 9,
+                "c": 2,
+                "v": "6"
+              },
+              {
+                "r": 9,
+                "c": 3,
+                "v": "8"
+              },
+              {
+                "r": 10,
+                "c": 2,
+                "v": "8"
+              },
+              {
+                "r": 10,
+                "c": 3,
+                "v": "4"
+              },
+              {
+                "r": 12,
+                "c": 0,
+                "v": "F-03"
+              },
+              {
+                "r": 12,
+                "c": 1,
+                "v": "Cross-references both ways: C below fetches 5 from the \"CrossCheck\" table at the bottom of the sheet. CrossCheck's top row conversely fetches 7 from here, and its SUM over the whole of column B must show 30."
+              },
+              {
+                "r": 13,
+                "c": 2,
+                "v": "5"
+              },
+              {
+                "r": 15,
+                "c": 0,
+                "v": "F-04"
+              },
+              {
+                "r": 15,
+                "c": 1,
+                "v": "YOUR TURN — formula: type =SUM(C17:C18) yourself in the yellow D cell next to the numbers below (must show 9). Then the app's formula can be compared with the library's, field by field."
+              },
+              {
+                "r": 16,
+                "c": 2,
+                "v": "4"
+              },
+              {
+                "r": 16,
+                "c": 3,
+                "v": "9"
+              },
+              {
+                "r": 17,
+                "c": 2,
+                "v": "5"
+              },
+              {
+                "r": 19,
+                "c": 0,
+                "v": "F-05"
+              },
+              {
+                "r": 19,
+                "c": 1,
+                "v": "YOUR TURN — cross-reference: type =CrossCheck::B4 yourself in the yellow C cell below (must show 10)."
+              },
+              {
+                "r": 20,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 22,
+                "c": 0,
+                "v": "F-06"
+              },
+              {
+                "r": 22,
+                "c": 1,
+                "v": "Control: the NoCalc table at the very bottom holds plain values and no formulas. C below fetches 8 from it. If this computes while F-03 errors, the difference is the formula records; if both error, registration needs more than the owner archives; if both compute, cross-references are settled."
+              },
+              {
+                "r": 23,
+                "c": 2,
+                "v": "8"
+              }
+            ]
+          },
+          {
+            "name": "CrossCheck",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Check"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Data"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Result"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Fetched from the main table (must show 7):"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "0"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Its own numbers in B: 5, 10 and 15"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "5"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "10"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "15"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "SUM over the whole of column B (must show 30):"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "30"
+              }
+            ]
+          },
+          {
+            "name": "NoCalc",
+            "rows": 3,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Check"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Data"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Its only value, fetched by the main table:"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "8"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

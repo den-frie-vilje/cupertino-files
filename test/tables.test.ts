@@ -1843,3 +1843,41 @@ describe("stored hidden states follow the filter", () => {
     expect(stale[0]!.message.includes("Instructions")).toBe(true);
   });
 });
+
+describe("the round-8 return: comments and the reference map's semantics", () => {
+  const round8 = () =>
+    NumbersDocument.load(fixture("olekristensen-v26.3-demo06-formulas-round8.numbers"));
+
+  it("reads the reviewer's cell comments in place", () => {
+    const doc = round8();
+    const main = doc.tables().find((t) => t.name === "Table 1")!;
+    const cross = doc.tables().find((t) => t.name === "CrossCheck")!;
+    expect(main.cellComments().map((c) => `${c.row},${c.column}`).join(" ")).toBe("13,2 23,2");
+    expect(main.cellComment(13, 2)?.text).toBe("Still just showing the number 5");
+    expect(cross.cellComment(1, 2)?.text).toBe("Shows 0, references own table, not the other one");
+  });
+
+  it("the app indexes a cross-reference the way the library does", () => {
+    const doc = round8();
+    const table = doc.tables().find((t) => t.name === "Table 1")!;
+    expect(table.cellFormula(20, 2)).toBe("=CrossCheck::B4");
+    const engine = doc.store.findByType(4000)!;
+    const entries = engine.message.getMessage(7)!.getMessages(1);
+    // The app's own surviving formula sits under its target's base uid
+    // as an owner entry naming the referring table's internal id (77,
+    // the app's re-registered Table 1) and the referring cell — the
+    // same shape the library writes at setFormula.
+    const hit = entries.some((e) =>
+      (e.getMessage(3)?.getMessages(1) ?? []).some(
+        (oe) =>
+          oe.getUint(1) === 77 &&
+          (oe.getMessage(2)?.getMessages(1) ?? []).some(
+            (c) =>
+              c.getUint(1) === 2 &&
+              (c.getMessage(2)?.getMessages(1) ?? []).some((r) => r.getUint(1) === 20),
+          ),
+      ),
+    );
+    expect(hit).toBe(true);
+  });
+});
