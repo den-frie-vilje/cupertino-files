@@ -45,11 +45,17 @@ export function readColor(message: RawMessage | undefined): Color | undefined {
   return out;
 }
 
+/**
+ * A colour that names no `space` is written as sRGB rather than bare.
+ * From iWork 19 on the apps stamp a space on every colour they write —
+ * of the 8,000-plus colours at the measured fill and stroke sites in
+ * iwork19/modern/current-era corpus files, not one is bare; bare
+ * colours appear only in 2013/2016-era files. An explicit `space` is
+ * kept as given, P3 included.
+ */
 export function writeColor(color: Color): RawMessage {
   const m = makeColor(color.r, color.g, color.b, color.a ?? 1);
-  if (color.space) {
-    m.setVarint(ColorFields.RGB_SPACE, color.space === "p3" ? RGB_SPACE.P3 : RGB_SPACE.SRGB);
-  }
+  m.setVarint(ColorFields.RGB_SPACE, color.space === "p3" ? RGB_SPACE.P3 : RGB_SPACE.SRGB);
   return m;
 }
 
@@ -95,6 +101,15 @@ export const GradientFields = protoFields("TSD.GradientArchive", {
 export const GradientStopFields = protoFields("TSD.GradientArchive", { COLOR: "type", FRACTION: "stops", INFLECTION: "opacity" });
 export const GradientType = protoEnum("TSD.GradientArchive.GradientType", { LINEAR: "Linear", RADIAL: "Radial" });
 
+/** TSD.AngleGradientArchive.gradientangle — radians. */
+const ANGLE_GRADIENT_ANGLE = 2;
+
+/**
+ * The direction of a fresh gradient: 3π/2, top to bottom. 755 of the
+ * 765 angle-bearing corpus gradients state exactly this value.
+ */
+const DEFAULT_GRADIENT_ANGLE = (3 * Math.PI) / 2;
+
 /** TSD.ImageFillArchive. */
 export const ImageFillFields = protoFields("TSD.ImageFillArchive", {
   TECHNIQUE: "technique",
@@ -122,6 +137,14 @@ export interface Gradient {
   type: "linear" | "radial";
   stops: GradientStop[];
   opacity?: number;
+  /**
+   * Direction in radians, as `TSD.AngleGradientArchive` stores it.
+   * Omitted, a written gradient gets the app's own fresh-gradient
+   * direction, 3π/2 — top to bottom.
+   */
+  angle?: number;
+  /** The inspector's advanced-gradient mode; fresh gradients state false. */
+  advanced?: boolean;
 }
 
 export interface ImageFill {
@@ -162,6 +185,10 @@ export function readFill(message: RawMessage | undefined): Fill | undefined {
     };
     const opacity = gradient.getFloat(GradientFields.OPACITY);
     if (opacity !== undefined) out.opacity = opacity;
+    const advanced = gradient.getBool(GradientFields.ADVANCED);
+    if (advanced !== undefined) out.advanced = advanced;
+    const angle = gradient.getMessage(GradientFields.ANGLE_GRADIENT)?.getFloat(ANGLE_GRADIENT_ANGLE);
+    if (angle !== undefined) out.angle = angle;
     return { kind: "gradient", gradient: out };
   }
 
@@ -186,6 +213,11 @@ export function writeFill(fill: Fill): RawMessage {
     return message;
   }
   if (fill.kind === "gradient") {
+    // The app's own gradients state all five fields — measured over the
+    // corpus's 876: opacity on every one, the advanced flag on every one
+    // (false outside a single advanced specimen), the midpoint on all
+    // 1,993 stops (0.5 unless dragged), and the angle on every fresh-era
+    // gradient. Absent options are completed to that fresh shape.
     const gradient = RawMessage.create();
     gradient.setVarint(
       GradientFields.TYPE,
@@ -195,13 +227,14 @@ export function writeFill(fill: Fill): RawMessage {
       const entry = RawMessage.create();
       entry.setMessage(GradientStopFields.COLOR, writeColor(stop.color));
       entry.setFloat(GradientStopFields.FRACTION, stop.fraction);
-      // Apple writes an explicit midpoint; default to the true middle.
       entry.setFloat(GradientStopFields.INFLECTION, stop.inflection ?? 0.5);
       gradient.addMessage(GradientFields.STOPS, entry);
     }
-    if (fill.gradient.opacity !== undefined) {
-      gradient.setFloat(GradientFields.OPACITY, fill.gradient.opacity);
-    }
+    gradient.setFloat(GradientFields.OPACITY, fill.gradient.opacity ?? 1);
+    gradient.setBool(GradientFields.ADVANCED, fill.gradient.advanced ?? false);
+    const angle = RawMessage.create();
+    angle.setFloat(ANGLE_GRADIENT_ANGLE, fill.gradient.angle ?? DEFAULT_GRADIENT_ANGLE);
+    gradient.setMessage(GradientFields.ANGLE_GRADIENT, angle);
     message.setMessage(FillFields.GRADIENT, gradient);
     return message;
   }
@@ -280,20 +313,35 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
     if (type === StrokePatternType.SOLID) out.pattern = "solid";
     else if (type === StrokePatternType.EMPTY) out.pattern = "none";
     else {
+      // The float list is padded to six; `count` states how many are the
+      // dash pattern. A corpus dashed border is count 2 with
+      // [2,2,0,0,0,0] — a two-dash pattern, not six.
       const dashes = pattern.getFloats(StrokePatternFields.PATTERN);
-      out.pattern = dashes.length > 0 ? dashes : "solid";
+      const count = pattern.getUint(StrokePatternFields.COUNT);
+      const meaningful =
+        count !== undefined && count > 0 && count <= dashes.length
+          ? dashes.slice(0, count)
+          : dashes;
+      out.pattern = meaningful.length > 0 ? meaningful : "solid";
     }
   }
   return out;
 }
 
 /**
- * Every app-written paragraph border stroke states cap, join, miter
- * limit 4 and a complete pattern message — phase 0, count 0 and six
- * pattern floats even for solid and empty types (167 of 167 in the
- * corpus). A stroke stating only type renders as no border: the app
- * shows the width but "None" for the stroke, draws nothing, and zeroes
- * `border_positions` on resave.
+ * Every app-written stroke states cap, join, miter limit and a complete
+ * pattern message — measured over all 9,493 strokes at every site the
+ * corpus has one: paragraph borders, table band strokes, the
+ * cell-border stroke sidecar, chart gridlines and legend outlines,
+ * shape and media outlines. Cap 0, join 0, miter 4 is the shape on
+ * 8,992 of them; the rest are styles' own round caps and joins and a
+ * few miter-8 gridlines, so the defaults here are the app's dominant
+ * shape and an explicit cap or join is honoured. The pattern message is
+ * always whole: phase 0, the run count, and the float list padded to
+ * six — solid and empty state count 0 with six zeros, a dashed border
+ * states its dashes and zero-fill. A stroke stating only type renders
+ * as no border: the app shows the width but "None" for the stroke,
+ * draws nothing, and zeroes `border_positions` on resave.
  */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
@@ -314,15 +362,23 @@ export function writeStroke(stroke: Stroke): RawMessage {
       pattern.setFloats(StrokePatternFields.PATTERN, [0, 0, 0, 0, 0, 0]);
     } else {
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
+      pattern.setFloat(StrokePatternFields.PHASE, 0);
       pattern.setVarint(StrokePatternFields.COUNT, stroke.pattern.length);
-      pattern.setFloats(StrokePatternFields.PATTERN, stroke.pattern);
+      const floats = [...stroke.pattern];
+      while (floats.length < 6) floats.push(0);
+      pattern.setFloats(StrokePatternFields.PATTERN, floats);
     }
     message.setMessage(StrokeFields.PATTERN, pattern);
   }
   return message;
 }
 
-/** Convenience: a solid border. */
+/**
+ * Convenience: a solid border. The 1 pt default width is the app's own
+ * — the width its border controls start at, and the corpus mode for
+ * borders a person added (139 of 169 paragraph borders, every legend
+ * outline).
+ */
 export function solidStroke(color: Color, width = 1): Stroke {
   return { color, width, pattern: "solid" };
 }
@@ -420,10 +476,7 @@ export const DEFAULT_SHADOW: Shadow = {
 export function writeShadow(shadow: Shadow): RawMessage {
   const message = RawMessage.create();
   const color = shadow.color ?? DEFAULT_SHADOW.color!;
-  message.setMessage(
-    ShadowFields.COLOR,
-    writeColor(color.space ? color : { ...color, space: "srgb" }),
-  );
+  message.setMessage(ShadowFields.COLOR, writeColor(color));
   message.setFloat(ShadowFields.ANGLE, shadow.angle ?? DEFAULT_SHADOW.angle!);
   message.setFloat(ShadowFields.OFFSET, shadow.offset ?? DEFAULT_SHADOW.offset!);
   message.setVarint(ShadowFields.RADIUS, shadow.radius ?? DEFAULT_SHADOW.radius!);
@@ -460,6 +513,11 @@ export function readPadding(message: RawMessage | undefined): Padding | undefine
   return out;
 }
 
+/**
+ * Sides are written exactly as given — this bag supplies no default.
+ * For reference, the app's own cell paddings state all four sides,
+ * 4 pt each being the norm (4,908 of the corpus's 5,072).
+ */
 export function writePadding(padding: Padding): RawMessage {
   const message = RawMessage.create();
   if (padding.left !== undefined) message.setFloat(PaddingFields.LEFT, padding.left);
