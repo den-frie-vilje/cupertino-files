@@ -914,7 +914,12 @@ slide.body;   slide.body = "First\nSecond";
 slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
-slide.transition();  slide.setTransition({ effect: "apple:transition/dissolve", duration: 1 });
+slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
+// Effect ids are the app's own, measured from real decks: the
+// CoreAnimation family ("apple:ca-push", with `direction`) and the
+// bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
+// is written verbatim — an invented one is discarded by Keynote, so
+// read a deck that uses the effect you want and reuse its id.
 ```
 
 Placeholders are the theme's boxes for you to fill. Setting one only works

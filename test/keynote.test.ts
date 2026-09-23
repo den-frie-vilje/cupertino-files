@@ -341,6 +341,37 @@ describe("slide management", () => {
     }
   });
 
+  it("keeps a fresh slide's note storage, emptied", () => {
+    // Every corpus slide carries a note archive, empty notes included
+    // (49 of 49; empty ones with hasNote false) — stripping it left
+    // `notes =` on the new slide with nothing to write into.
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));
+    const added = doc.addSlide({ copyOf: 0, withContent: false });
+    expect(added.notesStorage() !== undefined).toBe(true);
+    expect(added.notes).toBe("");
+    expect(added.node.message.getBool(8)).toBe(false);
+    added.notes = "written into the fresh slide";
+    const reloaded = KeynoteDocument.load(doc.save());
+    expect(reloaded.slides()[added.index]!.notes).toBe("written into the fresh slide");
+  });
+
+  it("answers style() for a text box, whose reference sits on the embedded super", () => {
+    // A TSWP.ShapeInfoArchive keeps its style on the ShapeArchive super
+    // at field 1, one level below the top-level scan — style() answered
+    // undefined for every text box until the scan descended.
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));
+    const shapeInfos = doc
+      .slides()
+      .flatMap((s) => s.drawables())
+      .filter((d) => doc.store.typeNameOf(d.object) === "TSWP.ShapeInfoArchive");
+    expect(shapeInfos.length).toBeGreaterThan(0);
+    for (const drawable of shapeInfos) {
+      const style = drawable.style();
+      expect(style !== undefined).toBe(true);
+      expect(typeof style!.read()).toBe("object");
+    }
+  });
+
   it("keeps a cloned placeholder from declaring the slide that holds it", () => {
     // The container rule at Keynote-local type ids: 546/546 corpus
     // placeholders carry their slide as the drawable parent three supers

@@ -403,6 +403,14 @@ export class KeynoteSlide {
    * Update the slide's transition. Only the given properties change.
    * Setting `effect: "none"` disables the transition, which is how Keynote
    * itself encodes "no transition".
+   *
+   * The effect string is written verbatim, and only the app's own ids
+   * take: both measured families read back from Keynote-authored decks —
+   * `apple:ca-push` (CoreAnimation-class, with `direction`) and
+   * `com.apple.iWork.Keynote.BLTFadeThruColor` (bespoke, with its own
+   * parameter fields) — while a guessed `apple:transition/dissolve` did
+   * not survive the app. Reuse an id read from a deck that has the
+   * effect; no corpus fixture carries one to copy from.
    */
   setTransition(update: Partial<Omit<SlideTransition, "enabled">>): void {
     const animation = this.animationAttributes();
@@ -706,7 +714,6 @@ export class KeynoteDocument extends IWorkDocument {
     if (!options.withContent) {
       const stripped: bigint[] = [];
       for (const field of [
-        Slide.NOTE,
         Slide.OWNED_DRAWABLES,
         Slide.BUILDS,
         Slide.BUILD_CHUNKS,
@@ -750,7 +757,14 @@ export class KeynoteDocument extends IWorkDocument {
       }
       slide.message.remove(Slide.BUILDS);
       slide.message.remove(Slide.BUILD_CHUNKS);
-      slide.message.remove(Slide.NOTE);
+      // The note stays: every corpus slide carries one, empty or not —
+      // removing it is the absent-field defect class, and it left
+      // `notes =` on the new slide with nothing to write into. Emptied
+      // like the placeholders, it is the app's own fresh-slide shape
+      // (note present, hasNote false).
+      const note = this.store.resolve(refId(slide.message, Slide.NOTE));
+      const noteStorage = note && this.store.resolve(refId(note.message, Note.CONTAINED_STORAGE));
+      if (noteStorage) new TextStorage(this.store, noteStorage).setText("");
       // Placeholders are kept — they are what makes the new slide usable on
       // its layout — but emptied, so it reads as a fresh slide rather than
       // a copy of its neighbour.
