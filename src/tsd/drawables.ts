@@ -23,6 +23,7 @@ import {
   writeStroke,
 } from "./style.ts";
 import { protoFields } from "../proto/fields.ts";
+import { rectangleOf, rectanglePath } from "./paths.ts";
 
 const SHADOW_SUBARCHIVE_FIELDS = [
   ShadowFields.DROP_SHADOW,
@@ -157,6 +158,45 @@ export class DrawableModel {
     if (update.angle !== undefined) g.setFloat(Geometry.ANGLE, update.angle);
   }
 
+  /**
+   * Rewrite a shape's rectangular path to a new size.
+   *
+   * A shape's path renders scaled from the path source's `naturalSize`
+   * to the geometry frame, text and all: 93 of the corpus's 103
+   * text-bearing Keynote boxes store a natural size that differs from
+   * their frame, and a text box resized by frame alone shrinks or
+   * clips its text against the donor's path — the measured field
+   * failure. Pages' own text boxes keep path and frame equal (97 of
+   * 97), so a text box resized through this library gets both:
+   * {@link setGeometry} for the frame, this for the text's coordinate
+   * space. Which of the two states Keynote's own resize writes is
+   * unmeasured, so the two calls stay explicit rather than one
+   * implying the other.
+   *
+   * Throws when the shape has no bezier path source, or its path is
+   * not a plain axis-aligned rectangle — rewriting a star or an arrow
+   * into a box would flatten the shape.
+   */
+  setPathRectangle(width: number, height: number): void {
+    const shape =
+      this.object.type === TSWP_SHAPE_INFO ? this.object.message.getMessage(1) : this.object.message;
+    const pathsource = shape?.getMessage(SHAPE_PATHSOURCE);
+    const bezier = pathsource?.getMessage(BEZIER_PATH_SOURCE);
+    if (!bezier) {
+      throw new RangeError(`drawable ${this.id} has no bezier path source to resize`);
+    }
+    if (!isRectanglePath(bezier.getMessage(BEZIER_PATH))) {
+      throw new RangeError(
+        `drawable ${this.id}: the path is not a plain rectangle; rewriting it would flatten the shape`,
+      );
+    }
+    const natural = RawMessage.create();
+    natural.setFloat(SizeFields.WIDTH, width);
+    natural.setFloat(SizeFields.HEIGHT, height);
+    bezier.setMessage(BEZIER_NATURAL_SIZE, natural);
+    bezier.setMessage(BEZIER_PATH, rectanglePath(width, height));
+  }
+
   get hyperlinkUrl(): string | undefined {
     return this.core()?.getString(Drawable.HYPERLINK_URL);
   }
@@ -257,6 +297,25 @@ const DRAWABLE_STYLE_PROPERTIES = 11;
  * no fill, so everything after it shifts down by one.
  */
 const SHAPE_STYLE_FIELDS = { FILL: 1, STROKE: 2, OPACITY: 3, SHADOW: 4, REFLECTION: 5 } as const;
+
+/**
+ * TSWP.ShapeInfoArchive's type id, as a literal: the archive is a text
+ * shape from the layer above this one, and naming the number here keeps
+ * tsd from importing upward.
+ */
+const TSWP_SHAPE_INFO = 2011;
+/** TSD.PathSourceArchive.bezier_path_source. */
+const BEZIER_PATH_SOURCE = 5;
+/** TSD.BezierPathSourceArchive: naturalSize = 2, path = 3. */
+const BEZIER_NATURAL_SIZE = 2;
+const BEZIER_PATH = 3;
+/** TSD.ShapeArchive.pathsource. */
+const SHAPE_PATHSOURCE = 3;
+
+function isRectanglePath(path: RawMessage | undefined): boolean {
+  if (!path) return false;
+  return rectangleOf(path.getMessages(1)) !== undefined;
+}
 const MEDIA_STYLE_FIELDS = { STROKE: 1, OPACITY: 2, SHADOW: 3, REFLECTION: 4 } as const;
 
 export interface DrawableStyle {

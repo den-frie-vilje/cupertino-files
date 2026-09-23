@@ -90,6 +90,12 @@ in commit messages and pull requests.
   locked, styled with the theme's image style, in both drawable lists
   so it paints, sized from its pixels (or a PDF's page box) and
   centered unless placed explicitly.
+- `setPathRectangle` rewrites a text box's rectangular path beside its
+  frame. A shape's path renders scaled from its own stored size to the
+  frame, text included, so a text box resized by frame alone shrinks
+  or clips its text; pairing `setGeometry` with `setPathRectangle`
+  resizes it the way its text expects. Non-rectangular paths are
+  refused rather than flattened.
 - `NumbersDocument.addTable` without `copyOf` now grafts the embedded
   Apple-made blank table instead of cloning whatever table the document
   contains: the new table arrives empty and neutrally styled,

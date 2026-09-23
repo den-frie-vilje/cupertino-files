@@ -942,6 +942,19 @@ it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
 
+**Resizing a text box takes two calls.** A shape's path renders scaled
+from its own stored size to the frame, text included, so
+`setGeometry({ width, height })` alone shrinks or clips the text
+against the old path. Pair it:
+
+```ts
+box.setGeometry({ width: 600, height: 80 });
+box.setPathRectangle(600, 80);   // the text's coordinate space follows
+```
+
+`setPathRectangle` refuses a path that is not a plain rectangle —
+rewriting a star or an arrow into a box would flatten the shape.
+
 ### Presentation settings
 
 ```ts
