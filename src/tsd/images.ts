@@ -9,18 +9,21 @@
  */
 import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
-import type { ObjectStore } from "../tsp/store.ts";
+import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { makeRef, refId, SizeFields } from "../tsp/schema.ts";
+import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
+import { imageDimensions } from "../base/imagesize.ts";
 import { DrawableModel } from "./drawables.ts";
-import { Drawable, Image, TSD_TYPE } from "./schema.ts";
-import { buildRectangularMask, MaskModel, type ImageCrop, type Rect } from "./masks.ts";
+import { buildTextWrap, Drawable, Geometry, Image, TSD_TYPE } from "./schema.ts";
+import { buildRectangularMask, MaskModel, rectanglePath, type ImageCrop, type Rect } from "./masks.ts";
 
 /** TSD.ImageArchive: imageAdjustments = 14, plus the media variants. */
 const IMAGE_ADJUSTMENTS = 14;
 const IMAGE_ADJUSTED_DATA = 15;
 const IMAGE_ENHANCED_DATA = 17;
 const IMAGE_THUMBNAIL_DATA = 12;
+/** `traced_path` — the source-extent outline the mask editor uses. */
+const TRACED_PATH = 19;
 
 /** TSD.ImageAdjustmentsArchive field numbers. */
 export const ImageAdjustments = protoFields("TSD.ImageAdjustmentsArchive", {
@@ -354,4 +357,111 @@ export function imagesOf(store: ObjectStore): ImageModel[] {
     if (obj.type === TSD_TYPE.IMAGE) out.push(new ImageModel(store, obj));
   }
   return out;
+}
+
+/**
+ * Build a complete `TSD.ImageArchive` the way the apps write one.
+ *
+ * One builder for every host: the archive is identical whether the image
+ * rides a Pages text column or sits on a Keynote slide — geometry with
+ * the stated flags and angle, the drawable parent, the exterior wrap,
+ * locked false with the aspect ratio locked, stand-in title and caption
+ * with both hidden flags stated, both sizes, the traced-path rectangle,
+ * the data reference and the media style. Only the parent, the wrap
+ * mode, the position and the style differ per host, so the caller names
+ * those. Sizing: explicit width/height win; otherwise the intrinsic
+ * dimensions (raster pixels, or a PDF's first-page MediaBox) are fitted
+ * to `maxWidth` (default 400 pt).
+ *
+ * The caller anchors the result — a text attachment, a slide's drawable
+ * lists — and declares the drawable's references its own way.
+ */
+export function buildImageDrawable(
+  store: ObjectStore,
+  component: Component,
+  options: {
+    data: Uint8Array;
+    fileName: string;
+    parentId: bigint;
+    wrap: "text" | "page";
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    maxWidth?: number;
+    styleId?: bigint;
+  },
+): { image: IwaObject; dataId: bigint; width: number; height: number } {
+  const { dataId } = store.addDataFile(options.data, options.fileName);
+
+  const dims = imageDimensions(options.data);
+  const maxWidth = options.maxWidth ?? 400;
+  let width = options.width;
+  let height = options.height;
+  if (width === undefined || height === undefined) {
+    const iw = dims?.width ?? 300;
+    const ih = dims?.height ?? 200;
+    const scale = Math.min(1, maxWidth / iw);
+    width = width ?? iw * scale;
+    height = height ?? ih * (width / iw);
+  }
+
+  const image = store.createObject(TSD_TYPE.IMAGE, component);
+  const drawable = RawMessage.create();
+  const geometry = RawMessage.create();
+  const position = RawMessage.create();
+  position.setFloat(Point.X, options.x ?? 0);
+  position.setFloat(Point.Y, options.y ?? 0);
+  const size = RawMessage.create();
+  size.setFloat(SizeFields.WIDTH, width);
+  size.setFloat(SizeFields.HEIGHT, height);
+  geometry.setMessage(Geometry.POSITION, position);
+  geometry.setMessage(Geometry.SIZE, size);
+  // Flags 3 and an explicit angle are on 102 of 102 corpus inline
+  // drawables, without exception.
+  geometry.setVarint(Geometry.FLAGS, 3);
+  geometry.setFloat(Geometry.ANGLE, 0);
+  drawable.setMessage(Drawable.GEOMETRY, geometry);
+  drawable.setMessage(Drawable.PARENT, makeRef(options.parentId));
+  drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap(options.wrap));
+  // Locked and aspect-ratio-locked are stated, not left absent: 156 of
+  // 171 corpus Pages images carry exactly this pair, every masked one
+  // and all 22 Keynote slide images state aspect_ratio_locked true.
+  drawable.setBool(Drawable.LOCKED, false);
+  drawable.setBool(Drawable.ASPECT_RATIO_LOCKED, true);
+  // Title and caption point at empty stand-in archives with both hidden
+  // flags stated — the unanimous shape on both hosts.
+  const title = store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
+  const caption = store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
+  drawable.setMessage(Drawable.TITLE, makeRef(title.identifier));
+  drawable.setMessage(Drawable.CAPTION, makeRef(caption.identifier));
+  drawable.setBool(Drawable.TITLE_HIDDEN, false);
+  drawable.setBool(Drawable.CAPTION_HIDDEN, false);
+  image.message.setMessage(Image.SUPER, drawable);
+  if (dims) {
+    // `naturalSize` is the source's own extent (pixels, or a PDF's
+    // points), `originalSize` the uncropped drawn frame in parent
+    // points — the frame the mask editor exposes.
+    const natural = RawMessage.create();
+    natural.setFloat(SizeFields.WIDTH, dims.width);
+    natural.setFloat(SizeFields.HEIGHT, dims.height);
+    image.message.setMessage(Image.NATURAL_SIZE, natural);
+    const drawn = RawMessage.create();
+    drawn.setFloat(SizeFields.WIDTH, width);
+    drawn.setFloat(SizeFields.HEIGHT, height);
+    image.message.setMessage(Image.ORIGINAL_SIZE, drawn);
+    // traced_path: the source-extent rectangle masked images carry,
+    // and the mask editor's outline.
+    image.message.setMessage(TRACED_PATH, rectanglePath(dims.width, dims.height));
+  }
+  image.message.setMessage(Image.DATA, makeDataRef(dataId));
+  // An image with no style is valid, complete by the schema, and never
+  // drawn. Every corpus image points at a TSD.MediaStyleArchive.
+  if (options.styleId !== undefined) {
+    image.message.setMessage(Image.STYLE, makeRef(options.styleId));
+  }
+  image.message.setVarint(Image.FLAGS, 0);
+  image.message.setBool(Image.UNTAGGED_AS_GENERIC, false);
+  image.setDataReferences([dataId]);
+  return { image, dataId, width, height };
 }

@@ -174,6 +174,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["PagesDocument.unlistParagraphStyle", "style-management edge case, not an editing task"],
   ["PagesDocument.insertSectionBreak", "section semantics need more than a position to be safe over JSON"],
   ["PagesDocument.insertInlineImage", "image bytes do not travel well as JSON tool arguments; the API takes them directly"],
+  ["KeynoteDocument.addImage", "same byte-argument class as insertInlineImage; the API takes the picture directly"],
   ["TableModel.setCellControl", "control creation is app-unverified (see docs/BLOCKERS.md); the tool waits for the app's word"],
   ["TableModel.setPopupMenu", "same app-unverified class as setCellControl"],
   ["TableModel.removeCellControl", "paired with control creation; ships with it"],

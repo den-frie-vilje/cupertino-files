@@ -140,6 +140,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 |---|---|---|---:|---|
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 9 | iwork16→current |
+| Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide copies in a Keynote-saved deck (per-slide components)<br><sub>a copied slide gets a component of its own, modeled on its donor's</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 3 | iwork16→current |
 | Transitions<br><sub>named effects were blocked on evidence — every corpus slide says effect "none" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 17 of 17); written effects copy a string measured from the app that run, never a guess</sub> | Keynote | ✅ read + write | **0** | — |
@@ -159,7 +160,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-55 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+56 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -211,6 +212,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
+- 🟠 medium — Keynote → **Pictures on slides (addImage)**
 - 🔴 high — Keynote → **Slide copies in a Keynote-saved deck (per-slide components)**
 - 🟠 medium — Keynote → **Speaker notes**
 - 🟠 medium — Keynote → **Transitions**

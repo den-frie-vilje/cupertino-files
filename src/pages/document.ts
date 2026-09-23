@@ -24,12 +24,11 @@ import {
   Storage,
   TSWP_TYPE,
 } from "../tswp/schema.ts";
-import { makeDataRef, makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
 import {
   buildTextWrap,
   Drawable,
   ExteriorTextWrap,
-  Geometry,
   Image,
   TEXT_WRAP_IN_FLOW,
   TSD_TYPE,
@@ -37,10 +36,9 @@ import {
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { rectanglePath } from "../tsd/masks.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
-import { imageDimensions } from "../base/imagesize.ts";
+import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
@@ -1143,85 +1141,16 @@ export class PagesDocument extends IWorkDocument {
     const wrap = options.wrap ?? "text";
     const component = this.store.componentOf(body.id);
     if (!component) throw new RangeError("body component not found");
-    const { dataId } = this.store.addDataFile(data, options.fileName);
-
-    // Size: explicit > intrinsic (fitted) > fallback.
-    const dims = imageDimensions(data);
-    const maxWidth = options.maxWidth ?? 400;
-    let width = options.width;
-    let height = options.height;
-    if (width === undefined || height === undefined) {
-      const iw = dims?.width ?? 300;
-      const ih = dims?.height ?? 200;
-      const scale = Math.min(1, maxWidth / iw);
-      width = width ?? iw * scale;
-      height = height ?? ih * (width / iw);
-    }
-
-    const image = this.store.createObject(TSD_TYPE.IMAGE, component);
-    const drawable = RawMessage.create();
-    const geometry = RawMessage.create();
-    const position = RawMessage.create();
-    position.setFloat(Point.X, 0);
-    position.setFloat(Point.Y, 0);
-    const size = RawMessage.create();
-    size.setFloat(SizeFields.WIDTH, width);
-    size.setFloat(SizeFields.HEIGHT, height);
-    geometry.setMessage(Geometry.POSITION, position);
-    geometry.setMessage(Geometry.SIZE, size);
-    // Flags 3 and an explicit angle are on 102 of 102 corpus inline
-    // drawables, without exception.
-    geometry.setVarint(Geometry.FLAGS, 3);
-    geometry.setFloat(Geometry.ANGLE, 0);
-    drawable.setMessage(Drawable.GEOMETRY, geometry);
-    // The back-pointer to the storage the drawable is anchored in:
-    // present on all 102, resolving to the TSWP.StorageArchive every time.
-    drawable.setMessage(Drawable.PARENT, makeRef(body.id));
-    drawable.setMessage(Drawable.EXTERIOR_TEXT_WRAP, buildTextWrap(wrap));
-    // Locked and aspect-ratio-locked are stated, not left absent: 156 of
-    // 171 corpus images carry exactly this pair, and all 87 masked ones
-    // state aspect_ratio_locked true — the resize behavior a photo gets.
-    drawable.setBool(Drawable.LOCKED, false);
-    drawable.setBool(Drawable.ASPECT_RATIO_LOCKED, true);
-    // Title and caption point at empty stand-in archives with both hidden
-    // flags stated: 88 corpus images carry the pair, all 176 targets are
-    // empty TSD.StandinCaptionArchives, and 87 of 88 state false/false.
-    const title = this.store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
-    const caption = this.store.createObject(TSD_TYPE.STANDIN_CAPTION, component);
-    drawable.setMessage(Drawable.TITLE, makeRef(title.identifier));
-    drawable.setMessage(Drawable.CAPTION, makeRef(caption.identifier));
-    drawable.setBool(Drawable.TITLE_HIDDEN, false);
-    drawable.setBool(Drawable.CAPTION_HIDDEN, false);
-    image.message.setMessage(Image.SUPER, drawable);
-    if (dims) {
-      // Both sizes are on 83 of 83 corpus images, and they answer
-      // different questions: `naturalSize` is the source's own extent
-      // (pixels, or a PDF's points), `originalSize` the uncropped
-      // drawn frame in parent points — the frame the mask editor
-      // exposes. Writing pixels into both wrapped a source-sized claim
-      // around a scaled geometry, and the editor refused the mask.
-      const natural = RawMessage.create();
-      natural.setFloat(SizeFields.WIDTH, dims.width);
-      natural.setFloat(SizeFields.HEIGHT, dims.height);
-      image.message.setMessage(Image.NATURAL_SIZE, natural);
-      const drawn = RawMessage.create();
-      drawn.setFloat(SizeFields.WIDTH, width);
-      drawn.setFloat(SizeFields.HEIGHT, height);
-      image.message.setMessage(Image.ORIGINAL_SIZE, drawn);
-      // traced_path: the source-extent rectangle 30 of the corpus's 31
-      // masked Pages images carry, and the mask editor's outline.
-      image.message.setMessage(19, rectanglePath(dims.width, dims.height));
-    }
-    image.message.setMessage(Image.DATA, makeDataRef(dataId));
-    // An image with no style is the same shape as a cell control with no
-    // format: valid, complete by the schema, and never drawn. Every corpus
-    // image points at a TSD.MediaStyleArchive, and the one it points at is
-    // the theme's own `image-0-imageStyle`.
-    const style = mediaStyleIdOf(this);
-    if (style !== undefined) image.message.setMessage(Image.STYLE, makeRef(style));
-    image.message.setVarint(Image.FLAGS, 0);
-    image.message.setBool(Image.UNTAGGED_AS_GENERIC, false);
-    image.setDataReferences([dataId]);
+    const { image, dataId } = buildImageDrawable(this.store, component, {
+      data,
+      fileName: options.fileName,
+      parentId: body.id,
+      wrap,
+      width: options.width,
+      height: options.height,
+      maxWidth: options.maxWidth,
+      styleId: mediaStyleIdOf(this),
+    });
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(image.identifier));

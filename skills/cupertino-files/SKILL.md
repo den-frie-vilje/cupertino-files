@@ -928,6 +928,20 @@ synthesizing the geometry and style the master defines for that role, so a
 slide on a layout without a body box is told so rather than given an
 unstyled box at the origin.
 
+### Pictures on slides
+
+```ts
+doc.addImage(0, pngBytes, { fileName: "chart.png" });            // centered, fitted to 400 pt
+doc.addImage(2, pdfBytes, { fileName: "figure.pdf", x: 80, y: 120, width: 640 });
+```
+
+The archive is the measured slide-image shape — the drawable's parent is
+the slide, the aspect ratio locked, the theme's `image-0-imageStyle`
+applied — and the picture joins both of the slide's drawable lists, so
+it paints. Sizing works like `insertInlineImage`: explicit dimensions
+win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
+is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
+
 ### Presentation settings
 
 ```ts

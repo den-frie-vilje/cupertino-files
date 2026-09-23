@@ -12,6 +12,9 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
+import { buildImageDrawable } from "../tsd/images.ts";
+import { Image, TSD_TYPE } from "../tsd/schema.ts";
+import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -827,6 +830,74 @@ export class KeynoteDocument extends IWorkDocument {
    */
   duplicateSlide(index: number): KeynoteSlide {
     return this.addSlide({ copyOf: index, after: index, withContent: true });
+  }
+
+  /**
+   * Put a picture on a slide.
+   *
+   * The archive is the measured slide-image shape, unanimous across the
+   * corpus's 22: the drawable's parent is the slide, the exterior wrap
+   * is the on-page shape, the aspect ratio is locked, stand-in title
+   * and caption ride along, and the style is the theme's
+   * `image-0-imageStyle` media style. The image lands in the slide's
+   * own package component beside its other content and joins both
+   * drawable lists — ownership and paint order. Sized like
+   * `insertInlineImage`: explicit `width`/`height` win, otherwise the
+   * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
+   * `x`/`y` say otherwise the picture is centered on the slide.
+   */
+  addImage(
+    slideIndex: number,
+    data: Uint8Array,
+    options: {
+      fileName: string;
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      maxWidth?: number;
+    },
+  ): { imageId: bigint; dataId: bigint } {
+    const slide = this.slides()[slideIndex];
+    if (!slide) throw new RangeError(`no slide at index ${slideIndex}`);
+    const component = this.store.componentOf(slide.id);
+    if (!component) throw new RangeError(`slide ${slideIndex} has no component`);
+    const { image, dataId, width, height } = buildImageDrawable(this.store, component, {
+      data,
+      fileName: options.fileName,
+      parentId: slide.id,
+      wrap: "page",
+      width: options.width,
+      height: options.height,
+      maxWidth: options.maxWidth,
+      styleId: this.mediaStyleId(),
+    });
+    slide.container().attach(image.identifier);
+    const size = this.slideSize();
+    drawableById(this.store, image.identifier)?.setGeometry({
+      x: options.x ?? (size ? Math.max(0, (size.width - width) / 2) : 0),
+      y: options.y ?? (size ? Math.max(0, (size.height - height) / 2) : 0),
+    });
+    return { imageId: image.identifier, dataId };
+  }
+
+  /**
+   * The theme's `image-0-imageStyle`, the media style every corpus
+   * slide image points at; failing the identifier, any existing image's
+   * style, and failing that none — an unstyled image is valid and never
+   * drawn, so the builder leaves the field off rather than invent one.
+   */
+  private mediaStyleId(): bigint | undefined {
+    for (const sheet of this.stylesheets()) {
+      const info = sheet.findByIdentifier("image-0-imageStyle");
+      if (info) return info.id;
+    }
+    for (const { obj } of this.store.allObjects()) {
+      if (obj.type !== TSD_TYPE.IMAGE) continue;
+      const style = refId(obj.message, Image.STYLE);
+      if (style !== undefined) return style;
+    }
+    return undefined;
   }
 
   /**

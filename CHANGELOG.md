@@ -84,6 +84,12 @@ in commit messages and pull requests.
 
 ### Added
 
+- `KeynoteDocument.addImage` puts a picture on a slide — the gap that
+  made "swap an image" impossible in Keynote. The image arrives in the
+  shape the app writes for its own: parented on the slide, aspect
+  locked, styled with the theme's image style, in both drawable lists
+  so it paints, sized from its pixels (or a PDF's page box) and
+  centered unless placed explicitly.
 - `NumbersDocument.addTable` without `copyOf` now grafts the embedded
   Apple-made blank table instead of cloning whatever table the document
   contains: the new table arrives empty and neutrally styled,
