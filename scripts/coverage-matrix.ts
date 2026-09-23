@@ -1831,6 +1831,28 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Pictures on slides (addImage)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slideCount() ?? 0) > 0),
+    note: "the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists",
+    manualProof: {
+      claim: "Keynote draws a picture this library added to a slide, at the size and position asked.",
+      why:
+        "The archive matches the corpus's 22 slide images field for field — parent, wrap, aspect " +
+        "lock, stand-ins, style, component placement — and a field report's hand-built adaptation " +
+        "of the same recipe rendered. But an image with a well-formed archive and any one wrong " +
+        "linkage is the invisible-control failure class: valid, complete, never drawn. Only the " +
+        "app can say it paints.",
+      how:
+        "`addImage` a PNG onto a fresh deck's first slide, open in Keynote: the picture must show " +
+        "centered at its intrinsic size, selectable and movable like an inserted one. A blank " +
+        "slide means the linkage failed somewhere the audit cannot see; say which slide you see.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Slide copies in a Keynote-saved deck (per-slide components)",
     apps: ["keynote"],
     status: "read+write",

@@ -43,6 +43,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "IWorkDocument.tables", tool: null },
   { api: "IWorkDocument.textStorages", tool: null },
   { api: "IWorkDocument.typeNameOf", tool: null },
+  { api: "KeynoteDocument.addImage", tool: null },
   { api: "KeynoteDocument.addSlide", tool: "manage_slides" },
   { api: "KeynoteDocument.allNotes", tool: null },
   { api: "KeynoteDocument.blank", tool: "create_document" },

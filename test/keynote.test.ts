@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
+import { Drawable, ExteriorTextWrap, Image } from "../src/tsd/schema.ts";
 import { readdirSync } from "node:fs";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -61,12 +62,12 @@ describe("Keynote slide model", () => {
   it("edits transitions and speaker notes, and round-trips", () => {
     const doc = KeynoteDocument.load(fixture("tika-testKeynote2013.key"));
     const noteSlideId = doc.slides()[1]!.id;
-    doc.slides()[0]!.setTransition({ effect: "apple:transition/dissolve", duration: 2.5, automatic: true });
+    doc.slides()[0]!.setTransition({ effect: "apple:ca-push", duration: 2.5, direction: 14, automatic: true });
     doc.slides()[1]!.notes = "Rewritten speaker note.";
 
     const reloaded = KeynoteDocument.load(doc.save());
     const first = reloaded.slides()[0]!.transition()!;
-    expect(first.effect).toBe("apple:transition/dissolve");
+    expect(first.effect).toBe("apple:ca-push");
     expect(first.enabled).toBe(true);
     expect(first.duration).toBe(2.5);
     expect(first.automatic).toBe(true);
@@ -137,11 +138,11 @@ describe("current-era Keynote decks (26.x)", () => {
   it("edits and round-trips a 26.x deck", () => {
     const doc = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
     const slideCount = doc.slideCount();
-    doc.slides()[0]!.setTransition({ effect: "apple:transition/dissolve", duration: 1.5 });
+    doc.slides()[0]!.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
     const reloaded = KeynoteDocument.load(doc.save());
     expect(reloaded.slideCount()).toBe(slideCount);
     const transition = reloaded.slides()[0]!.transition()!;
-    expect(transition.effect).toBe("apple:transition/dissolve");
+    expect(transition.effect).toBe("apple:ca-push");
     expect(transition.duration).toBe(1.5);
     expect(reloaded.compatibility().formatVersion!.toString()).toBe("26.1.0");
   });
@@ -370,6 +371,49 @@ describe("slide management", () => {
       expect(style !== undefined).toBe(true);
       expect(typeof style!.read()).toBe("object");
     }
+  });
+
+  it("puts a picture on a slide in the measured shape", () => {
+    // Unanimous across the corpus's 22 slide images: parent is the
+    // slide, wrap {type 4, direction 2, fit 1, margin 12, alpha 0.5,
+    // html false}, aspect locked, stand-ins with hidden flags stated,
+    // the theme's image-0-imageStyle, the slide's own component.
+    const PNG = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0, 0, 0, 0x64, 0, 0, 0, 0x32, 8, 6, 0, 0, 0,
+    ]);
+    const doc = KeynoteDocument.blank();
+    const { imageId } = doc.addImage(0, PNG, { fileName: "figure.png" });
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides()[0]!;
+    const image = slide
+      .drawables()
+      .find((d) => reloaded.store.typeNameOf(d.object) === "TSD.ImageArchive")!;
+    expect(image !== undefined).toBe(true);
+    expect(image.object.identifier).toBe(imageId);
+
+    // Centered on the 16:9 canvas at the intrinsic 100×50.
+    const geometry = image.geometry()!;
+    expect(geometry.width).toBe(100);
+    expect(geometry.height).toBe(50);
+    expect(geometry.x).toBe((reloaded.slideSize()!.width - 100) / 2);
+
+    const drawable = image.object.message.getMessage(Image.SUPER)!;
+    const wrap = drawable.getMessage(Drawable.EXTERIOR_TEXT_WRAP)!;
+    expect(wrap.getUint(ExteriorTextWrap.TYPE)).toBe(4);
+    expect(wrap.getFloat(ExteriorTextWrap.MARGIN)).toBe(12);
+    expect(wrap.getFloat(ExteriorTextWrap.ALPHA_THRESHOLD)).toBe(0.5);
+    const parent = drawable.getMessage(Drawable.PARENT)?.getVarint(1);
+    expect(parent).toBe(slide.id);
+    expect(drawable.getBool(Drawable.ASPECT_RATIO_LOCKED)).toBe(true);
+
+    const style = image.style();
+    expect(reloaded.store.typeNameOf(style!.object)).toBe("TSD.MediaStyleArchive");
+    expect(
+      reloaded.store.componentOf(imageId)?.locator,
+    ).toBe(reloaded.store.componentOf(slide.id)?.locator);
+    expect(reloaded.audit()).toEqual([]);
   });
 
   it("keeps a cloned placeholder from declaring the slide that holds it", () => {
