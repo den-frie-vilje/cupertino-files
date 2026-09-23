@@ -184,6 +184,7 @@ export class DrawableModel {
     return reference
       ? new DrawableStyleHandle(this.store, reference.object, {
           drawable: this.object,
+          container: reference.container,
           field: reference.field,
         })
       : undefined;
@@ -195,17 +196,24 @@ export class DrawableModel {
    * The field number differs per concrete archive (`ShapeArchive.style` is
    * 2, `ImageArchive.style` is 3, and so on), so rather than tabulate every
    * subclass we resolve each reference-shaped field and keep the one that
-   * lands on a shape or media style.
+   * lands on a shape or media style. The reference is not always at the
+   * top level: a text box's `TSWP.ShapeInfoArchive` keeps it on the
+   * embedded `ShapeArchive` super at field 1, so a miss descends the
+   * super chain before giving up.
    */
-  private styleReference(): { object: IwaObject; field: number } | undefined {
-    for (const field of this.object.message.fields) {
-      if (field.wire !== WireType.Bytes) continue;
-      const id = refId(this.object.message, field.no);
-      if (id === undefined) continue;
-      const target = this.store.object(id);
-      if (target && isDrawableStyleType(target.type, this.store.app)) {
-        return { object: target, field: field.no };
+  private styleReference(): { object: IwaObject; container: RawMessage; field: number } | undefined {
+    let message: RawMessage | undefined = this.object.message;
+    for (let depth = 0; message && depth < 4; depth++) {
+      for (const field of message.fields) {
+        if (field.wire !== WireType.Bytes) continue;
+        const id = refId(message, field.no);
+        if (id === undefined) continue;
+        const target = this.store.object(id);
+        if (target && isDrawableStyleType(target.type, this.store.app)) {
+          return { object: target, container: message, field: field.no };
+        }
       }
+      message = message.getMessage(1);
     }
     return undefined;
   }
@@ -266,13 +274,18 @@ export interface DrawableStyle {
 export class DrawableStyleHandle {
   readonly store: ObjectStore;
   private styleObject: IwaObject;
-  /** Set when the handle came from a drawable, enabling copy-on-write. */
-  private readonly ownedBy?: { drawable: IwaObject; field: number };
+  /**
+   * Set when the handle came from a drawable, enabling copy-on-write.
+   * `container` is the message actually holding the reference — the
+   * drawable's own, or an embedded super's when the concrete archive
+   * keeps its style there.
+   */
+  private readonly ownedBy?: { drawable: IwaObject; container: RawMessage; field: number };
 
   constructor(
     store: ObjectStore,
     object: IwaObject,
-    ownedBy?: { drawable: IwaObject; field: number },
+    ownedBy?: { drawable: IwaObject; container: RawMessage; field: number },
   ) {
     this.store = store;
     this.styleObject = object;
@@ -436,7 +449,7 @@ export class DrawableStyleHandle {
    */
   private privatise(): void {
     if (!this.ownedBy) return;
-    const { drawable, field } = this.ownedBy;
+    const { drawable, container, field } = this.ownedBy;
     const others = this.store.referrers(this.id).filter((id) => id !== drawable.identifier);
     if (others.length === 0) return;
     const source = this.styleObject;
@@ -457,7 +470,7 @@ export class DrawableStyleHandle {
         ]);
       }
     }
-    drawable.message.setMessage(field, makeRef(clone.identifier));
+    container.setMessage(field, makeRef(clone.identifier));
     this.store.retargetReference(drawable, this.id, clone.identifier);
     this.styleObject = clone;
   }

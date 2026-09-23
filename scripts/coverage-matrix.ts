@@ -1831,6 +1831,35 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slide copies in a Keynote-saved deck (per-slide components)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slideCount() ?? 0) > 1),
+    note: "a copied slide gets a component of its own, modeled on its donor's",
+    manualProof: {
+      claim:
+        "Keynote SAVES a deck in which this library added or duplicated a slide of a " +
+        "Keynote-saved, per-slide-component deck.",
+      why:
+        "A Keynote-saved deck keeps each slide in a `Slide-<id>` component, and a field report " +
+        "measured the squatting copy's failure precisely: the deck opens and renders, and saving " +
+        "fails — \"Dokumentet kunne ikke gemmes automatisk\", AppleScript save error -10000 — " +
+        "with a clean bisect (text edits save; duplicateSlide alone fails) and an app-side " +
+        "control (Keynote-made duplicates edited by this library save fine). The copy now " +
+        "arrives in a fresh component mirroring the donor's registration. Two deliberate " +
+        "differences from the app's own shape remain, each accepted in a measured save but " +
+        "never exercised together: no per-object UUID map entries, and one object-level row " +
+        "for the master where the app writes a component-level row alone.",
+      how:
+        "Load a deck Keynote has saved (per-slide `Slide-<id>` components in Index/), " +
+        "`duplicateSlide` any slide, save, open in Keynote, edit something small, and let it " +
+        "save (autosave or ⌘S). The failure mode of the old shape was at SAVE, not open — a " +
+        "deck that opens and renders proves nothing yet.",
+      risk: "high",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Speaker notes",
     apps: ["keynote"],
     status: "read+write",

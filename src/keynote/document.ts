@@ -403,6 +403,14 @@ export class KeynoteSlide {
    * Update the slide's transition. Only the given properties change.
    * Setting `effect: "none"` disables the transition, which is how Keynote
    * itself encodes "no transition".
+   *
+   * The effect string is written verbatim, and only the app's own ids
+   * take: both measured families read back from Keynote-authored decks —
+   * `apple:ca-push` (CoreAnimation-class, with `direction`) and
+   * `com.apple.iWork.Keynote.BLTFadeThruColor` (bespoke, with its own
+   * parameter fields) — while a guessed `apple:transition/dissolve` did
+   * not survive the app. Reuse an id read from a deck that has the
+   * effect; no corpus fixture carries one to copy from.
    */
   setTransition(update: Partial<Omit<SlideTransition, "enabled">>): void {
     const animation = this.animationAttributes();
@@ -706,7 +714,6 @@ export class KeynoteDocument extends IWorkDocument {
     if (!options.withContent) {
       const stripped: bigint[] = [];
       for (const field of [
-        Slide.NOTE,
         Slide.OWNED_DRAWABLES,
         Slide.BUILDS,
         Slide.BUILD_CHUNKS,
@@ -750,7 +757,14 @@ export class KeynoteDocument extends IWorkDocument {
       }
       slide.message.remove(Slide.BUILDS);
       slide.message.remove(Slide.BUILD_CHUNKS);
-      slide.message.remove(Slide.NOTE);
+      // The note stays: every corpus slide carries one, empty or not —
+      // removing it is the absent-field defect class, and it left
+      // `notes =` on the new slide with nothing to write into. Emptied
+      // like the placeholders, it is the app's own fresh-slide shape
+      // (note present, hasNote false).
+      const note = this.store.resolve(refId(slide.message, Slide.NOTE));
+      const noteStorage = note && this.store.resolve(refId(note.message, Note.CONTAINED_STORAGE));
+      if (noteStorage) new TextStorage(this.store, noteStorage).setText("");
       // Placeholders are kept — they are what makes the new slide usable on
       // its layout — but emptied, so it reads as a fresh slide rather than
       // a copy of its neighbour.
@@ -777,6 +791,30 @@ export class KeynoteDocument extends IWorkDocument {
     if (!options.withContent) node.message.setBool(SlideNode.HAS_NOTE, false);
 
     this.insertSlideNode(node.identifier, options.after ?? sourceIndex);
+
+    // A Keynote-saved deck keeps every slide in a component of its own
+    // (`Slide-<slideId>`), and Keynote refuses to save a deck where a
+    // second slide squats in another slide's component: it opens and
+    // renders, and autosave fails. The app-side control is the reverse
+    // proof — a deck whose extra slides Keynote itself made saves fine.
+    // So the copy moves into a fresh component named after it, modeled
+    // on its source's: same versions and save token, and the same
+    // external references, which is right because the copy shares its
+    // donor's master and styles. Decks with no per-slide convention
+    // (metadata-less packages) keep the clone where it was born.
+    if (component.locator === `Slide-${source.object.identifier}`) {
+      const fresh = this.store.createComponent(`Slide-${slide.identifier}`, component);
+      if (fresh) {
+        const movers = [slide.identifier, ...map.values()].filter(
+          (id) => this.store.componentOf(id) === component,
+        );
+        this.store.moveObjectsToComponent(movers, fresh);
+        // The document's own info lists each slide component at component
+        // level — mirror that row for the new one.
+        this.store.declareComponentDependency(nodeComponent, slide.identifier);
+      }
+    }
+
     const created = this.slides().find((s) => s.id === slide.identifier);
     if (!created) throw new RangeError("slide was created but is not reachable from the tree");
     return created;

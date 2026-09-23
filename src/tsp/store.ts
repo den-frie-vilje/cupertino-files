@@ -86,9 +86,19 @@ export class Component {
   readonly framing: IwaFraming;
   readonly loadError: Error | undefined;
 
-  constructor(name: string, bytes: Uint8Array) {
+  constructor(name: string, bytes?: Uint8Array) {
     this.name = name;
     this.locator = locatorForIwaName(name);
+    if (bytes === undefined) {
+      // A component born in this session: no original bytes to preserve,
+      // nothing to parse, and dirty from the start so it serializes.
+      this.originalBytes = undefined;
+      this.framing = "snappy";
+      this.loadError = undefined;
+      this.objects = [];
+      this.structurallyDirty = true;
+      return;
+    }
     this.originalBytes = bytes;
     this.framing = detectIwaFraming(bytes);
     let error: Error | undefined;
@@ -387,7 +397,13 @@ export class ObjectStore {
 
   /**
    * Ensure `fromComponent`'s ComponentInfo lists an external reference to
-   * object `toId` living in `toComponent`. No-op when already recorded.
+   * object `toId` living in `toComponent`. No-op when that exact row is
+   * already recorded. Component-level entries (no object identifier) are
+   * a separate mechanism and never suppress object rows here: the apps'
+   * own Document infos carry hundreds of object rows beside a non-weak
+   * component-level stylesheet entry, so what exactly lets their writer
+   * omit object rows (a slide's master component is named with none) is
+   * unmeasured, and declaring a superset is the side the apps accept.
    */
   private ensureExternalReference(fromComponent: Component, toComponent: Component, toId: bigint): void {
     const fromInfo = this.componentInfo(fromComponent);
@@ -407,6 +423,98 @@ export class ObjectStore {
     entry.setVarint(EXTREF_COMPONENT_IDENTIFIER, toComponentId);
     entry.setVarint(EXTREF_OBJECT_IDENTIFIER, toId);
     fromInfo.addMessage(COMPONENT_EXTERNAL_REFERENCES, entry);
+  }
+
+  /**
+   * Ensure `fromComponent`'s ComponentInfo carries a component-level
+   * external reference (no object identifier) to the component whose
+   * ComponentInfo identifier is `toComponentId` — the shape the apps use
+   * for whole-component dependencies, such as the document's row for each
+   * slide component.
+   */
+  declareComponentDependency(fromComponent: Component, toComponentId: bigint): void {
+    const fromInfo = this.componentInfo(fromComponent);
+    if (!fromInfo) return;
+    for (const er of fromInfo.getMessages(COMPONENT_EXTERNAL_REFERENCES)) {
+      if (
+        er.getVarint(EXTREF_COMPONENT_IDENTIFIER) === toComponentId &&
+        er.getVarint(EXTREF_OBJECT_IDENTIFIER) === undefined
+      ) {
+        return;
+      }
+    }
+    const entry = RawMessage.create();
+    entry.setVarint(EXTREF_COMPONENT_IDENTIFIER, toComponentId);
+    fromInfo.addMessage(COMPONENT_EXTERNAL_REFERENCES, entry);
+  }
+
+  /**
+   * Create an empty component and register it in the package metadata.
+   *
+   * Measured from a Keynote-saved multi-slide deck
+   * (`olekristensen-v26.3-mac-builds-effects.key`): each slide lives in a
+   * component of its own whose ComponentInfo carries the slide's id as
+   * identifier, the bare kind as preferred locator ("Slide"), the full
+   * `Slide-<id>` as locator, the document read/write versions, an
+   * explicit `is_stored_outside_object_archive: false`, the save token,
+   * and the external references its content needs. `modeledOn` supplies
+   * everything content-dependent: versions and save token are copied
+   * from its info, and its external-reference rows are mirrored verbatim
+   * — right for a component whose objects reference the same styles and
+   * master as the donor's, which is what a slide copy does. The apps'
+   * own slide infos also carry per-object UUID map entries; a component
+   * created here has none, a difference Keynote accepted in every
+   * measured save.
+   *
+   * Returns undefined when the package keeps no metadata (nothing to
+   * register against) or the locator lacks the `Kind-<digits>` shape.
+   */
+  createComponent(locator: string, modeledOn: Component): Component | undefined {
+    const match = /^(.+)-(\d+)$/.exec(locator);
+    if (!match) return undefined;
+    const modelInfo = this.componentInfo(modeledOn);
+    if (!modelInfo) return undefined;
+    const component = new Component(`Index/${locator}.iwa`);
+    this.components.push(component);
+
+    const info = RawMessage.create();
+    info.setVarint(COMPONENT_IDENTIFIER, BigInt(match[2]!));
+    info.setString(COMPONENT_PREFERRED_LOCATOR, match[1]!);
+    info.setString(COMPONENT_LOCATOR, locator);
+    // Document read/write versions are packed lists; copy their bytes.
+    for (const no of [4, 5]) {
+      const field = modelInfo.fields.find((f) => f.no === no);
+      if (field && field.value instanceof Uint8Array) info.setBytes(no, field.value);
+    }
+    for (const er of modelInfo.getMessages(COMPONENT_EXTERNAL_REFERENCES)) {
+      info.addMessage(COMPONENT_EXTERNAL_REFERENCES, RawMessage.parse(er.toBytes()));
+    }
+    info.setBool(10, false); // is_stored_outside_object_archive, stated
+    const saveToken = modelInfo.getVarint(12);
+    if (saveToken !== undefined) info.setVarint(12, saveToken);
+    this.packageMetadata.message.addMessage(PKG_COMPONENTS, info);
+    return component;
+  }
+
+  /**
+   * Move objects into `component`, keeping index and dirtiness straight.
+   * The objects' identities and payloads are untouched; only which IWA
+   * file they serialize into changes.
+   */
+  moveObjectsToComponent(ids: Iterable<bigint>, component: Component): void {
+    for (const id of ids) {
+      const entry = this.index.get(id);
+      if (!entry || entry.component === component) continue;
+      const from = entry.component;
+      const at = from.objects.indexOf(entry.obj);
+      if (at >= 0) from.objects.splice(at, 1);
+      from.byId.delete(id);
+      from.structurallyDirty = true;
+      component.objects.push(entry.obj);
+      component.byId.set(id, entry.obj);
+      component.structurallyDirty = true;
+      this.index.set(id, { obj: entry.obj, component });
+    }
   }
 
   /** File name registered for a Data/ identifier, from PackageMetadata.datas. */
