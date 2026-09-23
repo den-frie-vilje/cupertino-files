@@ -415,6 +415,62 @@ describe("slide management", () => {
     expect(reloaded.audit()).toEqual([]);
   });
 
+  it("rewrites a text box's rectangular path beside its frame", () => {
+    // A shape's path renders scaled from the path source's naturalSize
+    // to the frame, text included — resizing the frame alone shrinks or
+    // clips the text against the donor's path. The explicit pairing:
+    // setGeometry for the frame, setPathRectangle for the text's space.
+    const doc = KeynoteDocument.blank();
+    const box = doc
+      .slides()[0]!
+      .drawables()
+      .find((d) => doc.store.typeNameOf(d.object) === "TSWP.ShapeInfoArchive")!;
+    box.setGeometry({ width: 600, height: 80 });
+    box.setPathRectangle(600, 80);
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded
+      .slides()[0]!
+      .drawables()
+      .find((d) => d.object.identifier === box.object.identifier)!;
+    expect(again.geometry()!.width).toBe(600);
+    const bezier = again.object.message.getMessage(1)!.getMessage(3)!.getMessage(5)!;
+    expect(bezier.getMessage(2)!.getFloat(1)).toBe(600);
+    expect(bezier.getMessage(2)!.getFloat(2)).toBe(80);
+    expect(reloaded.audit()).toEqual([]);
+
+    // A path that is not a plain rectangle is refused, not flattened.
+    // No corpus deck carries a non-rectangle text-shape path, so the
+    // case is built: the same box with its path rewritten to a line.
+    const lineDoc = KeynoteDocument.blank();
+    const lineBox = lineDoc
+      .slides()[0]!
+      .drawables()
+      .find((d) => lineDoc.store.typeNameOf(d.object) === "TSWP.ShapeInfoArchive")!;
+    const lineBezier = lineBox.object.message.getMessage(1)!.getMessage(3)!.getMessage(5)!;
+    const linePath = RawMessage.create();
+    for (const [x, y] of [
+      [0, 0],
+      [100, 100],
+    ]) {
+      const el = RawMessage.create();
+      el.setVarint(1, x === 0 ? 1 : 2); // moveTo, lineTo
+      const point = RawMessage.create();
+      point.setFloat(1, x!);
+      point.setFloat(2, y!);
+      el.setMessage(2, point);
+      linePath.addMessage(1, el);
+    }
+    lineBezier.setMessage(3, linePath);
+    let threw = false;
+    try {
+      lineBox.setPathRectangle(100, 100);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+
   it("keeps a cloned placeholder from declaring the slide that holds it", () => {
     // The container rule at Keynote-local type ids: 546/546 corpus
     // placeholders carry their slide as the drawable parent three supers
