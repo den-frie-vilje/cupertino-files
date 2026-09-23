@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
+import { RawMessage } from "../src/base/protobuf.ts";
 import { readdirSync } from "node:fs";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
@@ -223,6 +224,55 @@ describe("slide management", () => {
     const reloaded = KeynoteDocument.load(doc.save());
     expect(reloaded.slides()[1]!.drawables().length).toBe(drawablesBefore);
     expect(reloaded.compatibility().canRoundTrip).toBe(true);
+  });
+
+  it("gives a copied slide a component of its own in a per-slide deck", () => {
+    // A Keynote-saved deck keeps each slide in a `Slide-<id>` component,
+    // and a copy squatting in its donor's component makes the deck
+    // unsaveable in Keynote (opens, renders, autosave fails). The copy
+    // must arrive in a fresh component whose info mirrors the donor's.
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));
+    const source = doc.slides()[1]!;
+    const donorLocator = `Slide-${source.id}`;
+    expect(doc.store.components.some((c) => c.locator === donorLocator)).toBe(true);
+
+    const copy = doc.duplicateSlide(1);
+    const reloaded = KeynoteDocument.load(doc.save());
+    const locator = `Slide-${copy.id}`;
+    const component = reloaded.store.components.find((c) => c.locator === locator);
+    expect(component !== undefined).toBe(true);
+    // The whole clone set lives there — same census as the app's own
+    // slide components — and none of it stayed behind in the donor's.
+    expect(component!.byId.has(copy.id)).toBe(true);
+    expect(component!.objects.length).toBe(20);
+    const donor = reloaded.store.components.find((c) => c.locator === donorLocator)!;
+    expect(donor.byId.has(copy.id)).toBe(false);
+
+    const pkg = reloaded.store.object(2n)!;
+    const infos = pkg.message.getMessages(3);
+    const info = infos.find((ci) => ci.getString(3) === locator)!;
+    const donorInfo = infos.find((ci) => ci.getString(3) === donorLocator)!;
+    expect(info.getVarint(1)).toBe(copy.id);
+    expect(info.getString(2)).toBe("Slide");
+    // Versions, save token and the external references mirror the donor
+    // — the copy shares its master and styles. The save pass then adds
+    // one row the donor does not carry: an object row for the master the
+    // copy references. Apple names the master's component with no object
+    // row, and what lets its writer omit them is unmeasured — the
+    // superset is the shape the app-side control accepted.
+    expect(info.getVarint(12)).toBe(donorInfo.getVarint(12));
+    const row = (er: RawMessage) => `${er.getVarint(1)}:${er.getVarint(2) ?? "-"}`;
+    const donorRows = new Set(donorInfo.getMessages(6).map(row));
+    const extras = info.getMessages(6).map(row).filter((r) => !donorRows.has(r));
+    const master = reloaded.slides()[2]!.masterId;
+    expect(extras).toEqual([`${master}:${master}`]);
+    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length + 1);
+    const documentInfo = infos.find((ci) => ci.getString(2) === "Document" && !ci.has(3))!;
+    const reciprocal = documentInfo
+      .getMessages(6)
+      .some((er) => er.getVarint(1) === copy.id && er.getVarint(2) === undefined);
+    expect(reciprocal).toBe(true);
+    expect(reloaded.audit()).toEqual([]);
   });
 
   it("moves and removes slides", () => {

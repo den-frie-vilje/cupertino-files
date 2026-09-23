@@ -777,6 +777,30 @@ export class KeynoteDocument extends IWorkDocument {
     if (!options.withContent) node.message.setBool(SlideNode.HAS_NOTE, false);
 
     this.insertSlideNode(node.identifier, options.after ?? sourceIndex);
+
+    // A Keynote-saved deck keeps every slide in a component of its own
+    // (`Slide-<slideId>`), and Keynote refuses to save a deck where a
+    // second slide squats in another slide's component: it opens and
+    // renders, and autosave fails. The app-side control is the reverse
+    // proof — a deck whose extra slides Keynote itself made saves fine.
+    // So the copy moves into a fresh component named after it, modeled
+    // on its source's: same versions and save token, and the same
+    // external references, which is right because the copy shares its
+    // donor's master and styles. Decks with no per-slide convention
+    // (metadata-less packages) keep the clone where it was born.
+    if (component.locator === `Slide-${source.object.identifier}`) {
+      const fresh = this.store.createComponent(`Slide-${slide.identifier}`, component);
+      if (fresh) {
+        const movers = [slide.identifier, ...map.values()].filter(
+          (id) => this.store.componentOf(id) === component,
+        );
+        this.store.moveObjectsToComponent(movers, fresh);
+        // The document's own info lists each slide component at component
+        // level — mirror that row for the new one.
+        this.store.declareComponentDependency(nodeComponent, slide.identifier);
+      }
+    }
+
     const created = this.slides().find((s) => s.id === slide.identifier);
     if (!created) throw new RangeError("slide was created but is not reachable from the tree");
     return created;

@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A slide added or duplicated into a deck Keynote had saved landed in
+  the source slide's component, and Keynote would open and render the
+  result but refuse to save it. A copied slide now gets a package
+  component of its own, registered the way the app registers one, so
+  the deck saves again.
 - Colours written without an explicit `space` now carry sRGB, the way
   the apps have written every colour since iWork 19; bare colours are a
   2013/2016-era shape. An explicit `space` (P3 included) is unchanged.
