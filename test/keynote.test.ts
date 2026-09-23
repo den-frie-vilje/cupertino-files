@@ -390,7 +390,6 @@ describe("slide management", () => {
     const image = slide
       .drawables()
       .find((d) => reloaded.store.typeNameOf(d.object) === "TSD.ImageArchive")!;
-    expect(image !== undefined).toBe(true);
     expect(image.object.identifier).toBe(imageId);
 
     // Centered on the 16:9 canvas at the intrinsic 100×50.
