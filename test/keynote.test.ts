@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { Slide } from "../src/keynote/schema.ts";
+import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import { Drawable, ExteriorTextWrap, Image } from "../src/tsd/schema.ts";
@@ -786,5 +787,29 @@ describe("creating a build", () => {
     expect([1, 2, 3, 4, 5, 6, 7, 8].filter((f) => chunk.has(f))).toEqual([1, 3, 4, 5, 6, 7, 8]);
     expect(chunk.getMessage(1)!.getVarint(1)).toBe(builds[0]!.id);
     expect(slide.object.getObjectReferences().includes(builds[0]!.id)).toBe(true);
+  });
+});
+
+describe("a build delivered by paragraph", () => {
+  it("has one chunk per paragraph of its target and omits the text-delivery pair", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    slide.body = "First point\nSecond point";
+    const body = refId(slide.object.message, Slide.BODY_PLACEHOLDER)!;
+    slide.addBuild({ drawableId: body, effect: "com.apple.iWork.Keynote.BUKAnvil", duration: 1.75, delivery: "byParagraph" });
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const build = reloaded.slides()[0]!.builds()[0]!;
+    const info = build.read();
+    expect(info.delivery).toBe("By Paragraph");
+    expect(info.chunks.map((c) => [c.delay, c.duration, c.automatic])).toEqual([[0, 1.75, false], [0, 1.75, false]]);
+    expect(build.object.message.getUint(5)).toBe(2);
+    // The corpus's by-paragraph build states event trigger, chart rotation
+    // and animation attributes, and nothing else.
+    const attributes = build.object.message.getMessage(4)!;
+    expect([...Array(40).keys()].filter((f) => f > 0 && attributes.has(f))).toEqual([4, 17, 18]);
+    const chunkRefs = reloaded.slides()[0]!.object.message.getMessages(Slide.BUILD_CHUNKS);
+    const ids = chunkRefs.map((r) => reloaded.store.resolve(r.getVarint(1))!.message.getMessage(7)!.getUint(2));
+    expect(ids).toEqual([1, 2]);
   });
 });

@@ -342,15 +342,28 @@ export interface NewBuild {
   delay?: number;
   /** The app's display word for the kind: "In" (default), "Out" or "Action". */
   type?: string;
+  /**
+   * All at once (default), or one stage per paragraph of the target's
+   * text. By paragraph needs `paragraphs`, which the slide supplies from
+   * the target's storage.
+   */
+  delivery?: "allAtOnce" | "byParagraph";
+  /** Paragraph count of the target's text, for a by-paragraph build. */
+  paragraphs?: number;
 }
 
 /**
- * Add an all-at-once build to a slide, in the shape every app-authored
- * build in the corpus deck shares: the build archive with its delivery,
- * event trigger, chart rotation, text delivery and delivery option stated,
- * the effect and timing in `animationAttributes` with a fresh random seed,
- * and one chunk carrying the timing under a fresh build UUID. Both objects
- * go in the slide's component and both lists on the slide grow.
+ * Add a build to a slide, in the shape the app-authored builds in the
+ * corpus deck share: the build archive with its delivery, event trigger
+ * and chart rotation stated, the effect and timing in
+ * `animationAttributes` with a fresh random seed, and its chunks carrying
+ * the timing under a fresh build UUID. An all-at-once build also states
+ * text delivery and delivery option and has one chunk; a by-paragraph
+ * build omits those two and has one chunk per paragraph, each played on
+ * click (the deck's own by-paragraph build was set to play after the
+ * previous one with a delay; a fresh one's timing is the app's default,
+ * unmeasured). All objects go in the slide's component and both lists on
+ * the slide grow.
  */
 export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild): BuildModel {
   const component = store.componentOf(slide.identifier);
@@ -369,20 +382,27 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   );
   animation.setBool(AnimationAttributesFields.WRITING_DIRECTION_IS_RTL, false);
 
+  const byParagraph = spec.delivery === "byParagraph";
+  const stages = byParagraph ? spec.paragraphs ?? 0 : 1;
+  if (byParagraph && stages < 1) {
+    throw new RangeError("a by-paragraph build needs the target's paragraph count");
+  }
   const attributes = RawMessage.create();
   attributes.setVarint(BuildAttributesFields.EVENT_TRIGGER, 1);
   attributes.setDouble(BuildAttributesFields.CHART_ROTATION_3D, 60);
   attributes.setMessage(BuildAttributesFields.ANIMATION_ATTRIBUTES, animation);
-  attributes.setVarint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY, TextDelivery.BY_OBJECT);
-  attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
+  if (!byParagraph) {
+    attributes.setVarint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY, TextDelivery.BY_OBJECT);
+    attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
+  }
 
   const build = store.createObject(BUILD_TYPE.BUILD, component);
   const message = RawMessage.create();
   message.setMessage(BuildFields.DRAWABLE, makeRef(spec.drawableId));
-  message.setString(BuildFields.DELIVERY, "All at Once");
+  message.setString(BuildFields.DELIVERY, byParagraph ? "By Paragraph" : "All at Once");
   message.setDouble(BuildFields.DURATION_DEPRECATED, 0);
   message.setMessage(BuildFields.ATTRIBUTES, attributes);
-  message.setVarint(BuildFields.CHUNK_ID_SEED, 1);
+  message.setVarint(BuildFields.CHUNK_ID_SEED, stages);
   build.setMessageBytes(message.toBytes());
 
   const buildUid = randomUid();
@@ -392,19 +412,23 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     m.setVarint(2, buildUid.upper);
     return m;
   };
-  const identifier = RawMessage.create();
-  identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid());
-  identifier.setVarint(BuildChunkIdentifierFields.BUILD_CHUNK_ID, 1);
-  const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component);
-  const chunkMessage = RawMessage.create();
-  chunkMessage.setMessage(BuildChunkFields.BUILD, makeRef(build.identifier));
-  chunkMessage.setDouble(BuildChunkFields.DELAY, delay);
-  chunkMessage.setDouble(BuildChunkFields.DURATION, duration);
-  chunkMessage.setBool(BuildChunkFields.AUTOMATIC, false);
-  chunkMessage.setBool(BuildChunkFields.REFERENT, true);
-  chunkMessage.setMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER, identifier);
-  chunkMessage.setMessage(BuildChunkFields.BUILD_ID, uuid());
-  chunk.setMessageBytes(chunkMessage.toBytes());
+  const chunks: IwaObject[] = [];
+  for (let stage = 1; stage <= stages; stage++) {
+    const identifier = RawMessage.create();
+    identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid());
+    identifier.setVarint(BuildChunkIdentifierFields.BUILD_CHUNK_ID, stage);
+    const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component);
+    const chunkMessage = RawMessage.create();
+    chunkMessage.setMessage(BuildChunkFields.BUILD, makeRef(build.identifier));
+    chunkMessage.setDouble(BuildChunkFields.DELAY, delay);
+    chunkMessage.setDouble(BuildChunkFields.DURATION, duration);
+    chunkMessage.setBool(BuildChunkFields.AUTOMATIC, false);
+    chunkMessage.setBool(BuildChunkFields.REFERENT, true);
+    chunkMessage.setMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER, identifier);
+    chunkMessage.setMessage(BuildChunkFields.BUILD_ID, uuid());
+    chunk.setMessageBytes(chunkMessage.toBytes());
+    chunks.push(chunk);
+  }
 
   slide.message.setMessages(Slide.BUILDS, [
     ...slide.message.getMessages(Slide.BUILDS),
@@ -412,9 +436,13 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   ]);
   slide.message.setMessages(Slide.BUILD_CHUNKS, [
     ...slide.message.getMessages(Slide.BUILD_CHUNKS),
-    makeRef(chunk.identifier),
+    ...chunks.map((chunk) => makeRef(chunk.identifier)),
   ]);
-  slide.setObjectReferences([...slide.getObjectReferences(), build.identifier, chunk.identifier]);
+  slide.setObjectReferences([
+    ...slide.getObjectReferences(),
+    build.identifier,
+    ...chunks.map((chunk) => chunk.identifier),
+  ]);
   return new BuildModel(store, build);
 }
 

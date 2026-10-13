@@ -141,7 +141,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component; delivery by paragraph, actions and build order are not authored</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
+| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component, and a by-paragraph build with one chunk per paragraph of the target's text; actions and build order are not authored</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 9 | iwork16→current |
 | Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 9 | iwork16→current |

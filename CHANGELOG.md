@@ -107,9 +107,10 @@ in commit messages and pull requests.
 
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,
-  written in the shape the app's own builds have. Delivery by paragraph,
-  actions and build order are not authored. Keynote has not yet been seen
-  to play a build written this way.
+  written in the shape the app's own builds have; `delivery:
+  "byParagraph"` instead writes one stage per paragraph of the target's
+  text, each played on click. Actions and build order are not authored.
+  Keynote has not yet been seen to play a build written this way.
 
 - `addCategory(column)` groups a table's rows by the values in a column,
   and `addCategory([first, second, …])` nests the groups by several:

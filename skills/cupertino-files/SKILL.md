@@ -920,6 +920,7 @@ slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
 slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
 slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
+slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }); // one stage per paragraph
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
 // bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
@@ -1051,7 +1052,7 @@ throw, naming the object and field, rather than produce the file.
    by-value categories (`addCategory`) and all-at-once Keynote builds
    (`addBuild`), none of which the apps have confirmed yet. Genuinely
    absent today: recomputing which rows a filter hides, bucketed
-   categories and their summaries, and builds delivered by paragraph. For
+   categories and their summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

@@ -1760,8 +1760,8 @@ export const CAPABILITIES: Capability[] = [
     probe: () => true,
     note:
       "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
-      "app-authored builds carry them, in the slide's component; delivery by paragraph, actions and " +
-      "build order are not authored",
+      "app-authored builds carry them, in the slide's component, and a by-paragraph build with one " +
+      "chunk per paragraph of the target's text; actions and build order are not authored",
     manualProof: {
       claim: "Keynote plays a build this library wrote from nothing.",
       why:

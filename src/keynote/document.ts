@@ -367,7 +367,27 @@ export class KeynoteSlide {
    * @agentTool add_build
    */
   addBuild(spec: NewBuild): BuildModel {
+    if (spec.delivery === "byParagraph" && spec.paragraphs === undefined) {
+      const storage =
+        this.storageOfShape(this.store.resolve(spec.drawableId)) ??
+        this.placeholderStorageOf(spec.drawableId);
+      if (!storage) throw new RangeError("a by-paragraph build needs a target with text");
+      return createBuild(this.store, this.object, { ...spec, paragraphs: storage.paragraphs().length });
+    }
     return createBuild(this.store, this.object, spec);
+  }
+
+  /** The storage of a placeholder drawable the slide lists, by its id. */
+  private placeholderStorageOf(drawableId: bigint): TextStorage | undefined {
+    for (const field of [
+      Slide.TITLE_PLACEHOLDER,
+      Slide.BODY_PLACEHOLDER,
+      Slide.OBJECT_PLACEHOLDER,
+      Slide.SLIDE_NUMBER_PLACEHOLDER,
+    ]) {
+      if (refId(this.object.message, field) === drawableId) return this.placeholderStorage(field);
+    }
+    return undefined;
   }
 
   /**

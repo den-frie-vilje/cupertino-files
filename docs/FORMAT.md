@@ -2126,12 +2126,12 @@ writing and chart appearance all used to be here.
   regrouped byte-identically to Apple; bucketed groupings need the
   grouping formula evaluated, and no fixture carries a summary row to
   measure one from.
-- **Keynote builds beyond all-at-once.** The model reads whole — effect,
+- **Keynote actions and build order.** The model reads whole — effect,
   timing, delivery and chunks, pinned against the three app-authored
-  builds in `olekristensen-v26.3-mac-builds-effects.key` — and an
-  all-at-once build is written from nothing (`addBuild`); delivery by
-  paragraph, actions and build order are not authored, and whether the
-  app plays a written build is unproven.
+  builds in `olekristensen-v26.3-mac-builds-effects.key` — and
+  all-at-once and by-paragraph builds are written from nothing
+  (`addBuild`); actions and build order are not authored, and whether
+  the app plays a written build is unproven.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.
