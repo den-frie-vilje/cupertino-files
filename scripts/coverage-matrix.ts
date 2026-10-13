@@ -1769,7 +1769,7 @@ export const CAPABILITIES: Capability[] = [
         "silently drops looks exactly like one never written, so only playing the deck can say.",
       how:
         "npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass " +
-        "shows the square dissolving in on the first click; a failure shows it already present, " +
+        "shows the title dissolving in on the first click; a failure shows it already present, " +
         "or the deck refused, which means the build needs state only the app writes.",
       risk: "medium",
     },

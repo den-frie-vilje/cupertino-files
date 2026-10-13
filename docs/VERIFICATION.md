@@ -87,7 +87,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Why the suite cannot settle it.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
 
-**How to settle it.** npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass shows the square dissolving in on the first click; a failure shows it already present, or the deck refused, which means the build needs state only the app writes.
+**How to settle it.** npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass shows the title dissolving in on the first click; a failure shows it already present, or the deck refused, which means the build needs state only the app writes.
 
 ### 5. Pictures on slides (addImage)
 

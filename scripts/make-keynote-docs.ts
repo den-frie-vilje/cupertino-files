@@ -27,6 +27,8 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { KeynoteDocument } from "../src/index.ts";
+import { Slide } from "../src/keynote/schema.ts";
+import { refId } from "../src/tsp/schema.ts";
 
 /**
  * Two bases, same reasoning as the Pages ladder: a rung proves something
@@ -164,6 +166,20 @@ export const RUNGS: {
     build: (doc) => {
       doc.slides()[0]!.title = "K10: this deck should be 4:3 (1024×768) — squarer than widescreen.";
       doc.setSlideSize(1024, 768);
+    },
+  },
+  {
+    name: "K11-build",
+    note: "the title placeholder animated in with a dissolve build written from nothing — the corpus's builds animate placeholders",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title =
+        "K11: this title should dissolve in on the first click. Already there with no animation is the finding.";
+      // The build targets the placeholder drawable, which the slide lists as
+      // its title placeholder; the placeholder wrapper's object is its storage.
+      const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+      if (title === undefined) throw new Error("K11: base slide has no title placeholder");
+      slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
     },
   },
 ];

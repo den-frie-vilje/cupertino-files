@@ -35,6 +35,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import { Slide } from "../src/keynote/schema.ts";
+import { refId } from "../src/tsp/schema.ts";
 import { Storage } from "../src/tswp/schema.ts";
 import { blockPng } from "./png.ts";
 
@@ -159,9 +161,10 @@ function seedBuild(): Uint8Array {
   const doc = KeynoteDocument.blank();
   const slide = doc.slides()[0]!;
   slide.title =
-    "Expected: the square appears with a dissolve on the first click. Already there with no animation, or a refusal to open, is the finding; comment on the slide.";
-  const { imageId } = doc.addImage(0, blockPng(200, 200, [0x1f, 0x4e, 0x79]), { fileName: "square.png", x: 400, y: 400 });
-  slide.addBuild({ drawableId: imageId, effect: "apple:dissolve", duration: 1 });
+    "Expected: this title dissolves in on the first click. Already there with no animation, or a refusal to open, is the finding; comment on the slide.";
+  const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+  if (title === undefined) throw new Error("build seed: blank deck has no title placeholder");
+  slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
   return doc.save();
 }
 
