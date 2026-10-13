@@ -1329,11 +1329,12 @@ filter set says *why* rows should be hidden, the hidden-state extent
 records *which* ones are. Changing a rule does not change visibility until
 something re-evaluates the predicates.
 
-A filter set's rules are addressed by column through parallel arrays —
-`filter_offsets[i]` is the column rule `i` tests, `filter_enabled[i]`
-whether it is live — so the three repeated fields must stay the same
-length. Both are written **unpacked** (one varint key per value), the
-proto2 default.
+A filter set's rules each name their column inside their predicate, as an
+offset from a host column (every app-authored rule sits on column 1 or 2
+with offset 0 or 1); `filter_offsets` is a boundary list, one entry more
+than there are rules, written **unpacked** (one varint key per value),
+the proto2 default; `filter_enabled`, a per-rule switch, is absent on
+every app-written set, where absent means on.
 
 #### 14.7.1 A control needs a format, not just a spec
 
@@ -2114,13 +2115,15 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Recomputing filtered rows** (§14.7). Comparison and text-contains
-  rules are authored (`addFilterRule`), byte for byte as the populated
-  set in `olekristensen-v26.3-mac-filters.numbers` carries them, and a
-  set can be enabled, disabled or switched between "all" and "any". Which
-  rows a rule hides is stored separately and recomputing it means
-  evaluating the predicates; that stays the app's, and whether the app
-  recomputes for a rule it did not write is unproven.
+- **Function-shaped filter rules beyond text-contains** (§14.7).
+  Comparison and text-contains rules are authored (`addFilterRule`),
+  byte for byte as the populated set in
+  `olekristensen-v26.3-mac-filters.numbers` carries them, with the rows
+  they hide written to the hidden-state extent by evaluating them
+  offline; a set can be enabled, disabled or switched between "all" and
+  "any". Is-blank and the other function-shaped conditions are read but
+  not written, and a rule on column 0 waits for a document showing how
+  the app references it.
 - **Category summaries** (§14.9). A category — by value, nested, or
   bucketed by date with the app's own functor — is defined from nothing
   (`addCategory`) and rows are regrouped byte-identically to Apple; no

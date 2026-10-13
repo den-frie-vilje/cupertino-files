@@ -44,7 +44,7 @@ import {
   type ConditionalCondition,
   type ConditionalRule,
 } from "./conditional.ts";
-import { FilterSet, type FilterRule } from "./filters.ts";
+import { FilterSet, type FilterRule, FILTER_HOST_COLUMN } from "./filters.ts";
 import {
   categoriesOf,
   defineByValueCategory,
@@ -199,6 +199,8 @@ const STROKE_LAYER_TYPE = 6306;
 const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
 const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
 const HiddenStateExtent = { STATES: 2, FILTER_SET: 8 } as const;
+/** TST.HiddenStateExtentArchive.RowOrColumnState. */
+const RowOrColumnState = { UID: 1, FILTERED: 3 } as const;
 /** TST.DataStore. */
 export const DataStoreFields = protoFields("TST.DataStore", {
   ROW_HEADERS: "rowHeaders",
@@ -4274,19 +4276,28 @@ export class TableModel {
   }
 
   /**
-   * Add a row-filter rule: show rows whose cell in `column` compares to
-   * `value` as `operator` says, or contains it as text when the operator
-   * is "contains". The rule is written the way a rule the
-   * app wrote is carried — the comparison in the predicate and as a
-   * formula over the table's own identity — and the set is switched on.
-   * Which rows the rule hides is left to the app, which has not yet been
-   * seen to apply a rule written this way; see docs/VERIFICATION.md.
+   * Add a row-filter rule: show rows whose cell in `column` (absolute;
+   * column 0 is refused, see below) compares to `value` as `operator`
+   * says, or contains it as text when the operator is "contains". The
+   * rule is written the way a rule the app wrote is carried — the
+   * comparison in the predicate and as a formula over the table's own
+   * identity, both counted from the app's host column — the
+   * set is switched on, and the rows the set now hides are written to the
+   * hidden-state extent, evaluated here. The app has not yet been seen to
+   * open a filter written this way; see docs/VERIFICATION.md.
    * @agentTool add_filter_rule
    */
   addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
     this.requireWritable();
     if (column < 0 || column >= this.columnCount) {
       throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    }
+    // Every app-authored rule in the corpus references its column from a
+    // host at column 1; a rule on column 0 would need an offset no document
+    // shows, so it is refused rather than guessed.
+    const offset = column - FILTER_HOST_COLUMN;
+    if (offset < 0) {
+      throw new RangeError(`column ${column} cannot carry a filter rule: the app's rules count from column ${FILTER_HOST_COLUMN}`);
     }
     const set = this.filterSets().rows;
     if (!set) throw new RangeError("table carries no row filter set to add a rule to");
@@ -4303,6 +4314,7 @@ export class TableModel {
       column: { value: column, absolute: false },
       row: { value: 0, absolute: false },
     };
+    const origin = { row: 0, column: FILTER_HOST_COLUMN };
     const expression: FormulaExpression =
       condition.operator === "contains"
         ? {
@@ -4317,10 +4329,84 @@ export class TableModel {
             ],
           }
         : { kind: "binary", op: condition.operator, left: cell, right: literal };
-    const ast = buildFormula(expression, { row: 0, column: 0 }, {
+    const ast = buildFormula(expression, origin, {
       tableUid: (table) => this.owners().tableUid(table),
     });
-    return set.addRule(column, writeComparisonPredicate(condition.operator, condition.value, column, uid, ast));
+    const index = set.addRule(writeComparisonPredicate(condition.operator, condition.value, offset, uid, ast));
+    this.refilterRows();
+    return index;
+  }
+
+  /**
+   * Recompute which rows the row filter hides and write them to the
+   * hidden-state extent: one state per hidden row, `filtered` stated,
+   * the way the app records a filter that has run. Every enabled rule
+   * must be a comparison or a text-contains rule; the extent is left
+   * alone when the set is disabled or carries a rule this cannot
+   * evaluate.
+   */
+  refilterRows(): number {
+    const set = this.filterSets().rows;
+    if (!set || !set.enabled) return 0;
+    const rules = set.rules().filter((rule) => rule.enabled && rule.predicate);
+    const tests: ((row: number) => boolean)[] = [];
+    for (const rule of rules) {
+      const predicate = rule.predicate!;
+      const literal = predicate.operands[1];
+      if (rule.column === undefined) {
+        throw new RangeError(`filter rule ${rule.index} names no column; its rows cannot be recomputed here`);
+      }
+      const column = rule.column;
+      if (predicate.operator && literal && (literal.kind === "number" || literal.kind === "string")) {
+        const op = predicate.operator;
+        const expected = literal.kind === "number" ? literal.number : literal.string;
+        tests.push((row) => {
+          const actual = groupValueOf(this.cellValue(row, column));
+          if (actual === undefined || typeof actual !== typeof expected) return op === "<>";
+          const a = actual as number | string;
+          const e = expected as number | string;
+          switch (op) {
+            case "=": return a === e;
+            case "<>": return a !== e;
+            case "<": return a < e;
+            case "<=": return a <= e;
+            case ">": return a > e;
+            case ">=": return a >= e;
+          }
+        });
+      } else if (predicate.predicateType === 3 && literal?.kind === "string") {
+        const needle = literal.string!.toLowerCase();
+        tests.push((row) => {
+          const actual = groupValueOf(this.cellValue(row, column));
+          return typeof actual === "string" && actual.toLowerCase().includes(needle);
+        });
+      } else {
+        throw new RangeError(`filter rule ${rule.index} is not a comparison or text-contains rule; its rows cannot be recomputed here`);
+      }
+    }
+    const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    const states = owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES).find((s) => s.has(HiddenStates.ROW_EXTENT));
+    const extent = states?.getMessage(HiddenStates.ROW_EXTENT);
+    if (!owner || !states || !extent) throw new RangeError("table carries no row hidden-state extent to write to");
+    const uids = this.uidMap();
+    const hidden: RawMessage[] = [];
+    for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) {
+      const passes = set.mode === "any" ? tests.some((test) => test(row)) : tests.every((test) => test(row));
+      if (passes) continue;
+      const uid = uids.rowUid(row);
+      if (!uid) continue;
+      const state = RawMessage.create();
+      const id = RawMessage.create();
+      id.setVarint(1, uid.lower);
+      id.setVarint(2, uid.upper);
+      state.setMessage(RowOrColumnState.UID, id);
+      state.setBool(RowOrColumnState.FILTERED, true);
+      hidden.push(state);
+    }
+    extent.setMessages(HiddenStateExtent.STATES, hidden);
+    states.setMessage(HiddenStates.ROW_EXTENT, extent);
+    this.object.message.setMessage(TableModelFields.HIDDEN_STATES_OWNER, owner);
+    return hidden.length;
   }
 
   /** The format-table entry a cell's record points at, as stored. */

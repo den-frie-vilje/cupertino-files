@@ -582,7 +582,7 @@ const { rows, columns } = t.filterSets();
 rows?.mode;                             // "all" | "any"
 rows?.rules();                          // [{ column, enabled, predicate }]
 rows?.setEnabled(true); rows?.setMode("any");
-t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing; "contains" for text
+t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing, rows hidden; "contains" for text
 ```
 
 Two things to know before relying on this:
@@ -1052,8 +1052,8 @@ throw, naming the object and field, rather than produce the file.
    legend, gridlines) all write, and so do filter rules (`addFilterRule`),
    by-value categories (`addCategory`) and all-at-once Keynote builds
    (`addBuild`), none of which the apps have confirmed yet. Genuinely
-   absent today: recomputing which rows a filter hides, category
-   summaries, and build actions and order. For
+   absent today: filter rules on column 0 and function-shaped rules beyond
+   text-contains, category summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

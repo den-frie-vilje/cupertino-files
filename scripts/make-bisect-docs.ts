@@ -291,9 +291,9 @@ export const RUNGS: {
     note: "a comparison filter rule written from nothing, the set switched on",
     build: (doc) => {
       const table = doc.tables()[0]!;
-      for (let row = 1; row <= 4; row++) table.setCell(row, 0, row * 5);
-      table.setCell(1, 1, "23: column A holds 5, 10, 15, 20 and a filter rule says A > 10. PASS: only the 15 and 20 rows show, with the filter on in the panel. FAIL: every row shows.");
-      table.addFilterRule(0, { operator: ">", value: 10 });
+      for (let row = 1; row <= 4; row++) table.setCell(row, 1, row * 5);
+      table.setCell(1, 0, "23: column B holds 5, 10, 15, 20 and a filter rule says B > 10. PASS: only the 15 and 20 rows show, with the filter on in the panel. FAIL: every row shows, or another column is filtered.");
+      table.addFilterRule(1, { operator: ">", value: 10 });
     },
   },
   {

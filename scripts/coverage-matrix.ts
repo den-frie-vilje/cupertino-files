@@ -1781,19 +1781,22 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: () => true,
     note:
-      "addFilterRule writes a comparison rule byte for byte as the fixture's app-authored rule — the " +
-      "predicate with its operands and the formula over the table's own identity — grows the set's " +
-      "parallel arrays and switches the set on; text-contains rules are written the same way; other " +
-      "function-shaped rules and the hidden-state extent are not",
+      "addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's " +
+      "app-authored rules — the predicate with its operands and the formula over the table's own " +
+      "identity, counted from the app's host column — grows the boundary list, switches the set on and " +
+      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a rule " +
+      "on column 0 is refused until a document shows its offset",
     manualProof: {
-      claim: "Numbers applies a filter rule this library wrote and hides the rows it excludes.",
+      claim: "Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.",
       why:
-        "The rule's bytes equal an app-authored rule's, but which rows a filter hides is stored " +
-        "separately and recomputed by the app; whether it recomputes for a rule it did not write is unseen.",
+        "The rule's bytes and the hidden states equal an app-authored set's, but the column a rule " +
+        "references is relative to a host column measured from rules on columns 1 and 2 only; a rule " +
+        "elsewhere tells whether the host is column 1 or the first rule's own column.",
       how:
-        "npm run seeds -- out writes seed-filter.numbers; open it in Numbers. A pass shows only Pear " +
-        "and Train with the filter on in the panel; a failure shows every row, which means the hidden " +
-        "state must be written too, or a refusal to open.",
+        "npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only " +
+        "Pear and Train with the filter on in the panel; column D filtered instead means the host is the " +
+        "first rule's column; every row showing or a refusal to open means the set needs state only the " +
+        "app writes.",
       risk: "medium",
     },
   },
@@ -1880,10 +1883,10 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: recomputing hidden rows",
+    name: "Filters: function-shaped rules beyond text-contains",
     apps: "all",
     status: "roadmap",
-    note: "rules are authored (see their own row); a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates",
+    note: "comparison and text-contains rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote

@@ -100,10 +100,15 @@ in commit messages and pull requests.
 
 - `addFilterRule(column, { operator, value })` adds a row-filter rule
   comparing a column's cells with a number or a string, written as the
-  app writes one, and switches the filter on. Which rows the rule hides
-  is left to the app, which has not yet been seen to apply a rule written
-  this way. The operator may also be "contains" for a text-contains rule;
-  other function-shaped rules are not authored.
+  app writes one, switches the filter on and writes the rows it hides,
+  evaluated offline. The operator may also be "contains" for a
+  text-contains rule; other function-shaped rules are not authored, and a
+  rule on column 0 is refused until a document shows how the app
+  references it. Numbers has not yet been seen to open a filter written
+  this way.
+- A filter rule's `column` now reads as the absolute column the rule
+  tests; it was the index of a boundary entry before, which happened to
+  be one less.
 
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,

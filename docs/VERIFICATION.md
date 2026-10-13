@@ -31,7 +31,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 6 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
 | 7 | 🟠 medium | Numbers & tables → Categories: defining a category by a column | Numbers draws a category this library defined from nothing, with the groups collapsed under their values. | manual |
 | 8 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 9 | 🟠 medium | Numbers & tables → Filters: adding a comparison rule | Numbers applies a filter rule this library wrote and hides the rows it excludes. | manual |
+| 9 | 🟠 medium | Numbers & tables → Filters: adding a comparison rule | Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names. | manual |
 | 10 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
 | 11 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 12 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
@@ -143,11 +143,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Numbers & tables  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** Numbers applies a filter rule this library wrote and hides the rows it excludes.
+**Claim.** Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.
 
-**Why the suite cannot settle it.** The rule's bytes equal an app-authored rule's, but which rows a filter hides is stored separately and recomputed by the app; whether it recomputes for a rule it did not write is unseen.
+**Why the suite cannot settle it.** The rule's bytes and the hidden states equal an app-authored set's, but the column a rule references is relative to a host column measured from rules on columns 1 and 2 only; a rule elsewhere tells whether the host is column 1 or the first rule's own column.
 
-**How to settle it.** npm run seeds -- out writes seed-filter.numbers; open it in Numbers. A pass shows only Pear and Train with the filter on in the panel; a failure shows every row, which means the hidden state must be written too, or a refusal to open.
+**How to settle it.** npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only Pear and Train with the filter on in the panel; column D filtered instead means the host is the first rule's column; every row showing or a refusal to open means the set needs state only the app writes.
 
 ### 10. Formula reading (AST rendered to text)
 

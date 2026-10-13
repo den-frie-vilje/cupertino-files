@@ -6,12 +6,13 @@
  * of per-column rules that reuse the same {@link Predicate} structure as
  * conditional formatting.
  *
- * Rules are addressed by **column offset**, not by index in the rule list.
- * `filter_offsets[i]` is the column rule `i` applies to and
- * `filter_enabled[i]` whether that one rule is live, so the three repeated
- * fields are parallel arrays that must stay the same length. Writing
- * enforces that; a set whose arrays disagree is one the app reads with the
- * wrong rule on the wrong column.
+ * A rule names its column inside its predicate, as a reference relative
+ * to a host at column 1: every app-authored rule in the corpus sits on
+ * column 1 or 2 and carries offset 0 or 1. `filter_offsets` is not a
+ * column list but a boundary list — `[0]` on an empty set, `[0, 1, 2]`
+ * on a two-rule set, one entry more than there are rules — and
+ * `filter_enabled`, absent on every app-written set, is a per-rule
+ * switch where absent means on.
  *
  * **What the corpus proves, and what it does not.** Most corpus
  * `FilterSetArchive`s are empty — mode "all", disabled, no rules — and
@@ -53,6 +54,15 @@ export const FilterSetFields = protoFields("TST.FilterSetArchive", {
 /** TST.FilterRuleArchive / TST.FilterRulePrePivotArchive. */
 const FilterRuleFields = { PREDICATE: 1, DISABLED: 2 } as const;
 
+/** The column a rule's predicate names: its relative offset from the host at column 1. */
+function ruleColumn(predicate: ReturnType<IwaObject["message"]["getMessage"]>): number | undefined {
+  const offset = predicate?.getMessage(4)?.getMessage(4)?.getUint(2);
+  return offset === undefined ? undefined : offset + FILTER_HOST_COLUMN;
+}
+
+/** The column the app's filter references count from. */
+export const FILTER_HOST_COLUMN = 1;
+
 /** How a set combines its rules. */
 export const FilterSetType = protoEnum("TST.FilterSetArchive.FilterSetType", {
   /** A row must match every enabled rule. */
@@ -68,8 +78,9 @@ export interface FilterRule {
   /** Position in the rule list. */
   index: number;
   /**
-   * Column the rule tests, from the parallel `filter_offsets` array.
-   * `undefined` when the arrays are ragged — a file we should not guess at.
+   * Column the rule tests, absolute: the predicate's relative column
+   * offset from the host at column 1. `undefined` when the predicate
+   * carries no cell operand.
    */
   column: number | undefined;
   /** Whether this rule contributes, independent of the set's own switch. */
@@ -126,7 +137,7 @@ export class FilterSet {
     );
   }
 
-  /** Column each rule applies to, in rule order. */
+  /** The boundary list: one entry more than there are rules. */
   private offsets(): number[] {
     return this.object.message.getPackedVarints(FilterSetFields.OFFSETS).map(Number);
   }
@@ -144,12 +155,11 @@ export class FilterSet {
    * older one.
    */
   rules(options: ReadPredicateOptions = {}): FilterRule[] {
-    const offsets = this.offsets();
     const enabled = this.ruleFlags();
     const build = (messages: ReturnType<IwaObject["message"]["getMessages"]>, legacy: boolean): FilterRule[] =>
       messages.map((rule, index) => ({
         index,
-        column: offsets[index],
+        column: ruleColumn(rule.getMessage(FilterRuleFields.PREDICATE)),
         // A rule is live unless its own switch says otherwise. The legacy
         // shape stores the inverse — `disabled` — on the rule itself.
         enabled: legacy
@@ -177,7 +187,7 @@ export class FilterSet {
     const count = this.rules().length;
     if (count === 0) return true;
     const enabled = this.ruleFlags();
-    return this.offsets().length >= count && (enabled.length === 0 || enabled.length >= count);
+    return this.offsets().length === count + 1 && (enabled.length === 0 || enabled.length >= count);
   }
 
   /** Turn a rule on or off without removing it. */
@@ -200,16 +210,16 @@ export class FilterSet {
   }
 
   /**
-   * Add a rule for a column, enabled, and switch the set on.
+   * Add a rule, enabled, and switch the set on.
    *
-   * The three parallel arrays grow together: the rule, its column offset
-   * and its own switch. The predicate is written by
+   * The rule carries its column in its predicate; the boundary list grows
+   * by one. The predicate is written by
    * `writeComparisonPredicate`; the rows the rule would hide are the
    * app's to recompute (the hidden-state extent is not touched), and
    * whether the app does so for a rule it did not author is unproven.
    * Returns the new rule's index.
    */
-  addRule(column: number, predicate: RawMessage): number {
+  addRule(predicate: RawMessage): number {
     const m = this.object.message;
     if (m.getMessages(FilterSetFields.RULES_PRE_PIVOT).length > 0 && m.getMessages(FilterSetFields.RULES).length === 0) {
       throw new RangeError("filter set carries only pre-2016 rules; adding to it is not supported");
@@ -217,14 +227,9 @@ export class FilterSet {
     const rule = RawMessage.create();
     rule.setMessage(FilterRuleFields.PREDICATE, predicate);
     const rules = [...m.getMessages(FilterSetFields.RULES), rule];
-    const offsets = this.offsets();
-    // An empty set carries one stray offset; the array indexes rules, so
-    // it is cut to the rule count before growing.
-    offsets.length = rules.length - 1;
-    for (let i = 0; i < offsets.length; i++) offsets[i] ??= 0;
-    offsets.push(column);
     m.setMessages(FilterSetFields.RULES, rules);
-    m.setVarints(FilterSetFields.OFFSETS, offsets);
+    // The boundary list: 0 through the rule count.
+    m.setVarints(FilterSetFields.OFFSETS, [...Array(rules.length + 1).keys()]);
     // `filter_enabled` is absent on every app-written set — absent means
     // enabled — so it is only kept in step where a set already states it.
     if (m.has(FilterSetFields.ENABLED)) {

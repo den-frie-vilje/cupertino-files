@@ -176,17 +176,27 @@ function seedFilter(): Uint8Array {
   // app hides the rows for a rule it did not author is the question.
   const doc = NumbersDocument.blank();
   const table = doc.tables()[0]!;
+  // The rule sits on column C on purpose: the app's rules count their
+  // column from a host column, and every measured rule sat on column 1 or
+  // 2. A rule the app applies to C confirms the host is column 1; one it
+  // applies to D, or to nothing, says the host is the first rule's own
+  // column instead.
   table.name =
-    "Expected: only the rows with Amount above 10 show (Pear 12 and Train 40), with the filter on in the panel. All rows showing, or a refusal to open, is the finding; comment on any cell.";
+    "Expected: only the rows with Amount above 10 show (Pear 12 and Train 40), filter on in the panel. All rows showing, column D filtered instead, or a refusal to open, is the finding; comment on any cell.";
+  table.insertColumns(2, 2);
   table.setCell(0, 0, "Item");
-  table.setCell(0, 1, "Amount");
-  const rows: [string, number][] = [["Pear", 12], ["Cat", 3], ["Apple", 7], ["Train", 40], ["Dog", 10]];
-  rows.forEach(([item, amount], i) => {
+  table.setCell(0, 1, "Colour");
+  table.setCell(0, 2, "Amount");
+  table.setCell(0, 3, "Note");
+  const rows: [string, string, number, string][] = [["Pear", "green", 12, "a"], ["Cat", "grey", 3, "b"], ["Apple", "red", 7, "c"], ["Train", "blue", 40, "d"], ["Dog", "brown", 10, "e"]];
+  rows.forEach(([item, colour, amount, note], i) => {
     table.setCell(i + 1, 0, item);
-    table.setCell(i + 1, 1, amount);
+    table.setCell(i + 1, 1, colour);
+    table.setCell(i + 1, 2, amount);
+    table.setCell(i + 1, 3, note);
   });
   table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
-  table.addFilterRule(1, { operator: ">", value: 10 });
+  table.addFilterRule(2, { operator: ">", value: 10 });
   return doc.save();
 }
 
