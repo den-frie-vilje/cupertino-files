@@ -17,13 +17,13 @@
  * `FilterSetArchive`s are empty — mode "all", disabled, no rules — and
  * `olekristensen-v26.3-mac-filters.numbers` carries a populated two-rule
  * set, so the container, switches, parallel arrays and rule predicates
- * are all validated against app-written bytes. Creating filter rules
- * from nothing is still not offered: reading a populated set does not
- * establish everything the app recomputes when it *writes* one (the
- * hidden-state extent among it), so {@link FilterSet.setEnabled},
+ * are all validated against app-written bytes, and {@link FilterSet.addRule}
+ * writes a comparison or text-contains rule byte for byte as that set
+ * carries one. What a written rule cannot do is hide rows: the
+ * hidden-state extent is recomputed by the app, and whether it does so
+ * for a rule it did not author has not been seen. {@link FilterSet.setEnabled},
  * {@link FilterSet.setMode} and {@link FilterSet.setRuleEnabled} change
- * fields Apple demonstrably writes, and rule synthesis stays out until
- * a library-written rule survives the app.
+ * fields Apple demonstrably writes.
  *
  * Filtering also *hides rows*, and that is stored separately, in
  * `TST.HiddenStateExtentArchive` — a filter set says which rows should be

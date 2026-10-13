@@ -2114,26 +2114,24 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Authoring filter rules** is not implemented (§14.7). Rules read — the
-  common case is measured from a real filter set, and the predicate
-  encoding is shared with conditional formatting — and a filter set can be
-  enabled, disabled or switched between "all" and "any". What keeps
-  authoring here is that writing a rule is only half the feature: which
-  rows it hides is stored separately, and recomputing that means
-  evaluating the predicates. The reading is pinned by the populated set
-  in `olekristensen-v26.3-mac-filters.numbers`, and individual rules can
-  additionally be toggled with `setRuleEnabled`.
-- **Creating a category group** (§14.9). Rows can be *regrouped* among
-  groups that exist, byte-identically to Apple; creating one needs its
-  identity, its sort position and the fields the archive carries beside the
-  tree, which no fixture explains. Bucketed groupings need the grouping
-  formula evaluated.
-- **Creating a Keynote build** (animation). The model reads whole —
-  effect, timing, delivery and chunks, pinned against the three
-  app-authored builds in `olekristensen-v26.3-mac-builds-effects.key` —
-  and retimes or removes existing builds. Creation from nothing stays
-  here: a build the app silently drops is indistinguishable from one
-  never written.
+- **Recomputing filtered rows** (§14.7). Comparison and text-contains
+  rules are authored (`addFilterRule`), byte for byte as the populated
+  set in `olekristensen-v26.3-mac-filters.numbers` carries them, and a
+  set can be enabled, disabled or switched between "all" and "any". Which
+  rows a rule hides is stored separately and recomputing it means
+  evaluating the predicates; that stays the app's, and whether the app
+  recomputes for a rule it did not write is unproven.
+- **Category nesting, bucketing and summaries** (§14.9). A by-value
+  category is defined from nothing (`addCategory`) and rows are
+  regrouped byte-identically to Apple; nesting and bucketed groupings
+  need the grouping formula evaluated, and no fixture carries a summary
+  row to measure one from.
+- **Keynote builds beyond all-at-once.** The model reads whole — effect,
+  timing, delivery and chunks, pinned against the three app-authored
+  builds in `olekristensen-v26.3-mac-builds-effects.key` — and an
+  all-at-once build is written from nothing (`addBuild`); delivery by
+  paragraph, actions and build order are not authored, and whether the
+  app plays a written build is unproven.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.
