@@ -85,6 +85,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves with its indent</sub> | Pages | ✅ read + write | n/a | — |
 | Inline image placement in an indented column<br><sub>exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and on none of its 175 floating drawables; the other values place the drawable against the page and are unnamed in any published schema</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 10 | iwork16→current |
+| Text boxes: adding one<br><sub>addTextBox deep-copies a text box the document already carries — its own storage, style chain and path — into the slide's or page's drawable list, sets the text, places it, and repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry none); a document without any text box has nothing to copy and is refused</sub> | Pages, Keynote | ✅ read + write | 37 | all |
 
 ### Pages
 
@@ -163,7 +164,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-60 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+61 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -215,6 +216,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
 - 🟠 medium — Keynote → **Builds: creating an animation**
+- 🟠 medium — Drawables & media → **Text boxes: adding one**
 - 🟠 medium — Numbers & tables → **Filters: adding a comparison rule**
 - 🟠 medium — Numbers & tables → **Categories: defining a category by a column**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**

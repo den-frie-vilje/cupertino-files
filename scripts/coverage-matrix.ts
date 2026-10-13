@@ -1775,6 +1775,29 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Drawables & media",
+    name: "Text boxes: adding one",
+    apps: ["pages", "keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addTextBox deep-copies a text box the document already carries — its own storage, style " +
+      "chain and path — into the slide's or page's drawable list, sets the text, places it, and " +
+      "repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry " +
+      "none); a document without any text box has nothing to copy and is refused",
+    manualProof: {
+      claim: "Keynote and Pages draw a text box this library copied and re-worded.",
+      why:
+        "The copy matches the donor in every field but text, geometry and parent; a box the app " +
+        "silently drops looks exactly like one never written, so only opening the file can say.",
+      how:
+        "npm run seeds -- out writes seed-text-box.key; open it in Keynote. A pass shows a second " +
+        "box saying 'Written by cupertino-files' below the title; a failure shows only the title, " +
+        "or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.",
+      risk: "medium",
+    },
+  },
+  {
     group: "Numbers & tables",
     name: "Filters: adding a comparison rule",
     apps: ["numbers"],

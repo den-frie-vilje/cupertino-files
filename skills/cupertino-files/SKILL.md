@@ -949,6 +949,19 @@ it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
 
+**Adding a text box copies one.** A text box from nothing would omit
+state only the app knows, so `addTextBox` deep-copies a box the document
+already carries — the slide's own in Keynote, the page's own or any in
+the document in Pages — gives it its own storage, sets the text, places
+it and sets its parent (the slide, or none in Pages). A document without
+a single text box has nothing to copy and is refused: add one in the
+app first.
+
+```ts
+slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });
+doc.addTextBox(0, "Written by the library", { x: 360, y: 560, width: 220, height: 60 }); // Pages, page 0
+```
+
 **Resizing a text box takes two calls.** A shape's path renders scaled
 from its own stored size to the frame, text included, so
 `setGeometry({ width, height })` alone shrinks or clips the text
@@ -1050,8 +1063,9 @@ throw, naming the object and field, rather than produce the file.
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
    legend, gridlines) all write, and so do filter rules (`addFilterRule`),
-   by-value categories (`addCategory`) and all-at-once Keynote builds
-   (`addBuild`), none of which the apps have confirmed yet. Genuinely
+   by-value categories (`addCategory`), all-at-once Keynote builds
+   (`addBuild`) and text boxes copied from the document's own
+   (`addTextBox`), none of which the apps have confirmed yet. Genuinely
    absent today: filter rules on column 0 and function-shaped rules beyond
    text-contains, category summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult

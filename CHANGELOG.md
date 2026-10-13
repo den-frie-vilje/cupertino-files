@@ -110,6 +110,15 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- `slide.addTextBox(text, { x, y, width, height })` on a Keynote slide
+  and `doc.addTextBox(pageIndex, text, placement)` in Pages add a text
+  box by deep-copying one the document already carries — its own storage,
+  styles and path — then setting the text, placing it and repointing its
+  parent to the slide (or clearing it, as Pages' floating boxes carry
+  none). A document with no text box to copy is refused. Also served as
+  the MCP tool `add_text_box`. Neither app has yet been seen to draw a
+  box written this way.
+
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,
   written in the shape the app's own builds have; `delivery:

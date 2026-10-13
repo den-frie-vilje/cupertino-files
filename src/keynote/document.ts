@@ -20,7 +20,8 @@ import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer } from "../tsd/placement.ts";
+import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
+import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
@@ -358,6 +359,22 @@ export class KeynoteSlide {
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
+  }
+
+  /**
+   * Put a text box on this slide, saying `text`, placed and sized by
+   * `placement` (points; the donor's size otherwise). The box is a deep
+   * copy of a text box the deck already carries — this slide's first,
+   * else any slide's or master's — so it has the theme's own style, its
+   * own storage and every field the app writes. Keynote has not yet been
+   * seen to open a box added this way; see docs/VERIFICATION.md.
+   * @agentTool add_text_box
+   */
+  addTextBox(text: string, placement: DrawablePlacement = {}): DrawableModel {
+    const own = this.container().drawables().find((d) => isTextBox(d.object));
+    const donor = own?.object ?? anyTextBox(this.store);
+    if (!donor) throw new RangeError("the deck carries no text box to copy");
+    return addTextBoxFrom(this.store, this.container(), donor, this.id, text, placement);
   }
 
   /**

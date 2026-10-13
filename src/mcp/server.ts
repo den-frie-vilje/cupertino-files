@@ -830,6 +830,56 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_text_box",
+    description: apiDoc(
+      "add_text_box",
+      "Puts a text box with the given text on a Keynote slide or a Pages page, copied from a " +
+        "text box the document already carries, placed by x, y, width and height in points. " +
+        "slide (Keynote) or page (Pages) is 0-based. Saves over the input unless output names " +
+        "another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        slide: { type: "number", description: "0-based slide index (Keynote)" },
+        page: { type: "number", description: "0-based page index (Pages)" },
+        text: { type: "string" },
+        x: { type: "number" },
+        y: { type: "number" },
+        width: { type: "number" },
+        height: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "text"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const text = str(args.text);
+      if (text === undefined) throw new RangeError("text is required");
+      const placement: { x?: number; y?: number; width?: number; height?: number } = {};
+      for (const key of ["x", "y", "width", "height"] as const) {
+        const value = num(args[key]);
+        if (value !== undefined) placement[key] = value;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        const slide = doc.slides()[index];
+        if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const box = slide.addTextBox(text, placement);
+        const target = save(doc, path, str(args.output));
+        return `added text box ${box.id} to slide ${index} and saved ${target}`;
+      }
+      if (doc instanceof PagesDocument) {
+        const box = doc.addTextBox(num(args.page) ?? 0, text, placement);
+        const target = save(doc, path, str(args.output));
+        return `added text box ${box.id} to page ${num(args.page) ?? 0} and saved ${target}`;
+      }
+      throw new RangeError("add_text_box writes Keynote and Pages documents; this is not one");
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",

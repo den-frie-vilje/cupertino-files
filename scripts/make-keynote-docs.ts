@@ -182,6 +182,15 @@ export const RUNGS: {
       slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
     },
   },
+  {
+    name: "K12-text-box",
+    note: "a text box copied from the deck's own and placed on the first slide with new text",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K12: a text box saying 'Written by cupertino-files' should sit in the lower half.";
+      slide.addTextBox("Written by cupertino-files", { x: 300, y: 650, width: 1300, height: 120 });
+    },
+  },
 ];
 
 function main(argv: string[]): number {

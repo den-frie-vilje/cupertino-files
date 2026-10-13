@@ -813,3 +813,30 @@ describe("a build delivered by paragraph", () => {
     expect(ids).toEqual([1, 2]);
   });
 });
+
+describe("a text box added to a slide", () => {
+  it("is a deep copy of the deck's own box, owned by the slide, saying the text", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const before = slide.container().ids().length;
+    const donorStorages = new Set(slide.textStorages().map((s) => s.id));
+    const box = slide.addTextBox("Written by the library", { x: 300, y: 500, width: 900, height: 120 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(again.container().ids().length).toBe(before + 1);
+    expect(again.container().ids().includes(box.id)).toBe(true);
+    const placed = again.drawables().find((d) => d.id === box.id)!;
+    expect(placed.object.type).toBe(2011);
+    const geometry = placed.geometry()!;
+    expect([geometry.x, geometry.y, geometry.width, geometry.height]).toEqual([300, 500, 900, 120]);
+    const text = again.textStorages().find((s) => s.text === "Written by the library");
+    expect(text !== undefined).toBe(true);
+    // Its storage is its own, and its parent is the slide.
+    const storageId = refId(placed.object.message, 4)!;
+    expect(reloaded.store.object(storageId)?.type).toBe(2001);
+    expect(refId(placed.object.message.getMessage(1)!.getMessage(1), 2)).toBe(again.id);
+    // The parent is never among a drawable's declared references.
+    expect(placed.object.getObjectReferences().includes(again.id)).toBe(false);
+    expect(donorStorages.has(storageId)).toBe(false);
+  });
+});

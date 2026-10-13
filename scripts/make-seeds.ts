@@ -168,6 +168,20 @@ function seedBuild(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- text box
+
+function seedTextBox(): Uint8Array {
+  // A text box is a deep copy of one the document already carries, with
+  // its own storage, its parent repointed and the text replaced. Whether
+  // the app draws a box it did not author is the question.
+  const doc = KeynoteDocument.blank();
+  const slide = doc.slides()[0]!;
+  slide.title =
+    "Expected: a second text box saying 'Written by cupertino-files' in the lower half of this slide. No box, a box without the words, or a refusal to open, is the finding; comment on the slide.";
+  slide.addTextBox("Written by cupertino-files", { x: 300, y: 650, width: 1300, height: 120 });
+  return doc.save();
+}
+
 // ---------------------------------------------------------- filter
 
 function seedFilter(): Uint8Array {
@@ -218,6 +232,15 @@ const seeds: Seed[] = [
       const builds = slide.builds();
       if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve") throw new Error("build seed: expected one dissolve build");
       if (!slide.title?.includes("Expected")) throw new Error("build seed: expectations missing");
+    },
+  },
+  {
+    name: "seed-text-box.key",
+    bytes: seedTextBox(),
+    check: (bytes) => {
+      const slide = KeynoteDocument.load(bytes).slides()[0]!;
+      if (!slide.textStorages().some((s) => s.text === "Written by cupertino-files")) throw new Error("text box seed: the box's text is missing");
+      if (!slide.title?.includes("Expected")) throw new Error("text box seed: expectations missing");
     },
   },
   {
