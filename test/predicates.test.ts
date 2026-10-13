@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   IWorkDocument,
+  NumbersDocument,
   readPredicate,
   describePredicate,
   tablesOf,
@@ -394,5 +395,40 @@ describe("cell records with conditional ids", () => {
     const decoded = CellRecord.decode(record.encode());
     expect(decoded.id(CellFlag.COND_STYLE_ID)).toBe(2);
     expect(decoded.id(CellFlag.COND_RULE_STYLE_ID)).toBe(15);
+  });
+});
+
+describe("writing a filter rule", () => {
+  it("rebuilds the fixture's own rule byte for byte", () => {
+    const document = open("olekristensen-v26.3-mac-filters.numbers");
+    const table = tablesOf(document.store).find(
+      (t) => (t.filterSets().rows?.rules().length ?? 0) > 0,
+    )!;
+    const set = table.filterSets().rows!;
+    const authored = set.object.message.getMessages(7)[0]!.getMessage(1)!.toBytes();
+    const index = table.addFilterRule(0, { operator: ">", value: 10 });
+    const written = set.object.message.getMessages(7)[index]!.getMessage(1)!.toBytes();
+    expect(Buffer.compare(Buffer.from(written), Buffer.from(authored))).toBe(0);
+    expect(set.consistent).toBe(true);
+    expect(set.rules().map((r) => r.column)).toEqual([0, 1, 0]);
+  });
+
+  it("adds an enabled rule to a blank table and reads it back", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 0, 5);
+    table.setCell(2, 0, 15);
+    table.addFilterRule(0, { operator: ">", value: 10 });
+    table.addFilterRule(1, { operator: "=", value: "yes" });
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const set = reloaded.filterSets().rows!;
+    expect(set.enabled).toBe(true);
+    expect(set.consistent).toBe(true);
+    const rules = set.rules();
+    expect(rules.map((r) => [r.column, r.enabled])).toEqual([[0, true], [1, true]]);
+    expect(rules[0]!.predicate!.operator).toBe(">");
+    expect(rules[0]!.predicate!.operands.map((o) => o.kind)).toEqual(["cell", "number"]);
+    expect(rules[1]!.predicate!.operator).toBe("=");
+    expect(rules[1]!.predicate!.operands[1]).toEqual({ kind: "string", argType: 3, string: "yes" });
   });
 });

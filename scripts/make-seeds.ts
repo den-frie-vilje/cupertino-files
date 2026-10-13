@@ -165,7 +165,38 @@ function seedBuild(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- filter
+
+function seedFilter(): Uint8Array {
+  // The corpus's one populated filter set was authored by Numbers. This
+  // rule is written from nothing, byte for byte as that one; whether the
+  // app hides the rows for a rule it did not author is the question.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name =
+    "Expected: only the rows with Amount above 10 show (Pear 12 and Train 40), with the filter on in the panel. All rows showing, or a refusal to open, is the finding; comment on any cell.";
+  table.setCell(0, 0, "Item");
+  table.setCell(0, 1, "Amount");
+  const rows: [string, number][] = [["Pear", 12], ["Cat", 3], ["Apple", 7], ["Train", 40], ["Dog", 10]];
+  rows.forEach(([item, amount], i) => {
+    table.setCell(i + 1, 0, item);
+    table.setCell(i + 1, 1, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  table.addFilterRule(1, { operator: ">", value: 10 });
+  return doc.save();
+}
+
 const seeds: Seed[] = [
+  {
+    name: "seed-filter.numbers",
+    bytes: seedFilter(),
+    check: (bytes) => {
+      const set = NumbersDocument.load(bytes).tables()[0]!.filterSets().rows;
+      const rules = set?.rules() ?? [];
+      if (!set?.enabled || rules.length !== 1 || rules[0]!.predicate?.operator !== ">") throw new Error("filter seed: expected one enabled > rule");
+    },
+  },
   {
     name: "seed-build.key",
     bytes: seedBuild(),

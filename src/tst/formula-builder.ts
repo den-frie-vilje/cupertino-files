@@ -410,7 +410,7 @@ function relativeTractRange(begin: number, end: number): RawMessage {
  * The plain decimal a formula number node carries: the value's own digits
  * with no normalization — trailing zeros stay in the mantissa.
  */
-function formulaDecimal(value: number): Uint8Array {
+export function formulaDecimal(value: number): Uint8Array {
   if (!Number.isFinite(value)) return new Uint8Array(16);
   const negative = value < 0 || Object.is(value, -0);
   const text = Math.abs(value).toString();

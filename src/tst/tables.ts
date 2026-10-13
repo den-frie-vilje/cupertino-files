@@ -9,6 +9,7 @@
  * bookkeeping (see docs/FORMAT.md §14).
  */
 import { protoFields } from "../proto/fields.ts";
+import { writeComparisonPredicate, type PredicateOperator } from "./predicates.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -4260,6 +4261,42 @@ export class TableModel {
       (row, col) => this.rawCellFormat(row, col),
     );
     return definition;
+  }
+
+  /**
+   * Add a row-filter rule: show rows whose cell in `column` compares to
+   * `value` as `operator` says. The rule is written the way a rule the
+   * app wrote is carried — the comparison in the predicate and as a
+   * formula over the table's own identity — and the set is switched on.
+   * Which rows the rule hides is left to the app, which has not yet been
+   * seen to apply a rule written this way; see docs/VERIFICATION.md.
+   * @agentTool add_filter_rule
+   */
+  addFilterRule(column: number, condition: { operator: PredicateOperator; value: number | string }): number {
+    this.requireWritable();
+    if (column < 0 || column >= this.columnCount) {
+      throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    }
+    const set = this.filterSets().rows;
+    if (!set) throw new RangeError("table carries no row filter set to add a rule to");
+    const name = this.name;
+    const uid = name === undefined ? undefined : this.owners().tableUid(name);
+    if (!uid) throw new RangeError("table has no calc-engine identity to write the rule against");
+    const literal: FormulaExpression =
+      typeof condition.value === "number"
+        ? { kind: "number", value: condition.value }
+        : { kind: "string", value: condition.value };
+    const ast = buildFormula(
+      {
+        kind: "binary",
+        op: condition.operator,
+        left: { kind: "crossRef", table: name!, column: { value: column, absolute: false }, row: { value: 0, absolute: false } },
+        right: literal,
+      },
+      { row: 0, column: 0 },
+      { tableUid: (table) => this.owners().tableUid(table) },
+    );
+    return set.addRule(column, writeComparisonPredicate(condition.operator, condition.value, uid, ast));
   }
 
   /** The format-table entry a cell's record points at, as stored. */

@@ -1769,6 +1769,29 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Filters: adding a comparison rule",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addFilterRule writes a comparison rule byte for byte as the fixture's app-authored rule — the " +
+      "predicate with its operands and the formula over the table's own identity — grows the set's " +
+      "parallel arrays and switches the set on; text-contains and other function-shaped rules, and the " +
+      "hidden-state extent, are not written",
+    manualProof: {
+      claim: "Numbers applies a filter rule this library wrote and hides the rows it excludes.",
+      why:
+        "The rule's bytes equal an app-authored rule's, but which rows a filter hides is stored " +
+        "separately and recomputed by the app; whether it recomputes for a rule it did not write is unseen.",
+      how:
+        "npm run seeds -- out writes seed-filter.numbers; open it in Numbers. A pass shows only Pear " +
+        "and Train with the filter on in the panel; a failure shows every row, which means the hidden " +
+        "state must be written too, or a refusal to open.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Categories: defining a category by a column",
     apps: ["numbers"],
     status: "read+write",

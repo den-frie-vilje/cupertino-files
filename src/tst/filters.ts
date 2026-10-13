@@ -36,6 +36,7 @@ import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { readPredicate, type Predicate, type ReadPredicateOptions } from "./predicates.ts";
+import { RawMessage } from "../base/protobuf.ts";
 import { columnName } from "./formulas.ts";
 
 /** TST.FilterSetArchive. */
@@ -196,6 +197,41 @@ export class FilterSet {
       FilterSetFields.ENABLED,
       flags.map((flag) => (flag ? 1 : 0)),
     );
+  }
+
+  /**
+   * Add a rule for a column, enabled, and switch the set on.
+   *
+   * The three parallel arrays grow together: the rule, its column offset
+   * and its own switch. The predicate is written by
+   * `writeComparisonPredicate`; the rows the rule would hide are the
+   * app's to recompute (the hidden-state extent is not touched), and
+   * whether the app does so for a rule it did not author is unproven.
+   * Returns the new rule's index.
+   */
+  addRule(column: number, predicate: RawMessage): number {
+    const m = this.object.message;
+    if (m.getMessages(FilterSetFields.RULES_PRE_PIVOT).length > 0 && m.getMessages(FilterSetFields.RULES).length === 0) {
+      throw new RangeError("filter set carries only pre-2016 rules; adding to it is not supported");
+    }
+    const rule = RawMessage.create();
+    rule.setMessage(FilterRuleFields.PREDICATE, predicate);
+    const rules = [...m.getMessages(FilterSetFields.RULES), rule];
+    const offsets = this.offsets();
+    const flags = this.ruleFlags();
+    // An empty set carries one stray offset; the arrays index rules, so
+    // they are rebuilt to the rule count before growing.
+    offsets.length = rules.length - 1;
+    flags.length = rules.length - 1;
+    for (let i = 0; i < flags.length; i++) flags[i] ??= true;
+    for (let i = 0; i < offsets.length; i++) offsets[i] ??= 0;
+    offsets.push(column);
+    flags.push(true);
+    m.setMessages(FilterSetFields.RULES, rules);
+    m.setVarints(FilterSetFields.OFFSETS, offsets);
+    m.setVarints(FilterSetFields.ENABLED, flags.map((flag) => (flag ? 1 : 0)));
+    m.setBool(FilterSetFields.IS_ENABLED, true);
+    return rules.length - 1;
   }
 
   /** Readable summary, one line per rule. */

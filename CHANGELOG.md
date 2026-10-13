@@ -98,6 +98,12 @@ in commit messages and pull requests.
 
 ### Added
 
+- `addFilterRule(column, { operator, value })` adds a row-filter rule
+  comparing a column's cells with a number or a string, written as the
+  app writes one, and switches the filter on. Which rows the rule hides
+  is left to the app, which has not yet been seen to apply a rule written
+  this way. Text-contains and other function-shaped rules are not authored.
+
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,
   written in the shape the app's own builds have. Delivery by paragraph,

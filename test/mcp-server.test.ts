@@ -106,6 +106,7 @@ describe("the MCP server over stdio", () => {
       expect(names).toEqual([
         "add_build",
         "add_category",
+        "add_filter_rule",
         "append_paragraph",
         "audit_document",
         "create_document",

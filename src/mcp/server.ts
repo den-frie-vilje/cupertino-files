@@ -1087,6 +1087,43 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_filter_rule",
+    description: apiDoc(
+      "add_filter_rule",
+      "Adds a row-filter rule to the table: show rows whose cell in the 0-based column compares " +
+        "to value as operator says (=, <>, <, <=, >, >=; value a number or a string), and switches " +
+        "the filter on. Which rows it hides is the app's to recompute. Saves over the input " +
+        "unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column the rule applies to" },
+        operator: { type: "string", description: "One of =, <>, <, <=, >, >=" },
+        value: { description: "A number or a string to compare the cell with" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column", "operator", "value"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      const operator = str(args.operator);
+      const value = args.value;
+      if (column === undefined || operator === undefined || (typeof value !== "number" && typeof value !== "string")) {
+        throw new RangeError("column, operator and a number or string value are required");
+      }
+      if (!["=", "<>", "<", "<=", ">", ">="].includes(operator)) throw new RangeError(`operator must be one of =, <>, <, <=, >, >=`);
+      const index = table.addFilterRule(column, { operator: operator as "=" | "<>" | "<" | "<=" | ">" | ">=", value });
+      const target = save(doc, path, str(args.output));
+      return `added filter rule ${index} on column ${column} and saved ${target}`;
+    },
+  },
+  {
     name: "insert_link",
     description: apiDoc(
       "insert_link",
