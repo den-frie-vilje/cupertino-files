@@ -2,10 +2,9 @@
  * Pages-specific (TP family) field numbers, type IDs and reference
  * extractors, layered on top of the shared families in model/schema.ts.
  *
- * TP message shapes are from the iWork '13 proto dump; the type registry and
- * every field this module touches are confirmed present in current Pages
- * (2026 registry dump + fixture evidence). Unknown newer fields are
- * preserved untouched by the RawMessage layer.
+ * TP message shapes are from the Pages 15.1 descriptor dump under
+ * `proto/pages-15.1/`. Unknown newer fields are preserved untouched by
+ * the RawMessage layer.
  */
 import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";

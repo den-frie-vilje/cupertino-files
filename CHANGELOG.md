@@ -82,6 +82,16 @@ in commit messages and pull requests.
   measured so far does — so until the app's own duplicate is
   measured, avoid table copies in filter-bearing documents.
 
+### Changed
+
+- Field numbers now resolve from schema descriptors extracted from the
+  15.1 applications themselves, for all three apps. The Pages-specific
+  schema, previously the Pages 5.0 dump from 2013, grows from 21 to 42
+  messages, so every Pages archive the apps write today is addressable
+  by name. Additions to the shared families since 14.4 are named too:
+  a colour's `headroom`, a placeholder field's `localizable`, and the
+  section-template fields of a Pages section under their current names.
+
 ### Added
 
 - `KeynoteDocument.addImage` puts a picture on a slide — the gap that

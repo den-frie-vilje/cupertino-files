@@ -27,9 +27,9 @@ Keynote for macOS/iOS/iCloud.
 
 The IWA generation has been structurally stable from 2013 through today:
 Apple evolves it by **adding** protobuf fields and type IDs, never by
-reusing or reshaping existing ones (verified by diffing the 2013 and 14.4
-schema dumps: every shared field number is unchanged; changes are additions
-plus a handful of renames). Version markers moved from "5.x" to year-based
+reusing or reshaping existing ones (verified by diffing the 2013, 14.4 and
+15.1 schema dumps: every shared field number is unchanged; changes are
+additions plus a handful of renames). Version markers moved from "5.x" to year-based
 "26.x" in 2025 with no structural change.
 
 ## 2. Package container
@@ -582,10 +582,9 @@ renders wrong.
 `r/g/b = 3/4/5`, `a = 6`, cmyk `c/m/y/k = 7..10`, white `w = 11`, and
 `rgbspace = 12` (1 sRGB, 2 Display P3). The 26.x-era apps write an explicit
 `rgbspace` on essentially every colour, so a reader that ignores field 12
-will silently render P3 colours as sRGB. There is also an **undocumented
-fixed32 field 13**, first seen in the 26.x era, always paired with an
-explicit `rgbspace` and always `1.0` in every document examined — meaning
-unknown, preserved verbatim like any unknown field.
+will silently render P3 colours as sRGB. `headroom = 13` is a float
+defaulting to 1 (named by the 15.1 schema); the 26.x-era apps write it
+explicitly beside `rgbspace`, and it is `1.0` in every document examined.
 
 **Stylesheets** (`TSS.StylesheetArchive`, type 401): `styles = 1` (refs),
 `identifier_to_style_map = 2` (`{identifier=1, style=2}` entries),
@@ -1505,11 +1504,11 @@ own lookup, and a first attempt at conversion that ignored this would have
 written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
 enums, same arity, silently wrong.
 
-**What cannot be looked up is listed rather than hidden.** The shared dumps
-are Numbers 14.4 and the Pages-specific ones are Pages 5.0 from 2013, so
-fields added since are declared with `measuredFields`, which requires a
-sentence of evidence and refuses a number the schema already defines — when
-a refreshed dump contains it, the declaration throws until it moves. Archive
+**What cannot be looked up is listed rather than hidden.** The dumps are
+one release of the applications (15.1), so a field a newer release adds is
+declared with `measuredFields`, which requires a sentence of evidence and
+refuses a number the schema already defines — when a refreshed dump
+contains it, the declaration throws until it moves. Archive
 type ids are not in any `.proto` and never will be: `TSWP_TYPE.STORAGE =
 2001` is the app's object registry, and the only authority for it is the
 corpus.

@@ -1509,6 +1509,11 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "border_positions": 45,
     "rounded_corners": 46,
   },
+  "TSWP.PlaceholderSmartFieldArchive": {
+    "super": 1,
+    "localizable": 2,
+    "script_tag": 3,
+  },
   "TSWP.ShapeInfoArchive": {
     "super": 1,
     "deprecated_storage": 2,
