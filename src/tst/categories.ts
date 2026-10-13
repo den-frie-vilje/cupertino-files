@@ -666,8 +666,12 @@ export function defineByValueCategory(
     leafObjects.map((object) => makeRef(object.identifier)),
   );
   root.setMessageBytes(referenced.toBytes());
+  // The references the app declares: the root lists its leaves, the
+  // archive lists its root, both beside the messages that carry them.
+  root.setObjectReferences(leafObjects.map((object) => object.identifier));
   m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(leaves));
   m.setMessage(GroupByFields.GROUP_NODE_ROOT_REF, makeRef(root.identifier));
+  groupBy.setObjectReferences([...groupBy.getObjectReferences(), root.identifier]);
   m.setBool(GroupByFields.IS_ENABLED, true);
 }
 

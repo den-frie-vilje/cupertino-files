@@ -218,18 +218,22 @@ export class FilterSet {
     rule.setMessage(FilterRuleFields.PREDICATE, predicate);
     const rules = [...m.getMessages(FilterSetFields.RULES), rule];
     const offsets = this.offsets();
-    const flags = this.ruleFlags();
-    // An empty set carries one stray offset; the arrays index rules, so
-    // they are rebuilt to the rule count before growing.
+    // An empty set carries one stray offset; the array indexes rules, so
+    // it is cut to the rule count before growing.
     offsets.length = rules.length - 1;
-    flags.length = rules.length - 1;
-    for (let i = 0; i < flags.length; i++) flags[i] ??= true;
     for (let i = 0; i < offsets.length; i++) offsets[i] ??= 0;
     offsets.push(column);
-    flags.push(true);
     m.setMessages(FilterSetFields.RULES, rules);
     m.setVarints(FilterSetFields.OFFSETS, offsets);
-    m.setVarints(FilterSetFields.ENABLED, flags.map((flag) => (flag ? 1 : 0)));
+    // `filter_enabled` is absent on every app-written set — absent means
+    // enabled — so it is only kept in step where a set already states it.
+    if (m.has(FilterSetFields.ENABLED)) {
+      const flags = this.ruleFlags();
+      flags.length = rules.length - 1;
+      for (let i = 0; i < flags.length; i++) flags[i] ??= true;
+      flags.push(true);
+      m.setVarints(FilterSetFields.ENABLED, flags.map((flag) => (flag ? 1 : 0)));
+    }
     m.setBool(FilterSetFields.IS_ENABLED, true);
     return rules.length - 1;
   }
