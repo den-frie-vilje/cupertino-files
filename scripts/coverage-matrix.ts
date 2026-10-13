@@ -1776,8 +1776,8 @@ export const CAPABILITIES: Capability[] = [
     note:
       "addFilterRule writes a comparison rule byte for byte as the fixture's app-authored rule — the " +
       "predicate with its operands and the formula over the table's own identity — grows the set's " +
-      "parallel arrays and switches the set on; text-contains and other function-shaped rules, and the " +
-      "hidden-state extent, are not written",
+      "parallel arrays and switches the set on; text-contains rules are written the same way; other " +
+      "function-shaped rules and the hidden-state extent are not",
     manualProof: {
       claim: "Numbers applies a filter rule this library wrote and hides the rows it excludes.",
       why:

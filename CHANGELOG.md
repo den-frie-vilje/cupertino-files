@@ -102,7 +102,8 @@ in commit messages and pull requests.
   comparing a column's cells with a number or a string, written as the
   app writes one, and switches the filter on. Which rows the rule hides
   is left to the app, which has not yet been seen to apply a rule written
-  this way. Text-contains and other function-shaped rules are not authored.
+  this way. The operator may also be "contains" for a text-contains rule;
+  other function-shaped rules are not authored.
 
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,

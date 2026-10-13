@@ -9,7 +9,7 @@
  * bookkeeping (see docs/FORMAT.md §14).
  */
 import { protoFields } from "../proto/fields.ts";
-import { writeComparisonPredicate, type PredicateOperator } from "./predicates.ts";
+import { writeComparisonPredicate, type FilterOperator } from "./predicates.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -4265,14 +4265,15 @@ export class TableModel {
 
   /**
    * Add a row-filter rule: show rows whose cell in `column` compares to
-   * `value` as `operator` says. The rule is written the way a rule the
+   * `value` as `operator` says, or contains it as text when the operator
+   * is "contains". The rule is written the way a rule the
    * app wrote is carried — the comparison in the predicate and as a
    * formula over the table's own identity — and the set is switched on.
    * Which rows the rule hides is left to the app, which has not yet been
    * seen to apply a rule written this way; see docs/VERIFICATION.md.
    * @agentTool add_filter_rule
    */
-  addFilterRule(column: number, condition: { operator: PredicateOperator; value: number | string }): number {
+  addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
     this.requireWritable();
     if (column < 0 || column >= this.columnCount) {
       throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
@@ -4286,17 +4287,30 @@ export class TableModel {
       typeof condition.value === "number"
         ? { kind: "number", value: condition.value }
         : { kind: "string", value: condition.value };
-    const ast = buildFormula(
-      {
-        kind: "binary",
-        op: condition.operator,
-        left: { kind: "crossRef", table: name!, column: { value: column, absolute: false }, row: { value: 0, absolute: false } },
-        right: literal,
-      },
-      { row: 0, column: 0 },
-      { tableUid: (table) => this.owners().tableUid(table) },
-    );
-    return set.addRule(column, writeComparisonPredicate(condition.operator, condition.value, uid, ast));
+    const cell: FormulaExpression = {
+      kind: "crossRef",
+      table: name!,
+      column: { value: column, absolute: false },
+      row: { value: 0, absolute: false },
+    };
+    const expression: FormulaExpression =
+      condition.operator === "contains"
+        ? {
+            kind: "call",
+            name: "NOT",
+            args: [
+              {
+                kind: "call",
+                name: "ISERROR",
+                args: [{ kind: "call", name: "FIND.CASEINSENSITIVE", args: [literal, cell] }],
+              },
+            ],
+          }
+        : { kind: "binary", op: condition.operator, left: cell, right: literal };
+    const ast = buildFormula(expression, { row: 0, column: 0 }, {
+      tableUid: (table) => this.owners().tableUid(table),
+    });
+    return set.addRule(column, writeComparisonPredicate(condition.operator, condition.value, column, uid, ast));
   }
 
   /** The format-table entry a cell's record points at, as stored. */

@@ -411,6 +411,12 @@ describe("writing a filter rule", () => {
     expect(Buffer.compare(Buffer.from(written), Buffer.from(authored))).toBe(0);
     expect(set.consistent).toBe(true);
     expect(set.rules().map((r) => r.column)).toEqual([0, 1, 0]);
+
+    // The fixture's second rule is text-contains; the same writer rebuilds it.
+    const contains = set.object.message.getMessages(7)[1]!.getMessage(1)!.toBytes();
+    const second = table.addFilterRule(1, { operator: "contains", value: "ko" });
+    const rebuilt = set.object.message.getMessages(7)[second]!.getMessage(1)!.toBytes();
+    expect(Buffer.compare(Buffer.from(rebuilt), Buffer.from(contains))).toBe(0);
   });
 
   it("adds an enabled rule to a blank table and reads it back", () => {
