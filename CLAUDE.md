@@ -251,3 +251,9 @@ The traps, each paid for once:
   evidence bundles, snapshots and thinned binaries stay under `/tmp`;
   the repository gets a measured constant, its test and a ledger row
   (docs/LEGAL.md, item 3).
+- **Read the file before decompiling.** The formula registry, the duration
+  initialiser and the group-by sidecar fields were all settled by reading
+  bytes and instructions in node or by a corpus census, in minutes; the
+  Ghidra route costs eleven minutes per TSTables call and its `xrefs`
+  step died twice in provider cleanup. Decompile when the question is a
+  switch or a computed value; measure the data when it is a table.
