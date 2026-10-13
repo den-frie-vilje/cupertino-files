@@ -1299,6 +1299,30 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Duration default format (a typed duration's stamp)",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "a duration written with setCell is stamped with the app's own fresh duration format — type 268, " +
+      "short style, hour down to second, automatic units on — read from the app's duration format class; " +
+      "explicit duration formats are written as type 268 with the automatic-units flag, where demo-05 " +
+      "proved the earlier 273 shape",
+    manualProof: {
+      claim: "A duration typed through the library displays in Numbers as a duration typed in the app.",
+      why:
+        "No plain duration cell exists in the corpus, so the default is the app's initialiser rather " +
+        "than a measured file; its rendering has not been seen.",
+      how:
+        "Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where " +
+        "the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the " +
+        "inspector; a failure shows a bare number or an inspector reading other than Duration, " +
+        "which means the written field set differs from a fresh cell's.",
+      risk: "low",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Formula reading (AST rendered to text)",
     apps: "all",
     status: "read",

@@ -84,6 +84,10 @@ in commit messages and pull requests.
 
 ### Changed
 
+- Duration formats are written with the app's duration type (268)
+  instead of the custom-duration code, and the automatic-units flag is
+  read and written alongside style and units.
+
 - Field numbers now resolve from schema descriptors extracted from the
   15.1 applications themselves, for all three apps. The Pages-specific
   schema, previously the Pages 5.0 dump from 2013, grows from 21 to 42
@@ -93,6 +97,10 @@ in commit messages and pull requests.
   section-template fields of a Pages section under their current names.
 
 ### Added
+
+- A duration written with `setCell` is stamped with the app's own fresh
+  duration format: short style, hours down to seconds, automatic units
+  on. Before, a typed duration carried no format at all.
 
 - Every spreadsheet function Numbers 15.1 registers is authorable by
   name: the function index table grows from 272 to 345 entries, read

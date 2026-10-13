@@ -102,14 +102,19 @@ import {
  * The format a freshly written value is stamped with, per cell type —
  * the app's own default for a freshly typed value, measured as the
  * dominant archive per type across every plain value cell in the
- * corpus. Durations are absent deliberately: no plain duration cell
- * exists in the corpus to measure one from.
+ * corpus. No plain duration cell exists in the corpus; the duration
+ * default is the app's own, read from its duration format class: short
+ * style, hour down to second, automatic units on.
  */
 const DEFAULT_STAMP_FORMAT_BY_TYPE: ReadonlyMap<number, CellFormat> = new Map<number, CellFormat>([
   [CellType.NUMBER, { kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false }],
   [CellType.TEXT, { kind: "text" }],
   [CellType.DATE, { kind: "date", pattern: "d MMM yyyy" }],
   [CellType.BOOL, { kind: "boolean" }],
+  [
+    CellType.DURATION,
+    { kind: "duration", style: 1, largestUnit: 4, smallestUnit: 16, automaticUnits: true },
+  ],
 ]);
 const DEFAULT_STAMP_FORMATS: readonly CellFormat[] = [...DEFAULT_STAMP_FORMAT_BY_TYPE.values()];
 
@@ -4494,9 +4499,8 @@ export class TableModel {
    * 60 of 60 booleans, none missing — and a cell without one is
    * app-real only as this library's own output. The archives written
    * are the app's defaults for a freshly typed value, measured as the
-   * dominant shape per type; a duration's is unmeasured (no plain
-   * duration cell exists in the corpus) and is left unwritten rather
-   * than guessed. A format already on the record is kept: a rewrite
+   * dominant shape per type, and for a duration read from the app's
+   * duration format class. A format already on the record is kept: a rewrite
    * must not flatten the cell's chosen presentation to the default.
    */
   private stampDefaultFormat(record: CellRecord): void {

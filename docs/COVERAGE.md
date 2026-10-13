@@ -111,6 +111,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 34 | iwork16→current |
 | Merged cell ranges<br><sub>mergeCells/unmergeCells, complete with the calc engine's dependency ledger: the kind-5 owner's (row 0, column = formula_index) record, tile minted on first use. Deleting Apple's last merge in issue102 and remaking it through mergeCells reproduces the whole saved file byte for byte</sub> | all | ✅ read + write | 5 | modern→current |
 | Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 29 | iwork19→current |
+| Duration default format (a typed duration's stamp)<br><sub>a duration written with setCell is stamped with the app's own fresh duration format — type 268, short style, hour down to second, automatic units on — read from the app's duration format class; explicit duration formats are written as type 268 with the automatic-units flag, where demo-05 proved the earlier 273 shape</sub> | Numbers | ✅ read + write | 22 | iwork16→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 11 | iwork19→current |
 | Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_&lt;id&gt;. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 10 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 5 | current→current |
@@ -160,7 +161,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-56 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+57 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -196,6 +197,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)**
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
 - 🟡 low — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
+- 🟡 low — Numbers & tables → **Duration default format (a typed duration's stamp)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
