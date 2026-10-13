@@ -1926,13 +1926,20 @@ covering a single index is written with `range_begin` alone**, no
 a group holding seven scattered rows stores seven entries *without* one.
 Either encoding reads back correctly, so only a byte comparison catches it.
 
-What can be recomputed offline stops at membership. Creating a group would
-mean minting its identity, placing it in whatever order the app sorts
-groups in, and updating the run of fields the archive carries beside the
-tree — eight messages of shape `{ f2: <small int>, f3: 0 }` at fields 7–13
-and 16, a count at 14, and a list of per-row UUID pairs at 15. Their
-meaning is not documented by any fixture, so a group this library invented
-would be a claim about all of them.
+The fields beside the tree are constant. Fields 7–13 and 16 are
+`TSCE.CellCoordinateArchive` coordinates of the eight internal formulas
+the grouping registers with the calc engine — aggregate-type change,
+grouping columns, aggregates in the root, grouping column headers, column
+order, row order, row order ignoring recalc, hidden states — at columns
+0–7 of row 0 of the grouping's own owner in every archive in the corpus,
+categorised or not; `owner_index` (14) is 8 everywhere; `row_uid_lookup`
+(15) is the table's row-uid list in map order. Every table carries the
+archive, so defining a category fills it in: the group column (the
+column's uid, grouping type 0, a fresh grouping-column uid), the lookup
+list, and a tree of one leaf per distinct value, listed in the code-unit
+order of their text, each leaf carrying the value, a format manager that
+restates the value with the cells' format and the row set, and the rows.
+`addCategory` writes that shape; the app has yet to confirm it draws it.
 
 Two further shape notes. A real archive carries **both** `group_node_root`
 (3, inline) and `group_node_root_ref` (18) — the reference is the live tree

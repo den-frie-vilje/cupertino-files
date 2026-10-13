@@ -46,6 +46,7 @@ import {
 import { FilterSet, type FilterRule } from "./filters.ts";
 import {
   categoriesOf,
+  defineByValueCategory,
   type CategoryGroup,
   type GroupValue,
   type TableCategories,
@@ -4223,6 +4224,56 @@ export class TableModel {
     return definition.regroup((row, column) =>
       groupValueOf(byPosition.get(`${row}:${column}`)),
     );
+  }
+
+  /**
+   * Group the table's rows by the values in one column.
+   *
+   * Defines a by-value category — one group per distinct value, listed in
+   * text order, each holding its rows — in the shape every categorised
+   * table in the corpus has, and switches it on. The table must not be
+   * categorised already (`regroupCategories` maintains an existing
+   * definition), and every data row needs a value in the column.
+   *
+   * The app has not yet been seen to draw a category this library
+   * defined; see docs/VERIFICATION.md.
+   * @agentTool add_category
+   */
+  addCategory(column: number): TableCategories {
+    this.requireWritable();
+    if (column < 0 || column >= this.columnCount) {
+      throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    }
+    const definition = this.categories()[0];
+    if (!definition) throw new RangeError("table carries no group-by archive to define a category in");
+    const byPosition = new Map<string, CellValue>();
+    for (const cell of this.cells()) byPosition.set(`${cell.row}:${cell.column}`, cell.value);
+    const dataRows: number[] = [];
+    for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) dataRows.push(row);
+    defineByValueCategory(
+      this.store,
+      definition.object,
+      this.uidMap(),
+      column,
+      dataRows,
+      (row, col) => groupValueOf(byPosition.get(`${row}:${col}`)),
+      (row, col) => this.rawCellFormat(row, col),
+    );
+    return definition;
+  }
+
+  /** The format-table entry a cell's record points at, as stored. */
+  private rawCellFormat(row: number, column: number): RawMessage | undefined {
+    const record = this.recordAt(row, column);
+    if (!record) return undefined;
+    const formats = this.numberFormats();
+    for (const flag of Object.values(FORMAT_FLAG_BY_CATEGORY)) {
+      const id = record.id(flag);
+      if (id === undefined) continue;
+      const format = formats.get(id);
+      if (format) return format;
+    }
+    return undefined;
   }
 
   /** `cell_style_id` of a cell, if its record carries one. */

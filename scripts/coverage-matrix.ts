@@ -1747,6 +1747,29 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Categories: defining a category by a column",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addCategory fills the table's existing group-by archive — every table carries one — with the " +
+      "shape every categorised corpus table has: the group column, the row-uid lookup, one leaf per " +
+      "distinct value in text order with its format manager, a referenced root and its inline copy; " +
+      "the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them",
+    manualProof: {
+      claim: "Numbers draws a category this library defined from nothing, with the groups collapsed under their values.",
+      why:
+        "The suite proves the archive matches the corpus shape field for field; whether the calc engine " +
+        "accepts a grouping whose internal formulas it did not register itself is the app's to say.",
+      how:
+        "npm run seeds -- out writes seed-category.numbers; open it in Numbers. A pass shows three " +
+        "groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows " +
+        "flat or a refusal to open, which means the definition needs state only the app writes.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Categories: regrouping rows after an edit",
     apps: "all",
     status: "read+write",

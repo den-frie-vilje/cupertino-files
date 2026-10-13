@@ -24,22 +24,27 @@
  * {@link TableCategories.verify} says whether the cached tree still matches
  * the data and {@link TableCategories.regroup} brings it back into line.
  *
- * Regrouping moves rows between groups that already exist and nothing else.
- * Which rows belong to "Animal" is a question the grouping column answers
- * directly, so it can be settled offline; what a *new* group's identity
- * should be, where the app would sort it, and how the per-column and
- * per-row fields alongside the tree should change are questions no fixture
- * answers. So a value with no group is refused. That line — recompute what
- * the data determines, refuse what only the app knows — is the same one
- * drawn for conditional rules and filters.
+ * Regrouping moves rows between groups that already exist and nothing else:
+ * which rows belong to "Animal" is a question the grouping column answers
+ * directly. A value with no group is refused there, because a new group's
+ * identity and position are the app's to give; {@link defineByValueCategory}
+ * mints a whole definition at once instead, in the shape every categorised
+ * table in the corpus has, and the app has yet to confirm it draws one.
+ *
+ * The archive's other fields are constant. Fields 7–13 and 16 are the
+ * calc-engine coordinates of the eight internal formulas the grouping
+ * registers (columns 0–7 of row 0 of its own owner, in every archive in the
+ * corpus, categorised or not), `owner_index` is 8, and `row_uid_lookup`
+ * is the table's row-uid list in map order. Every table carries the
+ * archive, so defining a category fills it in rather than creating it.
  */
 import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { APPLE_EPOCH_SECONDS } from "../base/bytes.ts";
-import { ColumnRowUidMap, readUid, type Uid } from "./uidmap.ts";
+import { ColumnRowUidMap, randomUid, readUid, type Uid } from "./uidmap.ts";
 
 /** TST.TableModelArchive.category_owner. */
 export const CATEGORY_OWNER = 86;
@@ -77,6 +82,19 @@ export const GroupNodeFields = protoFields("TST.GroupByArchive.GroupNodeArchive"
   ROW_LOOKUP_UIDS: "row_lookup_uids",
   CHILD_REF: "child_ref",
 });
+
+/** TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive. */
+const FormatManagerFields = protoFields("TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive", {
+  CELL_VALUE: "cell_value",
+  FORMATS: "formats",
+  ROW_UID_LOOKUP_SETS: "row_uid_lookup_sets",
+});
+
+/** TST.GroupByArchive.row_uid_lookup: the table's row uids, in map order. */
+const ROW_UID_LOOKUP = 15;
+
+/** Archive type id of `TST.GroupByArchive.GroupNodeArchive`. */
+const GROUP_NODE_TYPE = 6383;
 
 /** TST.ColumnAggregateArchive — the per-group summary of one column. */
 export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
@@ -495,6 +513,162 @@ export function writeIndexSet(indexes: readonly number[]): RawMessage {
   }
   set.setMessages(IndexSet.ENTRIES, entries);
   return set;
+}
+
+/** A `TSP.UUID` message. */
+function writeUidMessage(uid: Uid): RawMessage {
+  const m = RawMessage.create();
+  m.setVarint(1, uid.lower);
+  m.setVarint(2, uid.upper);
+  return m;
+}
+
+/**
+ * Encode a group's value as the app does: the value, the format its cells
+ * carry, and the explicit-false flags the app states for the type.
+ */
+export function writeCellValue(value: GroupValue, format: RawMessage): RawMessage {
+  const out = RawMessage.create();
+  const inner = RawMessage.create();
+  if (typeof value === "string") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.STRING);
+    inner.setString(1, value);
+    inner.setMessage(2, format);
+    inner.setBool(4, false);
+    inner.setBool(5, false);
+    inner.setBool(6, false);
+    out.setMessage(CellValueFields.STRING, inner);
+  } else if (typeof value === "number") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.NUMBER);
+    inner.setDouble(1, value);
+    inner.setVarint(2, 0);
+    inner.setMessage(3, format);
+    inner.setBool(6, false);
+    out.setMessage(CellValueFields.NUMBER, inner);
+  } else if (typeof value === "boolean") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.BOOLEAN);
+    inner.setBool(1, value);
+    inner.setMessage(2, format);
+    inner.setBool(3, false);
+    out.setMessage(CellValueFields.BOOLEAN, inner);
+  } else if (value instanceof Date) {
+    out.setVarint(CellValueFields.TYPE, CellValueType.DATE);
+    inner.setDouble(1, value.getTime() / 1000 - APPLE_EPOCH_SECONDS);
+    inner.setMessage(2, format);
+    inner.setBool(4, false);
+    out.setMessage(CellValueFields.DATE, inner);
+  } else {
+    throw new RangeError("a category group needs a value; the grouping column has an empty cell");
+  }
+  return out;
+}
+
+/** A group's text, the order the app lists by-value groups in. */
+function groupText(value: GroupValue): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/**
+ * Define a by-value category on a column, filling the table's existing
+ * group-by archive with the shape every categorised table in the corpus
+ * has: the group column, the row-uid lookup, a root node holding one leaf
+ * per distinct value, referenced from field 18 and copied inline into
+ * field 3, and the definition switched on.
+ *
+ * Groups are listed in the code-unit order of their text, which is the
+ * order the corpus shows for strings and numbers alike. A leaf carries the
+ * value, a format manager restating the value with the format its cells
+ * carry and its row set, and the rows. `formatAt` supplies the format
+ * message of a row's cell in the column, or nothing when it carries none.
+ */
+export function defineByValueCategory(
+  store: ObjectStore,
+  groupBy: IwaObject,
+  uids: ColumnRowUidMap,
+  column: number,
+  dataRows: readonly number[],
+  valueAt: (row: number, column: number) => GroupValue,
+  formatAt: (row: number, column: number) => RawMessage | undefined,
+): void {
+  const m = groupBy.message;
+  if (m.getMessages(GroupByFields.GROUP_COLUMN).length > 0) {
+    throw new RangeError("table is already categorised; regroup it instead of defining it again");
+  }
+  const columnUid = uids.columnUid(column);
+  if (!columnUid) throw new RangeError(`column ${column} has no identity in the uid map`);
+
+  const groupColumn = RawMessage.create();
+  groupColumn.setMessage(GroupColumnFields.COLUMN_UID, writeUidMessage(columnUid));
+  groupColumn.setVarint(GroupColumnFields.GROUPING_TYPE, GroupingType.BY_VALUE);
+  groupColumn.setMessage(GroupColumnFields.GROUPING_COLUMN_UID, writeUidMessage(randomUid()));
+  m.setMessages(GroupByFields.GROUP_COLUMN, [groupColumn]);
+
+  const lookup = RawMessage.create();
+  lookup.setMessages(
+    1,
+    uids.rowUidList().flatMap((uid) => (uid ? [writeUidMessage(uid)] : [])),
+  );
+  m.setMessage(ROW_UID_LOOKUP, lookup);
+
+  // One leaf per distinct value, rows in table order within a group.
+  const groups = new Map<string, { value: GroupValue; rows: number[] }>();
+  for (const row of dataRows) {
+    const value = valueAt(row, column);
+    if (value === undefined) {
+      throw new RangeError(`row ${row} has no value in column ${column}; every data row needs one to be grouped`);
+    }
+    const key = `${typeof value}:${groupText(value)}`;
+    const group = groups.get(key);
+    if (group) group.rows.push(row);
+    else groups.set(key, { value, rows: [row] });
+  }
+  const ordered = [...groups.values()].sort((a, b) => {
+    const x = groupText(a.value);
+    const y = groupText(b.value);
+    return x < y ? -1 : x > y ? 1 : 0;
+  });
+
+  const component = store.componentOf(groupBy.identifier);
+  if (!component) throw new RangeError("group-by archive has no component");
+  const leafMessage = (group: { value: GroupValue; rows: number[] }): RawMessage => {
+    const leaf = RawMessage.create();
+    leaf.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    const format = formatAt(group.rows[0]!, column) ?? RawMessage.create();
+    const cellValue = writeCellValue(group.value, format);
+    const manager = RawMessage.create();
+    manager.setMessage(FormatManagerFields.CELL_VALUE, cellValue);
+    manager.setMessages(FormatManagerFields.FORMATS, [format]);
+    manager.setMessages(FormatManagerFields.ROW_UID_LOOKUP_SETS, [writeIndexSet(group.rows)]);
+    leaf.setMessage(GroupNodeFields.FORMAT_MANAGER, manager);
+    leaf.setMessage(GroupNodeFields.GROUP_CELL_VALUE, cellValue);
+    leaf.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet(group.rows));
+    return leaf;
+  };
+  const leaves = ordered.map(leafMessage);
+  const leafObjects = leaves.map((leaf) => {
+    const object = store.createObject(GROUP_NODE_TYPE, component);
+    object.setMessageBytes(leaf.toBytes());
+    return object;
+  });
+
+  const rootMessage = (children: readonly RawMessage[] | undefined): RawMessage => {
+    const root = RawMessage.create();
+    root.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    if (children) root.setMessages(GroupNodeFields.CHILD, children);
+    root.setMessage(GroupNodeFields.FORMAT_MANAGER, RawMessage.create());
+    root.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet([...dataRows]));
+    return root;
+  };
+  const root = store.createObject(GROUP_NODE_TYPE, component);
+  const referenced = rootMessage(undefined);
+  referenced.setMessages(
+    GroupNodeFields.CHILD_REF,
+    leafObjects.map((object) => makeRef(object.identifier)),
+  );
+  root.setMessageBytes(referenced.toBytes());
+  m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(leaves));
+  m.setMessage(GroupByFields.GROUP_NODE_ROOT_REF, makeRef(root.identifier));
+  m.setBool(GroupByFields.IS_ENABLED, true);
 }
 
 /** Decode a `TSCE.CellValueArchive`. */

@@ -1112,6 +1112,12 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "row_lookup_uids": 9,
     "child_ref": 10,
   },
+  "TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive": {
+    "cell_value": 1,
+    "formats": 2,
+    "row_sets": 3,
+    "row_uid_lookup_sets": 4,
+  },
   "TST.GroupColumnArchive": {
     "column_uid": 1,
     "grouping_type": 2,

@@ -34,7 +34,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { PagesDocument } from "../src/index.ts";
+import { NumbersDocument, PagesDocument } from "../src/index.ts";
 import { Storage } from "../src/tswp/schema.ts";
 import { blockPng } from "./png.ts";
 
@@ -122,7 +122,48 @@ function seedInlineImage(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- category
+
+function seedCategory(): Uint8Array {
+  // Every categorised table in the corpus was grouped by the app. This
+  // one is grouped by the library from nothing, in the same shape; the
+  // app's drawing it is the only proof that shape is enough.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name =
+    "Expected: three groups, Animal, Fruit and Transport, each with its rows beneath it. Flat rows or a refusal to open is the finding; comment on any cell.";
+  table.setCell(0, 0, "Item");
+  table.setCell(0, 1, "Kind");
+  const rows: [string, string][] = [
+    ["Pear", "Fruit"],
+    ["Cat", "Animal"],
+    ["Apple", "Fruit"],
+    ["Bicycle", "Transport"],
+    ["Dog", "Animal"],
+    ["Train", "Transport"],
+  ];
+  rows.forEach(([item, kind], i) => {
+    table.setCell(i + 1, 0, item);
+    table.setCell(i + 1, 1, kind);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  table.addCategory(1);
+  return doc.save();
+}
+
 const seeds: Seed[] = [
+  {
+    name: "seed-category.numbers",
+    bytes: seedCategory(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      const groups = table.activeCategories()?.groups() ?? [];
+      if (groups.map((g) => g.value).join() !== "Animal,Fruit,Transport") {
+        throw new Error("category seed: expected three groups in text order");
+      }
+      if (table.staleCategoryGroups().length !== 0) throw new Error("category seed: tree disagrees with cells");
+    },
+  },
   {
     name: "seed-inline-image.pages",
     bytes: seedInlineImage(),

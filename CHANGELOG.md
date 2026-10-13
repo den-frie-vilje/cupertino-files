@@ -98,6 +98,12 @@ in commit messages and pull requests.
 
 ### Added
 
+- `addCategory(column)` groups a table's rows by the values in a column:
+  one group per distinct value in text order, each holding its rows,
+  written in the shape every categorised document carries and switched
+  on. Nesting, date bucketing and summaries are not authored. Numbers has
+  not yet been seen to draw a category defined this way.
+
 - A duration written with `setCell` is stamped with the app's own fresh
   duration format: short style, hours down to seconds, automatic units
   on. Before, a typed duration carried no format at all.

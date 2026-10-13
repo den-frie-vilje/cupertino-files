@@ -1007,6 +1007,36 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_category",
+    description: apiDoc(
+      "add_category",
+      "Groups the table's rows by the values in one 0-based column: one group per distinct " +
+        "value in text order, switched on. The table must not be categorised already, and " +
+        "every data row needs a value in the column. Saves over the input unless output " +
+        "names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column to group by" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      if (column === undefined) throw new RangeError("column is required");
+      const category = table.addCategory(column);
+      const target = save(doc, path, str(args.output));
+      return `grouped by column ${column} into ${category.groups().length} groups and saved ${target}`;
+    },
+  },
+  {
     name: "insert_link",
     description: apiDoc(
       "insert_link",
