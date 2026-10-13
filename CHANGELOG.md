@@ -98,6 +98,12 @@ in commit messages and pull requests.
 
 ### Added
 
+- `slide.addBuild({ drawableId, effect, duration, delay })` animates a
+  drawable on a Keynote slide with an all-at-once build played on click,
+  written in the shape the app's own builds have. Delivery by paragraph,
+  actions and build order are not authored. Keynote has not yet been seen
+  to play a build written this way.
+
 - `addCategory(column)` groups a table's rows by the values in a column:
   one group per distinct value in text order, each holding its rows,
   written in the shape every categorised document carries and switched

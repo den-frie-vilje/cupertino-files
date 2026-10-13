@@ -28,8 +28,10 @@
  *
  *  - reads and **edits** existing builds, where the risk is a field number
  *    being wrong and the damage is visible immediately in the app;
- *  - does **not** create builds from nothing, because a build the apps drop
- *    silently is indistinguishable from one that never existed;
+ *  - **creates** an all-at-once build in the shape the deck's app-authored
+ *    builds share, field for field ({@link createBuild}); whether the app
+ *    plays one it did not author is unconfirmed, because a build the app
+ *    drops silently looks like one never written;
  *  - exposes `effect` as the raw string Apple stores rather than an enum of
  *    invented names.
  *
@@ -52,7 +54,9 @@
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import { randomUid } from "../tst/uidmap.ts";
 import { Slide } from "./schema.ts";
 
 /** KN archive types in the build graph. */
@@ -78,6 +82,13 @@ export const BuildChunkFields = protoFields("KN.BuildChunkArchive", {
   AUTOMATIC: "automatic",
   REFERENT: "referent",
   BUILD_ID: "build_id",
+  BUILD_CHUNK_IDENTIFIER: "build_chunk_identifier",
+});
+
+/** KN.BuildChunkIdentifierArchive. */
+export const BuildChunkIdentifierFields = protoFields("KN.BuildChunkIdentifierArchive", {
+  BUILD_ID: "build_id",
+  BUILD_CHUNK_ID: "build_chunk_id",
 });
 
 /** KN.BuildAttributesArchive — the subset that describes the effect. */
@@ -94,6 +105,7 @@ export const BuildAttributesFields = protoFields("KN.BuildAttributesArchive", {
   ACTION_COLOR_ALPHA: "action_colorAlpha",
   ACTION_ACCELERATION: "action_acceleration",
   CURVE_STYLE: "curveStyle",
+  CHART_ROTATION_3D: "ChartRotation3D",
   ANIMATION_ATTRIBUTES: "animationAttributes",
   CUSTOM_BOUNCE: "custom_bounce",
   CUSTOM_TEXT_DELIVERY: "custom_textDelivery",
@@ -316,6 +328,94 @@ export function buildsOfSlide(store: ObjectStore, slide: IwaObject): BuildModel[
     if (object?.type === BUILD_TYPE.BUILD) out.push(new BuildModel(store, object));
   }
   return out;
+}
+
+/** What a new build needs. */
+export interface NewBuild {
+  /** The drawable on the slide to animate. */
+  drawableId: bigint;
+  /** The effect identifier as the app stores it, e.g. `apple:dissolve`. */
+  effect: string;
+  /** Seconds; the app's fresh build has 1. */
+  duration?: number;
+  /** Seconds before the build starts; 0 by default. */
+  delay?: number;
+  /** The app's display word for the kind: "In" (default), "Out" or "Action". */
+  type?: string;
+}
+
+/**
+ * Add an all-at-once build to a slide, in the shape every app-authored
+ * build in the corpus deck shares: the build archive with its delivery,
+ * event trigger, chart rotation, text delivery and delivery option stated,
+ * the effect and timing in `animationAttributes` with a fresh random seed,
+ * and one chunk carrying the timing under a fresh build UUID. Both objects
+ * go in the slide's component and both lists on the slide grow.
+ */
+export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild): BuildModel {
+  const component = store.componentOf(slide.identifier);
+  if (!component) throw new RangeError("slide has no component to hold a build");
+  const duration = spec.duration ?? 1;
+  const delay = spec.delay ?? 0;
+
+  const animation = RawMessage.create();
+  animation.setString(AnimationAttributesFields.ANIMATION_TYPE, spec.type ?? "In");
+  animation.setString(AnimationAttributesFields.EFFECT, spec.effect);
+  animation.setDouble(AnimationAttributesFields.DURATION, duration);
+  animation.setDouble(AnimationAttributesFields.DELAY, delay);
+  animation.setVarint(
+    AnimationAttributesFields.RANDOM_NUMBER_SEED,
+    globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!,
+  );
+  animation.setBool(AnimationAttributesFields.WRITING_DIRECTION_IS_RTL, false);
+
+  const attributes = RawMessage.create();
+  attributes.setVarint(BuildAttributesFields.EVENT_TRIGGER, 1);
+  attributes.setDouble(BuildAttributesFields.CHART_ROTATION_3D, 60);
+  attributes.setMessage(BuildAttributesFields.ANIMATION_ATTRIBUTES, animation);
+  attributes.setVarint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY, TextDelivery.BY_OBJECT);
+  attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
+
+  const build = store.createObject(BUILD_TYPE.BUILD, component);
+  const message = RawMessage.create();
+  message.setMessage(BuildFields.DRAWABLE, makeRef(spec.drawableId));
+  message.setString(BuildFields.DELIVERY, "All at Once");
+  message.setDouble(BuildFields.DURATION_DEPRECATED, 0);
+  message.setMessage(BuildFields.ATTRIBUTES, attributes);
+  message.setVarint(BuildFields.CHUNK_ID_SEED, 1);
+  build.setMessageBytes(message.toBytes());
+
+  const buildUid = randomUid();
+  const uuid = (): RawMessage => {
+    const m = RawMessage.create();
+    m.setVarint(1, buildUid.lower);
+    m.setVarint(2, buildUid.upper);
+    return m;
+  };
+  const identifier = RawMessage.create();
+  identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid());
+  identifier.setVarint(BuildChunkIdentifierFields.BUILD_CHUNK_ID, 1);
+  const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component);
+  const chunkMessage = RawMessage.create();
+  chunkMessage.setMessage(BuildChunkFields.BUILD, makeRef(build.identifier));
+  chunkMessage.setDouble(BuildChunkFields.DELAY, delay);
+  chunkMessage.setDouble(BuildChunkFields.DURATION, duration);
+  chunkMessage.setBool(BuildChunkFields.AUTOMATIC, false);
+  chunkMessage.setBool(BuildChunkFields.REFERENT, true);
+  chunkMessage.setMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER, identifier);
+  chunkMessage.setMessage(BuildChunkFields.BUILD_ID, uuid());
+  chunk.setMessageBytes(chunkMessage.toBytes());
+
+  slide.message.setMessages(Slide.BUILDS, [
+    ...slide.message.getMessages(Slide.BUILDS),
+    makeRef(build.identifier),
+  ]);
+  slide.message.setMessages(Slide.BUILD_CHUNKS, [
+    ...slide.message.getMessages(Slide.BUILD_CHUNKS),
+    makeRef(chunk.identifier),
+  ]);
+  slide.setObjectReferences([...slide.getObjectReferences(), build.identifier, chunk.identifier]);
+  return new BuildModel(store, build);
 }
 
 /** Take a build off a slide. The archive stays; the slide stops listing it. */

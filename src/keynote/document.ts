@@ -39,7 +39,13 @@ import {
   Transition,
   TransitionAttributes,
 } from "./schema.ts";
-import { buildsOfSlide, removeBuild, BuildModel } from "./builds.ts";
+import {
+  BuildModel,
+  buildsOfSlide,
+  createBuild,
+  type NewBuild,
+  removeBuild,
+} from "./builds.ts";
 
 /** Shared-family extractors plus the KN types this document mutates. */
 const KEYNOTE_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
@@ -352,6 +358,16 @@ export class KeynoteSlide {
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
+  }
+
+  /**
+   * Animate a drawable on this slide: an all-at-once build in the shape
+   * the app writes, played on click. Keynote has not yet been seen to play
+   * a build this library wrote from nothing; see docs/VERIFICATION.md.
+   * @agentTool add_build
+   */
+  addBuild(spec: NewBuild): BuildModel {
+    return createBuild(this.store, this.object, spec);
   }
 
   /**

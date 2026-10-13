@@ -779,6 +779,56 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_build",
+    description: apiDoc(
+      "add_build",
+      "Animates one drawable on a Keynote slide with an all-at-once build played on click. " +
+        "slide and drawable are 0-based (drawables in the slide's z-order; use " +
+        "describe_document); effect is the identifier the app stores, e.g. \"apple:dissolve\". " +
+        "Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .key document" },
+        slide: { type: "number", description: "0-based slide index" },
+        drawable: { type: "number", description: "0-based index among the slide's drawables" },
+        effect: { type: "string", description: "Effect identifier as the app stores it" },
+        duration: { type: "number", description: "Seconds, default 1" },
+        delay: { type: "number", description: "Seconds before the build starts, default 0" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "slide", "drawable", "effect"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof KeynoteDocument)) {
+        throw new RangeError("add_build writes Keynote documents; this is not one");
+      }
+      const index = num(args.slide);
+      const slides = doc.slides();
+      if (index === undefined || index < 0 || index >= slides.length) {
+        throw new RangeError(`slide must be 0..${slides.length - 1}`);
+      }
+      const slide = slides[index]!;
+      const drawables = slide.drawables();
+      const which = num(args.drawable);
+      const effect = str(args.effect);
+      if (which === undefined || which < 0 || which >= drawables.length || effect === undefined) {
+        throw new RangeError(`drawable must be 0..${drawables.length - 1} and effect is required`);
+      }
+      const build = slide.addBuild({
+        drawableId: drawables[which]!.id,
+        effect,
+        duration: num(args.duration),
+        delay: num(args.delay),
+      });
+      const target = save(doc, path, str(args.output));
+      return `added build ${build.id} (${effect}) to slide ${index} and saved ${target}`;
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",

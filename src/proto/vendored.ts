@@ -133,6 +133,10 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "build_chunk_identifier": 7,
     "build_id": 8,
   },
+  "KN.BuildChunkIdentifierArchive": {
+    "build_id": 1,
+    "build_chunk_id": 2,
+  },
   "KN.DocumentArchive": {
     "show": 2,
     "super": 3,

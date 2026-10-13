@@ -1746,6 +1746,28 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Keynote",
+    name: "Builds: creating an animation",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
+      "app-authored builds carry them, in the slide's component; delivery by paragraph, actions and " +
+      "build order are not authored",
+    manualProof: {
+      claim: "Keynote plays a build this library wrote from nothing.",
+      why:
+        "The suite proves the archive matches the deck's builds field for field; a build the app " +
+        "silently drops looks exactly like one never written, so only playing the deck can say.",
+      how:
+        "npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass " +
+        "shows the square dissolving in on the first click; a failure shows it already present, " +
+        "or the deck refused, which means the build needs state only the app writes.",
+      risk: "medium",
+    },
+  },
+  {
     group: "Numbers & tables",
     name: "Categories: defining a category by a column",
     apps: ["numbers"],

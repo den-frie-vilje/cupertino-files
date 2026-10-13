@@ -5,6 +5,7 @@
 /** Tool name → the tagged API methods and the doc summaries agents read. */
 export const TOOL_DOCS: ReadonlyMap<string, readonly { api: string; summary: string }[]> =
   new Map([
+    ["add_build", [{"api":"KeynoteSlide.addBuild","summary":"Animate a drawable on this slide: an all-at-once build in the shape the app writes, played on click. Keynote has not yet been seen to play a build this library wrote from nothing; see docs/VERIFICATION.md."}]],
     ["add_category", [{"api":"TableModel.addCategory","summary":"Group the table's rows by the values in one column. Defines a by-value category — one group per distinct value, listed in text order, each holding its rows — in the shape every categorised table in the corpus has, and switches it on. The table must not be categorised already (`regroupCategories` maintains an existing definition), and every data row needs a value in the column. The app has not yet been seen to draw a category this library defined; see docs/VERIFICATION.md."}]],
     ["append_paragraph", [{"api":"PagesDocument.appendParagraph","summary":"Append a paragraph to the body. `style` may be a style name (\"Heading 1\") or a style object id. Returns the new paragraph index. `list` names a list style (\"Bullet\", \"Numbered\") to make the paragraph a list item; without it the paragraph is not one, whatever the paragraph before it was."}]],
     ["audit_document", [{"api":"IWorkDocument.audit","summary":"Every fault this library knows how to recognise offline, across the whole document — the checks a person otherwise performs by opening the file in an app. Each finding names a state some review round has already watched an app refuse, repair destructively, or render against the author's intent. `save()` refuses the `error` classes it can see; `audit()` reports them without saving, warnings included, so a builder can ask \"what would a person object to?\" before shipping a document."}]],
@@ -62,6 +63,19 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "KeynoteDocument.slideCount", tool: null },
   { api: "KeynoteDocument.slideSize", tool: null },
   { api: "KeynoteDocument.slides", tool: null },
+  { api: "KeynoteSlide.addBuild", tool: "add_build" },
+  { api: "KeynoteSlide.builds", tool: null },
+  { api: "KeynoteSlide.container", tool: null },
+  { api: "KeynoteSlide.drawables", tool: null },
+  { api: "KeynoteSlide.notesStorage", tool: null },
+  { api: "KeynoteSlide.placeholder", tool: null },
+  { api: "KeynoteSlide.placeholderKind", tool: null },
+  { api: "KeynoteSlide.placeholders", tool: null },
+  { api: "KeynoteSlide.removeBuild", tool: null },
+  { api: "KeynoteSlide.setPlaceholderText", tool: null },
+  { api: "KeynoteSlide.setTransition", tool: null },
+  { api: "KeynoteSlide.textStorages", tool: null },
+  { api: "KeynoteSlide.transition", tool: null },
   { api: "NumbersDocument.addSheet", tool: "manage_sheets" },
   { api: "NumbersDocument.addTable", tool: "manage_sheets" },
   { api: "NumbersDocument.blank", tool: "create_document" },

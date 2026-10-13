@@ -34,7 +34,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { NumbersDocument, PagesDocument } from "../src/index.ts";
+import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
 import { Storage } from "../src/tswp/schema.ts";
 import { blockPng } from "./png.ts";
 
@@ -151,7 +151,31 @@ function seedCategory(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- build
+
+function seedBuild(): Uint8Array {
+  // The corpus deck's builds were authored by Keynote. This one is
+  // written from nothing in the same shape; only the app can say it plays.
+  const doc = KeynoteDocument.blank();
+  const slide = doc.slides()[0]!;
+  slide.title =
+    "Expected: the square appears with a dissolve on the first click. Already there with no animation, or a refusal to open, is the finding; comment on the slide.";
+  const { imageId } = doc.addImage(0, blockPng(200, 200, [0x1f, 0x4e, 0x79]), { fileName: "square.png", x: 400, y: 400 });
+  slide.addBuild({ drawableId: imageId, effect: "apple:dissolve", duration: 1 });
+  return doc.save();
+}
+
 const seeds: Seed[] = [
+  {
+    name: "seed-build.key",
+    bytes: seedBuild(),
+    check: (bytes) => {
+      const slide = KeynoteDocument.load(bytes).slides()[0]!;
+      const builds = slide.builds();
+      if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve") throw new Error("build seed: expected one dissolve build");
+      if (!slide.title?.includes("Expected")) throw new Error("build seed: expectations missing");
+    },
+  },
   {
     name: "seed-category.numbers",
     bytes: seedCategory(),

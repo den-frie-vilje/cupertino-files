@@ -140,6 +140,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
+| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component; delivery by paragraph, actions and build order are not authored</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 9 | iwork16→current |
 | Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
@@ -162,7 +163,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-58 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+59 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -213,6 +214,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Numbers & tables → **Conditional formatting: authoring new rules**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
+- 🟠 medium — Keynote → **Builds: creating an animation**
 - 🟠 medium — Numbers & tables → **Categories: defining a category by a column**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**

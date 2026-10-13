@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
+import { Slide } from "../src/keynote/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import { Drawable, ExteriorTextWrap, Image } from "../src/tsd/schema.ts";
@@ -748,5 +749,42 @@ describe("presentation settings", () => {
     const drawables = reloaded.slides()[0]!.container().drawables();
     const original = document.slides()[0]!.container().drawables();
     expect(drawables.length).toBe(original.length);
+  });
+});
+
+describe("creating a build", () => {
+  it("animates a picture in the shape the app's own builds have", () => {
+    const PNG = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0, 0, 0, 0x64, 0, 0, 0, 0x32, 8, 6, 0, 0, 0,
+    ]);
+    const doc = KeynoteDocument.blank();
+    const { imageId } = doc.addImage(0, PNG, { fileName: "figure.png" });
+    const created = doc.slides()[0]!.addBuild({ drawableId: imageId, effect: "apple:dissolve", duration: 1.5 });
+    expect(created.read().effect).toBe("apple:dissolve");
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides()[0]!;
+    const builds = slide.builds();
+    expect(builds.length).toBe(1);
+    const info = builds[0]!.read();
+    expect(info.effect).toBe("apple:dissolve");
+    expect(info.duration).toBe(1.5);
+    expect(info.delay).toBe(0);
+    expect(info.delivery).toBe("All at Once");
+    expect(info.chunks.map((c) => [c.delay, c.duration, c.automatic])).toEqual([[0, 1.5, false]]);
+
+    // Field for field, the corpus deck's all-at-once build and its chunk.
+    const m = builds[0]!.object.message;
+    expect([1, 2, 3, 4, 5].filter((f) => m.has(f))).toEqual([1, 2, 3, 4, 5]);
+    const attributes = m.getMessage(4)!;
+    expect([...Array(40).keys()].filter((f) => f > 0 && attributes.has(f))).toEqual([4, 17, 18, 20, 21]);
+    const animation = attributes.getMessage(18)!;
+    expect([...Array(30).keys()].filter((f) => f > 0 && animation.has(f))).toEqual([1, 2, 3, 5, 11, 16]);
+    const chunkId = slide.object.message.getMessages(Slide.BUILD_CHUNKS)[0]!.getVarint(1);
+    const chunk = reloaded.store.resolve(chunkId)!.message;
+    expect([1, 2, 3, 4, 5, 6, 7, 8].filter((f) => chunk.has(f))).toEqual([1, 3, 4, 5, 6, 7, 8]);
+    expect(chunk.getMessage(1)!.getVarint(1)).toBe(builds[0]!.id);
+    expect(slide.object.getObjectReferences().includes(builds[0]!.id)).toBe(true);
   });
 });
