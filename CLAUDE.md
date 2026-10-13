@@ -214,3 +214,40 @@ file, never who provided it or the session that produced it — "donated",
 "returned", "measured on the phone" all belong in the commit message or
 `fixtures/ATTRIBUTION.md`, never in code. Code that narrates its own
 past fills context fast and goes stale faster.
+
+## Reading the apps' binaries with REA and Ghidra
+
+The installed Pages, Numbers and Keynote bundles answer what no document
+can: the names behind plain integer codes, the defaults a writer emits,
+and the schema itself. REA is registered as an MCP server in the DFV
+profile, and Ghidra 12.1.4 under `~/Applications` is its decompiler.
+The traps, each paid for once:
+
+- **REA setup registers whatever launcher ran it.** Under `pnpm dlx` it
+  writes the absolute path of pnpm's cache copy, which pnpm prunes within
+  a day. The registered command must read `pnpm dlx rea-agents@<version>
+  mcp`; REA's own `doctor` then calls the entry stale, which is cosmetic,
+  but a `rea setup` re-run writes the cache path again.
+- **Ghidra 12.1.4 ships no macOS natives.** `gradle buildNatives` from
+  `support/gradle/` builds the decompiler and sleigh for the host in half a
+  minute, run through pkgx with Gradle, bison 3 and a JDK 21. The
+  Makefile route hard-codes x86_64 and is the wrong one on this Mac.
+- **The bridge refuses universal binaries.** Thin the slice first
+  (`lipo -thin arm64`) into the scratch area, and pass `--snapshot` so
+  REA keeps its evidence. Each REA call still re-imports the target into
+  Ghidra, about eleven minutes for TSTables, so chain as little as
+  possible and prefer the cheap reads: `inspect-native-dispatch-metadata`
+  gives Objective-C method addresses without a decompiler (capped at
+  20000 records), `search --kind strings` and `xrefs` reach data.
+- **Objective-C methods are addressed as `Class::selector:`**, colons
+  kept, class and instance methods alike. A string's first reference is
+  usually its CFString constant in `__DATA_CONST`; the code is one hop
+  further.
+- **The engine is in the frameworks, not the app binary.** TSPersistence
+  holds the IWA layer, TSTables the table engine and formula specs,
+  TSUtility the format types, TSDrawables and TSStyles the rest. Each is
+  a far smaller target than the app.
+- **What leaves the session is the fact, never the code.** Pseudocode,
+  evidence bundles, snapshots and thinned binaries stay under `/tmp`;
+  the repository gets a measured constant, its test and a ledger row
+  (docs/LEGAL.md, item 3).
