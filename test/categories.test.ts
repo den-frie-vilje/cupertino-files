@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
 import { refId } from "../src/tsp/schema.ts";
-import { GroupByFields, GroupNodeFields } from "../src/tst/categories.ts";
+import { GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart } from "../src/tst/categories.ts";
 import {
   ColumnRowUidMap,
   expandIndexSet,
@@ -390,5 +390,60 @@ describe("nesting a category", () => {
     expect([1, 2, 3, 4].filter((f) => leaf.getMessage(GroupNodeFields.FORMAT_MANAGER)!.has(f))).toEqual([1]);
     const inlineTop = gb.getMessage(GroupByFields.GROUP_NODE_ROOT)!.getMessages(GroupNodeFields.CHILD);
     expect(inlineTop.map((n) => n.getMessages(GroupNodeFields.CHILD).length)).toEqual([2, 2]);
+  });
+});
+
+describe("bucketing a date column", () => {
+  it("writes the app's own functor for the kind and buckets the dates as it would", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    const dates = ["2024-03-05", "2024-01-20", "2024-03-28", "2023-12-31"];
+    dates.forEach((iso, i) => {
+      table.setCell(i + 1, 0, `row ${i + 1}`);
+      table.setCell(i + 1, 1, { type: "date", value: new Date(`${iso}T00:00:00Z`) });
+    });
+    table.deleteRows(dates.length + 1, table.rowCount - dates.length - 1);
+    table.addCategory([{ column: 1, bucket: "yearAndMonth" }]);
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const category = reloaded.activeCategories()!;
+    expect(category.groupColumns().map((c) => c.groupingName)).toEqual(["year and month"]);
+    const groups = category.groups();
+    expect(groups.map((g) => (g.value as Date).toISOString().slice(0, 10))).toEqual(["2023-12-01", "2024-01-01", "2024-03-01"]);
+    expect(groups.map((g) => g.rows)).toEqual([[4], [2], [1, 3]]);
+    expect(reloaded.staleCategoryGroups()).toEqual([]);
+
+    // The functor is the fixture's, byte for byte, and the group value
+    // carries the kind's pattern.
+    const fixture = IWorkDocument.open(new Uint8Array(readFileSync(new URL("numbers-parser-v26.0-categories.numbers", FIXTURES))));
+    const monthTable = tablesOf(fixture.store).find((t) => t.name === "Date Year-Month")!;
+    const theirs = monthTable.categories()[0]!.object.message.getMessages(GroupByFields.GROUP_COLUMN)[0]!.getMessage(3)!.toBytes();
+    const ours = category.object.message.getMessages(GroupByFields.GROUP_COLUMN)[0]!.getMessage(3)!.toBytes();
+    expect(Buffer.compare(Buffer.from(ours), Buffer.from(theirs))).toBe(0);
+    const root = reloaded.store.resolve(refId(category.object.message, GroupByFields.GROUP_NODE_ROOT_REF))!.message;
+    const leaf = reloaded.store.resolve(root.getMessages(GroupNodeFields.CHILD_REF)[0]!.getVarint(1))!.message;
+    expect(leaf.getMessage(GroupNodeFields.GROUP_CELL_VALUE)!.getMessage(3)!.getMessage(2)!.getString(14)).toBe("LLLL yyyy");
+  });
+
+  it("computes every kind's bucket the way the fixture's groups show", () => {
+    const fixture = IWorkDocument.open(new Uint8Array(readFileSync(new URL("numbers-parser-v26.0-categories.numbers", FIXTURES))));
+    let checked = 0;
+    for (const table of tablesOf(fixture.store)) {
+      const category = table.activeCategories();
+      const first = category?.groupColumns()[0];
+      if (!category || !first || first.groupingType === GroupingType.BY_VALUE) continue;
+      expect(BUCKET_FUNCTORS.get(first.groupingType)).toBe(
+        Buffer.from(category.object.message.getMessages(GroupByFields.GROUP_COLUMN)[0]!.getMessage(3)!.toBytes()).toString("hex"),
+      );
+      for (const group of category.groups()) {
+        for (const row of group.rows) {
+          const cell = table.cellValue(row, first.column!);
+          const date = cell && typeof cell === "object" && "value" in cell && cell.value instanceof Date ? cell.value : undefined;
+          expect(date && bucketStart(first.groupingType, date).getTime()).toBe((group.value as Date).getTime());
+          checked++;
+        }
+      }
+    }
+    expect(checked > 100).toBe(true);
   });
 });

@@ -26,6 +26,7 @@ import { hexColor, solidStroke } from "../tsd/style.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
+import type { DateBucket } from "../tst/categories.ts";
 
 const PROTOCOL_FALLBACK = "2025-06-18";
 const SERVER_INFO = { name: "cupertino-files", version: packageVersion() };
@@ -1061,9 +1062,10 @@ export const TOOLS: readonly Tool[] = [
     description: apiDoc(
       "add_category",
       "Groups the table's rows by the values in one 0-based column: one group per distinct " +
-        "value in text order, switched on. The table must not be categorised already, and " +
-        "every data row needs a value in the column. Saves over the input unless output " +
-        "names another path.",
+        "value in text order, switched on; with bucket (year, yearAndMonth, yearAndQuarter, " +
+        "yearAndWeek, day, weekday) a date column is grouped by that period instead. The table " +
+        "must not be categorised already, and every data row needs a value in the column. Saves " +
+        "over the input unless output names another path.",
     ),
     inputSchema: {
       type: "object",
@@ -1071,6 +1073,10 @@ export const TOOLS: readonly Tool[] = [
         path: PATH_PROP,
         table: TABLE_PROP,
         column: { type: "number", description: "0-based column to group by" },
+        bucket: {
+          type: "string",
+          description: "For a date column: year, yearAndMonth, yearAndQuarter, yearAndWeek, day or weekday",
+        },
         output: OUTPUT_PROP,
       },
       required: ["path", "column"],
@@ -1081,7 +1087,14 @@ export const TOOLS: readonly Tool[] = [
       const table = tableIn(doc, str(args.table));
       const column = num(args.column);
       if (column === undefined) throw new RangeError("column is required");
-      const category = table.addCategory(column);
+      const bucket = str(args.bucket);
+      const buckets = ["year", "yearAndMonth", "yearAndQuarter", "yearAndWeek", "day", "weekday"];
+      if (bucket !== undefined && !buckets.includes(bucket)) {
+        throw new RangeError(`bucket must be one of ${buckets.join(", ")}`);
+      }
+      const category = table.addCategory(
+        bucket === undefined ? column : [{ column, bucket: bucket as DateBucket }],
+      );
       const target = save(doc, path, str(args.output));
       return `grouped by column ${column} into ${category.groups().length} groups and saved ${target}`;
     },

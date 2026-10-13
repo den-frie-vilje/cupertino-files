@@ -48,6 +48,7 @@ import { FilterSet, type FilterRule } from "./filters.ts";
 import {
   categoriesOf,
   defineByValueCategory,
+  type CategoryLevel,
   type CategoryGroup,
   type GroupValue,
   type TableCategories,
@@ -4229,7 +4230,9 @@ export class TableModel {
 
   /**
    * Group the table's rows by the values in one column, or nest groups by
-   * several columns in the order given.
+   * several columns in the order given; a level given as
+   * `{ column, bucket }` groups a date column by year, month, quarter,
+   * week, day or weekday, with the app's own bucketing formula.
    *
    * Defines a by-value category — one group per distinct value at each
    * level, listed in text order, each holding its rows — in the shape
@@ -4242,10 +4245,12 @@ export class TableModel {
    * defined; see docs/VERIFICATION.md.
    * @agentTool add_category
    */
-  addCategory(column: number | readonly number[]): TableCategories {
+  addCategory(column: number | readonly (number | CategoryLevel)[]): TableCategories {
     this.requireWritable();
-    const columns = typeof column === "number" ? [column] : [...column];
-    for (const c of columns) {
+    const levels: CategoryLevel[] = (typeof column === "number" ? [column] : column).map((level) =>
+      typeof level === "number" ? { column: level } : level,
+    );
+    for (const { column: c } of levels) {
       if (c < 0 || c >= this.columnCount) {
         throw new RangeError(`column ${c} is outside the table's ${this.columnCount} columns`);
       }
@@ -4260,7 +4265,7 @@ export class TableModel {
       this.store,
       definition.object,
       this.uidMap(),
-      columns,
+      levels,
       dataRows,
       (row, col) => groupValueOf(byPosition.get(`${row}:${col}`)),
       (row, col) => this.rawCellFormat(row, col),

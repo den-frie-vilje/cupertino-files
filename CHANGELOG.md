@@ -116,8 +116,10 @@ in commit messages and pull requests.
   and `addCategory([first, second, …])` nests the groups by several:
   one group per distinct value at each level in text order, each holding
   its rows, written in the shape every categorised document carries and
-  switched on. Date bucketing and summaries are not authored. Numbers has
-  not yet been seen to draw a category defined this way.
+  switched on. A level given as `{ column, bucket }` groups a date column
+  by year, month, quarter, week, day or weekday with the app's own
+  bucketing formula. Summaries are not authored. Numbers has not yet been
+  seen to draw a category defined this way.
 
 - A duration written with `setCell` is stamped with the app's own fresh
   duration format: short style, hours down to seconds, automatic units
