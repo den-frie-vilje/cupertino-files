@@ -104,6 +104,7 @@ describe("the MCP server over stdio", () => {
       const listed = await client.request("tools/list");
       const names = (listed.tools as { name: string }[]).map((t) => t.name).sort();
       expect(names).toEqual([
+        "add_category",
         "append_paragraph",
         "audit_document",
         "create_document",
