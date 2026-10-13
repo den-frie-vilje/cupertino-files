@@ -1194,10 +1194,12 @@ Three traps:
   entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
   7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
-  from the live-app harvest; with the 271 harvested names (which include
-  SUM and DURATION) the union is 272 authorable in total. Guessing beyond that would convert a visible gap into silent
-  wrong answers, so unknown ids render as `FUNCTION_<id>` and callers can
-  supply their own table.
+  from the live-app harvest. The complete table — 345 names, every function
+the 15.1 build registers — is read from the registration code in the
+app's TSTables framework (`scripts/harvest-functions.ts --binary`), and
+the document harvest confirms every one it reaches. Guessing beyond that would
+convert a visible gap into silent wrong answers, so unknown ids render as
+`FUNCTION_<id>` and callers can supply their own table.
 
 Cross-table references **do** resolve to table names — the `table_id` in
 `AST_cross_table_reference_extra_info` is the target's kind-1 calc-engine
@@ -1287,7 +1289,7 @@ what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons — 5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=` — with filters and conditional formatting
 sharing the encoding. Function-shaped conditions are identified too:
-3 is "text contains" (compiled as `NOT(ISERROR(f_296(needle, cell)))`),
+3 is "text contains" (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`),
 34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
 `undefined` rather than a guess.
 

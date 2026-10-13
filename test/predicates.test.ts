@@ -271,7 +271,7 @@ describe("conditional formatting beyond plain comparisons", () => {
     rules.sort((a, b) => (a.text < b.text ? -1 : 1));
     expect(rules).toEqual([
       { type: 34, text: "ISBLANK(THIS_CELL)" },
-      { type: 3, text: 'NOT(ISERROR(FUNCTION_296("pear",THIS_CELL)))' },
+      { type: 3, text: 'NOT(ISERROR(FIND.CASEINSENSITIVE("pear",THIS_CELL)))' },
       { type: 7, text: "THIS_CELL>5" },
       { type: 8, text: "THIS_CELL>=7" },
     ]);
@@ -329,7 +329,7 @@ describe("filters", () => {
     expect(rules[0]!.predicate!.text).toBe("OTHER_TABLE::R[0]C[0]>10");
     expect(rules[1]!.predicate!.predicateType).toBe(3);
     expect(rules[1]!.predicate!.text).toBe(
-      'NOT(ISERROR(FUNCTION_296("ko",OTHER_TABLE::R[0]C[1])))',
+      'NOT(ISERROR(FIND.CASEINSENSITIVE("ko",OTHER_TABLE::R[0]C[1])))',
     );
     expect(set.describe().length).toBe(2);
   });

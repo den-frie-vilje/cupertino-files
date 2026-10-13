@@ -156,13 +156,13 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  * them from being mistaken for gaps in the comparison enum.
  *
  * Type **3** is "text contains" in both rule systems: it compiles to
- * `NOT(ISERROR(f(needle, cell)))`, where `f` is function index **296** —
- * SEARCH-shaped in its arguments, but not SEARCH, which is 131. That index
- * is in no harvested name table, so the formula renders it `FUNCTION_296`
- * and this map records no entry for 3: an entry's value is the identifying
- * callee's *name*, and 296 does not have one yet.
+ * `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))` — function index
+ * 296, SEARCH-shaped in its arguments but not SEARCH, which is 131. The
+ * name comes from the app's own function registry; no document ever
+ * showed it.
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
+  [3, "FIND.CASEINSENSITIVE"],
   [34, "ISBLANK"],
   [54, "SUM"],
 ]);

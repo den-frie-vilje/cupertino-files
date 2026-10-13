@@ -433,7 +433,8 @@ cell of a filled-down column.
 
 Two honest gaps, both visible in the output rather than papered over:
 
-- **Function names are not in the format.** 272 measured ids are named;
+- **Function names are not in the format.** 345 ids are named, read from
+  the app's own function registry and confirmed by document harvests;
   an unknown one renders as `FUNCTION_<id>` and is refused for writing.
   Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`, or measure
   on a Mac with `npm run harvest -- --drive`. `functionTableProvenance()`

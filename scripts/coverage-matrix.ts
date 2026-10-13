@@ -1443,7 +1443,7 @@ export const CAPABILITIES: Capability[] = [
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
       "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
-      "target's owner UUID), nested calls, omitted arguments, and any of the 272 measured " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 345 named " +
       "functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula " +
       "rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with " +
       "its own text saves the whole document byte-identical to the original. Nothing " +

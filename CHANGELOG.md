@@ -94,6 +94,16 @@ in commit messages and pull requests.
 
 ### Added
 
+- Every spreadsheet function Numbers 15.1 registers is authorable by
+  name: the function index table grows from 272 to 345 entries, read
+  from the application's own function registry (`npm run harvest --
+  --binary <Numbers.app>`) and confirmed by the document harvest. The
+  additions include IF, TRUE, FALSE, NOW, TODAY, XLOOKUP, XMATCH,
+  SWITCH, LET, LAMBDA, FILTER, SORT, UNIQUE, SEQUENCE and the text
+  functions; the "text contains" condition now renders its callee as
+  FIND.CASEINSENSITIVE instead of FUNCTION_296.
+
+
 - `KeynoteDocument.addImage` puts a picture on a slide — the gap that
   made "swap an image" impossible in Keynote. The image arrives in the
   shape the app writes for its own: parented on the slide, aspect

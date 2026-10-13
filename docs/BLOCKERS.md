@@ -55,15 +55,17 @@ that rebuild the structures from them.
 
 ## Blocked on evaluation or the app — not on format knowledge
 
-- **Formula authoring: the function table's edge.** Authoring is shipped
-  and proven — every parseable corpus formula rebuilds byte-identical to
-  Apple's AST, and the e2e recompute probe settled the dependency-ledger
-  question (Numbers rebuilds it on open; see VERIFICATION). What remains
-  is coverage: any function outside the 272 with measured ids has no
-  index. Widening the table is the same harvest against more documents:
-  `npm run harvest -- --ingest doc.numbers`, `--emit-sheet probe.tsv`,
-  or `--drive` (macOS, drives Numbers directly). It refuses to guess — a
-  name is accepted only when every observation agrees.
+- **Formula authoring: the function table is complete for 15.1.** Authoring
+  is shipped and proven — every parseable corpus formula rebuilds
+  byte-identical to Apple's AST, and the e2e recompute probe settled the
+  dependency-ledger question (Numbers rebuilds it on open; see
+  VERIFICATION). The index table now comes from the app itself:
+  `npm run harvest -- --binary /Applications/Numbers.app` reads the
+  registration code in TSTables and names all 345 functions the build
+  registers; the document harvest (`--ingest`, `--emit-sheet`,
+  `--drive`) confirms it and supplies T, which the registry registers
+  by another route. A new release means a new `--binary` run; the merge
+  refuses any disagreement between the two sources.
 - **Keynote builds: creation.** Reading is measured whole — effect,
   timing and delivery decode from `animationAttributes` against the
   fixture deck — and retiming writes the same fields. Creation stays
@@ -254,6 +256,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 | 2026-10-13 | format types named from the app | Pages 15.1.1, TSUtility framework (decompiled with Ghidra through REA; no document round) | **`TSK.FormatStructArchive.format_type` is the apps' `TSUFormatType`, and its naming function names every value**: 1 Boolean, 254 Conflicting, 255 Automatic, 256 Decimal (the inspector's Number), 257 Currency, 258 Percent, 259 Scientific, 260 Text, 261 DateTime, 262 Fraction, 263 Checkbox, 264 Stepper and 265 Slider (both deprecated), 266 MultipleChoiceList (deprecated; the inspector's Pop-Up Menu), 267 Rating, 268 Duration, 269 Base (the inspector's Numeral System), 270 CustomNumber, 271 CustomText, 272 CustomDateTime, 274 CustomCurrency; 273 is grouped with 255 and 256 under Decimal and has no display name, so the corpus's CustomDuration reading stands on its own. Every corpus-measured value agrees with the app's name; the enum gains the eight values the corpus never showed | `src/tst/formats.ts` |
 | 2026-10-13 | interaction types bounded and named from the app | Pages 15.1.1, TSTables and TSUtility frameworks (decompiled with Ghidra through REA; no document round) | **`TST.CellSpecArchive.interaction_type` has exactly five control values, 4 through 8, and the app names them Stepper, Slider, Star Rating, Pop-Up Menu and Checkbox**: TSTables' cell-spec class converts an interaction type to a control format code by adding 100 and refuses anything outside 4–8 as unconvertible, and TSUtility's display naming labels 104–108 in that order. The five values measured in the app in August stand, and there is no sixth | `src/tst/controls.ts` |
 | 2026-10-13 | three binary leads, partial | Pages 15.1.1 frameworks (Ghidra through REA; no document round) | **located, not decoded**: (1) the formula function table — the function-name constants are 32-byte CFString records in TSTables' `__DATA_CONST`, grouped by source file rather than by index, so the index↔name pairing lives in the registry code that builds `TSCEFunctionSpec` objects with an explicit `functionIndex:`; two reference lookups from the name constants toward that code ended in Ghidra provider-cleanup failures and the registry was not reached. (2) the duration default format — `TSKFormat`'s default-format factory selects a static per-type record from a table in TSKit for each `TSUFormatType`; the duration record was not decoded against the format-struct layout. (3) `exterior_text_wrap.type` names — TSDrawables serialises the type as a bare number in its sync JSON and the enum trait's only string is a log line, so no name table was found | — |
+| 2026-10-14 | the function index table, read from the app | Numbers 15.1, TSTables framework (static read of the registration code; no Ghidra, no document round) | **all 345 functions the build registers are named, and the 270 the document harvest had measured agree entry for entry**: the registry is one function in TSTables that loads each name's constant and calls a registration helper, with the index either in the sixth argument register or stored as a halfword to the stack just before the name load; `scripts/function-registry.ts` reads both shapes and `harvest-functions.ts --binary` merges the reading with the recorded harvest, refusing any disagreement. 296 is FIND.CASEINSENSITIVE, so the text-contains predicate renders its callee by name; T (149) is the one harvested function the registry registers by another route and stays on the harvest's authority. The two earlier Ghidra reference lookups toward this code were unnecessary: the pairing is readable from the file | `src/tst/function-names.ts`, `scripts/function-registry.ts`, `src/tst/predicates.ts` |
 
 ### Findings from file analysis alone
 
