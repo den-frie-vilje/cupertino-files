@@ -1474,7 +1474,7 @@ also silently missed five fields, the members of the two `oneof` blocks in
 Swapping to the canonical parser regenerated the embedded table
 byte-identically, so nothing the library relies on changed.
 
-**Merging 41 files is safe, and that is measured rather than assumed.**
+**Merging 40 files is safe, and that is measured rather than assumed.**
 Across every vendored file, no field *number* maps to two different names,
 and exactly one field *name* maps to two different numbers: `extension`, the
 name protobuf convention gives every extension field. `TSA`, `TSCH`, `TSD`,

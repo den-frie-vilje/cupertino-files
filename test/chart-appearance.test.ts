@@ -52,7 +52,7 @@ describe("chart type enum", () => {
     // rather than restating it means the next extension is caught by this
     // test rather than by a document.
     const proto = readFileSync(
-      new URL("../proto/current/TSCHArchives_Common.proto", import.meta.url),
+      new URL("../proto/current/TSCHArchives.Common.proto", import.meta.url),
       "utf8",
     );
     const block = /enum ChartType \{([^}]*)\}/.exec(proto);

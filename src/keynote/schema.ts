@@ -1,6 +1,6 @@
 /**
  * Keynote-specific (KN family) type IDs and field numbers, layered on the
- * shared families. Field numbers from proto/keynote-14.4/KNArchives.proto;
+ * shared families. Field numbers from proto/keynote-15.1/KNArchives.proto;
  * see research/keynote-slides.md for the verified object graph.
  *
  * Transitions are the canonical example of app-specific behavior that does

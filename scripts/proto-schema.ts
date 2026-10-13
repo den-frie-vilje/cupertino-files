@@ -23,11 +23,11 @@
  * ambiguity never arises. The key used here is the carried message type,
  * which is what a caller actually means by "the paragraph-style preset list".
  *
- * **Duplicate namespaces.** `TNArchives.sos.proto` and `TNArchives_sos.proto`
- * are different files declaring the same `TNSOS` message names. Parsing them
- * into one root is an error — correctly — so each file gets its own root and
- * the merge below is where disagreement is detected, deliberately, rather
- * than resolved by whichever file was read last.
+ * **Files protobuf refuses to merge.** A file whose declarations collide
+ * with one already parsed gets a root of its own, and the merge below is
+ * where disagreement is detected, deliberately, rather than resolved by
+ * whichever file was read last. The current dumps merge cleanly; the
+ * fallback stays because a future dump may not.
  */
 import { readFileSync, readdirSync } from "node:fs";
 import protobuf from "protobufjs";
@@ -114,16 +114,15 @@ function newRoot(): protobuf.Root {
  * A field extending `TSS.ThemeArchive` is declared in `TSWPArchives.proto`
  * and attaches to a type defined in `TSSArchives.proto`; parsed
  * file-by-file it attaches to nothing. So everything goes into one root —
- * except the files protobuf legitimately refuses to merge.
- * `TNArchives.sos.proto` and `TNArchives_sos.proto` are different files
- * declaring the same `TNSOS` names, and each gets a root of its own rather
- * than one of them being silently dropped.
+ * except a file protobuf legitimately refuses to merge, which gets a root
+ * of its own rather than being silently dropped.
  *
  * Deliberately no `resolveAll()`. Extension fields attach to the extended
  * type as each file is added, which is all that is needed here, and full
- * resolution would fail anyway: these dumps carry no `import` statements
- * and reference each other's types by name, so a `.TSDSOS.SpecFillArchive`
- * that lives in a file this root skipped is unresolvable by construction.
+ * resolution would fail anyway: the `import` lines in the dumps are never
+ * fetched, the files reference each other's types by name, and a
+ * `.TSDSOS.SpecFillArchive` that lives in a file this root skipped is
+ * unresolvable by construction.
  * Everything read below — id, name, label, declared type — comes straight
  * from the parse.
  */

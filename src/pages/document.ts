@@ -151,9 +151,9 @@ export class PagesSection {
   templates(): SectionTemplateInfo[] {
     const out: SectionTemplateInfo[] = [];
     const roles = [
-      ["first", Section.FIRST_PAGE_MASTER],
-      ["even", Section.EVEN_PAGE_MASTER],
-      ["odd", Section.ODD_PAGE_MASTER],
+      ["first", Section.FIRST_SECTION_TEMPLATE_PAGE],
+      ["even", Section.EVEN_SECTION_TEMPLATE_PAGE],
+      ["odd", Section.ODD_SECTION_TEMPLATE_PAGE],
     ] as const;
     for (const [role, field] of roles) {
       const id = refId(this.object.message, field);
@@ -205,7 +205,7 @@ export class PagesSection {
     return this.templates().map((t) => {
       const template = this.document.store.object(t.templateId);
       const drawables: DrawableModel[] = [];
-      for (const ref of template?.message.getMessages(SectionTemplate.MASTER_DRAWABLES) ?? []) {
+      for (const ref of template?.message.getMessages(SectionTemplate.SECTION_TEMPLATE_DRAWABLES) ?? []) {
         const obj = this.document.store.resolve(ref.getVarint(1));
         if (obj) drawables.push(new DrawableModel(this.document.store, obj));
       }
@@ -973,9 +973,9 @@ export class PagesDocument extends IWorkDocument {
     });
     const m = section.message;
     for (const field of [
-      Section.FIRST_PAGE_MASTER,
-      Section.EVEN_PAGE_MASTER,
-      Section.ODD_PAGE_MASTER,
+      Section.FIRST_SECTION_TEMPLATE_PAGE,
+      Section.EVEN_SECTION_TEMPLATE_PAGE,
+      Section.ODD_SECTION_TEMPLATE_PAGE,
     ]) {
       const masterId = refId(m, field);
       const master = masterId !== undefined ? this.store.object(masterId) : undefined;

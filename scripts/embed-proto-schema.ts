@@ -2,8 +2,8 @@
  * Carry the vendored `.proto` schemas into the library.
  *
  * `src/proto/fields.ts` explains why field numbers are looked up rather
- * than typed. This is the other half: the protos are 504 KiB across 41
- * files and parsing them costs 57 ms, which is not something a library may
+ * than typed. This is the other half: the protos are 656 KiB across 40
+ * files and parsing them costs 53 ms, which is not something a library may
  * do at import — and reading them from disk at all would put `node:fs` in
  * the core of a package that currently runs in a browser.
  *
@@ -17,7 +17,7 @@
  * regenerates and compares, so a refreshed dump that nobody re-embedded
  * fails the suite, and so does a hand-edit of the generated module.
  *
- * ## Merging 41 files
+ * ## Merging 40 files
  *
  * A message can be declared in several files — `TSS.ThemeArchive` appears
  * in six, because each family `extend`s it. Merging is safe, and measured

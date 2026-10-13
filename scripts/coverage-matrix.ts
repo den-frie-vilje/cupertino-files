@@ -1538,7 +1538,7 @@ export const CAPABILITIES: Capability[] = [
     status: "read+write",
     probe: (c) => safe(() => chartsOf(c.doc.store).some((chart) => chart.seriesStyles().length > 0)),
     note:
-      "chart type reads and writes against the full TSCHArchives_Common enum (a test parses the " +
+      "chart type reads and writes against the full TSCHArchives.Common enum (a test parses the " +
       "proto, so the next value Apple adds fails the suite rather than a document). Series colour " +
       "copies on write: style archives are shared — one is referenced by ten charts in a borrowed " +
       "document — so setSeriesFill clones a shared archive, repoints this chart's slot and " +
