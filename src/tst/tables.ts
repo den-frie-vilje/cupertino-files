@@ -4228,22 +4228,27 @@ export class TableModel {
   }
 
   /**
-   * Group the table's rows by the values in one column.
+   * Group the table's rows by the values in one column, or nest groups by
+   * several columns in the order given.
    *
-   * Defines a by-value category — one group per distinct value, listed in
-   * text order, each holding its rows — in the shape every categorised
-   * table in the corpus has, and switches it on. The table must not be
-   * categorised already (`regroupCategories` maintains an existing
-   * definition), and every data row needs a value in the column.
+   * Defines a by-value category — one group per distinct value at each
+   * level, listed in text order, each holding its rows — in the shape
+   * every categorised table in the corpus has, and switches it on. The
+   * table must not be categorised already (`regroupCategories` maintains
+   * an existing definition), and every data row needs a value in each
+   * column.
    *
    * The app has not yet been seen to draw a category this library
    * defined; see docs/VERIFICATION.md.
    * @agentTool add_category
    */
-  addCategory(column: number): TableCategories {
+  addCategory(column: number | readonly number[]): TableCategories {
     this.requireWritable();
-    if (column < 0 || column >= this.columnCount) {
-      throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    const columns = typeof column === "number" ? [column] : [...column];
+    for (const c of columns) {
+      if (c < 0 || c >= this.columnCount) {
+        throw new RangeError(`column ${c} is outside the table's ${this.columnCount} columns`);
+      }
     }
     const definition = this.categories()[0];
     if (!definition) throw new RangeError("table carries no group-by archive to define a category in");
@@ -4255,7 +4260,7 @@ export class TableModel {
       this.store,
       definition.object,
       this.uidMap(),
-      column,
+      columns,
       dataRows,
       (row, col) => groupValueOf(byPosition.get(`${row}:${col}`)),
       (row, col) => this.rawCellFormat(row, col),

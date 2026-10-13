@@ -1805,8 +1805,9 @@ export const CAPABILITIES: Capability[] = [
     probe: () => true,
     note:
       "addCategory fills the table's existing group-by archive — every table carries one — with the " +
-      "shape every categorised corpus table has: the group column, the row-uid lookup, one leaf per " +
-      "distinct value in text order with its format manager, a referenced root and its inline copy; " +
+      "shape every categorised corpus table has: a group column per level, the row-uid lookup, one node " +
+      "per distinct value in text order at each level with its format manager, a referenced root and " +
+      "its inline copy; " +
       "the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them",
     manualProof: {
       claim: "Numbers draws a category this library defined from nothing, with the groups collapsed under their values.",
@@ -1859,13 +1860,13 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Categories: per-group summaries, nesting and date bucketing",
+    name: "Categories: per-group summaries and date bucketing",
     apps: "all",
     status: "roadmap",
     note:
-      "defining a by-value category shipped (see its own row); nesting and bucketed groupings mean " +
-      "evaluating the grouping formula, and no fixture has a non-empty aggregate list, so summary " +
-      "rows are read but unexercised",
+      "defining a by-value category, nested or not, shipped (see its own row); bucketed groupings " +
+      "mean evaluating the grouping formula, and no fixture has a non-empty aggregate list, so " +
+      "summary rows are read but unexercised",
   },
   {
     group: "Numbers & tables",

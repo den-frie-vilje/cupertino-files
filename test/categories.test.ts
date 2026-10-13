@@ -345,3 +345,50 @@ describe("defining a category", () => {
     expect(() => other.addCategory(1)).toThrow(/no value/);
   });
 });
+
+describe("nesting a category", () => {
+  it("groups by two columns in the corpus's two-level shape", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    const rows: [string, boolean][] = [
+      ["Fruit", true],
+      ["Animal", false],
+      ["Fruit", false],
+      ["Animal", true],
+      ["Animal", false],
+    ];
+    rows.forEach(([kind, flag], i) => {
+      table.setCell(i + 1, 0, kind);
+      table.setCell(i + 1, 1, flag);
+    });
+    table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+    table.addCategory([0, 1]);
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const category = reloaded.activeCategories()!;
+    expect(category.groupColumns().map((c) => c.column)).toEqual([0, 1]);
+    const top = category.groups();
+    expect(top.map((g) => g.value)).toEqual(["Animal", "Fruit"]);
+    expect(top.map((g) => g.rows)).toEqual([[2, 4, 5], [1, 3]]);
+    expect(top.map((g) => g.children.map((c) => [c.value, c.rows]))).toEqual([
+      [[false, [2, 5]], [true, [4]]],
+      [[false, [3]], [true, [1]]],
+    ]);
+    expect(reloaded.staleCategoryGroups()).toEqual([]);
+
+    // Measured at every level of the corpus's nested tables: a string
+    // parent carries value, format manager with formats and lookup sets,
+    // rows and children; a boolean leaf carries its format manager with
+    // the value alone.
+    const gb = category.object.message;
+    const root = reloaded.store.resolve(refId(gb, GroupByFields.GROUP_NODE_ROOT_REF))!.message;
+    const parent = reloaded.store.resolve(root.getMessages(GroupNodeFields.CHILD_REF)[0]!.getVarint(1))!.message;
+    expect([1, 3, 4, 5, 6, 7, 8, 9, 10].filter((f) => parent.has(f))).toEqual([1, 6, 7, 9, 10]);
+    expect([1, 2, 3, 4].filter((f) => parent.getMessage(GroupNodeFields.FORMAT_MANAGER)!.has(f))).toEqual([1, 2, 4]);
+    const leaf = reloaded.store.resolve(parent.getMessages(GroupNodeFields.CHILD_REF)[0]!.getVarint(1))!.message;
+    expect([1, 3, 4, 5, 6, 7, 8, 9, 10].filter((f) => leaf.has(f))).toEqual([1, 6, 7, 9]);
+    expect([1, 2, 3, 4].filter((f) => leaf.getMessage(GroupNodeFields.FORMAT_MANAGER)!.has(f))).toEqual([1]);
+    const inlineTop = gb.getMessage(GroupByFields.GROUP_NODE_ROOT)!.getMessages(GroupNodeFields.CHILD);
+    expect(inlineTop.map((n) => n.getMessages(GroupNodeFields.CHILD).length)).toEqual([2, 2]);
+  });
+});

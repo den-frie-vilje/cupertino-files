@@ -2121,11 +2121,11 @@ writing and chart appearance all used to be here.
   rows a rule hides is stored separately and recomputing it means
   evaluating the predicates; that stays the app's, and whether the app
   recomputes for a rule it did not write is unproven.
-- **Category nesting, bucketing and summaries** (§14.9). A by-value
-  category is defined from nothing (`addCategory`) and rows are
-  regrouped byte-identically to Apple; nesting and bucketed groupings
-  need the grouping formula evaluated, and no fixture carries a summary
-  row to measure one from.
+- **Category bucketing and summaries** (§14.9). A by-value category,
+  nested or not, is defined from nothing (`addCategory`) and rows are
+  regrouped byte-identically to Apple; bucketed groupings need the
+  grouping formula evaluated, and no fixture carries a summary row to
+  measure one from.
 - **Keynote builds beyond all-at-once.** The model reads whole — effect,
   timing, delivery and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key` — and an

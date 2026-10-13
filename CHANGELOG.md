@@ -111,10 +111,11 @@ in commit messages and pull requests.
   actions and build order are not authored. Keynote has not yet been seen
   to play a build written this way.
 
-- `addCategory(column)` groups a table's rows by the values in a column:
-  one group per distinct value in text order, each holding its rows,
-  written in the shape every categorised document carries and switched
-  on. Nesting, date bucketing and summaries are not authored. Numbers has
+- `addCategory(column)` groups a table's rows by the values in a column,
+  and `addCategory([first, second, …])` nests the groups by several:
+  one group per distinct value at each level in text order, each holding
+  its rows, written in the shape every categorised document carries and
+  switched on. Date bucketing and summaries are not authored. Numbers has
   not yet been seen to draw a category defined this way.
 
 - A duration written with `setCell` is stamped with the app's own fresh

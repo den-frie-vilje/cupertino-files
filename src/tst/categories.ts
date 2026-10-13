@@ -569,23 +569,26 @@ function groupText(value: GroupValue): string {
 }
 
 /**
- * Define a by-value category on a column, filling the table's existing
- * group-by archive with the shape every categorised table in the corpus
- * has: the group column, the row-uid lookup, a root node holding one leaf
- * per distinct value, referenced from field 18 and copied inline into
+ * Define a by-value category on one or more columns, filling the table's
+ * existing group-by archive with the shape every categorised table in the
+ * corpus has: one group column per level, the row-uid lookup, a tree with
+ * one node per distinct value at each level — nested in the order the
+ * columns are given — referenced from field 18 and copied inline into
  * field 3, and the definition switched on.
  *
- * Groups are listed in the code-unit order of their text, which is the
- * order the corpus shows for strings and numbers alike. A leaf carries the
- * value, a format manager restating the value with the format its cells
- * carry and its row set, and the rows. `formatAt` supplies the format
- * message of a row's cell in the column, or nothing when it carries none.
+ * At every level the groups list in the code-unit order of their text,
+ * which is the order the corpus shows for strings and numbers alike. A
+ * node carries its value, its rows (a parent's are the union of its
+ * children's) and a format manager: the value again, the cells' format
+ * and the row set for string and number groups, the value alone for
+ * boolean groups, as the corpus writes them. `formatAt` supplies the
+ * format message of a row's cell in a column, or nothing.
  */
 export function defineByValueCategory(
   store: ObjectStore,
   groupBy: IwaObject,
   uids: ColumnRowUidMap,
-  column: number,
+  columns: readonly number[],
   dataRows: readonly number[],
   valueAt: (row: number, column: number) => GroupValue,
   formatAt: (row: number, column: number) => RawMessage | undefined,
@@ -594,14 +597,17 @@ export function defineByValueCategory(
   if (m.getMessages(GroupByFields.GROUP_COLUMN).length > 0) {
     throw new RangeError("table is already categorised; regroup it instead of defining it again");
   }
-  const columnUid = uids.columnUid(column);
-  if (!columnUid) throw new RangeError(`column ${column} has no identity in the uid map`);
-
-  const groupColumn = RawMessage.create();
-  groupColumn.setMessage(GroupColumnFields.COLUMN_UID, writeUidMessage(columnUid));
-  groupColumn.setVarint(GroupColumnFields.GROUPING_TYPE, GroupingType.BY_VALUE);
-  groupColumn.setMessage(GroupColumnFields.GROUPING_COLUMN_UID, writeUidMessage(randomUid()));
-  m.setMessages(GroupByFields.GROUP_COLUMN, [groupColumn]);
+  if (columns.length === 0) throw new RangeError("a category needs at least one column");
+  const groupColumns = columns.map((column) => {
+    const columnUid = uids.columnUid(column);
+    if (!columnUid) throw new RangeError(`column ${column} has no identity in the uid map`);
+    const groupColumn = RawMessage.create();
+    groupColumn.setMessage(GroupColumnFields.COLUMN_UID, writeUidMessage(columnUid));
+    groupColumn.setVarint(GroupColumnFields.GROUPING_TYPE, GroupingType.BY_VALUE);
+    groupColumn.setMessage(GroupColumnFields.GROUPING_COLUMN_UID, writeUidMessage(randomUid()));
+    return groupColumn;
+  });
+  m.setMessages(GroupByFields.GROUP_COLUMN, groupColumns);
 
   const lookup = RawMessage.create();
   lookup.setMessages(
@@ -610,47 +616,78 @@ export function defineByValueCategory(
   );
   m.setMessage(ROW_UID_LOOKUP, lookup);
 
-  // One leaf per distinct value, rows in table order within a group.
-  const groups = new Map<string, { value: GroupValue; rows: number[] }>();
-  for (const row of dataRows) {
-    const value = valueAt(row, column);
-    if (value === undefined) {
-      throw new RangeError(`row ${row} has no value in column ${column}; every data row needs one to be grouped`);
-    }
-    const key = `${typeof value}:${groupText(value)}`;
-    const group = groups.get(key);
-    if (group) group.rows.push(row);
-    else groups.set(key, { value, rows: [row] });
-  }
-  const ordered = [...groups.values()].sort((a, b) => {
-    const x = groupText(a.value);
-    const y = groupText(b.value);
-    return x < y ? -1 : x > y ? 1 : 0;
-  });
-
   const component = store.componentOf(groupBy.identifier);
   if (!component) throw new RangeError("group-by archive has no component");
-  const leafMessage = (group: { value: GroupValue; rows: number[] }): RawMessage => {
-    const leaf = RawMessage.create();
-    leaf.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+
+  /** Distinct values of `column` among `rows`, each with its rows, in text order. */
+  const partition = (rows: readonly number[], column: number): { value: GroupValue; rows: number[] }[] => {
+    const groups = new Map<string, { value: GroupValue; rows: number[] }>();
+    for (const row of rows) {
+      const value = valueAt(row, column);
+      if (value === undefined) {
+        throw new RangeError(`row ${row} has no value in column ${column}; every data row needs one to be grouped`);
+      }
+      const key = `${typeof value}:${groupText(value)}`;
+      const group = groups.get(key);
+      if (group) group.rows.push(row);
+      else groups.set(key, { value, rows: [row] });
+    }
+    return [...groups.values()].sort((a, b) => {
+      const x = groupText(a.value);
+      const y = groupText(b.value);
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+  };
+
+  /** A node's message, without its children; `inline` nodes carry children inline. */
+  const nodeMessage = (group: { value: GroupValue; rows: number[] }, column: number): RawMessage => {
+    const node = RawMessage.create();
+    node.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
     const format = formatAt(group.rows[0]!, column) ?? RawMessage.create();
     const cellValue = writeCellValue(group.value, format);
     const manager = RawMessage.create();
     manager.setMessage(FormatManagerFields.CELL_VALUE, cellValue);
-    manager.setMessages(FormatManagerFields.FORMATS, [format]);
-    manager.setMessages(FormatManagerFields.ROW_UID_LOOKUP_SETS, [writeIndexSet(group.rows)]);
-    leaf.setMessage(GroupNodeFields.FORMAT_MANAGER, manager);
-    leaf.setMessage(GroupNodeFields.GROUP_CELL_VALUE, cellValue);
-    leaf.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet(group.rows));
-    return leaf;
+    if (typeof group.value !== "boolean") {
+      manager.setMessages(FormatManagerFields.FORMATS, [format]);
+      manager.setMessages(FormatManagerFields.ROW_UID_LOOKUP_SETS, [writeIndexSet(group.rows)]);
+    }
+    node.setMessage(GroupNodeFields.FORMAT_MANAGER, manager);
+    node.setMessage(GroupNodeFields.GROUP_CELL_VALUE, cellValue);
+    node.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet(group.rows));
+    return node;
   };
-  const leaves = ordered.map(leafMessage);
-  const leafObjects = leaves.map((leaf) => {
-    const object = store.createObject(GROUP_NODE_TYPE, component);
-    object.setMessageBytes(leaf.toBytes());
-    return object;
-  });
 
+  /**
+   * Build one level: returns the referenced objects and the inline copies
+   * of the nodes for `rows` grouped by `columns[level]`, recursively.
+   */
+  const buildLevel = (rows: readonly number[], level: number): { objects: IwaObject[]; inline: RawMessage[] } => {
+    const column = columns[level]!;
+    const objects: IwaObject[] = [];
+    const inline: RawMessage[] = [];
+    for (const group of partition(rows, column)) {
+      const base = nodeMessage(group, column);
+      const referenced = nodeMessage(group, column);
+      const inlineNode = base;
+      if (level + 1 < columns.length) {
+        const children = buildLevel(group.rows, level + 1);
+        inlineNode.setMessages(GroupNodeFields.CHILD, children.inline);
+        referenced.setMessages(GroupNodeFields.CHILD_REF, children.objects.map((o) => makeRef(o.identifier)));
+        const object = store.createObject(GROUP_NODE_TYPE, component);
+        object.setMessageBytes(referenced.toBytes());
+        object.setObjectReferences(children.objects.map((o) => o.identifier));
+        objects.push(object);
+      } else {
+        const object = store.createObject(GROUP_NODE_TYPE, component);
+        object.setMessageBytes(referenced.toBytes());
+        objects.push(object);
+      }
+      inline.push(inlineNode);
+    }
+    return { objects, inline };
+  };
+
+  const levels = buildLevel(dataRows, 0);
   const rootMessage = (children: readonly RawMessage[] | undefined): RawMessage => {
     const root = RawMessage.create();
     root.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
@@ -663,13 +700,13 @@ export function defineByValueCategory(
   const referenced = rootMessage(undefined);
   referenced.setMessages(
     GroupNodeFields.CHILD_REF,
-    leafObjects.map((object) => makeRef(object.identifier)),
+    levels.objects.map((object) => makeRef(object.identifier)),
   );
   root.setMessageBytes(referenced.toBytes());
-  // The references the app declares: the root lists its leaves, the
+  // The references the app declares: each node lists its children, the
   // archive lists its root, both beside the messages that carry them.
-  root.setObjectReferences(leafObjects.map((object) => object.identifier));
-  m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(leaves));
+  root.setObjectReferences(levels.objects.map((object) => object.identifier));
+  m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(levels.inline));
   m.setMessage(GroupByFields.GROUP_NODE_ROOT_REF, makeRef(root.identifier));
   groupBy.setObjectReferences([...groupBy.getObjectReferences(), root.identifier]);
   m.setBool(GroupByFields.IS_ENABLED, true);

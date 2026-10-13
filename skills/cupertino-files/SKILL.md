@@ -624,6 +624,7 @@ cat.setEnabled(false);                  // ungroup without losing the definition
 t.staleCategoryGroups();                // groups whose rows no longer match the data
 t.regroupCategories();                  // put them back; returns how many rows moved
 t.addCategory(1);                       // group an uncategorised table by a column's values
+t.addCategory([1, 2]);                  // or nest: groups by column 1, then by column 2 within each
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -1049,7 +1050,7 @@ throw, naming the object and field, rather than produce the file.
    legend, gridlines) all write, and so do filter rules (`addFilterRule`),
    by-value categories (`addCategory`) and all-at-once Keynote builds
    (`addBuild`), none of which the apps have confirmed yet. Genuinely
-   absent today: recomputing which rows a filter hides, nested or bucketed
+   absent today: recomputing which rows a filter hides, bucketed
    categories and their summaries, and builds delivered by paragraph. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
