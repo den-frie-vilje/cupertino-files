@@ -1345,7 +1345,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Formula function names",
     apps: "all",
-    status: "experimental",
+    status: "read+write",
     probe: (c) =>
       safe(() =>
         c.doc
@@ -1356,7 +1356,7 @@ export const CAPABILITIES: Capability[] = [
               t.formulas().some((f) => /[A-Z]+\(/.test(f.formula) && !f.formula.includes("FUNCTION_")),
           ),
       ),
-    note: "only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()",
+    note: "every function Numbers 15.1 registers is named, read from the app's own registry and confirmed by the document harvest; an id outside the table renders as FUNCTION_<id>, and registerFormulaFunctions() extends it",
     manualProof: {
       claim: "The function-index table is incomplete, and every unnamed id is visible rather than guessed.",
       why:
@@ -1369,6 +1369,13 @@ export const CAPABILITIES: Capability[] = [
         "and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save " +
         "in Numbers by hand, then `--ingest`. Procedure in docs/BLOCKERS.md.",
       e2e: true,
+      settled:
+        "**Complete for Numbers 15.1, read from the app itself.** The registration code in the " +
+        "TSTables framework pairs every function name with its index; scripts/function-registry.ts " +
+        "reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with " +
+        "the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, " +
+        "345 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
+        "renders by name",
       risk: "medium",
     },
   },
@@ -1852,13 +1859,13 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Categories: creating a grouping, and per-group summaries",
+    name: "Categories: per-group summaries, nesting and date bucketing",
     apps: "all",
     status: "roadmap",
     note:
-      "creating a group needs its identity, its sort position and the several per-column and " +
-      "per-row fields written alongside the tree, none of which any fixture explains; and no " +
-      "fixture has a non-empty aggregate list, so summary rows are read but unexercised",
+      "defining a by-value category shipped (see its own row); nesting and bucketed groupings mean " +
+      "evaluating the grouping formula, and no fixture has a non-empty aggregate list, so summary " +
+      "rows are read but unexercised",
   },
   {
     group: "Numbers & tables",
@@ -1873,10 +1880,10 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: authoring rules and recomputing hidden rows",
+    name: "Filters: recomputing hidden rows",
     apps: "all",
     status: "roadmap",
-    note: "a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates",
+    note: "rules are authored (see their own row); a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates",
   },
 
   // ----------------------------------------------------------------- keynote
@@ -2131,13 +2138,6 @@ export const CAPABILITIES: Capability[] = [
       how: "a three-slide deck with a different effect on each and one text build delivered by line, then `npm run probe -- animated.key`",
       risk: "high",
     },
-  },
-  {
-    group: "Keynote",
-    name: "Builds: creating an animation",
-    apps: ["keynote"],
-    status: "roadmap",
-    note: "withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written",
   },
 
   // ------------------------------------------------------------- concurrency
