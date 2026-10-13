@@ -582,6 +582,7 @@ const { rows, columns } = t.filterSets();
 rows?.mode;                             // "all" | "any"
 rows?.rules();                          // [{ column, enabled, predicate }]
 rows?.setEnabled(true); rows?.setMode("any");
+t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing; "contains" for text
 ```
 
 Two things to know before relying on this:
@@ -622,6 +623,7 @@ cat.setEnabled(false);                  // ungroup without losing the definition
 
 t.staleCategoryGroups();                // groups whose rows no longer match the data
 t.regroupCategories();                  // put them back; returns how many rows moved
+t.addCategory(1);                       // group an uncategorised table by a column's values
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -916,6 +918,7 @@ slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
 slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
+slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
 // bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
@@ -1043,9 +1046,12 @@ throw, naming the object and field, rather than produce the file.
    capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
-   legend, gridlines) all write. Genuinely absent today: authoring
-   filter *rules*, creating category groups, and creating Keynote builds.
-   For those, drop to the low-level `RawMessage` layer and consult
+   legend, gridlines) all write, and so do filter rules (`addFilterRule`),
+   by-value categories (`addCategory`) and all-at-once Keynote builds
+   (`addBuild`), none of which the apps have confirmed yet. Genuinely
+   absent today: recomputing which rows a filter hides, nested or bucketed
+   categories and their summaries, and builds delivered by paragraph. For
+   those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
