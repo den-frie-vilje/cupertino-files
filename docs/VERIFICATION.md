@@ -185,7 +185,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **Claim.** Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.
 
-**Why the suite cannot settle it.** The rule's bytes and the hidden states equal an app-authored set's, but the column a rule references is relative to a host column measured from rules on columns 1 and 2 only; a rule elsewhere tells whether the host is column 1 or the first rule's own column.
+**Why the suite cannot settle it.** The rule's bytes and the hidden states equal app-authored sets', on columns A, B and C; whether the app re-evaluates a rule it did not author is what only opening the file shows.
 
 **How to settle it.** npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only Pear and Train with the filter on in the panel; column D filtered instead means the host is the first rule's column; every row showing or a refusal to open means the set needs state only the app writes.
 

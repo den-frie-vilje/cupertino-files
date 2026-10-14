@@ -183,8 +183,8 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 
 - **The app draws one more paragraph than `paragraphs()` lists** when the
   text ends with a terminator. That tail is *one* of the apps' shapes,
-  not the norm: of the corpus's 28 body storages, 17 end bare — what
-  typing leaves — 8 end with the terminator, 3 are empty. Appending
+  not the norm: of the corpus's 29 body storages, 17 end bare — what
+  typing leaves — 9 end with the terminator, 3 are empty. Appending
   preserves whichever convention the document already has (a `blank()`
   build ends bare), so check `doc.body.endsWithEmptyParagraph` rather
   than assuming either state, and call `doc.body.normalizeTail()` when
@@ -1129,8 +1129,8 @@ throw, naming the object and field, rather than produce the file.
    by-value categories (`addCategory`), all-at-once Keynote builds
    (`addBuild`) and text boxes copied from the document's own
    (`addTextBox`), none of which the apps have confirmed yet. Genuinely
-   absent today: filter rules on column 0 and function-shaped rules beyond
-   text-contains, category summaries, and build actions and order. For
+   absent today: function-shaped filter rules beyond text-contains and
+   starts-with, category summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

@@ -1857,14 +1857,14 @@ export const CAPABILITIES: Capability[] = [
       "addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's " +
       "app-authored rules — the predicate with its operands and the formula over the table's own " +
       "identity, counted from the app's host column — grows the boundary list, switches the set on and " +
-      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a rule " +
-      "on column 0 is refused until a document shows its offset",
+      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a " +
+      "starts-with rule is written byte for byte as the app wrote one on column A, whose offset from " +
+      "the host at column 1 is −1 stored unsigned",
     manualProof: {
       claim: "Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.",
       why:
-        "The rule's bytes and the hidden states equal an app-authored set's, but the column a rule " +
-        "references is relative to a host column measured from rules on columns 1 and 2 only; a rule " +
-        "elsewhere tells whether the host is column 1 or the first rule's own column.",
+        "The rule's bytes and the hidden states equal app-authored sets', on columns A, B and C; " +
+        "whether the app re-evaluates a rule it did not author is what only opening the file shows.",
       how:
         "npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only " +
         "Pear and Train with the filter on in the panel; column D filtered instead means the host is the " +
@@ -1956,10 +1956,10 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: function-shaped rules beyond text-contains",
+    name: "Filters: function-shaped rules beyond text-contains and starts-with",
     apps: "all",
     status: "roadmap",
-    note: "comparison and text-contains rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
+    note: "comparison, text-contains and starts-with rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote

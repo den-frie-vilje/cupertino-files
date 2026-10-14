@@ -159,9 +159,11 @@ describe("reference extractors agree with Apple", () => {
     // Two instances of that container rule hold elsewhere — a storage must
     // not declare its stylesheet, a drawable must not declare its parent —
     // and this comparison is exactly what catches a violation of either.
+    // The three authored-twin fixtures added 21 in the same two classes:
+    // 17 Keynote slides and four stylesheets.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=233: ${disagree <= 233} (${disagree})`).toBe(
-      `disagree<=233: true (${disagree})`,
+    expect(`disagree<=254: ${disagree <= 254} (${disagree})`).toBe(
+      `disagree<=254: true (${disagree})`,
     );
   });
 
@@ -216,10 +218,10 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     }
     const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
     expect(summary).toEqual([
-      "TSCE.FormulaOwnerDependenciesArchive 0/69",
-      "TST.CategoryOrderArchive 0/65",
-      "TST.SummaryCellVendorArchive 0/65",
-      "TST.SummaryModelArchive 0/65",
+      "TSCE.FormulaOwnerDependenciesArchive 0/73",
+      "TST.CategoryOrderArchive 0/69",
+      "TST.SummaryCellVendorArchive 0/69",
+      "TST.SummaryModelArchive 0/69",
     ]);
   });
 

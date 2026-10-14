@@ -4303,13 +4303,9 @@ export class TableModel {
     if (column < 0 || column >= this.columnCount) {
       throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
     }
-    // Every app-authored rule in the corpus references its column from a
-    // host at column 1; a rule on column 0 would need an offset no document
-    // shows, so it is refused rather than guessed.
+    // The app's rules reference their column from a host at column 1; a
+    // rule on column A carries offset −1, stored as 2^64 − 1.
     const offset = column - FILTER_HOST_COLUMN;
-    if (offset < 0) {
-      throw new RangeError(`column ${column} cannot carry a filter rule: the app's rules count from column ${FILTER_HOST_COLUMN}`);
-    }
     const set = this.filterSets().rows;
     if (!set) throw new RangeError("table carries no row filter set to add a rule to");
     const name = this.name;
@@ -4339,7 +4335,14 @@ export class TableModel {
               },
             ],
           }
-        : { kind: "binary", op: condition.operator, left: cell, right: literal };
+        : condition.operator === "startsWith"
+          ? {
+              kind: "binary",
+              op: "=",
+              left: { kind: "call", name: "FIND.CASEINSENSITIVE", args: [literal, cell] },
+              right: { kind: "number", value: 1 },
+            }
+          : { kind: "binary", op: condition.operator, left: cell, right: literal };
     const ast = buildFormula(expression, origin, {
       tableUid: (table) => this.owners().tableUid(table),
     });
@@ -4368,7 +4371,14 @@ export class TableModel {
         throw new RangeError(`filter rule ${rule.index} names no column; its rows cannot be recomputed here`);
       }
       const column = rule.column;
-      if (predicate.operator && literal && (literal.kind === "number" || literal.kind === "string")) {
+      if (predicate.predicateType === 1 && literal?.kind === "string") {
+        // Starts-with: FIND.CASEINSENSITIVE(needle, cell) = 1.
+        const needle = literal.string!.toLowerCase();
+        tests.push((row) => {
+          const actual = groupValueOf(this.cellValue(row, column));
+          return typeof actual === "string" && actual.toLowerCase().startsWith(needle);
+        });
+      } else if (predicate.operator && literal && (literal.kind === "number" || literal.kind === "string")) {
         const op = predicate.operator;
         const expected = literal.kind === "number" ? literal.number : literal.string;
         tests.push((row) => {
@@ -4392,7 +4402,7 @@ export class TableModel {
           return typeof actual === "string" && actual.toLowerCase().includes(needle);
         });
       } else {
-        throw new RangeError(`filter rule ${rule.index} is not a comparison or text-contains rule; its rows cannot be recomputed here`);
+        throw new RangeError(`filter rule ${rule.index} is not a comparison, text-contains or starts-with rule; its rows cannot be recomputed here`);
       }
     }
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
@@ -4957,7 +4967,7 @@ export function cellValueToString(v: CellValue): string {
  * The table info an owner-side archive carries and never declares: the
  * calc engine's formula-owner dependencies at field 11, and the summary
  * model, summary cell vendor and category order at field 1. Measured
- * across the corpus: 69, 65, 65 and 65 carry one, none declares it, in
+ * across the corpus: 73, 69, 69 and 69 carry one, none declares it, in
  * every app — the container rule a drawable's parent follows, one type
  * family over.
  */

@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- Reading a filter rule on a table's first column threw: the rule's
+  column is a signed offset from the app's host column stored in an
+  unsigned field, and column A reads as the wrapped value. The reader
+  takes the sign, and `addFilterRule` writes a rule on column A the same
+  way instead of refusing it.
 - A table grafted onto a Pages page or a Keynote slide now takes the
   host theme's first table style preset: its styles are the preset
   network's members and its cell-level styles hang off them, the way a
@@ -126,10 +131,9 @@ in commit messages and pull requests.
   comparing a column's cells with a number or a string, written as the
   app writes one, switches the filter on and writes the rows it hides,
   evaluated offline. The operator may also be "contains" for a
-  text-contains rule; other function-shaped rules are not authored, and a
-  rule on column 0 is refused until a document shows how the app
-  references it. Numbers has not yet been seen to open a filter written
-  this way.
+  text-contains rule or "startsWith" for a starts-with rule, each written
+  as the app writes it; other function-shaped rules are not authored.
+  Numbers has not yet been seen to open a filter written this way.
 - A filter rule's `column` now reads as the absolute column the rule
   tests; it was the index of a boundary entry before, which happened to
   be one less.

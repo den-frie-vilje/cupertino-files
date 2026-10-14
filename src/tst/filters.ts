@@ -54,10 +54,16 @@ export const FilterSetFields = protoFields("TST.FilterSetArchive", {
 /** TST.FilterRuleArchive / TST.FilterRulePrePivotArchive. */
 const FilterRuleFields = { PREDICATE: 1, DISABLED: 2 } as const;
 
-/** The column a rule's predicate names: its relative offset from the host at column 1. */
+/**
+ * The column a rule's predicate names: its relative offset from the host
+ * at column 1. The offset is a signed count stored in an unsigned field —
+ * a rule on column A carries 2^64 − 1 — so the high half reads as negative.
+ */
 function ruleColumn(predicate: ReturnType<IwaObject["message"]["getMessage"]>): number | undefined {
-  const offset = predicate?.getMessage(4)?.getMessage(4)?.getUint(2);
-  return offset === undefined ? undefined : offset + FILTER_HOST_COLUMN;
+  const raw = predicate?.getMessage(4)?.getMessage(4)?.getVarint(2);
+  if (raw === undefined) return undefined;
+  const offset = raw >= 1n << 63n ? raw - (1n << 64n) : raw;
+  return Number(offset) + FILTER_HOST_COLUMN;
 }
 
 /** The column the app's filter references count from. */

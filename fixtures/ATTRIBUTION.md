@@ -1180,3 +1180,30 @@ carries it is not included even when the licence would allow it.
 ```sh
 node scripts/scan-fixture-privacy.ts
 ```
+
+### olekristensen-v26.0-mac-authored.numbers
+- 148,643 bytes, md5 `d3ba0988a0f215958df28af56986f03d`
+- Saved by M15.1-7044.0.271-2 (macOS Numbers) over a seed this library
+  wrote, with constructs built by the app's own controls on request: a
+  "starts with" row filter rule on column A (predicate_type 1, the host
+  column's offset −1 stored as 2^64 − 1), a category on column B with a
+  group summary (the live GroupByArchive behind the model's category
+  owner, with its aggregator and column aggregate type), a second table
+  from Insert ▸ Table (10×5, one header row and column, 98-point columns)
+  and a cell comment. Text is placeholder data and the request itself.
+
+### olekristensen-v26.0-mac-authored.pages
+- 164,667 bytes, md5 `0a1852f53b7e8818b63eb6b747f5927d`
+- Saved by M15.1.1-7044.0.273-2 (macOS Pages) over a seed this library
+  wrote: a table from Insert ▸ Table (5×4, one header row and column,
+  name hidden), a text box from Insert ▸ Text Box (anchored inline), a
+  shape moved to the section master, a page break from Insert ▸ Page
+  Break (U+0005) and a comment on one word. Text is the request itself.
+
+### olekristensen-v26.0-mac-authored.key
+- 644,199 bytes, md5 `3d6e486b96329806f2e1517c66b697df`
+- Saved by M15.1.1-7044.0.273-2 (macOS Keynote) over a seed this library
+  wrote: a slide whose layout was changed to Title & Bullets, a table
+  from Insert ▸ Table (5×4, one header row and column, name hidden), a
+  text box and a slide background colour, and a wipe build on a title.
+  Text is the request itself.
