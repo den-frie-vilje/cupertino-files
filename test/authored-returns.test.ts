@@ -53,7 +53,7 @@ describe("a starts-with filter rule the app wrote", () => {
 });
 
 describe("a per-group summary the app wrote", () => {
-  it("reads as one aggregate on the grouping column, level 1, agg_type 1", () => {
+  it("reads as one aggregate on the grouping column, level 1, agg_type 1 (Count)", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));
     const category = doc.tables()[0]!.categories()[0]!;
     expect(category.groupColumns().map((c) => c.column)).toEqual([1]);

@@ -1969,7 +1969,7 @@ export const CAPABILITIES: Capability[] = [
     note:
       "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
       "the reader is exercised by one app-written summary (column_agg_type on the grouping column, " +
-      "level 1, agg_type 1); writing one needs the aggregator tree with an accumulator per group, " +
+      "level 1, agg_type 1 = Count); writing one needs the aggregator tree with an accumulator per group, " +
       "the root node's agg_formula_coords and the summary model's cells, none of which is written yet",
   },
   {

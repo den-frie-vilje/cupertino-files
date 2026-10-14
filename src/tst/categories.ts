@@ -207,9 +207,9 @@ export interface ColumnAggregate {
   /** Category depth this summary is shown at. */
   level: number;
   /**
-   * Raw `agg_type`. Numbers offers sum, average, count and so on; the one
-   * measured code is 1 on a text column, whose per-group accumulator is a
-   * string count. The rest are passed through rather than named.
+   * Raw `agg_type`. Numbers offers sum, average, count and so on; 1 is
+   * Count, measured (its per-group accumulator is a string count on a
+   * text column). The rest are passed through rather than named.
    */
   aggType: number;
   showAsType: number | undefined;
