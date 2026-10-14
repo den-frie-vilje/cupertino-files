@@ -85,6 +85,15 @@ that rebuild the structures from them.
   instantiates a master in the shape every corpus content slide has
   against its master; whether Keynote draws one it did not instantiate
   is rung K13's question.
+- **Authored twins requested.** `seed-authored.numbers`, `.pages` and
+  `.key` ask the checker to build, with the apps' own controls, the
+  constructs no corpus document carries app-written: a function-shaped
+  filter rule, a category summary, a table inserted by Numbers, Pages
+  and Keynote, a section-master object, a page break, a layout change,
+  a slide background and a build. Each returned file is the fixture
+  that settles its row; until then the writers for tables on pages and
+  slides, filter rules beyond comparison and summaries stay measured
+  against nothing the app wrote.
 - **Text boxes: creation shipped, unproven.** `addTextBox` deep-copies a
   box the document carries, re-words, places and re-parents it; the
   corpus says a Keynote box's parent is its slide and a Pages floating

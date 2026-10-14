@@ -199,6 +199,62 @@ function seedTableKeynote(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- authored twins
+
+// Three documents that ask for nothing of this library's writing: each
+// names constructs no corpus document carries app-written, and asks the
+// checker to build them with the app's own controls. The returned file is
+// the fixture that settles the row.
+
+function seedAuthoredNumbers(): Uint8Array {
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name =
+    "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filter); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.";
+  table.insertColumns(2, 1);
+  table.setCell(0, 0, "Item");
+  table.setCell(0, 1, "Kind");
+  table.setCell(0, 2, "Amount");
+  const rows: [string, string, number][] = [["Pear", "Fruit", 12], ["Cat", "Animal", 3], ["Apple", "Fruit", 7], ["Train", "Transport", 40], ["Dog", "Animal", 10], ["Bicycle", "Transport", 2]];
+  rows.forEach(([item, kind, amount], i) => {
+    table.setCell(i + 1, 0, item);
+    table.setCell(i + 1, 1, kind);
+    table.setCell(i + 1, 2, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  return doc.save();
+}
+
+function seedAuthoredPages(): Uint8Array {
+  const doc = PagesDocument.blank();
+  doc.appendParagraph("Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.", "Body");
+  doc.appendParagraph("1) Insert > Table (Indsaet > Tabel), here:", "Body");
+  doc.appendParagraph("", "Body");
+  doc.appendParagraph("2) Insert > Text Box (Tekstfelt), anywhere on this page.", "Body");
+  doc.appendParagraph("3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.", "Body");
+  doc.appendParagraph("4) Insert > Page Break (Sideskift), right after this line.", "Body");
+  doc.appendParagraph("5) Select the word twin in this line and add a comment on it: the twin.", "Body");
+  return doc.save();
+}
+
+function seedAuthoredKeynote(): Uint8Array {
+  const doc = KeynoteDocument.blank();
+  const first = doc.slides()[0]!;
+  first.title = "Please build each of these with Keynote's own controls, on the slide that asks, then send the deck back.";
+  first.body = "Nothing here is expected to look any particular way; what you build is the measurement.";
+  const asks = [
+    "2) Change this slide's layout to Title & Bullets: Format > Slide Layout (Format > Layout).",
+    "3) Insert > Table (Indsaet > Tabel) on this slide.",
+    "4) Insert > Text Box (Tekstfelt) on this slide, and give the slide a background colour: Format > Slide Background (Baggrund).",
+    "5) Animate this title: Animate > Build In > Dissolve (Animer > Byg ind).",
+  ];
+  for (const ask of asks) {
+    const slide = doc.addSlide({ copyOf: 0, after: doc.slideCount() - 1 });
+    slide.title = ask;
+  }
+  return doc.save();
+}
+
 // ---------------------------------------------------------- text box
 
 function seedTextBox(): Uint8Array {
@@ -283,6 +339,30 @@ const seeds: Seed[] = [
       const table = doc.tables()[0];
       if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (keynote): the table or its rows are missing");
       if (!doc.slides()[0]!.title?.includes("Expected")) throw new Error("table seed (keynote): expectations missing");
+    },
+  },
+  {
+    name: "seed-authored.numbers",
+    bytes: seedAuthoredNumbers(),
+    check: (bytes) => {
+      const doc = NumbersDocument.load(bytes);
+      if (!doc.tables()[0]?.name?.includes("Please build")) throw new Error("authored seed (numbers): instructions missing");
+    },
+  },
+  {
+    name: "seed-authored.pages",
+    bytes: seedAuthoredPages(),
+    check: (bytes) => {
+      const doc = PagesDocument.load(bytes);
+      if (!doc.bodyText.includes("Please build") || !doc.bodyText.includes("5)")) throw new Error("authored seed (pages): instructions missing");
+    },
+  },
+  {
+    name: "seed-authored.key",
+    bytes: seedAuthoredKeynote(),
+    check: (bytes) => {
+      const doc = KeynoteDocument.load(bytes);
+      if (doc.slideCount() !== 5 || !doc.slides()[4]!.title?.includes("Dissolve")) throw new Error("authored seed (keynote): slides missing");
     },
   },
   {
