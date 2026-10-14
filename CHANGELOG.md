@@ -9,6 +9,12 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table this library creates no longer declares its parent — the
+  sheet, body or slide — among its object references. Apple's table
+  infos never do (71 of 71 in the corpus carry a parent, none declares
+  it), and the table info now joins the drawable types the store treats
+  that way.
+
 - A slide added or duplicated into a deck Keynote had saved landed in
   the source slide's component, and Keynote would open and render the
   result but refuse to save it. A copied slide now gets a package

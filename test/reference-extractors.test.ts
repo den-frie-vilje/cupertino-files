@@ -182,6 +182,7 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     ["TSD.MaskArchive", 0],
     ["TSD.GroupArchive", 0],
     ["TSD.MovieArchive", 0],
+    ["TST.TableInfoArchive", 0],
   ]);
 
   it("matches the corpus for every drawable type the store subtracts", () => {
