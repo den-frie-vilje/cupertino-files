@@ -9,7 +9,7 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown, splitFrontMatter, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
@@ -41,7 +41,7 @@ import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
+import { DrawableContainer, drawableById, type DrawablePlacement } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -1388,7 +1388,7 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /** Append a table at the end of the body, in a paragraph of its own. */
-  appendTable(rows: readonly (readonly string[])[], name?: string): TableModel {
+  appendTable(rows: readonly (readonly string[])[] = [], name?: string): TableModel {
     const body = this.body;
     // The anchor sits in a paragraph of its own: the trailing empty one
     // when the body ends at a paragraph boundary, a fresh one otherwise.
@@ -1433,9 +1433,20 @@ export class PagesDocument extends IWorkDocument {
     let cloneId: bigint;
     if (sourceId === undefined) {
       cloneId = graftNeutralTable(this.store, component, body.id, this.stylesheet);
-      // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
       const grafted = tablesOf(this.store, [cloneId])[0];
-      if (grafted) grafted.nameVisible = false;
+      if (grafted) {
+        // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
+        grafted.nameVisible = false;
+        // The shape Insert ▸ Table gives: 5 by 4 across the body, one
+        // header row and column; rows, when given, decide the counts.
+        const setup = this.pageSetup();
+        const hostWidth = (setup.pageWidth ?? 595.28) - (setup.leftMargin ?? 56.69) - (setup.rightMargin ?? 56.69);
+        const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
+        const rows = given?.length ?? APP_TABLE_DEFAULTS.pages.rows;
+        const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.pages.columns;
+        fitNewTable(grafted, { rows, columns, hostWidth, borderAllowance: APP_TABLE_DEFAULTS.pages.borderAllowance });
+        drawableById(this.store, cloneId)?.setGeometry({ width: hostWidth });
+      }
     } else {
       const source = this.store.object(sourceId);
       if (source?.type !== TST_TYPE.TABLE_INFO) {
@@ -1460,7 +1471,7 @@ export class PagesDocument extends IWorkDocument {
     remintTableIdentity(this.store, clone.identifier);
     model.name = this.uniqueTableName(options.name, clone.identifier);
     if (options.withContent === false) model.clearAllCells();
-    if (options.rows) fillTable(model, options.rows);
+    if (options.rows && options.rows.length > 0) fillTable(model, options.rows);
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(clone.identifier));

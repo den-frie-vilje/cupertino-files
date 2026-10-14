@@ -11,7 +11,7 @@ import type { Component, ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
 import { Drawable } from "../tsd/schema.ts";
 import { findDrawableCore } from "../tsd/drawables.ts";
-import { TST_TYPE, tablesOf } from "../tst/tables.ts";
+import { TST_TYPE, tablesOf, type TableModel } from "../tst/tables.ts";
 import { makeRef } from "../tsp/schema.ts";
 import type { StylesheetModel } from "../tss/stylesheet.ts";
 
@@ -164,6 +164,41 @@ function neutralTableDonor(): NonNullable<typeof cached> {
     cached = { store: donor.store, info, parentId, presetId: refId(table.object.message, TABLE_MODEL_STYLE_PRESET) };
   }
   return cached;
+}
+
+/**
+ * The shape the apps give a table from Insert ▸ Table, measured on each
+ * app's own insertion: Numbers 10 rows by 5 columns of 98 points, Pages
+ * and Keynote 5 by 4 filling the host's width, all with one header row
+ * and one header column.
+ */
+export const APP_TABLE_DEFAULTS = {
+  numbers: { rows: 10, columns: 5, columnWidth: 98 },
+  /** Columns share the body width less 0.35 points: 4 × 120.386 in a 481.894-point body. */
+  pages: { rows: 5, columns: 4, borderAllowance: 0.35 },
+  /** Columns share the frame width less one point: 4 × 432.25 in a 1730-point frame. */
+  keynote: { rows: 5, columns: 4, borderAllowance: 1 },
+} as const;
+
+/**
+ * Cut or grow a fresh table to `rows` by `columns`, give it one header
+ * row and one header column, and set every column to the same width:
+ * `columnWidth` when given, else an equal share of `hostWidth` less the
+ * border allowance — the shape of a table the app inserts.
+ */
+export function fitNewTable(
+  table: TableModel,
+  shape: { rows: number; columns: number; columnWidth?: number; hostWidth?: number; borderAllowance?: number },
+): void {
+  if (table.rowCount < shape.rows) table.insertRows(table.rowCount, shape.rows - table.rowCount);
+  else if (table.rowCount > shape.rows) table.deleteRows(shape.rows, table.rowCount - shape.rows);
+  if (table.columnCount < shape.columns) table.insertColumns(table.columnCount, shape.columns - table.columnCount);
+  else if (table.columnCount > shape.columns) table.deleteColumns(shape.columns, table.columnCount - shape.columns);
+  table.setBands({ headerRows: 1, headerColumns: 1 });
+  const width =
+    shape.columnWidth ??
+    (shape.hostWidth === undefined ? undefined : (shape.hostWidth - (shape.borderAllowance ?? 0)) / shape.columns);
+  if (width !== undefined) for (let c = 0; c < table.columnCount; c++) table.setColumnWidth(c, width);
 }
 
 /** `preferred` (or "Table"), suffixed with the first free number among `existing`. */

@@ -6,7 +6,7 @@
  */
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "../tsa/numbers-blank-donor.generated.ts";
-import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
@@ -459,6 +459,9 @@ export class NumbersDocument extends IWorkDocument {
     if (!component) throw new RangeError(`sheet ${sheetId} has no component`);
     const id = graftNeutralTable(this.store, component, sheetId);
     this.sheetContainer(sheetId).attach(id);
+    // The shape Insert ▸ Table gives: 10 by 5, one header row and column, 98-point columns.
+    const table = tablesOf(this.store, [id])[0];
+    if (table) fitNewTable(table, APP_TABLE_DEFAULTS.numbers);
     if (Object.keys(placement).length > 0) drawableById(this.store, id)?.setGeometry(placement);
     return id;
   }

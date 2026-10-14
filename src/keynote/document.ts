@@ -14,7 +14,7 @@ import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { ImageModel } from "../tsd/images.ts";
 import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
@@ -464,6 +464,16 @@ export class KeynoteSlide {
     return addTextBoxFrom(this.store, this.container(), donor, this.id, text, placement);
   }
 
+  /** The master's object placeholder frame, where the app puts an inserted table or picture. */
+  private objectPlaceholderFrame(): { x: number; y: number; width: number; height: number } | undefined {
+    const master = this.store.object(this.masterId ?? -1n);
+    const placeholder = master && this.store.resolve(refId(master.message, Slide.OBJECT_PLACEHOLDER));
+    const geometry = placeholder && new DrawableModel(this.store, placeholder).geometry();
+    return geometry?.width !== undefined && geometry.height !== undefined
+      ? { x: geometry.x ?? 0, y: geometry.y ?? 0, width: geometry.width, height: geometry.height }
+      : undefined;
+  }
+
   /**
    * Put a table on the slide: the neutral table every app shares (the
    * blank Numbers document's own, Apple-made), its parent the slide, in
@@ -481,19 +491,27 @@ export class KeynoteSlide {
       this.document.stylesheets().find((s) => s.id === stylesheetId) ?? this.document.stylesheets()[0];
     const id = graftNeutralTable(this.store, component, this.id, stylesheet);
     this.container().attach(id);
-    if (options.x !== undefined || options.y !== undefined) {
-      const placement: { x?: number; y?: number } = {};
-      if (options.x !== undefined) placement.x = options.x;
-      if (options.y !== undefined) placement.y = options.y;
-      drawableById(this.store, id)?.setGeometry(placement);
-    }
     const table = tablesOf(this.store, [id])[0];
     if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
+    // The frame Insert ▸ Table fills: the layout's object placeholder when
+    // the master has one, else the slide; 5 by 4 with one header row and
+    // column, rows deciding the counts when given.
+    const frame = this.objectPlaceholderFrame() ?? { x: 0, y: 0, width: this.document.slideSize()?.width ?? 1920, height: 650 };
+    const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
+    const rows = given?.length ?? APP_TABLE_DEFAULTS.keynote.rows;
+    const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.keynote.columns;
+    fitNewTable(table, { rows, columns, hostWidth: frame.width, borderAllowance: APP_TABLE_DEFAULTS.keynote.borderAllowance });
+    drawableById(this.store, id)?.setGeometry({
+      x: options.x ?? frame.x,
+      y: options.y ?? frame.y,
+      width: frame.width,
+      height: frame.height,
+    });
     remintTableIdentity(this.store, id);
     table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
     // Slide tables keep their name to themselves: 0 of 3 in the corpus show it.
     table.nameVisible = false;
-    if (options.rows) fillTable(table, options.rows);
+    if (options.rows && options.rows.length > 0) fillTable(table, options.rows);
     return table;
   }
 

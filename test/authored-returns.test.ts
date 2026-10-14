@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/numbers/document.ts";
 import { PagesDocument } from "../src/pages/document.ts";
+import { KeynoteDocument } from "../src/keynote/document.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { refId } from "../src/tsp/schema.ts";
 
@@ -84,5 +85,40 @@ describe("the page break", () => {
     const again = PagesDocument.load(doc.save());
     expect(again.bodyText).toBe("Before the break.\u0005After the break.");
     expect(again.body.paragraphs().map((p) => p.text)).toEqual(["Before the break.", "After the break."]);
+  });
+});
+
+describe("a new table takes the app's Insert > Table shape", () => {
+  const widths = (t: { columnCount: number; columnWidth(c: number): number }): number[] =>
+    [...Array(t.columnCount).keys()].map((c) => Math.round(t.columnWidth(c) * 1000) / 1000);
+
+  it("in Numbers: 10 by 5, one header row and column, 98-point columns", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.addTable(doc.sheets()[0]!.id, { name: "Fresh" });
+    expect([table.rowCount, table.columnCount, table.headerRowCount, table.headerColumnCount]).toEqual([10, 5, 1, 1]);
+    expect(widths(table)).toEqual([98, 98, 98, 98, 98]);
+    const theirs = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers")).tables()[1]!;
+    expect([theirs.rowCount, theirs.columnCount, theirs.headerRowCount, theirs.headerColumnCount, widths(theirs)[0]]).toEqual([10, 5, 1, 1, 98]);
+  });
+
+  it("in Pages: 5 by 4 across the body, 120.386-point columns on A4", () => {
+    const doc = PagesDocument.blank();
+    const table = doc.appendTable();
+    expect([table.rowCount, table.columnCount, table.headerRowCount, table.headerColumnCount, table.nameVisible]).toEqual([5, 4, 1, 1, false]);
+    const theirs = PagesDocument.load(fixture("olekristensen-v26.0-mac-authored.pages")).tables()[0]!;
+    expect(widths(table)).toEqual(widths(theirs));
+  });
+
+  it("in Keynote: 5 by 4 in the layout's object frame, 432.25-point columns", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const table = slide.addTable();
+    expect([table.rowCount, table.columnCount, table.headerRowCount, table.headerColumnCount, table.nameVisible]).toEqual([5, 4, 1, 1, false]);
+    const theirs = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-authored.key"));
+    const theirTable = theirs.tables()[0]!;
+    expect(widths(table)).toEqual(widths(theirTable));
+    const frame = slide.drawables().find((d) => d.object.type === 6000)!.geometry()!;
+    const theirFrame = theirs.slides()[2]!.drawables().find((d) => d.object.type === 6000)!.geometry()!;
+    expect([frame.x, frame.y, frame.width, frame.height]).toEqual([theirFrame.x, theirFrame.y, theirFrame.width, theirFrame.height]);
   });
 });

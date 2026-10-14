@@ -980,6 +980,7 @@ document's own — Apple-made — copied under the body or the slide, then
 sized and filled from `rows`:
 
 ```ts
+doc.appendTable();                                               // Pages: the app's 5×4, one header row and column, across the body
 doc.appendTable([["Item", "Count"], ["Apples", "3"]]);          // Pages: in a paragraph of its own at the end
 doc.insertInlineTable(pos, { rows, name: "Prices" });          // Pages: inline at a body position
 slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on the slide

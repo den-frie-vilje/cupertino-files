@@ -113,6 +113,13 @@ in commit messages and pull requests.
 
 ### Changed
 
+- A new table takes the shape the apps' Insert ▸ Table gives: 10 rows by
+  5 columns of 98 points in Numbers, 5 by 4 across the body in Pages and
+  across the layout's object frame in Keynote, each with one header row
+  and one header column. `addTable`, `appendTable` and `insertInlineTable`
+  without rows produce it; given rows, the counts follow the rows and the
+  columns still fill the host.
+
 - Duration formats are written with the app's duration type (268)
   instead of the custom-duration code, and the automatic-units flag is
   read and written alongside style and units.
