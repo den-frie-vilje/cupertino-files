@@ -249,7 +249,7 @@ export const TOOLS: readonly Tool[] = [
     name: "read_text",
     description:
       "Extract the text of a document: a Pages file's body, or a Keynote deck's titles, " +
-      "bodies and presenter notes per slide. For Numbers, use read_table instead.",
+      "bodies, text boxes and presenter notes per slide. For Numbers, use read_table instead.",
     inputSchema: {
       type: "object",
       properties: { path: PATH_PROP },
@@ -265,6 +265,11 @@ export const TOOLS: readonly Tool[] = [
             const parts = [`--- slide ${i + 1} ---`];
             if (s.title) parts.push(s.title);
             if (s.body) parts.push(s.body);
+            const placeholders = new Set([s.placeholder("title")?.id, s.placeholder("body")?.id, s.placeholder("slideNumber")?.id]);
+            for (const box of s.textStorages()) {
+              const text = box.text.replace(/[\u2029\ufffc]/g, "").trim();
+              if (!placeholders.has(box.id) && text) parts.push(text);
+            }
             if (s.notes) parts.push(`[notes] ${s.notes}`);
             return parts.join("\n");
           })
