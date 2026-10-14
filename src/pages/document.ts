@@ -8,7 +8,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
-import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
+import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
@@ -303,7 +303,9 @@ export class PagesDocument extends IWorkDocument {
    * items with the Bullet or Numbered list style, block quotes Body
    * paragraphs, each pipe table an inline table in a paragraph of its
    * own, and each image on a line of its own an inline picture, when
-   * `images` supplies its bytes by the source the Markdown names.
+   * `images` supplies its bytes by the source the Markdown names. Links
+   * become hyperlinks and footnote references with a definition become
+   * footnotes.
    * @agentTool create_document
    */
   static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): PagesDocument {
@@ -311,17 +313,36 @@ export class PagesDocument extends IWorkDocument {
     const names = new Set(doc.paragraphStyles().map((s) => s.name));
     const style = (name: string): string | undefined => (names.has(name) ? name : undefined);
     const heading = ["Title", "Heading", "Heading 2", "Heading 3"];
-    for (const block of parseMarkdown(markdown)) {
+    const blocks = parseMarkdown(markdown);
+    const notes = new Map(blocks.flatMap((b) => (b.kind === "footnote" ? [[b.label, b.text] as const] : [])));
+    // A paragraph with its links and footnote references: the references
+    // go in last to first, so earlier offsets hold, and the links are
+    // shifted by the marks inserted before them.
+    const appendInline = (inline: InlineText, styleName: string | undefined, list?: string): void => {
+      const index = doc.appendParagraph(inline.text, styleName, list);
+      const start = doc.body.paragraphs()[index]?.start ?? 0;
+      const refs = inline.footnotes.filter((n) => notes.has(n.label)).sort((a, b) => b.index - a.index);
+      for (const ref of refs) doc.body.addFootnote(start + ref.index, notes.get(ref.label)!);
+      for (const link of inline.links) {
+        const shift = (at: number): number => refs.filter((r) => r.index <= at).length;
+        doc.insertLink(start + link.start + shift(link.start), start + link.end + shift(link.end), link.url);
+      }
+    };
+    for (const block of blocks) {
       switch (block.kind) {
         case "heading":
           doc.appendParagraph(block.text, style(heading[Math.min(block.level, 4) - 1]!));
           break;
         case "paragraph":
+          appendInline(block.inline, style("Body"));
+          break;
         case "quote":
           doc.appendParagraph(block.text, style("Body"));
           break;
         case "list":
-          for (const item of block.items) doc.appendParagraph(item, style("Body"), block.ordered ? "Numbered" : "Bullet");
+          for (const item of block.items) appendInline(item, style("Body"), block.ordered ? "Numbered" : "Bullet");
+          break;
+        case "footnote":
           break;
         case "table":
           doc.appendTable(block.rows);

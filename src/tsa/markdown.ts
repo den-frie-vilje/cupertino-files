@@ -95,13 +95,39 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     items = [];
   };
   const attachments = storage.attachments();
+  const links = storage.links();
+  const footnotes = storage.footnotes();
+  const marks = new Map(footnotes.map((note, i) => [note.anchorIndex, `[^${i + 1}]`]));
+  const full = storage.text;
+  // A range of the text with its links as links, its footnote anchors as
+  // references and the other marks dropped.
+  const render = (from: number, to: number): string => {
+    let out = "";
+    let i = from;
+    for (const link of links.filter((l) => l.start >= from && l.end <= to).sort((a, b) => a.start - b.start)) {
+      out += plainRange(i, link.start);
+      out += `[${plainRange(link.start, link.end)}](${link.url})`;
+      i = link.end;
+    }
+    return out + plainRange(i, to);
+  };
+  function plainRange(from: number, to: number): string {
+    let out = "";
+    for (let k = from; k < to; k++) {
+      const mark = marks.get(k);
+      if (mark !== undefined) out += mark;
+      else if (!MARKS.test(full[k]!)) out += full[k]!;
+      MARKS.lastIndex = 0;
+    }
+    return out;
+  }
   for (const paragraph of storage.paragraphs()) {
     // Pictures and tables anchored in this paragraph follow its text.
     const anchored = attachments
       .filter((a) => a.drawableId !== undefined && a.index >= paragraph.start && a.index <= paragraph.end)
       .map((a) => attachmentToMarkdown(storage.store, a.drawableId!, options))
       .filter((block) => block.length > 0);
-    const text = paragraph.text.replace(MARKS, "").trim();
+    const text = render(paragraph.start, paragraph.end).trim();
     if (text === "") {
       flush();
       blocks.push(...anchored);
@@ -125,6 +151,9 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     blocks.push(text, ...anchored);
   }
   flush();
+  for (const [i, note] of footnotes.entries()) {
+    blocks.push(`[^${i + 1}]: ${note.storage.text.replace(MARKS, "").trim()}`);
+  }
   return blocks.join("\n\n");
 }
 

@@ -6,7 +6,7 @@ import { PagesDocument } from "../src/pages/document.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { blockPng } from "../scripts/png.ts";
-import { parseMarkdown } from "../src/tsa/markdown-parser.ts";
+import { inlineText, parseMarkdown } from "../src/tsa/markdown-parser.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -116,7 +116,7 @@ describe("building from Markdown", () => {
     ]);
     expect(doc.body.paragraphs()[1]!.text).toBe("An opening paragraph with bold and a link.");
     const again = PagesDocument.load(doc.save()).toMarkdown();
-    expect(again.startsWith("# Quarterly review\n\nAn opening paragraph with bold and a link.\n\n## Highlights\n\n- Revenue up\n- Costs flat\n\n1. First step\n2. Second step\n\nRemember the caveat")).toBe(true);
+    expect(again.startsWith("# Quarterly review\n\nAn opening paragraph with bold and a [link](https://example.org).\n\n## Highlights\n\n- Revenue up\n- Costs flat\n\n1. First step\n2. Second step\n\nRemember the caveat")).toBe(true);
   });
 
   it("gives Keynote a slide per heading with the body's lines and quoted notes", () => {
@@ -231,5 +231,31 @@ describe("pictures and anchored tables in the export", () => {
     expect(first >= 0 && secondAt > first).toBe(true);
     expect(md.indexOf("![dot.png](dot.png)") > secondAt).toBe(true);
     expect(md.indexOf("### Nums") > secondAt).toBe(true);
+  });
+});
+
+describe("links and footnotes", () => {
+  it("lifts links and references out of a run by offset", () => {
+    const run = inlineText("  See **the** [docs](https://x.org/d) now[^a] and ![pic](p.png).");
+    expect(run.text).toBe("See the docs now and pic.");
+    expect(run.links).toEqual([{ start: 8, end: 12, url: "https://x.org/d" }]);
+    expect(run.footnotes).toEqual([{ index: 16, label: "a" }]);
+  });
+
+  it("round-trip through Pages as hyperlinks and footnotes", () => {
+    const md = "# Notes\n\nSee [the site](https://example.org/a) for more[^1]. Then [again](https://example.org/b).\n\n- an [item link](https://example.org/c)\n\n[^1]: The note text.\n";
+    const doc = PagesDocument.load(PagesDocument.fromMarkdown(md).save());
+    expect(doc.body.links().map((l) => [doc.body.text.slice(l.start, l.end), l.url])).toEqual([
+      ["the site", "https://example.org/a"],
+      ["again", "https://example.org/b"],
+      ["item link", "https://example.org/c"],
+    ]);
+    const notes = doc.footnotes();
+    expect(notes.length).toBe(1);
+    expect(notes[0]!.storage.text.trim().endsWith("The note text.")).toBe(true);
+    expect(doc.body.text.slice(notes[0]!.anchorIndex - 4, notes[0]!.anchorIndex)).toBe("more");
+    expect(doc.toMarkdown()).toBe(
+      "# Notes\n\nSee [the site](https://example.org/a) for more[^1]. Then [again](https://example.org/b).\n\n- an [item link](https://example.org/c)\n\n[^1]: The note text.",
+    );
   });
 });

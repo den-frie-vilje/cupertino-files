@@ -798,7 +798,9 @@ export class KeynoteDocument extends IWorkDocument {
           break;
         case "list":
           content();
-          body.push(...block.items);
+          body.push(...block.items.map((item) => item.text));
+          break;
+        case "footnote":
           break;
         case "quote":
           content();
