@@ -12,6 +12,9 @@ export interface InlineText {
   links: { start: number; end: number; url: string }[];
   /** Footnote references, by the label after the caret and the offset the mark sits at. */
   footnotes: { index: number; label: string }[];
+  /** Ranges set in bold (`**` or `__`) and in italic (`*` or `_`); the two may overlap. */
+  bold: { start: number; end: number }[];
+  italic: { start: number; end: number }[];
 }
 
 export type MarkdownBlock =
@@ -36,42 +39,112 @@ const RULE = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const FOOTNOTE = /^\[\^([^\]]+)\]:\s*(.*)$/;
 const INLINE = /\[\^([^\]]+)\]|!\[([^\]]*)\]\([^)]*\)|\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g;
 
-/** Emphasis and code spans reduced to their text; links and references left alone. */
-function plainEmphasis(text: string): string {
-  return text
-    .replace(/`([^`]*)`/g, "$1")
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/__([^_]+)__/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/(^|\s)_([^_]+)_(?=\s|$)/g, "$1$2");
+/**
+ * Emphasis markers and code spans taken out of `pre`: the plain text, the
+ * bold and italic ranges in it, and for every offset of `pre` the offset
+ * of the plain text it maps to. An unclosed marker is dropped.
+ */
+function scanEmphasis(pre: string): { text: string; map: number[]; bold: { start: number; end: number }[]; italic: { start: number; end: number }[] } {
+  let text = "";
+  const map: number[] = new Array<number>(pre.length + 1).fill(0);
+  const bold: { start: number; end: number }[] = [];
+  const italic: { start: number; end: number }[] = [];
+  let boldAt: number | undefined;
+  let italicAt: { at: number; marker: string } | undefined;
+  const boundaryBefore = (i: number): boolean => i === 0 || /[\s(["']/.test(pre[i - 1]!);
+  const boundaryAfter = (i: number): boolean => i >= pre.length || /[\s.,;:!?)\]"']/.test(pre[i]!);
+  let i = 0;
+  while (i < pre.length) {
+    map[i] = text.length;
+    const ch = pre[i]!;
+    if (ch === "`") {
+      const close = pre.indexOf("`", i + 1);
+      if (close > i) {
+        for (let k = i + 1; k < close; k++) {
+          map[k] = text.length;
+          text += pre[k]!;
+        }
+        map[close] = text.length;
+        i = close + 1;
+        continue;
+      }
+    }
+    const pair = pre.slice(i, i + 2);
+    if (pair === "**" || pair === "__") {
+      map[i + 1] = text.length;
+      if (boldAt === undefined) boldAt = text.length;
+      else {
+        if (text.length > boldAt) bold.push({ start: boldAt, end: text.length });
+        boldAt = undefined;
+      }
+      i += 2;
+      continue;
+    }
+    if (ch === "*" || ch === "_") {
+      const opens = italicAt === undefined && !/\s/.test(pre[i + 1] ?? " ") && (ch === "*" || boundaryBefore(i));
+      const closes = italicAt?.marker === ch && (ch === "*" || boundaryAfter(i + 1));
+      if (opens) {
+        italicAt = { at: text.length, marker: ch };
+        i++;
+        continue;
+      }
+      if (closes) {
+        if (text.length > italicAt!.at) italic.push({ start: italicAt!.at, end: text.length });
+        italicAt = undefined;
+        i++;
+        continue;
+      }
+    }
+    text += ch;
+    i++;
+  }
+  // An opener nothing closed was a literal character after all.
+  const restore = (at: number, marker: string): void => {
+    text = text.slice(0, at) + marker + text.slice(at);
+    for (let k = 0; k <= pre.length; k++) if ((map[k] ?? 0) > at) map[k] = (map[k] ?? 0) + marker.length;
+    for (const r of [...bold, ...italic]) {
+      if (r.start > at) r.start += marker.length;
+      if (r.end > at) r.end += marker.length;
+    }
+  };
+  if (italicAt !== undefined) restore(italicAt.at, italicAt.marker);
+  if (boldAt !== undefined) restore(boldAt, "**");
+  map[pre.length] = text.length;
+  return { text, map, bold, italic };
 }
 
-/** The text of a run with its links and footnote references lifted out by offset. */
+/** The text of a run with its links, footnote references and emphasis lifted out by offset. */
 export function inlineText(raw: string): InlineText {
-  const out: InlineText = { text: "", links: [], footnotes: [] };
+  // First the structures with their own syntax, in the raw text's offsets.
+  let pre = "";
+  const links: { start: number; end: number; url: string }[] = [];
+  const notes: { index: number; label: string }[] = [];
   let last = 0;
   for (const m of raw.matchAll(INLINE)) {
-    out.text += plainEmphasis(raw.slice(last, m.index));
-    if (m[1] !== undefined) out.footnotes.push({ index: out.text.length, label: m[1] });
-    else if (m[2] !== undefined) out.text += m[2];
+    pre += raw.slice(last, m.index);
+    if (m[1] !== undefined) notes.push({ index: pre.length, label: m[1] });
+    else if (m[2] !== undefined) pre += m[2];
     else {
-      const start = out.text.length;
-      out.text += plainEmphasis(m[3] ?? "");
-      out.links.push({ start, end: out.text.length, url: m[4] ?? "" });
+      const start = pre.length;
+      pre += m[3] ?? "";
+      links.push({ start, end: pre.length, url: m[4] ?? "" });
     }
     last = m.index + m[0].length;
   }
-  out.text += plainEmphasis(raw.slice(last));
-  const lead = out.text.length - out.text.trimStart().length;
-  out.text = out.text.trim();
-  if (lead > 0) {
-    for (const link of out.links) {
-      link.start -= lead;
-      link.end -= lead;
-    }
-    for (const note of out.footnotes) note.index -= lead;
-  }
-  return out;
+  pre += raw.slice(last);
+  // Then the emphasis, which may sit inside a link's label.
+  const scanned = scanEmphasis(pre);
+  const lead = scanned.text.length - scanned.text.trimStart().length;
+  const text = scanned.text.trim();
+  const at = (offset: number): number => Math.max(0, Math.min(text.length, (scanned.map[offset] ?? scanned.text.length) - lead));
+  const range = (r: { start: number; end: number }): { start: number; end: number } => ({ start: r.start - lead, end: Math.min(text.length, r.end - lead) });
+  return {
+    text,
+    links: links.map((l) => ({ start: at(l.start), end: at(l.end), url: l.url })).filter((l) => l.end > l.start),
+    footnotes: notes.map((n) => ({ index: at(n.index), label: n.label })),
+    bold: scanned.bold.map(range).filter((r) => r.end > r.start),
+    italic: scanned.italic.map(range).filter((r) => r.end > r.start),
+  };
 }
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
 const TABLE_SEPARATOR = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;

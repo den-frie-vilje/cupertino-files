@@ -305,7 +305,7 @@ export class PagesDocument extends IWorkDocument {
    * own, and each image on a line of its own an inline picture, when
    * `images` supplies its bytes by the source the Markdown names. Links
    * become hyperlinks and footnote references with a definition become
-   * footnotes.
+   * footnotes, and bold and italic direct formatting.
    * @agentTool create_document
    */
   static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): PagesDocument {
@@ -323,10 +323,12 @@ export class PagesDocument extends IWorkDocument {
       const start = doc.body.paragraphs()[index]?.start ?? 0;
       const refs = inline.footnotes.filter((n) => notes.has(n.label)).sort((a, b) => b.index - a.index);
       for (const ref of refs) doc.body.addFootnote(start + ref.index, notes.get(ref.label)!);
+      const shift = (at: number): number => refs.filter((r) => r.index <= at).length;
       for (const link of inline.links) {
-        const shift = (at: number): number => refs.filter((r) => r.index <= at).length;
         doc.insertLink(start + link.start + shift(link.start), start + link.end + shift(link.end), link.url);
       }
+      for (const r of inline.bold) doc.applyCharacterFormatting(start + r.start + shift(r.start), start + r.end + shift(r.end), { bold: true });
+      for (const r of inline.italic) doc.applyCharacterFormatting(start + r.start + shift(r.start), start + r.end + shift(r.end), { italic: true });
     };
     for (const block of blocks) {
       switch (block.kind) {

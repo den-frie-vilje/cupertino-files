@@ -99,17 +99,54 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
   const footnotes = storage.footnotes();
   const marks = new Map(footnotes.map((note, i) => [note.anchorIndex, `[^${i + 1}]`]));
   const full = storage.text;
+  // Bold and italic per character, from the character style in effect:
+  // bit 1 bold, bit 2 italic.
+  const emphasis = new Uint8Array(full.length);
+  const sheet = storage.sheet();
+  const faces = new Map<bigint, number>();
+  for (const run of storage.characterStyleRuns()) {
+    if (run.objectId === undefined) continue;
+    let face = faces.get(run.objectId);
+    if (face === undefined) {
+      const character = sheet?.style(run.objectId)?.resolved().character;
+      face = (character?.bold ? 1 : 0) | (character?.italic ? 2 : 0);
+      faces.set(run.objectId, face);
+    }
+    if (face) emphasis.fill(face, run.start, Math.min(run.end, full.length));
+  }
+  const wrap = (piece: string, face: number): string => {
+    if (!face || piece.trim() === "") return piece;
+    const lead = piece.length - piece.trimStart().length;
+    const trail = piece.length - piece.trimEnd().length;
+    let core = piece.slice(lead, piece.length - trail);
+    if (face & 2) core = `*${core}*`;
+    if (face & 1) core = `**${core}**`;
+    return piece.slice(0, lead) + core + piece.slice(piece.length - trail);
+  };
+  // A stretch of the text, its emphasis runs wrapped.
+  const spans = (from: number, to: number): string => {
+    let out = "";
+    let at = from;
+    while (at < to) {
+      const face = emphasis[at] ?? 0;
+      let end = at;
+      while (end < to && (emphasis[end] ?? 0) === face) end++;
+      out += wrap(plainRange(at, end), face);
+      at = end;
+    }
+    return out;
+  };
   // A range of the text with its links as links, its footnote anchors as
-  // references and the other marks dropped.
+  // references, its emphasis as markers and the other marks dropped.
   const render = (from: number, to: number): string => {
     let out = "";
     let i = from;
     for (const link of links.filter((l) => l.start >= from && l.end <= to).sort((a, b) => a.start - b.start)) {
-      out += plainRange(i, link.start);
-      out += `[${plainRange(link.start, link.end)}](${link.url})`;
+      out += spans(i, link.start);
+      out += `[${spans(link.start, link.end)}](${link.url})`;
       i = link.end;
     }
-    return out + plainRange(i, to);
+    return out + spans(i, to);
   };
   function plainRange(from: number, to: number): string {
     let out = "";

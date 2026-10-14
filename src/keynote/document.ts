@@ -13,7 +13,7 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { ImageModel } from "../tsd/images.ts";
-import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
+import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
@@ -751,8 +751,9 @@ export class KeynoteDocument extends IWorkDocument {
    * slide's body, one line each, its block quotes its presenter notes
    * and its pipe tables tables on the slide; an image on a line of its
    * own lands on the slide when `images` supplies its bytes, and a
-   * thematic break (`---`) starts an untitled slide. Text before any
-   * heading goes on the title slide.
+   * thematic break (`---`) starts an untitled slide; links, bold and
+   * italic in the body survive. Text before any heading goes on the
+   * title slide.
    */
   static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): KeynoteDocument {
     const doc = KeynoteDocument.blank();
@@ -767,12 +768,23 @@ export class KeynoteDocument extends IWorkDocument {
     const content = (): void => {
       if (pending) newSlide();
     };
-    const body: string[] = [];
+    const body: InlineText[] = [];
     const notes: string[] = [];
     const tables: (readonly (readonly string[])[])[] = [];
     const pictures: { data: Uint8Array; fileName: string }[] = [];
     const flush = (): void => {
-      if (body.length) slide.body = body.join("\n");
+      if (body.length) {
+        slide.body = body.map((run) => run.text).join("\n");
+        const storage = slide.placeholder("body");
+        const paragraphs = storage?.paragraphs() ?? [];
+        for (const [i, run] of body.entries()) {
+          const start = paragraphs[i]?.start;
+          if (!storage || start === undefined) continue;
+          for (const link of run.links) storage.insertLink(start + link.start, start + link.end, link.url);
+          for (const r of run.bold) storage.range(start + r.start, start + r.end).format({ bold: true });
+          for (const r of run.italic) storage.range(start + r.start, start + r.end).format({ italic: true });
+        }
+      }
       if (notes.length) slide.notes = notes.join("\n");
       for (const rows of tables) slide.addTable({ rows });
       for (const picture of pictures) doc.addImage(slide.index, picture.data, picture);
@@ -794,11 +806,11 @@ export class KeynoteDocument extends IWorkDocument {
           break;
         case "paragraph":
           content();
-          body.push(block.text);
+          body.push(block.inline);
           break;
         case "list":
           content();
-          body.push(...block.items.map((item) => item.text));
+          body.push(...block.items);
           break;
         case "footnote":
           break;

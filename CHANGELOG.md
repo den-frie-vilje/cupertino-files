@@ -135,8 +135,9 @@ in commit messages and pull requests.
   `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
   build a new document from text: Pages gives headings the template's
   Title and Heading styles and lists its Bullet and Numbered styles;
-  Pages also turns links into hyperlinks and footnote references with a
-  definition into footnotes; Keynote makes a slide per heading with the
+  Pages also turns links into hyperlinks, bold and italic into direct
+  formatting and footnote references with a definition into footnotes;
+  Keynote keeps links, bold and italic in a slide's body; Keynote makes a slide per heading with the
   lines beneath as its body and block quotes as presenter notes; Numbers makes a sheet per top-level
   heading and a table per pipe table, named by the heading above. `create_document` takes `content`
   (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
@@ -155,8 +156,9 @@ in commit messages and pull requests.
   anchors them, a slide's pictures and tables under its heading; pictures
   are written through an image sink (`images` in the API, an `assets`
   directory on the tool, `--assets` on the command line) and linked.
-  Hyperlinks render as links and footnotes as references with their
-  definitions after the text. Served as the MCP tool `export_document`
+  Hyperlinks render as links, bold and italic character styling as
+  markers, and footnotes as references with their definitions after the
+  text. Served as the MCP tool `export_document`
   (markdown, csv or text) and the CLI subcommand `cupertino-files export
   <file>`.
 

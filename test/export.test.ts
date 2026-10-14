@@ -116,7 +116,7 @@ describe("building from Markdown", () => {
     ]);
     expect(doc.body.paragraphs()[1]!.text).toBe("An opening paragraph with bold and a link.");
     const again = PagesDocument.load(doc.save()).toMarkdown();
-    expect(again.startsWith("# Quarterly review\n\nAn opening paragraph with bold and a [link](https://example.org).\n\n## Highlights\n\n- Revenue up\n- Costs flat\n\n1. First step\n2. Second step\n\nRemember the caveat")).toBe(true);
+    expect(again.startsWith("# Quarterly review\n\nAn opening paragraph with **bold** and a [link](https://example.org).\n\n## Highlights\n\n- Revenue up\n- Costs flat\n\n1. First step\n2. Second step\n\nRemember the caveat")).toBe(true);
   });
 
   it("gives Keynote a slide per heading with the body's lines and quoted notes", () => {
@@ -257,5 +257,36 @@ describe("links and footnotes", () => {
     expect(doc.toMarkdown()).toBe(
       "# Notes\n\nSee [the site](https://example.org/a) for more[^1]. Then [again](https://example.org/b).\n\n- an [item link](https://example.org/c)\n\n[^1]: The note text.",
     );
+  });
+});
+
+describe("emphasis", () => {
+  it("is lifted out of a run by offset, inside links too", () => {
+    const run = inlineText("Say **bold**, *it*, __both__ and [a **b** c](https://x.org) `*code*` _under_score");
+    expect(run.text).toBe("Say bold, it, both and a b c *code* _under_score");
+    expect(run.bold).toEqual([{ start: 4, end: 8 }, { start: 14, end: 18 }, { start: 25, end: 26 }]);
+    expect(run.italic).toEqual([{ start: 10, end: 12 }]);
+    expect(run.links).toEqual([{ start: 23, end: 28, url: "https://x.org" }]);
+  });
+
+  it("round-trips through Pages as direct formatting and back to markers", () => {
+    const md = "# T\n\nSay **bold** and *soft* and [a **b** c](https://x.org).\n";
+    const doc = PagesDocument.load(PagesDocument.fromMarkdown(md).save());
+    const text = doc.body.text;
+    const faces = doc.body.characterStyleRuns().map((r) => {
+      const c = r.objectId === undefined ? undefined : doc.body.sheet()?.style(r.objectId)?.resolved().character;
+      return [text.slice(r.start, r.end), c?.bold ? "b" : "", c?.italic ? "i" : ""].join("|");
+    });
+    expect(faces.includes("bold|b|")).toBe(true);
+    expect(faces.includes("soft||i")).toBe(true);
+    expect(doc.toMarkdown()).toBe("# T\n\nSay **bold** and *soft* and [a **b** c](https://x.org).");
+  });
+
+  it("survives in a Keynote body", () => {
+    const md = "# T\n\n- see [here](https://x.org) and **now**\n- plain\n";
+    const doc = KeynoteDocument.load(KeynoteDocument.fromMarkdown(md).save());
+    const body = doc.slides()[0]!.placeholder("body")!;
+    expect(body.links().map((l) => [body.text.slice(l.start, l.end), l.url])).toEqual([["here", "https://x.org"]]);
+    expect(doc.toMarkdown().includes("see [here](https://x.org) and **now**")).toBe(true);
   });
 });
