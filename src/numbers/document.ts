@@ -15,7 +15,7 @@ import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst
 import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
-import { chartToMarkdown, joinBlocks, tableToMarkdown } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, tableToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
@@ -217,7 +217,7 @@ export class NumbersDocument extends IWorkDocument {
    * name as a pipe table and each chart as a table of its series, in the
    * sheet's own order.
    */
-  override toMarkdown(): string {
+  override toMarkdown(_options: MarkdownOptions = {}): string {
     const charts = new Map(this.charts().map((c) => [c.id, c]));
     return joinBlocks(
       this.sheets().map((sheet, index) =>

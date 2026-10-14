@@ -52,7 +52,7 @@ if (subcommand === "mcp") {
   const { TOOLS } = await import("./mcp/server.ts");
   const file = process.argv[3];
   if (!file) {
-    console.error("usage: cupertino-files export <file> [--format markdown|csv|text] [--table <index|name>] [--out <path>]");
+    console.error("usage: cupertino-files export <file> [--format markdown|csv|text] [--table <index|name>] [--out <path>] [--assets <dir>]");
     process.exit(2);
   }
   const args: Record<string, unknown> = { path: file };
@@ -63,6 +63,7 @@ if (subcommand === "mcp") {
     if (flag === "--format") args.format = value;
     else if (flag === "--table") args.table = value;
     else if (flag === "--out") args.output = value;
+    else if (flag === "--assets") args.assets = value;
     else {
       console.error(`unknown option ${String(flag)}`);
       process.exit(2);

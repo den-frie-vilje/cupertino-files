@@ -5,7 +5,9 @@
  * own structure in `toMarkdown()`; CSV lives beside the table model.
  */
 import type { ChartModel, ChartValue } from "../tsch/charts.ts";
-import type { TableModel } from "../tst/tables.ts";
+import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { ImageModel } from "../tsd/images.ts";
+import type { ObjectStore } from "../tsp/store.ts";
 import { FOOTNOTE_MARK_CHARACTER, OBJECT_REPLACEMENT_CHARACTER, type TextStorage } from "../tswp/textstorage.ts";
 
 /** Characters that mark attachments and notes in the text, not words. */
@@ -42,6 +44,40 @@ function levelOf(label: string | undefined): number | undefined {
   return undefined;
 }
 
+/**
+ * Where an exported picture goes: given its file name and bytes, returns
+ * the link target to write, or nothing to leave the picture out.
+ */
+export type ImageSink = (image: { fileName: string; data: Uint8Array }) => string | undefined;
+
+export interface MarkdownOptions {
+  images?: ImageSink;
+}
+
+/** A picture as a Markdown image, through the sink; nothing without one. */
+export function imageToMarkdown(image: ImageModel, options: MarkdownOptions): string {
+  const data = image.data();
+  if (!options.images || !data) return "";
+  const fileName = image.fileName ?? `image-${image.id}`;
+  const target = options.images({ fileName, data });
+  return target === undefined ? "" : `![${fileName}](${target})`;
+}
+
+/**
+ * What an attachment at a U+FFFC renders as: a pipe table for a table,
+ * an image link for a picture, nothing for the rest.
+ */
+export function attachmentToMarkdown(store: ObjectStore, drawableId: bigint, options: MarkdownOptions): string {
+  const object = store.object(drawableId);
+  if (!object) return "";
+  if (object.type === 3005) return imageToMarkdown(new ImageModel(store, object), options);
+  if (object.type === 6000) {
+    const table = tablesOf(store, [drawableId])[0];
+    return table ? joinBlocks([table.name ? `### ${table.name}` : "", tableToMarkdown(table)]) : "";
+  }
+  return "";
+}
+
 /** List styles that number their items, by the template's locale-free identifier or name. */
 const ORDERED_LIST = /number|harvard|letter/i;
 
@@ -50,7 +86,7 @@ const ORDERED_LIST = /number|harvard|letter/i;
  * paragraph is an item: "- " under a bullet style, "1. " under a numbered
  * or lettered one, and a run of items of one kind is one list.
  */
-export function storageToMarkdown(storage: TextStorage): string {
+export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions = {}): string {
   const blocks: string[] = [];
   let items: string[] = [];
   let ordered = false;
@@ -58,10 +94,17 @@ export function storageToMarkdown(storage: TextStorage): string {
     if (items.length > 0) blocks.push(items.join("\n"));
     items = [];
   };
+  const attachments = storage.attachments();
   for (const paragraph of storage.paragraphs()) {
+    // Pictures and tables anchored in this paragraph follow its text.
+    const anchored = attachments
+      .filter((a) => a.drawableId !== undefined && a.index >= paragraph.start && a.index <= paragraph.end)
+      .map((a) => attachmentToMarkdown(storage.store, a.drawableId!, options))
+      .filter((block) => block.length > 0);
     const text = paragraph.text.replace(MARKS, "").trim();
     if (text === "") {
       flush();
+      blocks.push(...anchored);
       continue;
     }
     const level = headingLevel(storage, paragraph.styleId);
@@ -79,7 +122,7 @@ export function storageToMarkdown(storage: TextStorage): string {
       continue;
     }
     flush();
-    blocks.push(text);
+    blocks.push(text, ...anchored);
   }
   flush();
   return blocks.join("\n\n");

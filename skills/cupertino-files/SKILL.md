@@ -1023,6 +1023,7 @@ instead of 5 would describe a deck that races through itself.
 
 ```ts
 doc.toMarkdown();            // any document: text, tables and charts in its own structure
+doc.toMarkdown({ images: ({ fileName, data }) => saveAndLink(fileName, data) });  // pictures too
 doc.tables()[0].toCsv();     // one table, RFC 4180
 doc.allText();               // every text storage, plain
 PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/Heading/Body styles, lists, tables, pictures
@@ -1039,7 +1040,7 @@ is a section per sheet, each table a pipe table whose first row is the
 header. Keynote is a section per slide, "## 1. Title", the body's
 paragraphs as list items and the presenter notes as a block quote. From
 the shell: `cupertino-files export deck.key`, `--format csv --table
-Sales`, `--format text`, `--out file.md`; and back, `cupertino-files
+Sales`, `--format text`, `--out file.md --assets file-assets`; and back, `cupertino-files
 import notes.md deck.key` (a `.csv` source makes a Numbers table). A
 Pages table is not built from Markdown — its rows land as tab-separated
 Body lines — and a Keynote deck's content slides take the "Title &

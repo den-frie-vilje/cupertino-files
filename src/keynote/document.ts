@@ -11,11 +11,12 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
-import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { ImageModel } from "../tsd/images.ts";
 import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
-import { remintTableIdentity, tablesOf, type TableModel } from "../tst/tables.ts";
+import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import { Image, TSD_TYPE } from "../tsd/schema.ts";
@@ -879,22 +880,32 @@ export class KeynoteDocument extends IWorkDocument {
 
   /**
    * The deck as Markdown: a section per slide headed by its number and
-   * title, the body's paragraphs as list items, the presenter notes as a
-   * block quote, then the deck's tables and charts.
+   * title, the body's paragraphs as list items, the slide's pictures and
+   * tables, the presenter notes as a block quote; then the tables on no
+   * slide, and the charts.
    */
-  override toMarkdown(): string {
+  override toMarkdown(options: MarkdownOptions = {}): string {
+    const placed = new Set<bigint>();
     const slides = this.slides().map((slide) => {
       const body = slide.placeholder("body");
       const notes = slide.notes.trim();
+      const own = slide.drawables();
+      for (const d of own) placed.add(d.id);
+      const tables = tablesOf(this.store, own.filter((d) => d.object.type === TST_TYPE.TABLE_INFO).map((d) => d.id));
+      const pictures = own.filter((d) => d.object.type === TSD_TYPE.IMAGE).map((d) => new ImageModel(this.store, d.object));
       return joinBlocks([
         `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
-        body ? storageToMarkdown(body) : "",
+        body ? storageToMarkdown(body, options) : "",
+        ...pictures.map((p) => imageToMarkdown(p, options)),
+        ...tables.map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
         notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",
       ]);
     });
     return joinBlocks([
       ...slides,
-      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.tables()
+        .filter((t) => !placed.has(t.infoObject?.identifier ?? -1n))
+        .map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
       ...this.charts().map((c) => chartToMarkdown(c)),
     ]);
   }

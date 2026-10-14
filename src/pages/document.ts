@@ -7,7 +7,7 @@
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
-import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
@@ -400,15 +400,25 @@ export class PagesDocument extends IWorkDocument {
 
   /**
    * The document as Markdown: the body (or, in a page-layout document,
-   * each text box in turn), then every table under its name, then the
-   * charts.
+   * each text box in turn) with its inline tables and pictures where
+   * they are anchored, then every other table under its name, the
+   * floating pictures, then the charts.
    */
-  override toMarkdown(): string {
+  override toMarkdown(options: MarkdownOptions = {}): string {
     const body = this.bodyOrUndefined;
-    const text = body ? [storageToMarkdown(body)] : this.textStorages(StorageKind.TEXTBOX).map((s) => storageToMarkdown(s));
+    const text = body
+      ? [storageToMarkdown(body, options)]
+      : this.textStorages(StorageKind.TEXTBOX).map((s) => storageToMarkdown(s, options));
+    // Whatever the body anchors is rendered in place; the rest follows.
+    const anchored = new Set(body?.attachments().map((a) => a.drawableId) ?? []);
     return joinBlocks([
       ...text,
-      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.tables()
+        .filter((t) => !anchored.has(t.infoObject?.identifier))
+        .map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.images()
+        .filter((i) => !anchored.has(i.id))
+        .map((i) => imageToMarkdown(i, options)),
       ...this.charts().map((c) => chartToMarkdown(c)),
     ]);
   }

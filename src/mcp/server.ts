@@ -13,8 +13,8 @@
  * save in place unless `output` names somewhere else, which mirrors what
  * the apps themselves do to a document.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { createInterface } from "node:readline";
 import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
@@ -201,6 +201,7 @@ export const TOOLS: readonly Tool[] = [
         path: PATH_PROP,
         format: { type: "string", enum: ["markdown", "csv", "text"] },
         table: { type: "string", description: "csv: 0-based table index or table name" },
+        assets: { type: "string", description: "markdown: a directory the pictures are written to, linked relative to output" },
         output: { type: "string", description: "Write here instead of returning the content" },
       },
       required: ["path"],
@@ -210,7 +211,19 @@ export const TOOLS: readonly Tool[] = [
       const doc = open(path);
       const format = str(args.format) ?? "markdown";
       let content: string;
-      if (format === "markdown") content = doc.toMarkdown();
+      const output = str(args.output);
+      const assets = str(args.assets);
+      if (format === "markdown") {
+        const sink = assets
+          ? (image: { fileName: string; data: Uint8Array }): string => {
+              mkdirSync(assets, { recursive: true });
+              const file = join(assets, image.fileName);
+              writeFileSync(file, image.data);
+              return output ? relative(dirname(output), file) || image.fileName : file;
+            }
+          : undefined;
+        content = doc.toMarkdown(sink ? { images: sink } : {});
+      }
       else if (format === "text") content = doc.allText();
       else if (format === "csv") {
         const tables = doc.tables();
@@ -223,7 +236,6 @@ export const TOOLS: readonly Tool[] = [
         }
         content = table.toCsv();
       } else throw new RangeError(`unknown format ${format}; use markdown, csv or text`);
-      const output = str(args.output);
       if (output) {
         writeFileSync(output, content);
         return `wrote ${format} to ${output}`;

@@ -197,3 +197,39 @@ describe("images in Markdown", () => {
     expect(deck.slides()[1]!.drawables().filter((d) => d.object.type === 3005).length).toBe(0);
   });
 });
+
+describe("pictures and anchored tables in the export", () => {
+  it("renders a Pages body's inline table and picture where they sit, and writes the picture through the sink", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Before.", "Body");
+    doc.appendTable([["k", "v"], ["a", "1"]], "Facts");
+    doc.appendParagraph("Between.", "Body");
+    doc.insertInlineImage(doc.bodyText.length, blockPng(20, 10), { fileName: "dot.png" });
+    const written: string[] = [];
+    const md = PagesDocument.load(doc.save()).toMarkdown({
+      images: ({ fileName, data }) => {
+        written.push(`${fileName}:${data.length}`);
+        return `assets/${fileName}`;
+      },
+    });
+    const order = ["Before.", "### Facts", "| k | v |", "Between.", "![dot.png](assets/dot.png)"].map((s) => md.indexOf(s));
+    expect(order.every((i, n) => i >= 0 && (n === 0 || i > order[n - 1]!))).toBe(true);
+    expect(written).toEqual([`dot.png:${blockPng(20, 10).length}`]);
+    expect(PagesDocument.load(doc.save()).toMarkdown().includes("![")).toBe(false);
+  });
+
+  it("puts a slide's picture and table under its heading", () => {
+    const doc = KeynoteDocument.blank();
+    doc.slides()[0]!.title = "First";
+    const second = doc.addSlide({ master: "Title & Bullets" });
+    second.title = "Second";
+    second.addTable({ rows: [["x"], ["9"]], name: "Nums" });
+    doc.addImage(1, blockPng(20, 10), { fileName: "dot.png", x: 10, y: 10 });
+    const md = KeynoteDocument.load(doc.save()).toMarkdown({ images: ({ fileName }) => fileName });
+    const first = md.indexOf("## 1. First");
+    const secondAt = md.indexOf("## 2. Second");
+    expect(first >= 0 && secondAt > first).toBe(true);
+    expect(md.indexOf("![dot.png](dot.png)") > secondAt).toBe(true);
+    expect(md.indexOf("### Nums") > secondAt).toBe(true);
+  });
+});
