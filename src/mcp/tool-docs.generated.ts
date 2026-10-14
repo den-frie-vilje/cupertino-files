@@ -130,6 +130,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "PagesDocument.insertInlineImage", tool: "add_image" },
   { api: "PagesDocument.insertInlineTable", tool: "add_table" },
   { api: "PagesDocument.insertLink", tool: "insert_link" },
+  { api: "PagesDocument.insertPageBreak", tool: null },
   { api: "PagesDocument.insertSectionBreak", tool: null },
   { api: "PagesDocument.insertText", tool: null },
   { api: "PagesDocument.links", tool: null },

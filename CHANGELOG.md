@@ -154,6 +154,12 @@ in commit messages and pull requests.
   `add_table`; the Markdown constructors now make real tables of pipe
   tables. Neither app has yet been seen to open a table placed this way.
 
+- `section.moveToSectionMaster(drawableId)` moves a drawable from its
+  page onto the section master so it repeats on every page, and
+  `doc.insertPageBreak(paragraphIndex)` ends a paragraph with a page
+  break, each written as Pages writes it. Pages has not yet been seen to
+  open either.
+
 - `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
   `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
   build a new document from text: Pages gives headings the template's

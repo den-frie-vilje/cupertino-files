@@ -964,6 +964,15 @@ it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
 
+**Repeating a drawable on every page, and breaking a page.** A drawable
+moved to the section master repeats on every page that master draws;
+a page break ends a paragraph:
+
+```ts
+doc.sections()[0].moveToSectionMaster(drawable.id);  // Arrange > Section Masters > Move Object to Section Master
+doc.insertPageBreak(paragraphIndex);                  // the paragraph's terminator becomes the page break
+```
+
 **Adding a table grafts the neutral donor.** A table from nothing would
 omit state only the app knows, so a new table is the blank Numbers
 document's own — Apple-made — copied under the body or the slide, then

@@ -190,6 +190,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["PagesDocument.setListStyle", "list styling needs the same find-based design work"],
   ["PagesDocument.unlistParagraphStyle", "style-management edge case, not an editing task"],
   ["PagesDocument.insertSectionBreak", "section semantics need more than a position to be safe over JSON"],
+  ["PagesDocument.insertPageBreak", "a paragraph index, like insertSectionBreak; the tool surface does not address paragraphs yet"],
   ["TableModel.setCellControl", "control creation is app-unverified (see docs/BLOCKERS.md); the tool waits for the app's word"],
   ["TableModel.setPopupMenu", "same app-unverified class as setCellControl"],
   ["TableModel.removeCellControl", "paired with control creation; ships with it"],

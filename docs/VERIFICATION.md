@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 21 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 22 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -39,11 +39,12 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 14 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
 | 15 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
 | 16 | 🟠 medium | Numbers & tables → Tables from nothing on a page or a slide | Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide. | manual |
-| 17 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 18 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 19 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
-| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 17 | 🟠 medium | Pages → Master-page drawables | Pages repeats a drawable this library moved to the section master on every page. | manual |
+| 18 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 19 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 20 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
+| 21 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 22 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -237,7 +238,19 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run seeds -- out writes seed-table.pages and seed-table.key; open each. A pass shows the 3×2 table with its three rows where the text says; a missing or empty table, or a refused file, is a failure.
 
-### 17. Categories: enable or disable grouping
+### 17. Master-page drawables
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Pages  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Pages repeats a drawable this library moved to the section master on every page.
+
+**Why the suite cannot settle it.** The archive matches the app's own move field for field; whether the app draws it on every page only the app shows.
+
+**How to settle it.** node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the page-1 graphic on every page of the section; only on page 1, or gone, is a failure.
+
+### 18. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -249,7 +262,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 18. Conditional formatting rules
+### 19. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -261,7 +274,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 19. Duration default format (a typed duration's stamp)
+### 20. Duration default format (a typed duration's stamp)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -273,7 +286,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the inspector; a failure shows a bare number or an inspector reading other than Duration, which means the written field set differs from a fresh cell's.
 
-### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 21. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -285,7 +298,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 21. Table of contents (rules read + write, cached entries read)
+### 22. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -582,7 +595,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Outcome.** **Confirmed — "K10 size was 4:3 on iPhone".** The resized canvas renders 4:3 in Keynote for iOS, the second platform this ladder has been checked on (the Pages comment rung was the first). One TSP.Size on the show is all it takes, and the app re-lays out for it.
 
-### ✅ Sections (read + insert)
+### ✅ Sections (read + insert) and page breaks
 
 **Was claimed.** a section break this library inserts starts a new section on a new page
 

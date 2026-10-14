@@ -93,9 +93,9 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Sections (read + insert)<br><sub>validation counts multi-section documents only</sub> | Pages | ✅ read + write | 5 | iwork19→current |
+| Sections (read + insert) and page breaks<br><sub>validation counts multi-section documents only; insertPageBreak ends a paragraph with U+0005, what Insert ▸ Page Break writes and what every corpus page-break character is (rung P24 asks Pages whether it paginates one written here)</sub> | Pages | ✅ read + write | 5 | iwork19→current |
 | Headers & footers (3 columns × first/even/odd) | Pages | ✅ read + write | 7 | iwork19→current |
-| Master-page drawables | Pages | 🔍 read only | 3 | iwork19→current |
+| Master-page drawables<br><sub>moveToSectionMaster writes the shape every master drawable in the corpus has — a plain reference from the master's list, the drawable without a parent, on no page — measured on the app's own move in olekristensen-v26.0-mac-authored.pages and two iWork '19 documents</sub> | Pages | ✅ read + write | 3 | iwork19→current |
 | Page setup (size, margins, orientation) | Pages | ✅ read + write | 29 | all |
 | Page-layout (body-less) documents | Pages | ✅ read + write | 2 | iwork16→modern |
 | Text boxes | Pages | ✅ read + write | 10 | iwork16→current |
@@ -169,7 +169,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-64 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+65 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -195,8 +195,9 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Drawables & media → **Inline image insertion**
 - 🔴 high — Drawables & media → **Inline image placement in an indented column**
 - 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
-- 🟠 medium — Pages → **Sections (read + insert)**
+- 🟠 medium — Pages → **Sections (read + insert) and page breaks**
 - 🟡 low — Pages → **Headers & footers (3 columns × first/even/odd)**
+- 🟠 medium — Pages → **Master-page drawables**
 - 🟡 low — Pages → **Page setup (size, margins, orientation)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*

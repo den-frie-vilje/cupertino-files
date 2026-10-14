@@ -206,6 +206,34 @@ export class PagesSection {
    * Drawables placed on this section's master pages (watermarks, logos,
    * repeating page furniture), keyed by page-master role.
    */
+  /**
+   * Move a drawable from its page onto this section's master, so it
+   * repeats on every page the master draws: the app's Arrange ▸ Section
+   * Masters ▸ Move Object to Section Master. The drawable leaves its
+   * page group and paint order and loses its parent, and the master
+   * names it in its own list — the shape of every master drawable in
+   * the corpus, app-written on request and in two earlier documents.
+   * `role` picks which master; the app uses the odd one.
+   */
+  moveToSectionMaster(drawableId: bigint, role: "first" | "even" | "odd" = "odd"): void {
+    const doc = this.document;
+    const template = this.templates().find((t) => t.role === role);
+    const templateObject = template && doc.store.object(template.templateId);
+    if (!templateObject) throw new RangeError(`section ${this.index} has no ${role} master`);
+    const drawable = doc.store.object(drawableId);
+    if (!drawable) throw new RangeError(`no drawable ${drawableId}`);
+    for (const page of doc.floatingDrawablePages()) doc.floatingDrawables(page)?.remove(drawableId);
+    const core = findDrawableCore(drawable.message);
+    if (core?.has(Drawable.PARENT)) {
+      core.remove(Drawable.PARENT);
+      drawable.message.markDirty();
+    }
+    if (!templateObject.message.getMessages(SectionTemplate.SECTION_TEMPLATE_DRAWABLES).some((r) => r.getVarint(1) === drawableId)) {
+      templateObject.message.addMessage(SectionTemplate.SECTION_TEMPLATE_DRAWABLES, makeRef(drawableId));
+      doc.store.declareReference(templateObject, drawableId);
+    }
+  }
+
   masterDrawables(): { role: "first" | "even" | "odd"; drawables: DrawableModel[] }[] {
     return this.templates().map((t) => {
       const template = this.document.store.object(t.templateId);
@@ -1073,6 +1101,23 @@ export class PagesDocument extends IWorkDocument {
    * editable. `inherit_previous_header_footer` is set, matching Pages'
    * "Create a new section" default. Returns the new section.
    */
+  /**
+   * End a paragraph with a page break, so the next one starts a new
+   * page: the paragraph's terminator becomes U+0005, which is what
+   * Insert ▸ Page Break writes and what every one of the corpus's
+   * page-break characters is, a terminator in place of the U+000A.
+   * Same length, so every attribute table keeps its indexes.
+   */
+  insertPageBreak(paragraphIndex: number): void {
+    const body = this.body;
+    const paragraph = body.paragraphs()[paragraphIndex];
+    if (!paragraph) throw new RangeError(`paragraph ${paragraphIndex} out of range`);
+    const terminator = body.text[paragraph.end];
+    if (terminator === "\u0005") return;
+    if (terminator !== "\n") throw new RangeError(`paragraph ${paragraphIndex} ends with a break of another kind`);
+    body.replaceRange(paragraph.end, paragraph.end + 1, "\u0005");
+  }
+
   insertSectionBreak(
     paragraphIndex: number,
     options: { name?: string; pageNumberStart?: number } = {},

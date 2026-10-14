@@ -1684,8 +1684,8 @@ Counting that across the Pages fixtures gives the terminator set:
 | --- | ---: | --- |
 | `U+000A` | 2607 | line feed |
 | `U+0004` | 28 | section break |
-| `U+0005` | 18 | layout / column break |
-| `U+000C` | 1 | page break |
+| `U+0005` | 18 | page break — what Insert ▸ Page Break writes |
+| `U+000C` | 1 | a break of an unmeasured kind |
 | `U+2028` | **0** (209 present) | soft line break — *not* a terminator |
 
 The section breaks run the other way too: **writing** a section needs the

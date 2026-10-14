@@ -985,11 +985,14 @@ export const CAPABILITIES: Capability[] = [
   // ------------------------------------------------------------------- pages
   {
     group: "Pages",
-    name: "Sections (read + insert)",
+    name: "Sections (read + insert) and page breaks",
     apps: ["pages"],
     status: "read+write",
     probe: (c) => safe(() => (c.pages?.sections().length ?? 0) > 1),
-    note: "validation counts multi-section documents only",
+    note:
+      "validation counts multi-section documents only; insertPageBreak ends a paragraph with U+0005, " +
+      "what Insert ▸ Page Break writes and what every corpus page-break character is (rung P24 asks " +
+      "Pages whether it paginates one written here)",
     manualProof: {
       claim: "a section break this library inserts starts a new section on a new page",
       settled:
@@ -1054,7 +1057,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Pages",
     name: "Master-page drawables",
     apps: ["pages"],
-    status: "read",
+    status: "read+write",
     probe: (c) =>
       safe(
         () =>
@@ -1062,6 +1065,18 @@ export const CAPABILITIES: Capability[] = [
             ?.sections()
             .some((s) => s.masterDrawables().some((m) => m.drawables.length > 0)) ?? false,
       ),
+    note:
+      "moveToSectionMaster writes the shape every master drawable in the corpus has — a plain " +
+      "reference from the master's list, the drawable without a parent, on no page — measured on " +
+      "the app's own move in olekristensen-v26.0-mac-authored.pages and two iWork '19 documents",
+    manualProof: {
+      claim: "Pages repeats a drawable this library moved to the section master on every page.",
+      why: "The archive matches the app's own move field for field; whether the app draws it on every page only the app shows.",
+      how:
+        "node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the " +
+        "page-1 graphic on every page of the section; only on page 1, or gone, is a failure.",
+      risk: "medium",
+    },
   },
   {
     group: "Pages",
