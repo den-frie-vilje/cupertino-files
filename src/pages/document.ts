@@ -1199,6 +1199,7 @@ export class PagesDocument extends IWorkDocument {
    * other behaviour, where the image is placed against the page margins
    * and text flows around it — with an indented body that means the
    * picture will not line up with the words above it.
+   * @agentTool add_image
    */
   insertInlineImage(
     pos: number,

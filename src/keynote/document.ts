@@ -1173,6 +1173,7 @@ export class KeynoteDocument extends IWorkDocument {
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
    * `x`/`y` say otherwise the picture is centered on the slide.
+   * @agentTool add_image
    */
   addImage(
     slideIndex: number,

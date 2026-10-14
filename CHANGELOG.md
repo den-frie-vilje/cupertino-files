@@ -116,6 +116,10 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- The MCP tool `add_image` puts a picture from a file on disk inline in a
+  Pages body or on a Keynote slide, through `insertInlineImage` and
+  `addImage`, which were API-only before.
+
 - Tables from nothing in Pages and Keynote: `doc.appendTable(rows)` and
   `doc.insertInlineTable(pos, { rows })` put a table in a Pages body,
   inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`

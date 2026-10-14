@@ -1035,6 +1035,68 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_image",
+    description: apiDoc(
+      "add_image",
+      "file is the picture on disk (PNG, JPEG or PDF). Pages: inline in the body at pos (a character " +
+        "index; omitted means the end), with wrap text (the default) or page. Keynote: on slide " +
+        "(0-based), placed by x and y, centred when omitted. width, height and maxWidth are points. " +
+        "Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        file: { type: "string", description: "Path to the image file" },
+        slide: { type: "number", description: "Keynote: 0-based slide index" },
+        pos: { type: "number", description: "Pages: body character index (default: end)" },
+        wrap: { type: "string", enum: ["text", "page"], description: "Pages: in the text flow or against the page" },
+        x: { type: "number" },
+        y: { type: "number" },
+        width: { type: "number" },
+        height: { type: "number" },
+        maxWidth: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "file"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const file = str(args.file);
+      if (!file) throw new RangeError("file is required");
+      if (!existsSync(file)) throw new RangeError(`no image at ${file}`);
+      const data = new Uint8Array(readFileSync(file));
+      const fileName = file.split("/").pop() ?? file;
+      const doc = open(path);
+      const sizing: { width?: number; height?: number; maxWidth?: number } = {};
+      for (const key of ["width", "height", "maxWidth"] as const) {
+        const value = num(args[key]);
+        if (value !== undefined) sizing[key] = value;
+      }
+      if (doc instanceof PagesDocument) {
+        const wrap = str(args.wrap);
+        if (wrap !== undefined && wrap !== "text" && wrap !== "page") throw new RangeError("wrap is text or page");
+        const pos = num(args.pos) ?? doc.bodyText.length;
+        const { imageId } = doc.insertInlineImage(pos, data, { fileName, ...sizing, ...(wrap ? { wrap } : {}) });
+        const target = save(doc, path, str(args.output));
+        return `inserted image ${imageId} at ${pos} and saved ${target}`;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        if (!doc.slides()[index]) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const placement: { x?: number; y?: number } = {};
+        const x = num(args.x);
+        const y = num(args.y);
+        if (x !== undefined) placement.x = x;
+        if (y !== undefined) placement.y = y;
+        const { imageId } = doc.addImage(index, data, { fileName, ...sizing, ...placement });
+        const target = save(doc, path, str(args.output));
+        return `added image ${imageId} to slide ${index} and saved ${target}`;
+      }
+      throw new RangeError("add_image writes Pages and Keynote documents; this is not one");
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",
