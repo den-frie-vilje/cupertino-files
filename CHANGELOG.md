@@ -159,7 +159,8 @@ in commit messages and pull requests.
   directory on the tool, `--assets` on the command line) and linked.
   Hyperlinks render as links, bold and italic character styling as
   markers, and footnotes as references with their definitions after the
-  text; a slide's free text boxes follow its body. A table's name heads
+  text; a slide's free text boxes follow its body, and the text of the
+  shapes and text boxes placed on Pages pages follows the body. A table's name heads
   it only when the table shows its name;
   Numbers sheets are top-level headings and their tables second-level. Served as the MCP tool `export_document`
   (markdown, csv or text) and the CLI subcommand `cupertino-files export

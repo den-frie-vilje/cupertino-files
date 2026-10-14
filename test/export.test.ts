@@ -315,3 +315,24 @@ describe("text boxes on slides", () => {
     expect(KeynoteDocument.load(doc.save()).toMarkdown().includes("Free text here")).toBe(true);
   });
 });
+
+describe("text placed on pages", () => {
+  it("exports the shapes' and text boxes' text after the body", () => {
+    const doc = PagesDocument.load(fixture("gomap-v26.1-newest-writer.pages"));
+    const spoken: string[] = [];
+    for (const page of doc.floatingDrawablePages()) {
+      for (const d of doc.floatingDrawables(page)!.drawables()) {
+        if (d.object.type !== 2011) continue;
+        const storage = doc.store.resolve(refId(d.object.message, 4));
+        const text = storage ? doc.textStorages().find((s) => s.id === storage.identifier)?.text.trim() : undefined;
+        if (text && text.length > 3) spoken.push(text.split("\n")[0]!.trim());
+      }
+    }
+    expect(spoken.length > 0).toBe(true);
+    const md = doc.toMarkdown();
+    expect(spoken.every((t) => md.includes(t))).toBe(true);
+    const withBox = PagesDocument.load(fixture("patrickomatic-pages26-sections-masks.pages"));
+    withBox.addTextBox(0, "Box on the page", { x: 100, y: 100, width: 200, height: 50 });
+    expect(PagesDocument.load(withBox.save()).toMarkdown().includes("Box on the page")).toBe(true);
+  });
+});

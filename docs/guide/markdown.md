@@ -15,8 +15,9 @@ doc.toMarkdown({ images: ({ fileName, data }) => save(fileName, data) });  // pi
 Pages renders its body: headings from the named paragraph styles, list
 paragraphs as list items, inline tables and pictures where the text
 anchors them, hyperlinks as links, bold and italic as markers, footnotes
-as references with their definitions after the text. A page-layout
-document renders each text box instead. Numbers is a top-level heading
+as references with their definitions after the text, then the text of
+the shapes and text boxes placed on the pages (all the text of a
+page-layout document). Numbers is a top-level heading
 per sheet and a pipe table per table, under its name when the table
 shows one. Keynote is a section per slide, `## 1. Title`, the body's
 paragraphs as list items, the slide's text boxes, pictures and tables,

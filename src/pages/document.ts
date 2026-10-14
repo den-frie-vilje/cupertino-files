@@ -423,16 +423,28 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * The document as Markdown: the body (or, in a page-layout document,
-   * each text box in turn) with its inline tables and pictures where
-   * they are anchored, then every other table under its name, the
-   * floating pictures, then the charts.
+   * The document as Markdown: the body with its inline tables and
+   * pictures where they are anchored, the text of the shapes and text
+   * boxes placed on the pages (all the text of a page-layout document),
+   * then every other table under its name, the floating pictures, then
+   * the charts.
    */
   override toMarkdown(options: MarkdownOptions = {}): string {
     const body = this.bodyOrUndefined;
-    const text = body
-      ? [storageToMarkdown(body, options)]
-      : this.textStorages(StorageKind.TEXTBOX).map((s) => storageToMarkdown(s, options));
+    // The shapes and text boxes placed on the pages, in page order, each
+    // with text of its own: in a page-layout document that is all the text.
+    const placed: TextStorage[] = [];
+    for (const page of this.floatingDrawablePages()) {
+      for (const drawable of this.floatingDrawables(page)?.drawables() ?? []) {
+        if (drawable.object.type !== TSWP_TYPE.SHAPE_INFO) continue;
+        const storage = this.store.resolve(refId(drawable.object.message, ShapeInfo.OWNED_STORAGE));
+        if (storage?.type === TSWP_TYPE.STORAGE) placed.push(new TextStorage(this.store, storage));
+      }
+    }
+    const text = [
+      body ? storageToMarkdown(body, options) : "",
+      ...placed.map((s) => storageToMarkdown(s, options)),
+    ];
     // Whatever the body anchors is rendered in place; the rest follows.
     const anchored = new Set(body?.attachments().map((a) => a.drawableId) ?? []);
     return joinBlocks([
