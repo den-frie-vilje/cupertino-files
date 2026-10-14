@@ -24,6 +24,7 @@ import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
 import { hexColor, solidStroke } from "../tsd/style.ts";
+import { fillTable } from "../tst/csv.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
@@ -1206,6 +1207,11 @@ export const TOOLS: readonly Tool[] = [
         },
         sheet: { type: "number", description: "0-based sheet index the action targets" },
         name: { type: "string", description: "add_sheet/rename_sheet/add_table: the name" },
+        rows: {
+          type: "array",
+          items: { type: "array", items: { type: "string" } },
+          description: "add_table: cell text by row, the first row the header; sizes and fills the table",
+        },
         copyOf: { type: "number", description: "add_sheet: 0-based sheet to copy" },
         to: { type: "number", description: "move_sheet: destination index" },
         output: OUTPUT_PROP,
@@ -1245,7 +1251,13 @@ export const TOOLS: readonly Tool[] = [
         case "add_table": {
           const id = doc.sheets()[sheet ?? 0]?.id;
           if (id === undefined) throw new RangeError(`no sheet at index ${sheet ?? 0}`);
-          doc.addTable(id, { name: str(args.name) });
+          const table = doc.addTable(id, { name: str(args.name) });
+          if (Array.isArray(args.rows)) {
+            fillTable(
+              table,
+              (args.rows as unknown[]).map((row) => (Array.isArray(row) ? row.map((cell) => String(cell)) : [String(row)])),
+            );
+          }
           break;
         }
         default:
