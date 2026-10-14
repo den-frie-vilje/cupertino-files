@@ -140,7 +140,8 @@ in commit messages and pull requests.
   formatting and footnote references with a definition into footnotes;
   Keynote keeps links, bold and italic in a slide's body; Keynote makes a slide per heading with the
   lines beneath as its body and block quotes as presenter notes; Numbers makes a sheet per top-level
-  heading and a table per pipe table, named by the heading above. `create_document` takes `content`
+  heading and a table per pipe table, named by the heading above, with
+  numbers, TRUE/FALSE and ISO dates typed. `create_document` takes `content`
   (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
   the same from a file. An image on a line of its own becomes an inline
   picture in Pages or a picture on the slide in Keynote when its bytes

@@ -29,6 +29,9 @@ features:
   - icon: ∅
     title: It mostly just works
     details: And where it doesn't, it declines with a reason — a clear error beats a plausible guess. Password-protected documents are refused on principle.
+  - icon: ⤓
+    title: Markdown in and out
+    details: Every document exports to Markdown, tables to CSV, pictures and comments along; a Pages document, a Keynote deck or a Numbers table is written from Markdown or CSV, from the API, the MCP tool or the command line.
   - icon: ⇄
     title: For the next implementer
     details: The format written down as we learn it, a language-neutral conformance suite, and the recovered schemas with their provenance. Port it, check yourself, tell us what we got wrong.

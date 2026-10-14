@@ -79,9 +79,16 @@ export function fillTable(table: TableModel, rows: readonly (readonly string[])[
   }
 }
 
-/** A CSV cell as the value a table cell takes: number, boolean or text. */
-export function csvCellValue(text: string): string | number | boolean {
+/**
+ * A CSV cell as the value a table cell takes: a number, TRUE/FALSE, an
+ * ISO date (as the export writes one) or text.
+ */
+export function csvCellValue(text: string): string | number | boolean | Date {
   if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
   if (/^(TRUE|FALSE)$/i.test(text)) return text.toUpperCase() === "TRUE";
+  if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/.test(text)) {
+    const date = new Date(text);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
   return text;
 }

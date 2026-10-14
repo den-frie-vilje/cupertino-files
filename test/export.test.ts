@@ -350,3 +350,14 @@ describe("comments in the export", () => {
     expect(lines[0]).toBe('> **"comment"** (Thibaud Colas): Comment');
   });
 });
+
+describe("dates in CSV", () => {
+  it("come back as date cells, as the export writes them", () => {
+    const csv = "When,What\n2013-07-26T00:00:00.000Z,seen\n2024-02-29,leap\n";
+    const doc = NumbersDocument.load(NumbersDocument.fromCsv(csv).save());
+    const table = doc.tables()[0]!;
+    expect(table.cellValue(1, 0)?.type).toBe("date");
+    expect(table.cellValue(2, 0)?.type).toBe("date");
+    expect(table.toCsv().split("\n")[1]!.startsWith("2013-07-26T00:00:00.000Z,")).toBe(true);
+  });
+});
