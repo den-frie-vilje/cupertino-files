@@ -284,3 +284,10 @@ The traps, each paid for once:
   float32 colour compared to its decimal — and each cost a diagnostic
   script the assertion message already answered. Read the actual value
   before touching the writer.
+- **A round trip over the corpus is an instrument too.** Exporting every
+  fixture to Markdown, building a document back and exporting again
+  found three things no unit test saw: table names headed tables that
+  hid them, the Numbers reader and writer disagreed on heading levels,
+  and the Keynote reader made a slide of every heading. Any writer with
+  a matching reader gets a corpus round trip (`test/markdown-corpus.test.ts`
+  is the pattern), comparing the structure the pair claims to carry.
