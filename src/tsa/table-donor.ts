@@ -12,10 +12,39 @@ import { refId } from "../tsp/schema.ts";
 import { Drawable } from "../tsd/schema.ts";
 import { findDrawableCore } from "../tsd/drawables.ts";
 import { TST_TYPE } from "../tst/tables.ts";
+import { makeRef } from "../tsp/schema.ts";
 import type { StylesheetModel } from "../tss/stylesheet.ts";
 
 /** TST.TableModelArchive's style preset reference, reached outside the curated extractor. */
 const TABLE_MODEL_STYLE_PRESET = 48;
+/** TSS.ThemeArchive → TST.ThemePresetsArchive (extension 200) → table_style_presets. */
+const THEME_SUPER = 1;
+const THEME_TABLE_PRESETS = 200;
+const THEME_TABLE_PRESET_LIST = 1;
+
+/**
+ * List a table style preset in the host theme, where the apps keep every
+ * preset a table can take (theme.super.200.1; the blank themes list six).
+ * Returns whether a theme was found to list it in.
+ */
+export function listTablePresetInTheme(store: ObjectStore, presetId: bigint): boolean {
+  for (const { obj } of store.allObjects()) {
+    if (!/ThemeArchive$/.test(store.typeNameOf(obj) ?? "")) continue;
+    const head = obj.message.getMessage(THEME_SUPER);
+    if (!head) continue;
+    const presets = head.getMessage(THEME_TABLE_PRESETS);
+    if (!presets) continue;
+    if (!presets.getMessages(THEME_TABLE_PRESET_LIST).some((m) => m.getVarint(1) === presetId)) {
+      presets.addMessage(THEME_TABLE_PRESET_LIST, makeRef(presetId));
+      head.setMessage(THEME_TABLE_PRESETS, presets);
+      obj.message.setMessage(THEME_SUPER, head);
+      obj.message.markDirty();
+      store.declareReference(obj, presetId);
+    }
+    return true;
+  }
+  return false;
+}
 
 let cached: { store: ObjectStore; info: IwaObject; parentId: bigint; presetId: bigint | undefined } | undefined;
 
@@ -58,10 +87,10 @@ const STYLE_TYPES = new Set([2021, 2022, 2023, 2025, 3015, 3016, 6004]);
  * parent is `parentId` — a sheet, a body storage or a slide. The one
  * reference allowed to escape the donor closure is that parent, rebound;
  * the style preset is seeded explicitly because the model reaches it
- * through a field the curated extractor skips. With `stylesheet`, the
- * table's per-object styles are listed there, as every Pages and Keynote
- * table's are in the corpus. Returns the new TST.TableInfoArchive's id;
- * the caller lists and places it.
+ * through a field no app declares. With `stylesheet`, the table's
+ * per-object styles are listed there and its preset in the host theme,
+ * as every Pages and Keynote table's are in the corpus. Returns the new
+ * TST.TableInfoArchive's id; the caller lists and places it.
  */
 export function graftNeutralTable(
   store: ObjectStore,
@@ -80,6 +109,10 @@ export function graftNeutralTable(
       const object = store.object(id);
       if (object && STYLE_TYPES.has(object.type)) stylesheet.adopt(id);
     }
+    // The preset that came with the table is the theme's to list, as
+    // every corpus preset is listed by its document's theme.
+    const preset = donor.presetId === undefined ? undefined : map.get(donor.presetId);
+    if (preset !== undefined) listTablePresetInTheme(store, preset);
   }
   return clone.identifier;
 }

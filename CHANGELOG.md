@@ -135,7 +135,8 @@ in commit messages and pull requests.
   inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`
   puts one on a Keynote slide — the neutral table every app shares (the
   blank Numbers document's own, Apple-made), grafted under the body or the
-  slide and sized and filled from `rows`. `insertInlineTable` takes the
+  slide and sized and filled from `rows`, its styles listed in the host
+  stylesheet and its preset in the host theme. `insertInlineTable` takes the
   neutral table by default and copies a table in the document only when
   `copyOf` names one; it no longer refuses a document without a table. Served as the MCP tool
   `add_table`; the Markdown constructors now make real tables of pipe
