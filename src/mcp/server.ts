@@ -186,6 +186,51 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "export_document",
+    description: apiDoc(
+      "export_document",
+      "format is markdown (the default: text, tables and charts in the document's structure), " +
+        "csv (one table, chosen by table as a 0-based index or a name; the first by default) or " +
+        "text (every text storage, plain). Returns the result, or writes it to output and " +
+        "returns the path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        format: { type: "string", enum: ["markdown", "csv", "text"] },
+        table: { type: "string", description: "csv: 0-based table index or table name" },
+        output: { type: "string", description: "Write here instead of returning the content" },
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const format = str(args.format) ?? "markdown";
+      let content: string;
+      if (format === "markdown") content = doc.toMarkdown();
+      else if (format === "text") content = doc.allText();
+      else if (format === "csv") {
+        const tables = doc.tables();
+        const which = str(args.table) ?? "0";
+        const table = /^\d+$/.test(which) ? tables[Number(which)] : tables.find((t) => t.name === which);
+        if (!table) {
+          throw new RangeError(
+            `no table ${which}; the document has ${tables.map((t, i) => `${i}: ${t.name ?? "(unnamed)"}`).join(", ") || "none"}`,
+          );
+        }
+        content = table.toCsv();
+      } else throw new RangeError(`unknown format ${format}; use markdown, csv or text`);
+      const output = str(args.output);
+      if (output) {
+        writeFileSync(output, content);
+        return `wrote ${format} to ${output}`;
+      }
+      return content;
+    },
+  },
+  {
     name: "read_text",
     description:
       "Extract the text of a document: a Pages file's body, or a Keynote deck's titles, " +

@@ -14,6 +14,7 @@ import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst
 import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, deepCloneObjectInto, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
+import { chartToMarkdown, joinBlocks, tableToMarkdown } from "../tsa/markdown.ts";
 import { drawableById } from "../tsd/placement.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
@@ -157,6 +158,29 @@ export class NumbersDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  /**
+   * The document as Markdown: a section per sheet, each table under its
+   * name as a pipe table and each chart as a table of its series, in the
+   * sheet's own order.
+   */
+  override toMarkdown(): string {
+    const charts = new Map(this.charts().map((c) => [c.id, c]));
+    return joinBlocks(
+      this.sheets().map((sheet, index) =>
+        joinBlocks([
+          `## ${sheet.name ?? `Sheet ${index + 1}`}`,
+          ...this.tablesOnSheet(sheet.id).map((table) =>
+            joinBlocks([table.name ? `### ${table.name}` : "", tableToMarkdown(table)]),
+          ),
+          ...this.sheetContainer(sheet.id)
+            .ids()
+            .map((id) => charts.get(id))
+            .map((chart) => (chart ? chartToMarkdown(chart) : "")),
+        ]),
+      ),
+    );
   }
 
   /**

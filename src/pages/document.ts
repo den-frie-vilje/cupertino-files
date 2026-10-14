@@ -7,6 +7,7 @@
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   describeStyle,
@@ -22,6 +23,7 @@ import {
   ENTRY_OBJECT,
   ShapeInfo,
   Storage,
+  StorageKind,
   TSWP_TYPE,
 } from "../tswp/schema.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -348,6 +350,21 @@ export class PagesDocument extends IWorkDocument {
   /** Plain body text ("" for page-layout documents). */
   get bodyText(): string {
     return this.bodyOrUndefined?.text ?? "";
+  }
+
+  /**
+   * The document as Markdown: the body (or, in a page-layout document,
+   * each text box in turn), then every table under its name, then the
+   * charts.
+   */
+  override toMarkdown(): string {
+    const body = this.bodyOrUndefined;
+    const text = body ? [storageToMarkdown(body)] : this.textStorages(StorageKind.TEXTBOX).map((s) => storageToMarkdown(s));
+    return joinBlocks([
+      ...text,
+      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Body paragraphs with resolved style names ([] for page-layout documents). */

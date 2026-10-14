@@ -110,6 +110,14 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- `doc.toMarkdown()` renders any document as Markdown — a Pages body
+  with headings from the named styles and list paragraphs as list items,
+  Numbers as a section per sheet with each table as a pipe table, Keynote
+  as a section per slide with body items and quoted presenter notes, and
+  charts as a table of their series — and `table.toCsv()` renders a table
+  as RFC 4180 CSV. Served as the MCP tool `export_document` (markdown, csv
+  or text) and the CLI subcommand `cupertino-files export <file>`.
+
 - `slide.background()` reads a Keynote slide's background fill up its
   style chain, and `slide.setBackground(fill)` sets one, as the app does:
   a variation style of the slide's own under the layout's, replaced in

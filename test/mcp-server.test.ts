@@ -112,6 +112,7 @@ describe("the MCP server over stdio", () => {
         "audit_document",
         "create_document",
         "describe_document",
+        "export_document",
         "format_cells",
         "format_text",
         "insert_link",

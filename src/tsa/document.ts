@@ -43,6 +43,7 @@ import { SHARED_REFERENCE_EXTRACTORS } from "./extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage, verifyTextStorageIntegrity } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "./markdown.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
@@ -253,6 +254,21 @@ export class IWorkDocument {
     }
     for (const table of this.tables()) findings.push(...table.audit());
     return findings;
+  }
+
+  /**
+   * The document as Markdown: paragraphs as paragraphs, headings by their
+   * named style, list paragraphs as list items, tables as pipe tables and
+   * charts as a table of their series. Pages, Numbers and Keynote each
+   * arrange this in their own structure — body, sheets, slides.
+   * @agentTool export_document
+   */
+  toMarkdown(): string {
+    return joinBlocks([
+      ...this.textStorages().map((s) => storageToMarkdown(s)),
+      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Concatenated plain text of all in-document storages (reading order approximation). */

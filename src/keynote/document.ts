@@ -11,6 +11,7 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import { Image, TSD_TYPE } from "../tsd/schema.ts";
@@ -763,6 +764,28 @@ export class KeynoteDocument extends IWorkDocument {
   /** Slides that will actually be presented (skipped ones removed). */
   presentedSlides(): KeynoteSlide[] {
     return this.slides().filter((s) => !s.isSkipped);
+  }
+
+  /**
+   * The deck as Markdown: a section per slide headed by its number and
+   * title, the body's paragraphs as list items, the presenter notes as a
+   * block quote, then the deck's tables and charts.
+   */
+  override toMarkdown(): string {
+    const slides = this.slides().map((slide) => {
+      const body = slide.placeholder("body");
+      const notes = slide.notes.trim();
+      return joinBlocks([
+        `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
+        body ? storageToMarkdown(body) : "",
+        notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",
+      ]);
+    });
+    return joinBlocks([
+      ...slides,
+      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Number of slides reachable from the slide tree. */

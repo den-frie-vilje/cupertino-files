@@ -230,6 +230,17 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Container",
+    name: "Export to Markdown, CSV and plain text",
+    apps: "all",
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.toMarkdown().length >= 0),
+    note:
+      "toMarkdown arranges text, tables and charts in each kind's structure (body with headings " +
+      "and lists; a section per sheet; a section per slide with quoted notes); toCsv renders one " +
+      "table per RFC 4180. An offline rendering, so nothing here waits on an app",
+  },
+  {
+    group: "Container",
     name: "Compaction (drop unreachable archives)",
     apps: "all",
     status: "read+write",
