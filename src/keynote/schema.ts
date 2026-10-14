@@ -111,6 +111,18 @@ export const MASTER_ONLY_FIELDS: readonly number[] = [
   Slide.THUMBNAIL_TEXT_FOR_BODY,
 ];
 
+/** KN.SlideStyleArchive. */
+export const SlideStyle = protoFields("KN.SlideStyleArchive", {
+  SUPER: "super",
+  OVERRIDE_COUNT: "override_count",
+  SLIDE_PROPERTIES: "slide_properties",
+});
+
+/** KN.SlideStylePropertiesArchive. */
+export const SlideStyleProperties = protoFields("KN.SlideStylePropertiesArchive", {
+  FILL: "fill",
+});
+
 /** KN.NoteArchive. */
 export const Note = protoFields("KN.NoteArchive", { CONTAINED_STORAGE: "containedStorage" });
 

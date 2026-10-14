@@ -194,6 +194,15 @@ export const RUNGS: {
     },
   },
   {
+    name: "K14-slide-background",
+    note: "the first slide's background set to a dark green, as a style of its own",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K14: this slide's background should be dark green (not the theme's). White means the style was ignored.";
+      slide.setBackground({ kind: "color", color: { r: 0.1, g: 0.23, b: 0.16, space: "srgb" } });
+    },
+  },
+  {
     name: "K12-text-box",
     note: "a text box copied from the deck's own and placed on the first slide with new text",
     build: (doc) => {

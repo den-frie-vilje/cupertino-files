@@ -920,6 +920,7 @@ slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
 slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
+slide.background();  slide.setBackground({ kind: "color", color: hexColor("#1a3a2a") }); // a style of the slide's own, under the layout's
 slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
 slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }); // one stage per paragraph
 // Effect ids are the app's own, measured from real decks: the

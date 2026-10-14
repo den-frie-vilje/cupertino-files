@@ -894,3 +894,52 @@ describe("a slide instantiated from a layout", () => {
     expect(() => doc.addSlide({ master: "No such layout" })).toThrow(/Title & Bullets/);
   });
 });
+
+describe("a slide background of its own", () => {
+  it("is a variation style under the master's, read back and replaced in place", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const masterStyle = refId(doc.store.object(slide.masterId!)!.message, Slide.STYLE)!;
+    expect(refId(slide.object.message, Slide.STYLE)).toBe(masterStyle);
+    const green = { r: 0.125, g: 0.25, b: 0.1875, space: "srgb" as const };
+    slide.setBackground({ kind: "color", color: green });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    const styleId = refId(again.object.message, Slide.STYLE)!;
+    expect(styleId).not.toBe(masterStyle);
+    const style = reloaded.store.object(styleId)!;
+    expect(style.type).toBe(9);
+    const head = style.message.getMessage(1)!;
+    expect([head.has(1), head.has(2), refId(head, 3), head.getBool(4), refId(head, 5)]).toEqual([
+      false,
+      false,
+      masterStyle,
+      true,
+      refId(reloaded.store.object(masterStyle)!.message.getMessage(1), 5),
+    ]);
+    expect(style.message.getUint(10)).toBe(1);
+    expect(again.background()).toEqual({ kind: "color", color: green });
+    // The master's style is untouched, and the slide alone refers to the new one.
+    expect(reloaded.store.object(masterStyle)!.message.toBytes()).toEqual(doc.store.object(masterStyle)!.message.toBytes());
+    expect(reloaded.store.referrers(styleId)).toEqual([again.id]);
+    expect(reloaded.store.componentOf(styleId)).toBe(reloaded.store.componentOf(masterStyle));
+    // A second colour replaces the fill in the same variation.
+    again.setBackground({ kind: "color", color: { r: 1, g: 0, b: 0, space: "srgb" } });
+    expect(refId(again.object.message, Slide.STYLE)).toBe(styleId);
+    const red = again.background();
+    expect(red?.kind === "color" ? red.color.r : undefined).toBe(1);
+  });
+
+  it("reads the corpus deck's per-slide backgrounds through the same chain", () => {
+    const deck = KeynoteDocument.load(fixture("zenodo-v26.1-pptx-lineage.key"));
+    const own = deck.slides().filter((s) => refId(s.object.message, Slide.STYLE) !== refId(deck.store.object(s.masterId!)!.message, Slide.STYLE));
+    expect(own.length).toBe(11);
+    const fill = own[0]!.background();
+    expect(fill?.kind).toBe("color");
+    expect(fill?.kind === "color" && fill.color.r < 0.2).toBe(true);
+    // A slide sharing its master's style reads the master's fill.
+    const shared = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key")).slides()[0]!;
+    expect(refId(shared.object.message, Slide.STYLE)).toBe(refId(shared.document.store.object(shared.masterId!)!.message, Slide.STYLE));
+    expect(shared.background()?.kind).toBe("image");
+  });
+});

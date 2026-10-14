@@ -830,6 +830,39 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "set_slide_background",
+    description: apiDoc(
+      "set_slide_background",
+      "Gives a Keynote slide a flat background colour (hex like #1a3a2a), as a style of its own " +
+        "under the layout's. slide is 0-based. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .key document" },
+        slide: { type: "number", description: "0-based slide index" },
+        color: { type: "string", description: "Background colour as hex, e.g. #1a3a2a" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "slide", "color"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof KeynoteDocument)) {
+        throw new RangeError("set_slide_background edits Keynote documents; this is not one");
+      }
+      const index = num(args.slide);
+      const color = str(args.color);
+      if (index === undefined || color === undefined) throw new RangeError("slide and color are required");
+      const slide = doc.slides()[index];
+      if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+      slide.setBackground({ kind: "color", color: hexColor(color) });
+      const target = save(doc, path, str(args.output));
+      return `set the background of slide ${index} and saved ${target}`;
+    },
+  },
+  {
     name: "add_text_box",
     description: apiDoc(
       "add_text_box",

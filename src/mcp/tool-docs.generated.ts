@@ -26,6 +26,7 @@ export const TOOL_DOCS: ReadonlyMap<string, readonly { api: string; summary: str
     ["set_cells", [{"api":"TableModel.setCell","summary":"Write a value into an existing cell. Presentation the record already carries — cell and text style ids, number formats, comments, conditional styles — is preserved, except that format ids tied to the *old* value type are dropped when the type changes (a date format on a number cell would render nonsense). Writing a literal also clears any formula on the cell. Rich text (`{ type: \"richText\" }`) cannot be written: the value lives in a separate TSWP storage object. Set plain `text` instead, or edit the existing rich-text storage through richTextStorage."}]],
     ["set_formula", [{"api":"TableModel.setFormula","summary":"Write a formula into a cell. The formula is compiled to a TSCE AST, interned in the table's formula table, and the cell's record points at it — the same three steps the app performs. Relative references are stored as offsets from this cell, so `=A1+1` in B2 and in B3 compile to different bytes, exactly as in the app. **Nothing here evaluates.** A cell record carries the formula *and* its cached result, and the apps display the cache until the engine recalculates. `value` is that cache: supply it and the cell reads correctly before any app has touched the file; omit it and whatever the cell held is kept, which is right when the formula reproduces the value already there and wrong otherwise. There is no third option that does not involve implementing Apple's calc engine. **The dependency tracker is not written — and does not need to be.** The calc engine keeps its own per-cell ledger (`TSCE.FormulaOwnerDependenciesArchive`) that this method leaves alone. Numbers rebuilds it on open rather than trusting it: the e2e recompute probe writes a formula with a deliberately wrong cached value and the app reports the recomputed result on every `npm run test:e2e`. Refuses a function it has no index for rather than inventing one — see `authorableFunctions()` for the 272 it knows."}]],
     ["set_page_setup", [{"api":"PagesDocument.setPageSetup","summary":"Update page geometry (points; 1 pt = 1/72 in). Only given fields change."}]],
+    ["set_slide_background", [{"api":"KeynoteSlide.setBackground","summary":"Set the slide's background, copying on write. A per-slide background is a KN.SlideStyleArchive beside the master's in the stylesheet's component: unnamed, a variation whose parent is the master's style and whose stylesheet is the document's, override count 1, and the fill in its slide properties. Nothing lists it; the slide's own reference is its only referrer. A slide already carrying such a variation of its own has the fill replaced in place; one sharing its style with the master, or with other slides, gets a variation of its own."}]],
     ["set_table_bands", [{"api":"TableModel.setBands","summary":"Change how many leading rows/columns are header bands, and how those bands behave. Bands are presentation only — cell storage is identical either way — so this is a safe edit that does not touch the tiles. Counts are clamped to the table's real size: a header count past the last row would leave the app with no body."}]],
   ]);
 
@@ -67,6 +68,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "KeynoteDocument.slides", tool: null },
   { api: "KeynoteSlide.addBuild", tool: "add_build" },
   { api: "KeynoteSlide.addTextBox", tool: "add_text_box" },
+  { api: "KeynoteSlide.background", tool: null },
   { api: "KeynoteSlide.builds", tool: null },
   { api: "KeynoteSlide.container", tool: null },
   { api: "KeynoteSlide.drawables", tool: null },
@@ -75,6 +77,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "KeynoteSlide.placeholderKind", tool: null },
   { api: "KeynoteSlide.placeholders", tool: null },
   { api: "KeynoteSlide.removeBuild", tool: null },
+  { api: "KeynoteSlide.setBackground", tool: "set_slide_background" },
   { api: "KeynoteSlide.setPlaceholderText", tool: null },
   { api: "KeynoteSlide.setTransition", tool: null },
   { api: "KeynoteSlide.textStorages", tool: null },

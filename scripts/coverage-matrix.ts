@@ -2138,6 +2138,28 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slide background (read + set)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.background() !== undefined)),
+    note:
+      "background reads up the style chain; setBackground writes the corpus shape of a per-slide " +
+      "background — an unnamed KN.SlideStyleArchive variation under the master's style, in the " +
+      "stylesheet's component, override count 1, the fill in its slide properties, referenced by " +
+      "the slide alone — measured on the one deck that carries any (11 slides)",
+    manualProof: {
+      claim: "Keynote draws a background this library set as a variation of the layout's style.",
+      why:
+        "The suite proves the archive matches the corpus's per-slide styles field for field; a " +
+        "style the app ignores looks like a slide left on its theme, so only the app can say.",
+      how:
+        "npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass " +
+        "shows the first slide dark green; the theme's own background, or a refused deck, is a failure.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Slides from a layout (addSlide master)",
     apps: ["keynote"],
     status: "read+write",

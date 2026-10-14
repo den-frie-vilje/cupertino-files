@@ -239,6 +239,20 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "live_video_source_ids": 30,
     "live_video_source_usage_entries": 31,
   },
+  "KN.SlideStyleArchive": {
+    "super": 1,
+    "override_count": 10,
+    "slide_properties": 11,
+  },
+  "KN.SlideStylePropertiesArchive": {
+    "fill": 1,
+    "transition": 2,
+    "transition_null": 3,
+    "titlePlaceholderVisibility": 4,
+    "bodyPlaceholderVisibility": 5,
+    "slideNumberPlaceholderVisibility": 6,
+    "objectPlaceholderVisibility": 7,
+  },
   "KN.SlideTreeArchive": {
     "rootSlideNode": 1,
     "slides": 2,

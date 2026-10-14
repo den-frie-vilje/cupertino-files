@@ -110,6 +110,13 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- `slide.background()` reads a Keynote slide's background fill up its
+  style chain, and `slide.setBackground(fill)` sets one, as the app does:
+  a variation style of the slide's own under the layout's, replaced in
+  place on a second call. Also served as the MCP tool
+  `set_slide_background`. Keynote has not yet been seen to draw a
+  background written this way.
+
 - `doc.addSlide({ master })` makes a Keynote slide from one of the deck's
   layouts, by name or id, as the app's own "add slide" does: the master is
   deep-copied and the copy made a content slide, with empty title and body,

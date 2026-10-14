@@ -128,6 +128,7 @@ describe("the MCP server over stdio", () => {
         "set_cells",
         "set_formula",
         "set_page_setup",
+        "set_slide_background",
         "set_slide_text",
         "set_table_bands",
       ]);

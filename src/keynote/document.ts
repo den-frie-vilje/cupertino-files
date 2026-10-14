@@ -17,6 +17,8 @@ import { Image, TSD_TYPE } from "../tsd/schema.ts";
 import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
+import { StyleSuper } from "../tss/schema.ts";
+import { readFill, writeFill, type Fill } from "../tsd/style.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
@@ -36,6 +38,8 @@ import {
   Show,
   Slide,
   SlideNode,
+  SlideStyle,
+  SlideStyleProperties,
   SlideTree,
   SLIDE_TYPES,
   Transition,
@@ -182,6 +186,69 @@ export class KeynoteSlide {
   /** The master (template) slide this one is based on, if any. */
   get masterId(): bigint | undefined {
     return refId(this.object.message, Slide.TEMPLATE_SLIDE);
+  }
+
+  /**
+   * The slide's background fill, read up the style chain: a slide with a
+   * background of its own carries a variation style whose parent is the
+   * master's; one without shares the master's style outright.
+   */
+  background(): Fill | undefined {
+    let style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    for (let depth = 0; style && depth < 8; depth++) {
+      const fill = readFill(
+        style.message.getMessage(SlideStyle.SLIDE_PROPERTIES)?.getMessage(SlideStyleProperties.FILL),
+      );
+      if (fill) return fill;
+      style = this.store.resolve(refId(style.message.getMessage(SlideStyle.SUPER), StyleSuper.PARENT));
+    }
+    return undefined;
+  }
+
+  /**
+   * Set the slide's background, copying on write.
+   *
+   * A per-slide background is a KN.SlideStyleArchive beside the master's
+   * in the stylesheet's component: unnamed, a variation whose parent is
+   * the master's style and whose stylesheet is the document's, override
+   * count 1, and the fill in its slide properties. Nothing lists it; the
+   * slide's own reference is its only referrer. A slide already carrying
+   * such a variation of its own has the fill replaced in place; one
+   * sharing its style with the master, or with other slides, gets a
+   * variation of its own.
+   * @agentTool set_slide_background
+   */
+  setBackground(fill: Fill): void {
+    const current = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    if (!current) throw new RangeError(`slide ${this.index} has no style`);
+    const head = current.message.getMessage(SlideStyle.SUPER);
+    const isVariation = head?.getBool(StyleSuper.IS_VARIATION) ?? false;
+    const shared = this.store.referrers(current.identifier).some((id) => id !== this.id);
+    if (isVariation && !shared) {
+      const properties = current.message.getMessage(SlideStyle.SLIDE_PROPERTIES) ?? RawMessage.create();
+      properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+      current.message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+      return;
+    }
+    const component = this.store.componentOf(current.identifier);
+    if (!component) throw new RangeError(`slide style ${current.identifier} has no component`);
+    // Variations hang off the master's style, never off each other.
+    const parent = (isVariation ? refId(head, StyleSuper.PARENT) : undefined) ?? current.identifier;
+    const stylesheet = refId(head, StyleSuper.STYLESHEET);
+    const message = RawMessage.create();
+    const variation = RawMessage.create();
+    variation.setMessage(StyleSuper.PARENT, makeRef(parent));
+    variation.setBool(StyleSuper.IS_VARIATION, true);
+    if (stylesheet !== undefined) variation.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheet));
+    message.setMessage(SlideStyle.SUPER, variation);
+    message.setVarint(SlideStyle.OVERRIDE_COUNT, 1);
+    const properties = RawMessage.create();
+    properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+    message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+    const style = this.store.createObject(KN_TYPE.SLIDE_STYLE, component);
+    style.setMessageBytes(message.toBytes());
+    this.object.message.setMessage(Slide.STYLE, makeRef(style.identifier));
+    this.store.retargetReference(this.object, current.identifier, style.identifier);
   }
 
   /** Speaker-notes storage, when the slide has one. */
