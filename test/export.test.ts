@@ -336,3 +336,17 @@ describe("text placed on pages", () => {
     expect(PagesDocument.load(withBox.save()).toMarkdown().includes("Box on the page")).toBe(true);
   });
 });
+
+describe("comments in the export", () => {
+  it("quote a cell's comments after its table and a paragraph's after its text", () => {
+    const sheet = NumbersDocument.load(fixture("olekristensen-v26.3-demo08-structure-round6.numbers"));
+    const comments = sheet.tables().flatMap((t) => t.cellComments());
+    expect(comments.length).toBe(2);
+    const md = sheet.toMarkdown();
+    for (const c of comments) expect(md.includes(`: ${c.text.replace(/\s*\n\s*/g, " ").trim()}`)).toBe(true);
+    const pages = PagesDocument.load(fixture("draftjs-v2.3-comments.pages"));
+    const lines = pages.toMarkdown().split("\n").filter((l) => l.startsWith("> **"));
+    expect(lines.length).toBe(pages.comments().length);
+    expect(lines[0]).toBe('> **"comment"** (Thibaud Colas): Comment');
+  });
+});

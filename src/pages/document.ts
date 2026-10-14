@@ -339,7 +339,7 @@ export class PagesDocument extends IWorkDocument {
           appendInline(block.inline, style("Body"));
           break;
         case "quote":
-          doc.appendParagraph(block.text, style("Body"));
+          for (const line of block.text.split("\n")) doc.appendParagraph(line, style("Body"));
           break;
         case "list":
           for (const item of block.items) appendInline(item, style("Body"), block.ordered ? "Numbered" : "Bullet");

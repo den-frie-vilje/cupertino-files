@@ -6,6 +6,7 @@
  */
 import type { ChartModel, ChartValue } from "../tsch/charts.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
+import { columnName } from "../tst/formulas.ts";
 import { ImageModel } from "../tsd/images.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { FOOTNOTE_MARK_CHARACTER, OBJECT_REPLACEMENT_CHARACTER, type TextStorage } from "../tswp/textstorage.ts";
@@ -95,6 +96,7 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     items = [];
   };
   const attachments = storage.attachments();
+  const comments = storage.comments();
   const links = storage.links();
   const footnotes = storage.footnotes();
   const marks = new Map(footnotes.map((note, i) => [note.anchorIndex, `[^${i + 1}]`]));
@@ -159,11 +161,16 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     return out;
   }
   for (const paragraph of storage.paragraphs()) {
-    // Pictures and tables anchored in this paragraph follow its text.
+    // Pictures and tables anchored in this paragraph follow its text,
+    // and so do the comments on its words, quoting the words they mark.
     const anchored = attachments
       .filter((a) => a.drawableId !== undefined && a.index >= paragraph.start && a.index <= paragraph.end)
       .map((a) => attachmentToMarkdown(storage.store, a.drawableId!, options))
       .filter((block) => block.length > 0);
+    const remarks = comments
+      .filter((c) => c.start >= paragraph.start && c.start <= paragraph.end)
+      .map((c) => commentLine(`"${full.slice(c.start, c.end).replace(MARKS, "").trim()}"`, c.authorName, c.text));
+    if (remarks.length) anchored.push(remarks.join("\n"));
     const text = render(paragraph.start, paragraph.end).trim();
     if (text === "") {
       flush();
@@ -206,17 +213,29 @@ function cellRows(table: TableModel): string[][] {
 
 const pipeCell = (text: string): string => text.replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>");
 
+/** A comment as a quoted line: the author, then the words; replies indented beneath. */
+function commentLine(where: string, author: string | undefined, text: string): string {
+  const who = author ? ` (${author})` : "";
+  return `> **${where}**${who}: ${text.replace(/\s*\n\s*/g, " ").trim()}`;
+}
+
 /**
  * A pipe table. Markdown has one header row, so the table's first row
  * is the header whether or not the table marks header rows; the rest
- * are body rows. Pipes and line breaks in cells are escaped.
+ * are body rows. Pipes and line breaks in cells are escaped. The cells'
+ * comments follow the table, each quoting its cell, author and words,
+ * with replies beneath.
  */
 export function tableToMarkdown(table: TableModel): string {
   const rows = cellRows(table);
   if (rows.length === 0 || table.columnCount === 0) return "";
   const line = (cells: string[]): string => `| ${cells.map(pipeCell).join(" | ")} |`;
   const separator = `| ${rows[0]!.map(() => "---").join(" | ")} |`;
-  return [line(rows[0]!), separator, ...rows.slice(1).map(line)].join("\n");
+  const comments = table.cellComments().flatMap((c) => [
+    commentLine(`${columnName(c.column)}${c.row + 1}`, c.authorName, c.text),
+    ...c.replies.map((r) => `>${commentLine("reply", r.authorName, r.text).slice(1)}`),
+  ]);
+  return joinBlocks([[line(rows[0]!), separator, ...rows.slice(1).map(line)].join("\n"), comments.join("\n")]);
 }
 
 function chartValueText(value: ChartValue): string {
