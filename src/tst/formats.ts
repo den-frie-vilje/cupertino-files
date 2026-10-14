@@ -11,20 +11,31 @@
  * carries. Which of the record's six format flags holds that id is what
  * says the *category* — number, currency, date, duration, text or boolean —
  * so category never has to be inferred from the format's own type code.
- * That is worth stating because the type codes are otherwise opaque: the
- * mapping below was established by correlating every format in the corpus
- * against the flag that referenced it.
+ * The type codes themselves are the apps' `TSUFormatType`, whose naming
+ * function in TSUtility names every value; the categories were established
+ * by correlating every format in the corpus against the flag that
+ * referenced it.
  *
- * | code | category | what it is |
- * |------|----------|------------|
- * | 1    | boolean  | true/false |
- * | 256  | number   | decimal |
- * | 257  | currency | currency, with code and accounting style |
- * | 258  | number   | percentage |
- * | 260  | text     | plain text |
- * | 261  | date     | date/time, with a pattern string |
- * | 266  | —        | pop-up menu (pre-BNC files only) |
- * | 270..274 | various | custom formats, identified by a UUID |
+ * | code | the app's name | category | what it is |
+ * |------|----------------|----------|------------|
+ * | 1    | Boolean        | boolean  | true/false |
+ * | 254  | Conflicting    | —        | a selection mixing formats; never stored |
+ * | 255  | Automatic      | —        | the inspector's "Automatic"; never stored |
+ * | 256  | Decimal        | number   | the inspector's "Number" |
+ * | 257  | Currency       | currency | currency, with code and accounting style |
+ * | 258  | Percent        | number   | percentage |
+ * | 259  | Scientific     | number   | scientific notation |
+ * | 260  | Text           | text     | plain text |
+ * | 261  | DateTime       | date     | date/time, with a pattern string |
+ * | 262  | Fraction       | number   | fraction, with an accuracy |
+ * | 263  | Checkbox       | boolean  | a checkbox's drawing format |
+ * | 264  | Stepper        | —        | deprecated; controls carry a cell spec now |
+ * | 265  | Slider         | —        | deprecated; controls carry a cell spec now |
+ * | 266  | MultipleChoiceList | —    | pop-up menu (pre-BNC files only; deprecated) |
+ * | 267  | Rating         | number   | a star rating's drawing format |
+ * | 268  | Duration       | duration | duration, with units and a style |
+ * | 269  | Base           | number   | the inspector's "Numeral System" |
+ * | 270..274 | Custom*    | various  | custom formats, identified by a UUID |
  */
 import { measuredEnum, protoFields } from "../proto/fields.ts";
 import { RawMessage } from "../base/protobuf.ts";
@@ -47,6 +58,7 @@ export const FormatFields = protoFields("TSK.FormatStructArchive", {
   DATE_TIME_FORMAT: "date_time_format",
   DURATION_UNIT_LARGEST: "duration_unit_largest",
   DURATION_UNIT_SMALLEST: "duration_unit_smallest",
+  USE_AUTOMATIC_DURATION_UNITS: "use_automatic_duration_units",
   CUSTOM_FORMAT_STRING: "custom_format_string",
   SCALE_FACTOR: "scale_factor",
   CUSTOM_UID: "custom_uid",
@@ -58,11 +70,21 @@ export const FormatType = measuredEnum(
   "TSK.FormatStructArchive.format_type",
   {
   BOOLEAN: 1,
+  /** A selection whose cells disagree; an inspector state, never a stored format. */
+  CONFLICTING: 254,
+  /** The inspector's "Automatic"; a stored format always states a concrete type. */
+  AUTOMATIC: 255,
   NUMBER: 256,
   CURRENCY: 257,
   PERCENTAGE: 258,
+  SCIENTIFIC: 259,
   TEXT: 260,
   DATE: 261,
+  FRACTION: 262,
+  /** Deprecated: a stepper is a cell spec (`InteractionType`) today. */
+  STEPPER_DEPRECATED: 264,
+  /** Deprecated: a slider is a cell spec (`InteractionType`) today. */
+  SLIDER_DEPRECATED: 265,
   MULTIPLE_CHOICE: 266,
   /**
    * How a checkbox cell is drawn — a boolean format, not a number one.
@@ -83,15 +105,25 @@ export const FormatType = measuredEnum(
    * which fits — they display their value and a rating does not.
    */
   STAR_RATING: 267,
+  DURATION: 268,
+  /** The inspector's "Numeral System": `base` and `base_places`. */
+  BASE: 269,
   CUSTOM_NUMBER: 270,
   CUSTOM_TEXT: 271,
   CUSTOM_DATE: 272,
+  /**
+   * The corpus's custom duration formats carry 273. The app's own naming
+   * function groups 273 with 255 and 256 under "Decimal" and its display
+   * naming has no entry for it, so the name here is the corpus's, not
+   * Apple's.
+   */
   CUSTOM_DURATION: 273,
   CUSTOM_CURRENCY: 274,
   },
-  "`format_type` is a uint32 with no enum in the 14.4 dump. These values " +
-    "are read back from the corpus's own formatted cells rather than " +
-    "invented, and every one of them round-trips through the format tests.",
+  "`format_type` is a plain uint32 in every dump. The names are the apps' " +
+    "own: TSUtility's format-type naming function (Pages 15.1.1) switches " +
+    "over 1 and 254–274, and the inspector's display names come from its " +
+    "twin. The corpus-measured values round-trip through the format tests.",
 );
 
 /**
@@ -148,7 +180,19 @@ export type CellFormat =
       dateSuppressed?: boolean;
       timeSuppressed?: boolean;
     }
-  | { kind: "duration"; style?: number; largestUnit?: number; smallestUnit?: number }
+  | {
+      /**
+       * `style` is 0 compact, 1 short, 2 long; the units are flags — 1
+       * week, 2 day, 4 hour, 8 minute, 16 second, 32 millisecond. The
+       * app's fresh duration is short style, hour down to second, with
+       * automatic units on.
+       */
+      kind: "duration";
+      style?: number;
+      largestUnit?: number;
+      smallestUnit?: number;
+      automaticUnits?: boolean;
+    }
   | { kind: "text" }
   | { kind: "boolean"; trueString?: string; falseString?: string }
   /**
@@ -179,6 +223,9 @@ export function categoryOfFormatType(formatType: number): FormatCategory | undef
       return "boolean";
     case FormatType.NUMBER:
     case FormatType.PERCENTAGE:
+    case FormatType.SCIENTIFIC:
+    case FormatType.FRACTION:
+    case FormatType.BASE:
     case FormatType.CUSTOM_NUMBER:
       return "number";
     case FormatType.CURRENCY:
@@ -194,6 +241,7 @@ export function categoryOfFormatType(formatType: number): FormatCategory | undef
     case FormatType.DATE:
     case FormatType.CUSTOM_DATE:
       return "date";
+    case FormatType.DURATION:
     case FormatType.CUSTOM_DURATION:
       return "duration";
     default:
@@ -263,6 +311,9 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
       return { kind: "checkbox" };
     case FormatType.STAR_RATING:
       return { kind: "starRating" };
+    case FormatType.DURATION:
+    case FormatType.CUSTOM_DURATION:
+      return readDuration(message);
     case FormatType.NUMBER:
       return { kind: "number", ...readNumeric(message) };
     case FormatType.PERCENTAGE:
@@ -299,22 +350,26 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
       if (no !== undefined) out.falseString = no;
       return out;
     }
-    default: {
-      // Duration has no observed builtin code in the corpus, so it is
-      // recognised only through its flag; anything else is reported as-is
-      // rather than guessed at.
-      const style = message.getUint(FormatFields.DURATION_STYLE);
-      if (style !== undefined) {
-        const out: CellFormat = { kind: "duration", style };
-        const largest = message.getUint(FormatFields.DURATION_UNIT_LARGEST);
-        if (largest !== undefined) out.largestUnit = largest;
-        const smallest = message.getUint(FormatFields.DURATION_UNIT_SMALLEST);
-        if (smallest !== undefined) out.smallestUnit = smallest;
-        return out;
-      }
-      return { kind: "unknown", formatType };
-    }
+    default:
+      // An unnamed type carrying duration fields is still a duration;
+      // anything else is reported as-is rather than guessed at.
+      return message.has(FormatFields.DURATION_STYLE)
+        ? readDuration(message)
+        : { kind: "unknown", formatType };
   }
+}
+
+function readDuration(message: RawMessage): CellFormat {
+  const out: CellFormat = { kind: "duration" };
+  const style = message.getUint(FormatFields.DURATION_STYLE);
+  if (style !== undefined) out.style = style;
+  const largest = message.getUint(FormatFields.DURATION_UNIT_LARGEST);
+  if (largest !== undefined) out.largestUnit = largest;
+  const smallest = message.getUint(FormatFields.DURATION_UNIT_SMALLEST);
+  if (smallest !== undefined) out.smallestUnit = smallest;
+  const automatic = message.getUint(FormatFields.USE_AUTOMATIC_DURATION_UNITS);
+  if (automatic !== undefined) out.automaticUnits = automatic !== 0;
+  return out;
 }
 
 /**
@@ -377,13 +432,18 @@ export function writeFormat(format: CellFormat): RawMessage {
       }
       break;
     case "duration":
-      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CUSTOM_DURATION);
+      // The app's own duration format: the four fields its encoder
+      // states, after the type.
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.DURATION);
       if (format.style !== undefined) m.setVarint(FormatFields.DURATION_STYLE, format.style);
       if (format.largestUnit !== undefined) {
         m.setVarint(FormatFields.DURATION_UNIT_LARGEST, format.largestUnit);
       }
       if (format.smallestUnit !== undefined) {
         m.setVarint(FormatFields.DURATION_UNIT_SMALLEST, format.smallestUnit);
+      }
+      if (format.automaticUnits !== undefined) {
+        m.setVarint(FormatFields.USE_AUTOMATIC_DURATION_UNITS, format.automaticUnits ? 1 : 0);
       }
       break;
     case "text":

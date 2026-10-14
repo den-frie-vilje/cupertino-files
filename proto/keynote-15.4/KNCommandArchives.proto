@@ -5,13 +5,13 @@ import "TSKArchives.proto";
 import "TSCKArchives.proto";
 import "TSSArchives.proto";
 import "TSDArchives.proto";
-import "TSDArchives_sos.proto";
+import "TSDArchives.sos.proto";
 import "TSDCommandArchives.proto";
 import "TSWPArchives.proto";
 import "TSAArchives.proto";
 import "TSTArchives.proto";
 import "KNArchives.proto";
-import "KNArchives_sos.proto";
+import "KNArchives.sos.proto";
 package KN;
 
 enum AnimationReferent {

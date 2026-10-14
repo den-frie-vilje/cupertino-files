@@ -24,22 +24,27 @@
  * {@link TableCategories.verify} says whether the cached tree still matches
  * the data and {@link TableCategories.regroup} brings it back into line.
  *
- * Regrouping moves rows between groups that already exist and nothing else.
- * Which rows belong to "Animal" is a question the grouping column answers
- * directly, so it can be settled offline; what a *new* group's identity
- * should be, where the app would sort it, and how the per-column and
- * per-row fields alongside the tree should change are questions no fixture
- * answers. So a value with no group is refused. That line — recompute what
- * the data determines, refuse what only the app knows — is the same one
- * drawn for conditional rules and filters.
+ * Regrouping moves rows between groups that already exist and nothing else:
+ * which rows belong to "Animal" is a question the grouping column answers
+ * directly. A value with no group is refused there, because a new group's
+ * identity and position are the app's to give; {@link defineByValueCategory}
+ * mints a whole definition at once instead, in the shape every categorised
+ * table in the corpus has, and the app has yet to confirm it draws one.
+ *
+ * The archive's other fields are constant. Fields 7–13 and 16 are the
+ * calc-engine coordinates of the eight internal formulas the grouping
+ * registers (columns 0–7 of row 0 of its own owner, in every archive in the
+ * corpus, categorised or not), `owner_index` is 8, and `row_uid_lookup`
+ * is the table's row-uid list in map order. Every table carries the
+ * archive, so defining a category fills it in rather than creating it.
  */
 import { protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { refId } from "../tsp/schema.ts";
+import { makeRef, refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { APPLE_EPOCH_SECONDS } from "../base/bytes.ts";
-import { ColumnRowUidMap, readUid, type Uid } from "./uidmap.ts";
+import { ColumnRowUidMap, randomUid, readUid, type Uid } from "./uidmap.ts";
 
 /** TST.TableModelArchive.category_owner. */
 export const CATEGORY_OWNER = 86;
@@ -77,6 +82,19 @@ export const GroupNodeFields = protoFields("TST.GroupByArchive.GroupNodeArchive"
   ROW_LOOKUP_UIDS: "row_lookup_uids",
   CHILD_REF: "child_ref",
 });
+
+/** TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive. */
+const FormatManagerFields = protoFields("TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive", {
+  CELL_VALUE: "cell_value",
+  FORMATS: "formats",
+  ROW_UID_LOOKUP_SETS: "row_uid_lookup_sets",
+});
+
+/** TST.GroupByArchive.row_uid_lookup: the table's row uids, in map order. */
+const ROW_UID_LOOKUP = 15;
+
+/** Archive type id of `TST.GroupByArchive.GroupNodeArchive`. */
+export const GROUP_NODE_TYPE = 6383;
 
 /** TST.ColumnAggregateArchive — the per-group summary of one column. */
 export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
@@ -189,9 +207,9 @@ export interface ColumnAggregate {
   /** Category depth this summary is shown at. */
   level: number;
   /**
-   * Raw `agg_type`. Numbers offers sum, average, count and so on, but no
-   * fixture carries a non-empty aggregate list, so the codes are passed
-   * through rather than named.
+   * Raw `agg_type`. Numbers offers sum, average, count and so on; 1 is
+   * Count, measured (its per-group accumulator is a string count on a
+   * text column). The rest are passed through rather than named.
    */
   aggType: number;
   showAsType: number | undefined;
@@ -495,6 +513,319 @@ export function writeIndexSet(indexes: readonly number[]): RawMessage {
   }
   set.setMessages(IndexSet.ENTRIES, entries);
   return set;
+}
+
+/** The bucketing a date column can be grouped by. */
+export type DateBucket = "year" | "yearAndMonth" | "yearAndQuarter" | "yearAndWeek" | "day" | "weekday";
+
+const BUCKET_TYPE: Record<DateBucket, number> = {
+  year: GroupingType.BY_YEAR,
+  yearAndMonth: GroupingType.BY_YEAR_MONTH,
+  yearAndQuarter: GroupingType.BY_YEAR_QUARTER,
+  yearAndWeek: GroupingType.BY_YEAR_WEEK,
+  day: GroupingType.BY_DAY,
+  weekday: GroupingType.BY_WEEKDAY,
+};
+
+/**
+ * The `TSCE.FunctorArchive` a bucketed group column carries for each
+ * grouping type: the app's own bucketing formula, as a one-argument
+ * program the calc engine evaluates per cell. Byte for byte what
+ * `numbers-parser-v26.0-categories.numbers` carries, where every
+ * bucketed table of a kind carries the same bytes; the test re-reads
+ * them from the fixture. The formulas they encode, rendered: year
+ * `DATE(YEAR(x),1,1)`, month `DATE(YEAR(x),MONTH(x),1)`, quarter
+ * `DATE(YEAR(x),ROUNDDOWN((MONTH(x)-1)/3,0)*3+1,1)`, week
+ * `DATE(YEAR(x),MONTH(x),DAY(x))+6-WEEKDAY(x,2)`, day
+ * `DATE(YEAR(x),MONTH(x),DAY(x))`, weekday `DATE(2018,1,6+WEEKDAY(x))`,
+ * each guarded so a non-date cell errors.
+ */
+export const BUCKET_FUNCTORS: ReadonlyMap<number, string> = new Map([
+  [GroupingType.BY_YEAR, "0add010ada010a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a050835a802000a07081010a70118010a19081121000000000000f03fd00201d80280808080808080a0300a19081121000000000000f03fd00201d80280808080808080a0300a060810102718030a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+  [GroupingType.BY_YEAR_MONTH, "0ad1010ace010a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a050835a802000a07081010a70118010a050835a802000a060810105e18010a19081121000000000000f03fd00201d80280808080808080a0300a060810102718030a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+  [GroupingType.BY_YEAR_QUARTER, "0af0020aed020a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a050835a802000a07081010a70118010a050835a802000a060810105e18010a19081121000000000000f03fd00201d80280808080808080a0300a0208020a190811210000000000000840d00203d80280808080808080a0300a0208040a190811210000000000000000d00200d80280808080808080a0300a060810107f18020a190811210000000000000840d00203d80280808080808080a0300a0208030a19081121000000000000f03fd00201d80280808080808080a0300a0208010a19081121000000000000f03fd00201d80280808080808080a0300a060810102718030a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+  [GroupingType.BY_YEAR_WEEK, "0a93020a90020a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a050835a802000a07081010a70118010a050835a802000a060810105e18010a050835a802000a060810102918010a060810102718030a190811210000000000001840d00206d80280808080808080a0300a0208010a050835a802000a190811210000000000000040d00202d80280808080808080a0300a07081010a60118020a0208020a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+  [GroupingType.BY_DAY, "0ac5010ac2010a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a050835a802000a07081010a70118010a050835a802000a060810105e18010a050835a802000a060810102918010a060810102718030a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+  [GroupingType.BY_WEEKDAY, "0afd010afa010a050835a802000a07081010a80118010a050835a802000a02080b0a050835a802000a060810104518010a060810106018010a060810100718020a0208220a1a0811210000000000889f40d002e20fd80280808080808080a0300a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000001840d00206d80280808080808080a0300a050835a802000a07081010a60118010a0208010a060810102718030a0208230a0208220a19081121000000000000f03fd00201d80280808080808080a0300a190811210000000000000000d00200d80280808080808080a0300a0208040a0208230a060810103e180310011800"],
+]);
+
+/** The date pattern a bucketed group's value is formatted with, per grouping type. */
+export const BUCKET_PATTERNS: ReadonlyMap<number, string> = new Map([
+  [GroupingType.BY_YEAR, "yyyy"],
+  [GroupingType.BY_YEAR_MONTH, "LLLL yyyy"],
+  [GroupingType.BY_YEAR_QUARTER, "yyyy-QQQ"],
+  [GroupingType.BY_YEAR_WEEK, "yyyy'-W'w"],
+  [GroupingType.BY_DAY, "d/M/yyyy"],
+  [GroupingType.BY_WEEKDAY, "EEEE"],
+]);
+
+/**
+ * The bucket a date falls in, as the app's functor computes it: the
+ * bucket's start as a UTC midnight, a week ending on its Saturday, a
+ * weekday placed in the reference week of 7–13 January 2018. Agrees with
+ * every group in the corpus's bucketed tables.
+ */
+export function bucketStart(groupingType: number, date: Date): Date {
+  const utc = (y: number, m: number, d: number): Date => new Date(Date.UTC(y, m, d));
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
+  switch (groupingType) {
+    case GroupingType.BY_YEAR:
+      return utc(y, 0, 1);
+    case GroupingType.BY_YEAR_MONTH:
+      return utc(y, m, 1);
+    case GroupingType.BY_YEAR_QUARTER:
+      return utc(y, Math.floor(m / 3) * 3, 1);
+    case GroupingType.BY_YEAR_WEEK: {
+      const mondayBased = ((date.getUTCDay() + 6) % 7) + 1;
+      return utc(y, m, d + 6 - mondayBased);
+    }
+    case GroupingType.BY_DAY:
+      return utc(y, m, d);
+    case GroupingType.BY_WEEKDAY:
+      return utc(2018, 0, 6 + date.getUTCDay() + 1);
+    default:
+      throw new RangeError(`grouping type ${groupingType} is not a date bucket`);
+  }
+}
+
+/** The format a bucketed group's value carries: a date with the kind's pattern. */
+function bucketFormat(groupingType: number): RawMessage {
+  const format = RawMessage.create();
+  format.setVarint(1, 261);
+  format.setString(14, BUCKET_PATTERNS.get(groupingType)!);
+  return format;
+}
+
+/** One level of a category definition: a column, grouped by value or by a date bucket. */
+export interface CategoryLevel {
+  column: number;
+  bucket?: DateBucket;
+}
+
+/** A `TSP.UUID` message. */
+function writeUidMessage(uid: Uid): RawMessage {
+  const m = RawMessage.create();
+  m.setVarint(1, uid.lower);
+  m.setVarint(2, uid.upper);
+  return m;
+}
+
+/**
+ * Encode a group's value as the app does: the value, the format its cells
+ * carry, and the explicit-false flags the app states for the type.
+ */
+export function writeCellValue(value: GroupValue, format: RawMessage): RawMessage {
+  const out = RawMessage.create();
+  const inner = RawMessage.create();
+  if (typeof value === "string") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.STRING);
+    inner.setString(1, value);
+    inner.setMessage(2, format);
+    inner.setBool(4, false);
+    inner.setBool(5, false);
+    inner.setBool(6, false);
+    out.setMessage(CellValueFields.STRING, inner);
+  } else if (typeof value === "number") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.NUMBER);
+    inner.setDouble(1, value);
+    inner.setVarint(2, 0);
+    inner.setMessage(3, format);
+    inner.setBool(6, false);
+    out.setMessage(CellValueFields.NUMBER, inner);
+  } else if (typeof value === "boolean") {
+    out.setVarint(CellValueFields.TYPE, CellValueType.BOOLEAN);
+    inner.setBool(1, value);
+    inner.setMessage(2, format);
+    inner.setBool(3, false);
+    out.setMessage(CellValueFields.BOOLEAN, inner);
+  } else if (value instanceof Date) {
+    out.setVarint(CellValueFields.TYPE, CellValueType.DATE);
+    inner.setDouble(1, value.getTime() / 1000 - APPLE_EPOCH_SECONDS);
+    inner.setMessage(2, format);
+    inner.setBool(4, false);
+    out.setMessage(CellValueFields.DATE, inner);
+  } else {
+    throw new RangeError("a category group needs a value; the grouping column has an empty cell");
+  }
+  return out;
+}
+
+/** A group's text, the order the app lists by-value groups in. */
+function groupText(value: GroupValue): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/**
+ * Define a by-value category on one or more columns, filling the table's
+ * existing group-by archive with the shape every categorised table in the
+ * corpus has: one group column per level, the row-uid lookup, a tree with
+ * one node per distinct value at each level — nested in the order the
+ * columns are given — referenced from field 18 and copied inline into
+ * field 3, and the definition switched on.
+ *
+ * At every level the groups list in the code-unit order of their text,
+ * which is the order the corpus shows for strings and numbers alike. A
+ * node carries its value, its rows (a parent's are the union of its
+ * children's) and a format manager: the value again, the cells' format
+ * and the row set for string and number groups, the value alone for
+ * boolean groups, as the corpus writes them. `formatAt` supplies the
+ * format message of a row's cell in a column, or nothing.
+ */
+export function defineByValueCategory(
+  store: ObjectStore,
+  groupBy: IwaObject,
+  uids: ColumnRowUidMap,
+  levels: readonly CategoryLevel[],
+  dataRows: readonly number[],
+  valueAt: (row: number, column: number) => GroupValue,
+  formatAt: (row: number, column: number) => RawMessage | undefined,
+): void {
+  const m = groupBy.message;
+  if (m.getMessages(GroupByFields.GROUP_COLUMN).length > 0) {
+    throw new RangeError("table is already categorised; regroup it instead of defining it again");
+  }
+  if (levels.length === 0) throw new RangeError("a category needs at least one column");
+  const columns = levels.map((level) => level.column);
+  const types = levels.map((level) => (level.bucket ? BUCKET_TYPE[level.bucket] : GroupingType.BY_VALUE));
+  const groupColumns = levels.map((level, i) => {
+    const columnUid = uids.columnUid(level.column);
+    if (!columnUid) throw new RangeError(`column ${level.column} has no identity in the uid map`);
+    const groupColumn = RawMessage.create();
+    groupColumn.setMessage(GroupColumnFields.COLUMN_UID, writeUidMessage(columnUid));
+    groupColumn.setVarint(GroupColumnFields.GROUPING_TYPE, types[i]!);
+    if (level.bucket) {
+      const functor = BUCKET_FUNCTORS.get(types[i]!)!;
+      groupColumn.setMessage(
+        GroupColumnFields.GROUPING_FUNCTOR,
+        RawMessage.parse(Uint8Array.from(Buffer.from(functor, "hex"))),
+      );
+    }
+    groupColumn.setMessage(GroupColumnFields.GROUPING_COLUMN_UID, writeUidMessage(randomUid()));
+    return groupColumn;
+  });
+  m.setMessages(GroupByFields.GROUP_COLUMN, groupColumns);
+
+  const lookup = RawMessage.create();
+  lookup.setMessages(
+    1,
+    uids.rowUidList().flatMap((uid) => (uid ? [writeUidMessage(uid)] : [])),
+  );
+  m.setMessage(ROW_UID_LOOKUP, lookup);
+
+  const component = store.componentOf(groupBy.identifier);
+  if (!component) throw new RangeError("group-by archive has no component");
+
+  /**
+   * Distinct values of `column` among `rows`, each with its rows, in text
+   * order; for a bucketed level the bucket each date falls in.
+   */
+  const partition = (rows: readonly number[], column: number, type: number): { value: GroupValue; rows: number[] }[] => {
+    const groups = new Map<string, { value: GroupValue; rows: number[] }>();
+    for (const row of rows) {
+      let value = valueAt(row, column);
+      if (value === undefined) {
+        throw new RangeError(`row ${row} has no value in column ${column}; every data row needs one to be grouped`);
+      }
+      if (type !== GroupingType.BY_VALUE) {
+        if (!(value instanceof Date)) {
+          throw new RangeError(`row ${row} holds no date in column ${column}; a bucketed level needs dates`);
+        }
+        value = bucketStart(type, value);
+      }
+      const key = `${typeof value}:${groupText(value)}`;
+      const group = groups.get(key);
+      if (group) group.rows.push(row);
+      else groups.set(key, { value, rows: [row] });
+    }
+    return [...groups.values()].sort((a, b) => {
+      const x = groupText(a.value);
+      const y = groupText(b.value);
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+  };
+
+  /** A node's message, without its children; `inline` nodes carry children inline. */
+  const nodeMessage = (group: { value: GroupValue; rows: number[] }, column: number, type: number): RawMessage => {
+    const node = RawMessage.create();
+    node.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    const format =
+      type === GroupingType.BY_VALUE
+        ? formatAt(group.rows[0]!, column) ?? RawMessage.create()
+        : bucketFormat(type);
+    const cellValue = writeCellValue(group.value, format);
+    const manager = RawMessage.create();
+    manager.setMessage(FormatManagerFields.CELL_VALUE, cellValue);
+    if (typeof group.value !== "boolean") {
+      manager.setMessages(FormatManagerFields.FORMATS, [format]);
+      manager.setMessages(FormatManagerFields.ROW_UID_LOOKUP_SETS, [writeIndexSet(group.rows)]);
+    }
+    node.setMessage(GroupNodeFields.FORMAT_MANAGER, manager);
+    node.setMessage(GroupNodeFields.GROUP_CELL_VALUE, cellValue);
+    node.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet(group.rows));
+    return node;
+  };
+
+  /**
+   * Build one level: returns the referenced objects and the inline copies
+   * of the nodes for `rows` grouped by `columns[level]`, recursively.
+   */
+  const buildLevel = (rows: readonly number[], level: number): { objects: IwaObject[]; inline: RawMessage[] } => {
+    const column = columns[level]!;
+    const type = types[level]!;
+    const objects: IwaObject[] = [];
+    const inline: RawMessage[] = [];
+    for (const group of partition(rows, column, type)) {
+      const base = nodeMessage(group, column, type);
+      const referenced = nodeMessage(group, column, type);
+      const inlineNode = base;
+      if (level + 1 < columns.length) {
+        const children = buildLevel(group.rows, level + 1);
+        inlineNode.setMessages(GroupNodeFields.CHILD, children.inline);
+        referenced.setMessages(GroupNodeFields.CHILD_REF, children.objects.map((o) => makeRef(o.identifier)));
+        const object = store.createObject(GROUP_NODE_TYPE, component);
+        object.setMessageBytes(referenced.toBytes());
+        object.setObjectReferences(children.objects.map((o) => o.identifier));
+        objects.push(object);
+      } else {
+        const object = store.createObject(GROUP_NODE_TYPE, component);
+        object.setMessageBytes(referenced.toBytes());
+        objects.push(object);
+      }
+      inline.push(inlineNode);
+    }
+    return { objects, inline };
+  };
+
+  const tree = buildLevel(dataRows, 0);
+  const rootMessage = (children: readonly RawMessage[] | undefined): RawMessage => {
+    const root = RawMessage.create();
+    root.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    if (children) root.setMessages(GroupNodeFields.CHILD, children);
+    root.setMessage(GroupNodeFields.FORMAT_MANAGER, RawMessage.create());
+    root.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet([...dataRows]));
+    return root;
+  };
+  const root = store.createObject(GROUP_NODE_TYPE, component);
+  const referenced = rootMessage(undefined);
+  referenced.setMessages(
+    GroupNodeFields.CHILD_REF,
+    tree.objects.map((object) => makeRef(object.identifier)),
+  );
+  root.setMessageBytes(referenced.toBytes());
+  // The references the app declares: each node lists its children, the
+  // archive lists its root, both beside the messages that carry them.
+  root.setObjectReferences(tree.objects.map((object) => object.identifier));
+  const previousRoot = refId(m, GroupByFields.GROUP_NODE_ROOT_REF);
+  m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(tree.inline));
+  m.setMessage(GroupByFields.GROUP_NODE_ROOT_REF, makeRef(root.identifier));
+  groupBy.setObjectReferences([
+    ...groupBy.getObjectReferences().filter((id) => id !== previousRoot),
+    root.identifier,
+  ]);
+  if (previousRoot !== undefined) store.discardUnreachable(groupBy.identifier, [previousRoot]);
+  m.setBool(GroupByFields.IS_ENABLED, true);
 }
 
 /** Decode a `TSCE.CellValueArchive`. */

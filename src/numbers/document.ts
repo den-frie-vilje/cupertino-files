@@ -5,16 +5,21 @@
  * text/stylesheet/drawable machinery, sheet enumeration and round-trip save.
  */
 import { IWorkDocument } from "../tsa/document.ts";
-import { blankDonorBytes } from "./blank-donor.generated.ts";
+import { blankDonorBytes } from "../tsa/numbers-blank-donor.generated.ts";
+import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
-import { deepCloneObject, deepCloneObjectInto, defaultFollow } from "../tsp/clone.ts";
+import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
+import { chartToMarkdown, joinBlocks, namedTable, type MarkdownOptions } from "../tsa/markdown.ts";
+import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -100,6 +105,58 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
+   * A new document written from Markdown: a top-level heading names a
+   * sheet (the first renames the blank document's own; each later one
+   * adds a sheet), and each pipe table becomes a table on the current
+   * sheet, sized to its rows and named by the nearest lower heading above
+   * it (or "Table N"); the first table on a sheet fills the sheet's own.
+   * Text outside tables has no home in Numbers and is dropped. With
+   * `template`, the document is that one emptied (`blankFrom`).
+   */
+  static fromMarkdown(markdown: string, options: { template?: Uint8Array } = {}): NumbersDocument {
+    const doc = options.template ? NumbersDocument.blankFrom(options.template) : NumbersDocument.blank();
+    let sheet = doc.sheets()[0]!;
+    let sheets = 0;
+    let name: string | undefined;
+    let count = 0;
+    const place = (rows: readonly (readonly string[])[]): void => {
+      count++;
+      const own = count === 1 ? doc.tablesOnSheet(sheet.id)[0] : undefined;
+      const table = own ?? doc.addTable(sheet.id, { withContent: false });
+      if (name) {
+        table.name = name;
+        table.nameVisible = true;
+      } else if (count > 1) table.name = `Table ${count}`;
+      fillTable(table, rows);
+      name = undefined;
+    };
+    for (const block of parseMarkdown(markdown)) {
+      if (block.kind === "heading" && block.level === 1) {
+        if (sheets++ === 0) doc.renameSheet(0, block.text);
+        else {
+          sheet = doc.addSheet({ name: block.text, withContent: false });
+          count = 0;
+        }
+        name = undefined;
+      } else if (block.kind === "heading") name = block.text;
+      else if (block.kind === "table") place(block.rows);
+    }
+    return doc;
+  }
+
+  /**
+   * A new document holding one table written from CSV (RFC 4180): the
+   * first row is the header row, numbers and TRUE/FALSE become such.
+   */
+  static fromCsv(csv: string, name?: string, options: { template?: Uint8Array } = {}): NumbersDocument {
+    const doc = options.template ? NumbersDocument.blankFrom(options.template) : NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    if (name) table.name = name;
+    fillTable(table, parseCsv(csv));
+    return doc;
+  }
+
+  /**
    * A new, empty Numbers spreadsheet — one sheet, one table, A4 paper, no
    * template file needed.
    *
@@ -157,6 +214,32 @@ export class NumbersDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  /** The comments pinned to the sheets' canvases, every sheet in tab order; `cellComments()` on a table reads the ones on cells. */
+  canvasComments(): CanvasComment[] {
+    return this.sheets().flatMap((sheet) => canvasComments(this.store, sheet.id));
+  }
+
+  /**
+   * The document as Markdown: a top-level heading per sheet, each table
+   * under its name (when it shows one) as a pipe table and each chart as
+   * a table of its series, in the sheet's own order.
+   */
+  override toMarkdown(_options: MarkdownOptions = {}): string {
+    const charts = new Map(this.charts().map((c) => [c.id, c]));
+    return joinBlocks(
+      this.sheets().map((sheet, index) =>
+        joinBlocks([
+          `# ${sheet.name ?? `Sheet ${index + 1}`}`,
+          ...this.tablesOnSheet(sheet.id).map((table) => namedTable(table, 2)),
+          ...this.sheetContainer(sheet.id)
+            .ids()
+            .map((id) => charts.get(id))
+            .map((chart) => (chart ? chartToMarkdown(chart) : "")),
+        ]),
+      ),
+    );
   }
 
   /**
@@ -374,28 +457,19 @@ export class NumbersDocument extends IWorkDocument {
    *
    * The donor closure is fully self-contained (its per-object styles ride
    * along; nothing references the donor document's singletons), which is
-   * what makes a cross-document import safe — {@link deepCloneObjectInto}
-   * refuses any closure that is not.
+   * what makes a cross-document import safe — the shared graft refuses any
+   * closure that is not.
    */
   private importNeutralTable(sheetId: bigint, placement: { x?: number; y?: number }): bigint {
-    const donor = neutralTableDonor();
     const component = this.store.componentOf(sheetId);
     if (!component) throw new RangeError(`sheet ${sheetId} has no component`);
-    // The one reference allowed to escape the donor closure is the
-    // drawable's parent — its sheet — rebound to the sheet gaining the
-    // table. The style preset is seeded explicitly: the model reaches
-    // it through a field the curated extractor skips.
-    const { clone } = deepCloneObjectInto(this.store, donor.store, donor.info, {
-      component,
-      rebind: new Map([[donor.sheetId, sheetId]]),
-      ...(donor.presetId !== undefined ? { extraRoots: [donor.presetId] } : {}),
-    });
-    const container = this.sheetContainer(sheetId);
-    container.attach(clone.identifier);
-    if (Object.keys(placement).length > 0) {
-      drawableById(this.store, clone.identifier)?.setGeometry(placement);
-    }
-    return clone.identifier;
+    const id = graftNeutralTable(this.store, component, sheetId);
+    this.sheetContainer(sheetId).attach(id);
+    // The shape Insert ▸ Table gives: 10 by 5, one header row and column, 98-point columns.
+    const table = tablesOf(this.store, [id])[0];
+    if (table) fitNewTable(table, APP_TABLE_DEFAULTS.numbers);
+    if (Object.keys(placement).length > 0) drawableById(this.store, id)?.setGeometry(placement);
+    return id;
   }
 
   /**
@@ -459,28 +533,4 @@ export class NumbersDocument extends IWorkDocument {
  * ever read: imports copy out of this store, nothing writes into it.
  */
 /** TST.TableModelArchive field 48: the table-style preset reference. */
-const TABLE_MODEL_STYLE_PRESET = 48;
 
-let cachedNeutralDonor:
-  | { store: ObjectStore; info: IwaObject; sheetId: bigint; presetId: bigint | undefined }
-  | undefined;
-
-function neutralTableDonor(): {
-  store: ObjectStore;
-  info: IwaObject;
-  sheetId: bigint;
-  presetId: bigint | undefined;
-} {
-  if (!cachedNeutralDonor) {
-    const donor = NumbersDocument.load(blankDonorBytes());
-    const table = donor.tables()[0];
-    const info = table?.infoObject;
-    const sheetId = donor.sheets()[0]?.id;
-    if (!table || !info || sheetId === undefined) {
-      throw new RangeError("the embedded blank donor has no table");
-    }
-    const presetId = refId(table.object.message, TABLE_MODEL_STYLE_PRESET);
-    cachedNeutralDonor = { store: donor.store, info, sheetId, presetId };
-  }
-  return cachedNeutralDonor;
-}

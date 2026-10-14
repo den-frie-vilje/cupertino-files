@@ -183,8 +183,8 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 
 - **The app draws one more paragraph than `paragraphs()` lists** when the
   text ends with a terminator. That tail is *one* of the apps' shapes,
-  not the norm: of the corpus's 28 body storages, 17 end bare — what
-  typing leaves — 8 end with the terminator, 3 are empty. Appending
+  not the norm: of the corpus's 30 body storages, 18 end bare — what
+  typing leaves — 9 end with the terminator, 3 are empty. Appending
   preserves whichever convention the document already has (a `blank()`
   build ends bare), so check `doc.body.endsWithEmptyParagraph` rather
   than assuming either state, and call `doc.body.normalizeTail()` when
@@ -433,7 +433,8 @@ cell of a filled-down column.
 
 Two honest gaps, both visible in the output rather than papered over:
 
-- **Function names are not in the format.** 272 measured ids are named;
+- **Function names are not in the format.** 363 ids are named, read from
+  the app's own function registry and confirmed by document harvests;
   an unknown one renders as `FUNCTION_<id>` and is refused for writing.
   Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`, or measure
   on a Mac with `npm run harvest -- --drive`. `functionTableProvenance()`
@@ -581,6 +582,7 @@ const { rows, columns } = t.filterSets();
 rows?.mode;                             // "all" | "any"
 rows?.rules();                          // [{ column, enabled, predicate }]
 rows?.setEnabled(true); rows?.setMode("any");
+t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing, rows hidden; "contains" for text
 ```
 
 Two things to know before relying on this:
@@ -621,6 +623,9 @@ cat.setEnabled(false);                  // ungroup without losing the definition
 
 t.staleCategoryGroups();                // groups whose rows no longer match the data
 t.regroupCategories();                  // put them back; returns how many rows moved
+t.addCategory(1);                       // group an uncategorised table by a column's values
+t.addCategory([1, 2]);                  // or nest: groups by column 1, then by column 2 within each
+t.addCategory([{ column: 3, bucket: "yearAndMonth" }]);  // a date column by period
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -915,6 +920,9 @@ slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
 slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
+slide.background();  slide.setBackground({ kind: "color", color: hexColor("#1a3a2a") }); // a style of the slide's own, under the layout's
+slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
+slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }); // one stage per paragraph
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
 // bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
@@ -926,7 +934,22 @@ Placeholders are the theme's boxes for you to fill. Setting one only works
 where the slide already carries it — creating a placeholder means
 synthesizing the geometry and style the master defines for that role, so a
 slide on a layout without a body box is told so rather than given an
-unstyled box at the origin.
+unstyled box at the origin. A slide on another layout is made from that
+layout instead:
+
+```ts
+doc.masterSlides();                                   // [{ id, name }] — the deck's layouts
+doc.addSlide({ copyOf: 0, after: 0 });                // a fresh slide on slide 0's layout
+doc.addSlide({ master: "Title & Bullets", after: 2 }); // a fresh slide on that layout
+slide.setLayout("Title & Bullets");                    // this slide onto that layout, text and drawables kept
+```
+
+A layout slide is instantiated the way the app does it: the master is
+deep-copied, decorations and placeholders included, and the copy becomes
+a content slide — it points at the master, carries a note and the
+slide-number attachment, and drops the master's name, object placeholder,
+style lists and thumbnail texts. Title and body start empty. An unknown
+name's error lists the names the deck offers.
 
 ### Pictures on slides
 
@@ -941,6 +964,45 @@ applied — and the picture joins both of the slide's drawable lists, so
 it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
+
+**Repeating a drawable on every page, and breaking a page.** A drawable
+moved to the section master repeats on every page that master draws;
+a page break ends a paragraph:
+
+```ts
+doc.sections()[0].moveToSectionMaster(drawable.id);  // Arrange > Section Masters > Move Object to Section Master
+doc.insertPageBreak(paragraphIndex);                  // the paragraph's terminator becomes the page break
+```
+
+**Adding a table grafts the neutral donor.** A table from nothing would
+omit state only the app knows, so a new table is the blank Numbers
+document's own — Apple-made — copied under the body or the slide, then
+sized and filled from `rows`:
+
+```ts
+doc.appendTable();                                               // Pages: the app's 5×4, one header row and column, across the body
+doc.appendTable([["Item", "Count"], ["Apples", "3"]]);          // Pages: in a paragraph of its own at the end
+doc.insertInlineTable(pos, { rows, name: "Prices" });          // Pages: inline at a body position
+slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on the slide
+doc.addTable(sheetId, { name });                                 // Numbers: on a sheet (manage_sheets)
+```
+
+The Numbers path is app-confirmed; the Pages and Keynote paths are
+experimental — the donor is Numbers-born, and the shape audit lists ways
+its wiring differs from a table either app makes itself.
+
+**Adding a text box copies one.** A text box from nothing would omit
+state only the app knows, so `addTextBox` deep-copies a box the document
+already carries — the slide's own in Keynote, the page's own or any in
+the document in Pages — gives it its own storage, sets the text, places
+it and sets its parent (the slide, or none in Pages). A document without
+a single text box has nothing to copy and is refused: add one in the
+app first.
+
+```ts
+slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });
+doc.addTextBox(0, "Written by the library", { x: 360, y: 560, width: 220, height: 60 }); // Pages, page 0
+```
 
 **Resizing a text box takes two calls.** A shape's path renders scaled
 from its own stored size to the frame, text included, so
@@ -967,6 +1029,38 @@ doc.setSlideSize(1024, 768); // objects keep their coordinates — nothing is re
 Defaults come from the schema rather than from zero: every deck examined
 omits several of these fields, and reading an omitted autoplay delay as 0
 instead of 5 would describe a deck that races through itself.
+
+## Exporting and importing
+
+```ts
+doc.toMarkdown();            // any document: text, tables and charts in its own structure
+doc.toMarkdown({ images: ({ fileName, data }) => saveAndLink(fileName, data) });  // pictures too
+doc.tables()[0].toCsv();     // one table, RFC 4180
+doc.allText();               // every text storage, plain
+PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/Heading/Body styles, lists, tables, pictures, links, bold/italic, footnotes
+KeynoteDocument.fromMarkdown(md);  // a slide per heading or `---`; lines beneath are the body, quotes the notes
+NumbersDocument.fromMarkdown(md);  // a sheet per top heading, a table per pipe table named by the heading above
+NumbersDocument.fromCsv(csv, "Sales");
+PagesDocument.fromMarkdown(md, { template: letterheadBytes });        // built inside an emptied template
+KeynoteDocument.fromMarkdown(md, { template: deckBytes, layout: "Title & Bullets" });
+```
+
+Pages renders its body — headings from the named styles ("Title",
+"Heading 2", by the template's locale-free identifiers), list
+paragraphs as list items — then its tables under their names and its
+charts; a page-layout document renders each text box instead. Numbers
+is a top-level heading per sheet, each table a pipe table whose first
+row is the header, under its name when it shows one. Keynote is a
+section per slide, "## 1. Title", the body's paragraphs as list items,
+its pictures and tables, and the presenter notes as a block quote.
+Pictures go through an image sink and come back as links; hyperlinks,
+bold, italic and footnotes survive both ways. From
+the shell: `cupertino-files export deck.key`, `--format csv --table
+Sales`, `--format text`, `--out file.md --assets file-assets`; and back, `cupertino-files
+import notes.md deck.key` (a `.csv` source makes a Numbers table). A
+Pages table is not built from Markdown — its rows land as tab-separated
+Body lines — and a Keynote deck's content slides take the "Title &
+Bullets" layout.
 
 ## Editing text in Numbers/Keynote
 
@@ -1042,9 +1136,13 @@ throw, naming the object and field, rather than produce the file.
    capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
-   legend, gridlines) all write. Genuinely absent today: authoring
-   filter *rules*, creating category groups, and creating Keynote builds.
-   For those, drop to the low-level `RawMessage` layer and consult
+   legend, gridlines) all write, and so do filter rules (`addFilterRule`),
+   by-value categories (`addCategory`), all-at-once Keynote builds
+   (`addBuild`) and text boxes copied from the document's own
+   (`addTextBox`), none of which the apps have confirmed yet. Genuinely
+   absent today: function-shaped filter rules beyond text-contains and
+   starts-with, category summaries, and build actions and order. For
+   those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a

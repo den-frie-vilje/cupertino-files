@@ -27,9 +27,9 @@ Keynote for macOS/iOS/iCloud.
 
 The IWA generation has been structurally stable from 2013 through today:
 Apple evolves it by **adding** protobuf fields and type IDs, never by
-reusing or reshaping existing ones (verified by diffing the 2013 and 14.4
-schema dumps: every shared field number is unchanged; changes are additions
-plus a handful of renames). Version markers moved from "5.x" to year-based
+reusing or reshaping existing ones (verified by diffing the 2013, 14.4,
+15.1 and 15.4 schema dumps: every shared field number is unchanged; changes are
+additions plus a handful of renames). Version markers moved from "5.x" to year-based
 "26.x" in 2025 with no structural change.
 
 ## 2. Package container
@@ -582,10 +582,9 @@ renders wrong.
 `r/g/b = 3/4/5`, `a = 6`, cmyk `c/m/y/k = 7..10`, white `w = 11`, and
 `rgbspace = 12` (1 sRGB, 2 Display P3). The 26.x-era apps write an explicit
 `rgbspace` on essentially every colour, so a reader that ignores field 12
-will silently render P3 colours as sRGB. There is also an **undocumented
-fixed32 field 13**, first seen in the 26.x era, always paired with an
-explicit `rgbspace` and always `1.0` in every document examined — meaning
-unknown, preserved verbatim like any unknown field.
+will silently render P3 colours as sRGB. `headroom = 13` is a float
+defaulting to 1 (named by the 15.1 schema); the 26.x-era apps write it
+explicitly beside `rgbspace`, and it is `1.0` in every document examined.
 
 **Stylesheets** (`TSS.StylesheetArchive`, type 401): `styles = 1` (refs),
 `identifier_to_style_map = 2` (`{identifier=1, style=2}` entries),
@@ -1195,10 +1194,12 @@ Three traps:
   entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
   7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
-  from the live-app harvest; with the 271 harvested names (which include
-  SUM and DURATION) the union is 272 authorable in total. Guessing beyond that would convert a visible gap into silent
-  wrong answers, so unknown ids render as `FUNCTION_<id>` and callers can
-  supply their own table.
+  from the live-app harvest. The complete table — 363 names, every function
+the 15.4 build registers — is read from the registration code in the
+app's TSTables framework (`scripts/harvest-functions.ts --binary`), and
+the document harvest confirms every one it reaches. Guessing beyond that would
+convert a visible gap into silent wrong answers, so unknown ids render as
+`FUNCTION_<id>` and callers can supply their own table.
 
 Cross-table references **do** resolve to table names — the `table_id` in
 `AST_cross_table_reference_extra_info` is the target's kind-1 calc-engine
@@ -1288,7 +1289,7 @@ what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons — 5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=` — with filters and conditional formatting
 sharing the encoding. Function-shaped conditions are identified too:
-3 is "text contains" (compiled as `NOT(ISERROR(f_296(needle, cell)))`),
+3 is "text contains" (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`),
 34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
 `undefined` rather than a guess.
 
@@ -1328,11 +1329,12 @@ filter set says *why* rows should be hidden, the hidden-state extent
 records *which* ones are. Changing a rule does not change visibility until
 something re-evaluates the predicates.
 
-A filter set's rules are addressed by column through parallel arrays —
-`filter_offsets[i]` is the column rule `i` tests, `filter_enabled[i]`
-whether it is live — so the three repeated fields must stay the same
-length. Both are written **unpacked** (one varint key per value), the
-proto2 default.
+A filter set's rules each name their column inside their predicate, as an
+offset from a host column (every app-authored rule sits on column 1 or 2
+with offset 0 or 1); `filter_offsets` is a boundary list, one entry more
+than there are rules, written **unpacked** (one varint key per value),
+the proto2 default; `filter_enabled`, a per-rule switch, is absent on
+every app-written set, where absent means on.
 
 #### 14.7.1 A control needs a format, not just a spec
 
@@ -1474,7 +1476,7 @@ also silently missed five fields, the members of the two `oneof` blocks in
 Swapping to the canonical parser regenerated the embedded table
 byte-identically, so nothing the library relies on changed.
 
-**Merging 41 files is safe, and that is measured rather than assumed.**
+**Merging 40 files is safe, and that is measured rather than assumed.**
 Across every vendored file, no field *number* maps to two different names,
 and exactly one field *name* maps to two different numbers: `extension`, the
 name protobuf convention gives every extension field. `TSA`, `TSCH`, `TSD`,
@@ -1505,11 +1507,11 @@ own lookup, and a first attempt at conversion that ignored this would have
 written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
 enums, same arity, silently wrong.
 
-**What cannot be looked up is listed rather than hidden.** The shared dumps
-are Numbers 14.4 and the Pages-specific ones are Pages 5.0 from 2013, so
-fields added since are declared with `measuredFields`, which requires a
-sentence of evidence and refuses a number the schema already defines — when
-a refreshed dump contains it, the declaration throws until it moves. Archive
+**What cannot be looked up is listed rather than hidden.** The dumps are
+one release of the applications (15.4), so a field a newer release adds is
+declared with `measuredFields`, which requires a sentence of evidence and
+refuses a number the schema already defines — when a refreshed dump
+contains it, the declaration throws until it moves. Archive
 type ids are not in any `.proto` and never will be: `TSWP_TYPE.STORAGE =
 2001` is the app's object registry, and the only authority for it is the
 corpus.
@@ -1551,7 +1553,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3031 of 3031 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3445 of 3445 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1637,7 +1639,7 @@ And registration in the stylesheet is still not the panel. The paragraph
 style list the app shows lives on the **theme**:
 `TP.ThemeArchive.super.110.7` — `TSWP.ThemePresetsArchive` extension 110,
 `paragraph_style_presets` — holding one reference per listed style. Present
-in all 28 IWA-format Pages fixtures (the corpus's one remaining `.pages` file is
+in all 30 IWA-format Pages fixtures (the corpus's one remaining `.pages` file is
 iWork '09 XML, a different format entirely), always field 7, and its contents are exactly the
 panel's entries, localised with the document so a German template lists
 Titel and Überschrift. Its length tracks what the user sees: twelve in a
@@ -1682,8 +1684,8 @@ Counting that across the Pages fixtures gives the terminator set:
 | --- | ---: | --- |
 | `U+000A` | 2607 | line feed |
 | `U+0004` | 28 | section break |
-| `U+0005` | 18 | layout / column break |
-| `U+000C` | 1 | page break |
+| `U+0005` | 18 | page break — what Insert ▸ Page Break writes |
+| `U+000C` | 1 | a break of an unmeasured kind |
 | `U+2028` | **0** (209 present) | soft line break — *not* a terminator |
 
 The section breaks run the other way too: **writing** a section needs the
@@ -1713,7 +1715,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3031 storages carry the field and **zero** declare it. What
+fixtures here, 3445 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to* — the paragraph, list and
 column styles — plus same-component placeholders.
 
@@ -1750,7 +1752,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3031 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3445 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal — always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -1925,13 +1927,20 @@ covering a single index is written with `range_begin` alone**, no
 a group holding seven scattered rows stores seven entries *without* one.
 Either encoding reads back correctly, so only a byte comparison catches it.
 
-What can be recomputed offline stops at membership. Creating a group would
-mean minting its identity, placing it in whatever order the app sorts
-groups in, and updating the run of fields the archive carries beside the
-tree — eight messages of shape `{ f2: <small int>, f3: 0 }` at fields 7–13
-and 16, a count at 14, and a list of per-row UUID pairs at 15. Their
-meaning is not documented by any fixture, so a group this library invented
-would be a claim about all of them.
+The fields beside the tree are constant. Fields 7–13 and 16 are
+`TSCE.CellCoordinateArchive` coordinates of the eight internal formulas
+the grouping registers with the calc engine — aggregate-type change,
+grouping columns, aggregates in the root, grouping column headers, column
+order, row order, row order ignoring recalc, hidden states — at columns
+0–7 of row 0 of the grouping's own owner in every archive in the corpus,
+categorised or not; `owner_index` (14) is 8 everywhere; `row_uid_lookup`
+(15) is the table's row-uid list in map order. Every table carries the
+archive, so defining a category fills it in: the group column (the
+column's uid, grouping type 0, a fresh grouping-column uid), the lookup
+list, and a tree of one leaf per distinct value, listed in the code-unit
+order of their text, each leaf carrying the value, a format manager that
+restates the value with the cells' format and the row set, and the rows.
+`addCategory` writes that shape; the app has yet to confirm it draws it.
 
 Two further shape notes. A real archive carries **both** `group_node_root`
 (3, inline) and `group_node_root_ref` (18) — the reference is the live tree
@@ -2106,26 +2115,25 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Authoring filter rules** is not implemented (§14.7). Rules read — the
-  common case is measured from a real filter set, and the predicate
-  encoding is shared with conditional formatting — and a filter set can be
-  enabled, disabled or switched between "all" and "any". What keeps
-  authoring here is that writing a rule is only half the feature: which
-  rows it hides is stored separately, and recomputing that means
-  evaluating the predicates. The reading is pinned by the populated set
-  in `olekristensen-v26.3-mac-filters.numbers`, and individual rules can
-  additionally be toggled with `setRuleEnabled`.
-- **Creating a category group** (§14.9). Rows can be *regrouped* among
-  groups that exist, byte-identically to Apple; creating one needs its
-  identity, its sort position and the fields the archive carries beside the
-  tree, which no fixture explains. Bucketed groupings need the grouping
-  formula evaluated.
-- **Creating a Keynote build** (animation). The model reads whole —
-  effect, timing, delivery and chunks, pinned against the three
-  app-authored builds in `olekristensen-v26.3-mac-builds-effects.key` —
-  and retimes or removes existing builds. Creation from nothing stays
-  here: a build the app silently drops is indistinguishable from one
-  never written.
+- **Function-shaped filter rules beyond text-contains** (§14.7).
+  Comparison and text-contains rules are authored (`addFilterRule`),
+  byte for byte as the populated set in
+  `olekristensen-v26.3-mac-filters.numbers` carries them, with the rows
+  they hide written to the hidden-state extent by evaluating them
+  offline; a set can be enabled, disabled or switched between "all" and
+  "any". Is-blank and the other function-shaped conditions are read but
+  not written, and a rule on column 0 waits for a document showing how
+  the app references it.
+- **Category summaries** (§14.9). A category — by value, nested, or
+  bucketed by date with the app's own functor — is defined from nothing
+  (`addCategory`) and rows are regrouped byte-identically to Apple; no
+  fixture carries a summary row to measure one from.
+- **Keynote actions and build order.** The model reads whole — effect,
+  timing, delivery and chunks, pinned against the three app-authored
+  builds in `olekristensen-v26.3-mac-builds-effects.key` — and
+  all-at-once and by-paragraph builds are written from nothing
+  (`addBuild`); actions and build order are not authored, and whether
+  the app plays a written build is unproven.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.

@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
+import { MASTER_ONLY_FIELDS, Slide } from "../src/keynote/schema.ts";
+import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
 import { Drawable, ExteriorTextWrap, Image } from "../src/tsd/schema.ts";
@@ -256,18 +258,17 @@ describe("slide management", () => {
     expect(info.getVarint(1)).toBe(copy.id);
     expect(info.getString(2)).toBe("Slide");
     // Versions, save token and the external references mirror the donor
-    // — the copy shares its master and styles. The save pass then adds
-    // one row the donor does not carry: an object row for the master the
-    // copy references. Apple names the master's component with no object
-    // row, and what lets its writer omit them is unmeasured — the
-    // superset is the shape the app-side control accepted.
+    // — the copy shares its master and styles. The master is the root
+    // object of its own component, and a reference to a component's root
+    // is recorded as the component-level row the donor already carries
+    // (every such reference in the corpus is), so the save pass adds
+    // nothing.
     expect(info.getVarint(12)).toBe(donorInfo.getVarint(12));
     const row = (er: RawMessage) => `${er.getVarint(1)}:${er.getVarint(2) ?? "-"}`;
     const donorRows = new Set(donorInfo.getMessages(6).map(row));
     const extras = info.getMessages(6).map(row).filter((r) => !donorRows.has(r));
-    const master = reloaded.slides()[2]!.masterId;
-    expect(extras).toEqual([`${master}:${master}`]);
-    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length + 1);
+    expect(extras).toEqual([]);
+    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length);
     const documentInfo = infos.find((ci) => ci.getString(2) === "Document" && !ci.has(3))!;
     const reciprocal = documentInfo
       .getMessages(6)
@@ -748,5 +749,241 @@ describe("presentation settings", () => {
     const drawables = reloaded.slides()[0]!.container().drawables();
     const original = document.slides()[0]!.container().drawables();
     expect(drawables.length).toBe(original.length);
+  });
+});
+
+describe("creating a build", () => {
+  it("animates a picture in the shape the app's own builds have", () => {
+    const PNG = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0, 0, 0, 0x64, 0, 0, 0, 0x32, 8, 6, 0, 0, 0,
+    ]);
+    const doc = KeynoteDocument.blank();
+    const { imageId } = doc.addImage(0, PNG, { fileName: "figure.png" });
+    const created = doc.slides()[0]!.addBuild({ drawableId: imageId, effect: "apple:dissolve", duration: 1.5 });
+    expect(created.read().effect).toBe("apple:dissolve");
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides()[0]!;
+    const builds = slide.builds();
+    expect(builds.length).toBe(1);
+    const info = builds[0]!.read();
+    expect(info.effect).toBe("apple:dissolve");
+    expect(info.duration).toBe(1.5);
+    expect(info.delay).toBe(0);
+    expect(info.delivery).toBe("All at Once");
+    expect(info.chunks.map((c) => [c.delay, c.duration, c.automatic])).toEqual([[0, 1.5, false]]);
+
+    // Field for field, the corpus deck's all-at-once build and its chunk.
+    const m = builds[0]!.object.message;
+    expect([1, 2, 3, 4, 5].filter((f) => m.has(f))).toEqual([1, 2, 3, 4, 5]);
+    const attributes = m.getMessage(4)!;
+    expect([...Array(40).keys()].filter((f) => f > 0 && attributes.has(f))).toEqual([4, 17, 18, 20, 21]);
+    const animation = attributes.getMessage(18)!;
+    expect([...Array(30).keys()].filter((f) => f > 0 && animation.has(f))).toEqual([1, 2, 3, 5, 11, 16]);
+    const chunkId = slide.object.message.getMessages(Slide.BUILD_CHUNKS)[0]!.getVarint(1);
+    const chunk = reloaded.store.resolve(chunkId)!.message;
+    expect([1, 2, 3, 4, 5, 6, 7, 8].filter((f) => chunk.has(f))).toEqual([1, 3, 4, 5, 6, 7, 8]);
+    expect(chunk.getMessage(1)!.getVarint(1)).toBe(builds[0]!.id);
+    expect(slide.object.getObjectReferences().includes(builds[0]!.id)).toBe(true);
+  });
+});
+
+describe("a build delivered by paragraph", () => {
+  it("has one chunk per paragraph of its target and omits the text-delivery pair", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    slide.body = "First point\nSecond point";
+    const body = refId(slide.object.message, Slide.BODY_PLACEHOLDER)!;
+    slide.addBuild({ drawableId: body, effect: "com.apple.iWork.Keynote.BUKAnvil", duration: 1.75, delivery: "byParagraph" });
+
+    const reloaded = KeynoteDocument.load(doc.save());
+    const build = reloaded.slides()[0]!.builds()[0]!;
+    const info = build.read();
+    expect(info.delivery).toBe("By Paragraph");
+    expect(info.chunks.map((c) => [c.delay, c.duration, c.automatic])).toEqual([[0, 1.75, false], [0, 1.75, false]]);
+    expect(build.object.message.getUint(5)).toBe(2);
+    // The corpus's by-paragraph build states event trigger, chart rotation
+    // and animation attributes, and nothing else.
+    const attributes = build.object.message.getMessage(4)!;
+    expect([...Array(40).keys()].filter((f) => f > 0 && attributes.has(f))).toEqual([4, 17, 18]);
+    const chunkRefs = reloaded.slides()[0]!.object.message.getMessages(Slide.BUILD_CHUNKS);
+    const ids = chunkRefs.map((r) => reloaded.store.resolve(r.getVarint(1))!.message.getMessage(7)!.getUint(2));
+    expect(ids).toEqual([1, 2]);
+  });
+});
+
+describe("a text box added to a slide", () => {
+  it("is a deep copy of the deck's own box, owned by the slide, saying the text", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const before = slide.container().ids().length;
+    const donorStorages = new Set(slide.textStorages().map((s) => s.id));
+    const box = slide.addTextBox("Written by the library", { x: 300, y: 500, width: 900, height: 120 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(again.container().ids().length).toBe(before + 1);
+    expect(again.container().ids().includes(box.id)).toBe(true);
+    const placed = again.drawables().find((d) => d.id === box.id)!;
+    expect(placed.object.type).toBe(2011);
+    const geometry = placed.geometry()!;
+    expect([geometry.x, geometry.y, geometry.width, geometry.height]).toEqual([300, 500, 900, 120]);
+    const text = again.textStorages().find((s) => s.text === "Written by the library");
+    expect(text !== undefined).toBe(true);
+    // Its storage is its own, and its parent is the slide.
+    const storageId = refId(placed.object.message, 4)!;
+    expect(reloaded.store.object(storageId)?.type).toBe(2001);
+    expect(refId(placed.object.message.getMessage(1)!.getMessage(1), 2)).toBe(again.id);
+    // The parent is never among a drawable's declared references.
+    expect(placed.object.getObjectReferences().includes(again.id)).toBe(false);
+    expect(donorStorages.has(storageId)).toBe(false);
+  });
+});
+
+describe("a slide instantiated from a layout", () => {
+  const CORPUS_SLIDE_FIELDS = [1, 4, 5, 6, 7, 17, 19, 20, 27, 28, 36];
+  const fieldsOf = (m: RawMessage): number[] => {
+    const out: number[] = [];
+    for (let n = 1; n <= 40; n++) if (m.has(n)) out.push(n);
+    return out;
+  };
+
+  it("carries what a content slide carries and nothing a master keeps for itself", () => {
+    const doc = KeynoteDocument.blank();
+    const layout = doc.masterSlides().find((m) => m.name === "Title & Bullets")!;
+    const added = doc.addSlide({ master: "title & bullets", after: 0 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides()[1]!;
+    expect(slide.id).toBe(added.id);
+    expect(slide.masterId).toBe(layout.id);
+    expect(slide.name).toBe(undefined);
+    expect(fieldsOf(slide.object.message)).toEqual(CORPUS_SLIDE_FIELDS);
+    for (const field of MASTER_ONLY_FIELDS) expect(slide.object.message.has(field)).toBe(false);
+    expect(slide.placeholders().map((p) => [p.role, p.text])).toEqual([
+      ["title", ""],
+      ["body", ""],
+      ["slideNumber", "\uFFFC"],
+    ]);
+    // Its placeholders are its own, not the layout's.
+    const master = reloaded.store.object(layout.id)!;
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER]) {
+      expect(refId(slide.object.message, field)).not.toBe(refId(master.message, field));
+    }
+    expect(slide.notes).toBe("");
+    expect(reloaded.store.componentOf(slide.id)?.locator).toBe(`Slide-${slide.id}`);
+    slide.title = "Set after";
+    expect(slide.title).toBe("Set after");
+  });
+
+  it("writes the slide-number attachment the corpus decks carry, byte for byte", () => {
+    const deck = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const corpus = deck.slides()[0]!.placeholders().find((p) => p.role === "slideNumber")!;
+    const corpusAttachment = corpus.storage!.attachments()[0]!;
+    const doc = KeynoteDocument.blank();
+    const added = doc.addSlide({ master: "Title & Bullets" });
+    const ours = added.placeholders().find((p) => p.role === "slideNumber")!.storage!.attachments()[0]!;
+    expect(ours.kind).toBe(corpusAttachment.kind);
+    expect(doc.store.object(ours.objectId)!.message.toBytes()).toEqual(
+      deck.store.object(corpusAttachment.objectId)!.message.toBytes(),
+    );
+  });
+
+  it("names the deck's layouts when asked for one it lacks", () => {
+    const doc = KeynoteDocument.blank();
+    expect(() => doc.addSlide({ master: "No such layout" })).toThrow(/Title & Bullets/);
+  });
+});
+
+describe("a slide background of its own", () => {
+  it("is a variation style under the master's, read back and replaced in place", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const masterStyle = refId(doc.store.object(slide.masterId!)!.message, Slide.STYLE)!;
+    expect(refId(slide.object.message, Slide.STYLE)).toBe(masterStyle);
+    const green = { r: 0.125, g: 0.25, b: 0.1875, space: "srgb" as const };
+    slide.setBackground({ kind: "color", color: green });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    const styleId = refId(again.object.message, Slide.STYLE)!;
+    expect(styleId).not.toBe(masterStyle);
+    const style = reloaded.store.object(styleId)!;
+    expect(style.type).toBe(9);
+    const head = style.message.getMessage(1)!;
+    expect([head.has(1), head.has(2), refId(head, 3), head.getBool(4), refId(head, 5)]).toEqual([
+      false,
+      false,
+      masterStyle,
+      true,
+      refId(reloaded.store.object(masterStyle)!.message.getMessage(1), 5),
+    ]);
+    expect(style.message.getUint(10)).toBe(1);
+    expect(again.background()).toEqual({ kind: "color", color: green });
+    // The master's style is untouched, and the slide alone refers to the new one.
+    expect(reloaded.store.object(masterStyle)!.message.toBytes()).toEqual(doc.store.object(masterStyle)!.message.toBytes());
+    expect(reloaded.store.referrers(styleId)).toEqual([again.id]);
+    expect(reloaded.store.componentOf(styleId)).toBe(reloaded.store.componentOf(masterStyle));
+    // A second colour replaces the fill in the same variation.
+    again.setBackground({ kind: "color", color: { r: 1, g: 0, b: 0, space: "srgb" } });
+    expect(refId(again.object.message, Slide.STYLE)).toBe(styleId);
+    const red = again.background();
+    expect(red?.kind === "color" ? red.color.r : undefined).toBe(1);
+  });
+
+  it("reads the corpus deck's per-slide backgrounds through the same chain", () => {
+    const deck = KeynoteDocument.load(fixture("zenodo-v26.1-pptx-lineage.key"));
+    const own = deck.slides().filter((s) => refId(s.object.message, Slide.STYLE) !== refId(deck.store.object(s.masterId!)!.message, Slide.STYLE));
+    expect(own.length).toBe(11);
+    const fill = own[0]!.background();
+    expect(fill?.kind).toBe("color");
+    expect(fill?.kind === "color" && fill.color.r < 0.2).toBe(true);
+    // A slide sharing its master's style reads the master's fill.
+    const shared = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key")).slides()[0]!;
+    expect(refId(shared.object.message, Slide.STYLE)).toBe(refId(shared.document.store.object(shared.masterId!)!.message, Slide.STYLE));
+    expect(shared.background()?.kind).toBe("image");
+  });
+});
+
+describe("a table added to a slide", () => {
+  it("is the neutral donor grafted under the slide, listed, filled and named", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const before = slide.container().ids().length;
+    const table = slide.addTable({ rows: [["Item", "Count"], ["Apples", "3"]], x: 300, y: 500 });
+    expect(table.name).toBe("Table");
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(again.container().ids().length).toBe(before + 1);
+    const info = again.drawables().find((d) => d.object.type === 6000)!;
+    expect(refId(info.object.message.getMessage(1), 2)).toBe(again.id);
+    expect(again.object.message.getMessages(Slide.OWNED_DRAWABLES).some((m) => m.getVarint(1) === info.id)).toBe(true);
+    const placed = reloaded.tables().find((t) => t.infoObject?.identifier === info.id)!;
+    expect([placed.rowCount, placed.columnCount, placed.cellText(0, 0), placed.cellValue(1, 1)?.type]).toEqual([2, 2, "Item", "number"]);
+    expect(info.geometry()?.x).toBe(300);
+    expect(again.addTable({}).name).toBe("Table 2");
+  });
+});
+
+describe("a slide moved to another layout", () => {
+  it("takes fresh placeholders from the new master, keeps its text and drawables, drops the old placeholders", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    slide.title = "Carried";
+    const box = slide.addTextBox("Kept", { x: 100, y: 100, width: 400, height: 80 });
+    const oldPlaceholders = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER].map((f) => refId(slide.object.message, f)!);
+    slide.setLayout("Title & Bullets");
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(reloaded.masterSlides().find((m) => m.id === again.masterId)?.name).toBe("Title & Bullets");
+    expect(again.title).toBe("Carried");
+    const fields: number[] = [];
+    for (let n = 1; n <= 40; n++) if (again.object.message.has(n)) fields.push(n);
+    expect(fields).toEqual([1, 4, 5, 6, 7, 17, 19, 20, 27, 28, 36]);
+    for (const f of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER]) {
+      expect(oldPlaceholders.includes(refId(again.object.message, f)!)).toBe(false);
+    }
+    for (const id of oldPlaceholders) expect(reloaded.store.object(id)).toBe(undefined);
+    expect(again.container().ids().includes(box.id)).toBe(true);
+    expect(again.placeholders().map((p) => [p.role, p.text])).toEqual([["title", "Carried"], ["body", ""], ["slideNumber", "\uFFFC"]]);
+    expect(reloaded.store.componentOf(refId(again.object.message, Slide.TITLE_PLACEHOLDER)!)).toBe(reloaded.store.componentOf(again.id));
   });
 });

@@ -1,7 +1,7 @@
 syntax = "proto2";
 
 import "TSDArchives.proto";
-import "TSSArchives_sos.proto";
+import "TSSArchives.sos.proto";
 package TSDSOS;
 
 message SpecSetFillArchive {

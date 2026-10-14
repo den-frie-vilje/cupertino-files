@@ -44,12 +44,13 @@ reverse-engineering of it, measured from real documents.
 - **Styles** — named paragraph and character styles: apply, edit, create; direct formatting too
 - **Layout** — sections, headers & footers, page setup, margins, orientation
 - **Images** — inline insertion, floating placement, crops, filters
+- **Tables** — inserted inline from a neutral Apple-made donor, filled from rows; every cell edit under *Everywhere*
 - **Extras** — comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents
 
 ### Numbers
 
 - **Cells** — read and write every value type; formatting, styles, and comments survive your edits
-- **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 272 functions
+- **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 363 functions
 - **Formatting** — fills, borders, alignment, wrap; number, currency, date and duration formats; bands
 - **Structure** — sheets and tables (add, rename, move, remove), rows and columns, merges, column widths
 - **More** — conditional rules, cell controls, and category regrouping write too; filter sets toggle and switch mode, though their rules read only, as do category groups
@@ -57,8 +58,8 @@ reverse-engineering of it, measured from real documents.
 ### Keynote
 
 - **Slides** — add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
-- **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
-- **Decks** — slide size, auto-advance; transitions read and write; builds read, retime and remove
+- **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, add a table or a text box, set a background, make a slide from a layout, edit an embedded table cell-by-cell
+- **Decks** — slide size, auto-advance; transitions read and write; builds read, create, retime and remove; slides from a layout, backgrounds
 
 ### Everywhere
 
@@ -67,6 +68,8 @@ reverse-engineering of it, measured from real documents.
 - **Tables** — one table model for all three apps: a table on a slide or a page reads and writes exactly like one in Numbers
 - **Charts** — data (categories, series, values) and appearance (type, colours, gridlines, legend)
 - **Fidelity** — byte-identical round trips; future app versions load with their new features intact
+- **Export** — any document as Markdown (text, tables and charts in its own structure), any table as CSV, and plain text
+- **Build from text** — a Pages document, a Keynote deck or a Numbers table written from Markdown, a table from CSV, inside your own template if you have one
 - **Honesty** — iWork '09 XML and password-protected documents are detected and declined, never mis-parsed
 
 Deeper detail, per capability and with the evidence:
@@ -76,8 +79,8 @@ waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
 ## Tools for every kind of work
 
 - **The API** — typed, synchronous, documented: [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents)
-- **The CLI** — `npx -y cupertino-files dump info file.pages` inspects; `call` runs any editing tool from the shell
-- **For AI agents** — `npx -y cupertino-files mcp`: an MCP server with twenty creating, editing and formatting tools, plus a Claude Code skill in the package
+- **The CLI** — `npx -y cupertino-files dump info file.pages` inspects; `export file.key` prints Markdown (`--format csv` a table); `import notes.md deck.key` builds a document; `call` runs any editing tool from the shell
+- **For AI agents** — `npx -y cupertino-files mcp`: an MCP server whose tools create, edit, format and export documents, plus a Claude Code skill in the package
 - **For other implementations** — a language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself
 
 More in [For AI agents](https://den-frie-vilje.github.io/cupertino-files/guide/agents)

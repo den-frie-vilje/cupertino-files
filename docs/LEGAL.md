@@ -36,13 +36,13 @@ case above: most knowledge comes from black-box measurement of documents
 (the method Wine mandates), and the published artifact contains no Apple
 code at all.
 
-## The two gray items, and the decisions taken
+## The gray items, and the decisions taken
 
-**1. The vendored `.proto` dumps.** The schemas under `proto/` were
-recovered from application binaries by third-party projects and have
-been continuously public since 2013 (obriensp/iWorkFileFormat) and 2021
-(masaccio/numbers-parser); this repo redistributes their bytes with
-commit-pinned provenance. Their content — names, numbers, types — is a
+**1. The vendored `.proto` dumps.** The schemas under `proto/` are
+recovered from the application binaries, now by this project itself
+(item 3) and before that by third-party projects whose dumps have been
+continuously public since 2013 (obriensp/iWorkFileFormat) and 2021
+(masaccio/numbers-parser). Their content — names, numbers, types — is a
 set of facts about the wire format (Feist, merger, §102(b); SAS in the
 EU), but no court has ruled on dumped descriptors as such, a US
 breach-of-contract theory against an *extractor* exists in some circuits
@@ -51,7 +51,8 @@ preempted; EU: voided by Art. 8), and EU Art. 6(2)(b) limits sharing
 decompilation-derived information to what interoperability needs (these
 files are the compiled-in input of `src/proto/vendored.ts`, which is that).
 **Decision:** keep shipping the dumps with the no-copyright-claimed
-notice in THIRD-PARTY-NOTICES.md; the fallback, should it ever be
+notice in THIRD-PARTY-NOTICES.md and the binary digests in
+`proto/README.md`; the fallback, should it ever be
 needed, is regenerating schema text from this project's own measured
 tables and shipping only that — the SheetJS/libetonyek pattern.
 
@@ -69,6 +70,30 @@ and metadata describing what the library interoperates with — the
 squarely protected nominative use (*New Kids*, *Toyota v. Tabari*).
 Names leading with Apple's house mark or the live Creator Studio brand
 were rejected as strictly worse.
+
+**3. First-hand analysis of the installed applications.** Some
+questions no document answers — what a writer emits by default, what a
+plain integer code means, which fields a message gained since the last
+public dump — are answered by reading the installed Pages, Numbers and
+Keynote binaries directly: their embedded protobuf descriptors, and
+their serialisers through a decompiler. That is decompilation in the
+sense of Directive 2009/24/EC Art. 6 (ophavsretsloven §37): permitted
+when indispensable for interoperability of an independently created
+program, performed by a lawful user of the application, and confined to
+the parts needed. Art. 6(2) then bounds what may be done with what is
+learned: interoperability only, shared only as far as interoperability
+needs, never a substantially similar program — a format library is not
+a word processor. The binaries carry no encryption load command, so
+§1201 stays out of frame here as well. The analysis is performed in
+Denmark, where Art. 8 voids the licence clause against it.
+**Decision:** do it, under working rules that keep the memo's first
+claim true. Decompiler output, analysis databases, evidence bundles and
+thinned copies of Apple's binaries never enter the repository, the
+docs or a commit message; what enters is the fact learned, stated in
+this project's own words as a measured constant with its test. A
+descriptor dump extracted first-hand replaces the third-party dumps on
+the same terms as item 1, with the extraction recorded in the provenance
+table instead of a source repository.
 
 ## Apple's observed enforcement line
 

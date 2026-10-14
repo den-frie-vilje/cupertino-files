@@ -1,6 +1,6 @@
 /**
  * Keynote-specific (KN family) type IDs and field numbers, layered on the
- * shared families. Field numbers from proto/keynote-14.4/KNArchives.proto;
+ * shared families. Field numbers from proto/keynote-15.1/KNArchives.proto;
  * see research/keynote-slides.md for the verified object graph.
  *
  * Transitions are the canonical example of app-specific behavior that does
@@ -89,6 +89,38 @@ export const Slide = protoFields("KN.SlideArchive", {
   BUILD_CHUNKS: "buildChunks",
   /** TSD.GuideStorageArchive — alignment guides; carried by 148 corpus slides. */
   GUIDE_STORAGE: "userDefinedGuideStorage",
+  CLASSIC_STYLESHEET_RECORD: "classicStylesheetRecord",
+  BODY_PARAGRAPH_STYLES: "bodyParagraphStyles",
+  BODY_LIST_STYLES: "bodyListStyles",
+  THUMBNAIL_TEXT_FOR_TITLE: "thumbnailTextForTitlePlaceholder",
+  THUMBNAIL_TEXT_FOR_BODY: "thumbnailTextForBodyPlaceholder",
+});
+
+/**
+ * What a master carries that a content slide never does: its name, the
+ * object placeholder (0 of 49 corpus content slides carry one), the style
+ * lists the layout offers, and the thumbnail texts.
+ */
+export const MASTER_ONLY_FIELDS: readonly number[] = [
+  Slide.NAME,
+  Slide.OBJECT_PLACEHOLDER,
+  Slide.CLASSIC_STYLESHEET_RECORD,
+  Slide.BODY_PARAGRAPH_STYLES,
+  Slide.BODY_LIST_STYLES,
+  Slide.THUMBNAIL_TEXT_FOR_TITLE,
+  Slide.THUMBNAIL_TEXT_FOR_BODY,
+];
+
+/** KN.SlideStyleArchive. */
+export const SlideStyle = protoFields("KN.SlideStyleArchive", {
+  SUPER: "super",
+  OVERRIDE_COUNT: "override_count",
+  SLIDE_PROPERTIES: "slide_properties",
+});
+
+/** KN.SlideStylePropertiesArchive. */
+export const SlideStyleProperties = protoFields("KN.SlideStylePropertiesArchive", {
+  FILL: "fill",
 });
 
 /** KN.NoteArchive. */
@@ -228,16 +260,24 @@ export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = 
   [KN_TYPE.NOTE, noteExtractor],
 ]);
 
+// Declared here rather than imported from builds.ts, which imports this file.
+const BuildOwner = protoFields("KN.BuildArchive", { DRAWABLE: "drawable" });
+const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
+
 /**
- * The container rule, for the one Keynote drawable the shared map cannot
- * name: `KN.PlaceholderArchive` (types 7 and 12) reaches
- * `TSD.DrawableArchive` three supers down, and its `parent` is the slide.
- * Measured: 546 of 546 corpus placeholders carry the parent, zero declare
- * it. The type ids are Keynote-local (7 means something else in every
- * other app), so the rule lives here and is composed per app in
- * `tsa/document.ts` rather than added to the shared, app-blind map.
+ * The container rule, for the Keynote archives the shared map cannot
+ * name. `KN.PlaceholderArchive` (types 7 and 12) reaches
+ * `TSD.DrawableArchive` three supers down, and its `parent` is the slide:
+ * 706 of 706 corpus placeholders carry the parent, zero declare it. A
+ * `KN.BuildArchive` carries its drawable and a `KN.BuildChunkArchive` its
+ * build, and no corpus build or chunk declares either. The type ids are
+ * Keynote-local (7 means something else in every other app), so the rule
+ * lives here and is composed per app in `tsa/document.ts` rather than
+ * added to the shared, app-blind map.
  */
 export function keynoteContainerParent(type: number, m: RawMessage): bigint | undefined {
+  if (type === KN_TYPE.BUILD) return refId(m, BuildOwner.DRAWABLE);
+  if (type === KN_TYPE.BUILD_CHUNK) return refId(m, BuildChunkOwner.BUILD);
   if (type !== KN_TYPE.PLACEHOLDER && type !== KN_TYPE.PLACEHOLDER_ALT) return undefined;
   let node: RawMessage | undefined = m;
   for (let i = 0; i < 3 && node; i++) {

@@ -6,6 +6,7 @@
  *   node scripts/harvest-functions.ts --emit-sheet out.tsv # anywhere
  *   node scripts/harvest-functions.ts --drive              # macOS + Numbers
  *   node scripts/harvest-functions.ts --ingest doc.numbers # anywhere
+ *   node scripts/harvest-functions.ts --binary Numbers.app  # reads the app's own registry
  *   node scripts/harvest-functions.ts --check              # staleness gate
  *
  * ## Why this exists
@@ -44,6 +45,7 @@ import { IWorkDocument } from "../src/tsa/document.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { AstNodeFields, AstNodeType } from "../src/tst/formulas.ts";
 import type { RawMessage } from "../src/base/protobuf.ts";
+import { readFunctionRegistry } from "./function-registry.ts";
 
 const CANDIDATES = new URL("../data/numbers-function-candidates.txt", import.meta.url);
 const INDEX_JSON = new URL("../data/function-index.json", import.meta.url);
@@ -357,11 +359,13 @@ function generateTypeScript(harvested: Harvested): string {
   lines.push(" * TSCE function-index → name, measured from a real Numbers install.");
   lines.push(" *");
   lines.push(" * GENERATED — do not edit by hand. Regenerate with:");
+  lines.push(" *   node scripts/harvest-functions.ts --binary <Numbers.app>");
   lines.push(" *   node scripts/harvest-functions.ts --ingest <doc.numbers>");
   lines.push(" *");
-  lines.push(" * This mapping exists in no schema; it can only be measured by having");
-  lines.push(" * Numbers author the formulas. See docs/BLOCKERS.md for the procedure");
-  lines.push(" * and the ledger of who ran it against which version.");
+  lines.push(" * This mapping exists in no schema. It is read from the registration");
+  lines.push(" * code in the app's TSTables framework, and measured by having Numbers");
+  lines.push(" * author formulas; the two must agree. See docs/BLOCKERS.md for the");
+  lines.push(" * ledger of who ran which against which version.");
   lines.push(" *");
   if (entries.length === 0) {
     lines.push(" * Harvested: not yet run — the table below is empty by design. The one");
@@ -370,7 +374,7 @@ function generateTypeScript(harvested: Harvested): string {
   } else {
     lines.push(` * Harvested: ${harvested.provenance.harvestedAt} from ${harvested.provenance.app}`);
   }
-  lines.push(` * Coverage:  ${entries.length} of ${harvested.provenance.candidates} candidates`);
+  lines.push(` * Coverage:  ${entries.length} functions named; ${harvested.provenance.candidates} probe candidates`);
   lines.push(" */");
   lines.push("export const HARVESTED_FUNCTIONS: ReadonlyMap<number, string> = new Map([");
   for (const [index, name] of entries) lines.push(`  [${index}, ${JSON.stringify(name)}],`);
@@ -393,6 +397,53 @@ function write(harvested: Harvested): void {
   writeFileSync(GENERATED_TS, generateTypeScript(harvested));
   console.log(`wrote ${fileURLToPath(INDEX_JSON)}`);
   console.log(`wrote ${fileURLToPath(GENERATED_TS)}`);
+}
+
+/**
+ * Read the registry out of the application and merge it with the recorded
+ * harvest. `path` is an app bundle or its TSTables framework binary. A
+ * registry entry that contradicts a harvested one stops the run: the
+ * harvest's own rule is that a name is accepted only when every
+ * observation agrees, and the registry is one more observation.
+ */
+function fromBinary(path: string): Harvested {
+  const framework = `${path}/Contents/Frameworks/TSTables.framework/Versions/A/TSTables`;
+  const binary = existsSync(framework) ? framework : path;
+  const reading = readFunctionRegistry(binary);
+  const recorded: Harvested | undefined = existsSync(fileURLToPath(INDEX_JSON))
+    ? (JSON.parse(readFileSync(INDEX_JSON, "utf8")) as Harvested)
+    : undefined;
+  const functions: Record<string, string> = { ...(recorded?.functions ?? {}) };
+  const indexOfName = new Map(Object.entries(functions).map(([i, n]) => [n, Number(i)]));
+  const disagreements: string[] = [];
+  for (const [index, name] of reading.functions) {
+    const haveName = functions[String(index)];
+    const haveIndex = indexOfName.get(name);
+    if (haveName !== undefined && haveName !== name) disagreements.push(`${index}: harvest ${haveName}, registry ${name}`);
+    else if (haveIndex !== undefined && haveIndex !== index) disagreements.push(`${name}: harvest ${haveIndex}, registry ${index}`);
+    else functions[String(index)] = name;
+  }
+  if (disagreements.length > 0) {
+    console.error(`registry and harvest disagree:\n  ${disagreements.join("\n  ")}`);
+    process.exit(1);
+  }
+  let app = binary;
+  const info = `${path}/Contents/Info.plist`;
+  if (existsSync(info)) {
+    const plist = JSON.parse(execFileSync("plutil", ["-convert", "json", "-o", "-", info], { encoding: "utf8" })) as Record<string, string>;
+    app = `${plist["CFBundleName"] ?? "Numbers"} ${plist["CFBundleShortVersionString"]} (${plist["CFBundleVersion"]})`;
+  }
+  return {
+    functions: Object.fromEntries(Object.entries(functions).sort(([a], [b]) => Number(a) - Number(b))),
+    unrecognised: recorded?.unrecognised ?? [],
+    conflicts: recorded?.conflicts ?? [],
+    provenance: {
+      app: recorded ? `${app}, TSTables registry, merged with the harvest from ${recorded.provenance.app}` : `${app}, TSTables registry`,
+      harvestedAt: new Date().toISOString().slice(0, 10),
+      source: "scripts/harvest-functions.ts --binary",
+      candidates: candidateNames().length,
+    },
+  };
 }
 
 function osascript(script: string): string {
@@ -474,6 +525,17 @@ function main(): void {
     return;
   }
 
+  const binary = valueFor("--binary");
+  if (binary !== undefined) {
+    const harvested = fromBinary(binary);
+    if (args.includes("--dry-run")) {
+      console.log(JSON.stringify(harvested, null, 2));
+      return;
+    }
+    report(harvested);
+    return;
+  }
+
   const ingestPath = valueFor("--ingest");
   if (ingestPath !== undefined) {
     // Everything after --ingest that is not a flag is another document.
@@ -546,6 +608,7 @@ function main(): void {
       "  --emit-sheet <path>    build the probe sheet, tab-separated (works anywhere)",
       "  --drive                run the whole harvest via Numbers (macOS only)",
       "  --ingest <doc.numbers> read a harvested document back",
+      "  --binary <Numbers.app> read the app's own function registry and merge it with the harvest",
       "  --dry-run              with --ingest: print JSON, write nothing",
       "  --app <label>          record which Numbers version produced it",
       "  --check                verify the generated table matches the recorded harvest",

@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-import "TSACommandArchives_sos.proto";
+import "TSACommandArchives.sos.proto";
 import "TSKArchives.proto";
 import "TSPMessages.proto";
 package KNSOS;

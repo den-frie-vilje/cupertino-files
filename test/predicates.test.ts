@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import {
   IWorkDocument,
+  NumbersDocument,
   readPredicate,
   describePredicate,
   tablesOf,
@@ -271,7 +272,7 @@ describe("conditional formatting beyond plain comparisons", () => {
     rules.sort((a, b) => (a.text < b.text ? -1 : 1));
     expect(rules).toEqual([
       { type: 34, text: "ISBLANK(THIS_CELL)" },
-      { type: 3, text: 'NOT(ISERROR(FUNCTION_296("pear",THIS_CELL)))' },
+      { type: 3, text: 'NOT(ISERROR(FIND.CASEINSENSITIVE("pear",THIS_CELL)))' },
       { type: 7, text: "THIS_CELL>5" },
       { type: 8, text: "THIS_CELL>=7" },
     ]);
@@ -323,13 +324,13 @@ describe("filters", () => {
 
     const rules = set.rules();
     expect(rules.length).toBe(2);
-    expect(rules.map((r) => r.column)).toEqual([0, 1]);
+    expect(rules.map((r) => r.column)).toEqual([1, 2]);
     expect(rules.every((r) => r.enabled && !r.legacy)).toBe(true);
     expect(rules[0]!.predicate!.predicateType).toBe(7);
     expect(rules[0]!.predicate!.text).toBe("OTHER_TABLE::R[0]C[0]>10");
     expect(rules[1]!.predicate!.predicateType).toBe(3);
     expect(rules[1]!.predicate!.text).toBe(
-      'NOT(ISERROR(FUNCTION_296("ko",OTHER_TABLE::R[0]C[1])))',
+      'NOT(ISERROR(FIND.CASEINSENSITIVE("ko",OTHER_TABLE::R[0]C[1])))',
     );
     expect(set.describe().length).toBe(2);
   });
@@ -394,5 +395,66 @@ describe("cell records with conditional ids", () => {
     const decoded = CellRecord.decode(record.encode());
     expect(decoded.id(CellFlag.COND_STYLE_ID)).toBe(2);
     expect(decoded.id(CellFlag.COND_RULE_STYLE_ID)).toBe(15);
+  });
+});
+
+describe("writing a filter rule", () => {
+  it("rebuilds the fixture's own rule byte for byte", () => {
+    const document = open("olekristensen-v26.3-mac-filters.numbers");
+    const table = tablesOf(document.store).find(
+      (t) => (t.filterSets().rows?.rules().length ?? 0) > 0,
+    )!;
+    const set = table.filterSets().rows!;
+    // The app's own hidden states, before anything is written: the rows the
+    // two rules exclude, each stated filtered.
+    const extentBefore = table.object.message.getMessage(70)!.getMessages(2)[0]!.getMessage(3)!;
+    const theirs = extentBefore.getMessages(2).map((s) => Buffer.from(s.toBytes()).toString("hex")).sort();
+    expect(theirs.length).toBe(7);
+
+    // The fixture's rules sit on columns 1 and 2 and carry offsets 0 and 1
+    // from the app's host column.
+    const authored = set.object.message.getMessages(7)[0]!.getMessage(1)!.toBytes();
+    const index = table.addFilterRule(1, { operator: ">", value: 10 });
+    const written = set.object.message.getMessages(7)[index]!.getMessage(1)!.toBytes();
+    expect(Buffer.compare(Buffer.from(written), Buffer.from(authored))).toBe(0);
+    expect(set.consistent).toBe(true);
+    expect(set.rules().map((r) => r.column)).toEqual([1, 2, 1]);
+
+    // The fixture's second rule is text-contains; the same writer rebuilds it.
+    const contains = set.object.message.getMessages(7)[1]!.getMessage(1)!.toBytes();
+    const second = table.addFilterRule(2, { operator: "contains", value: "ko" });
+    const rebuilt = set.object.message.getMessages(7)[second]!.getMessage(1)!.toBytes();
+    expect(Buffer.compare(Buffer.from(rebuilt), Buffer.from(contains))).toBe(0);
+
+    // Recomputing the hidden rows reproduces the app's own state list,
+    // entry for entry (the duplicated rules exclude the same rows).
+    const extentAfter = table.object.message.getMessage(70)!.getMessages(2)[0]!.getMessage(3)!;
+    const ours = extentAfter.getMessages(2).map((s) => Buffer.from(s.toBytes()).toString("hex")).sort();
+    expect(ours).toEqual(theirs);
+    // Column A sits at offset −1 from the host column, stored unsigned.
+    const onA = table.addFilterRule(0, { operator: "=", value: "x" });
+    expect(set.rules()[onA]!.column).toBe(0);
+    expect(set.object.message.getMessages(7)[onA]!.getMessage(1)!.getMessage(4)!.getMessage(4)!.getVarint(2)).toBe((1n << 64n) - 1n);
+  });
+
+  it("adds an enabled rule to a blank table and reads it back", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 1, 5);
+    table.setCell(2, 1, 15);
+    table.setCell(3, 1, 20);
+    table.deleteRows(4, table.rowCount - 4);
+    table.addFilterRule(1, { operator: ">", value: 10 });
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    const set = reloaded.filterSets().rows!;
+    expect(set.enabled).toBe(true);
+    expect(set.consistent).toBe(true);
+    const rules = set.rules();
+    expect(rules.map((r) => [r.column, r.enabled])).toEqual([[1, true]]);
+    expect(rules[0]!.predicate!.operator).toBe(">");
+    expect(rules[0]!.predicate!.operands.map((o) => o.kind)).toEqual(["cell", "number"]);
+    // The 5 fails the rule and is the one hidden row.
+    const extent = reloaded.object.message.getMessage(70)!.getMessages(2)[0]!.getMessage(3)!;
+    expect(extent.getMessages(2).length).toBe(1);
   });
 });

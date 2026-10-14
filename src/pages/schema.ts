@@ -2,10 +2,9 @@
  * Pages-specific (TP family) field numbers, type IDs and reference
  * extractors, layered on top of the shared families in model/schema.ts.
  *
- * TP message shapes are from the iWork '13 proto dump; the type registry and
- * every field this module touches are confirmed present in current Pages
- * (2026 registry dump + fixture evidence). Unknown newer fields are
- * preserved untouched by the RawMessage layer.
+ * TP message shapes are from the Pages 15.1 descriptor dump under
+ * `proto/pages-15.1/`. Unknown newer fields are preserved untouched by
+ * the RawMessage layer.
  */
 import { protoFields } from "../proto/fields.ts";
 import type { ReferenceExtractor } from "../tsp/store.ts";
@@ -82,25 +81,25 @@ export const TPDocument = protoFields("TP.DocumentArchive", {
 export const Section = protoFields("TP.SectionArchive", {
   OBSOLETE_HEADERS: "OBSOLETE_headers",
   OBSOLETE_FOOTERS: "OBSOLETE_footers",
-  OBSOLETE_MASTER_DRAWABLES: "OBSOLETE_master_drawables",
+  OBSOLETE_SECTION_TEMPLATE_DRAWABLES: "OBSOLETE_section_template_drawables",
   INHERIT_PREVIOUS_HEADER_FOOTER: "inherit_previous_header_footer",
-  FIRST_PAGE_DIFFERENT: "page_master_first_page_different",
-  EVEN_ODD_DIFFERENT: "page_master_even_odd_pages_different",
+  FIRST_PAGE_DIFFERENT: "section_template_first_page_different",
+  EVEN_ODD_DIFFERENT: "section_template_even_odd_pages_different",
   START_KIND: "section_start_kind",
   PAGE_NUMBER_KIND: "section_page_number_kind",
   PAGE_NUMBER_START: "section_page_number_start",
-  FIRST_PAGE_MASTER: "first_page_master",
-  EVEN_PAGE_MASTER: "even_page_master",
-  ODD_PAGE_MASTER: "odd_page_master",
+  FIRST_SECTION_TEMPLATE_PAGE: "first_section_template_page",
+  EVEN_SECTION_TEMPLATE_PAGE: "even_section_template_page",
+  ODD_SECTION_TEMPLATE_PAGE: "odd_section_template_page",
   NAME: "name",
-  FIRST_PAGE_HIDES_HEADER_FOOTER: "page_master_first_page_hides_header_footer",
+  FIRST_PAGE_HIDES_HEADER_FOOTER: "section_template_first_page_hides_header_footer",
 });
 
-/** TP.PageMasterArchive / TP.SectionTemplateArchive. */
-export const SectionTemplate = protoFields("TP.PageMasterArchive", {
+/** TP.SectionTemplateArchive. */
+export const SectionTemplate = protoFields("TP.SectionTemplateArchive", {
   HEADERS: "headers",
   FOOTERS: "footers",
-  MASTER_DRAWABLES: "master_drawables",
+  SECTION_TEMPLATE_DRAWABLES: "section_template_drawables",
 });
 
 /** TP.SettingsArchive. */
@@ -139,10 +138,10 @@ const sectionExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];
   pushRef(out, m, Section.OBSOLETE_HEADERS);
   pushRef(out, m, Section.OBSOLETE_FOOTERS);
-  pushRef(out, m, Section.OBSOLETE_MASTER_DRAWABLES);
-  pushRef(out, m, Section.FIRST_PAGE_MASTER);
-  pushRef(out, m, Section.EVEN_PAGE_MASTER);
-  pushRef(out, m, Section.ODD_PAGE_MASTER);
+  pushRef(out, m, Section.OBSOLETE_SECTION_TEMPLATE_DRAWABLES);
+  pushRef(out, m, Section.FIRST_SECTION_TEMPLATE_PAGE);
+  pushRef(out, m, Section.EVEN_SECTION_TEMPLATE_PAGE);
+  pushRef(out, m, Section.ODD_SECTION_TEMPLATE_PAGE);
   return out;
 };
 
@@ -150,7 +149,7 @@ const sectionTemplateExtractor: ReferenceExtractor = (m) => {
   const out: bigint[] = [];
   pushRef(out, m, SectionTemplate.HEADERS);
   pushRef(out, m, SectionTemplate.FOOTERS);
-  pushRef(out, m, SectionTemplate.MASTER_DRAWABLES);
+  pushRef(out, m, SectionTemplate.SECTION_TEMPLATE_DRAWABLES);
   return out;
 };
 

@@ -1285,13 +1285,13 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     const neutral = document.addTable(sheet.id, { name: "Neutral" });
 
-    // Empty, and shaped by the embedded Apple-made blank donor rather
-    // than by whatever table the document happens to contain.
-    const donor = NumbersDocument.blank().tables()[0]!;
+    // Empty, grafted from the embedded Apple-made blank donor rather than
+    // from whatever table the document happens to contain, and cut to the
+    // shape Insert ▸ Table gives: 10 by 5, one header row and column,
+    // 98-point columns.
     expect(neutral.cells().length).toBe(0);
-    expect(neutral.rowCount).toBe(donor.rowCount);
-    expect(neutral.columnCount).toBe(donor.columnCount);
-    expect(neutral.columnWidth(0)).toBe(donor.columnWidth(0));
+    expect([neutral.rowCount, neutral.columnCount, neutral.headerRowCount, neutral.headerColumnCount]).toEqual([10, 5, 1, 1]);
+    expect(neutral.columnWidth(0)).toBe(98);
 
     const reloaded = NumbersDocument.load(document.save());
     const again = reloaded.tables().find((t) => t.name === "Neutral")!;
@@ -1465,9 +1465,10 @@ describe("adding and removing tables", () => {
       const spanning = obj.message.getMessage(7)!.getMessage(2)!;
       const spanningShape = [1, 2, 3, 4].map((n) => spanning.getVarint(n)).join(",");
       if (kind === 1) {
-        // The table's own owner states the real extent (the donor-sized
-        // clone at mint time); derived kinds state the no-extent sentinels.
-        expect(spanningShape.endsWith(",10")).toBe(true);
+        // The table's own owner states the real extent — the ten rows and
+        // five columns Insert ▸ Table gives, so 0,0,4,9 — and derived
+        // kinds state the no-extent sentinels.
+        expect(spanningShape).toBe("0,0,4,9");
       } else {
         expect(spanningShape).toBe("32767,2147483647,32767,2147483647");
       }
@@ -1618,9 +1619,11 @@ describe("Pages inline table insertion", () => {
     expect(reloaded.tables().map((t) => t.name).at(-1)).toBe("Ny tabel");
   });
 
-  it("throws without a donor rather than inventing a table", () => {
+  it("grafts the neutral donor when the document has no table to copy", () => {
     const doc = PagesDocument.blank();
-    expect(() => doc.insertInlineTable(0)).toThrow(/no table to copy/);
+    const table = doc.insertInlineTable(0, { rows: [["a"], ["1"]] });
+    expect([table.name, table.rowCount, table.columnCount]).toEqual(["Table", 2, 1]);
+    expect(PagesDocument.load(doc.save()).tables().length).toBe(1);
   });
 });
 

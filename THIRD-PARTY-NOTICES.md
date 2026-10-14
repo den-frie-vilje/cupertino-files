@@ -8,20 +8,14 @@ recipient knows exactly what they hold.
 ## `proto/` — recovered iWork schema definitions
 
 The `.proto` files under `proto/` are protocol-buffer schema definitions
-describing Apple's iWork file format. They were recovered from the iWork
-application binaries — where they are embedded as protobuf descriptors —
-by third-party open-source projects, and are redistributed here byte-for-
-byte as those projects published them:
-
-- `proto/current/` and `proto/numbers-14.4/`: published by
-  [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
-  (MIT, © 2021 Jon Connell), extracted from Numbers.app 14.4.
-- `proto/keynote-14.4/`: published by
-  [psobot/keynote-parser](https://github.com/psobot/keynote-parser)
-  (MIT, © Peter Sobot), extracted from Keynote.app 14.4.
-- `proto/pages-2013/`: published by
-  [obriensp/iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat)
-  (MIT, © 2013 Sean Patrick O'Brien), extracted from Pages 5.x.
+describing Apple's iWork file format. They are extracted by this project
+from the installed Pages, Numbers and Keynote applications, where they
+are embedded as protobuf descriptors, and are checked in byte-for-byte
+as the dumper writes them. The instrument is `protodump.py` from
+[masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
+(MIT, © 2021 Jon Connell), itself a descendant of
+[obriensp/proto-dump](https://github.com/obriensp/proto-dump)
+(MIT, © 2013 Sean Patrick O'Brien); the tool is not redistributed here.
 
 Exact source commits and file inventories are in
 [`proto/README.md`](proto/README.md).

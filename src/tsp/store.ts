@@ -322,6 +322,54 @@ export class ObjectStore {
     return removed;
   }
 
+  /**
+   * Drop the `candidates` that `from` no longer reaches — the same crude
+   * walk as {@link prune}, confined to a set this library just created,
+   * so an object the walk cannot see is never at risk. Returns how many
+   * were dropped.
+   */
+  discardUnreachable(from: bigint, candidates: Iterable<bigint>): number {
+    const pool = new Set(candidates);
+    const reachable = new Set<bigint>();
+    const queue = [from];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (reachable.has(id)) continue;
+      reachable.add(id);
+      const object = this.index.get(id)?.obj;
+      if (!object) continue;
+      for (const next of referencedIds(object.message)) if (this.index.has(next) && !reachable.has(next)) queue.push(next);
+    }
+    // A candidate something outside the drop set still points at stays:
+    // a style the stylesheet lists, a storage another slide shares.
+    const dropping = new Set<bigint>();
+    for (const id of pool) if (this.index.has(id) && !reachable.has(id)) dropping.add(id);
+    for (const id of [...dropping]) {
+      const held = this.referrers(id).some((referrer) => {
+        if (dropping.has(referrer)) return false;
+        // Declarations lag edits until save; the live references decide.
+        const object = this.index.get(referrer)?.obj;
+        return object !== undefined && this.currentReferencesOf(object).includes(id);
+      });
+      if (held) dropping.delete(id);
+    }
+    let removed = 0;
+    for (const component of this.components) {
+      if (component.isOpaque) continue;
+      const drop = component.objects.filter((o) => dropping.has(o.identifier));
+      if (drop.length === 0) continue;
+      for (const object of drop) {
+        component.byId.delete(object.identifier);
+        this.index.delete(object.identifier);
+        this.created.delete(object.identifier);
+        removed++;
+      }
+      component.objects = component.objects.filter((o) => !drop.includes(o));
+      component.structurallyDirty = true;
+    }
+    return removed;
+  }
+
   // ------------------------------------------------------------- Data/ files
 
   /** Files to add to the package on save (e.g. "Data/photo.png"). */
@@ -411,6 +459,15 @@ export class ObjectStore {
     if (!fromInfo || !toInfo) return; // metadata-less packages: nothing to maintain
     const toComponentId = toInfo.getVarint(COMPONENT_IDENTIFIER);
     if (toComponentId === undefined) return;
+    // A reference to a component's root object — the one whose id is the
+    // component's own identifier (a tile, a data list, a slide) — is a
+    // whole-component dependency: the apps record it as a component-level
+    // row, never per object (1,641 such references across the corpus, none
+    // listed by object id).
+    if (toComponentId === toId) {
+      this.declareComponentDependency(fromComponent, toComponentId);
+      return;
+    }
     for (const er of fromInfo.getMessages(COMPONENT_EXTERNAL_REFERENCES)) {
       if (
         er.getVarint(EXTREF_COMPONENT_IDENTIFIER) === toComponentId &&
@@ -736,7 +793,7 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * treated as a pointer. See {@link ObjectStore.prune} for why guessing wide
  * is the safe direction here.
  */
-function referencedIds(message: RawMessage): bigint[] {
+export function referencedIds(message: RawMessage): bigint[] {
   const out: bigint[] = [];
   const visit = (node: RawMessage, depth: number): void => {
     // Deep nesting is real (an AST inside a formula inside a list entry),

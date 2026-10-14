@@ -31,8 +31,11 @@ before anything reads or writes it. The rest group by task: reading
 (`read_text`, `read_table`, `list_formulas`), table editing
 (`set_cells`, `set_formula`, `format_cells`, `merge_cells` and their
 kin), Pages text (`append_paragraph`, `replace_text`, `format_text`,
-`insert_link`), and structure (`create_document`, `manage_slides`,
-`manage_sheets`). The live list, each tool with its full description:
+`insert_link`), things placed on a page or a slide (`add_text_box`,
+`add_table`, `add_image`, `set_slide_background`), structure
+(`create_document`, which also builds a document from Markdown or CSV,
+`manage_slides`, `manage_sheets`) and `export_document` for Markdown,
+CSV or plain text. The live list, each tool with its full description:
 `npx -y cupertino-files tools`.
 
 Rows and columns are 0-based throughout. Writes save over the input —

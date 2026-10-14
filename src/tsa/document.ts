@@ -43,7 +43,9 @@ import { SHARED_REFERENCE_EXTRACTORS } from "./extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage, verifyTextStorageIntegrity } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, type MarkdownOptions } from "./markdown.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
+import { tableInfoOwner } from "../tst/tables.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
@@ -59,8 +61,9 @@ import { tablesOf, verifyCellStorageIntegrity, type AuditFinding, type TableMode
  * for `load` and `open` alike.
  */
 function containerParentFor(app: IWorkApp): ContainerParentResolver {
-  if (app !== "keynote") return drawableParent;
-  return (type, message) => keynoteContainerParent(type, message) ?? drawableParent(type, message);
+  if (app !== "keynote") return (type, message) => drawableParent(type, message) ?? tableInfoOwner(type, message);
+  return (type, message) =>
+    keynoteContainerParent(type, message) ?? drawableParent(type, message) ?? tableInfoOwner(type, message);
 }
 
 // TSP.PackageMetadata version fields.
@@ -253,6 +256,23 @@ export class IWorkDocument {
     }
     for (const table of this.tables()) findings.push(...table.audit());
     return findings;
+  }
+
+  /**
+   * The document as Markdown: paragraphs as paragraphs, headings by their
+   * named style, list paragraphs as list items, tables as pipe tables and
+   * charts as a table of their series. Pages, Numbers and Keynote each
+   * arrange this in their own structure — body, sheets, slides. Pictures
+   * are written through `images`, a sink that places each one and
+   * returns its link; without it they are left out.
+   * @agentTool export_document
+   */
+  toMarkdown(options: MarkdownOptions = {}): string {
+    return joinBlocks([
+      ...this.textStorages().map((s) => storageToMarkdown(s, options)),
+      ...this.tables().map((t) => namedTable(t, 3)),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Concatenated plain text of all in-document storages (reading order approximation). */

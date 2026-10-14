@@ -11,16 +11,26 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
-import { DrawableModel } from "../tsd/drawables.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { ImageModel } from "../tsd/images.ts";
+import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
+import { APP_TABLE_DEFAULTS, appCellSize, fitNewTable, graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { fillTable } from "../tst/csv.ts";
+import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
+import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
-import { Image, TSD_TYPE } from "../tsd/schema.ts";
+import { Drawable, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
+import { StyleSuper } from "../tss/schema.ts";
+import { readFill, writeFill, type Fill } from "../tsd/style.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer } from "../tsd/placement.ts";
+import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
+import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
@@ -29,17 +39,26 @@ import {
   KN_REFERENCE_EXTRACTORS,
   KN_TYPE,
   KNDocument,
+  MASTER_ONLY_FIELDS,
   NO_TRANSITION_EFFECT,
   Note,
   Show,
   Slide,
   SlideNode,
+  SlideStyle,
+  SlideStyleProperties,
   SlideTree,
   SLIDE_TYPES,
   Transition,
   TransitionAttributes,
 } from "./schema.ts";
-import { buildsOfSlide, removeBuild, BuildModel } from "./builds.ts";
+import {
+  BuildModel,
+  buildsOfSlide,
+  createBuild,
+  type NewBuild,
+  removeBuild,
+} from "./builds.ts";
 
 /** Shared-family extractors plus the KN types this document mutates. */
 const KEYNOTE_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
@@ -174,6 +193,82 @@ export class KeynoteSlide {
   /** The master (template) slide this one is based on, if any. */
   get masterId(): bigint | undefined {
     return refId(this.object.message, Slide.TEMPLATE_SLIDE);
+  }
+
+  /**
+   * Put this slide on another layout, as Format ▸ Slide Layout does: the
+   * title, body and slide-number placeholders become fresh copies of the
+   * new master's, the title and body text carries over, every other
+   * drawable the slide owns stays, the old placeholders go, and the slide
+   * takes the master's style and tag map. Measured on the app's own
+   * change in olekristensen-v26.0-mac-authored.key.
+   * @agentTool manage_slides
+   */
+  setLayout(master: string | bigint): void {
+    this.document.relayoutSlide(this, master);
+  }
+
+  /**
+   * The slide's background fill, read up the style chain: a slide with a
+   * background of its own carries a variation style whose parent is the
+   * master's; one without shares the master's style outright.
+   */
+  background(): Fill | undefined {
+    let style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    for (let depth = 0; style && depth < 8; depth++) {
+      const fill = readFill(
+        style.message.getMessage(SlideStyle.SLIDE_PROPERTIES)?.getMessage(SlideStyleProperties.FILL),
+      );
+      if (fill) return fill;
+      style = this.store.resolve(refId(style.message.getMessage(SlideStyle.SUPER), StyleSuper.PARENT));
+    }
+    return undefined;
+  }
+
+  /**
+   * Set the slide's background, copying on write.
+   *
+   * A per-slide background is a KN.SlideStyleArchive beside the master's
+   * in the stylesheet's component: unnamed, a variation whose parent is
+   * the master's style and whose stylesheet is the document's, override
+   * count 1, and the fill in its slide properties. Nothing lists it; the
+   * slide's own reference is its only referrer. A slide already carrying
+   * such a variation of its own has the fill replaced in place; one
+   * sharing its style with the master, or with other slides, gets a
+   * variation of its own.
+   * @agentTool set_slide_background
+   */
+  setBackground(fill: Fill): void {
+    const current = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    if (!current) throw new RangeError(`slide ${this.index} has no style`);
+    const head = current.message.getMessage(SlideStyle.SUPER);
+    const isVariation = head?.getBool(StyleSuper.IS_VARIATION) ?? false;
+    const shared = this.store.referrers(current.identifier).some((id) => id !== this.id);
+    if (isVariation && !shared) {
+      const properties = current.message.getMessage(SlideStyle.SLIDE_PROPERTIES) ?? RawMessage.create();
+      properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+      current.message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+      return;
+    }
+    const component = this.store.componentOf(current.identifier);
+    if (!component) throw new RangeError(`slide style ${current.identifier} has no component`);
+    // Variations hang off the master's style, never off each other.
+    const parent = (isVariation ? refId(head, StyleSuper.PARENT) : undefined) ?? current.identifier;
+    const stylesheet = refId(head, StyleSuper.STYLESHEET);
+    const message = RawMessage.create();
+    const variation = RawMessage.create();
+    variation.setMessage(StyleSuper.PARENT, makeRef(parent));
+    variation.setBool(StyleSuper.IS_VARIATION, true);
+    if (stylesheet !== undefined) variation.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheet));
+    message.setMessage(SlideStyle.SUPER, variation);
+    message.setVarint(SlideStyle.OVERRIDE_COUNT, 1);
+    const properties = RawMessage.create();
+    properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+    message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+    const style = this.store.createObject(KN_TYPE.SLIDE_STYLE, component);
+    style.setMessageBytes(message.toBytes());
+    this.object.message.setMessage(Slide.STYLE, makeRef(style.identifier));
+    this.store.retargetReference(this.object, current.identifier, style.identifier);
   }
 
   /** Speaker-notes storage, when the slide has one. */
@@ -349,9 +444,112 @@ export class KeynoteSlide {
     return buildsOfSlide(this.store, this.object);
   }
 
+  /** The comments pinned to this slide's canvas. */
+  canvasComments(): CanvasComment[] {
+    return canvasComments(this.store, this.id);
+  }
+
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
+  }
+
+  /**
+   * Put a text box on this slide, saying `text`, placed and sized by
+   * `placement` (points; the donor's size otherwise). The box is a deep
+   * copy of a text box the deck already carries — this slide's first,
+   * else any slide's or master's — so it has the theme's own style, its
+   * own storage and every field the app writes. Keynote has not yet been
+   * seen to open a box added this way; see docs/VERIFICATION.md.
+   * @agentTool add_text_box
+   */
+  addTextBox(text: string, placement: DrawablePlacement = {}): DrawableModel {
+    const own = this.container().drawables().find((d) => isTextBox(d.object));
+    const donor = own?.object ?? anyTextBox(this.store);
+    if (!donor) throw new RangeError("the deck carries no text box to copy");
+    return addTextBoxFrom(this.store, this.container(), donor, this.id, text, placement);
+  }
+
+  /** The master's object placeholder frame, where the app puts an inserted table or picture. */
+  private objectPlaceholderFrame(): { x: number; y: number; width: number; height: number } | undefined {
+    const master = this.store.object(this.masterId ?? -1n);
+    const placeholder = master && this.store.resolve(refId(master.message, Slide.OBJECT_PLACEHOLDER));
+    const geometry = placeholder && new DrawableModel(this.store, placeholder).geometry();
+    return geometry?.width !== undefined && geometry.height !== undefined
+      ? { x: geometry.x ?? 0, y: geometry.y ?? 0, width: geometry.width, height: geometry.height }
+      : undefined;
+  }
+
+  /**
+   * Put a table on the slide: the neutral table every app shares (the
+   * blank Numbers document's own, Apple-made), its parent the slide, in
+   * both of the slide's drawable lists like the corpus's slide tables.
+   * `rows` fits and fills it; `name` is made unique among the deck's
+   * tables; `x` and `y` place it, else it keeps the donor's position.
+   * @agentTool add_table
+   */
+  addTable(options: { rows?: readonly (readonly string[])[]; name?: string; x?: number; y?: number } = {}): TableModel {
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError(`slide ${this.index} has no component`);
+    const style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    const stylesheetId = refId(style?.message.getMessage(SlideStyle.SUPER), StyleSuper.STYLESHEET);
+    const stylesheet =
+      this.document.stylesheets().find((s) => s.id === stylesheetId) ?? this.document.stylesheets()[0];
+    const id = graftNeutralTable(this.store, component, this.id, stylesheet);
+    this.container().attach(id);
+    const table = tablesOf(this.store, [id])[0];
+    if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
+    // The frame Insert ▸ Table fills: the layout's object placeholder when
+    // the master has one, else the slide; 5 by 4 with one header row and
+    // column, rows deciding the counts when given.
+    const frame = this.objectPlaceholderFrame() ?? { x: 0, y: 0, width: this.document.slideSize()?.width ?? 1920, height: 650 };
+    const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
+    const rows = given?.length ?? APP_TABLE_DEFAULTS.keynote.rows;
+    const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.keynote.columns;
+    const cell = appCellSize("keynote", frame);
+    fitNewTable(table, { rows, columns, ...cell });
+    drawableById(this.store, id)?.setGeometry({
+      x: options.x ?? frame.x,
+      y: options.y ?? frame.y,
+      width: columns * cell.columnWidth + APP_TABLE_DEFAULTS.keynote.borderAllowance,
+      height: rows * cell.rowHeight + APP_TABLE_DEFAULTS.keynote.borderAllowance,
+    });
+    remintTableIdentity(this.store, id);
+    table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
+    // Slide tables keep their name to themselves: 0 of 3 in the corpus show it.
+    table.nameVisible = false;
+    if (options.rows && options.rows.length > 0) fillTable(table, options.rows);
+    return table;
+  }
+
+  /**
+   * Animate a drawable on this slide: an all-at-once build in the shape
+   * the app writes, played on click. Keynote has not yet been seen to play
+   * a build this library wrote from nothing; see docs/VERIFICATION.md.
+   * @agentTool add_build
+   */
+  addBuild(spec: NewBuild): BuildModel {
+    if (spec.delivery === "byParagraph" && spec.paragraphs === undefined) {
+      const storage =
+        this.storageOfShape(this.store.resolve(spec.drawableId)) ??
+        this.placeholderStorageOf(spec.drawableId);
+      if (!storage) throw new RangeError("a by-paragraph build needs a target with text");
+      return createBuild(this.store, this.object, { ...spec, paragraphs: storage.paragraphs().length });
+    }
+    return createBuild(this.store, this.object, spec);
+  }
+
+  /** The storage of a placeholder drawable the slide lists, by its id. */
+  private placeholderStorageOf(drawableId: bigint): TextStorage | undefined {
+    for (const field of [
+      Slide.TITLE_PLACEHOLDER,
+      Slide.BODY_PLACEHOLDER,
+      Slide.OBJECT_PLACEHOLDER,
+      Slide.SLIDE_NUMBER_PLACEHOLDER,
+    ]) {
+      if (refId(this.object.message, field) === drawableId) return this.placeholderStorage(field);
+    }
+    return undefined;
   }
 
   /**
@@ -587,6 +785,115 @@ export class KeynoteDocument extends IWorkDocument {
   }
 
   /**
+   * A new deck written from Markdown: the first heading titles the blank
+   * deck's title slide and every later heading adds a slide on `layout`
+   * ("Title & Bullets" by default; a theme without it gets copies of the
+   * first slide's layout); the paragraphs and list items under a heading become that
+   * slide's body, one line each, its block quotes its presenter notes
+   * and its pipe tables tables on the slide; an image on a line of its
+   * own lands on the slide when `images` supplies its bytes, and a
+   * thematic break (`---`) starts an untitled slide; links, bold and
+   * italic in the body survive. Text before any heading goes on the
+   * title slide.
+   * With `template`, the deck is that one emptied (`blankFrom`), so its
+   * theme and layouts apply.
+   */
+  static fromMarkdown(
+    markdown: string,
+    options: { images?: ImageResolver; template?: Uint8Array; layout?: string } = {},
+  ): KeynoteDocument {
+    const doc = options.template ? KeynoteDocument.blankFrom(options.template) : KeynoteDocument.blank();
+    let slide = doc.slides()[0]!;
+    // The content layout: the one named, else "Title & Bullets" where the
+    // theme offers it, else a copy of the first slide's own layout.
+    const layouts = doc.masterSlides();
+    const wanted = options.layout ?? "Title & Bullets";
+    const layout = layouts.find((m) => m.name === wanted) ?? layouts.find((m) => m.name?.toLowerCase() === wanted.toLowerCase());
+    let headings = 0;
+    // A thematic break asks for a slide; the next heading or content takes it.
+    let pending = false;
+    const newSlide = (): void => {
+      slide = layout
+        ? doc.addSlide({ master: layout.id, after: doc.slideCount() - 1 })
+        : doc.addSlide({ copyOf: 0, after: doc.slideCount() - 1 });
+      pending = false;
+    };
+    const content = (): void => {
+      if (pending) newSlide();
+    };
+    const body: InlineText[] = [];
+    const notes: string[] = [];
+    const tables: (readonly (readonly string[])[])[] = [];
+    const pictures: { data: Uint8Array; fileName: string }[] = [];
+    const flush = (): void => {
+      if (body.length) {
+        slide.body = body.map((run) => run.text).join("\n");
+        const storage = slide.placeholder("body");
+        const paragraphs = storage?.paragraphs() ?? [];
+        for (const [i, run] of body.entries()) {
+          const start = paragraphs[i]?.start;
+          if (!storage || start === undefined) continue;
+          for (const link of run.links) storage.insertLink(start + link.start, start + link.end, link.url);
+          for (const r of run.bold) storage.range(start + r.start, start + r.end).format({ bold: true });
+          for (const r of run.italic) storage.range(start + r.start, start + r.end).format({ italic: true });
+        }
+      }
+      if (notes.length) slide.notes = notes.join("\n");
+      for (const rows of tables) slide.addTable({ rows });
+      for (const picture of pictures) doc.addImage(slide.index, picture.data, picture);
+      body.length = 0;
+      notes.length = 0;
+      tables.length = 0;
+      pictures.length = 0;
+    };
+    for (const block of parseMarkdown(markdown)) {
+      switch (block.kind) {
+        case "heading":
+          // The first two levels are slides; deeper headings are lines of the body.
+          if (block.level > 2) {
+            content();
+            body.push({ text: block.text, links: [], footnotes: [], bold: [], italic: [] });
+            break;
+          }
+          flush();
+          if (headings++ > 0 || pending) newSlide();
+          slide.title = block.text;
+          break;
+        case "rule":
+          flush();
+          pending = true;
+          break;
+        case "paragraph":
+          content();
+          body.push(block.inline);
+          break;
+        case "list":
+          content();
+          body.push(...block.items);
+          break;
+        case "footnote":
+          break;
+        case "quote":
+          content();
+          notes.push(block.text);
+          break;
+        case "table":
+          content();
+          tables.push(block.rows);
+          break;
+        case "image": {
+          content();
+          const data = options.images?.(block.src);
+          if (data) pictures.push({ data, fileName: block.src.split("/").pop() ?? block.src });
+          break;
+        }
+      }
+    }
+    flush();
+    return doc;
+  }
+
+  /**
    * A new, empty Keynote deck — one slide, 16:9 (1920 × 1080), no template
    * file needed.
    *
@@ -644,6 +951,42 @@ export class KeynoteDocument extends IWorkDocument {
     return this.slides().filter((s) => !s.isSkipped);
   }
 
+  /**
+   * The deck as Markdown: a section per slide headed by its number and
+   * title, the body's paragraphs as list items, the slide's text boxes,
+   * pictures and tables, the presenter notes as a block quote; then the
+   * tables on no slide, and the charts.
+   */
+  override toMarkdown(options: MarkdownOptions = {}): string {
+    const placed = new Set<bigint>();
+    const slides = this.slides().map((slide) => {
+      const body = slide.placeholder("body");
+      const notes = slide.notes.trim();
+      // The slide's free text boxes: every storage past the placeholders.
+      const placeholders = new Set([slide.placeholder("title")?.id, body?.id, slide.placeholder("slideNumber")?.id]);
+      const boxes = slide.textStorages().filter((s) => !placeholders.has(s.id) && s.text.replace(/[\u2029\ufffc]/g, "").trim() !== "");
+      const own = slide.drawables();
+      for (const d of own) placed.add(d.id);
+      const tables = tablesOf(this.store, own.filter((d) => d.object.type === TST_TYPE.TABLE_INFO).map((d) => d.id));
+      const pictures = own.filter((d) => d.object.type === TSD_TYPE.IMAGE).map((d) => new ImageModel(this.store, d.object));
+      return joinBlocks([
+        `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
+        body ? storageToMarkdown(body, options) : "",
+        ...boxes.map((s) => storageToMarkdown(s, options)),
+        ...pictures.map((p) => imageToMarkdown(p, options)),
+        ...tables.map((t) => namedTable(t, 3)),
+        notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",
+      ]);
+    });
+    return joinBlocks([
+      ...slides,
+      ...this.tables()
+        .filter((t) => !placed.has(t.infoObject?.identifier ?? -1n))
+        .map((t) => namedTable(t, 3)),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
+  }
+
   /** Number of slides reachable from the slide tree. */
   slideCount(): number {
     return this.slides().length;
@@ -678,11 +1021,24 @@ export class KeynoteDocument extends IWorkDocument {
    * `after` is a slide index; -1 puts the new slide first. By default the
    * copy is emptied of its drawables, giving a fresh slide on the same
    * layout; pass `withContent` to duplicate outright.
+   *
+   * `master` instead instantiates a layout — one of {@link masterSlides},
+   * by name or id — the way the app's "add slide" does: the master is
+   * deep-copied, its decorations and placeholders included, and the copy
+   * is made a content slide. The corpus states the difference between a
+   * content slide and its master exactly: the slide carries a reference
+   * to the master, a note, and the slide-number placeholder's storage
+   * holds the number attachment; it never carries the master's name,
+   * object placeholder, style lists or thumbnail texts. The title and
+   * body are emptied like a copied slide's.
    * @agentTool manage_slides
    */
-  addSlide(options: { copyOf?: number; after?: number; withContent?: boolean } = {}): KeynoteSlide {
+  addSlide(
+    options: { copyOf?: number; after?: number; withContent?: boolean; master?: string | bigint } = {},
+  ): KeynoteSlide {
     const slides = this.slides();
     if (slides.length === 0) throw new RangeError("document has no slide to copy");
+    if (options.master !== undefined) return this.addSlideFromMaster(options.master, options.after ?? slides.length - 1);
     const sourceIndex = options.copyOf ?? slides.length - 1;
     const source = slides[sourceIndex];
     if (!source) throw new RangeError(`no slide at index ${sourceIndex}`);
@@ -823,6 +1179,179 @@ export class KeynoteDocument extends IWorkDocument {
     return created;
   }
 
+  /** A master by id, by exact name, then by case-insensitive name. */
+  private resolveMaster(master: string | bigint): IwaObject {
+    const masters = this.masterSlides();
+    const found =
+      typeof master === "bigint"
+        ? masters.find((m) => m.id === master)
+        : (masters.find((m) => m.name === master) ??
+          masters.find((m) => m.name?.toLowerCase() === master.toLowerCase()));
+    const object = found && this.store.object(found.id);
+    if (!object) {
+      throw new RangeError(
+        `no master slide ${String(master)}; the deck offers: ${masters.map((m) => m.name ?? String(m.id)).join(", ")}`,
+      );
+    }
+    return object;
+  }
+
+  private addSlideFromMaster(master: string | bigint, after: number): KeynoteSlide {
+    const masterObject = this.resolveMaster(master);
+    const slides = this.slides();
+    // The slide the new one is modelled on for what a master lacks: a
+    // note and a per-slide component.
+    const model = slides[Math.max(0, Math.min(after, slides.length - 1))]!;
+    const modelComponent = this.store.componentOf(model.object.identifier);
+    if (!modelComponent) throw new RangeError("slide has no component");
+
+    // The object placeholder stays the master's: no content slide carries
+    // one, and cloning it would leave an orphan.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone: slide, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    for (const field of MASTER_ONLY_FIELDS) slide.message.remove(field);
+    slide.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      const kept = slide.message
+        .getMessages(field)
+        .map((ref) => ref.getVarint(1))
+        .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+      if (kept.length > 0) slide.message.setMessages(field, kept.map((id) => makeRef(id)));
+      else slide.message.remove(field);
+    }
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      this.storageOfPlaceholder(slide, field)?.setText("");
+    }
+    // A content slide's slide-number placeholder holds the number
+    // attachment (40 of 44 in the corpus, the rest emptied by hand); the
+    // master's holds nothing.
+    const number = this.storageOfPlaceholder(slide, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The note: the model slide's, copied and emptied.
+    const noteIds: bigint[] = [];
+    const modelNote = this.store.resolve(refId(model.object.message, Slide.NOTE));
+    if (modelNote) {
+      const { clone: note, map: noteMap } = deepCloneObject(this.store, modelNote);
+      const storage = this.store.resolve(refId(note.message, Note.CONTAINED_STORAGE));
+      if (storage) new TextStorage(this.store, storage).setText("");
+      slide.message.setMessage(Slide.NOTE, makeRef(note.identifier));
+      noteIds.push(...noteMap.values());
+    }
+
+    const nodeComponent = this.store.componentOf(model.node.identifier) ?? modelComponent;
+    const node = this.store.createObject(model.node.type, nodeComponent, { cloneFrom: model.node });
+    node.message.remove(SlideNode.CHILDREN);
+    node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
+    node.message.setBool(SlideNode.HAS_NOTE, false);
+    this.insertSlideNode(node.identifier, after);
+
+    // Per-slide components, as addSlide keeps them: the clones were born
+    // beside the master and the note beside its model, and all of them
+    // move into a component of the slide's own, modelled on a content
+    // slide's rather than the master's.
+    if (modelComponent.locator === `Slide-${model.object.identifier}`) {
+      const fresh = this.store.createComponent(`Slide-${slide.identifier}`, modelComponent);
+      if (fresh) {
+        this.store.moveObjectsToComponent([slide.identifier, ...map.values(), ...noteIds], fresh);
+        this.store.declareComponentDependency(nodeComponent, slide.identifier);
+      }
+    }
+
+    const created = this.slides().find((s) => s.id === slide.identifier);
+    if (!created) throw new RangeError("slide was created but is not reachable from the tree");
+    return created;
+  }
+
+  /** The work behind {@link KeynoteSlide.setLayout}. */
+  relayoutSlide(slide: KeynoteSlide, master: string | bigint): void {
+    const masterObject = this.resolveMaster(master);
+    const target = slide.object;
+    const component = this.store.componentOf(target.identifier);
+    if (!component) throw new RangeError("slide has no component");
+    const PLACEHOLDERS = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER];
+    const oldText = new Map<number, string>();
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      const text = this.storageOfPlaceholder(target, field)?.text ?? "";
+      if (text.replace(/[\u2029\ufffc]/g, "").trim()) oldText.set(field, text);
+    }
+    const oldPlaceholders = new Set(PLACEHOLDERS.map((f) => refId(target.message, f)).filter((id): id is bigint => id !== undefined));
+    // What the old placeholders reach — their storages and direct styles —
+    // goes with them unless something else still points at it.
+    const oldClosure = new Set(oldPlaceholders);
+    for (const id of [...oldClosure]) {
+      const object = this.store.object(id);
+      if (!object) continue;
+      for (const next of this.store.currentReferencesOf(object)) {
+        oldClosure.add(next);
+        const sub = this.store.object(next);
+        if (sub) for (const deeper of this.store.currentReferencesOf(sub)) oldClosure.add(deeper);
+      }
+    }
+
+    // A fresh instantiation of the new master, as addSlide({ master })
+    // makes one; this slide then takes its placeholders and drawables.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    // The instantiation's drawables answer to this slide, not to the
+    // throwaway clone they were born under.
+    for (const id of map.values()) {
+      const object = this.store.object(id);
+      const core = object && findDrawableCore(object.message);
+      if (core && refId(core, Drawable.PARENT) === clone.identifier) {
+        core.setMessage(Drawable.PARENT, makeRef(target.identifier));
+        object.message.markDirty();
+      }
+    }
+    for (const field of PLACEHOLDERS) {
+      const id = refId(clone.message, field);
+      if (id === undefined) target.message.remove(field);
+      else target.message.setMessage(field, makeRef(id));
+    }
+    const fresh = clone.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+    const kept = target.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !oldPlaceholders.has(id));
+    const owned = [...fresh, ...kept];
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      if (owned.length > 0) target.message.setMessages(field, owned.map((id) => makeRef(id)));
+      else target.message.remove(field);
+    }
+    for (const field of [Slide.STYLE, Slide.TRANSITION]) {
+      const value = clone.message.getMessage(field);
+      if (value) target.message.setMessage(field, value);
+    }
+    target.message.setMessages(28, clone.message.getMessages(28));
+    target.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    target.message.markDirty();
+    for (const [field, text] of oldText) this.storageOfPlaceholder(target, field)?.setText(text);
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      if (!oldText.has(field)) this.storageOfPlaceholder(target, field)?.setText("");
+    }
+    const number = this.storageOfPlaceholder(target, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The new placeholders and drawables join the slide's component; the
+    // instantiation's own slide object and the old placeholders, with
+    // what only they reached, go.
+    this.store.moveObjectsToComponent([...map.values()].filter((id) => id !== clone.identifier), component);
+    this.store.discardUnreachable(target.identifier, [clone.identifier, ...map.values(), ...oldClosure]);
+  }
+
   /**
    * Duplicate a slide, content and all.
    *
@@ -845,6 +1374,7 @@ export class KeynoteDocument extends IWorkDocument {
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
    * `x`/`y` say otherwise the picture is centered on the slide.
+   * @agentTool add_image
    */
   addImage(
     slideIndex: number,

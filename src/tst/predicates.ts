@@ -31,7 +31,9 @@
  * caller knows which cell they are asking about.
  */
 import { protoFields } from "../proto/fields.ts";
-import type { RawMessage } from "../base/protobuf.ts";
+import { RawMessage } from "../base/protobuf.ts";
+import { formulaDecimal } from "./formula-builder.ts";
+import type { OwnerUid } from "../tsce/owners.ts";
 import type { FormulaOwnerRegistry } from "../tsce/owners.ts";
 import { decodeDecimal128 } from "./cellrecord.ts";
 import { AstNodeArrayFields, AstNodeFields, AstNodeType, FormulaFields } from "../tsce/ast.ts";
@@ -156,13 +158,14 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  * them from being mistaken for gaps in the comparison enum.
  *
  * Type **3** is "text contains" in both rule systems: it compiles to
- * `NOT(ISERROR(f(needle, cell)))`, where `f` is function index **296** —
- * SEARCH-shaped in its arguments, but not SEARCH, which is 131. That index
- * is in no harvested name table, so the formula renders it `FUNCTION_296`
- * and this map records no entry for 3: an entry's value is the identifying
- * callee's *name*, and 296 does not have one yet.
+ * `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))` — function index
+ * 296, SEARCH-shaped in its arguments but not SEARCH, which is 131. The
+ * name comes from the app's own function registry; no document ever
+ * showed it.
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
+  [1, "FIND.CASEINSENSITIVE"],
+  [3, "FIND.CASEINSENSITIVE"],
   [34, "ISBLANK"],
   [54, "SUM"],
 ]);
@@ -427,6 +430,90 @@ function decimalOf(value: RawMessage): number {
  * `subject` replaces the "cell under test" marker, so a caller who knows
  * they are asking about B4 gets `B4 < 0` rather than `THIS_CELL<0`.
  */
+/** What a written rule can say: a comparison, or that the text contains a needle. */
+export type FilterOperator = PredicateOperator | "contains" | "startsWith";
+
+/** TST.FormulaPredArgArchive.arg_type codes, as the corpus's rules carry them. */
+const PRED_ARG_TYPE = { UNUSED: 0, NUMBER: 1, STRING: 3, CELL: 4 } as const;
+
+/**
+ * Write a comparison predicate the way a filter rule the app wrote carries
+ * one: the comparison's code as `predicate_type`, zero qualifiers, the
+ * cell operand as a relative reference to the host table, row offset zero
+ * and the rule's column as the column offset, the literal operand with its value (a number with its decimal pair), an
+ * unused third operand, the compiled formula, and the conditional-style
+ * flag stated false. `ast` is the formula the rule evaluates, compiled by
+ * the caller so the table identity in it is the host's.
+ */
+export function writeComparisonPredicate(
+  operator: FilterOperator,
+  value: number | string,
+  column: number,
+  tableUid: OwnerUid,
+  ast: RawMessage,
+): RawMessage {
+  // Text-contains is predicate type 3, the function-shaped condition
+  // whose formula is NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)));
+  // starts-with is type 1, FIND.CASEINSENSITIVE(needle, cell) = 1.
+  const type =
+    operator === "contains"
+      ? 3
+      : operator === "startsWith"
+        ? 1
+        : [...PREDICATE_TYPE_OPERATORS].find(([, op]) => op === operator)?.[0];
+  if (type === undefined) throw new RangeError(`no predicate type for operator ${operator}`);
+  const predicate = RawMessage.create();
+  predicate.setVarint(PredicateFields.PREDICATE_TYPE, type);
+  predicate.setVarint(PredicateFields.QUALIFIER1, 0);
+  predicate.setVarint(PredicateFields.QUALIFIER2, 0);
+
+  const cell = RawMessage.create();
+  cell.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.CELL);
+  const relative = RawMessage.create();
+  relative.setVarint(1, 0);
+  // A signed offset in an unsigned field: column A from the host at
+  // column 1 is −1, written as 2^64 − 1, as the app writes it.
+  relative.setVarint(2, column < 0 ? (1n << 64n) + BigInt(column) : column);
+  const uid = RawMessage.create();
+  uid.setVarint(1, tableUid.lo);
+  uid.setVarint(2, tableUid.hi);
+  relative.setMessage(3, uid);
+  relative.setBool(4, false);
+  relative.setBool(5, false);
+  relative.setBool(6, false);
+  relative.setBool(7, false);
+  cell.setMessage(PredArgFields.RELATIVE_CELL_REF, relative);
+  cell.setBool(PredArgFields.PRESERVE_ROW, false);
+  cell.setBool(PredArgFields.PRESERVE_COLUMN, false);
+  predicate.setMessage(PredicateFields.PARAM_VALUE0, cell);
+
+  const literal = RawMessage.create();
+  const data = RawMessage.create();
+  if (typeof value === "number") {
+    literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.NUMBER);
+    data.setDouble(PredArgDataFields.DOUBLE_VALUE, value);
+    const decimal = formulaDecimal(value);
+    const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
+    data.setVarint(PredArgDataFields.DECIMAL_LOW, view.getBigUint64(0, true));
+    data.setVarint(PredArgDataFields.DECIMAL_HIGH, view.getBigUint64(8, true));
+  } else {
+    literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.STRING);
+    data.setString(PredArgDataFields.STRING_VALUE, value);
+  }
+  literal.setMessage(PredArgFields.ARG_VALUE, data);
+  predicate.setMessage(PredicateFields.PARAM_VALUE1, literal);
+
+  const unused = RawMessage.create();
+  unused.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.UNUSED);
+  predicate.setMessage(PredicateFields.PARAM_VALUE2, unused);
+
+  const formula = RawMessage.create();
+  formula.setMessage(FormulaFields.AST_NODE_ARRAY, ast);
+  predicate.setMessage(PredicateFields.FORMULA, formula);
+  predicate.setBool(PredicateFields.FOR_CONDITIONAL_STYLE, false);
+  return predicate;
+}
+
 export function describePredicate(predicate: Predicate, subject?: string): string {
   const text = predicate.text || "(empty condition)";
   return subject ? text.split(SELF_CELL_MARKER).join(subject) : text;

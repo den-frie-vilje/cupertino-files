@@ -214,3 +214,88 @@ file, never who provided it or the session that produced it — "donated",
 "returned", "measured on the phone" all belong in the commit message or
 `fixtures/ATTRIBUTION.md`, never in code. Code that narrates its own
 past fills context fast and goes stale faster.
+
+## Reading the apps' binaries with REA and Ghidra
+
+The installed Pages, Numbers and Keynote bundles answer what no document
+can: the names behind plain integer codes, the defaults a writer emits,
+and the schema itself. REA is registered as an MCP server in the DFV
+profile, and Ghidra 12.1.4 under `~/Applications` is its decompiler.
+The traps, each paid for once:
+
+- **REA setup registers whatever launcher ran it.** Under `pnpm dlx` it
+  writes the absolute path of pnpm's cache copy, which pnpm prunes within
+  a day. The registered command must read `pnpm dlx rea-agents@<version>
+  mcp`; REA's own `doctor` then calls the entry stale, which is cosmetic,
+  but a `rea setup` re-run writes the cache path again.
+- **Ghidra 12.1.4 ships no macOS natives.** `gradle buildNatives` from
+  `support/gradle/` builds the decompiler and sleigh for the host in half a
+  minute, run through pkgx with Gradle, bison 3 and a JDK 21. The
+  Makefile route hard-codes x86_64 and is the wrong one on this Mac.
+- **The bridge refuses universal binaries.** Thin the slice first
+  (`lipo -thin arm64`) into the scratch area, and pass `--snapshot` so
+  REA keeps its evidence. Each REA call still re-imports the target into
+  Ghidra, about eleven minutes for TSTables, so chain as little as
+  possible and prefer the cheap reads: `inspect-native-dispatch-metadata`
+  gives Objective-C method addresses without a decompiler (capped at
+  20000 records), `search --kind strings` and `xrefs` reach data.
+- **Objective-C methods are addressed as `Class::selector:`**, colons
+  kept, class and instance methods alike. A string's first reference is
+  usually its CFString constant in `__DATA_CONST`; the code is one hop
+  further.
+- **The engine is in the frameworks, not the app binary.** TSPersistence
+  holds the IWA layer, TSTables the table engine and formula specs,
+  TSUtility the format types, TSDrawables and TSStyles the rest. Each is
+  a far smaller target than the app.
+- **What leaves the session is the fact, never the code.** Pseudocode,
+  evidence bundles, snapshots and thinned binaries stay under `/tmp`;
+  the repository gets a measured constant, its test and a ledger row
+  (docs/LEGAL.md, item 3).
+- **Read the file before decompiling.** The formula registry, the duration
+  initialiser and the group-by sidecar fields were all settled by reading
+  bytes and instructions in node or by a corpus census, in minutes; the
+  Ghidra route costs eleven minutes per TSTables call and its `xrefs`
+  step died twice in provider cleanup. Decompile when the question is a
+  switch or a computed value; measure the data when it is a table.
+- **Every new writer gets a ladder rung before it gets a commit.** The
+  shape audit (`npm run shape:audit`) compares what a rung writes with
+  the corpus in fields and referrers, and in one night it caught a
+  category tree nothing pointed at, a filter field no app-written set
+  carries, and a build aimed at a text storage instead of its
+  placeholder. None of the unit tests saw any of them. A rung is three
+  lines in `make-bisect-docs.ts`, `make-pages-docs.ts` or
+  `make-keynote-docs.ts`; the audit's budget (`shape:check`) is the gate.
+- **A donor grafted across apps carries its app's wiring.** The neutral
+  Numbers table under a Pages body or a Keynote slide anchors exactly as
+  the corpus does, and the shape audit still listed seven referrer
+  patterns no Pages or Keynote table shares: declared back-references,
+  the preset outside the theme, a style outside the network. Two closed
+  by measurement (table infos never declare their parent, styles are
+  listed in the stylesheet); the rest ship the feature as
+  `experimental`, carried by seeds rather than the audited ladders, so
+  the budget stays honest and the app gets the question.
+- **Ladder scripts write into the current directory by default.** Pass
+  an output directory (`npm run keynote:docs -- /tmp/kladder`); a bare
+  run litters the repository root with `.key` files that only `git
+  status` reveals.
+- **A fresh test is read notes-first too.** Three of the night's test
+  failures were the test's own mistake — a donor set collected after the
+  add, slide objects compared by identity across two `slides()` calls, a
+  float32 colour compared to its decimal — and each cost a diagnostic
+  script the assertion message already answered. Read the actual value
+  before touching the writer.
+- **A round trip over the corpus is an instrument too.** Exporting every
+  fixture to Markdown, building a document back and exporting again
+  found three things no unit test saw: table names headed tables that
+  hid them, the Numbers reader and writer disagreed on heading levels,
+  and the Keynote reader made a slide of every heading. Any writer with
+  a matching reader gets a corpus round trip (`test/markdown-corpus.test.ts`
+  is the pattern), comparing the structure the pair claims to carry.
+- **A reference extractor must reproduce Apple's order, not just its
+  set.** The table-model extractor matched every corpus model as a set
+  on the first try and broke a byte-identical round trip on the second,
+  because a dirtied Apple-written object is re-declared by the extractor
+  and the apps declare in a field sequence that is not field order.
+  Measure the sequence per field (single-field scans, nested stores
+  included) and compare lists, not sets, before registering; the merge
+  fixture's round trip is the gate.

@@ -114,10 +114,10 @@ const describeSignature = (sig: string): string =>
  * interpret is a finding nobody acts on.
  */
 function fieldNamer(): (type: number, field: number) => string {
-  // Every vendored dump, not just the shared families. The Pages-specific
-  // `TP*` schemas live in `pages-2013/`, and reading only `current/`
-  // reported `TP.SectionArchive.name` as a bare "field 26" — the one
-  // finding nobody could act on without going to the corpus by hand.
+  // Every vendored dump, not just the shared families: the app-specific
+  // `TP*`, `TN*` and `KN*` schemas live beside `current/`, and reading only
+  // `current/` would report `TP.SectionArchive.name` as a bare "field 26",
+  // a finding nobody can act on without going to the corpus by hand.
   let schema: ProtoSchema | undefined;
   try {
     schema = loadVendoredSchema().detailed;

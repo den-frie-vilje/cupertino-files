@@ -104,10 +104,17 @@ describe("the MCP server over stdio", () => {
       const listed = await client.request("tools/list");
       const names = (listed.tools as { name: string }[]).map((t) => t.name).sort();
       expect(names).toEqual([
+        "add_build",
+        "add_category",
+        "add_filter_rule",
+        "add_image",
+        "add_table",
+        "add_text_box",
         "append_paragraph",
         "audit_document",
         "create_document",
         "describe_document",
+        "export_document",
         "format_cells",
         "format_text",
         "insert_link",
@@ -124,6 +131,7 @@ describe("the MCP server over stdio", () => {
         "set_cells",
         "set_formula",
         "set_page_setup",
+        "set_slide_background",
         "set_slide_text",
         "set_table_bands",
       ]);

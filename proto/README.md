@@ -7,115 +7,103 @@
 > re-run `proto:embed`, or the test suite fails. They are also published
 > with the package, so an installed copy carries the authority for its own
 > field numbers.
->
-> Refreshing a dump: replace the files, update the provenance table below,
-> run `npm run proto:embed`, then `npm test`. A field that has appeared in
-> the newer dump makes its `measuredFields` declaration throw — that is
-> deliberate, and moving it to `protoFields` is the point.
 
-Curated set of protobuf schema definitions for the modern iWork IWA file format,
-collected to support a TypeScript library that reads/writes Apple Pages,
-Numbers and Keynote documents. These schemas are **not published by Apple**; they were
-recovered from the iWork application binaries by open-source projects using
-"proto-dump"-style extraction (protobuf descriptors are embedded in the app
-binaries and can be decompiled back into `.proto` source). The files below are
-verbatim copies from those projects — nothing has been edited.
+The schemas describe the modern iWork IWA file format and are **not
+published by Apple**. Each application embeds its protobuf descriptors in
+its binaries, and the files below are those descriptors decompiled back to
+`.proto` source, checked in byte-for-byte as the dumper writes them.
+Nothing has been edited.
 
 ## Layout
 
-- `current/` — newest available dumps of the **shared** iWork frameworks
-  (TSP, TSK, TSS, TSD, TSWP, TSA, TSCH, TST, TSCK, TSCE families), taken from
-  `masaccio/numbers-parser` (extracted from Numbers.app 14.4 — the same
-  framework versions used by current Pages/Keynote).
-- `pages-2013/` — the **Pages-specific** `TP*` schemas from
-  `obriensp/iWorkFileFormat` (extracted from Pages 5.x, iWork '13). This is the
-  only public Pages-specific dump.
+- `current/` — the **shared** iWork families (TSP, TSK, TSS, TSD, TSWP,
+  TSA, TSCH, TST, TSCK, TSCE), identical in every bundle.
+- `pages-15.4/` — the Pages-specific `TP*` files.
+- `keynote-15.4/` — the Keynote-specific `KN*` files.
+- `numbers-15.4/` — the Numbers-specific `TN*` files.
 
 ## Provenance
 
-| Directory | Files | Source repo | Commit (`git rev-parse HEAD`) | Path in repo | Extraction method | App version dumped | License |
-|---|---|---|---|---|---|---|---|
-| `current/` | 29 × `TS*.proto` | [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser) | `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` | `src/protos/` | `src/build/protodump.py` run against the Numbers.app binary (descendant of obriensp's 2013 `proto-dump`), then `rename_proto_files.py` | Numbers 14.4 (the last release before Apple's switch to year-based versions; the 26.x apps still accept these field numbers) | MIT (© 2021 Jon Connell) |
-| `pages-2013/` | 2 × `TP*.proto` (`TPArchives.proto`, `TPCommandArchives.proto` — every TP file the repo has) | [obriensp/iWorkFileFormat](https://github.com/obriensp/iWorkFileFormat) | `8575e441beaaaa56f480fdd91721f5bb06d07d43` | `iWorkFileInspector/iWorkFileInspector/Messages/Proto/` | [proto-dump](https://github.com/obriensp/proto-dump) against the Pages app binary | Pages 5.0 (iWork '13) | MIT (© 2013 Sean Patrick O'Brien) |
-| (cross-check only, nothing copied) | — | [psobot/keynote-parser](https://github.com/psobot/keynote-parser) | `6bc3849e80f531f51d2878550bd634706d3f036d` | `protos/versions/14.4/` | `dumper/protodump.py` ("Inspired by Sean Patrick O'Brien's 2013 proto-dump") against the Keynote.app binary | Keynote 14.4 | MIT |
+Every directory comes from the same release of the applications,
+extracted first-hand from the installed bundles on macOS. The dumper is
+`protodump.py` from
+[masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
+at commit `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` (`src/build/protodump.py`,
+a descendant of Sean Patrick O'Brien's 2013 `proto-dump`), run with
+Python 3.11 and `protobuf` 7.36 over each bundle's whole `Contents/`
+tree, main executable and frameworks alike.
 
-Cross-check result: the shared `TS*` families in numbers-parser and
-keynote-parser 14.4 are **identical** for every file compared
-(`TSPMessages`, `TSPArchiveMessages`, `TSPDatabaseMessages`, `TSKArchives`,
-`TSSArchives`, `TSWPArchives`, `TSAArchives`, `TSTArchives`), except two float
-default literals in `TSDArchives.proto` that differ only in decimal spelling
-(`0.200000003` vs `0.2`, `0.600000024` vs `0.6` — the same float32 value).
-keynote-parser ships real `.proto` sources (not just compiled `_pb2.py`), but
-per preference the numbers-parser copies are the ones vendored here.
+| Directory | Files | Extracted from | App version (build) | Main executable, SHA-256 |
+|---|---|---|---|---|
+| `current/` | 29 × `TS*.proto` | Pages.app (byte-identical in Numbers.app and Keynote.app) | Pages 15.4 (7051.0.79) | `66afd6fceae42033155d42f12e3bbb4fab9000d358926a48b7db6090e01e5ca1` |
+| `pages-15.4/` | 3 × `TP*.proto` | Pages.app | Pages 15.4 (7051.0.79) | as above |
+| `keynote-15.4/` | 4 × `KN*.proto` | Keynote.app | Keynote 15.4 (7051.0.79) | `e5c3e6eee9891e9d806028328139fd7500247e5bc25017797dffb5ba277ac065` |
+| `numbers-15.4/` | 4 × `TN*.proto` | Numbers.app | Numbers 15.4 (7051.0.79) | `372357ba69beb6561fbcd4b529d3f24bf50a0de4452ff95b8146df07c5d64182` |
 
-## Notes on file naming in `current/`
+The digests are of the universal (x86_64 + arm64) executables as
+installed. The 29 shared files dumped from the three bundles are
+byte-identical to one another, which is the cross-check that they are
+one schema and not three. Pages 15.4's own framework also embeds the
+`TN*` descriptors, byte-identical to Numbers 15.4's, which no earlier
+Pages did.
 
-numbers-parser stores some schemas twice with equivalent content: dot-named
-duplicates (`TSCHArchives.Common.proto`, `*.sos.proto`) differ from the
-underscore-named files (`TSCHArchives_Common.proto`, `*_sos.proto`) only in
-their `import` statement spelling. Only the underscore-named set is vendored
-here because it is the complete, self-consistent one (the import graph of
-`current/` resolves entirely within the directory, plus the standard
-`google/protobuf/descriptor.proto`).
+Earlier sets are in git history: the 15.1 release (Pages 15.1.1,
+Numbers 15.1, Keynote 15.1.1) under the directories `pages-15.1/`,
+`keynote-15.1/` and `numbers-15.1/` before this refresh, and
+numbers-parser's and keynote-parser's 14.4 dumps and
+obriensp/iWorkFileFormat's Pages 5.0 dump from 2013 at the tag
+`proto-before-15.1`. From 15.1 to 15.4 the `TP*` files did not change;
+`TSS.StylesheetArchive` gained three versioned-style snapshots,
+`TN.SheetArchive` a hidden flag and a tab colour, and Keynote's build and
+transition attributes custom angle, blur and text-alignment options.
 
-The `*_sos.proto` files declare separate `…SOS` packages (`TSKSOS`, `TSWPSOS`,
-`TSDSOS`, …) — "SOS" companion schemas used by the command/collaboration
-subsystem — and are imported by `TSDCommandArchives.proto`,
-`TSWPCommandArchives.proto`, `TSTCommandArchives.proto`.
+## Refreshing a dump
 
-Numbers-app-specific `TN*` schemas are omitted from `current/` (nothing in
-the `TS*` families imports them); they are vendored separately under
-`numbers-14.4/` below.
+1. Dump each bundle into a scratch directory:
+   `python3 protodump.py "/Applications/Pages.app/Contents" out/Pages`,
+   and the same for Numbers and Keynote.
+2. Replace the files: the `TS*` set into `current/` (from any one bundle,
+   after checking the three agree), `TP*` into `pages-<version>/`, `KN*`
+   into `keynote-<version>/`, `TN*` into `numbers-<version>/`.
+3. Update the provenance table above with the versions and digests.
+4. `npm run proto:embed`, then `npm test`.
+
+A field that has appeared in the newer dump makes its `measuredFields`
+declaration throw — that is deliberate, and moving it to `protoFields`
+is the point. A renamed field keeps its number; the declaration follows
+the new name.
+
+## Notes on file naming
+
+The dumper writes companion files with dot-spelled names
+(`TSCHArchives.Common.proto`, `TSCHArchives.GEN.proto`, `*.sos.proto`),
+and the `import` lines inside the files use the same spelling, so the
+import graph of each directory resolves within `proto/` plus the standard
+`google/protobuf/descriptor.proto`.
+
+The `*.sos.proto` files declare separate `…SOS` packages (`TSKSOS`,
+`TSWPSOS`, `TSDSOS`, …) — companion schemas used by the command and
+collaboration subsystem — and are imported by the `*CommandArchives`
+files.
 
 ## Caveats
 
-- **Version skew**: the `TP*` schemas in `pages-2013/` are from **iWork '13
-  (Pages 5.0)** while the shared `TS*` families in `current/` are from the
-  **14.4-era** frameworks. Current Pages certainly extends the TP messages
-  (new fields, possibly new messages), so `pages-2013/` is a starting map,
-  not ground truth for modern `.pages` files. Unknown fields encountered when
-  decoding modern documents must be preserved round-trip.
-- The TP files import 2013-era `TS*` files by name; compiling `pages-2013/`
-  against `current/` TS schemas may work for many messages (Apple rarely
-  renumbers fields) but is not guaranteed — obriensp's matching 2013 `TS*`
-  dumps live in the same repo directory if needed.
-- All schemas are `syntax = "proto2"` and use field numbers/`.TSP.Reference`
-  indirection resolved through the IWA object index (`TSPArchiveMessages`
-  `ArchiveInfo`/`MessageInfo` framing).
+- All schemas are `syntax = "proto2"` and use field numbers and
+  `.TSP.Reference` indirection resolved through the IWA object index
+  (`TSPArchiveMessages` `ArchiveInfo`/`MessageInfo` framing).
+- Two kinds of number are in no dump and never will be: archive **type
+  ids** (`TSWP.StorageArchive = 2001`), which are the apps' object
+  registry, and plain `uint32` codes whose meaning the schema does not
+  name (`TSK.FormatStructArchive.format_type`,
+  `TST.CellSpecArchive.interaction_type`). Both are measured from the
+  corpus and the applications.
+- Unknown fields met when decoding a document must be preserved
+  round-trip whatever the schema says.
 
 ## Licenses
 
-Both source repos are MIT-licensed. Retain their copyright notices if these
-files are redistributed:
-
-- numbers-parser: MIT, Copyright 2021 Jon Connell
-- iWorkFileFormat: MIT, Copyright (c) 2013 Sean Patrick O'Brien (http://obriensp.com)
-- keynote-parser (cross-check source): MIT, Copyright Peter Sobot
-
-## App-specific schemas: `keynote-14.4/` and `numbers-14.4/` (added 2026-07-30)
-
-Verbatim copies of the **app-local** schema families, vendored to support the
-Keynote (`.key`) and Numbers (`.numbers`) readers (see
-`research/keynote-slides.md`). Nothing has been edited.
-
-| Directory | Files | Source repo | Commit (`git rev-parse HEAD`) | Path in repo | Extraction method | App version dumped | License |
-|---|---|---|---|---|---|---|---|
-| `keynote-14.4/` | 4 × `KN*.proto` (`KNArchives.proto`, `KNArchives_sos.proto`, `KNCommandArchives.proto`, `KNCommandArchives_sos.proto` — every KN file the repo has) | [psobot/keynote-parser](https://github.com/psobot/keynote-parser) | `6bc3849e80f531f51d2878550bd634706d3f036d` | `protos/versions/14.4/` | `dumper/protodump.py` against the Keynote.app binary | Keynote 14.4 | MIT (© Peter Sobot) |
-| `numbers-14.4/` | 6 × `TN*.proto` (`TNArchives.proto`, `TNCommandArchives.proto`, plus both spellings of their SOS companions: `TNArchives_sos.proto`/`TNArchives.sos.proto`, `TNCommandArchives_sos.proto`/`TNCommandArchives.sos.proto` — every TN file the repo has) | [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser) | `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` | `src/protos/` | `src/build/protodump.py` against the Numbers.app binary | Numbers 14.4 | MIT (© 2021 Jon Connell) |
-
-Import-graph notes:
-
-- Every `import` in the KN files and in the **underscore-named** TN files
-  resolves against `current/` (the shared 14.4 `TS*` set) plus the app files
-  themselves. The KN files come from the same 14.4 dump that was cross-checked
-  against `current/` above.
-- As in `current/`, the numbers-parser dot-named duplicates
-  (`TN*.sos.proto`) differ from the underscore-named files **only** in their
-  `import` statement spelling (`TSDArchives.sos.proto` vs
-  `TSDArchives_sos.proto`); they are kept because the source repo ships both,
-  but only the underscore-named set resolves against `current/`.
-- `KNArchives.proto` ends with `extend .TSD.FillArchive` (field 200,
-  `KN.MotionBackgroundFillArchive`) and contains
-  `extend .TSD.MovieArchive` (field 100, `KN.LiveVideoInfo`) inside
-  `KN.LiveVideoInfo` — a proto2 extension pattern the reader must handle when
-  decoding TSD fills/movies found in Keynote documents.
+This project claims no copyright in the recovered schemas; see
+[THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md) and
+[docs/LEGAL.md](../docs/LEGAL.md). The dumper is MIT-licensed
+(© 2021 Jon Connell; proto-dump © 2013 Sean Patrick O'Brien) and is not
+redistributed here.
