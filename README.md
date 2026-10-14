@@ -44,6 +44,7 @@ reverse-engineering of it, measured from real documents.
 - **Styles** — named paragraph and character styles: apply, edit, create; direct formatting too
 - **Layout** — sections, headers & footers, page setup, margins, orientation
 - **Images** — inline insertion, floating placement, crops, filters
+- **Tables** — inserted inline from a neutral Apple-made donor, filled from rows; every cell edit under *Everywhere*
 - **Extras** — comments, footnotes, bookmarks, links, page-number and date fields, lists, table of contents
 
 ### Numbers
@@ -57,7 +58,7 @@ reverse-engineering of it, measured from real documents.
 ### Keynote
 
 - **Slides** — add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
-- **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
+- **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, add a table or a text box, set a background, make a slide from a layout, edit an embedded table cell-by-cell
 - **Decks** — slide size, auto-advance; transitions read and write; builds read, retime and remove
 
 ### Everywhere

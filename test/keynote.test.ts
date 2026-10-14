@@ -943,3 +943,23 @@ describe("a slide background of its own", () => {
     expect(shared.background()?.kind).toBe("image");
   });
 });
+
+describe("a table added to a slide", () => {
+  it("is the neutral donor grafted under the slide, listed, filled and named", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const before = slide.container().ids().length;
+    const table = slide.addTable({ rows: [["Item", "Count"], ["Apples", "3"]], x: 300, y: 500 });
+    expect(table.name).toBe("Table");
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(again.container().ids().length).toBe(before + 1);
+    const info = again.drawables().find((d) => d.object.type === 6000)!;
+    expect(refId(info.object.message.getMessage(1), 2)).toBe(again.id);
+    expect(again.object.message.getMessages(Slide.OWNED_DRAWABLES).some((m) => m.getVarint(1) === info.id)).toBe(true);
+    const placed = reloaded.tables().find((t) => t.infoObject?.identifier === info.id)!;
+    expect([placed.rowCount, placed.columnCount, placed.cellText(0, 0), placed.cellValue(1, 1)?.type]).toEqual([2, 2, "Item", "number"]);
+    expect(info.geometry()?.x).toBe(300);
+    expect(again.addTable({}).name).toBe("Table 2");
+  });
+});

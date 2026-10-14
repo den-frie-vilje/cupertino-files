@@ -1799,6 +1799,34 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Numbers & tables",
+    name: "Tables from nothing on a page or a slide",
+    apps: ["pages", "keynote"],
+    status: "experimental",
+    probe: () => true,
+    note:
+      "appendTable/insertInlineTable (Pages) and slide.addTable (Keynote) graft the neutral donor — " +
+      "the blank Numbers document's own table — under the body storage or the slide, anchored the " +
+      "way the corpus's 18 inline Pages tables are (a five-field attachment at a U+FFFC, parent the " +
+      "body) and listed the way its 3 slide tables are (parent the slide, in both drawable lists); " +
+      "rows size and fill it. Experimental because the shape audit lists seven ways a Numbers-born " +
+      "table's archives are referenced that no Pages or Keynote table shares — declared parents and " +
+      "calc-engine back-references, the style preset outside the theme, a paragraph style outside " +
+      "the style network — so the seeds, not the audited ladders, carry it",
+    manualProof: {
+      claim: "Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide.",
+      why:
+        "The donor is Apple-made and the anchoring matches the corpus, but the audit's seven " +
+        "findings are exactly the class only the app can judge, and a table the app repairs or " +
+        "drops looks like one never placed.",
+      how:
+        "npm run seeds -- out writes seed-table.pages and seed-table.key; open each. A pass shows " +
+        "the 3×2 table with its three rows where the text says; a missing or empty table, or a " +
+        "refused file, is a failure.",
+      risk: "high",
+    },
+  },
+  {
     group: "Drawables & media",
     name: "Text boxes: adding one",
     apps: ["pages", "keynote"],

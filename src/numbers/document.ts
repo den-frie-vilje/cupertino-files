@@ -5,14 +5,15 @@
  * text/stylesheet/drawable machinery, sheet enumeration and round-trip save.
  */
 import { IWorkDocument } from "../tsa/document.ts";
-import { blankDonorBytes } from "./blank-donor.generated.ts";
+import { blankDonorBytes } from "../tsa/numbers-blank-donor.generated.ts";
+import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
-import { deepCloneObject, deepCloneObjectInto, defaultFollow } from "../tsp/clone.ts";
+import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { chartToMarkdown, joinBlocks, tableToMarkdown } from "../tsa/markdown.ts";
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
@@ -436,28 +437,16 @@ export class NumbersDocument extends IWorkDocument {
    *
    * The donor closure is fully self-contained (its per-object styles ride
    * along; nothing references the donor document's singletons), which is
-   * what makes a cross-document import safe — {@link deepCloneObjectInto}
-   * refuses any closure that is not.
+   * what makes a cross-document import safe — the shared graft refuses any
+   * closure that is not.
    */
   private importNeutralTable(sheetId: bigint, placement: { x?: number; y?: number }): bigint {
-    const donor = neutralTableDonor();
     const component = this.store.componentOf(sheetId);
     if (!component) throw new RangeError(`sheet ${sheetId} has no component`);
-    // The one reference allowed to escape the donor closure is the
-    // drawable's parent — its sheet — rebound to the sheet gaining the
-    // table. The style preset is seeded explicitly: the model reaches
-    // it through a field the curated extractor skips.
-    const { clone } = deepCloneObjectInto(this.store, donor.store, donor.info, {
-      component,
-      rebind: new Map([[donor.sheetId, sheetId]]),
-      ...(donor.presetId !== undefined ? { extraRoots: [donor.presetId] } : {}),
-    });
-    const container = this.sheetContainer(sheetId);
-    container.attach(clone.identifier);
-    if (Object.keys(placement).length > 0) {
-      drawableById(this.store, clone.identifier)?.setGeometry(placement);
-    }
-    return clone.identifier;
+    const id = graftNeutralTable(this.store, component, sheetId);
+    this.sheetContainer(sheetId).attach(id);
+    if (Object.keys(placement).length > 0) drawableById(this.store, id)?.setGeometry(placement);
+    return id;
   }
 
   /**
@@ -521,28 +510,4 @@ export class NumbersDocument extends IWorkDocument {
  * ever read: imports copy out of this store, nothing writes into it.
  */
 /** TST.TableModelArchive field 48: the table-style preset reference. */
-const TABLE_MODEL_STYLE_PRESET = 48;
 
-let cachedNeutralDonor:
-  | { store: ObjectStore; info: IwaObject; sheetId: bigint; presetId: bigint | undefined }
-  | undefined;
-
-function neutralTableDonor(): {
-  store: ObjectStore;
-  info: IwaObject;
-  sheetId: bigint;
-  presetId: bigint | undefined;
-} {
-  if (!cachedNeutralDonor) {
-    const donor = NumbersDocument.load(blankDonorBytes());
-    const table = donor.tables()[0];
-    const info = table?.infoObject;
-    const sheetId = donor.sheets()[0]?.id;
-    if (!table || !info || sheetId === undefined) {
-      throw new RangeError("the embedded blank donor has no table");
-    }
-    const presetId = refId(table.object.message, TABLE_MODEL_STYLE_PRESET);
-    cachedNeutralDonor = { store: donor.store, info, sheetId, presetId };
-  }
-  return cachedNeutralDonor;
-}

@@ -107,6 +107,7 @@ describe("the MCP server over stdio", () => {
         "add_build",
         "add_category",
         "add_filter_rule",
+        "add_table",
         "add_text_box",
         "append_paragraph",
         "audit_document",

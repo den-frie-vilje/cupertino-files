@@ -384,6 +384,16 @@ export class StylesheetModel {
   }
 
   /** Register a style object in this sheet's lists/maps. */
+  /**
+   * List an existing style archive in this stylesheet's `styles`, the
+   * way the apps list every style a table carries — a grafted table's
+   * per-object styles arrive listed nowhere.
+   */
+  adopt(styleId: bigint): void {
+    const listed = this.msg.getMessages(StylesheetFields.STYLES).some((ref) => ref.getVarint(1) === styleId);
+    if (!listed) this.msg.addMessage(StylesheetFields.STYLES, makeRef(styleId));
+  }
+
   private register(styleId: bigint, identifier: string | undefined, parentId: bigint | undefined): void {
     this.msg.addMessage(StylesheetFields.STYLES, makeRef(styleId));
     if (identifier !== undefined) {

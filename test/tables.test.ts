@@ -1618,9 +1618,11 @@ describe("Pages inline table insertion", () => {
     expect(reloaded.tables().map((t) => t.name).at(-1)).toBe("Ny tabel");
   });
 
-  it("throws without a donor rather than inventing a table", () => {
+  it("grafts the neutral donor when the document has no table to copy", () => {
     const doc = PagesDocument.blank();
-    expect(() => doc.insertInlineTable(0)).toThrow(/no table to copy/);
+    const table = doc.insertInlineTable(0, { rows: [["a"], ["1"]] });
+    expect([table.name, table.rowCount, table.columnCount]).toEqual(["Table", 2, 1]);
+    expect(PagesDocument.load(doc.save()).tables().length).toBe(1);
   });
 });
 

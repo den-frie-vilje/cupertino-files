@@ -4,6 +4,7 @@ import { KeynoteDocument } from "../src/keynote/document.ts";
 import { NumbersDocument } from "../src/numbers/document.ts";
 import { PagesDocument } from "../src/pages/document.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
+import { refId } from "../src/tsp/schema.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -123,7 +124,10 @@ describe("building from Markdown", () => {
     expect(slides[0]!.body).toBe("An opening paragraph with bold and a link.");
     expect(slides[1]!.body).toBe("Revenue up\nCosts flat\nFirst step\nSecond step");
     expect(slides[1]!.notes).toBe("Remember the caveat");
-    expect(slides[2]!.body).toBe("Item\tCount\nApples\t3\nPears, ripe\tTRUE");
+    expect(slides[2]!.body).toBe("");
+    const table = doc.tables()[0]!;
+    expect([doc.tables().length, table.cellText(1, 0), table.cellValue(2, 1)?.type]).toEqual([1, "Apples", "bool"]);
+    expect(refId(table.infoObject!.message.getMessage(1), 2)).toBe(slides[2]!.id);
     expect(doc.masterSlides().find((m) => m.id === slides[1]!.masterId)?.name).toBe("Title & Bullets");
   });
 

@@ -44,10 +44,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "TableModel.clearConditionalStyles",
     "clone hygiene addTable runs itself for content-less copies; rule editing has its own tools",
   ],
-  [
-    "PagesDocument.insertInlineTable",
-    "inline anchoring takes a body position, which the tool surface does not model yet — the same gap that keeps insertInlineImage library-level",
-  ],
+  ["PagesDocument.appendTable", "add_table without pos is this; the tool serves insertInlineTable"],
   [
     "TableModel.textStyleId",
     "read surface the inspect tools compose over; the style-table key is a library-level currency",

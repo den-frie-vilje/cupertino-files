@@ -973,6 +973,68 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_table",
+    description: apiDoc(
+      "add_table",
+      "Pages: inline in the body at pos (a character index; omitted means a paragraph of its own at " +
+        "the end). Keynote: on slide (0-based), placed by x and y. rows, when given, is an array of " +
+        "rows of cell strings that sizes and fills the table (numbers and TRUE/FALSE typed). " +
+        "Numbers tables are added with manage_sheets. Saves over the input unless output names " +
+        "another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        slide: { type: "number", description: "Keynote: 0-based slide index" },
+        pos: { type: "number", description: "Pages: body character index to anchor at" },
+        name: { type: "string" },
+        rows: {
+          type: "array",
+          items: { type: "array", items: { type: "string" } },
+          description: "Cell text by row, the first row the header",
+        },
+        x: { type: "number" },
+        y: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const rows = Array.isArray(args.rows)
+        ? (args.rows as unknown[]).map((row) => (Array.isArray(row) ? row.map((cell) => String(cell)) : [String(row)]))
+        : undefined;
+      const name = str(args.name);
+      if (doc instanceof PagesDocument) {
+        const pos = num(args.pos);
+        const table =
+          pos === undefined
+            ? doc.appendTable(rows ?? [], name)
+            : doc.insertInlineTable(pos, { ...(rows ? { rows } : {}), ...(name ? { name } : {}) });
+        const target = save(doc, path, str(args.output));
+        return `added table ${table.name ?? ""} (${table.rowCount}×${table.columnCount}) and saved ${target}`;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        const slide = doc.slides()[index];
+        if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const options: { rows?: readonly (readonly string[])[]; name?: string; x?: number; y?: number } = {};
+        if (rows) options.rows = rows;
+        if (name) options.name = name;
+        const x = num(args.x);
+        const y = num(args.y);
+        if (x !== undefined) options.x = x;
+        if (y !== undefined) options.y = y;
+        const table = slide.addTable(options);
+        const target = save(doc, path, str(args.output));
+        return `added table ${table.name ?? ""} (${table.rowCount}×${table.columnCount}) to slide ${index} and saved ${target}`;
+      }
+      throw new RangeError("add_table writes Pages and Keynote documents; Numbers tables are added with manage_sheets");
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",

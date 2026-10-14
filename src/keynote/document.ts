@@ -13,6 +13,9 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { fillTable } from "../tst/csv.ts";
+import { remintTableIdentity, tablesOf, type TableModel } from "../tst/tables.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import { Image, TSD_TYPE } from "../tsd/schema.ts";
@@ -448,6 +451,37 @@ export class KeynoteSlide {
   }
 
   /**
+   * Put a table on the slide: the neutral table every app shares (the
+   * blank Numbers document's own, Apple-made), its parent the slide, in
+   * both of the slide's drawable lists like the corpus's slide tables.
+   * `rows` fits and fills it; `name` is made unique among the deck's
+   * tables; `x` and `y` place it, else it keeps the donor's position.
+   * @agentTool add_table
+   */
+  addTable(options: { rows?: readonly (readonly string[])[]; name?: string; x?: number; y?: number } = {}): TableModel {
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError(`slide ${this.index} has no component`);
+    const style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    const stylesheetId = refId(style?.message.getMessage(SlideStyle.SUPER), StyleSuper.STYLESHEET);
+    const stylesheet =
+      this.document.stylesheets().find((s) => s.id === stylesheetId) ?? this.document.stylesheets()[0];
+    const id = graftNeutralTable(this.store, component, this.id, stylesheet);
+    this.container().attach(id);
+    if (options.x !== undefined || options.y !== undefined) {
+      const placement: { x?: number; y?: number } = {};
+      if (options.x !== undefined) placement.x = options.x;
+      if (options.y !== undefined) placement.y = options.y;
+      drawableById(this.store, id)?.setGeometry(placement);
+    }
+    const table = tablesOf(this.store, [id])[0];
+    if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
+    remintTableIdentity(this.store, id);
+    table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
+    if (options.rows) fillTable(table, options.rows);
+    return table;
+  }
+
+  /**
    * Animate a drawable on this slide: an all-at-once build in the shape
    * the app writes, played on click. Keynote has not yet been seen to play
    * a build this library wrote from nothing; see docs/VERIFICATION.md.
@@ -712,9 +746,9 @@ export class KeynoteDocument extends IWorkDocument {
   /**
    * A new deck written from Markdown: the first heading titles the blank
    * deck's title slide and every later heading adds a "Title & Bullets"
-   * slide; the paragraphs, list items and table rows under a heading
-   * become that slide's body, one line each, and its block quotes its
-   * presenter notes. Text before any heading goes on the title slide.
+   * slide; the paragraphs and list items under a heading become that
+   * slide's body, one line each, its block quotes its presenter notes
+   * and its pipe tables tables on the slide. Text before any heading goes on the title slide.
    */
   static fromMarkdown(markdown: string): KeynoteDocument {
     const doc = KeynoteDocument.blank();
@@ -722,11 +756,14 @@ export class KeynoteDocument extends IWorkDocument {
     let headings = 0;
     const body: string[] = [];
     const notes: string[] = [];
+    const tables: (readonly (readonly string[])[])[] = [];
     const flush = (): void => {
       if (body.length) slide.body = body.join("\n");
       if (notes.length) slide.notes = notes.join("\n");
+      for (const rows of tables) slide.addTable({ rows });
       body.length = 0;
       notes.length = 0;
+      tables.length = 0;
     };
     for (const block of parseMarkdown(markdown)) {
       switch (block.kind) {
@@ -745,7 +782,7 @@ export class KeynoteDocument extends IWorkDocument {
           notes.push(block.text);
           break;
         case "table":
-          body.push(...block.rows.map((row) => row.join("\t")));
+          tables.push(block.rows);
           break;
       }
     }

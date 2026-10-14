@@ -9,6 +9,8 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   describeStyle,
@@ -45,7 +47,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
-import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
+import type { Component, ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import {
   TP_REFERENCE_EXTRACTORS,
@@ -321,7 +323,7 @@ export class PagesDocument extends IWorkDocument {
           for (const item of block.items) doc.appendParagraph(item, style("Body"), block.ordered ? "Numbered" : "Bullet");
           break;
         case "table":
-          for (const row of block.rows) doc.appendParagraph(row.join("\t"), style("Body"));
+          doc.appendTable(block.rows);
           break;
       }
     }
@@ -1224,8 +1226,20 @@ export class PagesDocument extends IWorkDocument {
       styleId: mediaStyleIdOf(this),
     });
 
+    this.anchorInlineDrawable(pos, image.identifier, component);
+
+    return { imageId: image.identifier, dataId };
+  }
+
+  /**
+   * Anchor a drawable in the body at `pos` as an inline attachment: the
+   * attachment archive with its four offsets, the U+FFFC character, and
+   * the point-anchored entry in the attachment table.
+   */
+  private anchorInlineDrawable(pos: number, drawableId: bigint, component: Component): void {
+    const body = this.body;
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
-    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(image.identifier));
+    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(drawableId));
     // Zero offsets, explicitly. All four fields are on 101 of 101 corpus
     // attachments; absent is not a value Pages has been observed to write.
     attachment.message.setVarint(DrawableAttachment.H_OFFSET_TYPE, 0);
@@ -1248,8 +1262,15 @@ export class PagesDocument extends IWorkDocument {
       (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
     );
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
+  }
 
-    return { imageId: image.identifier, dataId };
+  /** Append a table at the end of the body, in a paragraph of its own. */
+  appendTable(rows: readonly (readonly string[])[], name?: string): TableModel {
+    const body = this.body;
+    // The anchor sits in a paragraph of its own: the trailing empty one
+    // when the body ends at a paragraph boundary, a fresh one otherwise.
+    if (body.text.length > 0 && !body.text.endsWith("\n")) this.appendParagraph("");
+    return this.insertInlineTable(body.text.length, { rows, ...(name ? { name } : {}) });
   }
 
   /**
@@ -1259,8 +1280,10 @@ export class PagesDocument extends IWorkDocument {
    * Clone-based like `NumbersDocument.addTable`, because a table's object
    * graph — model, data store, tiles, data lists, per-band styles — is
    * far beyond what can be invented safely; every identity in the copy
-   * comes from an Apple-authored source. A document with no table has
-   * nothing to clone, and throws. The copy forks its data lists (the
+   * comes from an Apple-authored source. A document with no table gets
+   * the neutral table every app shares — the blank Numbers document's
+   * own, Apple-made — grafted in. `rows` fits and fills the table. The
+   * copy forks its data lists (the
    * clone walk follows the whole table subtree), so filling it never
    * touches the source — the save-time integrity gate would refuse the
    * file if it did.
@@ -1269,42 +1292,50 @@ export class PagesDocument extends IWorkDocument {
    * `parent` is the body storage, its geometry sits at the origin with
    * the standard flags, and a five-field attachment ties it to a U+FFFC
    * character.
+   * @agentTool add_table
    */
   insertInlineTable(
     pos: number,
-    options: { copyOf?: bigint; name?: string; withContent?: boolean } = {},
+    options: {
+      copyOf?: bigint;
+      name?: string;
+      withContent?: boolean;
+      rows?: readonly (readonly string[])[];
+    } = {},
   ): TableModel {
     const body = this.body;
     const component = this.store.componentOf(body.id);
     if (!component) throw new RangeError("body component not found");
     const sourceId =
       options.copyOf ?? this.tables().find((t) => t.infoObject !== undefined)?.infoObject?.identifier;
+    let cloneId: bigint;
     if (sourceId === undefined) {
-      throw new RangeError(
-        "no table to copy: this document contains none, and building one from nothing is not supported",
-      );
+      cloneId = graftNeutralTable(this.store, component, body.id, this.stylesheet);
+    } else {
+      const source = this.store.object(sourceId);
+      if (source?.type !== TST_TYPE.TABLE_INFO) {
+        throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
+      }
+      const { clone } = deepCloneObject(this.store, source, {
+        component,
+        follow: (candidate, depth) =>
+          defaultFollow(candidate, this.store.typeNameOf(candidate)) && depth <= 8,
+      });
+      const core = findDrawableCore(clone.message);
+      if (core) {
+        core.setMessage(Drawable.PARENT, makeRef(body.id));
+        clone.message.markDirty();
+      }
+      cloneId = clone.identifier;
     }
-    const source = this.store.object(sourceId);
-    if (source?.type !== TST_TYPE.TABLE_INFO) {
-      throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
-    }
-
-    const { clone } = deepCloneObject(this.store, source, {
-      component,
-      follow: (candidate, depth) =>
-        defaultFollow(candidate, this.store.typeNameOf(candidate)) && depth <= 8,
-    });
-    const core = findDrawableCore(clone.message);
-    if (core) {
-      core.setMessage(Drawable.PARENT, makeRef(body.id));
-      clone.message.markDirty();
-    }
+    const clone = this.store.object(cloneId)!;
 
     const model = tablesOf(this.store, [clone.identifier])[0];
     if (!model) throw new RangeError(`copied table ${clone.identifier} did not resolve`);
     remintTableIdentity(this.store, clone.identifier);
     model.name = this.uniqueTableName(options.name, clone.identifier);
     if (options.withContent === false) model.clearAllCells();
+    if (options.rows) fillTable(model, options.rows);
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(clone.identifier));

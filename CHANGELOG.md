@@ -110,6 +110,17 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- Tables from nothing in Pages and Keynote: `doc.appendTable(rows)` and
+  `doc.insertInlineTable(pos, { rows })` put a table in a Pages body,
+  inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`
+  puts one on a Keynote slide — the neutral table every app shares (the
+  blank Numbers document's own, Apple-made), grafted under the body or the
+  slide and sized and filled from `rows`. `insertInlineTable` no longer
+  refuses a document without a table to copy. Served as the MCP tool
+  `add_table`; the Markdown constructors now make real tables of pipe
+  tables. Experimental: neither app has yet been seen to open a table
+  placed this way, and the donor is Numbers-born.
+
 - `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
   `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
   build a new document from text: Pages gives headings the template's

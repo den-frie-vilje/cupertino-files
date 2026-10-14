@@ -964,6 +964,22 @@ it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
 
+**Adding a table grafts the neutral donor.** A table from nothing would
+omit state only the app knows, so a new table is the blank Numbers
+document's own — Apple-made — copied under the body or the slide, then
+sized and filled from `rows`:
+
+```ts
+doc.appendTable([["Item", "Count"], ["Apples", "3"]]);          // Pages: in a paragraph of its own at the end
+doc.insertInlineTable(pos, { rows, name: "Prices" });          // Pages: inline at a body position
+slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on the slide
+doc.addTable(sheetId, { name });                                 // Numbers: on a sheet (manage_sheets)
+```
+
+The Numbers path is app-confirmed; the Pages and Keynote paths are
+experimental — the donor is Numbers-born, and the shape audit lists ways
+its wiring differs from a table either app makes itself.
+
 **Adding a text box copies one.** A text box from nothing would omit
 state only the app knows, so `addTextBox` deep-copies a box the document
 already carries — the slide's own in Keynote, the page's own or any in
