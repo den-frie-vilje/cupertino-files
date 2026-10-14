@@ -1221,3 +1221,30 @@ node scripts/scan-fixture-privacy.ts
   blank deck whose title this library gave a dissolve build from nothing.
   The app played it and the checker commented "It worked" on the slide.
   The title is the request itself.
+
+### olekristensen-v26.0-mac-filter-seed.numbers
+- 114,526 bytes, md5 `beaec9c35f1be5e6da02631805a819a9`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-filter.numbers, a
+  blank document whose table this library gave an Amount > 10 filter rule
+  from nothing. The app applied it; the checker commented on the sheet
+  that it worked and that the instruction in the table name was not
+  sized to show. The table's name is the request itself.
+
+### olekristensen-v26.0-mac-table-seed.pages
+- 123,714 bytes, md5 `c95bea156ea4a55469a7bfe5ca988d46`
+- Saved by M15.4-7051.0.79-2 (macOS Pages) over seed-table.pages, a blank
+  document with a 3×2 table this library grafted from the Numbers donor.
+  The checker commented "worked great" on the request line.
+
+### olekristensen-v26.0-mac-table-seed.key
+- 571,729 bytes, md5 `f1538b4e4d817949b39f16ed0db5afbd`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-table.key, a blank
+  deck with a 3×2 table this library grafted from the Numbers donor at the
+  donor's cell size. The checker commented on the slide that the table was
+  there but not sized to its contents. The title is the request itself.
+
+### olekristensen-v26.0-mac-text-box-seed.key
+- 562,288 bytes, md5 `644f79fd9e06e5bb4cd8e00da1135b2a`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-text-box.key, a
+  blank deck with a text box this library copied and re-worded. The
+  checker commented "works" on the slide. The title is the request itself.

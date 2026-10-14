@@ -965,6 +965,10 @@ export const CAPABILITIES: Capability[] = [
         "with what it should look like. The in-flow picture starting where its own paragraph " +
         "starts is the pass.",
       risk: "high",
+      settled:
+        "**Opened in Pages 15.4 and returned without a comment**, which the seeds' protocol reads as " +
+        "as expected: the in-flow picture starts in the indented column and the page-placed one at " +
+        "the margin. A look, not a measurement; the returned file is not kept as a fixture.",
     },
   },
   {
@@ -1843,6 +1847,14 @@ export const CAPABILITIES: Capability[] = [
         "the 3×2 table with its three rows where the text says; a missing or empty table, or a " +
         "refused file, is a failure.",
       risk: "medium",
+      settled:
+        "**Confirmed in Pages 15.4 and Keynote 15.4.** On the page the checker wrote \"worked great\" " +
+        "(`olekristensen-v26.0-mac-table-seed.pages`); on the slide \"The table is there but you've not " +
+        "sized it to fit it's contents\" (`olekristensen-v26.0-mac-table-seed.key`): the seed carried the " +
+        "Numbers donor's 20-point rows and 200-point columns onto a 1920-point slide, and the app keeps " +
+        "whatever sizes a file states. A new table now takes the app's own cell size in both " +
+        "dimensions — Keynote 432.25 by 129.8 in the layout's frame, Pages 120.386 by 22.73 — whatever " +
+        "its row and column count, and its geometry is the cells plus the border allowance.",
     },
   },
   {
@@ -1866,6 +1878,9 @@ export const CAPABILITIES: Capability[] = [
         "box saying 'Written by cupertino-files' below the title; a failure shows only the title, " +
         "or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote 15.4** — the checker wrote \"works\" on the slide " +
+        "(`olekristensen-v26.0-mac-text-box-seed.key`). The Pages side still rides rung P21.",
     },
   },
   {
@@ -1892,6 +1907,12 @@ export const CAPABILITIES: Capability[] = [
         "first rule's column; every row showing or a refusal to open means the set needs state only the " +
         "app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Numbers 15.4** — only Pear and Train showed, so the rule applied to column C and " +
+        "the host is column 1. The checker wrote \"It worked, but you did not size the first row to show " +
+        "all content, and you put a long instruction line there\" (`olekristensen-v26.0-mac-filter-seed.numbers`): " +
+        "the seed had put its instruction in the table name, which the app shows on one unwrapped line. " +
+        "Seeds now keep names short and put the instruction in a wrapped first content row.",
     },
   },
   {

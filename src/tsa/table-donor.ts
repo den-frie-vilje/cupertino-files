@@ -173,32 +173,39 @@ function neutralTableDonor(): NonNullable<typeof cached> {
  * and one header column.
  */
 export const APP_TABLE_DEFAULTS = {
-  numbers: { rows: 10, columns: 5, columnWidth: 98 },
-  /** Columns share the body width less 0.35 points: 4 × 120.386 in a 481.894-point body. */
-  pages: { rows: 5, columns: 4, borderAllowance: 0.35 },
-  /** Columns share the frame width less one point: 4 × 432.25 in a 1730-point frame. */
+  numbers: { rows: 10, columns: 5, columnWidth: 98, rowHeight: 19.929931640625 },
+  /** Four columns share the body width less 0.35 points (120.386 each in a 481.894-point body); rows are 22.73 points. */
+  pages: { rows: 5, columns: 4, borderAllowance: 0.35, rowHeight: 22.729999542236328 },
+  /** Four columns share the frame width less one point (432.25 each in a 1730-point frame); five rows share its height the same way (129.8 in 650). */
   keynote: { rows: 5, columns: 4, borderAllowance: 1 },
 } as const;
 
+/** The cell size Insert ▸ Table gives in a host of `width` (and `height`, Keynote): the app's own column and row counts share it less the border allowance. */
+export function appCellSize(app: "pages" | "keynote", host: { width: number; height?: number }): { columnWidth: number; rowHeight: number } {
+  const defaults = APP_TABLE_DEFAULTS[app];
+  const columnWidth = (host.width - defaults.borderAllowance) / defaults.columns;
+  const rowHeight =
+    app === "pages" ? APP_TABLE_DEFAULTS.pages.rowHeight : ((host.height ?? 650) - defaults.borderAllowance) / defaults.rows;
+  return { columnWidth, rowHeight };
+}
+
 /**
  * Cut or grow a fresh table to `rows` by `columns`, give it one header
- * row and one header column, and set every column to the same width:
- * `columnWidth` when given, else an equal share of `hostWidth` less the
- * border allowance — the shape of a table the app inserts.
+ * row and one header column, and size every column and row alike — the
+ * shape of a table the app inserts, which keeps its cell size whatever
+ * the count.
  */
 export function fitNewTable(
   table: TableModel,
-  shape: { rows: number; columns: number; columnWidth?: number; hostWidth?: number; borderAllowance?: number },
+  shape: { rows: number; columns: number; columnWidth?: number; rowHeight?: number },
 ): void {
   if (table.rowCount < shape.rows) table.insertRows(table.rowCount, shape.rows - table.rowCount);
   else if (table.rowCount > shape.rows) table.deleteRows(shape.rows, table.rowCount - shape.rows);
   if (table.columnCount < shape.columns) table.insertColumns(table.columnCount, shape.columns - table.columnCount);
   else if (table.columnCount > shape.columns) table.deleteColumns(shape.columns, table.columnCount - shape.columns);
   table.setBands({ headerRows: 1, headerColumns: 1 });
-  const width =
-    shape.columnWidth ??
-    (shape.hostWidth === undefined ? undefined : (shape.hostWidth - (shape.borderAllowance ?? 0)) / shape.columns);
-  if (width !== undefined) for (let c = 0; c < table.columnCount; c++) table.setColumnWidth(c, width);
+  if (shape.columnWidth !== undefined) for (let c = 0; c < table.columnCount; c++) table.setColumnWidth(c, shape.columnWidth);
+  if (shape.rowHeight !== undefined) for (let r = 0; r < table.rowCount; r++) table.setRowHeight(r, shape.rowHeight);
 }
 
 /** `preferred` (or "Table"), suffixed with the first free number among `existing`. */

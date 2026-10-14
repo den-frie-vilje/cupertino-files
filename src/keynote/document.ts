@@ -14,7 +14,7 @@ import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { ImageModel } from "../tsd/images.ts";
 import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, appCellSize, fitNewTable, graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
@@ -506,12 +506,13 @@ export class KeynoteSlide {
     const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
     const rows = given?.length ?? APP_TABLE_DEFAULTS.keynote.rows;
     const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.keynote.columns;
-    fitNewTable(table, { rows, columns, hostWidth: frame.width, borderAllowance: APP_TABLE_DEFAULTS.keynote.borderAllowance });
+    const cell = appCellSize("keynote", frame);
+    fitNewTable(table, { rows, columns, ...cell });
     drawableById(this.store, id)?.setGeometry({
       x: options.x ?? frame.x,
       y: options.y ?? frame.y,
-      width: frame.width,
-      height: frame.height,
+      width: columns * cell.columnWidth + APP_TABLE_DEFAULTS.keynote.borderAllowance,
+      height: rows * cell.rowHeight + APP_TABLE_DEFAULTS.keynote.borderAllowance,
     });
     remintTableIdentity(this.store, id);
     table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);

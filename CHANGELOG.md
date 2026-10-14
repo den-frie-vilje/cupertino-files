@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table added to a Pages page or a Keynote slide takes the app's own
+  cell size in both dimensions whatever its row and column count
+  (Keynote 432.25 by 129.8 points in the layout's frame, Pages 120.386
+  by 22.73), with a geometry to match, instead of the Numbers donor's
+  20-point rows and an equal share of the width.
 - A build and its chunk no longer declare the drawable and the build they
   point at; the apps never do, and Keynote dropped the declarations on
   resave.

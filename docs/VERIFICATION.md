@@ -16,48 +16,32 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 21 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 17 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🔴 high | Drawables & media → Inline image placement in an indented column | an inline image sits in the text column of an indented paragraph, not at the page margin | manual |
-| 2 | 🔴 high | Keynote → Slide copies in a Keynote-saved deck (per-slide components) | Keynote SAVES a deck in which this library added or duplicated a slide of a Keynote-saved, per-slide-component deck. | manual |
-| 3 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
-| 4 | 🟠 medium | Drawables & media → Text boxes: adding one | Keynote and Pages draw a text box this library copied and re-worded. | manual |
-| 5 | 🟠 medium | Keynote → Pictures on slides (addImage) | Keynote draws a picture this library added to a slide, at the size and position asked. | manual |
-| 6 | 🟠 medium | Keynote → Slide background (read + set) | Keynote draws a background this library set as a variation of the layout's style. | manual |
-| 7 | 🟠 medium | Keynote → Slides from a layout (addSlide master) | Keynote opens a slide this library instantiated from a layout, drawn as that layout. | manual |
-| 8 | 🟠 medium | Keynote → Slides: changing the layout (setLayout) | Keynote draws a slide this library moved to another layout as that layout. | manual |
-| 9 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
-| 10 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 11 | 🟠 medium | Numbers & tables → Filters: adding a comparison rule | Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names. | manual |
-| 12 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 13 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 14 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 15 | 🟠 medium | Numbers & tables → Tables from nothing on a page or a slide | Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide. | manual |
-| 16 | 🟠 medium | Pages → Master-page drawables | Pages repeats a drawable this library moved to the section master on every page. | manual |
-| 17 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 18 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 19 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
-| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 1 | 🔴 high | Keynote → Slide copies in a Keynote-saved deck (per-slide components) | Keynote SAVES a deck in which this library added or duplicated a slide of a Keynote-saved, per-slide-component deck. | manual |
+| 2 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
+| 3 | 🟠 medium | Keynote → Pictures on slides (addImage) | Keynote draws a picture this library added to a slide, at the size and position asked. | manual |
+| 4 | 🟠 medium | Keynote → Slide background (read + set) | Keynote draws a background this library set as a variation of the layout's style. | manual |
+| 5 | 🟠 medium | Keynote → Slides from a layout (addSlide master) | Keynote opens a slide this library instantiated from a layout, drawn as that layout. | manual |
+| 6 | 🟠 medium | Keynote → Slides: changing the layout (setLayout) | Keynote draws a slide this library moved to another layout as that layout. | manual |
+| 7 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
+| 8 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 9 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 10 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 11 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 12 | 🟠 medium | Pages → Master-page drawables | Pages repeats a drawable this library moved to the section master on every page. | manual |
+| 13 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 14 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 15 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
+| 16 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 17 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
-### 1. Inline image placement in an indented column
-
-**Risk if wrong:** 🔴 high  
-**Group:** Drawables & media  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** an inline image sits in the text column of an indented paragraph, not at the page margin
-
-**Why the suite cannot settle it.** Reported from a real build: in a template whose body styles are indented, an inserted picture drew from the page margin instead of the column, and the next paragraph flowed up beside it into the running footer. The drawable carried no exterior_text_wrap at all — the field every corpus inline image has — and geometry could not move it, because for an in-flow attachment the position is a cache the app recomputes.
-
-**How to settle it.** `npm run seeds -- out` writes seed-inline-image.pages: two pictures in a paragraph indented well in from the margin, one in-flow and one page-placed, each labelled with what it should look like. The in-flow picture starting where its own paragraph starts is the pass.
-
-### 2. Slide copies in a Keynote-saved deck (per-slide components)
+### 1. Slide copies in a Keynote-saved deck (per-slide components)
 
 **Risk if wrong:** 🔴 high  
 **Group:** Keynote  
@@ -69,7 +53,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Load a deck Keynote has saved (per-slide `Slide-&lt;id&gt;` components in Index/), `duplicateSlide` any slide, save, open in Keynote, edit something small, and let it save (autosave or ⌘S). The failure mode of the old shape was at SAVE, not open — a deck that opens and renders proves nothing yet.
 
-### 3. Floating (non-inline) drawable placement
+### 2. Floating (non-inline) drawable placement
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Drawables & media  
@@ -81,19 +65,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source
 
-### 4. Text boxes: adding one
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Drawables & media  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Keynote and Pages draw a text box this library copied and re-worded.
-
-**Why the suite cannot settle it.** The copy matches the donor in every field but text, geometry and parent; a box the app silently drops looks exactly like one never written, so only opening the file can say.
-
-**How to settle it.** npm run seeds -- out writes seed-text-box.key; open it in Keynote. A pass shows a second box saying 'Written by cupertino-files' below the title; a failure shows only the title, or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.
-
-### 5. Pictures on slides (addImage)
+### 3. Pictures on slides (addImage)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -105,7 +77,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** `addImage` a PNG onto a fresh deck's first slide, open in Keynote: the picture must show centered at its intrinsic size, selectable and movable like an inserted one. A blank slide means the linkage failed somewhere the audit cannot see; say which slide you see.
 
-### 6. Slide background (read + set)
+### 4. Slide background (read + set)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -117,7 +89,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass shows the first slide dark green; the theme's own background, or a refused deck, is a failure.
 
-### 7. Slides from a layout (addSlide master)
+### 5. Slides from a layout (addSlide master)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -129,7 +101,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K13-slide-from-layout.key; open it in Keynote. A pass shows a last slide on the named layout with the K13 title and a body; a failure shows a blank slide, a slide on the wrong layout, or a refused deck.
 
-### 8. Slides: changing the layout (setLayout)
+### 6. Slides: changing the layout (setLayout)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -141,7 +113,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K16-set-layout.key; open it. A pass shows the first slide on Title &amp; Bullets with its title and a bullet body; the old layout, or a refused deck, is a failure.
 
-### 9. Add and remove tables on a sheet
+### 7. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -153,7 +125,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with =NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it means the app again reduced the reference to its cached value, and the next site to write is the engine's uuid_reference_map, populated in the round-five return by the checker's own typed twins.
 
-### 10. Conditional formatting: apply an existing rule set to more cells
+### 8. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -165,19 +137,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 11. Filters: adding a comparison rule
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.
-
-**Why the suite cannot settle it.** The rule's bytes and the hidden states equal app-authored sets', on columns A, B and C; whether the app re-evaluates a rule it did not author is what only opening the file shows.
-
-**How to settle it.** npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only Pear and Train with the filter on in the panel; column D filtered instead means the host is the first rule's column; every row showing or a refusal to open means the set needs state only the app writes.
-
-### 12. Formula reading (AST rendered to text)
+### 9. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -189,7 +149,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 13. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 10. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -201,7 +161,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 14. Table styling (banded rows, grid strokes, visibility)
+### 11. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -213,19 +173,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 15. Tables from nothing on a page or a slide
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide.
-
-**Why the suite cannot settle it.** The donor is Apple-made, the anchoring and style wiring match the corpus field for field, and a table the app repairs or drops looks like one never placed.
-
-**How to settle it.** npm run seeds -- out writes seed-table.pages and seed-table.key; open each. A pass shows the 3×2 table with its three rows where the text says; a missing or empty table, or a refused file, is a failure.
-
-### 16. Master-page drawables
+### 12. Master-page drawables
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Pages  
@@ -237,7 +185,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the page-1 graphic on every page of the section; only on page 1, or gone, is a failure.
 
-### 17. Categories: enable or disable grouping
+### 13. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -249,7 +197,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 18. Conditional formatting rules
+### 14. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -261,7 +209,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 19. Duration default format (a typed duration's stamp)
+### 15. Duration default format (a typed duration's stamp)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -273,7 +221,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the inspector; a failure shows a bare number or an inspector reading other than Duration, which means the written field set differs from a fresh cell's.
 
-### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 16. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -285,7 +233,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 21. Table of contents (rules read + write, cached entries read)
+### 17. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -299,7 +247,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-45 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+49 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -438,6 +386,14 @@ result mean something; what changed is that it is no longer a request.
 
 **Outcome.** **Confirmed for all three apps.** A current-format Pages document (file format 26.1.0) was edited, saved and opened with its formatting intact — appending a paragraph, applying character formatting, and applying a named paragraph style. Getting there took four separate defects, none of which any offline check could see, and each is now guarded: text colour must go in `tsd_fill` as well as `font_color`; a storage must not declare its stylesheet in `object_references`; paragraphs end at U+0004/U+0005/U+000C as well as U+000A but not at U+2028; and `table_para_style` is dense while the list and layout tables are sparse. Numbers is covered separately by the widget and regrouping checks — and directly on 2026-08-03, when the e2e suite's cell-write round-trip passed: Numbers opened a package whose cells we wrote and read our values back. Keynote joined the same day: the speaker-notes round-trip — our edit of the notes storage, opened and reported back by Keynote — passed on a current install, and Keynote also opened the deck whose transition we wrote
 
+### ✅ Filters: adding a comparison rule
+
+**Was claimed.** Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.
+
+**Why it needed an app.** The rule's bytes and the hidden states equal app-authored sets', on columns A, B and C; whether the app re-evaluates a rule it did not author is what only opening the file shows.
+
+**Outcome.** **Confirmed in Numbers 15.4** — only Pear and Train showed, so the rule applied to column C and the host is column 1. The checker wrote "It worked, but you did not size the first row to show all content, and you put a long instruction line there" (`olekristensen-v26.0-mac-filter-seed.numbers`): the seed had put its instruction in the table name, which the app shows on one unwrapped line. Seeds now keep names short and put the instruction in a wrapped first content row.
+
 ### ✅ Filters: enable, disable, combining mode
 
 **Was claimed.** enabling a filter set makes Numbers apply its rules
@@ -501,6 +457,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The shape audit found the archive incomplete in exactly the way a cell control with no format was — every omission optional, nothing offline objecting.
 
 **Outcome.** **Confirmed in Pages — "P11 pass".** A 1x1 red PNG inserted inline and scaled to 72pt renders as a red square at the size asked, on the current-format base. This was the rung that had never been opened at all, and it shipped with four shape-audit fixes applied together: the theme's `image-0-imageStyle` reference (all 83 corpus images carry one), `naturalSize` alongside `originalSize`, `flags`/`interpretsUntaggedImageDataAsGeneric`, and the four attachment offset fields (101 of 101 corpus attachments). All four rode in one file, so which were necessary rather than merely corpus-true is not isolated — they are cheap, measured, and stay
+
+### ✅ Inline image placement in an indented column
+
+**Was claimed.** an inline image sits in the text column of an indented paragraph, not at the page margin
+
+**Why it needed an app.** Reported from a real build: in a template whose body styles are indented, an inserted picture drew from the page margin instead of the column, and the next paragraph flowed up beside it into the running footer. The drawable carried no exterior_text_wrap at all — the field every corpus inline image has — and geometry could not move it, because for an in-flow attachment the position is a cache the app recomputes.
+
+**Outcome.** **Opened in Pages 15.4 and returned without a comment**, which the seeds' protocol reads as as expected: the in-flow picture starts in the indented column and the page-placed one at the margin. A look, not a measurement; the returned file is not kept as a fixture.
 
 ### ✅ Merged cell ranges
 
@@ -653,6 +617,22 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** Every offline check is self-referential: our encoder round-trips through our decoder. Apple's reader is the only authority on whether the rebuilt row buffers, offset array, cell counts and legacy stubs are all acceptable together.
 
 **Outcome.** **Right-alignment confirmed on open.** Three review rounds triangulated the mechanism — automatic alignment is the absence of the per-cell text style, and the template's do-nothing style (alignment: 0) was the left-pin — and the round after the writer began dropping that style came back all green, every number right-aligned with no cell touched, resaved clean by the app. One write path had missed the drop: setFormula without a cached value left formula results left-pinned beside right-aligned plain values, named cell by cell in the next returned demo — the drop now runs on every formula write, with app verification riding the next demo-06 round.
+
+### ✅ Tables from nothing on a page or a slide
+
+**Was claimed.** Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide.
+
+**Why it needed an app.** The donor is Apple-made, the anchoring and style wiring match the corpus field for field, and a table the app repairs or drops looks like one never placed.
+
+**Outcome.** **Confirmed in Pages 15.4 and Keynote 15.4.** On the page the checker wrote "worked great" (`olekristensen-v26.0-mac-table-seed.pages`); on the slide "The table is there but you've not sized it to fit it's contents" (`olekristensen-v26.0-mac-table-seed.key`): the seed carried the Numbers donor's 20-point rows and 200-point columns onto a 1920-point slide, and the app keeps whatever sizes a file states. A new table now takes the app's own cell size in both dimensions — Keynote 432.25 by 129.8 in the layout's frame, Pages 120.386 by 22.73 — whatever its row and column count, and its geometry is the cells plus the border allowance.
+
+### ✅ Text boxes: adding one
+
+**Was claimed.** Keynote and Pages draw a text box this library copied and re-worded.
+
+**Why it needed an app.** The copy matches the donor in every field but text, geometry and parent; a box the app silently drops looks exactly like one never written, so only opening the file can say.
+
+**Outcome.** **Confirmed in Keynote 15.4** — the checker wrote "works" on the slide (`olekristensen-v26.0-mac-text-box-seed.key`). The Pages side still rides rung P21.
 
 ### ✅ Transitions
 

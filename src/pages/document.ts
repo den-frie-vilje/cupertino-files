@@ -9,7 +9,7 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown, splitFrontMatter, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, appCellSize, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
@@ -1444,8 +1444,12 @@ export class PagesDocument extends IWorkDocument {
         const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
         const rows = given?.length ?? APP_TABLE_DEFAULTS.pages.rows;
         const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.pages.columns;
-        fitNewTable(grafted, { rows, columns, hostWidth, borderAllowance: APP_TABLE_DEFAULTS.pages.borderAllowance });
-        drawableById(this.store, cloneId)?.setGeometry({ width: hostWidth });
+        const cell = appCellSize("pages", { width: hostWidth });
+        fitNewTable(grafted, { rows, columns, ...cell });
+        drawableById(this.store, cloneId)?.setGeometry({
+          width: columns * cell.columnWidth + APP_TABLE_DEFAULTS.pages.borderAllowance,
+          height: rows * cell.rowHeight + APP_TABLE_DEFAULTS.pages.borderAllowance,
+        });
       }
     } else {
       const source = this.store.object(sourceId);

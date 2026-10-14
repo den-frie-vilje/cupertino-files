@@ -111,6 +111,39 @@ describe("a build the app played and answered on the slide", () => {
   });
 });
 
+describe("four seeds the 15.4 apps resaved", () => {
+  it("filter: the rule on column C is kept and applied", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-filter-seed.numbers"));
+    const table = doc.tables()[0]!;
+    expect(table.filterSets().rows!.rules().map((r) => [r.column, r.predicate?.predicateType])).toEqual([[2, 7]]);
+    expect(doc.canvasComments()[0]!.text.startsWith("It worked")).toBe(true);
+  });
+
+  it("pages: the grafted table survives with its cells", () => {
+    const doc = PagesDocument.load(fixture("olekristensen-v26.0-mac-table-seed.pages"));
+    const table = doc.tables()[0]!;
+    expect(table.cells().map((c) => ("value" in c.value ? c.value.value : undefined))).toEqual(["Item", "Count", "Apples", 3, "Pears", 5]);
+    expect(doc.comments().map((c) => c.text)).toEqual(["worked great"]);
+  });
+
+  it("keynote: the app keeps the sizes a file states, so a new table takes the app's cell size", () => {
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-table-seed.key"));
+    const kept = doc.tables()[0]!;
+    expect([Math.round(kept.rowHeight(0) * 100) / 100, Math.round(kept.columnWidth(0))]).toEqual([19.93, 205]);
+    expect(doc.slides()[0]!.canvasComments()[0]!.text.includes("sized")).toBe(true);
+    const fresh = KeynoteDocument.blank().slides()[0]!.addTable({ rows: [["Item", "Count"], ["Apples", "3"], ["Pears", "5"]] });
+    const theirs = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-authored.key")).tables()[0]!;
+    expect([fresh.columnWidth(0), fresh.rowHeight(2)]).toEqual([theirs.columnWidth(0), theirs.rowHeight(0)]);
+  });
+
+  it("keynote: the copied text box survives with its words", () => {
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-text-box-seed.key"));
+    const texts = [...doc.store.allObjects()].filter(({ obj }) => obj.type === 2001).map(({ obj }) => obj.message.getStrings(3).join(""));
+    expect(texts.some((t) => t.includes("Written by cupertino-files"))).toBe(true);
+    expect(doc.slides()[0]!.canvasComments().map((c) => c.text)).toEqual(["works"]);
+  });
+});
+
 describe("a shape the app moved to the section master", () => {
   it("is a plain reference from the odd master, the drawable without a parent, on no page", () => {
     const doc = PagesDocument.load(fixture("olekristensen-v26.0-mac-authored.pages"));
@@ -168,6 +201,7 @@ describe("a new table takes the app's Insert > Table shape", () => {
     expect([table.rowCount, table.columnCount, table.headerRowCount, table.headerColumnCount, table.nameVisible]).toEqual([5, 4, 1, 1, false]);
     const theirs = PagesDocument.load(fixture("olekristensen-v26.0-mac-authored.pages")).tables()[0]!;
     expect(widths(table)).toEqual(widths(theirs));
+    expect(table.rowHeight(0)).toBe(theirs.rowHeight(0));
   });
 
   it("in Keynote: 5 by 4 in the layout's object frame, 432.25-point columns", () => {
@@ -178,6 +212,7 @@ describe("a new table takes the app's Insert > Table shape", () => {
     const theirs = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-authored.key"));
     const theirTable = theirs.tables()[0]!;
     expect(widths(table)).toEqual(widths(theirTable));
+    expect(table.rowHeight(0)).toBe(theirTable.rowHeight(0));
     const frame = slide.drawables().find((d) => d.object.type === 6000)!.geometry()!;
     const theirFrame = theirs.slides()[2]!.drawables().find((d) => d.object.type === 6000)!.geometry()!;
     expect([frame.x, frame.y, frame.width, frame.height]).toEqual([theirFrame.x, theirFrame.y, theirFrame.width, theirFrame.height]);
