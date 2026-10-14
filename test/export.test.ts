@@ -133,16 +133,33 @@ describe("building from Markdown", () => {
     expect(doc.masterSlides().find((m) => m.id === slides[1]!.masterId)?.name).toBe("Title & Bullets");
   });
 
-  it("gives Numbers a table per pipe table, named by the heading above and sized to its rows", () => {
+  it("gives Numbers a sheet per top heading and a table per pipe table, named by the heading above", () => {
     const doc = NumbersDocument.load(NumbersDocument.fromMarkdown(SOURCE).save());
+    expect(doc.sheets().map((s) => s.name)).toEqual(["Quarterly review"]);
     const tables = doc.tables();
     expect(tables.length).toBe(1);
     const table = tables[0]!;
     expect([table.name, table.rowCount, table.columnCount]).toEqual(["Numbers", 3, 2]);
+    const two = NumbersDocument.load(NumbersDocument.fromMarkdown("# One\n\n| a |\n| --- |\n| 1 |\n\n# Two\n\n| b |\n| --- |\n| 2 |\n\n| c |\n| --- |\n| 3 |\n").save());
+    expect(two.sheets().map((s) => s.name)).toEqual(["One", "Two"]);
+    expect(two.tablesOnSheet(two.sheets()[1]!.id).map((t) => [t.name, t.cellText(0, 0)])).toEqual([["Table", "b"], ["Table 2", "c"]]);
     expect(table.cellText(0, 0)).toBe("Item");
     expect(table.cellValue(1, 1)).toEqual({ type: "number", value: 3, isFormula: false });
     expect(table.cellValue(2, 1)?.type).toBe("bool");
     expect(table.cellText(2, 0)).toBe("Pears, ripe");
+  });
+});
+
+describe("thematic breaks", () => {
+  it("start a new untitled slide in Keynote and are ignored elsewhere", () => {
+    const md = "# One\n\nfirst\n\n---\n\nsecond\n\n* * *\n\n## Three\n";
+    const deck = KeynoteDocument.load(KeynoteDocument.fromMarkdown(md).save());
+    expect(deck.slides().map((s) => [s.title ?? "", s.body ?? ""])).toEqual([
+      ["One", "first"],
+      ["", "second"],
+      ["Three", ""],
+    ]);
+    expect(PagesDocument.fromMarkdown(md).body.paragraphs().map((p) => p.text)).toEqual(["One", "first", "second", "Three"]);
   });
 });
 

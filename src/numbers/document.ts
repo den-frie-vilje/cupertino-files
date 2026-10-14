@@ -104,25 +104,38 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
-   * A new document written from Markdown: each pipe table becomes a table
-   * on the first sheet, sized to its rows and named by the nearest heading
-   * above it (or "Table N"); the first fills the blank document's own
-   * table. Text outside tables has no home in Numbers and is dropped.
+   * A new document written from Markdown: a top-level heading names a
+   * sheet (the first renames the blank document's own; each later one
+   * adds a sheet), and each pipe table becomes a table on the current
+   * sheet, sized to its rows and named by the nearest lower heading above
+   * it (or "Table N"); the first table on a sheet fills the sheet's own.
+   * Text outside tables has no home in Numbers and is dropped.
    */
   static fromMarkdown(markdown: string): NumbersDocument {
     const doc = NumbersDocument.blank();
-    const sheet = doc.sheets()[0]!;
+    let sheet = doc.sheets()[0]!;
+    let sheets = 0;
     let name: string | undefined;
     let count = 0;
-    for (const block of parseMarkdown(markdown)) {
-      if (block.kind === "heading") name = block.text;
-      if (block.kind !== "table") continue;
+    const place = (rows: readonly (readonly string[])[]): void => {
       count++;
-      const table = count === 1 ? doc.tables()[0]! : doc.addTable(sheet.id, { withContent: false });
+      const own = count === 1 ? doc.tablesOnSheet(sheet.id)[0] : undefined;
+      const table = own ?? doc.addTable(sheet.id, { withContent: false });
       if (name) table.name = name;
       else if (count > 1) table.name = `Table ${count}`;
-      fillTable(table, block.rows);
+      fillTable(table, rows);
       name = undefined;
+    };
+    for (const block of parseMarkdown(markdown)) {
+      if (block.kind === "heading" && block.level === 1) {
+        if (sheets++ === 0) doc.renameSheet(0, block.text);
+        else {
+          sheet = doc.addSheet({ name: block.text, withContent: false });
+          count = 0;
+        }
+        name = undefined;
+      } else if (block.kind === "heading") name = block.text;
+      else if (block.kind === "table") place(block.rows);
     }
     return doc;
   }

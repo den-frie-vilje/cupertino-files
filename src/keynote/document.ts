@@ -749,13 +749,23 @@ export class KeynoteDocument extends IWorkDocument {
    * slide; the paragraphs and list items under a heading become that
    * slide's body, one line each, its block quotes its presenter notes
    * and its pipe tables tables on the slide; an image on a line of its
-   * own lands on the slide when `images` supplies its bytes. Text before
-   * any heading goes on the title slide.
+   * own lands on the slide when `images` supplies its bytes, and a
+   * thematic break (`---`) starts an untitled slide. Text before any
+   * heading goes on the title slide.
    */
   static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): KeynoteDocument {
     const doc = KeynoteDocument.blank();
     let slide = doc.slides()[0]!;
     let headings = 0;
+    // A thematic break asks for a slide; the next heading or content takes it.
+    let pending = false;
+    const newSlide = (): void => {
+      slide = doc.addSlide({ master: "Title & Bullets", after: doc.slideCount() - 1 });
+      pending = false;
+    };
+    const content = (): void => {
+      if (pending) newSlide();
+    };
     const body: string[] = [];
     const notes: string[] = [];
     const tables: (readonly (readonly string[])[])[] = [];
@@ -774,22 +784,31 @@ export class KeynoteDocument extends IWorkDocument {
       switch (block.kind) {
         case "heading":
           flush();
-          if (headings++ > 0) slide = doc.addSlide({ master: "Title & Bullets", after: doc.slideCount() - 1 });
+          if (headings++ > 0 || pending) newSlide();
           slide.title = block.text;
           break;
+        case "rule":
+          flush();
+          pending = true;
+          break;
         case "paragraph":
+          content();
           body.push(block.text);
           break;
         case "list":
+          content();
           body.push(...block.items);
           break;
         case "quote":
+          content();
           notes.push(block.text);
           break;
         case "table":
+          content();
           tables.push(block.rows);
           break;
         case "image": {
+          content();
           const data = options.images?.(block.src);
           if (data) pictures.push({ data, fileName: block.src.split("/").pop() ?? block.src });
           break;

@@ -1,7 +1,7 @@
 /**
  * A small Markdown reader for building documents: headings, paragraphs,
- * bullet and numbered lists, block quotes, pipe tables and images on a
- * line of their own — the blocks
+ * bullet and numbered lists, block quotes, pipe tables, images on a
+ * line of their own and thematic breaks — the blocks
  * `toMarkdown()` writes, so a document survives a round trip. Inline
  * emphasis, code spans and links are reduced to their text; anything
  * else stays as written.
@@ -12,7 +12,8 @@ export type MarkdownBlock =
   | { kind: "list"; ordered: boolean; items: string[] }
   | { kind: "quote"; text: string }
   | { kind: "table"; rows: string[][] }
-  | { kind: "image"; alt: string; src: string };
+  | { kind: "image"; alt: string; src: string }
+  | { kind: "rule" };
 
 /** Supplies a picture's bytes for an image block, by the source it names; undefined skips it. */
 export type ImageResolver = (src: string) => Uint8Array | undefined;
@@ -22,6 +23,7 @@ const BULLET = /^\s*[-*+]\s+(.*)$/;
 const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
 const QUOTE = /^>\s?(.*)$/;
 const IMAGE = /^\s*!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*$/;
+const RULE = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
 const TABLE_SEPARATOR = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
 
@@ -82,6 +84,11 @@ export function parseMarkdown(source: string): MarkdownBlock[] {
     if (heading) {
       flush();
       blocks.push({ kind: "heading", level: heading[1]!.length, text: plainInline(heading[2]!) });
+      continue;
+    }
+    if (RULE.test(line)) {
+      flush();
+      blocks.push({ kind: "rule" });
       continue;
     }
     const image = IMAGE.exec(line);

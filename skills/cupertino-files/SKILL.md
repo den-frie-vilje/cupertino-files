@@ -1026,8 +1026,8 @@ doc.toMarkdown();            // any document: text, tables and charts in its own
 doc.tables()[0].toCsv();     // one table, RFC 4180
 doc.allText();               // every text storage, plain
 PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/Heading/Body styles, lists, tables, pictures
-KeynoteDocument.fromMarkdown(md);  // a slide per heading; lines beneath are the body, quotes the notes
-NumbersDocument.fromMarkdown(md);  // a table per pipe table, named by the heading above
+KeynoteDocument.fromMarkdown(md);  // a slide per heading or `---`; lines beneath are the body, quotes the notes
+NumbersDocument.fromMarkdown(md);  // a sheet per top heading, a table per pipe table named by the heading above
 NumbersDocument.fromCsv(csv, "Sales");
 ```
 

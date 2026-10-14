@@ -136,13 +136,14 @@ in commit messages and pull requests.
   build a new document from text: Pages gives headings the template's
   Title and Heading styles and lists its Bullet and Numbered styles;
   Keynote makes a slide per heading with the lines beneath as its body
-  and block quotes as presenter notes; Numbers makes a table per pipe
-  table, named by the heading above. `create_document` takes `content`
+  and block quotes as presenter notes; Numbers makes a sheet per top-level
+  heading and a table per pipe table, named by the heading above. `create_document` takes `content`
   (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
   the same from a file. An image on a line of its own becomes an inline
   picture in Pages or a picture on the slide in Keynote when its bytes
   can be found: through `images` in the API, `imageRoot` on the tool,
-  and beside the source file on the command line.
+  and beside the source file on the command line. A thematic break
+  (`---`) starts a new slide in Keynote.
 
 - `doc.toMarkdown()` renders any document as Markdown — a Pages body
   with headings from the named styles and list paragraphs as list items,
