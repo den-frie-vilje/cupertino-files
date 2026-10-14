@@ -305,13 +305,18 @@ export class PagesDocument extends IWorkDocument {
    * `images` supplies its bytes by the source the Markdown names. Links
    * become hyperlinks and footnote references with a definition become
    * footnotes, and bold and italic direct formatting. A front matter
-   * block at the top is left out of the body.
+   * block at the top is left out of the body. With \`template\`, the
+   * document is that one emptied (\`blankFrom\`) and the style names are
+   * looked up in it, so a letterhead's own Title, Heading and Body apply;
+   * a name the template lacks leaves the paragraph in its default style.
    * @agentTool create_document
    */
-  static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): PagesDocument {
-    const doc = PagesDocument.blank();
+  static fromMarkdown(markdown: string, options: { images?: ImageResolver; template?: Uint8Array } = {}): PagesDocument {
+    const doc = options.template ? PagesDocument.blankFrom(options.template) : PagesDocument.blank();
     const names = new Set(doc.paragraphStyles().map((s) => s.name));
     const style = (name: string): string | undefined => (names.has(name) ? name : undefined);
+    const lists = new Set(doc.listStyles().map((s) => s.name));
+    const list = (name: string): string | undefined => (lists.has(name) ? name : undefined);
     const heading = ["Title", "Heading", "Heading 2", "Heading 3"];
     const blocks = parseMarkdown(markdown);
     const notes = new Map(blocks.flatMap((b) => (b.kind === "footnote" ? [[b.label, b.text] as const] : [])));
@@ -342,7 +347,7 @@ export class PagesDocument extends IWorkDocument {
           for (const line of block.text.split("\n")) doc.appendParagraph(line, style("Body"));
           break;
         case "list":
-          for (const item of block.items) appendInline(item, style("Body"), block.ordered ? "Numbered" : "Bullet");
+          for (const item of block.items) appendInline(item, style("Body"), list(block.ordered ? "Numbered" : "Bullet"));
           break;
         case "footnote":
           break;

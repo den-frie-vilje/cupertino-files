@@ -82,14 +82,24 @@ if (subcommand === "mcp") {
   const source = process.argv[3];
   const target = process.argv[4];
   if (!source || !target) {
-    console.error("usage: cupertino-files import <source.md|source.csv> <new.pages|new.numbers|new.key>");
+    console.error("usage: cupertino-files import <source.md|source.csv> <new.pages|new.numbers|new.key> [--template <doc>] [--layout <name>]");
     process.exit(2);
+  }
+  const extra: Record<string, unknown> = {};
+  const rest = process.argv.slice(5);
+  for (let i = 0; i < rest.length; i += 2) {
+    if (rest[i] === "--template") extra.template = rest[i + 1];
+    else if (rest[i] === "--layout") extra.layout = rest[i + 1];
+    else {
+      console.error(`unknown option ${String(rest[i])}`);
+      process.exit(2);
+    }
   }
   try {
     const content = readFileSync(source, "utf8");
     const format = source.toLowerCase().endsWith(".csv") ? "csv" : "markdown";
     console.log(
-      TOOLS.find((t) => t.name === "create_document")!.handler({ path: target, content, format, imageRoot: dirname(source) }),
+      TOOLS.find((t) => t.name === "create_document")!.handler({ path: target, content, format, imageRoot: dirname(source), ...extra }),
     );
   } catch (error) {
     console.error((error as Error).message);

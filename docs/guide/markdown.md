@@ -66,12 +66,19 @@ every one after the first, and makes a table of each pipe table, named
 by the nearest heading above it. Text outside tables has no home in
 Numbers and is dropped.
 
+Pass `template` — a document of the same kind, as bytes — and the result
+is that document emptied, with its theme, page setup and named styles:
+a letterhead's Title and Body, a deck's own layouts. `layout` names the
+Keynote layout content slides take; without it, "Title & Bullets" where
+the theme has one, else a copy of the first slide's layout.
+
 From the shell, `import` takes a Markdown or CSV file and the document
 to create; pictures are found beside the source file:
 
 ```sh
 cupertino-files import notes.md deck.key
 cupertino-files import sales.csv sales.numbers
+cupertino-files import notes.md deck.key --template Letterhead.key --layout "Title & Bullets"
 ```
 
 Over MCP, `create_document` takes `content` (Markdown, or CSV with

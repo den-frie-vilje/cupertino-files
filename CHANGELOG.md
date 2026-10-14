@@ -147,7 +147,11 @@ in commit messages and pull requests.
   picture in Pages or a picture on the slide in Keynote when its bytes
   can be found: through `images` in the API, `imageRoot` on the tool,
   and beside the source file on the command line. A thematic break
-  (`---`) starts a new slide in Keynote.
+  (`---`) starts a new slide in Keynote. With `template` — a document of
+  the same kind, emptied the way `blankFrom` does — the result keeps that
+  document's theme and styles, and `layout` names the Keynote layout for
+  content slides; `create_document` takes both, and `import` takes
+  `--template` and `--layout`.
 
 - `doc.toMarkdown()` renders any document as Markdown — a Pages body
   with headings from the named styles and list paragraphs as list items,

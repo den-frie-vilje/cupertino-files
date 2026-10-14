@@ -1030,6 +1030,8 @@ PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/He
 KeynoteDocument.fromMarkdown(md);  // a slide per heading or `---`; lines beneath are the body, quotes the notes
 NumbersDocument.fromMarkdown(md);  // a sheet per top heading, a table per pipe table named by the heading above
 NumbersDocument.fromCsv(csv, "Sales");
+PagesDocument.fromMarkdown(md, { template: letterheadBytes });        // built inside an emptied template
+KeynoteDocument.fromMarkdown(md, { template: deckBytes, layout: "Title & Bullets" });
 ```
 
 Pages renders its body — headings from the named styles ("Title",

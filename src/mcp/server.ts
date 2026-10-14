@@ -479,7 +479,8 @@ export const TOOLS: readonly Tool[] = [
       "create_document",
       "kind picks the app, or the path's extension does. content, when given, is Markdown the " +
         "document is written from (headings, paragraphs, lists, block quotes, pipe tables), or " +
-        "CSV for a Numbers document when format is csv. Refuses to overwrite an existing file.",
+        "CSV for a Numbers document when format is csv. template names a document of the same kind to " +
+        "empty and build in. Refuses to overwrite an existing file.",
     ),
     inputSchema: {
       type: "object",
@@ -496,6 +497,8 @@ export const TOOLS: readonly Tool[] = [
         content: { type: "string", description: "Markdown (or CSV) to write the document from" },
         format: { type: "string", enum: ["markdown", "csv"], description: "What content is; markdown by default" },
         imageRoot: { type: "string", description: "Directory the Markdown's image paths are relative to" },
+        template: { type: "string", description: "A document of the same kind to empty and build in, keeping its theme and styles" },
+        layout: { type: "string", description: "Keynote: the layout for content slides (default Title & Bullets)" },
       },
       required: ["path"],
     },
@@ -522,21 +525,35 @@ export const TOOLS: readonly Tool[] = [
         const file = imageRoot ? join(imageRoot, src) : src;
         return existsSync(file) ? new Uint8Array(readFileSync(file)) : undefined;
       };
+      const templatePath = str(args.template);
+      if (templatePath !== undefined && !existsSync(templatePath)) throw new RangeError(`no template at ${templatePath}`);
+      const template = templatePath === undefined ? undefined : new Uint8Array(readFileSync(templatePath));
+      const layout = str(args.layout);
       const doc =
         kind === "pages"
           ? content === undefined
-            ? PagesDocument.blank()
-            : PagesDocument.fromMarkdown(content, { images })
+            ? template
+              ? PagesDocument.blankFrom(template)
+              : PagesDocument.blank()
+            : PagesDocument.fromMarkdown(content, { images, ...(template ? { template } : {}) })
           : kind === "numbers"
             ? content === undefined
-              ? NumbersDocument.blank()
+              ? template
+                ? NumbersDocument.blankFrom(template)
+                : NumbersDocument.blank()
               : format === "csv"
-                ? NumbersDocument.fromCsv(content)
-                : NumbersDocument.fromMarkdown(content)
+                ? NumbersDocument.fromCsv(content, undefined, template ? { template } : {})
+                : NumbersDocument.fromMarkdown(content, template ? { template } : {})
             : kind === "keynote"
               ? content === undefined
-                ? KeynoteDocument.blank()
-                : KeynoteDocument.fromMarkdown(content, { images })
+                ? template
+                  ? KeynoteDocument.blankFrom(template)
+                  : KeynoteDocument.blank()
+                : KeynoteDocument.fromMarkdown(content, {
+                    images,
+                    ...(template ? { template } : {}),
+                    ...(layout ? { layout } : {}),
+                  })
               : undefined;
       if (!doc) {
         throw new RangeError(

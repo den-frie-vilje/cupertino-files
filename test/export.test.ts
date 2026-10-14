@@ -361,3 +361,23 @@ describe("dates in CSV", () => {
     expect(table.toCsv().split("\n")[1]!.startsWith("2013-07-26T00:00:00.000Z,")).toBe(true);
   });
 });
+
+describe("building in a template", () => {
+  it("empties the template and uses its own styles and layouts", () => {
+    const md = "# Report\n\nBody text.\n\n- one\n\n## Next\n\nMore.\n";
+    const pages = PagesDocument.load(PagesDocument.fromMarkdown(md, { template: fixture("iwork-mcp-v14.5-sample.pages") }).save());
+    expect(pages.body.paragraphs().map((p) => `${p.text}:${pages.body.paragraph(p.index).styleName}`)).toEqual([
+      "Report:Title",
+      "Body text.:Body",
+      "one:Body",
+      "Next:Heading",
+      "More.:Body",
+    ]);
+    const deck = KeynoteDocument.load(KeynoteDocument.fromMarkdown(md, { template: fixture("zenodo-v26.0-ios-writer.key") }).save());
+    expect(deck.slides().map((s) => s.title)).toEqual(["Report", "Next"]);
+    expect(deck.masterSlides().some((m) => m.name === "Titel & Punkt")).toBe(true);
+    const named = KeynoteDocument.fromMarkdown(md, { template: fixture("zenodo-v26.0-ios-writer.key"), layout: "Titel & Punkt" });
+    const second = named.slides()[1]!;
+    expect(named.masterSlides().find((m) => m.id === second.masterId)?.name).toBe("Titel & Punkt");
+  });
+});

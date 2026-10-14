@@ -109,10 +109,11 @@ export class NumbersDocument extends IWorkDocument {
    * adds a sheet), and each pipe table becomes a table on the current
    * sheet, sized to its rows and named by the nearest lower heading above
    * it (or "Table N"); the first table on a sheet fills the sheet's own.
-   * Text outside tables has no home in Numbers and is dropped.
+   * Text outside tables has no home in Numbers and is dropped. With
+   * `template`, the document is that one emptied (`blankFrom`).
    */
-  static fromMarkdown(markdown: string): NumbersDocument {
-    const doc = NumbersDocument.blank();
+  static fromMarkdown(markdown: string, options: { template?: Uint8Array } = {}): NumbersDocument {
+    const doc = options.template ? NumbersDocument.blankFrom(options.template) : NumbersDocument.blank();
     let sheet = doc.sheets()[0]!;
     let sheets = 0;
     let name: string | undefined;
@@ -146,8 +147,8 @@ export class NumbersDocument extends IWorkDocument {
    * A new document holding one table written from CSV (RFC 4180): the
    * first row is the header row, numbers and TRUE/FALSE become such.
    */
-  static fromCsv(csv: string, name?: string): NumbersDocument {
-    const doc = NumbersDocument.blank();
+  static fromCsv(csv: string, name?: string, options: { template?: Uint8Array } = {}): NumbersDocument {
+    const doc = options.template ? NumbersDocument.blankFrom(options.template) : NumbersDocument.blank();
     const table = doc.tables()[0]!;
     if (name) table.name = name;
     fillTable(table, parseCsv(csv));

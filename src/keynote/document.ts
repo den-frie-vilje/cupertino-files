@@ -748,23 +748,36 @@ export class KeynoteDocument extends IWorkDocument {
 
   /**
    * A new deck written from Markdown: the first heading titles the blank
-   * deck's title slide and every later heading adds a "Title & Bullets"
-   * slide; the paragraphs and list items under a heading become that
+   * deck's title slide and every later heading adds a slide on `layout`
+   * ("Title & Bullets" by default; a theme without it gets copies of the
+   * first slide's layout); the paragraphs and list items under a heading become that
    * slide's body, one line each, its block quotes its presenter notes
    * and its pipe tables tables on the slide; an image on a line of its
    * own lands on the slide when `images` supplies its bytes, and a
    * thematic break (`---`) starts an untitled slide; links, bold and
    * italic in the body survive. Text before any heading goes on the
    * title slide.
+   * With `template`, the deck is that one emptied (`blankFrom`), so its
+   * theme and layouts apply.
    */
-  static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): KeynoteDocument {
-    const doc = KeynoteDocument.blank();
+  static fromMarkdown(
+    markdown: string,
+    options: { images?: ImageResolver; template?: Uint8Array; layout?: string } = {},
+  ): KeynoteDocument {
+    const doc = options.template ? KeynoteDocument.blankFrom(options.template) : KeynoteDocument.blank();
     let slide = doc.slides()[0]!;
+    // The content layout: the one named, else "Title & Bullets" where the
+    // theme offers it, else a copy of the first slide's own layout.
+    const layouts = doc.masterSlides();
+    const wanted = options.layout ?? "Title & Bullets";
+    const layout = layouts.find((m) => m.name === wanted) ?? layouts.find((m) => m.name?.toLowerCase() === wanted.toLowerCase());
     let headings = 0;
     // A thematic break asks for a slide; the next heading or content takes it.
     let pending = false;
     const newSlide = (): void => {
-      slide = doc.addSlide({ master: "Title & Bullets", after: doc.slideCount() - 1 });
+      slide = layout
+        ? doc.addSlide({ master: layout.id, after: doc.slideCount() - 1 })
+        : doc.addSlide({ copyOf: 0, after: doc.slideCount() - 1 });
       pending = false;
     };
     const content = (): void => {
