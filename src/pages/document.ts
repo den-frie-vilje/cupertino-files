@@ -305,7 +305,8 @@ export class PagesDocument extends IWorkDocument {
    * own, and each image on a line of its own an inline picture, when
    * `images` supplies its bytes by the source the Markdown names. Links
    * become hyperlinks and footnote references with a definition become
-   * footnotes, and bold and italic direct formatting.
+   * footnotes, and bold and italic direct formatting. A front matter
+   * block at the top is left out of the body.
    * @agentTool create_document
    */
   static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): PagesDocument {

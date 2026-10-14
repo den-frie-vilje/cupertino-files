@@ -179,6 +179,7 @@ export const TOOLS: readonly Tool[] = [
       out.charts = chartsOf(doc.store).length;
       if (doc instanceof KeynoteDocument) {
         out.slides = doc.slides().map((s, i) => ({ index: i, title: s.title ?? "" }));
+        out.layouts = doc.masterSlides().map((m) => m.name).filter((name): name is string => name !== undefined && name !== "");
       }
       if (doc instanceof PagesDocument) {
         out.bodyTextLength = doc.body.text.length;

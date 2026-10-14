@@ -180,9 +180,24 @@ function splitRow(line: string): string[] {
   return cells.map((c) => plainInline(c.replace(/<br\s*\/?>/g, "\n")));
 }
 
+/**
+ * A YAML-style front matter block — \`---\`, \`key: value\` lines, \`---\` — split
+ * off the top of the source; only flat string values are read.
+ */
+export function splitFrontMatter(source: string): { meta: Record<string, string>; body: string } {
+  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(source);
+  if (!m) return { meta: {}, body: source };
+  const meta: Record<string, string> = {};
+  for (const line of m[1]!.split(/\r?\n/)) {
+    const pair = /^([A-Za-z_][\w-]*)\s*:\s*(.*)$/.exec(line);
+    if (pair) meta[pair[1]!] = pair[2]!.replace(/^(["'])(.*)\1$/, "$2").trim();
+  }
+  return { meta, body: source.slice(m[0].length) };
+}
+
 export function parseMarkdown(source: string): MarkdownBlock[] {
   const blocks: MarkdownBlock[] = [];
-  const lines = source.split(/\r?\n/);
+  const lines = splitFrontMatter(source).body.split(/\r?\n/);
   let paragraph: string[] = [];
   let list: { ordered: boolean; items: string[] } | undefined;
   let quote: string[] = [];

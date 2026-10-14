@@ -6,7 +6,7 @@ import { PagesDocument } from "../src/pages/document.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { blockPng } from "../scripts/png.ts";
-import { inlineText, parseMarkdown } from "../src/tsa/markdown-parser.ts";
+import { inlineText, parseMarkdown, splitFrontMatter } from "../src/tsa/markdown-parser.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -290,5 +290,15 @@ describe("emphasis", () => {
     const body = doc.slides()[0]!.placeholder("body")!;
     expect(body.links().map((l) => [body.text.slice(l.start, l.end), l.url])).toEqual([["here", "https://x.org"]]);
     expect(doc.toMarkdown().includes("see [here](https://x.org) and **now**")).toBe(true);
+  });
+});
+
+describe("front matter", () => {
+  it("is read apart from the body and left out of the documents", () => {
+    const md = "---\nheader: Acme Ltd\nfooter: \"Confidential\"\n---\n# T\n\nBody.\n";
+    expect(splitFrontMatter(md).meta).toEqual({ header: "Acme Ltd", footer: "Confidential" });
+    const doc = PagesDocument.load(PagesDocument.fromMarkdown(md).save());
+    expect(doc.body.paragraphs().map((p) => p.text)).toEqual(["T", "Body."]);
+    expect(KeynoteDocument.fromMarkdown(md).slides().map((s) => s.title)).toEqual(["T"]);
   });
 });
