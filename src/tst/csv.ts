@@ -21,3 +21,67 @@ export function tableToCsv(table: TableModel): string {
     .join("\n");
 }
 
+
+/** RFC 4180 CSV read back into rows; a trailing line break adds no row. */
+export function parseCsv(source: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i]!;
+    if (quoted) {
+      if (ch === '"') {
+        if (source[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else quoted = false;
+      } else field += ch;
+      continue;
+    }
+    if (ch === '"') quoted = true;
+    else if (ch === ",") {
+      row.push(field);
+      field = "";
+    } else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && source[i + 1] === "\n") i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else field += ch;
+  }
+  if (field !== "" || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * Fit a table to `rows` and write them: the row and column counts grow or
+ * shrink to the data's, every cell is set — numbers and TRUE/FALSE as
+ * such, the rest as text — and empty cells are cleared.
+ */
+export function fillTable(table: TableModel, rows: readonly (readonly string[])[]): void {
+  const rowCount = Math.max(1, rows.length);
+  const columnCount = Math.max(1, ...rows.map((r) => r.length));
+  if (table.rowCount < rowCount) table.insertRows(table.rowCount, rowCount - table.rowCount);
+  else if (table.rowCount > rowCount) table.deleteRows(rowCount, table.rowCount - rowCount);
+  if (table.columnCount < columnCount) table.insertColumns(table.columnCount, columnCount - table.columnCount);
+  else if (table.columnCount > columnCount) table.deleteColumns(columnCount, table.columnCount - columnCount);
+  for (let r = 0; r < rowCount; r++) {
+    for (let c = 0; c < columnCount; c++) {
+      const text = rows[r]?.[c] ?? "";
+      if (text === "") table.clearCell(r, c);
+      else table.setCell(r, c, csvCellValue(text));
+    }
+  }
+}
+
+/** A CSV cell as the value a table cell takes: number, boolean or text. */
+export function csvCellValue(text: string): string | number | boolean {
+  if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
+  if (/^(TRUE|FALSE)$/i.test(text)) return text.toUpperCase() === "TRUE";
+  return text;
+}

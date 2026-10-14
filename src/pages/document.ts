@@ -8,6 +8,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
+import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   describeStyle,
@@ -290,6 +291,40 @@ export class PagesDocument extends IWorkDocument {
     }
     body.setText("");
     doc.compact();
+    return doc;
+  }
+
+  /**
+   * A new document written from Markdown: headings become the template's
+   * Title, Heading, Heading 2 and Heading 3 paragraphs (deeper levels
+   * share Heading 3), paragraphs Body, bullet and numbered lists Body
+   * items with the Bullet or Numbered list style, block quotes Body
+   * paragraphs, and a table's rows tab-separated Body lines, since a
+   * Pages table is not built from nothing here.
+   * @agentTool create_document
+   */
+  static fromMarkdown(markdown: string): PagesDocument {
+    const doc = PagesDocument.blank();
+    const names = new Set(doc.paragraphStyles().map((s) => s.name));
+    const style = (name: string): string | undefined => (names.has(name) ? name : undefined);
+    const heading = ["Title", "Heading", "Heading 2", "Heading 3"];
+    for (const block of parseMarkdown(markdown)) {
+      switch (block.kind) {
+        case "heading":
+          doc.appendParagraph(block.text, style(heading[Math.min(block.level, 4) - 1]!));
+          break;
+        case "paragraph":
+        case "quote":
+          doc.appendParagraph(block.text, style("Body"));
+          break;
+        case "list":
+          for (const item of block.items) doc.appendParagraph(item, style("Body"), block.ordered ? "Numbered" : "Bullet");
+          break;
+        case "table":
+          for (const row of block.rows) doc.appendParagraph(row.join("\t"), style("Body"));
+          break;
+      }
+    }
     return doc;
   }
 

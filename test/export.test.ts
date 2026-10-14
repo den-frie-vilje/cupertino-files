@@ -69,3 +69,85 @@ describe("CSV export", () => {
     expect(lines.length).toBe(table.rowCount + 1);
   });
 });
+
+describe("building from Markdown", () => {
+  const SOURCE = [
+    "# Quarterly review",
+    "",
+    "An opening paragraph with **bold** and a [link](https://example.org).",
+    "",
+    "## Highlights",
+    "",
+    "- Revenue up",
+    "- Costs flat",
+    "",
+    "1. First step",
+    "2. Second step",
+    "",
+    "> Remember the caveat",
+    "",
+    "## Numbers",
+    "",
+    "| Item | Count |",
+    "| --- | --- |",
+    "| Apples | 3 |",
+    "| Pears, ripe | TRUE |",
+    "",
+  ].join("\n");
+
+  it("gives Pages the template's heading, body and list styles, and survives a round trip", () => {
+    const doc = PagesDocument.fromMarkdown(SOURCE);
+    const styles = doc.body.paragraphs().map((p) => {
+      const h = doc.body.paragraph(p.index);
+      return `${h.styleName}/${h.listStyleName}`;
+    });
+    expect(styles.slice(0, 8)).toEqual([
+      "Title/None",
+      "Body/None",
+      "Heading/None",
+      "Body/Bullet",
+      "Body/Bullet",
+      "Body/Numbered",
+      "Body/Numbered",
+      "Body/None",
+    ]);
+    expect(doc.body.paragraphs()[1]!.text).toBe("An opening paragraph with bold and a link.");
+    const again = PagesDocument.load(doc.save()).toMarkdown();
+    expect(again.startsWith("# Quarterly review\n\nAn opening paragraph with bold and a link.\n\n## Highlights\n\n- Revenue up\n- Costs flat\n\n1. First step\n2. Second step\n\nRemember the caveat")).toBe(true);
+  });
+
+  it("gives Keynote a slide per heading with the body's lines and quoted notes", () => {
+    const doc = KeynoteDocument.load(KeynoteDocument.fromMarkdown(SOURCE).save());
+    const slides = doc.slides();
+    expect(slides.map((s) => s.title)).toEqual(["Quarterly review", "Highlights", "Numbers"]);
+    expect(slides[0]!.body).toBe("An opening paragraph with bold and a link.");
+    expect(slides[1]!.body).toBe("Revenue up\nCosts flat\nFirst step\nSecond step");
+    expect(slides[1]!.notes).toBe("Remember the caveat");
+    expect(slides[2]!.body).toBe("Item\tCount\nApples\t3\nPears, ripe\tTRUE");
+    expect(doc.masterSlides().find((m) => m.id === slides[1]!.masterId)?.name).toBe("Title & Bullets");
+  });
+
+  it("gives Numbers a table per pipe table, named by the heading above and sized to its rows", () => {
+    const doc = NumbersDocument.load(NumbersDocument.fromMarkdown(SOURCE).save());
+    const tables = doc.tables();
+    expect(tables.length).toBe(1);
+    const table = tables[0]!;
+    expect([table.name, table.rowCount, table.columnCount]).toEqual(["Numbers", 3, 2]);
+    expect(table.cellText(0, 0)).toBe("Item");
+    expect(table.cellValue(1, 1)).toEqual({ type: "number", value: 3, isFormula: false });
+    expect(table.cellValue(2, 1)?.type).toBe("bool");
+    expect(table.cellText(2, 0)).toBe("Pears, ripe");
+  });
+});
+
+describe("building from CSV", () => {
+  it("reads quoted fields and round-trips through toCsv", () => {
+    const csv = 'Name,Note,Score\nAda,"says ""hi""",9.5\n"Lin, Bo","two\nlines",7\n';
+    const doc = NumbersDocument.load(NumbersDocument.fromCsv(csv, "Scores").save());
+    const table = doc.tables()[0]!;
+    expect([table.name, table.rowCount, table.columnCount]).toEqual(["Scores", 3, 3]);
+    expect(table.cellText(1, 1)).toBe('says "hi"');
+    expect(table.cellText(2, 0)).toBe("Lin, Bo");
+    expect(table.toCsv()).toBe(csv.trimEnd());
+  });
+});

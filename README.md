@@ -68,6 +68,7 @@ reverse-engineering of it, measured from real documents.
 - **Charts** — data (categories, series, values) and appearance (type, colours, gridlines, legend)
 - **Fidelity** — byte-identical round trips; future app versions load with their new features intact
 - **Export** — any document as Markdown (text, tables and charts in its own structure), any table as CSV, and plain text
+- **Build from text** — a Pages document, a Keynote deck or a Numbers table written from Markdown, a table from CSV
 - **Honesty** — iWork '09 XML and password-protected documents are detected and declined, never mis-parsed
 
 Deeper detail, per capability and with the evidence:
@@ -77,7 +78,7 @@ waits on](docs/BLOCKERS.md) · [the format itself](docs/FORMAT.md).
 ## Tools for every kind of work
 
 - **The API** — typed, synchronous, documented: [take the tour](https://den-frie-vilje.github.io/cupertino-files/guide/documents)
-- **The CLI** — `npx -y cupertino-files dump info file.pages` inspects; `export file.key` prints Markdown (`--format csv` a table); `call` runs any editing tool from the shell
+- **The CLI** — `npx -y cupertino-files dump info file.pages` inspects; `export file.key` prints Markdown (`--format csv` a table); `import notes.md deck.key` builds a document; `call` runs any editing tool from the shell
 - **For AI agents** — `npx -y cupertino-files mcp`: an MCP server whose tools create, edit, format and export documents, plus a Claude Code skill in the package
 - **For other implementations** — a language-neutral [conformance suite](conformance/README.md) and format bundle, so a C++ or Rust port can check itself
 

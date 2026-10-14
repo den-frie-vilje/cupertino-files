@@ -241,6 +241,19 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Container",
+    name: "Construction from Markdown and CSV",
+    apps: "all",
+    status: "read+write",
+    probe: () => true,
+    note:
+      "fromMarkdown builds on blank(): Pages through appendParagraph with the template's Title, " +
+      "Heading and Body styles and Bullet/Numbered lists; Keynote through addSlide({ master: " +
+      "\"Title & Bullets\" }), title, body and notes; Numbers through the blank table, addTable and " +
+      "setCell with rows and columns fitted. Every step is a writer with its own row; the Keynote " +
+      "path rides on the layout writer's open question",
+  },
+  {
+    group: "Container",
     name: "Compaction (drop unreachable archives)",
     apps: "all",
     status: "read+write",

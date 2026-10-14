@@ -110,6 +110,16 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
+  `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
+  build a new document from text: Pages gives headings the template's
+  Title and Heading styles and lists its Bullet and Numbered styles;
+  Keynote makes a slide per heading with the lines beneath as its body
+  and block quotes as presenter notes; Numbers makes a table per pipe
+  table, named by the heading above. `create_document` takes `content`
+  (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
+  the same from a file.
+
 - `doc.toMarkdown()` renders any document as Markdown — a Pages body
   with headings from the named styles and list paragraphs as list items,
   Numbers as a section per sheet with each table as a pipe table, Keynote

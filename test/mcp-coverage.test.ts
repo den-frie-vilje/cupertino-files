@@ -74,6 +74,9 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   // Read surfaces the read tools compose over.
   ["IWorkDocument.allText", READ],
   ["PagesDocument.toMarkdown", "the Pages arrangement of IWorkDocument.toMarkdown, which export_document serves"],
+  ["NumbersDocument.fromMarkdown", "create_document with content, as PagesDocument.fromMarkdown is tagged"],
+  ["NumbersDocument.fromCsv", "create_document with content and format csv"],
+  ["KeynoteDocument.fromMarkdown", "create_document with content, as PagesDocument.fromMarkdown is tagged"],
   ["NumbersDocument.toMarkdown", "the Numbers arrangement of IWorkDocument.toMarkdown, which export_document serves"],
   ["KeynoteDocument.toMarkdown", "the Keynote arrangement of IWorkDocument.toMarkdown, which export_document serves"],
   ["IWorkDocument.charts", READ],

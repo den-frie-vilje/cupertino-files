@@ -1003,12 +1003,16 @@ Defaults come from the schema rather than from zero: every deck examined
 omits several of these fields, and reading an omitted autoplay delay as 0
 instead of 5 would describe a deck that races through itself.
 
-## Exporting
+## Exporting and importing
 
 ```ts
 doc.toMarkdown();            // any document: text, tables and charts in its own structure
 doc.tables()[0].toCsv();     // one table, RFC 4180
 doc.allText();               // every text storage, plain
+PagesDocument.fromMarkdown(md);    // Title/Heading/Body styles, Bullet and Numbered lists
+KeynoteDocument.fromMarkdown(md);  // a slide per heading; lines beneath are the body, quotes the notes
+NumbersDocument.fromMarkdown(md);  // a table per pipe table, named by the heading above
+NumbersDocument.fromCsv(csv, "Sales");
 ```
 
 Pages renders its body — headings from the named styles ("Title",
@@ -1019,7 +1023,11 @@ is a section per sheet, each table a pipe table whose first row is the
 header. Keynote is a section per slide, "## 1. Title", the body's
 paragraphs as list items and the presenter notes as a block quote. From
 the shell: `cupertino-files export deck.key`, `--format csv --table
-Sales`, `--format text`, `--out file.md`.
+Sales`, `--format text`, `--out file.md`; and back, `cupertino-files
+import notes.md deck.key` (a `.csv` source makes a Numbers table). A
+Pages table is not built from Markdown — its rows land as tab-separated
+Body lines — and a Keynote deck's content slides take the "Title &
+Bullets" layout.
 
 ## Editing text in Numbers/Keynote
 

@@ -7,6 +7,7 @@
  *   cupertino-files tools               list the tools, with their descriptions
  *   cupertino-files call <tool> <json>  run one tool from the shell
  *   cupertino-files export <file> …     Markdown, CSV or plain text to stdout
+ *   cupertino-files import <src> <doc>  a document written from a Markdown or CSV file
  *   cupertino-files dump …              the inspection CLI (same as `cupertino-dump`)
  *
  * `tools` and `call` dispatch the same registry the MCP server serves, so
@@ -73,15 +74,33 @@ if (subcommand === "mcp") {
     console.error((error as Error).message);
     process.exit(1);
   }
+} else if (subcommand === "import") {
+  const { TOOLS } = await import("./mcp/server.ts");
+  const { readFileSync } = await import("node:fs");
+  const source = process.argv[3];
+  const target = process.argv[4];
+  if (!source || !target) {
+    console.error("usage: cupertino-files import <source.md|source.csv> <new.pages|new.numbers|new.key>");
+    process.exit(2);
+  }
+  try {
+    const content = readFileSync(source, "utf8");
+    const format = source.toLowerCase().endsWith(".csv") ? "csv" : "markdown";
+    console.log(TOOLS.find((t) => t.name === "create_document")!.handler({ path: target, content, format }));
+  } catch (error) {
+    console.error((error as Error).message);
+    process.exit(1);
+  }
 } else if (subcommand === "dump") {
   process.argv.splice(2, 1);
   await import("./cli.ts");
 } else {
-  console.error("usage: cupertino-files <mcp|tools|call|export|dump> …");
+  console.error("usage: cupertino-files <mcp|tools|call|export|import|dump> …");
   console.error("  mcp                 Model Context Protocol server over stdio, for AI agents");
   console.error("  tools               list the editing tools and what they do");
   console.error("  call <tool> <json>  run one tool from the shell");
   console.error("  export <file> …     Markdown (default), CSV (--format csv --table n) or text");
+  console.error("  import <src> <doc>  write a new document from a Markdown or CSV file");
   console.error("  dump …              inspect a document (try `dump info <file>`)");
   process.exit(subcommand === undefined || subcommand === "--help" ? 0 : 2);
 }

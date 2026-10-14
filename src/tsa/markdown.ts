@@ -42,10 +42,18 @@ function levelOf(label: string | undefined): number | undefined {
   return undefined;
 }
 
-/** Paragraphs, headings and list items, separated by blank lines. */
+/** List styles that number their items, by the template's locale-free identifier or name. */
+const ORDERED_LIST = /number|harvard|letter/i;
+
+/**
+ * Paragraphs, headings and list items, separated by blank lines. A list
+ * paragraph is an item: "- " under a bullet style, "1. " under a numbered
+ * or lettered one, and a run of items of one kind is one list.
+ */
 export function storageToMarkdown(storage: TextStorage): string {
   const blocks: string[] = [];
   let items: string[] = [];
+  let ordered = false;
   const flush = (): void => {
     if (items.length > 0) blocks.push(items.join("\n"));
     items = [];
@@ -64,7 +72,10 @@ export function storageToMarkdown(storage: TextStorage): string {
     }
     const list = storage.paragraph(paragraph.index).listStyleName;
     if (list !== undefined && !/^none$/i.test(list)) {
-      items.push(`- ${text}`);
+      const numbered = ORDERED_LIST.test(list);
+      if (items.length > 0 && numbered !== ordered) flush();
+      ordered = numbered;
+      items.push(numbered ? `${items.length + 1}. ${text}` : `- ${text}`);
       continue;
     }
     flush();

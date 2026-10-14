@@ -457,7 +457,9 @@ export const TOOLS: readonly Tool[] = [
     name: "create_document",
     description: apiDoc(
       "create_document",
-      "kind picks the app, or the path's extension does. Refuses to overwrite an existing file.",
+      "kind picks the app, or the path's extension does. content, when given, is Markdown the " +
+        "document is written from (headings, paragraphs, lists, block quotes, pipe tables), or " +
+        "CSV for a Numbers document when format is csv. Refuses to overwrite an existing file.",
     ),
     inputSchema: {
       type: "object",
@@ -471,6 +473,8 @@ export const TOOLS: readonly Tool[] = [
           enum: ["pages", "numbers", "keynote"],
           description: "Which app's document to create; defaults to what the extension says",
         },
+        content: { type: "string", description: "Markdown (or CSV) to write the document from" },
+        format: { type: "string", enum: ["markdown", "csv"], description: "What content is; markdown by default" },
       },
       required: ["path"],
     },
@@ -488,13 +492,24 @@ export const TOOLS: readonly Tool[] = [
             : path.endsWith(".key")
               ? "keynote"
               : undefined);
+      const content = str(args.content);
+      const format = str(args.format) ?? "markdown";
+      if (format === "csv" && kind !== "numbers") throw new RangeError("csv content makes a Numbers document");
       const doc =
         kind === "pages"
-          ? PagesDocument.blank()
+          ? content === undefined
+            ? PagesDocument.blank()
+            : PagesDocument.fromMarkdown(content)
           : kind === "numbers"
-            ? NumbersDocument.blank()
+            ? content === undefined
+              ? NumbersDocument.blank()
+              : format === "csv"
+                ? NumbersDocument.fromCsv(content)
+                : NumbersDocument.fromMarkdown(content)
             : kind === "keynote"
-              ? KeynoteDocument.blank()
+              ? content === undefined
+                ? KeynoteDocument.blank()
+                : KeynoteDocument.fromMarkdown(content)
               : undefined;
       if (!doc) {
         throw new RangeError(
@@ -502,7 +517,7 @@ export const TOOLS: readonly Tool[] = [
         );
       }
       writeFileSync(path, doc.save());
-      return `created a blank ${kind} document at ${path}`;
+      return `created a ${content === undefined ? "blank" : `${format}-built`} ${kind} document at ${path}`;
     },
   },
   {

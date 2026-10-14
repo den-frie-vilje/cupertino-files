@@ -12,6 +12,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
+import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import { Image, TSD_TYPE } from "../tsd/schema.ts";
@@ -705,6 +706,50 @@ export class KeynoteDocument extends IWorkDocument {
     }
     for (const storage of doc.slides()[0]!.textStorages()) storage.setText("");
     doc.compact();
+    return doc;
+  }
+
+  /**
+   * A new deck written from Markdown: the first heading titles the blank
+   * deck's title slide and every later heading adds a "Title & Bullets"
+   * slide; the paragraphs, list items and table rows under a heading
+   * become that slide's body, one line each, and its block quotes its
+   * presenter notes. Text before any heading goes on the title slide.
+   */
+  static fromMarkdown(markdown: string): KeynoteDocument {
+    const doc = KeynoteDocument.blank();
+    let slide = doc.slides()[0]!;
+    let headings = 0;
+    const body: string[] = [];
+    const notes: string[] = [];
+    const flush = (): void => {
+      if (body.length) slide.body = body.join("\n");
+      if (notes.length) slide.notes = notes.join("\n");
+      body.length = 0;
+      notes.length = 0;
+    };
+    for (const block of parseMarkdown(markdown)) {
+      switch (block.kind) {
+        case "heading":
+          flush();
+          if (headings++ > 0) slide = doc.addSlide({ master: "Title & Bullets", after: doc.slideCount() - 1 });
+          slide.title = block.text;
+          break;
+        case "paragraph":
+          body.push(block.text);
+          break;
+        case "list":
+          body.push(...block.items);
+          break;
+        case "quote":
+          notes.push(block.text);
+          break;
+        case "table":
+          body.push(...block.rows.map((row) => row.join("\t")));
+          break;
+      }
+    }
+    flush();
     return doc;
   }
 

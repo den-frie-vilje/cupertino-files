@@ -15,6 +15,8 @@ import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, deepCloneObjectInto, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
 import { chartToMarkdown, joinBlocks, tableToMarkdown } from "../tsa/markdown.ts";
+import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
@@ -97,6 +99,42 @@ export class NumbersDocument extends IWorkDocument {
     // about the size of its template — the same is true of a new document
     // made in Numbers, which is also a template with the content deleted.
     doc.compact();
+    return doc;
+  }
+
+  /**
+   * A new document written from Markdown: each pipe table becomes a table
+   * on the first sheet, sized to its rows and named by the nearest heading
+   * above it (or "Table N"); the first fills the blank document's own
+   * table. Text outside tables has no home in Numbers and is dropped.
+   */
+  static fromMarkdown(markdown: string): NumbersDocument {
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    let name: string | undefined;
+    let count = 0;
+    for (const block of parseMarkdown(markdown)) {
+      if (block.kind === "heading") name = block.text;
+      if (block.kind !== "table") continue;
+      count++;
+      const table = count === 1 ? doc.tables()[0]! : doc.addTable(sheet.id, { withContent: false });
+      if (name) table.name = name;
+      else if (count > 1) table.name = `Table ${count}`;
+      fillTable(table, block.rows);
+      name = undefined;
+    }
+    return doc;
+  }
+
+  /**
+   * A new document holding one table written from CSV (RFC 4180): the
+   * first row is the header row, numbers and TRUE/FALSE become such.
+   */
+  static fromCsv(csv: string, name?: string): NumbersDocument {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    if (name) table.name = name;
+    fillTable(table, parseCsv(csv));
     return doc;
   }
 
