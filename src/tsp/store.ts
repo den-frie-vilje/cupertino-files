@@ -340,10 +340,23 @@ export class ObjectStore {
       if (!object) continue;
       for (const next of referencedIds(object.message)) if (this.index.has(next) && !reachable.has(next)) queue.push(next);
     }
+    // A candidate something outside the drop set still points at stays:
+    // a style the stylesheet lists, a storage another slide shares.
+    const dropping = new Set<bigint>();
+    for (const id of pool) if (this.index.has(id) && !reachable.has(id)) dropping.add(id);
+    for (const id of [...dropping]) {
+      const held = this.referrers(id).some((referrer) => {
+        if (dropping.has(referrer)) return false;
+        // Declarations lag edits until save; the live references decide.
+        const object = this.index.get(referrer)?.obj;
+        return object !== undefined && this.currentReferencesOf(object).includes(id);
+      });
+      if (held) dropping.delete(id);
+    }
     let removed = 0;
     for (const component of this.components) {
       if (component.isOpaque) continue;
-      const drop = component.objects.filter((o) => pool.has(o.identifier) && !reachable.has(o.identifier));
+      const drop = component.objects.filter((o) => dropping.has(o.identifier));
       if (drop.length === 0) continue;
       for (const object of drop) {
         component.byId.delete(object.identifier);

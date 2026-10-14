@@ -962,3 +962,28 @@ describe("a table added to a slide", () => {
     expect(again.addTable({}).name).toBe("Table 2");
   });
 });
+
+describe("a slide moved to another layout", () => {
+  it("takes fresh placeholders from the new master, keeps its text and drawables, drops the old placeholders", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    slide.title = "Carried";
+    const box = slide.addTextBox("Kept", { x: 100, y: 100, width: 400, height: 80 });
+    const oldPlaceholders = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER].map((f) => refId(slide.object.message, f)!);
+    slide.setLayout("Title & Bullets");
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(reloaded.masterSlides().find((m) => m.id === again.masterId)?.name).toBe("Title & Bullets");
+    expect(again.title).toBe("Carried");
+    const fields: number[] = [];
+    for (let n = 1; n <= 40; n++) if (again.object.message.has(n)) fields.push(n);
+    expect(fields).toEqual([1, 4, 5, 6, 7, 17, 19, 20, 27, 28, 36]);
+    for (const f of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER]) {
+      expect(oldPlaceholders.includes(refId(again.object.message, f)!)).toBe(false);
+    }
+    for (const id of oldPlaceholders) expect(reloaded.store.object(id)).toBe(undefined);
+    expect(again.container().ids().includes(box.id)).toBe(true);
+    expect(again.placeholders().map((p) => [p.role, p.text])).toEqual([["title", "Carried"], ["body", ""], ["slideNumber", "\uFFFC"]]);
+    expect(reloaded.store.componentOf(refId(again.object.message, Slide.TITLE_PLACEHOLDER)!)).toBe(reloaded.store.componentOf(again.id));
+  });
+});

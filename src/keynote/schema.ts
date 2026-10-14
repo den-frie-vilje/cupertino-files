@@ -264,7 +264,7 @@ export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = 
  * The container rule, for the one Keynote drawable the shared map cannot
  * name: `KN.PlaceholderArchive` (types 7 and 12) reaches
  * `TSD.DrawableArchive` three supers down, and its `parent` is the slide.
- * Measured: 546 of 546 corpus placeholders carry the parent, zero declare
+ * Measured: 706 of 706 corpus placeholders carry the parent, zero declare
  * it. The type ids are Keynote-local (7 means something else in every
  * other app), so the rule lives here and is composed per app in
  * `tsa/document.ts` rather than added to the shared, app-blind map.

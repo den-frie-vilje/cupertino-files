@@ -90,6 +90,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["KeynoteDocument.allNotes", READ],
   ["KeynoteDocument.masterSlides", READ],
   ["KeynoteSlide.background", READ],
+  ["KeynoteDocument.relayoutSlide", "the work behind KeynoteSlide.setLayout, which manage_slides serves"],
   ["KeynoteDocument.noteStorages", READ],
   ["KeynoteDocument.presentation", READ],
   ["TableModel.refilterRows", "runs inside add_filter_rule after every rule; on its own it is the repair step for a set edited another way"],

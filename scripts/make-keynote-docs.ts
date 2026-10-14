@@ -203,6 +203,16 @@ export const RUNGS: {
     },
   },
   {
+    name: "K16-set-layout",
+    note: "the first slide moved onto the Title & Bullets layout, its title kept",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K16: this slide was moved to the Title & Bullets layout — a bullet body box should sit below this title, and this title should read as the layout's title.";
+      slide.setLayout("Title & Bullets");
+      slide.body = "A body line, in the layout's bullet style.";
+    },
+  },
+  {
     name: "K15-table",
     note: "a table placed on the first slide from the neutral donor, wired to the theme's first preset, filled with three rows",
     build: (doc) => {

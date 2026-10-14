@@ -1146,7 +1146,7 @@ export const TOOLS: readonly Tool[] = [
       "manage_slides",
       "Actions: add (copyOf + after, both 0-based slide indexes; or master, a layout's name, " +
         "to instantiate that layout instead — an unknown name's error lists the deck's), " +
-        "duplicate (slide), move " +
+        "duplicate (slide), set_layout (slide + master, a layout's name), move " +
         "(slide + to), remove (slide), set_size (width + height in points). Keynote " +
         "documents only. Saves over the input unless output names another path.",
     ),
@@ -1156,11 +1156,11 @@ export const TOOLS: readonly Tool[] = [
         path: { type: "string", description: "Path to the .key document" },
         action: {
           type: "string",
-          enum: ["add", "duplicate", "move", "remove", "set_size"],
+          enum: ["add", "duplicate", "set_layout", "move", "remove", "set_size"],
         },
         slide: { type: "number", description: "0-based slide index the action targets" },
         after: { type: "number", description: "add: insert after this index (default: end)" },
-        master: { type: "string", description: "add: the layout (master slide) to instantiate, by name" },
+        master: { type: "string", description: "add/set_layout: the layout (master slide), by name" },
         to: { type: "number", description: "move: destination index" },
         width: { type: "number", description: "set_size: points" },
         height: { type: "number", description: "set_size: points" },
@@ -1184,6 +1184,14 @@ export const TOOLS: readonly Tool[] = [
           if (slide === undefined) throw new RangeError("duplicate needs slide");
           doc.duplicateSlide(slide);
           break;
+        case "set_layout": {
+          const master = str(args.master);
+          if (slide === undefined || master === undefined) throw new RangeError("set_layout needs slide and master");
+          const target = doc.slides()[slide];
+          if (!target) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+          target.setLayout(master);
+          break;
+        }
         case "move": {
           const to = num(args.to);
           if (slide === undefined || to === undefined) throw new RangeError("move needs slide and to");

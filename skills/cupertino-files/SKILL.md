@@ -941,6 +941,7 @@ layout instead:
 doc.masterSlides();                                   // [{ id, name }] — the deck's layouts
 doc.addSlide({ copyOf: 0, after: 0 });                // a fresh slide on slide 0's layout
 doc.addSlide({ master: "Title & Bullets", after: 2 }); // a fresh slide on that layout
+slide.setLayout("Title & Bullets");                    // this slide onto that layout, text and drawables kept
 ```
 
 A layout slide is instantiated the way the app does it: the master is

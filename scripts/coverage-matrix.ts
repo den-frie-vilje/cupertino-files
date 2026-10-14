@@ -2225,6 +2225,27 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slides: changing the layout (setLayout)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "setLayout re-instantiates the title, body and slide-number placeholders from the new master, " +
+      "carries the text, keeps every other drawable and drops the old placeholders — the shape the " +
+      "app's own Format ▸ Slide Layout left in olekristensen-v26.0-mac-authored.key",
+    manualProof: {
+      claim: "Keynote draws a slide this library moved to another layout as that layout.",
+      why:
+        "The slide's field set and placeholders match the app's own change; whether the app draws " +
+        "the carried title in the new layout's place only the app shows.",
+      how:
+        "npm run keynote:docs -- out writes K16-set-layout.key; open it. A pass shows the first slide " +
+        "on Title & Bullets with its title and a bullet body; the old layout, or a refused deck, is a failure.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Slides from a layout (addSlide master)",
     apps: ["keynote"],
     status: "read+write",

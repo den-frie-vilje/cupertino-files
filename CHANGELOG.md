@@ -154,6 +154,12 @@ in commit messages and pull requests.
   `add_table`; the Markdown constructors now make real tables of pipe
   tables. Neither app has yet been seen to open a table placed this way.
 
+- `slide.setLayout(master)` puts a Keynote slide on another layout the
+  way Format ▸ Slide Layout does: fresh placeholders from the new master,
+  the title and body text carried over, every other drawable kept, the
+  old placeholders gone. `manage_slides` takes `set_layout`. Keynote has
+  not yet been seen to open a slide changed this way.
+
 - `section.moveToSectionMaster(drawableId)` moves a drawable from its
   page onto the section master so it repeats on every page, and
   `doc.insertPageBreak(paragraphIndex)` ends a paragraph with a page

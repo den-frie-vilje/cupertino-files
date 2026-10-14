@@ -17,9 +17,9 @@ import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markd
 import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
-import { DrawableModel } from "../tsd/drawables.ts";
+import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
-import { Image, TSD_TYPE } from "../tsd/schema.ts";
+import { Drawable, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
@@ -192,6 +192,19 @@ export class KeynoteSlide {
   /** The master (template) slide this one is based on, if any. */
   get masterId(): bigint | undefined {
     return refId(this.object.message, Slide.TEMPLATE_SLIDE);
+  }
+
+  /**
+   * Put this slide on another layout, as Format ▸ Slide Layout does: the
+   * title, body and slide-number placeholders become fresh copies of the
+   * new master's, the title and body text carries over, every other
+   * drawable the slide owns stays, the old placeholders go, and the slide
+   * takes the master's style and tag map. Measured on the app's own
+   * change in olekristensen-v26.0-mac-authored.key.
+   * @agentTool manage_slides
+   */
+  setLayout(master: string | bigint): void {
+    this.document.relayoutSlide(this, master);
   }
 
   /**
@@ -1228,6 +1241,90 @@ export class KeynoteDocument extends IWorkDocument {
     const created = this.slides().find((s) => s.id === slide.identifier);
     if (!created) throw new RangeError("slide was created but is not reachable from the tree");
     return created;
+  }
+
+  /** The work behind {@link KeynoteSlide.setLayout}. */
+  relayoutSlide(slide: KeynoteSlide, master: string | bigint): void {
+    const masterObject = this.resolveMaster(master);
+    const target = slide.object;
+    const component = this.store.componentOf(target.identifier);
+    if (!component) throw new RangeError("slide has no component");
+    const PLACEHOLDERS = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER];
+    const oldText = new Map<number, string>();
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      const text = this.storageOfPlaceholder(target, field)?.text ?? "";
+      if (text.replace(/[\u2029\ufffc]/g, "").trim()) oldText.set(field, text);
+    }
+    const oldPlaceholders = new Set(PLACEHOLDERS.map((f) => refId(target.message, f)).filter((id): id is bigint => id !== undefined));
+    // What the old placeholders reach — their storages and direct styles —
+    // goes with them unless something else still points at it.
+    const oldClosure = new Set(oldPlaceholders);
+    for (const id of [...oldClosure]) {
+      const object = this.store.object(id);
+      if (!object) continue;
+      for (const next of this.store.currentReferencesOf(object)) {
+        oldClosure.add(next);
+        const sub = this.store.object(next);
+        if (sub) for (const deeper of this.store.currentReferencesOf(sub)) oldClosure.add(deeper);
+      }
+    }
+
+    // A fresh instantiation of the new master, as addSlide({ master })
+    // makes one; this slide then takes its placeholders and drawables.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    // The instantiation's drawables answer to this slide, not to the
+    // throwaway clone they were born under.
+    for (const id of map.values()) {
+      const object = this.store.object(id);
+      const core = object && findDrawableCore(object.message);
+      if (core && refId(core, Drawable.PARENT) === clone.identifier) {
+        core.setMessage(Drawable.PARENT, makeRef(target.identifier));
+        object.message.markDirty();
+      }
+    }
+    for (const field of PLACEHOLDERS) {
+      const id = refId(clone.message, field);
+      if (id === undefined) target.message.remove(field);
+      else target.message.setMessage(field, makeRef(id));
+    }
+    const fresh = clone.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+    const kept = target.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !oldPlaceholders.has(id));
+    const owned = [...fresh, ...kept];
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      if (owned.length > 0) target.message.setMessages(field, owned.map((id) => makeRef(id)));
+      else target.message.remove(field);
+    }
+    for (const field of [Slide.STYLE, Slide.TRANSITION]) {
+      const value = clone.message.getMessage(field);
+      if (value) target.message.setMessage(field, value);
+    }
+    target.message.setMessages(28, clone.message.getMessages(28));
+    target.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    target.message.markDirty();
+    for (const [field, text] of oldText) this.storageOfPlaceholder(target, field)?.setText(text);
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      if (!oldText.has(field)) this.storageOfPlaceholder(target, field)?.setText("");
+    }
+    const number = this.storageOfPlaceholder(target, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The new placeholders and drawables join the slide's component; the
+    // instantiation's own slide object and the old placeholders, with
+    // what only they reached, go.
+    this.store.moveObjectsToComponent([...map.values()].filter((id) => id !== clone.identifier), component);
+    this.store.discardUnreachable(target.identifier, [clone.identifier, ...map.values(), ...oldClosure]);
   }
 
   /**

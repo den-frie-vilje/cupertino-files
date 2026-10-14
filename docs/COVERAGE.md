@@ -157,6 +157,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 10 | iwork16→current |
 | Slide background (read + set)<br><sub>background reads up the style chain; setBackground writes the corpus shape of a per-slide background — an unnamed KN.SlideStyleArchive variation under the master's style, in the stylesheet's component, override count 1, the fill in its slide properties, referenced by the slide alone — measured on the one deck that carries any (11 slides)</sub> | Keynote | ✅ read + write | 10 | iwork16→current |
+| Slides: changing the layout (setLayout)<br><sub>setLayout re-instantiates the title, body and slide-number placeholders from the new master, carries the text, keeps every other drawable and drops the old placeholders — the shape the app's own Format ▸ Slide Layout left in olekristensen-v26.0-mac-authored.key</sub> | Keynote | ✅ read + write | 10 | iwork16→current |
 | Slides from a layout (addSlide master)<br><sub>addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape the corpus states for all 49 content slides against their masters: template reference, note and slide-number attachment added; name, object placeholder, style lists and thumbnail texts dropped; placeholder presence equal to the master's</sub> | Keynote | ✅ read + write | 10 | iwork16→current |
 | Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 2 | current→current |
 
@@ -169,7 +170,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-65 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+66 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -236,6 +237,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Keynote → **Slide placeholders (title, body, slide number) — read and fill**
 - 🟠 medium — Keynote → **Skipped slides**
 - 🟠 medium — Keynote → **Slide background (read + set)**
+- 🟠 medium — Keynote → **Slides: changing the layout (setLayout)**
 - 🟠 medium — Keynote → **Slides from a layout (addSlide master)**
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 
