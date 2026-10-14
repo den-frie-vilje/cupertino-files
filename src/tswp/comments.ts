@@ -28,11 +28,15 @@ import type { Component, ObjectStore } from "../tsp/store.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { APPLE_EPOCH_MS } from "../base/bytes.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
+import { findDrawableCore } from "../tsd/drawables.ts";
+import { Drawable } from "../tsd/schema.ts";
+import { ShapeInfo, Storage } from "./schema.ts";
 import { randomUuid } from "../base/uuid.ts";
 
 /** Archive types in the comment graph. */
 export const COMMENT_TYPE = {
   HIGHLIGHT: 2013,
+  CANVAS_COMMENT: 2014,
   COMMENT_STORAGE: 3056,
   AUTHOR: 212,
   AUTHOR_STORAGE: 213,
@@ -82,6 +86,51 @@ export interface CommentInfo {
   created: Date | undefined;
   /** Threaded replies, which this library reads but does not create. */
   replyCount: number;
+}
+
+/** A comment pinned to a sheet or a slide rather than to a run of text. */
+export interface CanvasComment {
+  text: string;
+  /** The sheet or slide the comment sits on. */
+  containerId: bigint;
+  /** The `TSWP.CommentInfoArchive`, the box that holds the text. */
+  commentInfoId: bigint;
+  commentStorageId: bigint | undefined;
+  authorId: bigint | undefined;
+  authorName: string | undefined;
+  created: Date | undefined;
+}
+
+/** TSWP.CommentInfoArchive: super (a shape) = 1, comment_storage = 2. */
+const CanvasCommentFields = protoFields("TSWP.CommentInfoArchive", { SUPER: "super", COMMENT_STORAGE: "comment_storage" });
+
+/**
+ * The comments pinned to a canvas: Numbers puts them on a sheet, Keynote
+ * on a slide. Each is a `TSWP.CommentInfoArchive`, a shape whose owned
+ * storage holds the words, with a comment storage for the author and the
+ * date whose own text is empty.
+ */
+export function canvasComments(store: ObjectStore, containerId: bigint): CanvasComment[] {
+  const out: CanvasComment[] = [];
+  for (const { obj } of store.allObjects()) {
+    if (obj.type !== COMMENT_TYPE.CANVAS_COMMENT) continue;
+    if (refId(findDrawableCore(obj.message), Drawable.PARENT) !== containerId) continue;
+    const storageId = refId(obj.message.getMessage(CanvasCommentFields.SUPER), ShapeInfo.OWNED_STORAGE);
+    const storage = storageId === undefined ? undefined : store.object(storageId);
+    const commentStorageId = refId(obj.message, CanvasCommentFields.COMMENT_STORAGE);
+    const comment = commentStorageId === undefined ? undefined : store.object(commentStorageId);
+    const meta = comment ? readCommentStorage(store, comment) : undefined;
+    out.push({
+      text: storage?.message.getStrings(Storage.TEXT).join("") ?? "",
+      containerId,
+      commentInfoId: obj.identifier,
+      commentStorageId,
+      authorId: meta?.authorId,
+      authorName: meta?.authorName,
+      created: meta?.created,
+    });
+  }
+  return out;
 }
 
 export interface AddCommentOptions {

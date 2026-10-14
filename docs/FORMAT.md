@@ -27,8 +27,8 @@ Keynote for macOS/iOS/iCloud.
 
 The IWA generation has been structurally stable from 2013 through today:
 Apple evolves it by **adding** protobuf fields and type IDs, never by
-reusing or reshaping existing ones (verified by diffing the 2013, 14.4 and
-15.1 schema dumps: every shared field number is unchanged; changes are
+reusing or reshaping existing ones (verified by diffing the 2013, 14.4,
+15.1 and 15.4 schema dumps: every shared field number is unchanged; changes are
 additions plus a handful of renames). Version markers moved from "5.x" to year-based
 "26.x" in 2025 with no structural change.
 
@@ -1194,8 +1194,8 @@ Three traps:
   entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
   7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
-  from the live-app harvest. The complete table — 345 names, every function
-the 15.1 build registers — is read from the registration code in the
+  from the live-app harvest. The complete table — 363 names, every function
+the 15.4 build registers — is read from the registration code in the
 app's TSTables framework (`scripts/harvest-functions.ts --binary`), and
 the document harvest confirms every one it reaches. Guessing beyond that would
 convert a visible gap into silent wrong answers, so unknown ids render as
@@ -1508,7 +1508,7 @@ written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
 enums, same arity, silently wrong.
 
 **What cannot be looked up is listed rather than hidden.** The dumps are
-one release of the applications (15.1), so a field a newer release adds is
+one release of the applications (15.4), so a field a newer release adds is
 declared with `measuredFields`, which requires a sentence of evidence and
 refuses a number the schema already defines — when a refreshed dump
 contains it, the declaration throws until it moves. Archive
@@ -1553,7 +1553,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3159 of 3159 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3250 of 3250 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style — the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one — the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1715,7 +1715,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3159 storages carry the field and **zero** declare it. What
+fixtures here, 3250 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to* — the paragraph, list and
 column styles — plus same-component placeholders.
 
@@ -1752,7 +1752,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3159 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3250 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal — always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |

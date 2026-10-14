@@ -260,16 +260,24 @@ export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = 
   [KN_TYPE.NOTE, noteExtractor],
 ]);
 
+// Declared here rather than imported from builds.ts, which imports this file.
+const BuildOwner = protoFields("KN.BuildArchive", { DRAWABLE: "drawable" });
+const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
+
 /**
- * The container rule, for the one Keynote drawable the shared map cannot
- * name: `KN.PlaceholderArchive` (types 7 and 12) reaches
- * `TSD.DrawableArchive` three supers down, and its `parent` is the slide.
- * Measured: 706 of 706 corpus placeholders carry the parent, zero declare
- * it. The type ids are Keynote-local (7 means something else in every
- * other app), so the rule lives here and is composed per app in
- * `tsa/document.ts` rather than added to the shared, app-blind map.
+ * The container rule, for the Keynote archives the shared map cannot
+ * name. `KN.PlaceholderArchive` (types 7 and 12) reaches
+ * `TSD.DrawableArchive` three supers down, and its `parent` is the slide:
+ * 706 of 706 corpus placeholders carry the parent, zero declare it. A
+ * `KN.BuildArchive` carries its drawable and a `KN.BuildChunkArchive` its
+ * build, and no corpus build or chunk declares either. The type ids are
+ * Keynote-local (7 means something else in every other app), so the rule
+ * lives here and is composed per app in `tsa/document.ts` rather than
+ * added to the shared, app-blind map.
  */
 export function keynoteContainerParent(type: number, m: RawMessage): bigint | undefined {
+  if (type === KN_TYPE.BUILD) return refId(m, BuildOwner.DRAWABLE);
+  if (type === KN_TYPE.BUILD_CHUNK) return refId(m, BuildChunkOwner.BUILD);
   if (type !== KN_TYPE.PLACEHOLDER && type !== KN_TYPE.PLACEHOLDER_ALT) return undefined;
   let node: RawMessage | undefined = m;
   for (let i = 0; i < 3 && node; i++) {

@@ -1413,7 +1413,7 @@ export const CAPABILITIES: Capability[] = [
         "TSTables framework pairs every function name with its index; scripts/function-registry.ts " +
         "reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with " +
         "the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, " +
-        "345 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
+        "363 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
         "renders by name",
       risk: "medium",
     },
@@ -1513,7 +1513,7 @@ export const CAPABILITIES: Capability[] = [
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
       "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
-      "target's owner UUID), nested calls, omitted arguments, and any of the 345 named " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 363 named " +
       "functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula " +
       "rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with " +
       "its own text saves the whole document byte-identical to the original. Nothing " +
@@ -1811,6 +1811,12 @@ export const CAPABILITIES: Capability[] = [
         "shows the title dissolving in on the first click; a failure shows it already present, " +
         "or the deck refused, which means the build needs state only the app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote " +
+        "\"It worked\" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app " +
+        "kept the build and its chunk field for field, reseeded the random number and minted new " +
+        "chunk uids, and dropped the two references the library had declared on them: a build's " +
+        "drawable and a chunk's build are carried and never declared, which the container rule now states.",
     },
   },
   {
@@ -1910,6 +1916,12 @@ export const CAPABILITIES: Capability[] = [
         "groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows " +
         "flat or a refusal to open, which means the definition needs state only the app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Numbers 15.1.** The checker opened seed-category.numbers and wrote \"Works\" " +
+        "as a comment on the sheet (`olekristensen-v26.0-mac-category-seed.numbers`). The app kept the " +
+        "group column, the tree and its node ids, re-minted the node uids, and dropped the donor's " +
+        "old root node, whose declaration the library had left on the archive; addCategory now " +
+        "retires it with the node.",
     },
   },
   {

@@ -50,7 +50,7 @@ reverse-engineering of it, measured from real documents.
 ### Numbers
 
 - **Cells** — read and write every value type; formatting, styles, and comments survive your edits
-- **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 345 functions
+- **Formulas** — author them as text — `=SUM(A1:A5)`, `=Other::B2` — 363 functions
 - **Formatting** — fills, borders, alignment, wrap; number, currency, date and duration formats; bands
 - **Structure** — sheets and tables (add, rename, move, remove), rows and columns, merges, column widths
 - **More** — conditional rules, cell controls, and category regrouping write too; filter sets toggle and switch mode, though their rules read only, as do category groups

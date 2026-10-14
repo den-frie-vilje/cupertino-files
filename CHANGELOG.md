@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A build and its chunk no longer declare the drawable and the build they
+  point at; the apps never do, and Keynote dropped the declarations on
+  resave.
+- `addCategory` retires the table's previous root group node with its
+  declaration instead of leaving both beside the new root.
 - Reading a filter rule on a table's first column threw: the rule's
   column is a signed offset from the app's host column stored in an
   unsigned field, and column A reads as the wrapped value. The reader
@@ -134,6 +139,15 @@ in commit messages and pull requests.
 
 ### Added
 
+- `canvasComments()` on a Numbers document and on a Keynote slide reads
+  the comments pinned to a sheet or a slide, with author and date.
+- The vendored schemas are the 15.4 applications': the stylesheet's
+  versioned-style snapshots for 15.2 to 15.4, a sheet's hidden flag and
+  tab colour, and Keynote's custom build angle, blur and text-alignment
+  attributes are now named fields.
+- Formulas may use the 18 functions Numbers 15.4 adds (ACOT, ACOTH, COT,
+  COTH, CSC, CSCH, SEC, SECH, XOR, COMBINA, GAMMA, PHI, FISHER,
+  FISHERINV, PERMUTATIONA, DAYS, PEARSON, RSQ); 363 are named.
 - `addFilterRule(column, { operator, value })` adds a row-filter rule
   comparing a column's cells with a number or a string, written as the
   app writes one, switches the filter on and writes the rows it hides,

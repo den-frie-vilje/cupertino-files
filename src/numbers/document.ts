@@ -19,6 +19,7 @@ import { chartToMarkdown, joinBlocks, namedTable, type MarkdownOptions } from ".
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -213,6 +214,11 @@ export class NumbersDocument extends IWorkDocument {
       }
     }
     return out;
+  }
+
+  /** The comments pinned to the sheets' canvases, every sheet in tab order; `cellComments()` on a table reads the ones on cells. */
+  canvasComments(): CanvasComment[] {
+    return this.sheets().flatMap((sheet) => canvasComments(this.store, sheet.id));
   }
 
   /**

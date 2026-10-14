@@ -1207,3 +1207,17 @@ node scripts/scan-fixture-privacy.ts
   from Insert ▸ Table (5×4, one header row and column, name hidden), a
   text box and a slide background colour, and a wipe build on a title.
   Text is the request itself.
+
+### olekristensen-v26.0-mac-category-seed.numbers
+- 134,859 bytes, md5 `3ab17bc798b99f1af49dcecb22fa0a1a`
+- Saved by M15.1-7044.0.271-2 (macOS Numbers) over seed-category.numbers,
+  a blank document whose table this library categorised by its Kind
+  column from nothing. The app regrouped it and the checker commented
+  "Works" on the sheet. The table's name is the request itself.
+
+### olekristensen-v26.0-mac-build-seed.key
+- 544,864 bytes, md5 `dd7ae923d66ca55d71ca4a28dbbd2bd8`
+- Saved by M15.1.1-7044.0.273-2 (macOS Keynote) over seed-build.key, a
+  blank deck whose title this library gave a dissolve build from nothing.
+  The app played it and the checker commented "It worked" on the slide.
+  The title is the request itself.

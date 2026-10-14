@@ -16,7 +16,7 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 23 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 21 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
@@ -27,25 +27,23 @@ person to look at a rendered document, because the scripting dictionaries expose
 | 2 | 🔴 high | Keynote → Slide copies in a Keynote-saved deck (per-slide components) | Keynote SAVES a deck in which this library added or duplicated a slide of a Keynote-saved, per-slide-component deck. | manual |
 | 3 | 🟠 medium | Drawables & media → Floating (non-inline) drawable placement | a drawable copied into a page's floating list is placed and rendered by Pages | manual |
 | 4 | 🟠 medium | Drawables & media → Text boxes: adding one | Keynote and Pages draw a text box this library copied and re-worded. | manual |
-| 5 | 🟠 medium | Keynote → Builds: creating an animation | Keynote plays a build this library wrote from nothing. | manual |
-| 6 | 🟠 medium | Keynote → Pictures on slides (addImage) | Keynote draws a picture this library added to a slide, at the size and position asked. | manual |
-| 7 | 🟠 medium | Keynote → Slide background (read + set) | Keynote draws a background this library set as a variation of the layout's style. | manual |
-| 8 | 🟠 medium | Keynote → Slides from a layout (addSlide master) | Keynote opens a slide this library instantiated from a layout, drawn as that layout. | manual |
-| 9 | 🟠 medium | Keynote → Slides: changing the layout (setLayout) | Keynote draws a slide this library moved to another layout as that layout. | manual |
-| 10 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
-| 11 | 🟠 medium | Numbers & tables → Categories: defining a category by a column | Numbers draws a category this library defined from nothing, with the groups collapsed under their values. | manual |
-| 12 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
-| 13 | 🟠 medium | Numbers & tables → Filters: adding a comparison rule | Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names. | manual |
-| 14 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
-| 15 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
-| 16 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
-| 17 | 🟠 medium | Numbers & tables → Tables from nothing on a page or a slide | Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide. | manual |
-| 18 | 🟠 medium | Pages → Master-page drawables | Pages repeats a drawable this library moved to the section master on every page. | manual |
-| 19 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 20 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 21 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
-| 22 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 23 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 5 | 🟠 medium | Keynote → Pictures on slides (addImage) | Keynote draws a picture this library added to a slide, at the size and position asked. | manual |
+| 6 | 🟠 medium | Keynote → Slide background (read + set) | Keynote draws a background this library set as a variation of the layout's style. | manual |
+| 7 | 🟠 medium | Keynote → Slides from a layout (addSlide master) | Keynote opens a slide this library instantiated from a layout, drawn as that layout. | manual |
+| 8 | 🟠 medium | Keynote → Slides: changing the layout (setLayout) | Keynote draws a slide this library moved to another layout as that layout. | manual |
+| 9 | 🟠 medium | Numbers & tables → Add and remove tables on a sheet | the app keeps a library-minted registration, so a cross-table reference to the clone computes on first open | manual |
+| 10 | 🟠 medium | Numbers & tables → Conditional formatting: apply an existing rule set to more cells | re-pointing a cell's conditional-style key makes Numbers apply that rule set to it | manual |
+| 11 | 🟠 medium | Numbers & tables → Filters: adding a comparison rule | Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names. | manual |
+| 12 | 🟠 medium | Numbers & tables → Formula reading (AST rendered to text) | Rendered formula text matches what the app shows in its formula bar. | manual |
+| 13 | 🟠 medium | Numbers & tables → Table structure (rows, columns, bands, sizes, freeze, repeat) | Changed band counts, freeze and repeating-header flags, row heights and column widths take effect. | manual |
+| 14 | 🟠 medium | Numbers & tables → Table styling (banded rows, grid strokes, visibility) | Banded rows, grid strokes and the visibility toggles render as set. | manual |
+| 15 | 🟠 medium | Numbers & tables → Tables from nothing on a page or a slide | Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide. | manual |
+| 16 | 🟠 medium | Pages → Master-page drawables | Pages repeats a drawable this library moved to the section master on every page. | manual |
+| 17 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
+| 18 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
+| 19 | 🟡 low | Numbers & tables → Duration default format (a typed duration's stamp) | A duration typed through the library displays in Numbers as a duration typed in the app. | manual |
+| 20 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 21 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
 ### 1. Inline image placement in an indented column
 
@@ -95,19 +93,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run seeds -- out writes seed-text-box.key; open it in Keynote. A pass shows a second box saying 'Written by cupertino-files' below the title; a failure shows only the title, or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.
 
-### 5. Builds: creating an animation
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Keynote  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Keynote plays a build this library wrote from nothing.
-
-**Why the suite cannot settle it.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
-
-**How to settle it.** npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass shows the title dissolving in on the first click; a failure shows it already present, or the deck refused, which means the build needs state only the app writes.
-
-### 6. Pictures on slides (addImage)
+### 5. Pictures on slides (addImage)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -119,7 +105,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** `addImage` a PNG onto a fresh deck's first slide, open in Keynote: the picture must show centered at its intrinsic size, selectable and movable like an inserted one. A blank slide means the linkage failed somewhere the audit cannot see; say which slide you see.
 
-### 7. Slide background (read + set)
+### 6. Slide background (read + set)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -131,7 +117,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass shows the first slide dark green; the theme's own background, or a refused deck, is a failure.
 
-### 8. Slides from a layout (addSlide master)
+### 7. Slides from a layout (addSlide master)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -143,7 +129,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K13-slide-from-layout.key; open it in Keynote. A pass shows a last slide on the named layout with the K13 title and a body; a failure shows a blank slide, a slide on the wrong layout, or a refused deck.
 
-### 9. Slides: changing the layout (setLayout)
+### 8. Slides: changing the layout (setLayout)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Keynote  
@@ -155,7 +141,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run keynote:docs -- out writes K16-set-layout.key; open it. A pass shows the first slide on Title &amp; Bullets with its title and a bullet body; the old layout, or a refused deck, is a failure.
 
-### 10. Add and remove tables on a sheet
+### 9. Add and remove tables on a sheet
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -167,19 +153,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with =NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it means the app again reduced the reference to its cached value, and the next site to write is the engine's uuid_reference_map, populated in the round-five return by the checker's own typed twins.
 
-### 11. Categories: defining a category by a column
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Numbers draws a category this library defined from nothing, with the groups collapsed under their values.
-
-**Why the suite cannot settle it.** The suite proves the archive matches the corpus shape field for field; whether the calc engine accepts a grouping whose internal formulas it did not register itself is the app's to say.
-
-**How to settle it.** npm run seeds -- out writes seed-category.numbers; open it in Numbers. A pass shows three groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows flat or a refusal to open, which means the definition needs state only the app writes.
-
-### 12. Conditional formatting: apply an existing rule set to more cells
+### 10. Conditional formatting: apply an existing rule set to more cells
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -191,7 +165,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling
 
-### 13. Filters: adding a comparison rule
+### 11. Filters: adding a comparison rule
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -203,7 +177,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only Pear and Train with the filter on in the panel; column D filtered instead means the host is the first rule's column; every row showing or a refusal to open means the set needs state only the app writes.
 
-### 14. Formula reading (AST rendered to text)
+### 12. Formula reading (AST rendered to text)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -215,7 +189,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers in Numbers, click the formula cells, and compare the formula bar with cellFormula(). Expect =B2*C2 and =SUM(C3:K6).
 
-### 15. Table structure (rows, columns, bands, sizes, freeze, repeat)
+### 13. Table structure (rows, columns, bands, sizes, freeze, repeat)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -227,7 +201,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check the header/footer controls in the inspector show what we set and that scrolling freezes correctly. For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.
 
-### 16. Table styling (banded rows, grid strokes, visibility)
+### 14. Table styling (banded rows, grid strokes, visibility)
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -239,7 +213,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against the same settings applied through the Table inspector on an untouched copy.
 
-### 17. Tables from nothing on a page or a slide
+### 15. Tables from nothing on a page or a slide
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
@@ -251,7 +225,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** npm run seeds -- out writes seed-table.pages and seed-table.key; open each. A pass shows the 3×2 table with its three rows where the text says; a missing or empty table, or a refused file, is a failure.
 
-### 18. Master-page drawables
+### 16. Master-page drawables
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Pages  
@@ -263,7 +237,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the page-1 graphic on every page of the section; only on page 1, or gone, is a failure.
 
-### 19. Categories: enable or disable grouping
+### 17. Categories: enable or disable grouping
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -275,7 +249,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
 
-### 20. Conditional formatting rules
+### 18. Conditional formatting rules
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -287,7 +261,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
 
-### 21. Duration default format (a typed duration's stamp)
+### 19. Duration default format (a typed duration's stamp)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Numbers & tables  
@@ -299,7 +273,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the inspector; a failure shows a bare number or an inspector reading other than Duration, which means the written field set differs from a fresh cell's.
 
-### 22. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 20. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -311,7 +285,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 23. Table of contents (rules read + write, cached entries read)
+### 21. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -325,7 +299,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-43 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+45 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Builds (animations): read and retime
@@ -335,6 +309,22 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation
 
 **Outcome.** **Half confirmed, half refuted (2026-08-03, the first animated deck anywhere), then closed whole when the deck's bytes arrived.** Confirmed: three builds survive authoring and resave, the slide↔build graph reads correctly, and delivery stores English display strings ("All at Once", "By Paragraph") even under a Danish UI. Refuted: every database_* field read for effect and timing was absent from the app-authored builds — including one given 3 s duration and 1 s delay by hand — so modern Keynote packs effect and timing into animationAttributes. The returned deck settled that field as KN.AnimationAttributesArchive (in the vendored schema all along): effect strings in two schemes, duration/delay doubles, and per-chunk timing on staged delivery. The deck is now the fixture the readers are pinned against
+
+### ✅ Builds: creating an animation
+
+**Was claimed.** Keynote plays a build this library wrote from nothing.
+
+**Why it needed an app.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
+
+**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states.
+
+### ✅ Categories: defining a category by a column
+
+**Was claimed.** Numbers draws a category this library defined from nothing, with the groups collapsed under their values.
+
+**Why it needed an app.** The suite proves the archive matches the corpus shape field for field; whether the calc engine accepts a grouping whose internal formulas it did not register itself is the app's to say.
+
+**Outcome.** **Confirmed in Numbers 15.1.** The checker opened seed-category.numbers and wrote "Works" as a comment on the sheet (`olekristensen-v26.0-mac-category-seed.numbers`). The app kept the group column, the tree and its node ids, re-minted the node uids, and dropped the donor's old root node, whose declaration the library had left on the archive; addCategory now retires it with the node.
 
 ### ✅ Categories: regrouping rows after an edit
 
@@ -470,7 +460,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** AST_function_node_index is an index into an Apple-internal list that appears in no public schema. The corpus proves exactly one entry (168 = SUM, by arithmetic). Shipping a table of plausible-looking guesses would turn a visible gap into silent wrong answers.
 
-**Outcome.** **Complete for Numbers 15.1, read from the app itself.** The registration code in the TSTables framework pairs every function name with its index; scripts/function-registry.ts reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, 345 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition renders by name
+**Outcome.** **Complete for Numbers 15.1, read from the app itself.** The registration code in the TSTables framework pairs every function name with its index; scripts/function-registry.ts reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, 363 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition renders by name
 
 ### ✅ Formula writing (authoring an AST)
 

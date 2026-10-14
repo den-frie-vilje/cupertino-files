@@ -30,6 +30,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
 import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
@@ -441,6 +442,11 @@ export class KeynoteSlide {
    */
   builds(): BuildModel[] {
     return buildsOfSlide(this.store, this.object);
+  }
+
+  /** The comments pinned to this slide's canvas. */
+  canvasComments(): CanvasComment[] {
+    return canvasComments(this.store, this.id);
   }
 
   /** Take an animation off this slide. */

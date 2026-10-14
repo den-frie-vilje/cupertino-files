@@ -5,6 +5,8 @@ import { PagesDocument } from "../src/pages/document.ts";
 import { KeynoteDocument } from "../src/keynote/document.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { refId } from "../src/tsp/schema.ts";
+import { Slide } from "../src/keynote/schema.ts";
+import { GROUP_NODE_TYPE } from "../src/tst/categories.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -58,6 +60,54 @@ describe("a per-group summary the app wrote", () => {
     expect(category.aggregates()).toEqual([
       { column: 1, columnUid: category.groupColumns()[0]!.columnUid, level: 1, aggType: 1, showAsType: 0 },
     ]);
+  });
+});
+
+describe("a category the app regrouped and answered on the canvas", () => {
+  it("keeps the library's grouping, and the comment reads back", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-category-seed.numbers"));
+    const category = doc.tables()[0]!.categories()[0]!;
+    expect(category.groupColumns().map((c) => c.column)).toEqual([1]);
+    expect(category.describe()).toEqual(["Animal (2 rows)", "Fruit (2 rows)", "Transport (2 rows)"]);
+    expect(doc.canvasComments().map((c) => [c.text, c.authorName])).toEqual([["Works", "ole kristensen"]]);
+  });
+
+  it("addCategory declares the new root and lets the donor's go", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.setCell(1, 1, "a");
+    table.setCell(2, 1, "b");
+    table.deleteRows(3, table.rowCount - 3);
+    table.addCategory(1);
+    const saved = NumbersDocument.load(doc.save());
+    const category = saved.tables()[0]!.categories()[0]!;
+    const declared = category.object.getObjectReferences();
+    expect(declared.every((id) => saved.store.object(id) !== undefined)).toBe(true);
+    const roots = declared.filter((id) => saved.store.object(id)?.type === GROUP_NODE_TYPE);
+    expect(roots.length).toBe(1);
+  });
+});
+
+describe("a build the app played and answered on the slide", () => {
+  it("reads back as the dissolve the library wrote, declared by the slide alone", () => {
+    const doc = KeynoteDocument.load(fixture("olekristensen-v26.0-mac-build-seed.key"));
+    const slide = doc.slides()[0]!;
+    const builds = slide.builds();
+    expect(builds.length).toBe(1);
+    expect(builds[0]!.read().effect).toBe("apple:dissolve");
+    expect(doc.store.object(builds[0]!.id)!.getObjectReferences()).toEqual([]);
+    expect(slide.canvasComments().map((c) => c.text)).toEqual(["It worked"]);
+  });
+
+  it("addBuild leaves the build and its chunk undeclared, as the app does", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!;
+    slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
+    const saved = KeynoteDocument.load(doc.save());
+    const build = saved.slides()[0]!.builds()[0]!;
+    expect(saved.store.object(build.id)!.getObjectReferences()).toEqual([]);
+    for (const chunk of build.chunks()) expect(saved.store.object(chunk.id)!.getObjectReferences()).toEqual([]);
   });
 });
 

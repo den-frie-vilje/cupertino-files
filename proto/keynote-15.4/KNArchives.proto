@@ -53,6 +53,8 @@ message TransitionAttributesArchive {
   optional .KN.TransitionAttributesArchive.TransitionCustomAttributesTextDeliveryType custom_text_delivery_type = 16;
   optional bool custom_motion_blur = 17;
   optional float custom_travel_distance = 18;
+  optional float custom_angle = 19;
+  optional float custom_blur_amount = 20;
   optional string database_animation_type = 1 [deprecated = true];
   optional string database_effect = 2 [deprecated = true];
   optional double database_duration = 3 [deprecated = true];
@@ -143,6 +145,11 @@ message BuildAttributesArchive {
     kJiggleIntensityMedium = 1;
     kJiggleIntensityLarge = 2;
   }
+  enum BuildAttributesTextAlignmentOption {
+    kTextAlignmentOptionUndefined = 0;
+    kTextAlignmentOptionFromCenter = 1;
+    kTextAlignmentOptionFromEdge = 2;
+  }
   optional .KN.AnimationAttributesArchive animationAttributes = 18;
   optional uint32 eventTrigger = 4;
   optional double delayAutomaticAfter = 6 [deprecated = true];
@@ -171,6 +178,10 @@ message BuildAttributesArchive {
   optional double custom_travel_distance = 35;
   optional bool custom_cursor = 36;
   optional bool custom_align_to_path = 37;
+  optional double custom_angle = 38;
+  optional double custom_blur_amount = 39;
+  optional .KN.BuildAttributesArchive.BuildAttributesTextAlignmentOption custom_textAlignmentOption = 40;
+  optional bool custom_blur = 41;
   optional string database_animationType = 1 [deprecated = true];
   optional string database_effect = 2 [deprecated = true];
   optional uint32 database_direction = 3 [deprecated = true];
@@ -308,6 +319,7 @@ message SlideNodeArchive {
   optional .TSP.UUID template_slide_id = 29;
   repeated .TSP.UUID live_video_source_ids = 30;
   repeated .KN.LiveVideoSourceUsageEntry live_video_source_usage_entries = 31;
+  optional bool has_comment = 32;
   optional .TSP.Reference database_thumbnail = 3 [deprecated = true];
   repeated .TSP.Reference database_thumbnails = 9 [deprecated = true];
 }

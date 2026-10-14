@@ -3,7 +3,7 @@
  *
  * Everything here rests on the harvested `AST_function_node_index` table:
  * writing `SUM` means writing Apple's integer for it, which only a
- * measured table can supply. 345 functions are authorable.
+ * measured table can supply. 363 functions are authorable.
  *
  * The check that matters most here is the **round trip through a different
  * piece of code**: text is parsed and compiled by the writer, then read
@@ -162,7 +162,7 @@ describe("compiling formulas", () => {
 
   it("knows the functions it says it knows", () => {
     const names = authorableFunctions();
-    expect(names.length).toBe(345);
+    expect(names.length).toBe(363);
     expect(names.includes("SUM")).toBe(true);
     expect(names.includes("DURATION")).toBe(true);
     // Measured by the e2e harvest on a real Numbers install.
