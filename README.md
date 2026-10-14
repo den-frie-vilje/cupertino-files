@@ -59,7 +59,7 @@ reverse-engineering of it, measured from real documents.
 
 - **Slides** — add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
 - **On a slide** — a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, add a table or a text box, set a background, make a slide from a layout, edit an embedded table cell-by-cell
-- **Decks** — slide size, auto-advance; transitions read and write; builds read, retime and remove
+- **Decks** — slide size, auto-advance; transitions read and write; builds read, create, retime and remove; slides from a layout, backgrounds
 
 ### Everywhere
 
