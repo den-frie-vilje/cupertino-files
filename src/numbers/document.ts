@@ -15,7 +15,7 @@ import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst
 import { makeRef, refId } from "../tsp/schema.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer } from "../tsd/placement.ts";
-import { chartToMarkdown, joinBlocks, tableToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, namedTable, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
@@ -121,8 +121,10 @@ export class NumbersDocument extends IWorkDocument {
       count++;
       const own = count === 1 ? doc.tablesOnSheet(sheet.id)[0] : undefined;
       const table = own ?? doc.addTable(sheet.id, { withContent: false });
-      if (name) table.name = name;
-      else if (count > 1) table.name = `Table ${count}`;
+      if (name) {
+        table.name = name;
+        table.nameVisible = true;
+      } else if (count > 1) table.name = `Table ${count}`;
       fillTable(table, rows);
       name = undefined;
     };
@@ -213,19 +215,17 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
-   * The document as Markdown: a section per sheet, each table under its
-   * name as a pipe table and each chart as a table of its series, in the
-   * sheet's own order.
+   * The document as Markdown: a top-level heading per sheet, each table
+   * under its name (when it shows one) as a pipe table and each chart as
+   * a table of its series, in the sheet's own order.
    */
   override toMarkdown(_options: MarkdownOptions = {}): string {
     const charts = new Map(this.charts().map((c) => [c.id, c]));
     return joinBlocks(
       this.sheets().map((sheet, index) =>
         joinBlocks([
-          `## ${sheet.name ?? `Sheet ${index + 1}`}`,
-          ...this.tablesOnSheet(sheet.id).map((table) =>
-            joinBlocks([table.name ? `### ${table.name}` : "", tableToMarkdown(table)]),
-          ),
+          `# ${sheet.name ?? `Sheet ${index + 1}`}`,
+          ...this.tablesOnSheet(sheet.id).map((table) => namedTable(table, 2)),
           ...this.sheetContainer(sheet.id)
             .ids()
             .map((id) => charts.get(id))

@@ -73,7 +73,7 @@ export function attachmentToMarkdown(store: ObjectStore, drawableId: bigint, opt
   if (object.type === 3005) return imageToMarkdown(new ImageModel(store, object), options);
   if (object.type === 6000) {
     const table = tablesOf(store, [drawableId])[0];
-    return table ? joinBlocks([table.name ? `### ${table.name}` : "", tableToMarkdown(table)]) : "";
+    return table ? namedTable(table, 3) : "";
   }
   return "";
 }
@@ -248,6 +248,11 @@ export function chartToMarkdown(chart: ChartModel): string {
   const title = `*${chart.chartType} chart*`;
   if (width === 0) return title;
   return [title, "", line(header), `| ${header.map(() => "---").join(" | ")} |`, ...rows].join("\n");
+}
+
+/** A table under its name as a heading of `level`, when the table shows its name. */
+export function namedTable(table: TableModel, level: number): string {
+  return joinBlocks([table.nameVisible && table.name ? `${"#".repeat(level)} ${table.name}` : "", tableToMarkdown(table)]);
 }
 
 /** Blocks joined with blank lines, empties dropped. */

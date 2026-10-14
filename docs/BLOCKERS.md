@@ -72,7 +72,11 @@ that rebuild the structures from them.
   are. The shape audit lists seven ways its archives are referenced that
   no Pages or Keynote table shares (the ledger row has them), so the
   feature is experimental and `seed-table.pages` and `seed-table.key`,
-  not the audited ladders, ask the apps.
+  not the audited ladders, ask the apps. Open beside it: copying a
+  grafted table that had been resized (`insertInlineTable` with
+  `copyOf`, four calls over a corpus round trip) left seven tables in
+  the document, not four; the default source is the donor now, and the
+  copy path's surplus is unmeasured.
 - **Slide backgrounds: shipped, unproven.** `setBackground` writes the
   variation-style shape the corpus's one deck with per-slide backgrounds
   carries; whether Keynote draws one it did not write is rung K14's

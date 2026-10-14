@@ -1036,9 +1036,12 @@ Pages renders its body — headings from the named styles ("Title",
 "Heading 2", by the template's locale-free identifiers), list
 paragraphs as list items — then its tables under their names and its
 charts; a page-layout document renders each text box instead. Numbers
-is a section per sheet, each table a pipe table whose first row is the
-header. Keynote is a section per slide, "## 1. Title", the body's
-paragraphs as list items and the presenter notes as a block quote. From
+is a top-level heading per sheet, each table a pipe table whose first
+row is the header, under its name when it shows one. Keynote is a
+section per slide, "## 1. Title", the body's paragraphs as list items,
+its pictures and tables, and the presenter notes as a block quote.
+Pictures go through an image sink and come back as links; hyperlinks,
+bold, italic and footnotes survive both ways. From
 the shell: `cupertino-files export deck.key`, `--format csv --table
 Sales`, `--format text`, `--out file.md --assets file-assets`; and back, `cupertino-files
 import notes.md deck.key` (a `.csv` source makes a Numbers table). A

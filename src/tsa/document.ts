@@ -43,7 +43,7 @@ import { SHARED_REFERENCE_EXTRACTORS } from "./extractors.ts";
 import { StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
 import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage, verifyTextStorageIntegrity } from "../tswp/textstorage.ts";
-import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, type MarkdownOptions } from "./markdown.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, type MarkdownOptions } from "./markdown.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
@@ -268,7 +268,7 @@ export class IWorkDocument {
   toMarkdown(options: MarkdownOptions = {}): string {
     return joinBlocks([
       ...this.textStorages().map((s) => storageToMarkdown(s, options)),
-      ...this.tables().map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+      ...this.tables().map((t) => namedTable(t, 3)),
       ...this.charts().map((c) => chartToMarkdown(c)),
     ]);
   }

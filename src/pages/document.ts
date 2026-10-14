@@ -7,7 +7,7 @@
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
-import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
@@ -438,7 +438,7 @@ export class PagesDocument extends IWorkDocument {
       ...text,
       ...this.tables()
         .filter((t) => !anchored.has(t.infoObject?.identifier))
-        .map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+        .map((t) => namedTable(t, 3)),
       ...this.images()
         .filter((i) => !anchored.has(i.id))
         .map((i) => imageToMarkdown(i, options)),
@@ -1317,16 +1317,16 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * Insert a table inline at a body-text position, cloned from a table
-   * already in the document.
+   * Insert a table inline at a body-text position: the neutral table
+   * every app shares — the blank Numbers document's own, Apple-made —
+   * grafted in, or with `copyOf` a copy of a table already in the
+   * document.
    *
-   * Clone-based like `NumbersDocument.addTable`, because a table's object
+   * Copy-based like `NumbersDocument.addTable`, because a table's object
    * graph — model, data store, tiles, data lists, per-band styles — is
    * far beyond what can be invented safely; every identity in the copy
-   * comes from an Apple-authored source. A document with no table gets
-   * the neutral table every app shares — the blank Numbers document's
-   * own, Apple-made — grafted in. `rows` fits and fills the table. The
-   * copy forks its data lists (the
+   * comes from an Apple-authored source. `rows` fits and fills the
+   * table. A copy forks its data lists (the
    * clone walk follows the whole table subtree), so filling it never
    * touches the source — the save-time integrity gate would refuse the
    * file if it did.
@@ -1349,11 +1349,13 @@ export class PagesDocument extends IWorkDocument {
     const body = this.body;
     const component = this.store.componentOf(body.id);
     if (!component) throw new RangeError("body component not found");
-    const sourceId =
-      options.copyOf ?? this.tables().find((t) => t.infoObject !== undefined)?.infoObject?.identifier;
+    const sourceId = options.copyOf;
     let cloneId: bigint;
     if (sourceId === undefined) {
       cloneId = graftNeutralTable(this.store, component, body.id, this.stylesheet);
+      // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
+      const grafted = tablesOf(this.store, [cloneId])[0];
+      if (grafted) grafted.nameVisible = false;
     } else {
       const source = this.store.object(sourceId);
       if (source?.type !== TST_TYPE.TABLE_INFO) {

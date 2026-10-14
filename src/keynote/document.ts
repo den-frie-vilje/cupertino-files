@@ -11,7 +11,7 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
-import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { ImageModel } from "../tsd/images.ts";
 import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
@@ -478,6 +478,8 @@ export class KeynoteSlide {
     if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
     remintTableIdentity(this.store, id);
     table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
+    // Slide tables keep their name to themselves: 0 of 3 in the corpus show it.
+    table.nameVisible = false;
     if (options.rows) fillTable(table, options.rows);
     return table;
   }
@@ -796,6 +798,12 @@ export class KeynoteDocument extends IWorkDocument {
     for (const block of parseMarkdown(markdown)) {
       switch (block.kind) {
         case "heading":
+          // The first two levels are slides; deeper headings are lines of the body.
+          if (block.level > 2) {
+            content();
+            body.push({ text: block.text, links: [], footnotes: [], bold: [], italic: [] });
+            break;
+          }
           flush();
           if (headings++ > 0 || pending) newSlide();
           slide.title = block.text;
@@ -911,7 +919,7 @@ export class KeynoteDocument extends IWorkDocument {
         `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
         body ? storageToMarkdown(body, options) : "",
         ...pictures.map((p) => imageToMarkdown(p, options)),
-        ...tables.map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+        ...tables.map((t) => namedTable(t, 3)),
         notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",
       ]);
     });
@@ -919,7 +927,7 @@ export class KeynoteDocument extends IWorkDocument {
       ...slides,
       ...this.tables()
         .filter((t) => !placed.has(t.infoObject?.identifier ?? -1n))
-        .map((t) => joinBlocks([t.name ? `### ${t.name}` : "", tableToMarkdown(t)])),
+        .map((t) => namedTable(t, 3)),
       ...this.charts().map((c) => chartToMarkdown(c)),
     ]);
   }

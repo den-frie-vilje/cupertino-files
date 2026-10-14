@@ -125,8 +125,9 @@ in commit messages and pull requests.
   inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`
   puts one on a Keynote slide — the neutral table every app shares (the
   blank Numbers document's own, Apple-made), grafted under the body or the
-  slide and sized and filled from `rows`. `insertInlineTable` no longer
-  refuses a document without a table to copy. Served as the MCP tool
+  slide and sized and filled from `rows`. `insertInlineTable` takes the
+  neutral table by default and copies a table in the document only when
+  `copyOf` names one; it no longer refuses a document without a table. Served as the MCP tool
   `add_table`; the Markdown constructors now make real tables of pipe
   tables. Experimental: neither app has yet been seen to open a table
   placed this way, and the donor is Numbers-born.
@@ -158,7 +159,8 @@ in commit messages and pull requests.
   directory on the tool, `--assets` on the command line) and linked.
   Hyperlinks render as links, bold and italic character styling as
   markers, and footnotes as references with their definitions after the
-  text. Served as the MCP tool `export_document`
+  text. A table's name heads it only when the table shows its name;
+  Numbers sheets are top-level headings and their tables second-level. Served as the MCP tool `export_document`
   (markdown, csv or text) and the CLI subcommand `cupertino-files export
   <file>`.
 

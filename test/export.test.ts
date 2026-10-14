@@ -26,8 +26,8 @@ describe("Markdown export", () => {
     table.setCell(2, 1, 42);
     const md = doc.toMarkdown();
     const sheet = doc.sheets()[0]!;
-    expect(md.startsWith(`## ${sheet.name}`)).toBe(true);
-    expect(md.includes(`### ${table.name}`)).toBe(true);
+    expect(md.startsWith(`# ${sheet.name}`)).toBe(true);
+    expect(md.includes(`## ${table.name}`)).toBe(true);
     expect(md.includes("a \\| b")).toBe(true);
     expect(md.includes("| 42 |")).toBe(true);
     const lines = md.split("\n");
@@ -212,7 +212,8 @@ describe("pictures and anchored tables in the export", () => {
         return `assets/${fileName}`;
       },
     });
-    const order = ["Before.", "### Facts", "| k | v |", "Between.", "![dot.png](assets/dot.png)"].map((s) => md.indexOf(s));
+    const order = ["Before.", "| k | v |", "Between.", "![dot.png](assets/dot.png)"].map((s) => md.indexOf(s));
+    expect(md.includes("Facts")).toBe(false);
     expect(order.every((i, n) => i >= 0 && (n === 0 || i > order[n - 1]!))).toBe(true);
     expect(written).toEqual([`dot.png:${blockPng(20, 10).length}`]);
     expect(PagesDocument.load(doc.save()).toMarkdown().includes("![")).toBe(false);
@@ -230,7 +231,8 @@ describe("pictures and anchored tables in the export", () => {
     const secondAt = md.indexOf("## 2. Second");
     expect(first >= 0 && secondAt > first).toBe(true);
     expect(md.indexOf("![dot.png](dot.png)") > secondAt).toBe(true);
-    expect(md.indexOf("### Nums") > secondAt).toBe(true);
+    expect(md.indexOf("| x |") > secondAt).toBe(true);
+    expect(md.includes("Nums")).toBe(false);
   });
 });
 
