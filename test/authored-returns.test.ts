@@ -50,6 +50,17 @@ describe("a starts-with filter rule the app wrote", () => {
   });
 });
 
+describe("a per-group summary the app wrote", () => {
+  it("reads as one aggregate on the grouping column, level 1, agg_type 1", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));
+    const category = doc.tables()[0]!.categories()[0]!;
+    expect(category.groupColumns().map((c) => c.column)).toEqual([1]);
+    expect(category.aggregates()).toEqual([
+      { column: 1, columnUid: category.groupColumns()[0]!.columnUid, level: 1, aggType: 1, showAsType: 0 },
+    ]);
+  });
+});
+
 describe("a shape the app moved to the section master", () => {
   it("is a plain reference from the odd master, the drawable without a parent, on no page", () => {
     const doc = PagesDocument.load(fixture("olekristensen-v26.0-mac-authored.pages"));
