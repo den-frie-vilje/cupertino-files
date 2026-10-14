@@ -203,6 +203,23 @@ export const RUNGS: {
     },
   },
   {
+    name: "K15-table",
+    note: "a table placed on the first slide from the neutral donor, wired to the theme's first preset, filled with three rows",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K15: a 3×2 table headed Item / Count (Apples 3, Pears 5) should sit on this slide.";
+      slide.addTable({
+        rows: [
+          ["Item", "Count"],
+          ["Apples", "3"],
+          ["Pears", "5"],
+        ],
+        x: 300,
+        y: 500,
+      });
+    },
+  },
+  {
     name: "K12-text-box",
     note: "a text box copied from the deck's own and placed on the first slide with new text",
     build: (doc) => {

@@ -5,22 +5,125 @@
  */
 import { blankDonorBytes } from "./numbers-blank-donor.generated.ts";
 import { IWorkDocument } from "./document.ts";
-import { deepCloneObjectInto } from "../tsp/clone.ts";
+import { deepCloneObjectInto, remapReferences } from "../tsp/clone.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { Component, ObjectStore } from "../tsp/store.ts";
 import { refId } from "../tsp/schema.ts";
 import { Drawable } from "../tsd/schema.ts";
 import { findDrawableCore } from "../tsd/drawables.ts";
-import { TST_TYPE } from "../tst/tables.ts";
+import { TST_TYPE, tablesOf } from "../tst/tables.ts";
 import { makeRef } from "../tsp/schema.ts";
 import type { StylesheetModel } from "../tss/stylesheet.ts";
 
 /** TST.TableModelArchive's style preset reference, reached outside the curated extractor. */
 const TABLE_MODEL_STYLE_PRESET = 48;
+/** TST.TableStylePresetArchive.style_network. */
+const PRESET_STYLE_NETWORK = 3;
+
+/**
+ * Which model style field the preset's network supplies: model field →
+ * network field. An app-written table's cell, text and category styles
+ * are the network's own members (Pages 11–12 of 14 tables, Numbers 45 of
+ * 48); the table style and name style are most often the network's too.
+ */
+const MODEL_FIELD_FROM_NETWORK: ReadonlyMap<number, number> = new Map([
+  [3, 9], // table_style
+  [24, 1], // body_text_style
+  [25, 2], // header_row_text_style
+  [26, 3], // header_column_text_style
+  [27, 4], // footer_row_text_style
+  [18, 5], // body_cell_style
+  [19, 6], // header_row_style
+  [20, 7], // header_column_style
+  [21, 8], // footer_row_style
+  [30, 10], // table_name_style
+  [36, 11], // table_name_shape_style
+  [60, 18], [61, 19], [62, 20], [63, 21], [64, 22], // category_level_n_style
+  [65, 13], [66, 14], [67, 15], [68, 16], [69, 17], // category_level_n_text_style
+  [71, 28], [72, 29], [73, 30], [74, 31], [75, 32], // label_level_n_style
+  [76, 23], [77, 24], [78, 25], [79, 26], [80, 27], // label_level_n_text_style
+  [87, 33], // pivot_body_summary_row_style
+  [88, 34], // pivot_body_summary_column_style
+  [89, 35], // pivot_header_column_summary_style
+]);
+
+/**
+ * For each role the donor's preset network fills, the imported copy of
+ * that member mapped to the host network's member of the same role.
+ */
+function networkReplacement(
+  store: ObjectStore,
+  donor: NonNullable<typeof cached>,
+  imported: ReadonlyMap<bigint, bigint>,
+  hostPresetId: bigint,
+): Map<bigint, bigint> {
+  const out = new Map<bigint, bigint>();
+  const donorPreset = donor.presetId === undefined ? undefined : donor.store.object(donor.presetId);
+  const donorNetwork = donorPreset ? donor.store.resolve(refId(donorPreset.message, PRESET_STYLE_NETWORK)) : undefined;
+  const hostPreset = store.object(hostPresetId);
+  const hostNetwork = hostPreset ? store.resolve(refId(hostPreset.message, PRESET_STYLE_NETWORK)) : undefined;
+  if (!donorNetwork || !hostNetwork) return out;
+  for (let field = 1; field <= 40; field++) {
+    const donorMember = refId(donorNetwork.message, field);
+    const hostMember = refId(hostNetwork.message, field);
+    const copy = donorMember === undefined ? undefined : imported.get(donorMember);
+    if (copy !== undefined && hostMember !== undefined) out.set(copy, hostMember);
+  }
+  return out;
+}
+
+/**
+ * Point a table model's styles at a preset's network, the way a table
+ * the app inserts takes the theme's preset: every model field the
+ * network supplies is set to the network's member, and the model names
+ * the preset. Returns the ids the model no longer references.
+ */
+export function applyTablePreset(store: ObjectStore, modelId: bigint, presetId: bigint): bigint[] {
+  const model = store.object(modelId);
+  const preset = store.object(presetId);
+  const network = preset ? store.resolve(refId(preset.message, PRESET_STYLE_NETWORK)) : undefined;
+  if (!model || !network) return [];
+  const released: bigint[] = [];
+  for (const [modelField, networkField] of MODEL_FIELD_FROM_NETWORK) {
+    if (!model.message.has(modelField)) continue;
+    const before = refId(model.message, modelField);
+    const member = refId(network.message, networkField);
+    if (member === undefined) {
+      // A role the network does not fill is one the table does not carry:
+      // an app-written table's optional styles are the network's or absent.
+      model.message.remove(modelField);
+      if (before !== undefined) released.push(before);
+      continue;
+    }
+    if (before !== undefined && before !== member) released.push(before);
+    model.message.setMessage(modelField, makeRef(member));
+  }
+  const oldPreset = refId(model.message, TABLE_MODEL_STYLE_PRESET);
+  if (oldPreset !== undefined && oldPreset !== presetId) released.push(oldPreset);
+  model.message.setMessage(TABLE_MODEL_STYLE_PRESET, makeRef(presetId));
+  model.message.markDirty();
+  return released;
+}
 /** TSS.ThemeArchive → TST.ThemePresetsArchive (extension 200) → table_style_presets. */
 const THEME_SUPER = 1;
 const THEME_TABLE_PRESETS = 200;
 const THEME_TABLE_PRESET_LIST = 1;
+
+/**
+ * The host theme's first table style preset: the one a table inserted in
+ * the app takes. Every blank Pages and Keynote theme lists six at
+ * theme.super.200.1; a document whose theme lists none gets undefined.
+ */
+export function hostTablePreset(store: ObjectStore): bigint | undefined {
+  for (const { obj } of store.allObjects()) {
+    if (!/ThemeArchive$/.test(store.typeNameOf(obj) ?? "")) continue;
+    const list = obj.message.getMessage(THEME_SUPER)?.getMessage(THEME_TABLE_PRESETS)?.getMessages(THEME_TABLE_PRESET_LIST);
+    const first = list?.[0]?.getVarint(1);
+    const target = first === undefined ? undefined : store.object(first);
+    if (target && store.typeNameOf(target) === "TST.TableStylePresetArchive") return first;
+  }
+  return undefined;
+}
 
 /**
  * List a table style preset in the host theme, where the apps keep every
@@ -99,18 +202,36 @@ export function graftNeutralTable(
   stylesheet?: StylesheetModel,
 ): bigint {
   const donor = neutralTableDonor();
+  // With a host stylesheet (Pages, Keynote) the table takes the host
+  // theme's first preset, as a table inserted in the app does, and the
+  // donor's own styles go; without one (Numbers) the donor's preset and
+  // styles come along, the app-confirmed shape.
+  const hostPreset = stylesheet ? hostTablePreset(store) : undefined;
   const { clone, map } = deepCloneObjectInto(store, donor.store, donor.info, {
     component,
     rebind: new Map([[donor.parentId, parentId]]),
-    ...(donor.presetId !== undefined ? { extraRoots: [donor.presetId] } : {}),
+    ...(donor.presetId !== undefined && hostPreset === undefined ? { extraRoots: [donor.presetId] } : {}),
   });
-  if (stylesheet) {
+  const model = tablesOf(store, [clone.identifier])[0]?.object;
+  if (hostPreset !== undefined && model) {
+    applyTablePreset(store, model.identifier, hostPreset);
+    // The cell-level styles the donor's data lists reference stay — an
+    // app-written table's are listed nowhere and hang off a network member
+    // as their parent — but re-parented onto the host network's member of
+    // the same role, so the donor's own members go.
+    const replacement = networkReplacement(store, donor, map, hostPreset);
+    for (const id of map.values()) {
+      const object = store.object(id);
+      if (!object) continue;
+      remapReferences(object.message, replacement);
+      object.message.markDirty();
+    }
+    store.discardUnreachable(clone.identifier, map.values());
+  } else if (stylesheet) {
     for (const id of map.values()) {
       const object = store.object(id);
       if (object && STYLE_TYPES.has(object.type)) stylesheet.adopt(id);
     }
-    // The preset that came with the table is the theme's to list, as
-    // every corpus preset is listed by its document's theme.
     const preset = donor.presetId === undefined ? undefined : map.get(donor.presetId);
     if (preset !== undefined) listTablePresetInTheme(store, preset);
   }

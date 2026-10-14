@@ -322,6 +322,41 @@ export class ObjectStore {
     return removed;
   }
 
+  /**
+   * Drop the `candidates` that `from` no longer reaches — the same crude
+   * walk as {@link prune}, confined to a set this library just created,
+   * so an object the walk cannot see is never at risk. Returns how many
+   * were dropped.
+   */
+  discardUnreachable(from: bigint, candidates: Iterable<bigint>): number {
+    const pool = new Set(candidates);
+    const reachable = new Set<bigint>();
+    const queue = [from];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (reachable.has(id)) continue;
+      reachable.add(id);
+      const object = this.index.get(id)?.obj;
+      if (!object) continue;
+      for (const next of referencedIds(object.message)) if (this.index.has(next) && !reachable.has(next)) queue.push(next);
+    }
+    let removed = 0;
+    for (const component of this.components) {
+      if (component.isOpaque) continue;
+      const drop = component.objects.filter((o) => pool.has(o.identifier) && !reachable.has(o.identifier));
+      if (drop.length === 0) continue;
+      for (const object of drop) {
+        component.byId.delete(object.identifier);
+        this.index.delete(object.identifier);
+        this.created.delete(object.identifier);
+        removed++;
+      }
+      component.objects = component.objects.filter((o) => !drop.includes(o));
+      component.structurallyDirty = true;
+    }
+    return removed;
+  }
+
   // ------------------------------------------------------------- Data/ files
 
   /** Files to add to the package on save (e.g. "Data/photo.png"). */

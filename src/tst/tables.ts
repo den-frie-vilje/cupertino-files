@@ -4953,6 +4953,32 @@ export function cellValueToString(v: CellValue): string {
  * which enumerates anchors first and falls back here for anything
  * unreachable.
  */
+/**
+ * The table info an owner-side archive carries and never declares: the
+ * calc engine's formula-owner dependencies at field 11, and the summary
+ * model, summary cell vendor and category order at field 1. Measured
+ * across the corpus: 69, 65, 65 and 65 carry one, none declares it, in
+ * every app — the container rule a drawable's parent follows, one type
+ * family over.
+ */
+const TABLE_INFO_OWNER_FIELD: ReadonlyMap<number, number> = new Map([
+  [4008, 11], // TSCE.FormulaOwnerDependenciesArchive
+  [6316, 1], // TST.SummaryModelArchive
+  [6317, 1], // TST.SummaryCellVendorArchive
+  [6318, 1], // TST.CategoryOrderArchive
+]);
+
+/** The table info a created owner-side archive points back at, to leave undeclared. */
+export function tableInfoOwner(type: number, message: RawMessage): bigint | undefined {
+  const field = TABLE_INFO_OWNER_FIELD.get(type);
+  if (field === undefined) return undefined;
+  try {
+    return refId(message, field);
+  } catch {
+    return undefined;
+  }
+}
+
 export function tablesOf(store: ObjectStore, drawableIds?: readonly bigint[]): TableModel[] {
   const out: TableModel[] = [];
   const fromInfo = (info: IwaObject): void => {

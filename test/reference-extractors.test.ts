@@ -39,6 +39,7 @@ import {
 } from "../src/index.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { drawableParent } from "../src/tsd/schema.ts";
+import { tableInfoOwner } from "../src/tst/tables.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
@@ -185,6 +186,42 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     ["TSD.MovieArchive", 0],
     ["TST.TableInfoArchive", 0],
   ]);
+
+  it("matches the corpus for every owner-side archive that carries its table info", () => {
+    const tally = new Map<string, { carry: number; declare: number }>();
+    for (const name of readdirSync(FIXTURES)) {
+      const Doc = name.endsWith(".pages")
+        ? PagesDocument
+        : name.endsWith(".numbers")
+          ? NumbersDocument
+          : name.endsWith(".key")
+            ? KeynoteDocument
+            : undefined;
+      if (!Doc) continue;
+      let doc: PagesDocument | NumbersDocument | KeynoteDocument;
+      try {
+        doc = (Doc as typeof PagesDocument).load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        const info = tableInfoOwner(obj.type, obj.message);
+        if (info === undefined) continue;
+        const key = typeName(obj.type) ?? String(obj.type);
+        let t = tally.get(key);
+        if (!t) tally.set(key, (t = { carry: 0, declare: 0 }));
+        t.carry++;
+        if (obj.getObjectReferences().includes(info)) t.declare++;
+      }
+    }
+    const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
+    expect(summary).toEqual([
+      "TSCE.FormulaOwnerDependenciesArchive 0/69",
+      "TST.CategoryOrderArchive 0/65",
+      "TST.SummaryCellVendorArchive 0/65",
+      "TST.SummaryModelArchive 0/65",
+    ]);
+  });
 
   it("matches the corpus for every drawable type the store subtracts", () => {
     const tally = new Map<number, { carry: number; declare: number }>();

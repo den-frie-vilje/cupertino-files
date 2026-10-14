@@ -477,6 +477,21 @@ export const RUNGS: {
       doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
     },
   },
+  {
+    name: "P22-inline-table",
+    note: "a table appended to the body from the neutral donor, wired to the theme's first preset, filled with three rows",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P22: below this line a 3×2 table should follow, headed Item / Count, with Apples 3 and " +
+          "Pears 5. No table, an empty one, or a refused file are each a failure.",
+      );
+      doc.appendTable([
+        ["Item", "Count"],
+        ["Apples", "3"],
+        ["Pears", "5"],
+      ]);
+    },
+  },
 ];
 
 function main(argv: string[]): number {

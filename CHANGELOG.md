@@ -9,6 +9,14 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table grafted onto a Pages page or a Keynote slide now takes the
+  host theme's first table style preset: its styles are the preset
+  network's members and its cell-level styles hang off them, the way a
+  table the app inserts is wired, instead of carrying a Numbers theme's
+  styles along. The feature is no longer marked experimental.
+- The calc engine's formula-owner dependencies and a table's summary
+  model, summary cell vendor and category order no longer declare the
+  table info they belong to; none written by the apps does.
 - A table model this library creates or edits declares its references
   the way the apps do: every one but the style preset (no corpus model
   declares it) and none of the numbers inside its merge owner and
@@ -140,8 +148,7 @@ in commit messages and pull requests.
   neutral table by default and copies a table in the document only when
   `copyOf` names one; it no longer refuses a document without a table. Served as the MCP tool
   `add_table`; the Markdown constructors now make real tables of pipe
-  tables. Experimental: neither app has yet been seen to open a table
-  placed this way, and the donor is Numbers-born.
+  tables. Neither app has yet been seen to open a table placed this way.
 
 - `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
   `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`

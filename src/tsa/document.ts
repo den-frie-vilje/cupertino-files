@@ -45,6 +45,7 @@ import { TSS_TYPE } from "../tss/schema.ts";
 import { TextStorage, verifyTextStorageIntegrity } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, type MarkdownOptions } from "./markdown.ts";
 import { StylesheetModel } from "../tss/stylesheet.ts";
+import { tableInfoOwner } from "../tst/tables.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { imagesOf, type ImageModel } from "../tsd/images.ts";
 import { chartsOf, type ChartModel } from "../tsch/charts.ts";
@@ -60,8 +61,9 @@ import { tablesOf, verifyCellStorageIntegrity, type AuditFinding, type TableMode
  * for `load` and `open` alike.
  */
 function containerParentFor(app: IWorkApp): ContainerParentResolver {
-  if (app !== "keynote") return drawableParent;
-  return (type, message) => keynoteContainerParent(type, message) ?? drawableParent(type, message);
+  if (app !== "keynote") return (type, message) => drawableParent(type, message) ?? tableInfoOwner(type, message);
+  return (type, message) =>
+    keynoteContainerParent(type, message) ?? drawableParent(type, message) ?? tableInfoOwner(type, message);
 }
 
 // TSP.PackageMetadata version fields.
