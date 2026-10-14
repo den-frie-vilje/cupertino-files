@@ -31,14 +31,10 @@ and its own expected result.
   The first starting where its own paragraph's text starts is the pass;
   the two looking identical means only one mode is ever used, whatever
   the file says. Nothing to run, just open and look.
-- `seed-collaboration.pages` — open, share via the Samarbejd button (no
-  invitation needs sending), save, run the probe, send the file back,
-  stop sharing. Collaboration rewrites the package with the two
-  components nothing else writes — `OperationStorage.iwa` and
-  `ActivityStream.iwa`, LZFSE-framed beside Snappy — and the decoder now
-  reads the framing but has never seen a real payload: the returned file
-  is both the first redistributable specimen and the measurement of what
-  the decoded bytes mean.
+- The collaboration seed is withdrawn: sharing needs iCloud Drive, and
+  the checker will not enable it on the work Mac (»skip the collaboration
+  features for now, i don't want to enable icloud drive on my work mac«).
+  The question it carried stays open below.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
@@ -147,9 +143,10 @@ that rebuild the structures from them.
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
   any opaque component, but no redistributable document carries an
-  `OperationStorage.iwa` to measure the decoded payload against — the
-  staged collaboration seed above is the path. Until then the document
-  model keeps LZFSE components opaque and byte-preserved.
+  `OperationStorage.iwa` to measure the decoded payload against, and a
+  shared document needs iCloud Drive, which the checker has declined to
+  enable. Deferred; the document model keeps LZFSE components opaque and
+  byte-preserved.
 
 ## Standing caveats — deliberate, not pending
 

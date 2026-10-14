@@ -48,30 +48,6 @@ interface Seed {
 
 const outDir = process.argv[2] ?? "out";
 
-// ---------------------------------------------------------- collaboration
-
-function seedCollaboration(): Uint8Array {
-  // Turning on Pages' collaboration rewrites the package with two
-  // components nothing else writes — OperationStorage.iwa and
-  // ActivityStream.iwa, LZFSE-framed beside the Snappy ones — and no
-  // redistributable document carries them. The library now decodes the
-  // framing; what the decoded payload *means* is the open question, and
-  // only a returned file can answer it.
-  const doc = PagesDocument.blank();
-  doc.appendParagraph(
-    "SEED · samarbejdstilstand (docs/BLOCKERS.md). Dette dokument skal have slået samarbejde til og arkiveres — det omskriver pakken med to komponenter, ingen andre dokumenter har, og som biblioteket nu kan afkode men aldrig har målt.",
-  );
-  doc.appendParagraph(
-    "1) Åbn dokumentet i Pages (kræver iCloud-login). 2) Tryk på Samarbejd-knappen i værktøjslinjen og del med \"Kun personer, du inviterer\" — du behøver ikke sende invitationen til nogen. 3) Arkivér (⌘S), luk, og kør: npm run probe -- seed-collaboration.pages — afsnit 8 viser, hvad afkoderen ser i de nye komponenter. 4) Send filen retur. 5) Du kan bagefter slå delingen fra igen (Samarbejd → Administrer delt dokument → Stop deling).",
-    "Body",
-  );
-  doc.appendParagraph(
-    "Hvis Pages nægter at dele, eller proben stadig viser 'every component parsed', er dét fundet — så skriver din version samarbejdsloggen et andet sted.",
-    "Body",
-  );
-  return doc.save();
-}
-
 // ------------------------------------------------------------ inline image
 
 function seedInlineImage(): Uint8Array {
@@ -411,15 +387,6 @@ const seeds: Seed[] = [
       if (indents.slice(1).some((v) => Math.round(v) !== 113)) {
         throw new Error(`inline image: paragraphs not indented (${indents.join(", ")})`);
       }
-    },
-  },
-  {
-    name: "seed-collaboration.pages",
-    bytes: seedCollaboration(),
-    check: (bytes) => {
-      const d = PagesDocument.load(bytes);
-      if (!d.bodyText.includes("npm run probe")) throw new Error("collaboration: command missing");
-      if (!d.bodyText.includes("Send filen retur")) throw new Error("collaboration: return ask missing");
     },
   },
 ];
