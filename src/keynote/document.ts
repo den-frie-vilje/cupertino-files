@@ -30,6 +30,7 @@ import {
   KN_REFERENCE_EXTRACTORS,
   KN_TYPE,
   KNDocument,
+  MASTER_ONLY_FIELDS,
   NO_TRANSITION_EFFECT,
   Note,
   Show,
@@ -731,11 +732,24 @@ export class KeynoteDocument extends IWorkDocument {
    * `after` is a slide index; -1 puts the new slide first. By default the
    * copy is emptied of its drawables, giving a fresh slide on the same
    * layout; pass `withContent` to duplicate outright.
+   *
+   * `master` instead instantiates a layout — one of {@link masterSlides},
+   * by name or id — the way the app's "add slide" does: the master is
+   * deep-copied, its decorations and placeholders included, and the copy
+   * is made a content slide. The corpus states the difference between a
+   * content slide and its master exactly: the slide carries a reference
+   * to the master, a note, and the slide-number placeholder's storage
+   * holds the number attachment; it never carries the master's name,
+   * object placeholder, style lists or thumbnail texts. The title and
+   * body are emptied like a copied slide's.
    * @agentTool manage_slides
    */
-  addSlide(options: { copyOf?: number; after?: number; withContent?: boolean } = {}): KeynoteSlide {
+  addSlide(
+    options: { copyOf?: number; after?: number; withContent?: boolean; master?: string | bigint } = {},
+  ): KeynoteSlide {
     const slides = this.slides();
     if (slides.length === 0) throw new RangeError("document has no slide to copy");
+    if (options.master !== undefined) return this.addSlideFromMaster(options.master, options.after ?? slides.length - 1);
     const sourceIndex = options.copyOf ?? slides.length - 1;
     const source = slides[sourceIndex];
     if (!source) throw new RangeError(`no slide at index ${sourceIndex}`);
@@ -867,6 +881,95 @@ export class KeynoteDocument extends IWorkDocument {
         this.store.moveObjectsToComponent(movers, fresh);
         // The document's own info lists each slide component at component
         // level — mirror that row for the new one.
+        this.store.declareComponentDependency(nodeComponent, slide.identifier);
+      }
+    }
+
+    const created = this.slides().find((s) => s.id === slide.identifier);
+    if (!created) throw new RangeError("slide was created but is not reachable from the tree");
+    return created;
+  }
+
+  /** A master by id, by exact name, then by case-insensitive name. */
+  private resolveMaster(master: string | bigint): IwaObject {
+    const masters = this.masterSlides();
+    const found =
+      typeof master === "bigint"
+        ? masters.find((m) => m.id === master)
+        : (masters.find((m) => m.name === master) ??
+          masters.find((m) => m.name?.toLowerCase() === master.toLowerCase()));
+    const object = found && this.store.object(found.id);
+    if (!object) {
+      throw new RangeError(
+        `no master slide ${String(master)}; the deck offers: ${masters.map((m) => m.name ?? String(m.id)).join(", ")}`,
+      );
+    }
+    return object;
+  }
+
+  private addSlideFromMaster(master: string | bigint, after: number): KeynoteSlide {
+    const masterObject = this.resolveMaster(master);
+    const slides = this.slides();
+    // The slide the new one is modelled on for what a master lacks: a
+    // note and a per-slide component.
+    const model = slides[Math.max(0, Math.min(after, slides.length - 1))]!;
+    const modelComponent = this.store.componentOf(model.object.identifier);
+    if (!modelComponent) throw new RangeError("slide has no component");
+
+    // The object placeholder stays the master's: no content slide carries
+    // one, and cloning it would leave an orphan.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone: slide, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    for (const field of MASTER_ONLY_FIELDS) slide.message.remove(field);
+    slide.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      const kept = slide.message
+        .getMessages(field)
+        .map((ref) => ref.getVarint(1))
+        .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+      if (kept.length > 0) slide.message.setMessages(field, kept.map((id) => makeRef(id)));
+      else slide.message.remove(field);
+    }
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      this.storageOfPlaceholder(slide, field)?.setText("");
+    }
+    // A content slide's slide-number placeholder holds the number
+    // attachment (40 of 44 in the corpus, the rest emptied by hand); the
+    // master's holds nothing.
+    const number = this.storageOfPlaceholder(slide, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The note: the model slide's, copied and emptied.
+    const noteIds: bigint[] = [];
+    const modelNote = this.store.resolve(refId(model.object.message, Slide.NOTE));
+    if (modelNote) {
+      const { clone: note, map: noteMap } = deepCloneObject(this.store, modelNote);
+      const storage = this.store.resolve(refId(note.message, Note.CONTAINED_STORAGE));
+      if (storage) new TextStorage(this.store, storage).setText("");
+      slide.message.setMessage(Slide.NOTE, makeRef(note.identifier));
+      noteIds.push(...noteMap.values());
+    }
+
+    const nodeComponent = this.store.componentOf(model.node.identifier) ?? modelComponent;
+    const node = this.store.createObject(model.node.type, nodeComponent, { cloneFrom: model.node });
+    node.message.remove(SlideNode.CHILDREN);
+    node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
+    node.message.setBool(SlideNode.HAS_NOTE, false);
+    this.insertSlideNode(node.identifier, after);
+
+    // Per-slide components, as addSlide keeps them: the clones were born
+    // beside the master and the note beside its model, and all of them
+    // move into a component of the slide's own, modelled on a content
+    // slide's rather than the master's.
+    if (modelComponent.locator === `Slide-${model.object.identifier}`) {
+      const fresh = this.store.createComponent(`Slide-${slide.identifier}`, modelComponent);
+      if (fresh) {
+        this.store.moveObjectsToComponent([slide.identifier, ...map.values(), ...noteIds], fresh);
         this.store.declareComponentDependency(nodeComponent, slide.identifier);
       }
     }

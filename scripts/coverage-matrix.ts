@@ -2138,6 +2138,30 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slides from a layout (addSlide master)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape " +
+      "the corpus states for all 49 content slides against their masters: template reference, note " +
+      "and slide-number attachment added; name, object placeholder, style lists and thumbnail texts " +
+      "dropped; placeholder presence equal to the master's",
+    manualProof: {
+      claim: "Keynote opens a slide this library instantiated from a layout, drawn as that layout.",
+      why:
+        "The suite proves the archive matches the corpus's content slides field for field; whether " +
+        "the app draws the copied placeholders in the layout's places, or repairs or refuses the " +
+        "slide, only the app can say.",
+      how:
+        "npm run keynote:docs -- out writes K13-slide-from-layout.key; open it in Keynote. A pass " +
+        "shows a last slide on the named layout with the K13 title and a body; a failure shows a " +
+        "blank slide, a slide on the wrong layout, or a refused deck.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Builds (animations): read and retime",
     apps: ["keynote"],
     status: "read+write",

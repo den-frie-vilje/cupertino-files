@@ -883,7 +883,9 @@ export const TOOLS: readonly Tool[] = [
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",
-      "Actions: add (copyOf + after, both 0-based slide indexes), duplicate (slide), move " +
+      "Actions: add (copyOf + after, both 0-based slide indexes; or master, a layout's name, " +
+        "to instantiate that layout instead — an unknown name's error lists the deck's), " +
+        "duplicate (slide), move " +
         "(slide + to), remove (slide), set_size (width + height in points). Keynote " +
         "documents only. Saves over the input unless output names another path.",
     ),
@@ -897,6 +899,7 @@ export const TOOLS: readonly Tool[] = [
         },
         slide: { type: "number", description: "0-based slide index the action targets" },
         after: { type: "number", description: "add: insert after this index (default: end)" },
+        master: { type: "string", description: "add: the layout (master slide) to instantiate, by name" },
         to: { type: "number", description: "move: destination index" },
         width: { type: "number", description: "set_size: points" },
         height: { type: "number", description: "set_size: points" },
@@ -914,7 +917,7 @@ export const TOOLS: readonly Tool[] = [
       const slide = num(args.slide);
       switch (action) {
         case "add":
-          doc.addSlide({ copyOf: slide, after: num(args.after) ?? doc.slideCount() - 1 });
+          doc.addSlide({ copyOf: slide, after: num(args.after) ?? doc.slideCount() - 1, master: str(args.master) });
           break;
         case "duplicate":
           if (slide === undefined) throw new RangeError("duplicate needs slide");

@@ -110,6 +110,14 @@ in commit messages and pull requests.
   tests; it was the index of a boundary entry before, which happened to
   be one less.
 
+- `doc.addSlide({ master })` makes a Keynote slide from one of the deck's
+  layouts, by name or id, as the app's own "add slide" does: the master is
+  deep-copied and the copy made a content slide, with empty title and body,
+  a note, and the slide-number attachment; the master's name, object
+  placeholder, style lists and thumbnail texts stay the master's. The MCP
+  tool `manage_slides` takes `master` on `add`. Keynote has not yet been
+  seen to open a slide made this way.
+
 - `slide.addTextBox(text, { x, y, width, height })` on a Keynote slide
   and `doc.addTextBox(pageIndex, text, placement)` in Pages add a text
   box by deep-copying one the document already carries — its own storage,

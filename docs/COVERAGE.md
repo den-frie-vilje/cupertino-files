@@ -153,6 +153,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 9 | iwork16→current |
+| Slides from a layout (addSlide master)<br><sub>addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape the corpus states for all 49 content slides against their masters: template reference, note and slide-number attachment added; name, object placeholder, style lists and thumbnail texts dropped; placeholder presence equal to the master's</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 1 | current→current |
 
 ### Concurrency
@@ -164,7 +165,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-61 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+62 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -228,6 +229,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Keynote → **Presentation settings (mode, loop, autoplay delays, slide size)**
 - 🟠 medium — Keynote → **Slide placeholders (title, body, slide number) — read and fill**
 - 🟠 medium — Keynote → **Skipped slides**
+- 🟠 medium — Keynote → **Slides from a layout (addSlide master)**
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 
 ## Validation gaps

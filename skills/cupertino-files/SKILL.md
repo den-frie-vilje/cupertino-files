@@ -933,7 +933,21 @@ Placeholders are the theme's boxes for you to fill. Setting one only works
 where the slide already carries it — creating a placeholder means
 synthesizing the geometry and style the master defines for that role, so a
 slide on a layout without a body box is told so rather than given an
-unstyled box at the origin.
+unstyled box at the origin. A slide on another layout is made from that
+layout instead:
+
+```ts
+doc.masterSlides();                                   // [{ id, name }] — the deck's layouts
+doc.addSlide({ copyOf: 0, after: 0 });                // a fresh slide on slide 0's layout
+doc.addSlide({ master: "Title & Bullets", after: 2 }); // a fresh slide on that layout
+```
+
+A layout slide is instantiated the way the app does it: the master is
+deep-copied, decorations and placeholders included, and the copy becomes
+a content slide — it points at the master, carries a note and the
+slide-number attachment, and drops the master's name, object placeholder,
+style lists and thumbnail texts. Title and body start empty. An unknown
+name's error lists the names the deck offers.
 
 ### Pictures on slides
 

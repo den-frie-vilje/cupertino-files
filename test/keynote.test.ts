@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { Slide } from "../src/keynote/schema.ts";
+import { MASTER_ONLY_FIELDS, Slide } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
@@ -838,5 +838,59 @@ describe("a text box added to a slide", () => {
     // The parent is never among a drawable's declared references.
     expect(placed.object.getObjectReferences().includes(again.id)).toBe(false);
     expect(donorStorages.has(storageId)).toBe(false);
+  });
+});
+
+describe("a slide instantiated from a layout", () => {
+  const CORPUS_SLIDE_FIELDS = [1, 4, 5, 6, 7, 17, 19, 20, 27, 28, 36];
+  const fieldsOf = (m: RawMessage): number[] => {
+    const out: number[] = [];
+    for (let n = 1; n <= 40; n++) if (m.has(n)) out.push(n);
+    return out;
+  };
+
+  it("carries what a content slide carries and nothing a master keeps for itself", () => {
+    const doc = KeynoteDocument.blank();
+    const layout = doc.masterSlides().find((m) => m.name === "Title & Bullets")!;
+    const added = doc.addSlide({ master: "title & bullets", after: 0 });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const slide = reloaded.slides()[1]!;
+    expect(slide.id).toBe(added.id);
+    expect(slide.masterId).toBe(layout.id);
+    expect(slide.name).toBe(undefined);
+    expect(fieldsOf(slide.object.message)).toEqual(CORPUS_SLIDE_FIELDS);
+    for (const field of MASTER_ONLY_FIELDS) expect(slide.object.message.has(field)).toBe(false);
+    expect(slide.placeholders().map((p) => [p.role, p.text])).toEqual([
+      ["title", ""],
+      ["body", ""],
+      ["slideNumber", "\uFFFC"],
+    ]);
+    // Its placeholders are its own, not the layout's.
+    const master = reloaded.store.object(layout.id)!;
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER]) {
+      expect(refId(slide.object.message, field)).not.toBe(refId(master.message, field));
+    }
+    expect(slide.notes).toBe("");
+    expect(reloaded.store.componentOf(slide.id)?.locator).toBe(`Slide-${slide.id}`);
+    slide.title = "Set after";
+    expect(slide.title).toBe("Set after");
+  });
+
+  it("writes the slide-number attachment the corpus decks carry, byte for byte", () => {
+    const deck = KeynoteDocument.load(fixture("zenodo-v26.1-hyperlinks-masks.key"));
+    const corpus = deck.slides()[0]!.placeholders().find((p) => p.role === "slideNumber")!;
+    const corpusAttachment = corpus.storage!.attachments()[0]!;
+    const doc = KeynoteDocument.blank();
+    const added = doc.addSlide({ master: "Title & Bullets" });
+    const ours = added.placeholders().find((p) => p.role === "slideNumber")!.storage!.attachments()[0]!;
+    expect(ours.kind).toBe(corpusAttachment.kind);
+    expect(doc.store.object(ours.objectId)!.message.toBytes()).toEqual(
+      deck.store.object(corpusAttachment.objectId)!.message.toBytes(),
+    );
+  });
+
+  it("names the deck's layouts when asked for one it lacks", () => {
+    const doc = KeynoteDocument.blank();
+    expect(() => doc.addSlide({ master: "No such layout" })).toThrow(/Title & Bullets/);
   });
 });

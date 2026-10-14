@@ -183,6 +183,17 @@ export const RUNGS: {
     },
   },
   {
+    name: "K13-slide-from-layout",
+    note: "a slide instantiated from a named layout, appended last",
+    build: (doc) => {
+      const layout = doc.masterSlides().find((m) => m.name !== undefined && /bullet|punkt/i.test(m.name)) ?? doc.masterSlides()[1];
+      if (!layout) throw new Error("deck has no layouts");
+      const added = doc.addSlide({ master: layout.id, after: doc.slideCount() - 1 });
+      added.title = `K13: this LAST slide was made from the layout '${layout.name}' — it should look like that layout, with this title and a body saying so.`;
+      if (added.placeholders().some((p) => p.role === "body")) added.body = "This body sits where the layout puts it.";
+    },
+  },
+  {
     name: "K12-text-box",
     note: "a text box copied from the deck's own and placed on the first slide with new text",
     build: (doc) => {
