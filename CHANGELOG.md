@@ -139,7 +139,10 @@ in commit messages and pull requests.
   and block quotes as presenter notes; Numbers makes a table per pipe
   table, named by the heading above. `create_document` takes `content`
   (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
-  the same from a file.
+  the same from a file. An image on a line of its own becomes an inline
+  picture in Pages or a picture on the slide in Keynote when its bytes
+  can be found: through `images` in the API, `imageRoot` on the tool,
+  and beside the source file on the command line.
 
 - `doc.toMarkdown()` renders any document as Markdown — a Pages body
   with headings from the named styles and list paragraphs as list items,

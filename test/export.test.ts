@@ -5,6 +5,8 @@ import { NumbersDocument } from "../src/numbers/document.ts";
 import { PagesDocument } from "../src/pages/document.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { refId } from "../src/tsp/schema.ts";
+import { blockPng } from "../scripts/png.ts";
+import { parseMarkdown } from "../src/tsa/markdown-parser.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -153,5 +155,28 @@ describe("building from CSV", () => {
     expect(table.cellText(1, 1)).toBe('says "hi"');
     expect(table.cellText(2, 0)).toBe("Lin, Bo");
     expect(table.toCsv()).toBe(csv.trimEnd());
+  });
+});
+
+describe("images in Markdown", () => {
+  const SOURCE = "# Pictures\n\nA line.\n\n![a block](pics/block.png)\n\n## Next\n\n![missing](nowhere.png)\n\n![web](https://example.org/x.png)\n";
+  const images = (src: string): Uint8Array | undefined => (src === "pics/block.png" ? blockPng(40, 30) : undefined);
+
+  it("parses an image on a line of its own as a block", () => {
+    const blocks = parseMarkdown(SOURCE).flatMap((b) => (b.kind === "image" ? [[b.alt, b.src]] : []));
+    expect(blocks).toEqual([
+      ["a block", "pics/block.png"],
+      ["missing", "nowhere.png"],
+      ["web", "https://example.org/x.png"],
+    ]);
+  });
+
+  it("inlines the pictures the resolver supplies and skips the rest", () => {
+    const pages = PagesDocument.load(PagesDocument.fromMarkdown(SOURCE, { images }).save());
+    expect(pages.images().length).toBe(1);
+    expect(pages.body.text.split("\uFFFC").length).toBe(2);
+    const deck = KeynoteDocument.load(KeynoteDocument.fromMarkdown(SOURCE, { images }).save());
+    expect(deck.slides()[0]!.drawables().filter((d) => d.object.type === 3005).length).toBe(1);
+    expect(deck.slides()[1]!.drawables().filter((d) => d.object.type === 3005).length).toBe(0);
   });
 });

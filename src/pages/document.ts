@@ -8,7 +8,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
-import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
@@ -301,11 +301,12 @@ export class PagesDocument extends IWorkDocument {
    * Title, Heading, Heading 2 and Heading 3 paragraphs (deeper levels
    * share Heading 3), paragraphs Body, bullet and numbered lists Body
    * items with the Bullet or Numbered list style, block quotes Body
-   * paragraphs, and a table's rows tab-separated Body lines, since a
-   * Pages table is not built from nothing here.
+   * paragraphs, each pipe table an inline table in a paragraph of its
+   * own, and each image on a line of its own an inline picture, when
+   * `images` supplies its bytes by the source the Markdown names.
    * @agentTool create_document
    */
-  static fromMarkdown(markdown: string): PagesDocument {
+  static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): PagesDocument {
     const doc = PagesDocument.blank();
     const names = new Set(doc.paragraphStyles().map((s) => s.name));
     const style = (name: string): string | undefined => (names.has(name) ? name : undefined);
@@ -325,6 +326,14 @@ export class PagesDocument extends IWorkDocument {
         case "table":
           doc.appendTable(block.rows);
           break;
+        case "image": {
+          const data = options.images?.(block.src);
+          if (!data) break;
+          const body = doc.body;
+          if (body.text.length > 0 && !body.text.endsWith("\n")) doc.appendParagraph("");
+          doc.insertInlineImage(body.text.length, data, { fileName: block.src.split("/").pop() ?? block.src });
+          break;
+        }
       }
     }
     return doc;

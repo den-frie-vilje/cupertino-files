@@ -12,7 +12,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, storageToMarkdown, tableToMarkdown } from "../tsa/markdown.ts";
-import { parseMarkdown } from "../tsa/markdown-parser.ts";
+import { parseMarkdown, type ImageResolver } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, type TableModel } from "../tst/tables.ts";
@@ -748,22 +748,27 @@ export class KeynoteDocument extends IWorkDocument {
    * deck's title slide and every later heading adds a "Title & Bullets"
    * slide; the paragraphs and list items under a heading become that
    * slide's body, one line each, its block quotes its presenter notes
-   * and its pipe tables tables on the slide. Text before any heading goes on the title slide.
+   * and its pipe tables tables on the slide; an image on a line of its
+   * own lands on the slide when `images` supplies its bytes. Text before
+   * any heading goes on the title slide.
    */
-  static fromMarkdown(markdown: string): KeynoteDocument {
+  static fromMarkdown(markdown: string, options: { images?: ImageResolver } = {}): KeynoteDocument {
     const doc = KeynoteDocument.blank();
     let slide = doc.slides()[0]!;
     let headings = 0;
     const body: string[] = [];
     const notes: string[] = [];
     const tables: (readonly (readonly string[])[])[] = [];
+    const pictures: { data: Uint8Array; fileName: string }[] = [];
     const flush = (): void => {
       if (body.length) slide.body = body.join("\n");
       if (notes.length) slide.notes = notes.join("\n");
       for (const rows of tables) slide.addTable({ rows });
+      for (const picture of pictures) doc.addImage(slide.index, picture.data, picture);
       body.length = 0;
       notes.length = 0;
       tables.length = 0;
+      pictures.length = 0;
     };
     for (const block of parseMarkdown(markdown)) {
       switch (block.kind) {
@@ -784,6 +789,11 @@ export class KeynoteDocument extends IWorkDocument {
         case "table":
           tables.push(block.rows);
           break;
+        case "image": {
+          const data = options.images?.(block.src);
+          if (data) pictures.push({ data, fileName: block.src.split("/").pop() ?? block.src });
+          break;
+        }
       }
     }
     flush();

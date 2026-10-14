@@ -77,6 +77,7 @@ if (subcommand === "mcp") {
 } else if (subcommand === "import") {
   const { TOOLS } = await import("./mcp/server.ts");
   const { readFileSync } = await import("node:fs");
+  const { dirname } = await import("node:path");
   const source = process.argv[3];
   const target = process.argv[4];
   if (!source || !target) {
@@ -86,7 +87,9 @@ if (subcommand === "mcp") {
   try {
     const content = readFileSync(source, "utf8");
     const format = source.toLowerCase().endsWith(".csv") ? "csv" : "markdown";
-    console.log(TOOLS.find((t) => t.name === "create_document")!.handler({ path: target, content, format }));
+    console.log(
+      TOOLS.find((t) => t.name === "create_document")!.handler({ path: target, content, format, imageRoot: dirname(source) }),
+    );
   } catch (error) {
     console.error((error as Error).message);
     process.exit(1);

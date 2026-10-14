@@ -14,6 +14,7 @@
  * the apps themselves do to a document.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
@@ -475,6 +476,7 @@ export const TOOLS: readonly Tool[] = [
         },
         content: { type: "string", description: "Markdown (or CSV) to write the document from" },
         format: { type: "string", enum: ["markdown", "csv"], description: "What content is; markdown by default" },
+        imageRoot: { type: "string", description: "Directory the Markdown's image paths are relative to" },
       },
       required: ["path"],
     },
@@ -495,11 +497,17 @@ export const TOOLS: readonly Tool[] = [
       const content = str(args.content);
       const format = str(args.format) ?? "markdown";
       if (format === "csv" && kind !== "numbers") throw new RangeError("csv content makes a Numbers document");
+      const imageRoot = str(args.imageRoot);
+      const images = (src: string): Uint8Array | undefined => {
+        if (/^[a-z]+:/i.test(src)) return undefined;
+        const file = imageRoot ? join(imageRoot, src) : src;
+        return existsSync(file) ? new Uint8Array(readFileSync(file)) : undefined;
+      };
       const doc =
         kind === "pages"
           ? content === undefined
             ? PagesDocument.blank()
-            : PagesDocument.fromMarkdown(content)
+            : PagesDocument.fromMarkdown(content, { images })
           : kind === "numbers"
             ? content === undefined
               ? NumbersDocument.blank()
@@ -509,7 +517,7 @@ export const TOOLS: readonly Tool[] = [
             : kind === "keynote"
               ? content === undefined
                 ? KeynoteDocument.blank()
-                : KeynoteDocument.fromMarkdown(content)
+                : KeynoteDocument.fromMarkdown(content, { images })
               : undefined;
       if (!doc) {
         throw new RangeError(

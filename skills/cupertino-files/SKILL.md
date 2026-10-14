@@ -1025,7 +1025,7 @@ instead of 5 would describe a deck that races through itself.
 doc.toMarkdown();            // any document: text, tables and charts in its own structure
 doc.tables()[0].toCsv();     // one table, RFC 4180
 doc.allText();               // every text storage, plain
-PagesDocument.fromMarkdown(md);    // Title/Heading/Body styles, Bullet and Numbered lists
+PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/Heading/Body styles, lists, tables, pictures
 KeynoteDocument.fromMarkdown(md);  // a slide per heading; lines beneath are the body, quotes the notes
 NumbersDocument.fromMarkdown(md);  // a table per pipe table, named by the heading above
 NumbersDocument.fromCsv(csv, "Sales");
