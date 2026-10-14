@@ -26,7 +26,6 @@ import {
   ENTRY_OBJECT,
   ShapeInfo,
   Storage,
-  StorageKind,
   TSWP_TYPE,
 } from "../tswp/schema.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
