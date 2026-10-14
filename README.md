@@ -69,7 +69,7 @@ reverse-engineering of it, measured from real documents.
 - **Charts** — data (categories, series, values) and appearance (type, colours, gridlines, legend)
 - **Fidelity** — byte-identical round trips; future app versions load with their new features intact
 - **Export** — any document as Markdown (text, tables and charts in its own structure), any table as CSV, and plain text
-- **Build from text** — a Pages document, a Keynote deck or a Numbers table written from Markdown, a table from CSV
+- **Build from text** — a Pages document, a Keynote deck or a Numbers table written from Markdown, a table from CSV, inside your own template if you have one
 - **Honesty** — iWork '09 XML and password-protected documents are detected and declined, never mis-parsed
 
 Deeper detail, per capability and with the evidence:

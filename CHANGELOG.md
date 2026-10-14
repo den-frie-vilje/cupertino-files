@@ -152,7 +152,9 @@ in commit messages and pull requests.
   document's theme and styles, and `layout` names the Keynote layout for
   content slides; `create_document` takes both, and `import` takes
   `--template` and `--layout`. A front matter block's `header` and
-  `footer` are written into a Pages template's first section.
+  `footer` are written into a Pages template's first section, and a
+  Pages export leads with the first section's header and footer as front
+  matter, so a document comes back with them.
 
 - `doc.toMarkdown()` renders any document as Markdown — a Pages body
   with headings from the named styles and list paragraphs as list items,

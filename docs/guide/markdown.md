@@ -12,7 +12,8 @@ doc.tables()[0].toCsv();               // one table as RFC 4180 CSV
 doc.toMarkdown({ images: ({ fileName, data }) => save(fileName, data) });  // pictures through a sink
 ```
 
-Pages renders its body: headings from the named paragraph styles, list
+Pages leads with the first section's header and footer as front matter,
+then renders its body: headings from the named paragraph styles, list
 paragraphs as list items, inline tables and pictures where the text
 anchors them, hyperlinks as links, bold and italic as markers, footnotes
 as references with their definitions after the text, then the text of

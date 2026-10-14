@@ -302,6 +302,8 @@ describe("front matter", () => {
     const templated = PagesDocument.load(PagesDocument.fromMarkdown(md, { template: fixture("patrickomatic-pages26-sections-masks.pages") }).save());
     const section = templated.sections()[0]!;
     expect([section.headerText(), section.footerText()]).toEqual(["Acme Ltd", "Confidential"]);
+    expect(templated.toMarkdown().startsWith('---\nheader: "Acme Ltd"\nfooter: "Confidential"\n---\n\n# T')).toBe(true);
+    expect(splitFrontMatter(templated.toMarkdown()).meta).toEqual({ header: "Acme Ltd", footer: "Confidential" });
     expect(KeynoteDocument.fromMarkdown(md).slides().map((s) => s.title)).toEqual(["T"]);
   });
 });

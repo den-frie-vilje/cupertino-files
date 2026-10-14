@@ -435,7 +435,8 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
-   * The document as Markdown: the body with its inline tables and
+   * The document as Markdown: the first section's header and footer as
+   * front matter, then the body with its inline tables and
    * pictures where they are anchored, the text of the shapes and text
    * boxes placed on the pages (all the text of a page-layout document),
    * then every other table under its name, the floating pictures, then
@@ -443,6 +444,14 @@ export class PagesDocument extends IWorkDocument {
    */
   override toMarkdown(options: MarkdownOptions = {}): string {
     const body = this.bodyOrUndefined;
+    // The first section's header and footer lead, as front matter, so a
+    // document built back from this keeps them.
+    const section = this.sections()[0];
+    const front: string[] = [];
+    const header = section?.headerText().trim();
+    const footer = section?.footerText().trim();
+    if (header) front.push(`header: ${JSON.stringify(header)}`);
+    if (footer) front.push(`footer: ${JSON.stringify(footer)}`);
     // The shapes and text boxes placed on the pages, in page order, each
     // with text of its own: in a page-layout document that is all the text.
     const placed: TextStorage[] = [];
@@ -460,6 +469,7 @@ export class PagesDocument extends IWorkDocument {
     // Whatever the body anchors is rendered in place; the rest follows.
     const anchored = new Set(body?.attachments().map((a) => a.drawableId) ?? []);
     return joinBlocks([
+      front.length ? `---\n${front.join("\n")}\n---` : "",
       ...text,
       ...this.tables()
         .filter((t) => !anchored.has(t.infoObject?.identifier))
