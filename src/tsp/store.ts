@@ -411,6 +411,15 @@ export class ObjectStore {
     if (!fromInfo || !toInfo) return; // metadata-less packages: nothing to maintain
     const toComponentId = toInfo.getVarint(COMPONENT_IDENTIFIER);
     if (toComponentId === undefined) return;
+    // A reference to a component's root object — the one whose id is the
+    // component's own identifier (a tile, a data list, a slide) — is a
+    // whole-component dependency: the apps record it as a component-level
+    // row, never per object (1,641 such references across the corpus, none
+    // listed by object id).
+    if (toComponentId === toId) {
+      this.declareComponentDependency(fromComponent, toComponentId);
+      return;
+    }
     for (const er of fromInfo.getMessages(COMPONENT_EXTERNAL_REFERENCES)) {
       if (
         er.getVarint(EXTREF_COMPONENT_IDENTIFIER) === toComponentId &&
@@ -736,7 +745,7 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * treated as a pointer. See {@link ObjectStore.prune} for why guessing wide
  * is the safe direction here.
  */
-function referencedIds(message: RawMessage): bigint[] {
+export function referencedIds(message: RawMessage): bigint[] {
   const out: bigint[] = [];
   const visit = (node: RawMessage, depth: number): void => {
     // Deep nesting is real (an AST inside a formula inside a list entry),

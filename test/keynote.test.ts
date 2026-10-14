@@ -258,18 +258,17 @@ describe("slide management", () => {
     expect(info.getVarint(1)).toBe(copy.id);
     expect(info.getString(2)).toBe("Slide");
     // Versions, save token and the external references mirror the donor
-    // — the copy shares its master and styles. The save pass then adds
-    // one row the donor does not carry: an object row for the master the
-    // copy references. Apple names the master's component with no object
-    // row, and what lets its writer omit them is unmeasured — the
-    // superset is the shape the app-side control accepted.
+    // — the copy shares its master and styles. The master is the root
+    // object of its own component, and a reference to a component's root
+    // is recorded as the component-level row the donor already carries
+    // (every such reference in the corpus is), so the save pass adds
+    // nothing.
     expect(info.getVarint(12)).toBe(donorInfo.getVarint(12));
     const row = (er: RawMessage) => `${er.getVarint(1)}:${er.getVarint(2) ?? "-"}`;
     const donorRows = new Set(donorInfo.getMessages(6).map(row));
     const extras = info.getMessages(6).map(row).filter((r) => !donorRows.has(r));
-    const master = reloaded.slides()[2]!.masterId;
-    expect(extras).toEqual([`${master}:${master}`]);
-    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length + 1);
+    expect(extras).toEqual([]);
+    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length);
     const documentInfo = infos.find((ci) => ci.getString(2) === "Document" && !ci.has(3))!;
     const reciprocal = documentInfo
       .getMessages(6)

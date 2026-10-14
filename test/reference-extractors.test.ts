@@ -133,8 +133,9 @@ describe("reference extractors agree with Apple", () => {
   });
 
   it("storages and text styles reproduce Apple's list exactly", () => {
-    // The four types the Pages ladder actually exercises.
-    const EXACT = [2001, 2021, 2022, 2024];
+    // The four types the Pages ladder actually exercises, and the table
+    // model every table writer creates.
+    const EXACT = [2001, 2021, 2022, 2024, 6001];
     const failing = EXACT.filter((t) => (TALLY.byType.get(t) ?? 0) > 0).map(
       (t) => `${typeName(t) ?? t}=${TALLY.byType.get(t)}`,
     );

@@ -9,6 +9,16 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table model this library creates or edits declares its references
+  the way the apps do: every one but the style preset (no corpus model
+  declares it) and none of the numbers inside its merge owner and
+  deprecated category owner, in the apps' own order. Measured against
+  all 71 corpus models, the lists match exactly.
+- A reference to a component's root object — a tile, a data list, a
+  slide — is now recorded in the package metadata as a component-level
+  row, the way the apps record a whole-component dependency, rather
+  than a row per object. Every such reference in the corpus is recorded
+  that way; a document edited and saved keeps its metadata byte for byte.
 - A table this library creates no longer declares its parent — the
   sheet, body or slide — among its object references. Apple's table
   infos never do (71 of 71 in the corpus carry a parent, none declares
