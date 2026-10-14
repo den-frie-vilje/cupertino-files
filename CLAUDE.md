@@ -265,3 +265,22 @@ The traps, each paid for once:
   placeholder. None of the unit tests saw any of them. A rung is three
   lines in `make-bisect-docs.ts`, `make-pages-docs.ts` or
   `make-keynote-docs.ts`; the audit's budget (`shape:check`) is the gate.
+- **A donor grafted across apps carries its app's wiring.** The neutral
+  Numbers table under a Pages body or a Keynote slide anchors exactly as
+  the corpus does, and the shape audit still listed seven referrer
+  patterns no Pages or Keynote table shares: declared back-references,
+  the preset outside the theme, a style outside the network. Two closed
+  by measurement (table infos never declare their parent, styles are
+  listed in the stylesheet); the rest ship the feature as
+  `experimental`, carried by seeds rather than the audited ladders, so
+  the budget stays honest and the app gets the question.
+- **Ladder scripts write into the current directory by default.** Pass
+  an output directory (`npm run keynote:docs -- /tmp/kladder`); a bare
+  run litters the repository root with `.key` files that only `git
+  status` reveals.
+- **A fresh test is read notes-first too.** Three of the night's test
+  failures were the test's own mistake — a donor set collected after the
+  add, slide objects compared by identity across two `slides()` calls, a
+  float32 colour compared to its decimal — and each cost a diagnostic
+  script the assertion message already answered. Read the actual value
+  before touching the writer.
