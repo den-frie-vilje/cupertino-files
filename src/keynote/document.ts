@@ -902,15 +902,18 @@ export class KeynoteDocument extends IWorkDocument {
 
   /**
    * The deck as Markdown: a section per slide headed by its number and
-   * title, the body's paragraphs as list items, the slide's pictures and
-   * tables, the presenter notes as a block quote; then the tables on no
-   * slide, and the charts.
+   * title, the body's paragraphs as list items, the slide's text boxes,
+   * pictures and tables, the presenter notes as a block quote; then the
+   * tables on no slide, and the charts.
    */
   override toMarkdown(options: MarkdownOptions = {}): string {
     const placed = new Set<bigint>();
     const slides = this.slides().map((slide) => {
       const body = slide.placeholder("body");
       const notes = slide.notes.trim();
+      // The slide's free text boxes: every storage past the placeholders.
+      const placeholders = new Set([slide.placeholder("title")?.id, body?.id, slide.placeholder("slideNumber")?.id]);
+      const boxes = slide.textStorages().filter((s) => !placeholders.has(s.id) && s.text.replace(/[\u2029\ufffc]/g, "").trim() !== "");
       const own = slide.drawables();
       for (const d of own) placed.add(d.id);
       const tables = tablesOf(this.store, own.filter((d) => d.object.type === TST_TYPE.TABLE_INFO).map((d) => d.id));
@@ -918,6 +921,7 @@ export class KeynoteDocument extends IWorkDocument {
       return joinBlocks([
         `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
         body ? storageToMarkdown(body, options) : "",
+        ...boxes.map((s) => storageToMarkdown(s, options)),
         ...pictures.map((p) => imageToMarkdown(p, options)),
         ...tables.map((t) => namedTable(t, 3)),
         notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",

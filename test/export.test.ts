@@ -302,3 +302,16 @@ describe("front matter", () => {
     expect(KeynoteDocument.fromMarkdown(md).slides().map((s) => s.title)).toEqual(["T"]);
   });
 });
+
+describe("text boxes on slides", () => {
+  it("export after the body, placeholders excluded", () => {
+    const deck = KeynoteDocument.load(fixture("zenodo-v26.0-ios-writer.key"));
+    const md = deck.toMarkdown();
+    const first = md.slice(0, md.indexOf("## 2."));
+    expect(first.includes("Livana Böhn")).toBe(true);
+    expect(first.indexOf("Livana Böhn") > first.indexOf("Was it an act of goodwill")).toBe(true);
+    const doc = KeynoteDocument.blank();
+    doc.slides()[0]!.addTextBox("Free text here", { x: 100, y: 100, width: 600, height: 80 });
+    expect(KeynoteDocument.load(doc.save()).toMarkdown().includes("Free text here")).toBe(true);
+  });
+});

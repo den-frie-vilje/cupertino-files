@@ -19,8 +19,8 @@ as references with their definitions after the text. A page-layout
 document renders each text box instead. Numbers is a top-level heading
 per sheet and a pipe table per table, under its name when the table
 shows one. Keynote is a section per slide, `## 1. Title`, the body's
-paragraphs as list items, the slide's pictures and tables, and the
-presenter notes as a block quote. Charts become a table of their series.
+paragraphs as list items, the slide's text boxes, pictures and tables,
+and the presenter notes as a block quote. Charts become a table of their series.
 
 Pictures leave the document only through the sink: it receives each
 picture's file name and bytes, stores it wherever it likes and returns
