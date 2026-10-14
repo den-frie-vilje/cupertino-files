@@ -8,7 +8,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
-import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
+import { parseMarkdown, splitFrontMatter, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
 import { graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
@@ -305,7 +305,9 @@ export class PagesDocument extends IWorkDocument {
    * `images` supplies its bytes by the source the Markdown names. Links
    * become hyperlinks and footnote references with a definition become
    * footnotes, and bold and italic direct formatting. A front matter
-   * block at the top is left out of the body. With \`template\`, the
+   * block at the top is left out of the body; its `header` and `footer`
+   * are written where the document has a section to carry them, which a
+   * template has and the blank document has not. With \`template\`, the
    * document is that one emptied (\`blankFrom\`) and the style names are
    * looked up in it, so a letterhead's own Title, Heading and Body apply;
    * a name the template lacks leaves the paragraph in its default style.
@@ -320,6 +322,12 @@ export class PagesDocument extends IWorkDocument {
     const heading = ["Title", "Heading", "Heading 2", "Heading 3"];
     const blocks = parseMarkdown(markdown);
     const notes = new Map(blocks.flatMap((b) => (b.kind === "footnote" ? [[b.label, b.text] as const] : [])));
+    // Front matter: a header and a footer, where the document has a
+    // section to carry them (a template's; the blank has none).
+    const { meta } = splitFrontMatter(markdown);
+    const section = doc.sections()[0];
+    if (section && meta.header) section.setHeaderText(meta.header);
+    if (section && meta.footer) section.setFooterText(meta.footer);
     // A paragraph with its links and footnote references: the references
     // go in last to first, so earlier offsets hold, and the links are
     // shifted by the marks inserted before them.

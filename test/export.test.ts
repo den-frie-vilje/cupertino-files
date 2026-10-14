@@ -299,6 +299,9 @@ describe("front matter", () => {
     expect(splitFrontMatter(md).meta).toEqual({ header: "Acme Ltd", footer: "Confidential" });
     const doc = PagesDocument.load(PagesDocument.fromMarkdown(md).save());
     expect(doc.body.paragraphs().map((p) => p.text)).toEqual(["T", "Body."]);
+    const templated = PagesDocument.load(PagesDocument.fromMarkdown(md, { template: fixture("patrickomatic-pages26-sections-masks.pages") }).save());
+    const section = templated.sections()[0]!;
+    expect([section.headerText(), section.footerText()]).toEqual(["Acme Ltd", "Confidential"]);
     expect(KeynoteDocument.fromMarkdown(md).slides().map((s) => s.title)).toEqual(["T"]);
   });
 });

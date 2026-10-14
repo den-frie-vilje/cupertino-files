@@ -68,7 +68,9 @@ Numbers and is dropped.
 
 Pass `template` — a document of the same kind, as bytes — and the result
 is that document emptied, with its theme, page setup and named styles:
-a letterhead's Title and Body, a deck's own layouts. `layout` names the
+a letterhead's Title and Body, a deck's own layouts — and a front
+matter block's `header:` and `footer:` land in the template's first
+section. `layout` names the
 Keynote layout content slides take; without it, "Title & Bullets" where
 the theme has one, else a copy of the first slide's layout.
 
