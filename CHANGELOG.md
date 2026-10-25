@@ -2,7 +2,7 @@
 
 Notable changes, kept in the spirit of [Keep a Changelog](https://keepachangelog.com/).
 The package follows [semantic versioning](https://semver.org/). Entries are
-user-facing — bug fixes, API changes and new features; the how and why live
+user-facing—bug fixes, API changes, and new features; the how and why live
 in commit messages and pull requests.
 
 ## Unreleased
@@ -14,9 +14,9 @@ in commit messages and pull requests.
   result but refuse to save it. A copied slide now gets a package
   component of its own, registered the way the app registers one, so
   the deck saves again.
-- `addSlide({ withContent: false })` stripped the fresh slide's speaker-
+- `addSlide({ withContent: false })` stripped the fresh slide's presenter
   notes storage, and setting `notes` on it then threw. The note now
-  stays, emptied — the shape every app-written slide has.
+  stays, emptied—the shape every app-written slide has.
 - `style()` answered `undefined` for text boxes: a text box keeps its
   style reference on an embedded archive one level below where the
   scan looked. The scan now descends, so text-box fills, strokes and
@@ -28,17 +28,17 @@ in commit messages and pull requests.
   the apps have written every colour since iWork 19; bare colours are a
   2013/2016-era shape. An explicit `space` (P3 included) is unchanged.
 - A dashed border read from an app-written document reported six dash
-  lengths — the real ones plus the format's zero padding. The dash
+  lengths—the real ones plus the format's zero padding. The dash
   count field is now honoured both ways: reading slices to the counted
-  dashes, and writing states phase, count and the padded float list the
+  dashes, and writing states phase, count, and the padded float list the
   apps write.
-- A reflection stored as an empty archive — the app's usual state, where
-  presence alone means "on at 50%" — read back as no reflection at all.
+- A reflection stored as an empty archive—the app's usual state, where
+  presence alone means "on at 50 percent"—read back as no reflection at all.
   It now reads as opacity 0.5, the archive's documented default.
 - Gradients written by `setFill` and friends omitted the opacity,
   advanced-mode flag and direction fields the apps state on every
   gradient. A written gradient now carries the app's fresh-gradient
-  shape — full opacity, simple mode, top-to-bottom — and `Gradient`
+  shape—full opacity, simple mode, top-to-bottom—and `Gradient`
   gains optional `angle` (radians) and `advanced` fields, both read
   back from documents that state them.
 - `lineSpacing` wrote an explicit mode field the apps leave to its
@@ -46,7 +46,7 @@ in commit messages and pull requests.
   every app-written multiple-line spacing has.
 
 - Conditional rules written by `setConditionalRules` showed in Numbers'
-  inspector but never drew their fills until each cell was manually
+  Format sidebar but never drew their fills until each cell was manually
   re-entered. Covered cells are now registered in the calc engine's
   dependency ledger, which is what the app evaluates from.
 - Numbers rendered values written by `setCell` left-aligned instead of
@@ -57,7 +57,7 @@ in commit messages and pull requests.
   pinned them. A style carrying any real formatting is kept. A bare
   boolean format also now reads back as `boolean`; only a checkbox
   control's own format reads as `checkbox`.
-- A table copied with `addTable`, `addSheet` or `insertInlineTable`
+- A table copied with `addTable`, `addSheet`, or `insertInlineTable`
   shared its source's calc-engine identity, and cross-table references
   naming the copy could open in Numbers as ref errors. Copies now get
   their own identity and are registered with the calc engine the way
@@ -68,23 +68,23 @@ in commit messages and pull requests.
   automatic. The write now sheds the template's pinning text style
   whether or not a cached value is passed.
 - A table copied with `withContent: false` kept its source's
-  conditional-formatting rules — visible in the inspector, never
+  conditional-formatting rules—visible in the Format sidebar, never
   evaluated. A content-less copy now starts without them.
-- A document whose filter the library disabled could open filtered
-  with a toggle that died after one use, when a copied table had
-  inherited its donor's hidden-row state list — entries naming the
-  donor's rows. A fresh copy now starts with no state list, and
-  `setEnabled(false)` flips the flag and leaves the list alone: the
-  app keeps it across enable/disable, and removing it left the filter
-  permanently inert. Known limitation: copying a table into a
-  document whose filters have actually run still breaks that
-  document's filter toggle in Numbers — every registration shape
-  measured so far does — so until the app's own duplicate is
-  measured, avoid table copies in filter-bearing documents.
+- A document whose filter the library turned off could open filtered
+  with a filter control that died after one use, when a copied table had
+  inherited its donor's hidden-row state list—entries naming the donor's
+  rows. A fresh copy now starts with no state list, and
+  `setEnabled(false)` flips the flag and leaves the list alone: the app
+  keeps it when the filter is turned off and on, and removing it left
+  the filter permanently inert. Known limitation: copying a table into a
+  document whose filters have actually run still breaks that document's
+  filter control in Numbers—every registration shape measured so far
+  does—so until the app's own duplicate is measured, avoid table copies
+  in filter-bearing documents.
 
 ### Added
 
-- `KeynoteDocument.addImage` puts a picture on a slide — the gap that
+- `KeynoteDocument.addImage` puts a picture on a slide—the gap that
   made "swap an image" impossible in Keynote. The image arrives in the
   shape the app writes for its own: parented on the slide, aspect
   locked, styled with the theme's image style, in both drawable lists
@@ -99,28 +99,28 @@ in commit messages and pull requests.
 - `NumbersDocument.addTable` without `copyOf` now grafts the embedded
   Apple-made blank table instead of cloning whatever table the document
   contains: the new table arrives empty and neutrally styled,
-  inheriting nobody's widths, fills or wrap styles. Passing `copyOf`
+  inheriting nobody's widths, fills, or wrap styles. Passing `copyOf`
   keeps the duplicate behavior. The graft rides a new cross-document
   import (`deepCloneObjectInto`) that refuses any subgraph it cannot
   carry whole.
 - Cell comments can now be read: `table.cellComments()` lists every
-  comment the app has on a table's cells — position, text, author,
-  date and replies — and `table.cellComment(row, column)` reads one.
+  comment the app has on a table's cells—position, text, author,
+  date, and replies—and `table.cellComment(row, column)` reads one.
   Comments are preserved on edit; writing one stays the app's job.
-- `NumbersDocument.setActiveSheet(index)` — choose the sheet the
+- `NumbersDocument.setActiveSheet(index)`—choose the sheet the
   document opens on. Numbers keeps this in its stored selection state,
   not in tab order, so reordering sheets alone does not change it.
-- `doc.audit()` — an offline check for the faults a person otherwise
+- `doc.audit()`—an offline check for the faults a person otherwise
   finds by opening the document: malformed table anchors, missing
   calc-engine registration, cross-table references whose target no
   table carries, conditional rules the engine never evaluates, and
   values without display formats. Each finding names the cell or table
   and what the app would do.
 - `save()` now refuses to write a document containing an archive with
-  a missing `required` field — the class the apps report as damaged —
-  naming the object and field instead of producing the file.
+  a missing `required` field—the class the apps report as damaged—naming
+  the object and field instead of producing the file.
 - Formulas written by `setFormula` now carry the calc engine's
-  dependency records on their table's owner — cell, range and
+  dependency records on their table's owner—cell, range and
   whole-column records matching the app's own. Cross-table references
   written into a document Numbers has not opened yet may still be
   reduced to their cached values on first open; the review rounds
@@ -131,10 +131,10 @@ in commit messages and pull requests.
 ### Fixed
 
 - Shadows written by this library could crash Pages when edited in the
-  app's Shadow inspector. Shadow archives are now written with the
+  app's Format sidebar. Shadow archives are now written with the
   complete field set the apps require, and styling one drawable no
-  longer writes through a style archive shared with other drawables —
-  the write goes to a private override style, as the apps do.
+  longer writes through a style archive shared with other drawables—the
+  write goes to a private override style, as the apps do.
 - Deleting a document's final paragraph terminator could leave style
   tables in a state the apps repair with document-wide style loss.
   Tail edits now keep every attribute table valid, and `save()` refuses
@@ -149,7 +149,7 @@ in commit messages and pull requests.
 
 ### Added
 
-- `TextStorage.normalizeTail()` — remove a trailing paragraph
+- `TextStorage.normalizeTail()`—remove a trailing paragraph
   terminator safely, so a built document ends without a stray empty
   paragraph.
 - `fillPlaceholder` accepts a `placeholders()` entry or a bare field
@@ -159,9 +159,9 @@ in commit messages and pull requests.
 
 ### Changed
 
-- `DEFAULT_SHADOW` now matches the app's own "add a shadow" preset
-  (270° in inspector terms, offset 2, blur 5, 50 % opacity). Library
-  defaults follow the apps' defaults.
+- `DEFAULT_SHADOW` now matches the app's own "add a shadow" preset (270°
+  as the Format sidebar shows it, offset 2, blur 5, 50 percent opacity).
+  Library defaults follow the apps' defaults.
 
 ## 0.3.0 — 2026-08-13
 
@@ -180,7 +180,7 @@ in commit messages and pull requests.
 - A drawable copied with `addCopyOf` shared child objects (titles,
   captions, masks) with its source; copies own their children.
 - Saving refuses a table whose records reference strings missing from
-  its own data list — the state behind cloned tables reloading empty.
+  its own data list—the state behind cloned tables reloading empty.
   `TableModel.orphanReferences()` is the diagnostic.
 - A floating copy of an inline image did not wrap text.
 - `insertSectionBreak` shared page masters between the new section and
@@ -190,7 +190,7 @@ in commit messages and pull requests.
 - One right-to-left paragraph no longer turns paragraphs appended after
   it right-to-left.
 - Authored paragraph borders did not draw; strokes are written complete
-  and the legacy positions field the inspector reads is written beside
+  and the legacy positions field the Format sidebar reads is written beside
   the bitmask.
 - Character styling no longer bleeds into paragraphs appended after a
   styled ending.
@@ -209,7 +209,7 @@ in commit messages and pull requests.
 
 ### Added
 
-- `CellFormatting.horizontalAlignment` — cell text alignment, enum or
+- `CellFormatting.horizontalAlignment`—cell text alignment, enum or
   name; `null` restores the band default.
 - `TableFormatting` covers the full modern table-style surface
   (dividers, header border, all sixteen band strokes); every key is
@@ -217,24 +217,24 @@ in commit messages and pull requests.
 - `insertRows`/`insertColumns` inherit the displaced row's or column's
   cell and text styling. `TableModel.textStyleId` and `textStyle` join
   the cell-style pair.
-- `PagesDocument.insertInlineTable(pos, options)` — anchor a copy of an
+- `PagesDocument.insertInlineTable(pos, options)`—anchor a copy of an
   existing table inline in body text.
-- `TableModel.nameVisible` — whether the app draws the table's name.
+- `TableModel.nameVisible`—whether the app draws the table's name.
 - Paragraph `alignment` accepts names (`left`, `right`, `center`,
   `justified`, `natural`) beside the enum, and rejects anything else at
   the call.
-- `ruleOffset` on paragraph formatting — the distance between text and
+- `ruleOffset` on paragraph formatting—the distance between text and
   its border rules; negative pulls the rules toward the text.
 - `setParagraphDirection(i, "rtl" | "ltr" | "natural")` and
   `paragraph(i).setDirection(...)`.
 - `BorderPosition.LEADING`/`TRAILING`: border side bits are logical and
   swap sides with the paragraph's writing direction; `LEFT`/`RIGHT`
   remain as the left-to-right aliases.
-- `paragraphStylesInUse()` — the styles a body actually uses;
+- `paragraphStylesInUse()`—the styles a body actually uses;
   `paragraphStyles()` lists only named styles.
-- `body.endsWithEmptyParagraph` — whether the app will draw an empty
+- `body.endsWithEmptyParagraph`—whether the app will draw an empty
   final paragraph after the text.
-- `TextStorage.copyShapeFrom` — adopt a sibling storage's table shape
+- `TextStorage.copyShapeFrom`—adopt a sibling storage's table shape
   so written text renders.
 - Keynote build effects and timing read (`effect`, `animationType`,
   `duration`, `delay`), and retiming writes.
@@ -251,25 +251,25 @@ in commit messages and pull requests.
   order, then each sheet's drawables; Pages: body anchors by text
   position, then paint order).
 - Inserted images carry the full modern drawable metadata (lock flags,
-  title and caption stand-ins), matching current app output.
+  title, and caption stand-ins), matching current app output.
 
 ## 0.2.0 — 2026-08-03
 
 ### Added
 
-- Placeholder text — the template tap-to-replace mechanism — as a
+- Placeholder text—the template tap-to-replace mechanism—as a
   first-class feature: `placeholders()` lists the spans,
   `fillPlaceholder()` fills one and sheds the marking the way typing
   does, `defineAsPlaceholder()` / `find(...)[0].asPlaceholder()`
   create one. An image placeholder is the same field over the image's
   object character.
-- `characterFormattingAt(pos)` — the formatting in effect at a
+- `characterFormattingAt(pos)`—the formatting in effect at a
   position, inheritance folded in; `characterStyleRuns()` is the
   whole-document sweep.
-- `applyEdits([...])` — apply many non-overlapping edits from one
+- `applyEdits([...])`—apply many non-overlapping edits from one
   snapshot, no ordering discipline required.
 - `characterStyleIdAt(pos)`.
-- One-click releases for maintainers (Actions → Release), publishing
+- One-click releases for maintainers (Actions > Release), publishing
   to npm via trusted publishing.
 
 ### Fixed
@@ -289,7 +289,7 @@ in commit messages and pull requests.
 
 ### Changed
 
-- Node ≥ 22 (Node 18 and 20 are end-of-life); CI adds Node 26.
+- Node 22 or later (Node 18 and 20 are end-of-life); CI adds Node 26.
 - Toolchain refresh: TypeScript 6, `strictTypeChecked` linting, and an
   `npm audit` gate in CI.
 
@@ -300,44 +300,44 @@ format as a working, zero-dependency TypeScript library.
 
 ### Documents
 
-- Load, edit and save Pages, Numbers and Keynote documents (modern IWA
-  format, 2013 →), in Node ≥ 22 and browsers — bytes in, bytes out.
+- Load, edit, and save Pages, Numbers, and Keynote documents (modern IWA
+  format, 2013 →), in Node 22 or later and browsers—bytes in, bytes out.
 - New documents from nothing: `blank()` on each app class instantiates
-  an embedded, Apple-authored donor — A4 for Pages and Numbers, 16:9
-  for Keynote — the same way the apps instantiate a bundled template,
+  an embedded, Apple-authored donor—A4 for Pages and Numbers, 16:9
+  for Keynote—the same way the apps instantiate a bundled template,
   dressed in the house typography: Palatino body text, Helvetica Neue
   headings, a terracotta accent. `blankFrom(bytes)` does the same with
   any document as the template.
 - Byte-fidelity round trips: untouched components are preserved exactly,
   and for documents written by current apps an edited save is typically
-  byte-for-byte what the app itself would have written — the Snappy
+  byte-for-byte what the app itself would have written—the Snappy
   compressor is a byte-exact port of both encoder vintages Apple has
   shipped, and the zip container mirrors Apple's writer's quirks.
 - Version-aware loading: newer documents warn rather than fail, and
   fields this library has never heard of ride along unharmed.
-- iWork '09 XML and password-protected documents are detected and
+- iWork ’09 XML and password-protected documents are detected and
   refused, never mis-parsed.
 
-### Text, styles and layout (Pages)
+### Text, styles, and layout (Pages)
 
 - Body editing that keeps every attribute table consistent: find and
-  replace, paragraph append, character and paragraph formatting, named
-  styles (create, apply, edit), sections, headers and footers, page
+  replace, paragraph append, character, and paragraph formatting, named
+  styles (create, apply, edit), sections, headers, and footers, page
   setup, comments, footnotes, bookmarks, links, and smart fields (page
   numbers, dates).
 - Inline image insertion, app-confirmed; floating drawables move,
-  resize, copy and style, with image crops read and written.
+  resize, copy, and style, with image crops read and written.
 
 ### Tables (all three apps)
 
 - Cells read and write with presentation preserved; cell and table
   styling, bands, row and column operations, display formats.
-- Formula authoring compiled to Apple's own AST encoding — operators,
+- Formula authoring compiled to Apple's own AST encoding—operators,
   ranges, anchored and cross-table references (`Other::A2`),
-  whole-column spans, 272 measured function names — with every
+  whole-column spans, 272 measured function names—with every
   parseable corpus formula rebuilding byte-identical to Apple's bytes.
 - Merges written the way the calc engine keeps them, dependency ledger
-  included; conditional formatting, filters, categories and cell
+  included; conditional formatting, filters, categories, and cell
   controls read.
 
 ### Keynote
@@ -348,20 +348,20 @@ format as a working, zero-dependency TypeScript library.
 ### Charts
 
 - Data (categories, series, values) and appearance (chart type, series
-  colours, axis gridlines and visibility, legend styling) read and
+  colours, axis gridlines, and visibility, legend styling) read and
   write, with shared style archives copied before writing.
 
 ### Tooling
 
-- `npx -y cupertino-files mcp` — a zero-dependency MCP server with
-  twenty tools covering describing, reading, editing and formatting
-  documents, for Claude Code, Claude Desktop, Cursor and friends.
-- `npx -y cupertino-files dump` (also `cupertino-dump`) — inspection CLI.
+- `npx -y cupertino-files mcp`—a zero-dependency MCP server with
+  twenty tools covering describing, reading, editing, and formatting
+  documents, for Claude Code, Claude Desktop, Cursor, and friends.
+- `npx -y cupertino-files dump` (also `cupertino-dump`)—inspection CLI.
 - A Claude Code skill ships in the package.
 
 ### The format itself
 
-- `docs/FORMAT.md` — the specification as measured, container to calc
+- `docs/FORMAT.md`—the specification as measured, container to calc
   engine; vendored schema dumps with provenance in `proto/`; a
   language-neutral conformance suite in `conformance/` and a
   calendar-versioned format bundle for other implementations.
