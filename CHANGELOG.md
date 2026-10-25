@@ -7,19 +7,28 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+Numbers documents this library writes now register with the app's
+calc engine the way the app's own do, so conditional rules evaluate,
+copied tables compute, and written values align automatically. Keynote
+gains pictures on slides and slide copies laid out the way the app lays
+out its own. Styling defaults are the apps' measured ones, and
+`doc.audit()` plus save-time validation catch the faults a person
+otherwise finds by opening the file.
+
 ### Fixed
 
 - A slide added or duplicated into a deck Keynote had saved landed in
   the source slide's component, and Keynote would open and render the
   result but refuse to save it. A copied slide now gets a package
-  component of its own, registered the way the app registers one, so
-  the deck saves again.
+  component of its own, registered the way the app registers one.
+  Keynote has not yet been seen saving such a deck; the layout matches
+  every Keynote-saved deck measured.
 - `addSlide({ withContent: false })` stripped the fresh slide's presenter
   notes storage, and setting `notes` on it then threw. The note now
   stays, emptied—the shape every app-written slide has.
 - `style()` answered `undefined` for text boxes: a text box keeps its
   style reference on an embedded archive one level below where the
-  scan looked. The scan now descends, so text-box fills, strokes and
+  scan looked. The scan now descends, so text-box fills, strokes, and
   shadows read and write like any other drawable's.
 - The documented transition example used an effect id Keynote discards.
   The docs now carry the two measured effect families and say plainly
@@ -36,7 +45,7 @@ in commit messages and pull requests.
   presence alone means "on at 50 percent"—read back as no reflection at all.
   It now reads as opacity 0.5, the archive's documented default.
 - Gradients written by `setFill` and friends omitted the opacity,
-  advanced-mode flag and direction fields the apps state on every
+  advanced-mode flag, and direction fields the apps state on every
   gradient. A written gradient now carries the app's fresh-gradient
   shape—full opacity, simple mode, top-to-bottom—and `Gradient`
   gains optional `angle` (radians) and `advanced` fields, both read
@@ -44,7 +53,6 @@ in commit messages and pull requests.
 - `lineSpacing` wrote an explicit mode field the apps leave to its
   default; a written spacing now states the amount alone, the shape
   every app-written multiple-line spacing has.
-
 - Conditional rules written by `setConditionalRules` showed in Numbers'
   Format sidebar but never drew their fills until each cell was manually
   re-entered. Covered cells are now registered in the calc engine's
@@ -89,38 +97,46 @@ in commit messages and pull requests.
   shape the app writes for its own: parented on the slide, aspect
   locked, styled with the theme's image style, in both drawable lists
   so it paints, sized from its pixels (or a PDF's page box) and
-  centered unless placed explicitly.
+  centred unless placed explicitly. Keynote has not yet been seen
+  drawing a picture this library added; the archive matches the app's
+  own for every slide picture measured.
 - `setPathRectangle` rewrites a text box's rectangular path beside its
   frame. A shape's path renders scaled from its own stored size to the
   frame, text included, so a text box resized by frame alone shrinks
   or clips its text; pairing `setGeometry` with `setPathRectangle`
   resizes it the way its text expects. Non-rectangular paths are
   refused rather than flattened.
-- `NumbersDocument.addTable` without `copyOf` now grafts the embedded
-  Apple-made blank table instead of cloning whatever table the document
-  contains: the new table arrives empty and neutrally styled,
-  inheriting nobody's widths, fills, or wrap styles. Passing `copyOf`
-  keeps the duplicate behavior. The graft rides a new cross-document
-  import (`deepCloneObjectInto`) that refuses any subgraph it cannot
-  carry whole.
 - Cell comments can now be read: `table.cellComments()` lists every
   comment the app has on a table's cells—position, text, author,
   date, and replies—and `table.cellComment(row, column)` reads one.
   Comments are preserved on edit; writing one stays the app's job.
-- `NumbersDocument.setActiveSheet(index)`—choose the sheet the
-  document opens on. Numbers keeps this in its stored selection state,
-  not in tab order, so reordering sheets alone does not change it.
+- `NumbersDocument.setActiveSheet(index)`—re-point the stored sheet
+  selections Numbers consults when choosing the tab to open on. Tab
+  order does not decide it, and the re-pointed selections have proved
+  necessary but not sufficient: one review round opened on the chosen
+  sheet and a later one did not, so the call is best-effort until the
+  deciding state is found.
 - `doc.audit()`—an offline check for the faults a person otherwise
   finds by opening the document: malformed table anchors, missing
   calc-engine registration, cross-table references whose target no
   table carries, conditional rules the engine never evaluates, and
   values without display formats. Each finding names the cell or table
   and what the app would do.
+
+### Changed
+
+- `NumbersDocument.addTable` without `copyOf` now grafts the embedded
+  Apple-made blank table instead of cloning whatever table the document
+  contains: the new table arrives empty and neutrally styled,
+  inheriting nobody's widths, fills, or wrap styles. Passing `copyOf`
+  keeps the duplicate behaviour. The graft rides a new cross-document
+  import (`deepCloneObjectInto`) that refuses any subgraph it cannot
+  carry whole.
 - `save()` now refuses to write a document containing an archive with
   a missing `required` field—the class the apps report as damaged—naming
   the object and field instead of producing the file.
 - Formulas written by `setFormula` now carry the calc engine's
-  dependency records on their table's owner—cell, range and
+  dependency records on their table's owner—cell, range, and
   whole-column records matching the app's own. Cross-table references
   written into a document Numbers has not opened yet may still be
   reduced to their cached values on first open; the review rounds
