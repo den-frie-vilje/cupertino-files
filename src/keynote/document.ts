@@ -1,7 +1,7 @@
 /**
  * KeynoteDocument — Apple Keynote (.key), extending the shared
  * IWorkDocument with the KN object graph: the show, its slide tree, slides
- * with their placeholders, speaker notes and transitions.
+ * with their placeholders, presenter notes, and transitions.
  *
  * Transitions are deliberately modeled here and not in the shared layer:
  * they are a Keynote-only concept (inline on KN.SlideArchive), unlike
@@ -176,7 +176,7 @@ export class KeynoteSlide {
     return refId(this.object.message, Slide.TEMPLATE_SLIDE);
   }
 
-  /** Speaker-notes storage, when the slide has one. */
+  /** Presenter-notes storage, when the slide has one. */
   notesStorage(): TextStorage | undefined {
     const note = this.store.resolve(refId(this.object.message, Slide.NOTE));
     if (!note) return undefined;
@@ -184,7 +184,7 @@ export class KeynoteSlide {
     return storage ? new TextStorage(this.store, storage) : undefined;
   }
 
-  /** Speaker-notes text ("" when the slide has no notes). */
+  /** Presenter-notes text ("" when the slide has no notes). */
   get notes(): string {
     return this.notesStorage()?.text ?? "";
   }
@@ -1008,7 +1008,7 @@ export class KeynoteDocument extends IWorkDocument {
     this.writeSlideNodeOrder(ids.filter((id) => id !== nodeId));
   }
 
-  /** Speaker notes of every slide, in order. */
+  /** Presenter notes of every slide, in order. */
   allNotes(): { slide: number; notes: string }[] {
     return this.slides().map((s) => ({ slide: s.index, notes: s.notes }));
   }
