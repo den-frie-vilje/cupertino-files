@@ -7,6 +7,8 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+## 0.5.0 — 2026-10-25
+
 Numbers documents this library writes now register with the app's
 calc engine the way the app's own do, so conditional rules evaluate,
 copied tables compute, and written values align automatically. Keynote
