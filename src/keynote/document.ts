@@ -269,7 +269,7 @@ export class KeynoteSlide {
    * Set a placeholder's text.
    *
    * Only replaces text in a placeholder the slide already has. Creating one
-   * means synthesizing a shape with the theme's geometry and style for that
+   * means synthesising a shape with the theme's geometry and style for that
    * role, which lives in the master — so a slide whose layout has no body
    * box is told so rather than given an unstyled one floating at the origin.
    */
@@ -844,7 +844,7 @@ export class KeynoteDocument extends IWorkDocument {
    * drawable lists — ownership and paint order. Sized like
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
-   * `x`/`y` say otherwise the picture is centered on the slide.
+   * `x`/`y` say otherwise the picture is centred on the slide.
    */
   addImage(
     slideIndex: number,

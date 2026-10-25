@@ -48,7 +48,7 @@ reverse-engineering of it, measured from real documents.
 
 ### Numbers
 
-- **Cells**—read and write every value type; formatting, styles, and comments survive your edits
+- **Cells**—read and write every value type; formatting, styles, and comments survive your edits; cell comments read back with their replies
 - **Formulas**—author them as text (`=SUM(A1:A5)`, `=Other::B2`); 272 functions
 - **Formatting**—fills, borders, alignment, wrap; number, currency, date, and duration formats; bands
 - **Structure**—sheets and tables (add, rename, move, remove), rows and columns, merges, column widths
@@ -57,7 +57,7 @@ reverse-engineering of it, measured from real documents.
 ### Keynote
 
 - **Slides**—add, duplicate, reorder, remove, skip; titles, bodies, presenter notes
-- **On a slide**—a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, swap or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
+- **On a slide**—a slide's content is drawables and tables, so everything under *Everywhere* applies: edit the text in a text box, restyle a shape, add, swap, or crop an image, copy a drawable onto another slide, edit an embedded table cell-by-cell
 - **Decks**—slide size, auto-advance; transitions read and write; builds read, retime, and remove
 
 ### Everywhere
@@ -68,6 +68,7 @@ reverse-engineering of it, measured from real documents.
 - **Charts**—data (categories, series, values) and appearance (type, colours, gridlines, legend)
 - **Fidelity**—byte-identical round trips; future app versions load with their new features intact
 - **Honesty**—iWork ’09 XML and password-protected documents are detected and declined, never mis-parsed
+- **Audit**—`doc.audit()` names the faults a person otherwise finds by opening the document, and `save()` refuses an archive missing a required field
 
 Deeper detail, per capability and with the evidence:
 [the capability matrix](docs/COVERAGE.md) · [what each open question

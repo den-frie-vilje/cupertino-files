@@ -270,7 +270,7 @@ doc.paragraph(3).setDirection("rtl");  // base direction, written as the app's �
 doc.range(0, 10).italic().color(0.8, 0, 0);
 ```
 
-`find()` returns `TextRange`s (string = literal, RegExp honored). Ranges
+`find()` returns `TextRange`s (string = literal, RegExp honoured). Ranges
 support `.replaceWith() .delete() .format() .bold() .italic()
 .underline() .fontSize() .fontName() .color() .link() .unlink()
 .applyCharacterStyle() .applyParagraphStyle() .applyListStyle()
@@ -924,14 +924,14 @@ slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.
 
 Placeholders are the theme's boxes for you to fill. Setting one only works
 where the slide already carries it—creating a placeholder means
-synthesizing the geometry and style the slide layout defines for that role, so a
+synthesising the geometry and style the slide layout defines for that role, so a
 slide on a layout without a body box is told so rather than given an
 unstyled box at the origin.
 
 ### Pictures on slides
 
 ```ts
-doc.addImage(0, pngBytes, { fileName: "chart.png" });            // centered, fitted to 400 pt
+doc.addImage(0, pngBytes, { fileName: "chart.png" });            // centred, fitted to 400 pt
 doc.addImage(2, pdfBytes, { fileName: "figure.pdf", x: 80, y: 120, width: 640 });
 ```
 
@@ -940,7 +940,7 @@ the slide, the aspect ratio locked, the theme's `image-0-imageStyle`
 applied—and the picture joins both of the slide's drawable lists, so
 it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
-is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
+is fitted to `maxWidth`. Without `x`/`y` the picture is centred.
 
 **Resizing a text box takes two calls.** A shape's path renders scaled
 from its own stored size to the frame, text included, so
