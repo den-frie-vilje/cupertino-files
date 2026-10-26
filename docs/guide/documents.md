@@ -1,6 +1,6 @@
 # Working with documents
 
-The fuller tour. Everything here follows the same few conventions — once
+The fuller tour. Everything here follows the same few conventions—once
 you've used one part of the API, you've used them all
 ([API design](/guide/api-design) explains the grammar).
 
@@ -21,7 +21,7 @@ document's design.
 ## Text
 
 All text is the same kind of thing. Body, headers, footers, table cells,
-speaker notes, text boxes — each is a `TextStorage`, with one editing
+presenter notes, text boxes—each is a `TextStorage`, with one editing
 model:
 
 ```ts
@@ -66,8 +66,8 @@ heading.setParagraph({
 });
 ```
 
-Fills, gradients, strokes and shadows are one shared vocabulary — the
-same values style text, table cells and shapes: `colorFill(r, g, b)`,
+Fills, gradients, strokes, and shadows are one shared vocabulary—the
+same values style text, table cells, and shapes: `colorFill(r, g, b)`,
 `linearGradient(a, b)`, `solidStroke(color, width)`, `hexColor("#0066ff")`.
 
 A created style appears in the app's styles panel, ready to reapply.
@@ -94,11 +94,12 @@ table.setFormula(1, 4, "=SUM(B2:B9)", { value: 1500 });  // nothing evaluates; p
 table.merges();                          // [{ row, column, rowCount, columnCount }]
 table.mergeCells(0, 0, 1, 3);            // anchor keeps its value, covered cells go
 table.unmergeCells(0, 0);
+table.cellComments();                    // the app's comments on cells, replies included
 ```
 
 Worth knowing: writing into a merge-covered cell throws; formulas work
 in Pages and Keynote tables too; nothing evaluates, so pass the value to
-display as `{ value }`. 272 functions are supported by name — an
+display as `{ value }`. 272 functions are supported by name—an
 unknown one renders as `FUNCTION_<id>` and is refused for writing.
 
 ## Numbers: conditional formatting, filters, categories
@@ -107,10 +108,13 @@ unknown one renders as `FUNCTION_<id>` and is refused for writing.
 table.conditionalRules(4, 2);      // [{ predicate: { operator: "<", text: "C5<0" }, … }]
 table.filterSets();                // { rows, columns }
 table.activeCategories()?.groups(); // tree: [{ value, label, rows, children }]
+doc.setActiveSheet(1);             // re-point the stored tab selections (best-effort)
 ```
 
 **Nothing evaluates**: the API reports what the rules are, not which
-currently matches.
+currently matches. `setActiveSheet` re-points the sheet selections
+Numbers consults when choosing the tab to open on; the state that
+decides it is still unmeasured, so treat the call as best-effort.
 
 ## Fields, comments, footnotes, bookmarks
 
@@ -122,8 +126,8 @@ body.insertLink(5, 12, "https://example.com");
 body.addBookmark(10, 20, "Introduction");
 ```
 
-The conventions the apps expect — link styling, footnote marks, comment
-authors — are applied by default; skip with `{ characterStyle: false }`
+The conventions the apps expect—link styling, footnote marks, comment
+authors—are applied by default; skip with `{ characterStyle: false }`
 or pass your own.
 
 ## Slides
@@ -139,12 +143,15 @@ deck.addSlide({ copyOf: 0 });
 deck.duplicateSlide(0);
 deck.moveSlide(0, 2);
 deck.setSlideSize(1024, 768);
+deck.addImage(1, pngBytes, { fileName: "chart.png" });  // a picture on the slide, centred unless placed
 ```
 
 ## Drawables, images, charts
 
 ```ts
 doc.drawables()[1].setGeometry({ x: 100, y: 50 });
+doc.drawables()[0].setGeometry({ width: 600, height: 80 });
+doc.drawables()[0].setPathRectangle(600, 80);   // a text box's path is its text's coordinate space
 doc.images()[0].setCrop({ x: 20, y: 0, width: 200, height: 150 });
 doc.images()[0].style()!.set({ shadow: { angle: 90, offset: 10, radius: 20, opacity: 0.7, enabled: true } });
 
@@ -153,9 +160,24 @@ chart.setValue(0, 2, { type: "number", value: 99 });
 chart.addSeries("Region 3", values);
 ```
 
-Chart data and appearance are both editable — type, series colours, axis
-gridlines, legend — and styling one chart never restyles its siblings.
-Crops are non-destructive.
+Chart data and appearance are both editable—type, series colours, axis
+gridlines, legend—and styling one chart never restyles its siblings.
+Crops are non-destructive. A text box's path renders scaled to its
+frame, text included, so resize the path with `setPathRectangle` beside
+`setGeometry` or the text scales with the frame.
+
+## Before you save
+
+```ts
+doc.audit();   // [{ severity, code, message }], the faults a person otherwise finds by opening the file
+doc.save();    // refuses an archive missing a required field, naming the object and field
+```
+
+`audit()` is offline and cheap: malformed table anchors, missing
+calc-engine registration, cross-table references whose target no table
+carries, conditional rules the engine never evaluates, and values
+without display formats. `save()` refuses an archive missing a required
+field rather than producing a file the app would report as damaged.
 
 ## Low level
 
