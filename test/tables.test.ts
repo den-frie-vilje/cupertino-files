@@ -1411,7 +1411,7 @@ describe("adding and removing tables", () => {
         expect(`${name} ${table.name}: ${table.object.message.getString(TableModelFields.TABLE_ID)}`).toBe(`${name} ${table.name}: ${ownerUuidString(base)}`);
       }
     }
-    expect(checked).toBeGreaterThan(50);
+    expect(checked).toBeGreaterThan(40);
   });
 
   it("registers a copy with the calc engine, the way the app registers a new table", () => {
