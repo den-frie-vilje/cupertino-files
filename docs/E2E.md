@@ -50,6 +50,9 @@ so the harness is defensive by construction:
 
 - **Refuses to run when an app already has documents open**—it skips with
   a message asking you to close them, rather than risk interfering.
+- **Stays off the screen while you hold it.** The suite brings the apps to
+  the front, so `touch ~/.cupertino-files-hold-screen` makes every
+  app-driving test skip, naming the file, until you remove it.
 - **Only touches a scratch directory** created under the system temp dir;
   repository fixtures are copied in, never edited in place.
 - **Closes documents with `saving no`** unless a test explicitly saves.
@@ -113,9 +116,20 @@ because no amount of reading Apple's files can prove them
 - **The formula-recompute probe**, which settled that Numbers rebuilds
   its dependency tracker on open rather than trusting the file's.
 
-These are the claims the scripting dictionaries happen to expose.
-Others cannot be reached this way at all—cell fills, paragraph border
-positions, shadow geometry, colour spaces—and those are collected in
-[`docs/VERIFICATION.md`](VERIFICATION.md) with what would settle each. That
-file is generated from the capability table, so it cannot quietly fall
-behind the code.
+`proofs.e2e.test.ts` takes the claims the dictionaries do not expose
+as far as the apps' own exporters reach: each probe writes a document,
+has the app export it as PDF, and reads the export back as text or as
+pixels (through poppler, run with `pkgx`; without it those probes skip
+and say so). A background's colour, a conditional fill, a band fill, a
+filter's hidden rows and a section master's repeat are measured that
+way; a slide's layout, a picture's position and a table's cells through
+the dictionaries; a build and a category by letting the app resave and
+reloading with the library. Each probe is cited by the claim it settles
+in [`docs/VERIFICATION.md`](VERIFICATION.md), and a claim the apps
+refuted stays there with the measurement.
+
+What is left cannot be reached this way at all—colour spaces on a
+display, a table of contents the app repaginates, a grouping toggle the
+export cannot distinguish—and those stay in `VERIFICATION.md` with what
+would settle each. That file is generated from the capability table, so
+it cannot quietly fall behind the code.
