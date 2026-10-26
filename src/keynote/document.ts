@@ -1,7 +1,7 @@
 /**
  * KeynoteDocument — Apple Keynote (.key), extending the shared
  * IWorkDocument with the KN object graph: the show, its slide tree, slides
- * with their placeholders, speaker notes and transitions.
+ * with their placeholders, presenter notes, and transitions.
  *
  * Transitions are deliberately modeled here and not in the shared layer:
  * they are a Keynote-only concept (inline on KN.SlideArchive), unlike
@@ -271,7 +271,7 @@ export class KeynoteSlide {
     this.store.retargetReference(this.object, current.identifier, style.identifier);
   }
 
-  /** Speaker-notes storage, when the slide has one. */
+  /** Presenter-notes storage, when the slide has one. */
   notesStorage(): TextStorage | undefined {
     const note = this.store.resolve(refId(this.object.message, Slide.NOTE));
     if (!note) return undefined;
@@ -279,7 +279,7 @@ export class KeynoteSlide {
     return storage ? new TextStorage(this.store, storage) : undefined;
   }
 
-  /** Speaker-notes text ("" when the slide has no notes). */
+  /** Presenter-notes text ("" when the slide has no notes). */
   get notes(): string {
     return this.notesStorage()?.text ?? "";
   }
@@ -364,7 +364,7 @@ export class KeynoteSlide {
    * Set a placeholder's text.
    *
    * Only replaces text in a placeholder the slide already has. Creating one
-   * means synthesizing a shape with the theme's geometry and style for that
+   * means synthesising a shape with the theme's geometry and style for that
    * role, which lives in the master — so a slide whose layout has no body
    * box is told so rather than given an unstyled one floating at the origin.
    */
@@ -444,7 +444,10 @@ export class KeynoteSlide {
     return buildsOfSlide(this.store, this.object);
   }
 
-  /** The comments pinned to this slide's canvas. */
+  /**
+   * The comments pinned to this slide's canvas.
+   * @agentTool list_comments
+   */
   canvasComments(): CanvasComment[] {
     return canvasComments(this.store, this.id);
   }
@@ -1373,7 +1376,7 @@ export class KeynoteDocument extends IWorkDocument {
    * drawable lists — ownership and paint order. Sized like
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
-   * `x`/`y` say otherwise the picture is centered on the slide.
+   * `x`/`y` say otherwise the picture is centred on the slide.
    * @agentTool add_image
    */
   addImage(
@@ -1538,7 +1541,7 @@ export class KeynoteDocument extends IWorkDocument {
     this.writeSlideNodeOrder(ids.filter((id) => id !== nodeId));
   }
 
-  /** Speaker notes of every slide, in order. */
+  /** Presenter notes of every slide, in order. */
   allNotes(): { slide: number; notes: string }[] {
     return this.slides().map((s) => ({ slide: s.index, notes: s.notes }));
   }

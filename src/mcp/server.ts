@@ -29,6 +29,7 @@ import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
 import type { DateBucket } from "../tst/categories.ts";
+import type { CanvasComment } from "../tswp/comments.ts";
 
 const PROTOCOL_FALLBACK = "2025-06-18";
 const SERVER_INFO = { name: "cupertino-files", version: packageVersion() };
@@ -359,7 +360,7 @@ export const TOOLS: readonly Tool[] = [
     name: "list_comments",
     description: apiDoc(
       "list_comments",
-      "Omit table to list every table. Reviewers answer as comments on cells, so read " +
+      "Omit table to list every table, and the comments pinned to a sheet or a slide canvas with them. Reviewers answer as comments on cells, so read " +
         "these before anything else on a returned file. Coordinates are 0-based.",
     ),
     inputSchema: {
@@ -374,7 +375,13 @@ export const TOOLS: readonly Tool[] = [
       const doc = open(requirePath(args));
       const name = str(args.table);
       const tables = name ? [tableIn(doc, name)] : tablesOf(doc.store);
-      const out = tables.map((t) => ({ table: t.name, comments: t.cellComments() }));
+      const out: unknown[] = tables.map((t) => ({ table: t.name, comments: t.cellComments() }));
+      // Canvas comments carry bigint ids; the agent needs the words, the author, and the date.
+      const plain = (c: CanvasComment) => ({ text: c.text, authorName: c.authorName, created: c.created });
+      if (!name && doc instanceof NumbersDocument) out.push({ canvas: doc.canvasComments().map(plain) });
+      if (!name && doc instanceof KeynoteDocument) {
+        out.push(...doc.slides().map((s) => ({ slide: s.index, canvas: s.canvasComments().map(plain) })));
+      }
       return JSON.stringify(out, null, 2);
     },
   },

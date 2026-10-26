@@ -1,7 +1,7 @@
 # CLI
 
 Sometimes you just want to look inside a document. `cupertino-dump` ships
-with the package — no code required:
+with the package—no code required:
 
 ```sh
 npx cupertino-dump info     Report.pages     # versions, components, object counts
@@ -19,8 +19,8 @@ npx -y cupertino-files import notes.md Deck.key               # a deck written f
 
 The same commands answer to `npx -y cupertino-files dump <command>`,
 and `npx -y cupertino-files mcp` starts the
-[MCP server](/guide/agents) that lets AI agents read, edit and format
+[MCP server](/guide/agents) that lets AI agents read, edit, and format
 documents through the same library.
 
-Filing an issue? `info` answers the first question we'll ask — which app
+Filing an issue? `info` answers the first question we'll ask—which app
 version wrote the document.

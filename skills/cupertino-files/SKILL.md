@@ -1,24 +1,24 @@
 ---
 name: cupertino-files
 description: >-
-  Read, inspect, and edit Apple iWork documents (.pages, .numbers, .key —
-  modern IWA format, 2013+) using the zero-dependency `cupertino-files`
+  Read, inspect, and edit Apple iWork documents (.pages, .numbers, .key—modern
+  IWA format, 2013+) using the zero-dependency `cupertino-files`
   TypeScript library. Use when a task involves extracting text from, editing
   text/styles/sections/margins in, or inspecting the internals of Apple
   Pages, Numbers, or Keynote files without Apple software. Do NOT use for
-  iWork '09 XML files or password-protected documents (both are detected and
+  iWork ’09 XML files or password-protected documents (both are detected and
   rejected with clear errors).
 ---
 
 # Working with Apple iWork files
 
 The `cupertino-files` package manipulates iWork documents entirely in
-TypeScript/JavaScript — no Apple apps, no external binaries, no native
-modules. It works in Node ≥ 22 and browsers (bytes in → bytes out).
+TypeScript/JavaScript—no Apple apps, no external binaries, no native
+modules. It works in Node 22 or later and browsers (bytes in → bytes out).
 
-The package also ships an MCP server — `npx -y cupertino-files mcp` —
-whose twenty tools (create, describe, read, edit and format tables, text,
-slides, sheets, links and page setup) cover the common cases without
+The package also ships an MCP server—`npx -y cupertino-files mcp`—whose
+twenty tools (create, describe, read, edit, and format tables, text,
+slides, sheets, links, and page setup) cover the common cases without
 writing code, and a matching CLI (`cupertino-files tools` / `call`).
 Tool descriptions are generated from the API's own docblocks
 (`@agentTool` tags), so they cannot drift. Prefer the API below when a
@@ -28,7 +28,7 @@ task outgrows them.
 import { PagesDocument, NumbersDocument, KeynoteDocument, IWorkDocument } from "cupertino-files";
 ```
 
-The package is ESM-only — `require()` fails with
+The package is ESM-only—`require()` fails with
 `ERR_PACKAGE_PATH_NOT_EXPORTED`. For a scratch script:
 `node --input-type=module -e "…"` or a `.mjs` file.
 
@@ -47,7 +47,7 @@ writeFileSync("report-edited.pages", doc.save());
 - `doc.save()` returns package bytes. Unmodified parts are preserved
   byte-for-byte, so always prefer load → edit → save over rebuilding.
 - Errors to expect: `EncryptedDocumentError` (password-protected),
-  `RangeError` mentioning "iWork '09" (legacy XML format — cannot be edited
+  `RangeError` mentioning "iWork '09" (legacy XML format—cannot be edited
   by this library).
 
 ## Check what's supported before doing real work
@@ -55,14 +55,14 @@ writeFileSync("report-edited.pages", doc.save());
 ```ts
 const report = doc.compatibility();
 report.era;                  // "iwork13" | "iwork16" | "iwork19" | "modern" | "current" | "future"
-report.unsupportedFeatures;  // e.g. ["pre-BNC table cell storage: cell values cannot be decoded"]
+report.unsupportedFeatures;  // for example ["pre-BNC table cell storage: cell values cannot be decoded"]
 report.warnings;             // unknown type IDs, patch archives, collaboration state…
 report.canRoundTrip;         // true ⇒ untouched content is preserved byte-for-byte
 doc.compatibilitySummary();  // one-line human summary
 ```
 
-Loading **never** fails because a document is newer than the library —
-unknown content is preserved and reported. If the report names unknown type
+Loading **never** fails because a document is newer than the library—unknown
+content is preserved and reported. If the report names unknown type
 IDs and you know what they are, teach the library:
 `registerTypes({ 10176: "TP.SomeNewArchive" }, "pages")`.
 
@@ -74,7 +74,7 @@ doc.bodyText;                   // plain text; paragraphs end with \n, inline ob
 doc.bodyOrUndefined;            // undefined for page-layout documents
 doc.paragraphs();               // [{ index, start, end, text, styleId, styleName }]
 doc.paragraph(n).styleName;     // named style of paragraph n, resolved through the
-                                // parent chain — direct formatting does not hide it
+                                // parent chain—direct formatting does not hide it
                                 // (.hasDirectFormatting says whether any is applied)
 doc.paragraphStyles();          // named styles: [{ id, name, identifier, parentId }]
 doc.listStyles();               // named list styles ("Bullet", "Numbered", "None", …)
@@ -99,7 +99,7 @@ For Numbers: `doc.sheets()` → `[{ id, name }]`. For Keynote:
 
 ## Editing a Pages document
 
-The safe path — it covers the modal job (take a real template, keep its
+The safe path—it covers the modal job (take a real template, keep its
 design, swap the words, drop surplus paragraphs):
 
 ```ts
@@ -110,12 +110,12 @@ clause.text = "New wording for this clause";      // keeps the paragraph's styli
 clause.setStyle("Body");
 doc.paragraph(9).delete();                         // boundary-safe, even for the last paragraph
 
-// Span replace: one atomic replaceWith per span — the replacement
+// Span replace: one atomic replaceWith per span—the replacement
 // inherits the replaced span's styling, through \n splits too.
 for (const hit of doc.find("TODO")) hit.replaceWith("Done").bold();
 
-// Many spans from one pass: applyEdits needs no ordering discipline —
-// every offset refers to the snapshot you read it from.
+// Many spans from one pass: applyEdits needs no ordering discipline—//
+every offset refers to the snapshot you read it from.
 const spans = doc.paragraphs();
 doc.applyEdits([
   { start: spans[2].start, end: spans[2].end, replacement: "New clause" },
@@ -127,36 +127,36 @@ Three things the API enforces so you don't have to:
 
 - A `TextRange` (from `find()`/`range()`) captures offsets. After an edit
   earlier in the text it throws `stale TextRange` instead of silently
-  hitting the wrong span — use the range an operation returns, re-obtain,
+  hitting the wrong span—use the range an operation returns, re-obtain,
   or use `applyEdits`. Edits *after* a range never invalidate it.
 - `deleteRange` + `insertText` is **not** a replace: the deletion removes
   the span's styling with it, so the insert inherits from the collapsed
   boundary. Each call is correct alone; for replace semantics use
   `replaceWith` / `replaceRange` / `applyEdits`.
-- Edits touching the very end of the text — deleting a tail, emptying or
-  rewriting the last paragraph — are safe; the writer keeps the
+- Edits touching the very end of the text—deleting a tail, emptying or
+  rewriting the last paragraph—are safe; the writer keeps the
   paragraph-style tables aligned for you.
 
 And three semantics worth knowing before they surprise you:
 
 - A replacement inherits the styling ruling at the **start** of the
   replaced range. If that position carries direct formatting (a
-  distinctly styled token, say), the new text adopts it — restore
+  distinctly styled token, say), the new text adopts it—restore
   formatting on the returned range, or better, use real placeholders
   (below) instead of styled tokens.
 - Replacing **every occurrence** of one token: pass all hits from a
-  single `find()` snapshot to `applyEdits` —
-  `doc.applyEdits(doc.find("[client]").map((r) => ({ start: r.start, end: r.end, replacement: name })))` —
-  non-overlapping hits of one token always qualify.
+  single `find()` snapshot to `applyEdits`—`doc.applyEdits(doc.find("[client]").map((r)
+  => ({ start: r.start, end: r.end, replacement: name })))`—non-overlapping
+  hits of one token always qualify.
 - After deleting paragraph runs next to auto-numbered headings, a
   surviving empty paragraph can inherit list membership and render as a
   stray numbered item; `doc.paragraph(i).setListStyle("None")` or
   `setStyle(...)` clears it.
 - `paragraph(i).format({...})` parents the paragraph on an anonymous
-  style — the look is right and `styleName` still reports the named
+  style—the look is right and `styleName` still reports the named
   style it inherits, but the paragraph now carries its own copy.
   `hasDirectFormatting` tells you which. For anything document-wide, set
-  the property on the named style instead — `sheet.style("Heading").setParagraph({ keepWithNext: true })` merges — or make a named
+  the property on the named style instead—`sheet.style("Heading").setParagraph({ keepWithNext: true })` merges—or make a named
   variant with `createParagraphStyle({ copyOf: "Heading", … })`.
 
 ### Building a long document by appending
@@ -167,7 +167,7 @@ place, and these are the parts that bite:
 ```ts
 // Every appended paragraph states its own list membership: a bullet
 // does not turn the rest of the document into a list.
-doc.appendParagraph("Chapter One", "Heading");   // style names are the template's own — blank() defines "Heading", not "Heading 1"
+doc.appendParagraph("Chapter One", "Heading");   // style names are the template's own—blank() defines "Heading", not "Heading 1"
 doc.appendParagraph("Body text.", "Body");
 doc.appendParagraph("A bulleted step", "Body", "Bullet");   // opt in per call
 
@@ -175,7 +175,7 @@ doc.appendParagraph("A bulleted step", "Body", "Bullet");   // opt in per call
 // indented body. `wrap: "page"` places it against the page margins.
 doc.insertInlineImage(doc.body.paragraphStarts()[i], png, { fileName: "shot.png", width: 456 });
 
-// What the template defines vs what it actually uses — a style nobody
+// What the template defines vs what it actually uses—a style nobody
 // has seen next to the rest usually looks foreign on the page.
 doc.paragraphStyles();        // every named style
 doc.paragraphStylesInUse();   // [{ name, count }], most-used first
@@ -183,13 +183,13 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 
 - **The app draws one more paragraph than `paragraphs()` lists** when the
   text ends with a terminator. That tail is *one* of the apps' shapes,
-  not the norm: of the corpus's 30 body storages, 18 end bare — what
-  typing leaves — 9 end with the terminator, 3 are empty. Appending
+  not the norm: of the corpus's 30 body storages, 18 end bare—what
+  typing leaves—9 end with the terminator, 3 are empty. Appending
   preserves whichever convention the document already has (a `blank()`
   build ends bare), so check `doc.body.endsWithEmptyParagraph` rather
   than assuming either state, and call `doc.body.normalizeTail()` when
   a stray final line must not appear. Use `normalizeTail()`, not a raw
-  `deleteRange(len - 1, len)` — it is the same edit with every
+  `deleteRange(len - 1, len)`—it is the same edit with every
   attribute table kept lawful, which matters whenever the last
   paragraph carries character styling or a placeholder field.
 - **Renaming a running header or footer**: `setFooterText` replaces the
@@ -204,28 +204,28 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 - **No API restarts list numbering.** Keep the source's own numbers as
   text when a document needs "1." to start again.
 - **Removing a picture**: `removeAttachment` unlinks it; `doc.compact()`
-  then reclaims the archives. The image bytes stay in the package —
-  nothing traces a Data/ file safely enough to collect one.
+  then reclaims the archives. The image bytes stay in the package—nothing
+  traces a Data/ file safely enough to collect one.
 
-### Placeholders — fill-in templates without styled-token hacks
+### Placeholders—fill-in templates without styled-token hacks
 
-Pages' native mechanism (Format → Advanced → Define as Placeholder
+Pages' native mechanism (choose Format > Advanced > Define as Placeholder
 Text): a click selects the whole span, typing replaces it.
 
 ```ts
-doc.placeholders();                     // [{ start, end, text, fieldId }] — "Tap or click to add …"
+doc.placeholders();                     // [{ start, end, text, fieldId }]—"Tap or click to add …"
 doc.fillPlaceholder(0, "Acme Corp");    // real text in, marking off, styling kept
 doc.find("[client name]")[0].asPlaceholder();  // make a span tap-to-replace in Pages
 ```
 
-Filling sheds the placeholder marking the way typing into one does —
-programmatic content never stays flagged as ghost text. A placeholder
+Filling sheds the placeholder marking the way typing into one does—programmatic
+content never stays flagged as ghost text. A placeholder
 spanning an image's object character is how a body document marks an
 image placeholder; the same calls read it.
 
 **Filling several: pass the listing's entries, not fresh indexes.** A
 fill removes its own entry, so the indexes of everything after it shift
-down — `fillPlaceholder(0); fillPlaceholder(1); fillPlaceholder(2)`
+down—`fillPlaceholder(0); fillPlaceholder(1); fillPlaceholder(2)`
 lands two of the three in the wrong fields. Each entry of one
 `placeholders()` snapshot carries the `fieldId` that pins it, resolved
 live at the fill, so this is safe in any order:
@@ -242,7 +242,7 @@ indexing, so `text.indexOf(...)` results are valid):
 
 ```ts
 doc.replaceText("old", "new");                    // literal find/replace everywhere, returns count
-doc.appendParagraph("New paragraph", "Heading"); // style by name (optional) — an unknown name throws
+doc.appendParagraph("New paragraph", "Heading"); // style by name (optional)—an unknown name throws
 doc.setParagraphStyle(2, "Body");                  // paragraph index, style name or bigint id
 doc.applyCharacterFormatting(start, end, { bold: true, fontSize: 18, fontColor: { r: 1, g: 0, b: 0 } });
 doc.createParagraphStyle({ name: "My Style", basedOn: "Body",
@@ -270,12 +270,12 @@ doc.paragraph(3).setDirection("rtl");  // base direction, written as the app's �
 doc.range(0, 10).italic().color(0.8, 0, 0);
 ```
 
-`find()` returns `TextRange`s (string = literal, RegExp honored). Ranges
+`find()` returns `TextRange`s (string = literal, RegExp honoured). Ranges
 support `.replaceWith() .delete() .format() .bold() .italic()
 .underline() .fontSize() .fontName() .color() .link() .unlink()
 .applyCharacterStyle() .applyParagraphStyle() .applyListStyle()
 .paragraphs()`. Prefer ONE `.format({...})` call with all properties over
-chaining sugar methods — each call creates a style object.
+chaining sugar methods—each call creates a style object.
 
 ### Checking styling survived, without a Mac
 
@@ -291,20 +291,20 @@ doc.body.characterStyleRuns();           // one pass over the whole body: [{ sta
 `characterFormattingAt` answers "what colour/font/size is this position
 really" with no style-chain walking; sweep `characterStyleRuns()` and
 resolve each run once for whole-document audits. `undefined` ids mean
-"no direct character styling — the paragraph style alone applies",
+"no direct character styling—the paragraph style alone applies",
 which is the normal state of most text, not a failure. What no offline
 read can prove is how the app *renders*. When a render is wrong,
 bisect: one operation per file, each from a fresh copy of the original,
-open each — the failing rung names the operation.
+open each—the failing rung names the operation.
 
 **`paragraphs()` is the wrong instrument for layout.** Text and style
-come back right from documents whose pages are wrong — a picture drawn
+come back right from documents whose pages are wrong—a picture drawn
 outside its column, a paragraph flowing over the footer, a heading that
 has left the table of contents. What a build script can assert offline
 is the countable: list membership against what the source asked for,
 picture and heading counts, `hasDirectFormatting` where a named style
 was meant, `endsWithEmptyParagraph`, `paragraphStylesInUse()` against
-the template's own vocabulary, geometry and indents against the
+the template's own vocabulary, geometry, and indents against the
 template's. Then still look at a page.
 
 **Character** options: `bold`, `italic`, `fontSize`, `fontName`
@@ -329,12 +329,12 @@ Colours are `{ r, g, b, a?, space? }` with channels in 0..1 and `space`
 `undefined` for a nullable property (`fontName`, `fontColor`,
 `backgroundColor`, `border`, …) means **explicitly none**, not "inherit".
 
-All text offsets are UTF-16 code units — identical to JavaScript string
+All text offsets are UTF-16 code units—identical to JavaScript string
 indexing, so `text.indexOf(...)` results are valid offsets.
 
 ## Editing named styles
 
-Editing a style changes every run that uses it — the difference between
+Editing a style changes every run that uses it—the difference between
 "make this heading blue" and "make all headings blue".
 
 ```ts
@@ -366,12 +366,12 @@ doc.unlistParagraphStyle(id);      // take it out of the panel, keep the style
 Listing is confirmed in Pages and takes four things, all handled for you:
 a name, an identifier plus its `identifier_to_style_map` entry, both
 property bags, and an entry in the theme's preset list. `copyOf` starts
-the bags as a full copy of an existing style's — the dense shape every
+the bags as a full copy of an existing style's—the dense shape every
 listed Apple style has; without it the style sets only what you asked for.
 
 ## Shared style values
 
-Fills, gradients, strokes and shadows are one vocabulary used by text,
+Fills, gradients, strokes, and shadows are one vocabulary used by text,
 table cells and shapes alike:
 
 ```ts
@@ -379,14 +379,14 @@ import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "cu
 
 colorFill(1, 0.9, 0.2);                                 // flat colour
 linearGradient(hexColor("#fff"), hexColor("#0066ff"));  // two-stop gradient
-solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1pt solid border
+solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1 pt solid border
 ({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: [4, 2] });  // dashed
 ```
 
 ## Tables
 
-`doc.tables()` is document order on both apps — Numbers walks sheets in
-tab order, Pages the body's anchors by text position — so `tables()[0]`
+`doc.tables()` is document order on both apps—Numbers walks sheets in
+tab order, Pages the body's anchors by text position—so `tables()[0]`
 is the first table on the page even right after an `addTable`/
 `insertInlineTable`. Saving verifies every changed table's records
 resolve in its own data lists and refuses the file otherwise, naming
@@ -396,7 +396,7 @@ the table and cells (`orphanReferences()` is the diagnostic behind it).
 const tables = doc.tables();                 // any app; numbersDoc.tables(sheetId) scopes to a sheet
 const t = tables[0];
 t.name; t.rowCount; t.columnCount; t.headerRowCount; t.footerRowCount;
-if (!t.hasReadableCells) { /* pre-BNC storage — see below */ }
+if (!t.hasReadableCells) { /* pre-BNC storage—see below */ }
 t.cells();        // [{ row, column, value }] non-empty cells
 t.grid();         // dense (CellValue | null)[][]
 t.merges();       // [{ row, column, rowCount, columnCount }] anchored top-left
@@ -409,7 +409,7 @@ cellValueToString(cell.value);
 
 Cell comments are read-only: the library reads and preserves them, only
 the app writes them. On a returned review file, dump `cellComments()`
-alongside `cells()` before anything else — reviewers answer as comments
+alongside `cells()` before anything else—reviewers answer as comments
 on the cells themselves.
 
 `CellValue` is a discriminated union on `.type`: `empty | number | text |
@@ -418,7 +418,7 @@ cells carry their cached result, so no evaluator is needed).
 
 ### Formulas
 
-Formulas belong to *tables*, not to Numbers — a table in a Pages document
+Formulas belong to *tables*, not to Numbers—a table in a Pages document
 or a Keynote slide has the same calc engine.
 
 ```ts
@@ -428,7 +428,7 @@ t.cellFormulaDetail(1, 3);    // { text, unknownFunctions, unknownNodeTypes, has
 ```
 
 Rendering takes a position because references are stored as **offsets from
-the cell using them** — one stored formula renders differently in every
+the cell using them**—one stored formula renders differently in every
 cell of a filled-down column.
 
 Two honest gaps, both visible in the output rather than papered over:
@@ -442,8 +442,8 @@ Two honest gaps, both visible in the output rather than papered over:
 - **Cross-table references resolve to table names** (`Other::A2`) via the
   calc engine's owner identities, both reading and writing.
 
-Writing formulas: `t.setFormula(row, col, "=SUM(B2:B9)", { value: 1500 })`
-— text in, Apple's exact AST encoding out. Nothing evaluates, so pass the
+Writing formulas: `t.setFormula(row, col, "=SUM(B2:B9)", { value: 1500
+})`—text in, Apple's exact AST encoding out. Nothing evaluates, so pass the
 cached display value: the app recomputes on open either way, but only the
 cached value gives the cell its type's display format before then, and a
 review round found format-less formula results rendering left-aligned
@@ -454,7 +454,7 @@ A cross-table reference to a table that came from `addTable` or
 `insertInlineTable` is honest about its standing. The clone is fully
 registered at all three of the engine's sites (owner archives, the
 dependency tracker's list, the owner-id map) and its owner carries
-dependency records for every formula written into it — but Numbers has
+dependency records for every formula written into it—but Numbers has
 so far reduced library-written cross-table references to their cached
 values on first open in every measured round, records or not. Two
 things are app-confirmed: a formula-less clone keeps its library
@@ -474,8 +474,8 @@ t.setCell(1, 1, 143_800_000_000);
 t.setCell(2, 0, new Date());
 t.setCell(2, 1, true);
 t.setCell(3, 0, null);                            // same as clearCell
-// A duration is the one type with no plain form — a bare number means the
-// number — so it keeps the tagged form.
+// A duration is the one type with no plain form—a bare number means the
+// number—so it keeps the tagged form.
 t.setCell(2, 2, { type: "duration", seconds: 3600 });
 t.setRow(4, ["Total", 42]);
 t.setCells(5, 0, [[1, 2]]);
@@ -483,16 +483,16 @@ t.setCells(5, 0, [[1, 2]]);
 
 An unrecognised value **throws** rather than writing an empty cell, and it
 throws before touching the row, so a rejected write leaves the table
-untouched. `NaN`, `Infinity` and an invalid `Date` are all refused.
+untouched. `NaN`, `Infinity`, and an invalid `Date` are all refused.
 
-Writing preserves the cell's styles, number formats and comments, and
+Writing preserves the cell's styles, number formats, and comments, and
 clears any formula. Rich text (`type: "richText"`) cannot be written
-directly — use `type: "text"`, or edit `t.richTextStorage(row, col)`.
+directly—use `type: "text"`, or edit `t.richTextStorage(row, col)`.
 Rows and columns: `insertRows(at, count)`, `deleteRows(at, count)`,
 `insertColumns`, `deleteColumns`, `setColumnWidth`, `setRowHeight`.
 Coordinates outside the existing table throw.
 
-Writing a value into a cell a merge has swallowed also throws — the value
+Writing a value into a cell a merge has swallowed also throws—the value
 would be stored and displayed nowhere. Write to the merge's anchor
 instead, or pass `{ allowCovered: true }` if you mean it. Clearing a
 covered cell is always allowed.
@@ -501,7 +501,7 @@ covered cell is always allowed.
 
 ```ts
 t.setCellFormatting(1, 0, {
-  fill: colorFill(0.95, 0.95, 1),                      // colour, gradient or image
+  fill: colorFill(0.95, 0.95, 1),                      // colour, gradient, or image
   borders: allBorders(solidStroke({ r: 0, g: 0, b: 0 }, 0.5)),  // or { top, right, bottom, left }
   padding: { left: 6, right: 6, top: 3, bottom: 3 },
   verticalAlignment: VerticalAlignment.MIDDLE,          // 0 top, 1 middle, 2 bottom
@@ -520,10 +520,10 @@ properties are inherited rather than lost, and neighbours are unaffected.
 **Long text needs `textWrap: true`, values need width.** A cell's text
 does not wrap by itself, and a table with long text cells (row notes, a
 description column) ships with silently truncated contents unless every
-such cell wraps — this shipped once, in Pages. The apps then fit the
+such cell wraps—this shipped once, in Pages. The apps then fit the
 row's height to the wrapped text on open; there is no auto-height flag
-to set. The rule runs the other way for numbers, dates and booleans:
-never wrap those — make the column wide enough with `setColumnWidth`
+to set. The rule runs the other way for numbers, dates, and booleans:
+never wrap those—make the column wide enough with `setColumnWidth`
 instead, or the value clips. And keep header labels to a word or two; a
 sentence in a narrow column grows the row for the whole table.
 
@@ -553,8 +553,8 @@ doc.addTable(sheet.id, { copyOf: someTable.infoObject!.identifier });  // a dupl
 doc.removeTable(sheet.id, table.infoObject!.identifier);
 ```
 
-Tables are created by **copying** — building one from nothing means
-synthesising tiles, header buckets, data lists and a calc-engine owner. The
+Tables are created by **copying**—building one from nothing means
+synthesising tiles, header buckets, data lists, and a calc-engine owner. The
 copy is always renamed, because Numbers addresses tables by name and two
 "Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
 is per sheet, so a copy onto another sheet may keep the original name.
@@ -565,12 +565,12 @@ copy still has the donor's row and column count, column widths, and
 per-cell styling (a wrap style from a prose column lands on your number
 cells, cell by cell). Size it with `deleteRows`/`deleteColumns` and
 `insertRows`, set its widths, and reset formatting where the donor's
-shows through — a reader who opens a mostly-empty table at someone
+shows through—a reader who opens a mostly-empty table at someone
 else's widths sees a mistake, and no offline check will catch it.
 
 ### Conditional formatting and filters
 
-Both are the same archive underneath — a *predicate* — so they read alike.
+Both are the same archive underneath—a *predicate*—so they read alike.
 
 ```ts
 t.conditionalStyleSets();               // Map<key, ConditionalStyleSet>, shared by many cells
@@ -588,23 +588,23 @@ t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing,
 Two things to know before relying on this:
 
 - **Nothing is evaluated.** `conditionalRules()` tells you what the rules
-  *are*, not which one currently matches — that needs the calc engine.
-  Likewise, enabling a filter set does not hide rows; the app recomputes
+  *are*, not which one currently matches—that needs the calc engine.
+  Likewise, turning a filter set on does not hide rows; the app recomputes
   that when it next opens the file.
 - **Conditions are read from the rule's formula**, which states the
   comparison, rather than from Apple's unpublished `predicate_type`. So a
   condition reads correctly even for a type code this library has never
-  seen — and `predicate.operator` is `undefined`, rather than a guess, when
+  seen—and `predicate.operator` is `undefined`, rather than a guess, when
   the rule is something richer than a comparison ("text contains").
 
-**Conditional rules write** for all six comparisons — `=`, `<>`, `>`,
-`>=`, `<`, `<=` via `setConditionalRules` — byte-identical to Apple's
+**Conditional rules write** for all six comparisons—`=`, `<>`, `>`,
+`>=`, `<`, `<=` via `setConditionalRules`—byte-identical to Apple's
 encoding; each code is measured from a real document's own formula, and
 filters share the encoding. Covered cells are also registered in the calc
 engine's dependency ledger: a rule is a formula, and one the engine has no
-record for shows in the inspector without ever drawing its fill — cell
+record for shows in the Format sidebar without ever drawing its fill—cell
 formulas are recomputed on open, rule formulas are not. **Filter rules do
-not write** — reading is measured from a real filter set, but authoring a
+not write**—reading is measured from a real filter set, but authoring a
 rule also means recomputing which rows it hides, which needs the calc
 engine.
 
@@ -629,8 +629,8 @@ t.addCategory([{ column: 3, bucket: "yearAndMonth" }]);  // a date column by per
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
-bucketed — `groupingName` says which ("year", "year and quarter", "weekday"
-…) — and a bucketed group's `value` is the bucket's start date, not any
+bucketed—`groupingName` says which ("year", "year and quarter", "weekday"
+…)—and a bucketed group's `value` is the bucket's start date, not any
 cell's value.
 
 Editing cells does not regroup them, so call `regroupCategories()` after
@@ -656,7 +656,7 @@ t.removeCellControl(1, 0);      // keeps the value
 ```
 
 A widget is **two** things: a spec saying what it is, and a *format* on the
-cell saying to draw it. `setCellControl` writes both — that matters because
+cell saying to draw it. `setCellControl` writes both—that matters because
 writing only the spec produces a document that opens fine and shows the
 underlying value instead of the widget, which is what this library used to
 do. If you set the format yourself afterwards, use a kind matching the
@@ -665,18 +665,18 @@ cell's value type or the widget disappears.
 A format you set *first* is kept: choosing a percentage for a stepper
 survives attaching it.
 
-The control needs a value of the right type — a boolean for a checkbox, a
-number for the others — so pass `value` unless the cell already holds one.
+The control needs a value of the right type—a boolean for a checkbox, a
+number for the others—so pass `value` unless the cell already holds one.
 
 Pop-up menus are created with
-`setCellControl(row, col, { widget: "popupMenu", items: [...] })` — the
+`setCellControl(row, col, { widget: "popupMenu", items: [...] })`—the
 None entry occupies slot 0 as a bare `NIL_TYPE`, measured and
 app-confirmed. `setPopupMenu(row, column, modelId)` attaches an existing
 model instead.
 
 ## Shadows and drawable styling
 
-Cell and table styles have **no shadow field** — the format has no such
+Cell and table styles have **no shadow field**—the format has no such
 thing. A shadow belongs to the *drawable*: a shape, text box, image, or the
 table as a whole.
 
@@ -684,7 +684,7 @@ table as a whole.
 const style = drawable.style();          // DrawableModel/ImageModel.style()
 style.read();                            // { fill?, stroke?, opacity?, shadow?, reflection? }
 style.set({
-  fill: colorFill(0.2, 0.4, 0.9),        // shapes only — images have no fill
+  fill: colorFill(0.2, 0.4, 0.9),        // shapes only—images have no fill
   stroke: solidStroke({ r: 0, g: 0, b: 0 }, 2),
   opacity: 0.9,
   shadow: { angle: 315, offset: 5, radius: 3, opacity: 0.5, enabled: true },
@@ -695,11 +695,11 @@ drawableStylesOf(doc.store);             // every styled drawable in a document
 ```
 
 `null` removes a property; omitting it leaves it. Note that a shadow with
-`enabled: false` and no shadow at all are different states — the apps keep
+`enabled: false` and no shadow at all are different states—the apps keep
 your parameters when you untick the box.
 
 **Important:** tables written by iWork '13/'15-era apps use *pre-BNC* cell
-storage, which reads (text, numbers, dates — by measured position) but
+storage, which reads (text, numbers, dates—by measured position) but
 never writes: `setCell()` **throws** rather than writing something wrong,
 and unmeasured record shapes refuse instead of guessing. Check
 `t.hasReadableCells` / `t.storageGeneration` when file age is unknown.
@@ -724,7 +724,7 @@ chart.removeSeries(0); chart.removeCategory(1);
 ```
 
 Charts are rectangular: a series must have a value for every category. A
-mismatched count throws rather than being padded — padding with zeroes and
+mismatched count throws rather than being padded—padding with zeroes and
 padding with gaps look identical in the data and completely different on the
 page.
 
@@ -747,7 +747,7 @@ chart.legendStyle()?.opacity;
 
 **Always go through the chart, never the style object, when writing.**
 Style archives live in the document stylesheet and templates hand the same
-one to several charts — in a real document a single series style was shared
+one to several charts—in a real document a single series style was shared
 by ten. `chart.setSeriesFill` and `chart.setAxisMajorGridlines` clone a
 shared archive first and repoint this chart at the copy;
 `chart.seriesStyle(0)!.setFill(…)` writes straight through and recolours
@@ -783,18 +783,18 @@ adds them to the document's roster.
 
 A footnote is two storages. The body gets a U+000E reference character (not
 the U+FFFC everything else uses), and the note is a separate storage whose
-text starts with its own U+FFFC — the spot where Pages draws the number.
+text starts with its own U+FFFC—the spot where Pages draws the number.
 Numbering is Pages' job: it depends on how many footnotes precede this one
 and on the document's footnote settings.
 
 ## Page numbers
 
-A page number is **not text** — no digits live in the storage, because the
+A page number is **not text**—no digits live in the storage, because the
 value comes from pagination the app performs. It is a U+FFFC placeholder
 plus an archive that renders it.
 
 ```ts
-// Any TextStorage — a footer, a header, a text box, the body.
+// Any TextStorage—a footer, a header, a text box, the body.
 const master = doc.sections()[0].templates().find((t) => t.role === "odd")!;
 const storage = master.footers[1]!;              // 0/1/2 = left/center/right
 storage.insertPageNumber(storage.text.length);          // "Page ￼"
@@ -807,7 +807,7 @@ storage.removeAttachment(objectId);   // drops the field and its placeholder
 Only `"decimal"` and `"lower-roman"` are written: they are the only formats
 any examined file contains, each with its numeric code stored alongside its
 name so the pairing is not a guess. For another, pass `{ formatCode, formatName }`
-together — one without the other is refused, since a file whose code and
+together—one without the other is refused, since a file whose code and
 name disagree is self-contradictory.
 
 `cachedValue` is what the app last rendered. This library never writes it:
@@ -837,14 +837,14 @@ body.removeBookmark(id);
 
 A date field is **not** like a page number: it spans real characters, and
 the app rewrites them when the field updates. So you supply the text to
-show — formatting a date the way a locale and pattern would is Foundation's
+show—formatting a date the way a locale and pattern would is Foundation's
 job, and approximating it here would put subtly wrong text in the document.
 The field is marked as needing an update, so the app replaces it with its
 own rendering when it next opens the file.
 
 A bookmark's `ranged` flag is derived from the span you give: `true` for
 more than one character, `false` for a point anchor. Do not set out to
-fight this — Pages trusts the flag over the run, and a mismatch (seen in
+fight this—Pages trusts the flag over the run, and a mismatch (seen in
 the app) collapses a 13-character bookmark to its first character.
 
 ## Inserting images (Pages)
@@ -861,8 +861,8 @@ doc.insertInlineImage(pos, pngBytes, { fileName: "plate.png", wrap: "page" });
 
 The picture **rides the text**: it sits in the text column and moves with
 the paragraph's indent, which is what you want when the body is indented
-(a letterhead template, say). `wrap: "page"` is the other mode — placed
-against the page margins with text flowing around it — where a picture
+(a letterhead template, say). `wrap: "page"` is the other mode—placed
+against the page margins with text flowing around it—where a picture
 in an indented body will *not* line up with the words above it.
 
 Geometry is not the lever for placement: `setGeometry({ x })` writes a
@@ -901,12 +901,12 @@ image.removeCrop();                 // show the whole picture again
 
 The one thing to get right: **the mask's frame is in the image's coordinate
 space, not the page's**, so `visible = image.position + window.position`.
-`setCrop` moves the window over the picture — the result moves on the page
+`setCrop` moves the window over the picture—the result moves on the page
 too. `setVisibleFrame` does the opposite: it keeps the same part of the
 picture visible and puts it where you ask.
 
 Cropping an image that has no mask creates one. Non-rectangular masks
-(instant alpha, shape crops) are read but never rewritten — `crop().isRectangular`
+(instant alpha, shape crops) are read but never rewritten—`crop().isRectangular`
 says which you have, and resizing a non-rectangular one throws rather than
 flattening the cut-out into a box.
 
@@ -926,13 +926,13 @@ slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
 // bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
-// is written verbatim — an invented one is discarded by Keynote, so
+// is written verbatim—an invented one is discarded by Keynote, so
 // read a deck that uses the effect you want and reuse its id.
 ```
 
 Placeholders are the theme's boxes for you to fill. Setting one only works
-where the slide already carries it — creating a placeholder means
-synthesizing the geometry and style the master defines for that role, so a
+where the slide already carries it—creating a placeholder means
+synthesising the geometry and style the slide layout defines for that role, so a
 slide on a layout without a body box is told so rather than given an
 unstyled box at the origin. A slide on another layout is made from that
 layout instead:
@@ -954,16 +954,16 @@ name's error lists the names the deck offers.
 ### Pictures on slides
 
 ```ts
-doc.addImage(0, pngBytes, { fileName: "chart.png" });            // centered, fitted to 400 pt
+doc.addImage(0, pngBytes, { fileName: "chart.png" });            // centred, fitted to 400 pt
 doc.addImage(2, pdfBytes, { fileName: "figure.pdf", x: 80, y: 120, width: 640 });
 ```
 
-The archive is the measured slide-image shape — the drawable's parent is
+The archive is the measured slide-image shape—the drawable's parent is
 the slide, the aspect ratio locked, the theme's `image-0-imageStyle`
-applied — and the picture joins both of the slide's drawable lists, so
+applied—and the picture joins both of the slide's drawable lists, so
 it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
-is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
+is fitted to `maxWidth`. Without `x`/`y` the picture is centred.
 
 **Repeating a drawable on every page, and breaking a page.** A drawable
 moved to the section master repeats on every page that master draws;
@@ -1014,8 +1014,8 @@ box.setGeometry({ width: 600, height: 80 });
 box.setPathRectangle(600, 80);   // the text's coordinate space follows
 ```
 
-`setPathRectangle` refuses a path that is not a plain rectangle —
-rewriting a star or an arrow into a box would flatten the shape.
+`setPathRectangle` refuses a path that is not a plain rectangle—rewriting
+a star or an arrow into a box would flatten the shape.
 
 ### Presentation settings
 
@@ -1023,7 +1023,7 @@ rewriting a star or an arrow into a box would flatten the shape.
 doc.presentation();          // { mode, loops, slideNumbersVisible, autoplay*, idleTimer*, playsUponOpen }
 doc.setPresentation({ mode: ShowMode.AUTOPLAY, autoplayTransitionDelay: 12, loops: true });
 doc.slideSize();             // { width: 1920, height: 1080 }
-doc.setSlideSize(1024, 768); // objects keep their coordinates — nothing is rescaled
+doc.setSlideSize(1024, 768); // objects keep their coordinates—nothing is rescaled
 ```
 
 Defaults come from the schema rather than from zero: every deck examined
@@ -1100,8 +1100,8 @@ review round watched an app refuse, repair destructively, or render
 against the author's intent. Errors (`text/table-position`,
 `table/unregistered`, `cell/cross-ref-dangling`, `table/orphan-string`)
 are states the app rejects or mangles; warnings (`cell/rule-unregistered`,
-`cell/format-missing`) open fine and render wrong. A document built through this API audits clean — a finding on one
-is a library bug — so its real use is documents from anywhere else:
+`cell/format-missing`) open fine and render wrong. A document built through this API audits clean—a finding on one
+is a library bug—so its real use is documents from anywhere else:
 app-edited files, other tools, raw-layer edits.
 
 `save()` enforces the other half by itself: an archive missing a proto2
@@ -1111,28 +1111,28 @@ throw, naming the object and field, rather than produce the file.
 ## Rules of thumb
 
 1. Never synthesise a document graph by hand. To make a *new* document,
-   use `NumbersDocument.blank()` (or `PagesDocument`/`KeynoteDocument`) —
-   an embedded, Apple-authored donor, A4 or 16:9, app-confirmed — or
+   use `NumbersDocument.blank()` (or `PagesDocument`/`KeynoteDocument`)—an
+   embedded, Apple-authored donor, A4 or 16:9, app-confirmed—or
    `blankFrom(template)` to empty a document you already have, keeping
    its design. The `create_document` MCP tool is the same thing by path.
 2. Make all edits through the API, not by writing raw protobuf fields,
-   unless the task is explicitly about the wire format — the API maintains
+   unless the task is explicitly about the wire format—the API maintains
    attribute-table indexes, object references, and package metadata that
    the apps validate.
 3. What `doc.save()` guarantees, precisely: **unedited content is
    byte-identical**, enforced for every fixture, and every fixture also
    survives an open→edit→save→reopen cycle with nothing else disturbed.
    That the *apps* then open the result is a separate claim only a Mac can
-   settle — `npm run test:e2e`, and the open claims in `docs/VERIFICATION.md`.
+   settle—`npm run test:e2e`, and the open claims in `docs/VERIFICATION.md`.
    Do not promise a user it will open; say it round-trips.
-4. **Never edit a document that is open in an iWork app** — the app rewrites
+4. **Never edit a document that is open in an iWork app**—the app rewrites
    the whole package on its next autosave and your changes vanish. Close it
    first. Live iCloud collaboration cannot be joined from a file at all.
 5. Check `doc.compatibility()` before relying on a feature with files of
    unknown provenance, and never interpret an empty result as "no data"
    without confirming the feature is supported.
-6. Check `docs/COVERAGE.md` before assuming a feature is missing — it is
-   generated from the code and says read, write or neither for every
+6. Check `docs/COVERAGE.md` before assuming a feature is missing—it is
+   generated from the code and says read, write, or neither for every
    capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
@@ -1143,16 +1143,16 @@ throw, naming the object and field, rather than produce the file.
    absent today: function-shaped filter rules beyond text-contains and
    starts-with, category summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult
-   `docs/FORMAT.md` — §14 covers tables byte by byte.
+   `docs/FORMAT.md`—§14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a
    repro. Check it before relying on cell styling or colour spaces in
    anything that matters. (Paragraph border positions are settled:
-   measured logical — 4 leading, 8 trailing, swapping visual sides with
+   measured logical—4 leading, 8 trailing, swapping visual sides with
    the writing direction.)
 8. **Proto first.** When something cannot be deduced from diffing
-   documents, read `proto/current/*.proto` before guessing — a plain
-   text search there has settled field names, types and defaults that
+   documents, read `proto/current/*.proto` before guessing—a plain
+   text search there has settled field names, types, and defaults that
    hours of byte-diffing could not: what a mask's `pathsource` union
    holds, that `traced_path` is a bare `TSP.Path`, which archive a
    settings field belongs to. The schemas ship in the package; the
@@ -1162,5 +1162,5 @@ throw, naming the object and field, rather than produce the file.
 9. Style-property bags are three-state. A field can be set, absent
    (inherit from the parent style), or removed; absent never means
    false. `applyTableFormatting` and friends take `null` to remove a
-   field and `undefined` to leave it alone — pass `false` only to
+   field and `undefined` to leave it alone—pass `false` only to
    *store* false.

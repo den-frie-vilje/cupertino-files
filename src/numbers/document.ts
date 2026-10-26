@@ -216,7 +216,10 @@ export class NumbersDocument extends IWorkDocument {
     return out;
   }
 
-  /** The comments pinned to the sheets' canvases, every sheet in tab order; `cellComments()` on a table reads the ones on cells. */
+  /**
+   * The comments pinned to the sheets' canvases, every sheet in tab order; `cellComments()` on a table reads the ones on cells.
+   * @agentTool list_comments
+   */
   canvasComments(): CanvasComment[] {
     return this.sheets().flatMap((sheet) => canvasComments(this.store, sheet.id));
   }
@@ -359,14 +362,16 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
-   * Make a sheet the one the document opens on.
+   * Re-point the stored sheet selections at a sheet, best-effort.
    *
-   * Numbers remembers the selected tab in its UI state — every
-   * `TN.SheetSelectionArchive` names a sheet through a reference — and
-   * ignores tab order when deciding where to open, so a document
-   * rearranged with {@link moveSheet} still opens on whatever sheet was
-   * active at the last save. This re-points every stored sheet
-   * selection at the given sheet.
+   * Numbers ignores tab order when deciding where a document opens, so
+   * a document rearranged with {@link moveSheet} still opens on whatever
+   * sheet was active at the last save. Every `TN.SheetSelectionArchive`
+   * in the UI state names a sheet through a reference, and this
+   * re-points all of them at the given sheet. That has proved necessary
+   * but not sufficient: a document with every selection re-pointed has
+   * opened on the chosen sheet in one review round and elsewhere in
+   * another, so the state that decides it is still unmeasured.
    *
    * @agentTool manage_sheets
    */
