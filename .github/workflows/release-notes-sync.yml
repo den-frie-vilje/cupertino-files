@@ -9,13 +9,16 @@
 #
 # A version that shipped before this pipeline existed has a changelog
 # section but no GitHub release. Passing the commit it was published
-# from as `target` creates that release, notes and tag included: the
-# annotated tag is pushed first and the release created on it, the same
-# sequence the Release workflow uses (the releases API refuses to create
-# the tag itself for the Actions token). Events raised by that token
-# never start a workflow, so the Release workflow's publish step does
-# not run and npm is untouched. The release is never marked Latest
-# either, because later versions already exist.
+# from as `target` creates the tag and then the release on it, the
+# sequence the Release workflow uses. The Actions token may push a tag
+# only when the tagged commit's workflow files match the default
+# branch's (GitHub's "workflows permission" rule), so for an older
+# commit push the tag by hand first (git tag -a vX <commit> -m vX &&
+# git push origin vX) and dispatch without a target: the run creates
+# the release on the existing tag. Either way the release is created
+# by the Actions token, whose events never start a workflow, so the
+# Release workflow's publish step does not run and npm is untouched;
+# --latest=false keeps the newest version's badge where it is.
 name: Sync release notes
 
 on:
@@ -53,14 +56,17 @@ jobs:
           node --experimental-strip-types scripts/release-notes.ts "$VERSION"
           if gh release view "v$VERSION" >/dev/null 2>&1; then
             gh release edit "v$VERSION" --notes-file RELEASE_NOTES.md
-          elif [ -n "$TARGET" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git fetch --depth=1 origin "$TARGET"
-            git tag -a "v$VERSION" "$TARGET" -m "v$VERSION"
-            git push origin "refs/tags/v$VERSION"
-            gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes-file RELEASE_NOTES.md --latest=false
           else
-            echo "No GitHub release v$VERSION exists. Pass the commit it was published from as target to create one." >&2
-            exit 1
+            if ! git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+              if [ -z "$TARGET" ]; then
+                echo "No GitHub release or tag v$VERSION exists. Pass the commit it was published from as target to create them." >&2
+                exit 1
+              fi
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git fetch --depth=1 origin "$TARGET"
+              git tag -a "v$VERSION" "$TARGET" -m "v$VERSION"
+              git push origin "refs/tags/v$VERSION"
+            fi
+            gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes-file RELEASE_NOTES.md --latest=false
           fi
