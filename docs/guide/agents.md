@@ -26,7 +26,7 @@ the Model Context Protocol over stdio, that's the whole configuration:
 }
 ```
 
-Start with `describe_document` — it tells the agent a document's shape
+Start with `describe_document`—it tells the agent a document's shape
 before anything reads or writes it. The rest group by task: reading
 (`read_text`, `read_table`, `list_formulas`), table editing
 (`set_cells`, `set_formula`, `format_cells`, `merge_cells` and their
@@ -35,8 +35,8 @@ kin), Pages text (`append_paragraph`, `replace_text`, `format_text`,
 `manage_sheets`). The live list, each tool with its full description:
 `npx -y cupertino-files tools`.
 
-Rows and columns are 0-based throughout. Writes save over the input —
-the same thing the apps do — unless `output` names somewhere else. A
+Rows and columns are 0-based throughout. Writes save over the input—the
+same thing the apps do—unless `output` names somewhere else. A
 failed call comes back as a readable result, not a dead server, so the
 agent can adjust and retry.
 
@@ -55,7 +55,7 @@ nothing to configure.
 
 ## The API, for agents that write code
 
-Everything the MCP tools do — and a great deal they don't — is the
+Everything the MCP tools do—and a great deal they don't—is the
 public API:
 
 ```ts
@@ -73,8 +73,8 @@ people, which makes it work for agents too.
 ## One more thing …
 
 Agents care about provenance more than most. Every claim in this
-library traces to a measurement — the [coverage
+library traces to a measurement—the [coverage
 matrix](/COVERAGE) says what is proven, what is experimental
-and what is refused — and a document the library edits and saves is,
+and what is refused—and a document the library edits and saves is,
 for modern files, byte-for-byte what the app itself would have written.
 An agent that checks its work has never had an easier audit.

@@ -25,8 +25,8 @@ Where an instruction names a menu the checker must find in a Danish
 UI, give the English path with the Danish label in parentheses once.
 The checker's own words stay verbatim in whatever language they
 arrive in — quotes in the ledger are evidence, and evidence is not
-translated away. The shipped prose (README, changelog, skill, and
-docblocks) follows the Apple Style Guide: closed em dashes, the serial
+translated away. The shipped prose (README, changelog, skill, docs
+site, and docblocks) follows the Apple Style Guide: closed em dashes, the serial
 comma, no Latin abbreviations, and Apple's own names for the apps'
 controls (Format sidebar, slide layout, presenter notes). Spelling
 stays British; the style guide's American spelling does not apply.

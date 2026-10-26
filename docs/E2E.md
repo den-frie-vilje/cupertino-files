@@ -1,8 +1,8 @@
 # End-to-end tests against the real iWork apps
 
 Everything else in this repository verifies the library against *our
-understanding* of the format. These tests verify it against **Apple** — by
-driving Pages, Numbers and Keynote through `osascript` and asking them what
+understanding* of the format. These tests verify it against **Apple**—by
+driving Pages, Numbers, and Keynote through `osascript` and asking them what
 they see.
 
 They answer the one question the unit suite structurally cannot: *does the
@@ -48,7 +48,7 @@ A silent no-op is impossible: the harness always logs why it skipped.
 These tests drive applications that may already hold your real documents,
 so the harness is defensive by construction:
 
-- **Refuses to run when an app already has documents open** — it skips with
+- **Refuses to run when an app already has documents open**—it skips with
   a message asking you to close them, rather than risk interfering.
 - **Only touches a scratch directory** created under the system temp dir;
   repository fixtures are copied in, never edited in place.
@@ -82,7 +82,7 @@ tests assert that:
 2. a transition the *library* writes is accepted by Keynote and reported
    back with the duration we set.
 
-The same approach covers speaker notes and Numbers cell values written by
+The same approach covers presenter notes and Numbers cell values written by
 the app itself.
 
 ## Scope and limits
@@ -90,8 +90,8 @@ the app itself.
 - The scripting dictionaries are narrow. Pages exposes little beyond
   `body text`; Keynote is richer (slides, presenter notes, transition
   properties); Numbers exposes cell values. Features outside those
-  dictionaries — footnotes, comments, image filters, cell *styling* —
-  cannot be asserted this way, and are covered by the fixture suite
+  dictionaries—footnotes, comments, image filters, cell *styling*—cannot
+  be asserted this way, and are covered by the fixture suite
   instead.
 - These tests are slow and interactive by nature. They are not part of CI.
 
@@ -103,10 +103,10 @@ because no amount of reading Apple's files can prove them
 
 - **Cell writing.** The unit suite proves our records re-encode
   byte-identically and reload through our own parser. Only Numbers can
-  confirm it agrees — so the e2e suite writes a cell with the library and
+  confirm it agrees—so the e2e suite writes a cell with the library and
   asks Numbers, through AppleScript, what it reads back.
 - **Keynote transitions.** No licensed deck in the corpus has a non-`none`
-  effect, so the app has to create the case for us (above) — and read
+  effect, so the app has to create the case for us (above)—and read
   back one we wrote.
 - **blank() documents**, opened and read back in all three apps.
 - **Merge survival** through a full Numbers rewrite of the package.
@@ -114,8 +114,8 @@ because no amount of reading Apple's files can prove them
   its dependency tracker on open rather than trusting the file's.
 
 These are the claims the scripting dictionaries happen to expose.
-Others cannot be reached this way at all — cell fills, paragraph border
-positions, shadow geometry, colour spaces — and those are collected in
+Others cannot be reached this way at all—cell fills, paragraph border
+positions, shadow geometry, colour spaces—and those are collected in
 [`docs/VERIFICATION.md`](VERIFICATION.md) with what would settle each. That
 file is generated from the capability table, so it cannot quietly fall
 behind the code.
