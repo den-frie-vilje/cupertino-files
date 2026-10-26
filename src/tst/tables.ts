@@ -1243,7 +1243,15 @@ export class TableModel {
     if (id === undefined) return undefined;
     const formula = this.formulaTable().get(id);
     if (!formula) return undefined;
-    return renderFormula(formula, { row, column }, { owners: this.owners() });
+    return renderFormula(formula, { row, column }, { owners: this.owners(), hostOwner: this.ownerBaseUid() });
+  }
+
+  /** The table's kind-1 owner identity: its haunted owner's uid less the haunted kind. */
+  private ownerBaseUid(): OwnerUid | undefined {
+    const haunted = readOwnerUid(
+      this.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
+    );
+    return haunted ? { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi } : undefined;
   }
 
   /**

@@ -9,6 +9,10 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A formula's reference to its own table that the app had stored as a
+  cross-table node (what a copied or renamed table leaves behind)
+  rendered with the table's name in front, `CrossCheck::C3`, where the
+  app's formula bar shows `C3`. It now renders as the app shows it.
 - A table added to a Pages page or a Keynote slide takes the app's own
   cell size in both dimensions whatever its row and column count
   (Keynote 432.25 by 129.8 points in the layout's frame, Pages 120.386
