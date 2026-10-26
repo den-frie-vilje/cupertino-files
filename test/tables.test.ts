@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { FormulaOwnerRegistry, OwnerKind, ownerRegistrationState } from "../src/tsce/owners.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { FormulaOwnerRegistry, HAUNTED_OWNER, HauntedOwnerFields, OwnerKind, ownerRegistrationState, ownerUuidString, readOwnerUid } from "../src/tsce/owners.ts";
 import { describe, expect, it } from "./harness.ts";
 import {
   allBorders,
@@ -1363,6 +1363,55 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
+  });
+
+  it("gives a copy its own table id, the owner base it was re-minted to", () => {
+    // The table model states its kind-1 owner identity twice: as the
+    // haunted owner (base + 35) and as the `table_id` string. A copy that
+    // kept the donor's string beside a fresh family is a duplicate the
+    // app resolves by re-minting the copy on open.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const donor = document.tables()[0]!;
+    const copy = document.addTable(sheet.id, { copyOf: donor.infoObject!.identifier, name: "Own id" });
+    const tableId = (t: TableModel) => t.object.message.getString(TableModelFields.TABLE_ID);
+    const base = (t: TableModel) => {
+      const haunted = readOwnerUid(t.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID))!;
+      return { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi };
+    };
+    expect(tableId(copy) === tableId(donor)).toBe(false);
+    expect(tableId(copy)).toBe(ownerUuidString(base(copy)));
+    expect(tableId(donor)).toBe(ownerUuidString(base(donor)));
+  });
+
+  it("every app-written corpus table's id string is its owner base", () => {
+    // Tables this library cloned before the id string was re-minted, in
+    // returned demos: they carry the blank donor's id beside their own
+    // family, and the app left the string as it found it.
+    const CLONED_BEFORE_THE_FIX = new Set([
+      "olekristensen-v26.3-demo06-formulas-round4.numbers NoCalc",
+      "olekristensen-v26.3-demo06-formulas-round8.numbers NoCalc",
+      "olekristensen-v26.3-demo08-structure-round2.numbers Instructions",
+      "olekristensen-v26.3-demo08-structure-round6.numbers Instructions",
+    ]);
+    let checked = 0;
+    for (const name of readdirSync(new URL("../fixtures/", import.meta.url))) {
+      if (!name.endsWith(".numbers")) continue;
+      let doc: NumbersDocument;
+      try {
+        doc = NumbersDocument.load(readFileSync(new URL(`../fixtures/${name}`, import.meta.url)));
+      } catch {
+        continue;
+      }
+      for (const table of doc.tables()) {
+        const haunted = readOwnerUid(table.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID));
+        if (!haunted || CLONED_BEFORE_THE_FIX.has(`${name} ${table.name}`)) continue;
+        checked++;
+        const base = { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi };
+        expect(`${name} ${table.name}: ${table.object.message.getString(TableModelFields.TABLE_ID)}`).toBe(`${name} ${table.name}: ${ownerUuidString(base)}`);
+      }
+    }
+    expect(checked).toBeGreaterThan(50);
   });
 
   it("registers a copy with the calc engine, the way the app registers a new table", () => {

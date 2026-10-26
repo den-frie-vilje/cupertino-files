@@ -129,9 +129,14 @@ that rebuild the structures from them.
   leaves the library's kind-1 and kind-9 archives orphaned, so a formula
   in another table naming the clone reads `=#REF!` and a formula in the
   clone naming its donor is rewritten to the clone's own cell. The
-  clone's own formulas compute. The next site to measure is the engine's
-  `uuid_reference_map`; the probe in `test/e2e/proofs.e2e.test.ts` is
-  skipped with this finding and flips on when the identity holds.
+  clone's own formulas compute. Measured since: the table model states
+  its owner base a second time as the `table_id` string (every corpus
+  table's equals its haunted owner less 35, as sixteen bytes in hex),
+  and the clone kept the donor's string beside its fresh family — the
+  duplicate the app resolves by re-minting; its resave wrote the clone
+  a new string whose bytes are the new base. The re-mint now writes the
+  string too. The probe in `test/e2e/proofs.e2e.test.ts` is skipped
+  until the app confirms, and flips on then.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:

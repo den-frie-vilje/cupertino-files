@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table copied with `addTable({ copyOf })` kept its donor's table id
+  string beside the fresh calc-engine identity the copy was given, and
+  Numbers re-minted the copy on open, so a formula in another table
+  naming the copy read `#REF!`. The copy's id is now its own identity,
+  the way every app-written table states it.
 - A formula's reference to its own table that the app had stored as a
   cross-table node (what a copied or renamed table leaves behind)
   rendered with the table's name in front, `CrossCheck::C3`, where the

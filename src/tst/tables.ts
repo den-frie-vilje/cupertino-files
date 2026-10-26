@@ -75,6 +75,7 @@ import {
   mintTableOwnerArchive,
   remintFormulaOwnerIdentity,
   TiledDependenciesFields,
+  ownerUuidString,
 } from "../tsce/owners.ts";
 import {
   controlsOf,
@@ -151,6 +152,7 @@ const ParagraphStyleBags = protoFields("TSWP.ParagraphStyleArchive", {
 });
 
 export const TableModelFields = protoFields("TST.TableModelArchive", {
+  TABLE_ID: "table_id",
   BASE_DATA_STORE: "base_data_store",
   NUMBER_OF_ROWS: "number_of_rows",
   NUMBER_OF_COLUMNS: "number_of_columns",
@@ -5061,6 +5063,9 @@ export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): vo
   model.clearStoredHiddenStates();
   const newBase = remintFormulaOwnerIdentity(model.object, objects);
   if (newBase) {
+    // The model states the same identity once more as a string; a clone
+    // still carrying the donor's is re-minted by the app on open.
+    model.object.message.setString(TableModelFields.TABLE_ID, ownerUuidString(newBase));
     mintTableOwnerArchive(store, tableInfoId, newBase, {
       rows: model.rowCount,
       columns: model.columnCount,
