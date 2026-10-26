@@ -556,7 +556,10 @@ doc.removeTable(sheet.id, table.infoObject!.identifier);
 Tables are created by **copying**—building one from nothing means
 synthesising tiles, header buckets, data lists, and a calc-engine owner. The
 copy is always renamed, because Numbers addresses tables by name and two
-"Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
+"Table 1"s on one sheet make every cross-table formula ambiguous. The copy's
+own formulas compute, but Numbers gives the copy a new calc-engine identity on
+open, so a formula in another table that names the copy reads as `#REF!`
+there; write such references from the app until that is settled. Uniqueness
 is per sheet, so a copy onto another sheet may keep the original name.
 
 **A clone keeps everything its donor had, and none of it fits by
@@ -997,7 +1000,9 @@ already carries — the slide's own in Keynote, the page's own or any in
 the document in Pages — gives it its own storage, sets the text, places
 it and sets its parent (the slide, or none in Pages). A document without
 a single text box has nothing to copy and is refused: add one in the
-app first.
+app first. Keynote draws the copy; Pages lists it with its position and
+size but draws nothing for it yet, so a Pages text box is a placed
+object, not visible text, until that is settled.
 
 ```ts
 slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });

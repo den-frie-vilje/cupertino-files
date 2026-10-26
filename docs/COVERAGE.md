@@ -195,20 +195,20 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Drawables & media → **Image cropping (set, move, remove a mask)**
 - 🔴 high — Drawables & media → **Inline image insertion**
 - 🔴 high — Drawables & media → **Inline image placement in an indented column**
-- 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement**
+- 🟠 medium — Drawables & media → **Floating (non-inline) drawable placement** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Pages → **Sections (read + insert) and page breaks**
 - 🟡 low — Pages → **Headers & footers (3 columns × first/even/odd)**
-- 🟠 medium — Pages → **Master-page drawables**
+- 🟠 medium — Pages → **Master-page drawables** *(covered by `npm run test:e2e`)*
 - 🟡 low — Pages → **Page setup (size, margins, orientation)**
 - 🔴 high — Numbers & tables → **Sheets (add, duplicate, rename, move, remove)**
 - 🔴 high — Numbers & tables → **Table cell writing (text, number, date, bool, duration)** *(covered by `npm run test:e2e`)*
 - 🟡 low — Numbers & tables → **Cell styling (fill, four borders, padding, alignment, wrap)**
-- 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)**
-- 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)**
+- 🟠 medium — Numbers & tables → **Table styling (banded rows, grid strokes, visibility)** *(covered by `npm run test:e2e`)*
+- 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
 - 🟡 low — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
-- 🟡 low — Numbers & tables → **Duration default format (a typed duration's stamp)**
-- 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
+- 🟡 low — Numbers & tables → **Duration default format (a typed duration's stamp)** *(covered by `npm run test:e2e`)*
+- 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
 - 🟠 medium — Numbers & tables → **Pop-up menu creation (TST.PopUpMenuModel)**
@@ -218,7 +218,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Numbers & tables → **Chart appearance: type and series colours**
 - 🟡 low — Numbers & tables → **Chart appearance: axes, legend, gridlines**
 - 🟡 low — Numbers & tables → **Conditional formatting rules**
-- 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells**
+- 🟠 medium — Numbers & tables → **Conditional formatting: apply an existing rule set to more cells** *(covered by `npm run test:e2e`)*
 - 🔴 high — Numbers & tables → **Conditional formatting: authoring new rules**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
@@ -229,16 +229,16 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Categories: defining a category by a column**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
-- 🟠 medium — Keynote → **Pictures on slides (addImage)**
-- 🔴 high — Keynote → **Slide copies in a Keynote-saved deck (per-slide components)**
+- 🟠 medium — Keynote → **Pictures on slides (addImage)** *(covered by `npm run test:e2e`)*
+- 🔴 high — Keynote → **Slide copies in a Keynote-saved deck (per-slide components)** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Keynote → **Speaker notes**
 - 🟠 medium — Keynote → **Transitions**
 - 🟠 medium — Keynote → **Presentation settings (mode, loop, autoplay delays, slide size)**
 - 🟠 medium — Keynote → **Slide placeholders (title, body, slide number) — read and fill**
 - 🟠 medium — Keynote → **Skipped slides**
-- 🟠 medium — Keynote → **Slide background (read + set)**
-- 🟠 medium — Keynote → **Slides: changing the layout (setLayout)**
-- 🟠 medium — Keynote → **Slides from a layout (addSlide master)**
+- 🟠 medium — Keynote → **Slide background (read + set)** *(covered by `npm run test:e2e`)*
+- 🟠 medium — Keynote → **Slides: changing the layout (setLayout)** *(covered by `npm run test:e2e`)*
+- 🟠 medium — Keynote → **Slides from a layout (addSlide master)** *(covered by `npm run test:e2e`)*
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 
 ## Validation gaps

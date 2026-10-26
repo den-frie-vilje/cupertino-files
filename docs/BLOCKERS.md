@@ -62,25 +62,19 @@ that rebuild the structures from them.
   `--drive`) confirms it and supplies T, which the registry registers
   by another route. A new release means a new `--binary` run; the merge
   refuses any disagreement between the two sources.
-- **Tables on pages and slides: shipped, unproven.** The neutral donor
-  that Numbers' `addTable` grafts lands under a Pages body or a Keynote
-  slide anchored as the corpus's inline and slide tables are, wired to
-  the host theme's first preset as an app-inserted table is, and the
-  shape audit finds nothing a Pages or Keynote table lacks. Whether the
-  apps draw it is `seed-table.pages` and `seed-table.key`'s question,
-  and `seed-authored.*` asks for the app's own twin beside it. Open
+- **Tables on pages and slides: the apps read them.** Pages and
+  Keynote 15.4 each list the grafted table and answer its cells through
+  their scripting dictionaries, and Keynote's own resave keeps it
+  (`test/e2e/proofs.e2e.test.ts`). Open
   beside it: copying a grafted table that had been resized
   (`insertInlineTable` with `copyOf`, four calls over a corpus round
   trip) left seven tables in the document, not four; the default source
   is the donor now, and the copy path's surplus is unmeasured.
-- **Slide backgrounds: shipped, unproven.** `setBackground` writes the
-  variation-style shape the corpus's one deck with per-slide backgrounds
-  carries; whether Keynote draws one it did not write is rung K14's
-  question.
-- **Slides from a layout: shipped, unproven.** `addSlide({ master })`
-  instantiates a master in the shape every corpus content slide has
-  against its master; whether Keynote draws one it did not instantiate
-  is rung K13's question.
+- **Slide backgrounds, slides from a layout, layout changes: the app
+  draws them.** Keynote 15.4's PDF export is the set background's colour,
+  and the app reports a slide made from a layout and a slide moved to
+  one as being on that layout with the written title and body
+  (VERIFICATION, the Keynote rows).
 - **Authored twins requested.** `seed-authored.numbers`, `.pages` and
   `.key` ask the checker to build, with the apps' own controls, the
   constructs no corpus document carries app-written: a function-shaped
@@ -90,34 +84,54 @@ that rebuild the structures from them.
   that settles its row; until then the writers for tables on pages and
   slides, filter rules beyond comparison and summaries stay measured
   against nothing the app wrote.
-- **Text boxes: creation shipped, unproven.** `addTextBox` deep-copies a
-  box the document carries, re-words, places and re-parents it; the
-  corpus says a Keynote box's parent is its slide and a Pages floating
-  box has none, and the shape audit finds nothing the donor does not
-  have. Whether the apps draw one is `seed-text-box.key`'s and rung
-  P21's question.
-- **Keynote builds: creation shipped, unproven.** Reading is measured
+- **Text boxes: Keynote draws them, Pages does not.** `addTextBox`
+  deep-copies a box the document carries, re-words, places and
+  re-parents it. Keynote 15.4 lists the copy where it was placed and its
+  words are in the PDF export. Pages 15.4 lists the copy with the asked
+  position and size and exports neither its words nor any ink in its
+  rectangle, from a top-level donor (gomap-v26.1-newest-writer) and a
+  grouped one (patrickomatic-pages26-sections-masks) alike. The box is a
+  TSWP.ShapeInfoArchive in the page group's drawable list and the
+  z-order list, as the corpus's are; what the app still needs is the
+  open question, and the authored twin `seed-authored.pages` asks for is
+  the measurement that answers it.
+- **Keynote builds: creation shipped, kept by the app.** Reading is measured
   whole — effect, timing and delivery decode from `animationAttributes`
   against the fixture deck — retiming writes the same fields, and
-  `addBuild` now writes an all-at-once build and its chunk field for
-  field as the deck's app-authored builds carry them. Whether the app
-  plays one it did not author is `seed-build.key`'s question: a build
-  the app silently drops looks exactly like one never written. (Cell-control creation shipped and is app-confirmed; see
+  `addBuild` writes an all-at-once build and its chunk field for
+  field as the deck's app-authored builds carry them. Keynote 15.4's
+  resave keeps a build the library added, effect and all; whether it
+  plays is still only the app's word, and the scripting dictionary has
+  no builds to ask. (Cell-control creation shipped and is app-confirmed; see
   VERIFICATION.)
-- **Creating a category: shipped, unproven.** `addCategory` defines a
+- **Creating a category: shipped, kept by the app.** `addCategory` defines a
   by-value category from nothing in the corpus shape (the eight sidecar
   fields are constant calc-engine coordinates, the lookup list is the
-  row-uid map, groups list in text order), and `seed-category.numbers`
-  asks the app whether that is enough. Bucketed groupings ("dates by
+  row-uid map, groups list in text order), and Numbers 15.4's resave
+  keeps the definition with its three groups in order and no stale
+  group; whether it draws the groups is `seed-category.numbers`'s
+  question still. Bucketed groupings ("dates by
   quarter") still mean evaluating the grouping formula and are not
-  authored. **Filter rules are now authored** (`addFilterRule`, comparison and
-  text-contains rules, written byte for byte as the fixture's app-authored rules and
-  asked of the app by `seed-filter.numbers`); **recomputing filtered
+  authored. **Filter rules are authored and hide their rows** (`addFilterRule`,
+  comparison and text-contains rules, written byte for byte as the
+  fixture's app-authored rules; Numbers 15.4's PDF export of a blank
+  document with a B > 10 rule shows the two rows above 10 and not the
+  two below); **recomputing filtered
   rows** stays the app's: which rows a filter hides lives in
   `TST.HiddenStateExtentArchive`, and computing it means evaluating
   predicates. (Filter *rule* reading is pinned against
   the populated set in `olekristensen-v26.3-mac-filters.numbers`; rule
   *synthesis* waits for an app round-trip of a library-written rule.)
+- **A cloned table's identity is not accepted.** `addTable({ copyOf })`
+  re-mints the clone's calc-engine owner family and registers it at the
+  three engine sites the library writes (archives, tracker list, owner
+  map); Numbers 15.4 still gives the clone a fresh family on open and
+  leaves the library's kind-1 and kind-9 archives orphaned, so a formula
+  in another table naming the clone reads `=#REF!` and a formula in the
+  clone naming its donor is rewritten to the clone's own cell. The
+  clone's own formulas compute. The next site to measure is the engine's
+  `uuid_reference_map`; the probe in `test/e2e/proofs.e2e.test.ts` is
+  skipped with this finding and flips on when the identity holds.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -191,6 +205,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-10-26 | the open VERIFICATION claims, asked by script | Pages, Numbers, Keynote 15.4 (macOS, Danish UI), `npm run test:e2e` | **thirteen settled, two refuted**: Keynote saves a per-slide-component deck with added and duplicated slides; pictures, text boxes, tables, layouts, layout changes and backgrounds on slides read back or render as written; a build and a category survive the apps' resave; a filter rule hides its rows; band counts, heights and widths, a conditional fill and its re-pointing, banded rows, a typed duration and the formula bar (references and operators) agree. Refuted: a Pages text box is listed but not drawn; a cloned table's identity is re-minted by Numbers (references to it `#REF!`). Found and fixed: a self-reference stored as a cross-table node rendered with a table prefix. | `test/e2e/proofs.e2e.test.ts`, VERIFICATION |
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | border bits 4/8 + RTL | Pages (macOS, Danish UI), via seed-borders v2 | **left and right assigned**: red left-only = 4, blue right-only = 8, the probe's stroke colours naming their paragraphs. The RTL leg failed its precondition — the Hebrew-first paragraph rendered LTR with the Danish tail folded into the same line, so unset `writing_direction` is not "natural" — leaving visual-vs-logical open; the regenerated seed writes an explicit RTL paragraph style instead | `src/tswp/schema.ts`, test/styling.test.ts |
