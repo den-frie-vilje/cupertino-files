@@ -1689,6 +1689,13 @@ export const CAPABILITIES: Capability[] = [
         "the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough",
       why: "its value contradicts the obvious reading — every cell on a one-rule set carries 15 regardless of content, and cells on other sets carry 0, which is not a valid key in any of the table's lists",
       how: "author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else",
+      settled:
+        "Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 26: the id " +
+        "does not track the match. Two sets, > 5 green on C2:C4 and = 4 yellow on C5, written with no " +
+        "id; after the checker typed 8 into C2 (now matching) and 7 into C5 (no longer matching), the " +
+        "app had given every cell on the first set 0 and the cell on the second set 15. It is a " +
+        "per-set value the app assigns, so preserving it verbatim is enough and reading it as the " +
+        "applied rule would be wrong.",
       risk: "low",
     },
   },
@@ -1807,6 +1814,14 @@ export const CAPABILITIES: Capability[] = [
       claim: "flipping is_enabled makes Numbers group or ungroup the rows",
       why: "the suite proves the flag round-trips and the tree survives, not that the app acts on it",
       how: "take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on",
+      settled:
+        "Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 25: the " +
+        "table opened flat, the category was there to switch on and regrouped the rows, and switching " +
+        "it off again flattened them (\"i turned it on and off - it worked\"). In the bytes the app " +
+        "left the disabled definition untouched, re-sorted the rows into group order and kept that " +
+        "order when disabled, so a disabled definition's cached tree is stale by index; it also " +
+        "synced the inline copy under the table model's category_owner_deprecated to the flag, which " +
+        "setEnabled leaves as it was.",
       risk: "low",
     },
   },

@@ -16,43 +16,17 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 4 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 2 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟡 low | Numbers & tables → Categories: enable or disable grouping | flipping is_enabled makes Numbers group or ungroup the rows | manual |
-| 2 | 🟡 low | Numbers & tables → Conditional formatting rules | the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough | manual |
-| 3 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 4 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
+| 1 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
+| 2 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
 
-### 1. Categories: enable or disable grouping
-
-**Risk if wrong:** 🟡 low  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** flipping is_enabled makes Numbers group or ungroup the rows
-
-**Why the suite cannot settle it.** the suite proves the flag round-trips and the tree survives, not that the app acts on it
-
-**How to settle it.** take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on
-
-### 2. Conditional formatting rules
-
-**Risk if wrong:** 🟡 low  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough
-
-**Why the suite cannot settle it.** its value contradicts the obvious reading — every cell on a one-rule set carries 15 regardless of content, and cells on other sets carry 0, which is not a valid key in any of the table's lists
-
-**How to settle it.** author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else
-
-### 3. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+### 1. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -64,7 +38,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 **How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
 
-### 4. Table of contents (rules read + write, cached entries read)
+### 2. Table of contents (rules read + write, cached entries read)
 
 **Risk if wrong:** 🟡 low  
 **Group:** Text & styles  
@@ -78,7 +52,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-62 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+64 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -112,6 +86,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The suite proves the archive matches the corpus shape field for field; whether the calc engine accepts a grouping whose internal formulas it did not register itself is the app's to say.
 
 **Outcome.** **Confirmed in Numbers 15.1.** The checker opened seed-category.numbers and wrote "Works" as a comment on the sheet (`olekristensen-v26.0-mac-category-seed.numbers`). The app kept the group column, the tree and its node ids, re-minted the node uids, and dropped the donor's old root node, whose declaration the library had left on the archive; addCategory now retires it with the node.
+
+### ✅ Categories: enable or disable grouping
+
+**Was claimed.** flipping is_enabled makes Numbers group or ungroup the rows
+
+**Why it needed an app.** the suite proves the flag round-trips and the tree survives, not that the app acts on it
+
+**Outcome.** Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 25: the table opened flat, the category was there to switch on and regrouped the rows, and switching it off again flattened them ("i turned it on and off - it worked"). In the bytes the app left the disabled definition untouched, re-sorted the rows into group order and kept that order when disabled, so a disabled definition's cached tree is stale by index; it also synced the inline copy under the table model's category_owner_deprecated to the flag, which setEnabled leaves as it was.
 
 ### ✅ Categories: regrouping rows after an edit
 
@@ -184,6 +166,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** the suite proves the three archives and the highlight run round-trip; what an author must carry before the comment UI will draw at all took three app rounds
 
 **Outcome.** **Confirmed — "P08 Comment works" — on the third round, each round a distinct finding.** Round one (Pages for iOS): unreadable placeholder — the comment carried no author where every corpus comment references one. Round two: with a name-only author, Pages crashed on open — both corpus authors carry the identical comment-yellow `TSP.Color` and explicit `is_public_author = false`, and the comment UI draws the author's tint; the corpus rosters also declare `refs=[]`, and the round-one fix had made ours declare the author — the container rule reintroduced by our own repair. Round three, with the author byte-for-byte Apple's shape and the roster declaring nothing: readable and attributed.
+
+### ✅ Conditional formatting rules
+
+**Was claimed.** the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough
+
+**Why it needed an app.** its value contradicts the obvious reading — every cell on a one-rule set carries 15 regardless of content, and cells on other sets carry 0, which is not a valid key in any of the table's lists
+
+**Outcome.** Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 26: the id does not track the match. Two sets, &gt; 5 green on C2:C4 and = 4 yellow on C5, written with no id; after the checker typed 8 into C2 (now matching) and 7 into C5 (no longer matching), the app had given every cell on the first set 0 and the cell on the second set 15. It is a per-set value the app assigns, so preserving it verbatim is enough and reading it as the applied rule would be wrong.
 
 ### ✅ Conditional formatting: apply an existing rule set to more cells
 

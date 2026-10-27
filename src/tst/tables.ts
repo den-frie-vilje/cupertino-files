@@ -3623,16 +3623,14 @@ export class TableModel {
   }
 
   /**
-   * The second conditional id a cell record carries, meaning unconfirmed.
+   * The second conditional id a cell record carries: a per-set value the
+   * app assigns, not the rule that last matched.
    *
    * Sits in the `COND_RULE_STYLE_ID` slot, which by position corresponds to
-   * `CellArchive.conditional_style_applied_rule` — the rule that last
-   * matched. The corpus does not bear that out: in the one fixture with
-   * real rules, every cell sharing a one-rule set carries the same value
-   * (15) regardless of content, and cells on other sets carry 0, which is
-   * not a valid key in any of the table's lists. So it is exposed raw and
-   * preserved byte-for-byte rather than interpreted. See
-   * `docs/VERIFICATION.md`.
+   * `CellArchive.conditional_style_applied_rule`, but Numbers gives every
+   * cell on one set the same value (15 on one set, 0 on another) whatever
+   * the cell's content, and leaves it alone when a different rule starts
+   * to fire. Exposed raw and preserved byte-for-byte.
    */
   conditionalRuleId(row: number, column: number): number | undefined {
     return this.recordAt(row, column)?.id(CellFlag.COND_RULE_STYLE_ID);
