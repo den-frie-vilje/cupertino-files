@@ -122,21 +122,6 @@ that rebuild the structures from them.
   predicates. (Filter *rule* reading is pinned against
   the populated set in `olekristensen-v26.3-mac-filters.numbers`; rule
   *synthesis* waits for an app round-trip of a library-written rule.)
-- **A cloned table's identity is not accepted.** `addTable({ copyOf })`
-  re-mints the clone's calc-engine owner family and registers it at the
-  three engine sites the library writes (archives, tracker list, owner
-  map); Numbers 15.4 still gives the clone a fresh family on open and
-  leaves the library's kind-1 and kind-9 archives orphaned, so a formula
-  in another table naming the clone reads `=#REF!` and a formula in the
-  clone naming its donor is rewritten to the clone's own cell. The
-  clone's own formulas compute. Measured since: the table model states
-  its owner base a second time as the `table_id` string (every corpus
-  table's equals its haunted owner less 35, as sixteen bytes in hex),
-  and the clone kept the donor's string beside its fresh family — the
-  duplicate the app resolves by re-minting; its resave wrote the clone
-  a new string whose bytes are the new base. The re-mint now writes the
-  string too. The probe in `test/e2e/proofs.e2e.test.ts` is skipped
-  until the app confirms, and flips on then.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -210,6 +195,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-10-27 | does Numbers keep a cloned table's identity once its `table_id` string is the re-minted base? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: both clones kept their id strings and owner bases through the app's save; `=CrossCheck::B3` read 5, `=NoCalc::B2` read 8, a typed `=CrossCheck::B4` read 10; the clone's `='Table 1'::C4` read 7 and `=SUM(B)` 30. No comments on the file. | demo-06-formler.numbers, saved by the app; `test/e2e/proofs.e2e.test.ts` probe switched on |
 | 2026-10-26 | the open VERIFICATION claims, asked by script | Pages, Numbers, Keynote 15.4 (macOS, Danish UI), `npm run test:e2e` | **thirteen settled, two refuted**: Keynote saves a per-slide-component deck with added and duplicated slides; pictures, text boxes, tables, layouts, layout changes and backgrounds on slides read back or render as written; a build and a category survive the apps' resave; a filter rule hides its rows; band counts, heights and widths, a conditional fill and its re-pointing, banded rows, a typed duration and the formula bar (references and operators) agree. Refuted: a Pages text box is listed but not drawn; a cloned table's identity is re-minted by Numbers (references to it `#REF!`). Found and fixed: a self-reference stored as a cross-table node rendered with a table prefix. | `test/e2e/proofs.e2e.test.ts`, VERIFICATION |
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |

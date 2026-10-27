@@ -87,7 +87,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** the clone itself is first-class — two rounds opened it, showed its cells, and the checker's own formula referencing it by name computed — but both rounds the app discarded the written identity and re-registered, tombstoning the library's stored references into ref errors. The mint now enrolls the full owner family at all three engine sites (archives, tracker list, owner map, internals past the map's max); whether that is the whole acceptance test only an open can say.
 
-**Outcome.** Refuted again, Numbers 15.4: the app re-mints the clone's identity on open (a fresh owner family after its resave, the library's kind-1 and kind-9 archives left orphaned), so a formula in the donor naming the clone reads =#REF! and a formula in the clone naming the donor is rewritten to the clone's own cell; the clone's own formulas compute. The library's registration is complete at the three engine sites it writes; the next site to measure is the engine's uuid_reference_map.
+**Outcome.** Settled, Numbers 15.4 (M15.4-7051.0.79-2): once the re-mint also writes the table model's table_id string as the new base, the app's own save keeps both clones' identities (id strings and owner bases unchanged), formulas in the donor naming the clones read 5 and 8, a formula the checker typed naming the clone read 10, and the clone's own cross reference and =SUM(B) read 7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on.
 
 ### ✅ Builds (animations): read and retime
 

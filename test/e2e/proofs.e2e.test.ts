@@ -304,11 +304,7 @@ describe("proofs: Numbers", () => {
     expect(reported.split("|").map(num)).toEqual([2, 1, 44, 180]);
   });
 
-  // Numbers 15.4 re-mints a clone's calc-engine identity on open, so the
-  // reference reads #REF! (docs/BLOCKERS.md, the cloned-table entry).
-  // The probe stays, skipped, to flip on when the identity holds.
-  const CLONE_IDENTITY = "Numbers re-mints a cloned table's identity on open; see docs/BLOCKERS.md";
-  it("a formula referring to a cloned table computes on first open", { skip: skip.Numbers ?? CLONE_IDENTITY }, () => {
+  it("a formula referring to a cloned table computes on first open", { skip: skip.Numbers ?? false }, () => {
     session!.remember("Numbers");
     const path = session!.path("clone-reference.numbers");
     const doc = NumbersDocument.blank();

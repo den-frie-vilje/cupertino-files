@@ -556,11 +556,10 @@ doc.removeTable(sheet.id, table.infoObject!.identifier);
 Tables are created by **copying**—building one from nothing means
 synthesising tiles, header buckets, data lists, and a calc-engine owner. The
 copy is always renamed, because Numbers addresses tables by name and two
-"Table 1"s on one sheet make every cross-table formula ambiguous. The copy's
-own formulas compute, but Numbers gives the copy a new calc-engine identity on
-open, so a formula in another table that names the copy reads as `#REF!`
-there; write such references from the app until that is settled. Uniqueness
-is per sheet, so a copy onto another sheet may keep the original name.
+"Table 1"s on one sheet make every cross-table formula ambiguous. The copy
+gets its own calc-engine identity, which Numbers keeps, so formulas in other
+tables may name it. Uniqueness is per sheet, so a copy onto another sheet may
+keep the original name.
 
 **A clone keeps everything its donor had, and none of it fits by
 default.** `withContent: false` clears the values, not the shape: the
