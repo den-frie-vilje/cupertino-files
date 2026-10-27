@@ -555,13 +555,17 @@ export const CAPABILITIES: Capability[] = [
       "the two dashed shapes the apps write at every stroke site and width, [2, 2] butt-capped and " +
       "[0.001, 2] round-capped; any other dash array draws but the Format sidebar shows None for it",
     manualProof: {
-      claim: "A border written with the \"dashed\" or \"dotted\" preset shows that line style in the Format sidebar.",
+      claim: "A paragraph border written with the \"dotted\" preset shows as dotted in the Format sidebar.",
       why:
-        "Pages showed None for a [4, 2] border that drew. The presets copy the apps' own arrays, measured " +
-        "over every stroke in the corpus, but whether the sidebar matches on the array alone is the app's to say.",
+        "Pages showed None for a [4, 2] border that drew, and reads the \"dashed\" preset back as dashed " +
+        "(Pages rung P28, both as direct formatting and as a named style: \"worked\"). The dotted preset " +
+        "is the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the " +
+        "control showed None for it (\"not showing up\"), and the corpus holds no app-written dotted " +
+        "paragraph border to compare against.",
       how:
-        "Open Pages rung P28, select each of its three bordered lines, and read Format > Layout > Borders & " +
-        "Rules: dashed, dashed, dotted.",
+        "Pages rung P29 asks for a dotted bottom border from the app's own line-style pop-up menu; the " +
+        "returned stroke is the shape to copy, or the menu offers no dots and the preset stays an " +
+        "outline shape.",
       risk: "low",
     },
   },

@@ -295,9 +295,13 @@ export interface Stroke {
   /**
    * "solid", "none", one of the apps' two dash presets, or dash lengths
    * in points. The apps write exactly two dashed shapes, at every site
-   * and width: "dashed" is [2, 2] with butt caps and "dotted" is
-   * [0.001, 2] with round caps. Any other array draws, but the Format
-   * sidebar reports its line style as None.
+   * and width: "dashed" is [2, 2] with butt caps, which Pages' Borders &
+   * Rules control reads back as its dashed line style, and "dotted" is
+   * [0.001, 2] with round caps, the apps' dots on shape outlines and
+   * chart gridlines. Any other array draws, but the Format sidebar
+   * reports its line style as None; a paragraph border's dotted style
+   * as the app itself writes it is unmeasured, and so is the control's
+   * reading of ours.
    */
   pattern?: "solid" | "none" | "dashed" | "dotted" | number[];
 }

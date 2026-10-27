@@ -23,7 +23,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟡 low | Text & styles → Dash presets (dashed, dotted strokes) | A border written with the "dashed" or "dotted" preset shows that line style in the Format sidebar. | manual |
+| 1 | 🟡 low | Text & styles → Dash presets (dashed, dotted strokes) | A paragraph border written with the "dotted" preset shows as dotted in the Format sidebar. | manual |
 
 ### 1. Dash presets (dashed, dotted strokes)
 
@@ -31,11 +31,11 @@ person to look at a rendered document, because the scripting dictionaries expose
 **Group:** Text & styles  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** A border written with the "dashed" or "dotted" preset shows that line style in the Format sidebar.
+**Claim.** A paragraph border written with the "dotted" preset shows as dotted in the Format sidebar.
 
-**Why the suite cannot settle it.** Pages showed None for a [4, 2] border that drew. The presets copy the apps' own arrays, measured over every stroke in the corpus, but whether the sidebar matches on the array alone is the app's to say.
+**Why the suite cannot settle it.** Pages showed None for a [4, 2] border that drew, and reads the "dashed" preset back as dashed (Pages rung P28, both as direct formatting and as a named style: "worked"). The dotted preset is the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the control showed None for it ("not showing up"), and the corpus holds no app-written dotted paragraph border to compare against.
 
-**How to settle it.** Open Pages rung P28, select each of its three bordered lines, and read Format &gt; Layout &gt; Borders &amp; Rules: dashed, dashed, dotted.
+**How to settle it.** Pages rung P29 asks for a dotted bottom border from the app's own line-style pop-up menu; the returned stroke is the shape to copy, or the menu offers no dots and the preset stays an outline shape.
 
 ## Settled
 

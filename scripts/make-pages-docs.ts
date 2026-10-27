@@ -636,6 +636,20 @@ export const RUNGS: {
     },
   },
   {
+    name: "P29-dotted-your-turn",
+    blank: true,
+    note: "a line for the checker to give a dotted bottom border with the app's own control, since the corpus has dots only on shape outlines and chart gridlines",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P29: YOUR TURN. Give the line below a dotted bottom border with Format > Layout > Borders & " +
+          "Rules (Kanter og linjer), picking the dotted line style from the line-style pop-up menu, " +
+          "then save. If the pop-up menu offers no dotted style, comment \"no dotted\" on the line " +
+          "instead. The app's own dotted border is then in the file for the library to copy.",
+      );
+      doc.appendParagraph("This line gets the app's own dotted bottom border.");
+    },
+  },
+  {
     name: "P22-inline-table",
     note: "a table appended to the body from the neutral donor, wired to the theme's first preset, filled with three rows",
     build: (doc) => {
