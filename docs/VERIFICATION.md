@@ -16,13 +16,26 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 1 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
+| 1 | 🟡 low | Text & styles → Dash presets (dashed, dotted strokes) | A border written with the "dashed" or "dotted" preset shows that line style in the Format sidebar. | manual |
+
+### 1. Dash presets (dashed, dotted strokes)
+
+**Risk if wrong:** 🟡 low  
+**Group:** Text & styles  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** A border written with the "dashed" or "dotted" preset shows that line style in the Format sidebar.
+
+**Why the suite cannot settle it.** Pages showed None for a [4, 2] border that drew. The presets copy the apps' own arrays, measured over every stroke in the corpus, but whether the sidebar matches on the array alone is the app's to say.
+
+**How to settle it.** Open Pages rung P28, select each of its three bordered lines, and read Format &gt; Layout &gt; Borders &amp; Rules: dashed, dashed, dotted.
 
 ## Settled
 
@@ -427,7 +440,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with rgbspace and that the dash array is repeated float, but not that a colour we author with space: 'p3' is treated as wide-gamut rather than reinterpreted.
 
-**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: two styles with the same channels, one tagged p3 and one srgb, drew as two greens ("the colourspace tagging works - it's two different greens"), and a [4, 2] paragraph border drew dashed ("the dashes look fine, as specified"). Found beside it: the Format sidebar shows no border for the created style's paragraph, while the app's own border on the next line, an anonymous variation of Body with [2, 2] at 2 pt, shows; that is an open item in docs/BLOCKERS.md.
+**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: two styles with the same channels, one tagged p3 and one srgb, drew as two greens ("the colourspace tagging works - it's two different greens"), and a [4, 2] paragraph border drew dashed ("the dashes look fine, as specified"). Found beside it: the Format sidebar shows None as the line style of that [4, 2] border, direct or named, while the app's own on the next line, [2, 2], shows: the sidebar knows only the two dash shapes the apps write, now the "dashed" and "dotted" presets.
 
 ### ✅ Sheets (add, duplicate, rename, move, remove)
 

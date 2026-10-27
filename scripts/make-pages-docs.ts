@@ -605,22 +605,32 @@ export const RUNGS: {
   {
     name: "P28-border-in-sidebar",
     blank: true,
-    note: "the same dashed border two ways, for the Format sidebar to be read on each: direct formatting (a variation of the paragraph's style, the app's own shape) and a named style",
+    note: "the app's own dash presets on paragraph borders, for the Format sidebar to be read on each: dashed as direct formatting, dashed as a named style, dotted as a named style",
     build: (doc) => {
       doc.appendParagraph(
-        "P28: the two lines below carry the same dashed bottom border, built two ways. Select each " +
+        "P28: the three lines below carry bottom borders in the app's own line styles. Select each " +
           "line in turn and look at Format > Layout > Borders & Rules (Kanter og linjer). PASS: the " +
-          "sidebar shows the border for both. Otherwise comment on the line whose sidebar shows none.",
+          "sidebar shows a dashed line for lines 1 and 2 and a dotted line for line 3. Otherwise " +
+          "comment on the line whose sidebar shows something else.",
       );
-      const border = { color: { r: 0, g: 0, b: 0, space: "srgb" as const }, width: 2, pattern: [4, 2] };
-      const direct = doc.appendParagraph("1. Direct formatting, a variation of this paragraph's style.");
-      doc.paragraph(direct).format({ border, borderPositions: BorderPosition.BOTTOM });
-      const named = doc.appendParagraph("2. A named style of its own.");
+      const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+      const dashed = { color: black, width: 2, pattern: "dashed" } as const;
+      const direct = doc.appendParagraph("1. Dashed, as direct formatting.");
+      doc.paragraph(direct).format({ border: dashed, borderPositions: BorderPosition.BOTTOM });
+      const named = doc.appendParagraph("2. Dashed, as a named style.");
       doc.setParagraphStyle(
         named,
         doc.createParagraphStyle({
-          name: "P28 Named",
-          paragraph: { border, borderPositions: BorderPosition.BOTTOM },
+          name: "P28 Dashed",
+          paragraph: { border: dashed, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+      const dotted = doc.appendParagraph("3. Dotted, as a named style.");
+      doc.setParagraphStyle(
+        dotted,
+        doc.createParagraphStyle({
+          name: "P28 Dotted",
+          paragraph: { border: { color: black, width: 2, pattern: "dotted" }, borderPositions: BorderPosition.BOTTOM },
         }),
       );
     },

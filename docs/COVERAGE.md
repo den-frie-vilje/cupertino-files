@@ -61,6 +61,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 35 | all |
 | Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; the null flag is never used. Rendering measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app preserves values beyond what its inspector displays (−12 stored, −2 shown)</sub> | all | ✅ read + write | 68 | all |
 | Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 68 | all |
+| Dash presets (dashed, dotted strokes)<br><sub>the two dashed shapes the apps write at every stroke site and width, [2, 2] butt-capped and [0.001, 2] round-capped; any other dash array draws but the Format sidebar shows None for it</sub> | all | ✅ read + write | n/a | — |
 | List styles | all | ✅ read + write | 30 | all |
 | Hyperlinks | all | ✅ read + write | 10 | iwork16→current |
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 40 | iwork16→current |
@@ -170,7 +171,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-66 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+67 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -181,6 +182,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟡 low — Text & styles → **Paragraph background & borders (rule stroke + positions)**
 - 🟡 low — Text & styles → **Paragraph rule offset (text-to-border distance)**
 - 🟡 low — Text & styles → **Shared style values (colour incl. P3, gradients, strokes, shadows, padding)**
+- 🟡 low — Text & styles → **Dash presets (dashed, dotted strokes)**
 - 🟡 low — Text & styles → **Hyperlinks**
 - 🟠 medium — Text & styles → **Page numbers and page counts (insert, read, remove)**
 - 🟡 low — Text & styles → **Paragraph writing direction (read + write)**

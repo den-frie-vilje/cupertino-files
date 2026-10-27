@@ -292,9 +292,18 @@ export interface Stroke {
   width?: number;
   cap?: number;
   join?: number;
-  /** "solid" | "none" | dash lengths in points. */
-  pattern?: "solid" | "none" | number[];
+  /**
+   * "solid", "none", one of the apps' two dash presets, or dash lengths
+   * in points. The apps write exactly two dashed shapes, at every site
+   * and width: "dashed" is [2, 2] with butt caps and "dotted" is
+   * [0.001, 2] with round caps. Any other array draws, but the Format
+   * sidebar reports its line style as None.
+   */
+  pattern?: "solid" | "none" | "dashed" | "dotted" | number[];
 }
+
+/** The apps' dash presets, the same at every width and site. */
+export const DASH_PRESETS = { dashed: [2, 2], dotted: [0.001, 2] } as const;
 
 export function readStroke(message: RawMessage | undefined): Stroke | undefined {
   if (!message) return undefined;
@@ -344,17 +353,18 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
  * draws nothing, and zeroes `border_positions` on resave. A stroke
  * given without a pattern is written solid, because the app writes no
  * stroke without one and fills an absent pattern with an empty dash
- * list on resave.
+ * list on resave. The dash presets are the apps' own (`DASH_PRESETS`),
+ * a dotted stroke round-capped as the app caps it unless a cap is given.
  */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
+  const kind = stroke.pattern ?? "solid";
   if (stroke.color) message.setMessage(StrokeFields.COLOR, writeColor(stroke.color));
   if (stroke.width !== undefined) message.setFloat(StrokeFields.WIDTH, stroke.width);
-  message.setVarint(StrokeFields.CAP, stroke.cap ?? 0);
+  message.setVarint(StrokeFields.CAP, stroke.cap ?? (kind === "dotted" ? LineCap.ROUND : 0));
   message.setVarint(StrokeFields.JOIN, stroke.join ?? 0);
   message.setFloat(StrokeFields.MITER_LIMIT, 4);
   {
-    const kind = stroke.pattern ?? "solid";
     const pattern = RawMessage.create();
     if (kind === "solid" || kind === "none") {
       pattern.setVarint(
@@ -365,10 +375,11 @@ export function writeStroke(stroke: Stroke): RawMessage {
       pattern.setVarint(StrokePatternFields.COUNT, 0);
       pattern.setFloats(StrokePatternFields.PATTERN, [0, 0, 0, 0, 0, 0]);
     } else {
+      const dashes = kind === "dashed" || kind === "dotted" ? DASH_PRESETS[kind] : kind;
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
       pattern.setFloat(StrokePatternFields.PHASE, 0);
-      pattern.setVarint(StrokePatternFields.COUNT, kind.length);
-      const floats = [...kind];
+      pattern.setVarint(StrokePatternFields.COUNT, dashes.length);
+      const floats = [...dashes];
       while (floats.length < 6) floats.push(0);
       pattern.setFloats(StrokePatternFields.PATTERN, floats);
     }

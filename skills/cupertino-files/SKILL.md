@@ -380,8 +380,13 @@ import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "cu
 colorFill(1, 0.9, 0.2);                                 // flat colour
 linearGradient(hexColor("#fff"), hexColor("#0066ff"));  // two-stop gradient
 solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1 pt solid border
-({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: [4, 2] });  // dashed
+({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: "dashed" });  // the app's dashes, [2, 2]
+({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: "dotted" });  // the app's dots, round-capped
 ```
+
+`pattern` also takes dash lengths in points (`[4, 2]`). The apps draw
+them, but their line-style control knows only the two presets and shows
+None for anything else.
 
 ## Tables
 

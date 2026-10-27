@@ -539,9 +539,29 @@ export const CAPABILITIES: Capability[] = [
         "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: " +
         "two styles with the same channels, one tagged p3 and one srgb, drew as two greens (\"the " +
         "colourspace tagging works - it's two different greens\"), and a [4, 2] paragraph border drew " +
-        "dashed (\"the dashes look fine, as specified\"). Found beside it: the Format sidebar shows no " +
-        "border for the created style's paragraph, while the app's own border on the next line, an " +
-        "anonymous variation of Body with [2, 2] at 2 pt, shows; that is an open item in docs/BLOCKERS.md.",
+        "dashed (\"the dashes look fine, as specified\"). Found beside it: the Format sidebar shows " +
+        "None as the line style of that [4, 2] border, direct or named, while the app's own on the next " +
+        "line, [2, 2], shows: the sidebar knows only the two dash shapes the apps write, now the " +
+        "\"dashed\" and \"dotted\" presets.",
+      risk: "low",
+    },
+  },
+  {
+    group: "Text & styles",
+    name: "Dash presets (dashed, dotted strokes)",
+    apps: "all",
+    status: "read+write",
+    note:
+      "the two dashed shapes the apps write at every stroke site and width, [2, 2] butt-capped and " +
+      "[0.001, 2] round-capped; any other dash array draws but the Format sidebar shows None for it",
+    manualProof: {
+      claim: "A border written with the \"dashed\" or \"dotted\" preset shows that line style in the Format sidebar.",
+      why:
+        "Pages showed None for a [4, 2] border that drew. The presets copy the apps' own arrays, measured " +
+        "over every stroke in the corpus, but whether the sidebar matches on the array alone is the app's to say.",
+      how:
+        "Open Pages rung P28, select each of its three bordered lines, and read Format > Layout > Borders & " +
+        "Rules: dashed, dashed, dotted.",
       risk: "low",
     },
   },

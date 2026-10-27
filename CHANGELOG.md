@@ -105,6 +105,10 @@ in commit messages and pull requests.
 
 ### Added
 
+- A stroke's `pattern` takes `"dashed"` and `"dotted"`, the two line
+  styles the apps themselves write, so a border or outline made with
+  them is one the apps' Format sidebar recognises. Dash arrays in points
+  still draw, but the sidebar shows None for them.
 - `canvasComments()` on a Numbers document and on a Keynote slide reads
   the comments pinned to a sheet or a slide, with author and date.
 

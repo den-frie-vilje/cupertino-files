@@ -32,7 +32,9 @@ import {
   writeStroke,
   type Stroke,
 } from "../src/index.ts";
-import { RawMessage } from "../src/base/protobuf.ts";
+import { RawMessage, WireType } from "../src/base/protobuf.ts";
+import { typeName } from "../src/tsp/registry.ts";
+import { loadSchema } from "../scripts/check-required-fields.ts";
 import {
   deprecatedBorders,
   ParaProps,
@@ -158,6 +160,55 @@ describe("style value codecs", () => {
     expect(pattern.getFloat(2)).toBe(0); // phase
     expect(pattern.getUint(3)).toBe(0); // count
     expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("writes the apps' two dash presets, and the corpus knows no other dashes", () => {
+    // Every dashed stroke the apps wrote, at every schema-reachable site
+    // and width, is one of two shapes: [2, 2] butt-capped or
+    // [0.001, 2] round-capped. The presets are those, so the Format
+    // sidebar names them; any other array draws but reads as None there.
+    const dashed = RawMessage.parse(writeStroke({ width: 2, pattern: "dashed" }).toBytes());
+    expect(dashed.getUint(3)).toBe(0);
+    expect(dashed.getMessage(6)!.getUint(3)).toBe(2);
+    expect(dashed.getMessage(6)!.getFloats(4)).toEqual([2, 2, 0, 0, 0, 0]);
+    const dotted = RawMessage.parse(writeStroke({ width: 2, pattern: "dotted" }).toBytes());
+    expect(dotted.getUint(3)).toBe(1); // round cap, the app's
+    expect(dotted.getMessage(6)!.getFloats(4).slice(1)).toEqual([2, 0, 0, 0, 0]);
+    expect(dotted.getMessage(6)!.getFloats(4)[0]).toBeCloseTo(0.001, 6);
+    expect(RawMessage.parse(writeStroke({ pattern: "dotted", cap: 0 }).toBytes()).getUint(3)).toBe(0);
+
+    const schema = loadSchema();
+    const shapes = new Map<string, number>();
+    const walk = (m: RawMessage, name: string, depth: number) => {
+      if (name === "TSD.StrokeArchive") {
+        const p = m.getMessage(6);
+        if (p?.getUint(1) !== 0 || !p.getUint(3)) return;
+        const key = `cap ${m.getUint(3)} [${p.getFloats(4).slice(0, p.getUint(3)).map((f) => f.toFixed(3)).join(", ")}]`;
+        shapes.set(key, (shapes.get(key) ?? 0) + 1);
+        return;
+      }
+      const def = schema.get(name);
+      if (!def || depth > 12) return;
+      for (const f of def.values()) {
+        if (!schema.has(f.type) || !m.fields.some((x) => x.no === f.number && x.wire === WireType.Bytes)) continue;
+        for (const child of m.getMessages(f.number)) walk(child, f.type, depth + 1);
+      }
+    };
+    for (const name of readdirSync(FIXTURES).filter((n) => /\.(pages|numbers|key)$/.test(n))) {
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(fixture(name));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        const type = typeName(obj.type, doc.app.toLowerCase() as never);
+        if (type && schema.has(type)) walk(obj.message, type, 0);
+      }
+    }
+    expect([...shapes.keys()].sort()).toEqual(["cap 0 [2.000, 2.000]", "cap 1 [0.001, 2.000]"]);
+    expect((shapes.get("cap 0 [2.000, 2.000]") ?? 0) > 10).toBe(true);
+    expect((shapes.get("cap 1 [0.001, 2.000]") ?? 0) > 10).toBe(true);
   });
 
   it("writes line spacing the way the app does: amount only", () => {
