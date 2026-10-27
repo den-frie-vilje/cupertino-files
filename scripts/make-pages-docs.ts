@@ -63,7 +63,7 @@ export const BASES: { tag: string; url: URL; note: string }[] = [
   {
     tag: "v14",
     url: new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url),
-    note: "file format 14.4.1 — an older document Pages upgrades on open",
+    note: "file format 14.4.1 — an older document Pages upgrades on open; the upgrade drops every paragraph style outside the theme's listed set, the document's own and any a rung creates, so style rungs are invisible on it",
   },
 ];
 
@@ -109,6 +109,8 @@ export const RUNGS: {
   name: string;
   note: string;
   base?: URL;
+  /** Built on the embedded blank donor instead of a base; emitted once. */
+  blank?: true;
   build: (doc: PagesDocument) => void;
 }[] = [
   {
@@ -568,16 +570,21 @@ export const RUNGS: {
   },
   {
     name: "P27-dashed-border",
-    base: new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url),
-    note: "a paragraph border dashed 4 on, 2 off, beside a solid one; on this base the body is plain text, not a placeholder, so a line can be selected and its border read in the Format sidebar",
+    blank: true,
+    note: "on the blank donor: a paragraph border dashed 4 on, 2 off, beside a solid one, and a line for the checker to border with the app's own controls",
     build: (doc) => {
       doc.appendParagraph(
         "P27: the next line carries a solid 2 pt bottom border, the line after it the same border " +
-          "dashed, 4 pt on and 2 pt off. PASS: the second rule is visibly dashed, and with that line " +
-          "selected the Format sidebar's border style shows a dash. FAIL: both rules solid, or no rule.",
+          "dashed, 4 pt on and 2 pt off. PASS: two rules, the second visibly dashed. FAIL: one rule, " +
+          "both solid, or none.",
       );
       const solid = doc.appendParagraph("Solid border below this line.");
       const dashed = doc.appendParagraph("Dashed border below this line.");
+      doc.appendParagraph(
+        "YOUR TURN: give this line a dashed bottom border yourself with Format > Layout > Borders & " +
+          "Rules (Format > Layout > Kanter og linjer), then save. The app's own construction is then " +
+          "in the file beside the library's.",
+      );
       const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
       doc.setParagraphStyle(
         solid,
@@ -623,10 +630,12 @@ function main(argv: string[]): number {
     console.log(`\n=== ${base.tag}: ${base.note} ===`);
     for (const rung of RUNGS) {
       // A rung with its own base is emitted once, not per base.
-      if (rung.base && base !== BASES[0]) continue;
+      if ((rung.base || rung.blank) && base !== BASES[0]) continue;
       const path = `${outDir}/${base.tag}-${rung.name}.pages`;
       try {
-        const doc = PagesDocument.load(rung.base ? new Uint8Array(readFileSync(rung.base)) : bytes);
+        const doc = rung.blank
+          ? PagesDocument.blank()
+          : PagesDocument.load(rung.base ? new Uint8Array(readFileSync(rung.base)) : bytes);
         rung.build(doc);
         writeFileSync(path, doc.save());
         console.log(`${(base.tag + "-" + rung.name).padEnd(28)} ${rung.note}`);
