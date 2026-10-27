@@ -38,7 +38,7 @@
  * Usage: `npm run pages:docs -- ~/Desktop/pages-rungs`
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { PagesDocument } from "../src/index.ts";
+import { BorderPosition, PagesDocument, tablesOfContents } from "../src/index.ts";
 import { chartsOf } from "../src/tsch/charts.ts";
 
 /**
@@ -500,6 +500,70 @@ export const RUNGS: {
       doc.appendParagraph("P24: this line should be alone on page 1; the next line should start page 2.");
       doc.appendParagraph("This line should be the first on page 2. Both on one page is a failure.");
       doc.insertPageBreak(doc.body.paragraphs().length - 2);
+    },
+  },
+  {
+    name: "P25-p3-colour",
+    note: "the same green as a Display P3 style and as an sRGB style, and a paragraph border dashed 4 on, 2 off",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P25: the next two lines are the same green numbers, the first tagged Display P3, the second sRGB. " +
+          "On a P3 display the first should be visibly more saturated. Two identical greens mean the P3 tag " +
+          "was reinterpreted as sRGB.",
+      );
+      const first = doc.appendParagraph("This line is Display P3 green.");
+      const second = doc.appendParagraph("This line is sRGB green.");
+      const dashed = doc.appendParagraph(
+        "This line carries a dashed bottom border, 4 pt dash and 2 pt gap. In the Format sidebar's " +
+          "border controls the dash should read as that pattern; a solid line, or no line, is a failure.",
+      );
+      const green = { r: 0, g: 0.85, b: 0.2 };
+      doc.setParagraphStyle(
+        first,
+        doc.createParagraphStyle({
+          name: "P25 P3",
+          character: { fontSize: 24, fontColor: { ...green, space: "p3" } },
+        }),
+      );
+      doc.setParagraphStyle(
+        second,
+        doc.createParagraphStyle({
+          name: "P25 sRGB",
+          character: { fontSize: 24, fontColor: { ...green, space: "srgb" } },
+        }),
+      );
+      doc.setParagraphStyle(
+        dashed,
+        doc.createParagraphStyle({
+          name: "P25 Dashed",
+          paragraph: {
+            border: { color: { r: 0, g: 0, b: 0, space: "srgb" }, width: 2, pattern: [4, 2] },
+            borderPositions: BorderPosition.BOTTOM,
+          },
+        }),
+      );
+    },
+  },
+  {
+    name: "P26-toc-rule",
+    base: new URL("../fixtures/picopalette-v3.2-multisection-footnotes.pages", import.meta.url),
+    note: "the table of contents told to stop collecting its first included paragraph style",
+    build: (doc) => {
+      const toc = tablesOfContents(doc.store)[0];
+      if (!toc) throw new Error("base has no table of contents");
+      const rule = toc.rules().find((r) => r.included && r.paragraphStyleId !== undefined);
+      if (!rule) throw new Error("no included TOC rule to switch off");
+      const style = doc.paragraphStyles().find((s) => s.id === rule.paragraphStyleId);
+      const before = toc.entries();
+      const dropped = before.filter((e) => doc.body.paragraphs()[e.paragraphIndex]?.styleId === rule.paragraphStyleId);
+      toc.setIncluded(rule.paragraphStyleId!, false);
+      doc.appendParagraph(
+        `P26: the table of contents at the top listed ${before.length} entries when this file was built, ` +
+          `${dropped.length} of them in the paragraph style "${style?.name ?? "?"}" (the first: ` +
+          `${dropped.slice(0, 3).map((e) => `"${e.heading.trim()}"`).join(", ")}). The library switched that style off ` +
+          "in the TOC's settings. PASS: after Pages redraws the TOC those headings are gone from it, and Edit > " +
+          "Table of Contents shows the style unticked. FAIL: the list is unchanged, or the style is still ticked.",
+      );
     },
   },
   {

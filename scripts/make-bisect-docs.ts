@@ -309,6 +309,30 @@ export const RUNGS: {
       table.addCategory(0);
     },
   },
+  {
+    name: "25-category-off",
+    note: "the template's grouped Categories table ungrouped with setEnabled(false), its definition kept",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(1, 0, "25: the Categories table in this document was grouped by Numbers; the library switched the grouping OFF and kept the definition. PASS: its rows are flat, and Organise > Categories (Organiser > Kategorier) offers the same category to switch back on. FAIL: still grouped, no category to re-enable, or a refusal to open.");
+      const categories = doc.tables().find((t) => t.name === "Categories")?.activeCategories();
+      if (!categories) throw new Error("template's Categories table is not grouped");
+      categories.setEnabled(false);
+    },
+  },
+  {
+    name: "26-conditional-cache",
+    note: "two rule sets on column C, so the second conditional id can be read back after a value changes which rule fires",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(1, 0, "26: C2 to C4 carry the rule '> 5 is green', C5 carries '= 4 is yellow'. PASS on open: C2 plain, C3 and C4 green, C5 yellow. YOUR TURN: type 8 into C2 and 7 into C5, then save with Cmd-S. The library reads the saved file back; the colours are all there is to look at.");
+      [3, 7, 9, 4].forEach((v, i) => { table.setCell(i + 1, 2, v); });
+      const green = { kind: "color", color: { r: 0.31, g: 0.6, b: 0.32, space: "srgb" } } as const;
+      const yellow = { kind: "color", color: { r: 1, g: 0.92, b: 0.55, space: "srgb" } } as const;
+      table.setConditionalRules(1, 2, [{ operator: ">", value: 5, cell: { fill: green } }], { rowCount: 3 });
+      table.setConditionalRules(4, 2, [{ operator: "=", value: 4, cell: { fill: yellow } }]);
+    },
+  },
 ];
 
 function main(argv: string[]): number {
