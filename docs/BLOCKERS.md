@@ -122,6 +122,16 @@ that rebuild the structures from them.
   predicates. (Filter *rule* reading is pinned against
   the populated set in `olekristensen-v26.3-mac-filters.numbers`; rule
   *synthesis* waits for an app round-trip of a library-written rule.)
+- **A created style's paragraph border draws but the Format sidebar shows
+  none.** With a paragraph on a `createParagraphStyle` style carrying a
+  border selected, Pages 15.4 draws the rule and the Borders & Rules
+  controls show no border; a border the app authors on the next line
+  shows, and its style differs from ours only in the header: anonymous,
+  a variation (`is_variation`) of Body with the parent set, and a full
+  character bag. Pages rung P28 writes the same dashed border three
+  ways, direct formatting (a variation of the paragraph's style), a
+  named style based on Body, and a named style with no parent, for the
+  sidebar to be read on each.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -195,6 +205,8 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-10-27 | does a Display P3 colour render as P3, and a dashed border with our dash lengths? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own saves | **settled, pass**: two greens from the same channels tagged p3 and srgb ("the colourspace tagging works - it's two different greens"); the [4, 2] rule drew dashed ("the dashes look fine, as specified"). The checker's own dashed border, authored in the Borders & Rules controls, is an anonymous variation of Body carrying [2, 2] at 2 pt with the same three paragraph fields as ours. | Pages rungs P25 and P27 as saved by the app |
+| 2026-10-27 | does Pages honour a TOC rule we switched off? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: the TOC reopened with 49 entries where 61 were cached, none in Subtitle, and the style unticked ("PASS - the subtitles were not included in the TOC when the doc opened. And subtitle was unticked"). | Pages rung P26 as saved by the app |
 | 2026-10-27 | do a created style's paragraph borders draw, solid and dashed? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **no verdict on the write, the base refuted**: on the 14.4.1 base (`iwork-mcp-v14.5-sample.pages`) no rule drew ("no borders in 4b"), and the app's save had moved every paragraph, the document's own headings included, onto the theme's Default style and dropped every style outside the theme's listed set, ours among them. The upgrade path discards them; the rung moved to the blank donor with an authoring slot beside it. | Pages rung P27 as saved by the app |
 | 2026-10-27 | does Numbers act on `is_enabled` both ways? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: opened flat, switched on and regrouped, switched off and flattened ("i turned it on and off - it worked"). The app re-sorts rows into group order on enabling and keeps the order when disabled; the disabled definition's archive came back byte-identical, and the table model's `category_owner_deprecated` copy of the flag was synced to 0. | Numbers rung 25, saved by the app |
 | 2026-10-27 | is the second conditional id the applied rule? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, refuted**: after the checker changed which rule fired, cells on the first set carried 0 and the cell on the second set 15, matching no change in content. The value is per set, assigned by the app; preserving it verbatim is right. | Numbers rung 26, saved by the app |

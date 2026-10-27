@@ -127,6 +127,12 @@ describe("style value codecs", () => {
       const round = readStroke(RawMessage.parse(writeStroke({ pattern }).toBytes()))!;
       expect(round.pattern).toBe(pattern);
     }
+    // No pattern given means solid, written whole: the app writes no
+    // stroke without a pattern message.
+    const bare = writeStroke({ color: { r: 0, g: 0, b: 0 }, width: 2 });
+    expect(bare.getMessage(6)!.getUint(1)).toBe(1);
+    expect(bare.getMessage(6)!.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(readStroke(RawMessage.parse(bare.toBytes()))!.pattern).toBe("solid");
 
     // On the wire a dashed pattern has the app's whole shape: phase 0,
     // the run count, and the float list padded to six.
@@ -675,6 +681,14 @@ describe("direct formatting through the fluent API", () => {
     expect(paragraph.leftIndent).toBe(48);
     expect(paragraph.borderPositions).toBe(BorderPosition.BOTTOM);
     expect(paragraph.border!.width).toBe(1);
+    // Direct formatting is a variation of the paragraph's style, as the
+    // apps write every parented style.
+    {
+      const styled = doc.body.paragraphs()[0]!.styleId!;
+      const sup = doc.store.resolve(styled)!.message.getMessage(1)!;
+      expect(sup.getMessage(3) !== undefined).toBe(true);
+      expect(sup.getBool(4)).toBe(true);
+    }
   });
 
   it("keeps every fixture's styles readable", () => {

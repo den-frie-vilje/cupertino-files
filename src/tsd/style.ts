@@ -341,7 +341,10 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
  * six — solid and empty state count 0 with six zeros, a dashed border
  * states its dashes and zero-fill. A stroke stating only type renders
  * as no border: the app shows the width but "None" for the stroke,
- * draws nothing, and zeroes `border_positions` on resave.
+ * draws nothing, and zeroes `border_positions` on resave. A stroke
+ * given without a pattern is written solid, because the app writes no
+ * stroke without one and fills an absent pattern with an empty dash
+ * list on resave.
  */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
@@ -350,12 +353,13 @@ export function writeStroke(stroke: Stroke): RawMessage {
   message.setVarint(StrokeFields.CAP, stroke.cap ?? 0);
   message.setVarint(StrokeFields.JOIN, stroke.join ?? 0);
   message.setFloat(StrokeFields.MITER_LIMIT, 4);
-  if (stroke.pattern !== undefined) {
+  {
+    const kind = stroke.pattern ?? "solid";
     const pattern = RawMessage.create();
-    if (stroke.pattern === "solid" || stroke.pattern === "none") {
+    if (kind === "solid" || kind === "none") {
       pattern.setVarint(
         StrokePatternFields.TYPE,
-        stroke.pattern === "solid" ? StrokePatternType.SOLID : StrokePatternType.EMPTY,
+        kind === "solid" ? StrokePatternType.SOLID : StrokePatternType.EMPTY,
       );
       pattern.setFloat(StrokePatternFields.PHASE, 0);
       pattern.setVarint(StrokePatternFields.COUNT, 0);
@@ -363,8 +367,8 @@ export function writeStroke(stroke: Stroke): RawMessage {
     } else {
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
       pattern.setFloat(StrokePatternFields.PHASE, 0);
-      pattern.setVarint(StrokePatternFields.COUNT, stroke.pattern.length);
-      const floats = [...stroke.pattern];
+      pattern.setVarint(StrokePatternFields.COUNT, kind.length);
+      const floats = [...kind];
       while (floats.length < 6) floats.push(0);
       pattern.setFloats(StrokePatternFields.PATTERN, floats);
     }

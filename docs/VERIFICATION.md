@@ -16,43 +16,17 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 2 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟡 low | Text & styles → Shared style values (colour incl. P3, gradients, strokes, shadows, padding) | A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths. | manual |
-| 2 | 🟡 low | Text & styles → Table of contents (rules read + write, cached entries read) | Pages regenerates a TOC whose collection rules we changed, and honours the new rule set. | manual |
-
-### 1. Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths.
-
-**Why the suite cannot settle it.** Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with rgbspace and that the dash array is repeated float, but not that a colour we author with space: 'p3' is treated as wide-gamut rather than reinterpreted.
-
-**How to settle it.** Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.
-
-### 2. Table of contents (rules read + write, cached entries read)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Pages regenerates a TOC whose collection rules we changed, and honours the new rule set.
-
-**Why the suite cannot settle it.** Rules are an instruction the app acts on at its next repagination. Nothing offline repaginates, so the change is visible in the archive but its effect is not.
-
-**How to settle it.** Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those headings after it redraws.
 
 ## Settled
 
-64 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+66 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -447,6 +421,14 @@ result mean something; what changed is that it is no longer a request.
 
 **Outcome.** **Confirmed in Pages — "P07 passed" — on the second round.** The first check failed ("not on a new page") and taught the rule: all 28 section boundaries across the five multi-section fixtures put U+0004 where the previous paragraph's newline was, and we wrote only the `table_section` entry — Pages listed the section and kept the text flowing, because the table names a section and the character breaks the page. With `insertSectionBreak` swapping the terminator (same length, so every attribute-table index survives) and keeping the clone's name, the second paragraph renders on its own page.
 
+### ✅ Shared style values (colour incl. P3, gradients, strokes, shadows, padding)
+
+**Was claimed.** A Display-P3 colour we write renders as P3, and a dashed stroke renders with our dash lengths.
+
+**Why it needed an app.** Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with rgbspace and that the dash array is repeated float, but not that a colour we author with space: 'p3' is treated as wide-gamut rather than reinterpreted.
+
+**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: two styles with the same channels, one tagged p3 and one srgb, drew as two greens ("the colourspace tagging works - it's two different greens"), and a [4, 2] paragraph border drew dashed ("the dashes look fine, as specified"). Found beside it: the Format sidebar shows no border for the created style's paragraph, while the app's own border on the next line, an anonymous variation of Body with [2, 2] at 2 pt, shows; that is an open item in docs/BLOCKERS.md.
+
 ### ✅ Sheets (add, duplicate, rename, move, remove)
 
 **Was claimed.** Numbers opens a document whose sheets we added, duplicated, renamed or reordered.
@@ -526,6 +508,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** Every offline check is self-referential: our encoder round-trips through our decoder. Apple's reader is the only authority on whether the rebuilt row buffers, offset array, cell counts and legacy stubs are all acceptable together.
 
 **Outcome.** **Right-alignment confirmed on open.** Three review rounds triangulated the mechanism — automatic alignment is the absence of the per-cell text style, and the template's do-nothing style (alignment: 0) was the left-pin — and the round after the writer began dropping that style came back all green, every number right-aligned with no cell touched, resaved clean by the app. One write path had missed the drop: setFormula without a cached value left formula results left-pinned beside right-aligned plain values, named cell by cell in the next returned demo — the drop now runs on every formula write, with app verification riding the next demo-06 round.
+
+### ✅ Table of contents (rules read + write, cached entries read)
+
+**Was claimed.** Pages regenerates a TOC whose collection rules we changed, and honours the new rule set.
+
+**Why it needed an app.** Rules are an instruction the app acts on at its next repagination. Nothing offline repaginates, so the change is visible in the archive but its effect is not.
+
+**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P26: with the Subtitle rule switched off, the TOC reopened without its twelve Subtitle headings, 49 entries where 61 were cached, and the style was unticked in the TOC settings ("PASS - the subtitles were not included in the TOC when the doc opened. And subtitle was unticked").
 
 ### ✅ Table structure (rows, columns, bands, sizes, freeze, repeat)
 

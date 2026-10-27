@@ -535,6 +535,13 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and " +
         "confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: " +
+        "two styles with the same channels, one tagged p3 and one srgb, drew as two greens (\"the " +
+        "colourspace tagging works - it's two different greens\"), and a [4, 2] paragraph border drew " +
+        "dashed (\"the dashes look fine, as specified\"). Found beside it: the Format sidebar shows no " +
+        "border for the created style's paragraph, while the app's own border on the next line, an " +
+        "anonymous variation of Body with [2, 2] at 2 pt, shows; that is an open item in docs/BLOCKERS.md.",
       risk: "low",
     },
   },
@@ -768,6 +775,11 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those " +
         "headings after it redraws.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P26: with the " +
+        "Subtitle rule switched off, the TOC reopened without its twelve Subtitle headings, 49 entries " +
+        "where 61 were cached, and the style was unticked in the TOC settings (\"PASS - the subtitles " +
+        "were not included in the TOC when the doc opened. And subtitle was unticked\").",
       risk: "low",
     },
   },

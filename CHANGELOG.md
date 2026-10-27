@@ -9,6 +9,11 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A stroke given without a pattern (`{ color, width }`) is written solid,
+  with the whole pattern message the apps write; before, the stroke had
+  no pattern at all, which Pages filled with an empty dash list.
+- Direct paragraph and character formatting creates a style marked as a
+  variation of its parent, as the apps mark every parented style.
 - A table copied with `addTable({ copyOf })` kept its donor's table id
   string beside the fresh calc-engine identity the copy was given, and
   Numbers re-minted the copy on open, so a formula in another table
