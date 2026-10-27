@@ -58,7 +58,7 @@ export const BASES: { tag: string; url: URL; note: string }[] = [
   {
     tag: "v26",
     url: new URL("../fixtures/patrickomatic-termpaper-footers-masks.pages", import.meta.url),
-    note: "file format 26.1.0 — written by a current Pages",
+    note: "file format 26.1.0 — written by a current Pages; its body is placeholder text, which appended paragraphs join, so a line cannot be selected on its own in the app",
   },
   {
     tag: "v14",
@@ -563,6 +563,35 @@ export const RUNGS: {
           `${dropped.slice(0, 3).map((e) => `"${e.heading.trim()}"`).join(", ")}). The library switched that style off ` +
           "in the TOC's settings. PASS: after Pages redraws the TOC those headings are gone from it, and Edit > " +
           "Table of Contents shows the style unticked. FAIL: the list is unchanged, or the style is still ticked.",
+      );
+    },
+  },
+  {
+    name: "P27-dashed-border",
+    base: new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url),
+    note: "a paragraph border dashed 4 on, 2 off, beside a solid one; on this base the body is plain text, not a placeholder, so a line can be selected and its border read in the Format sidebar",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P27: the next line carries a solid 2 pt bottom border, the line after it the same border " +
+          "dashed, 4 pt on and 2 pt off. PASS: the second rule is visibly dashed, and with that line " +
+          "selected the Format sidebar's border style shows a dash. FAIL: both rules solid, or no rule.",
+      );
+      const solid = doc.appendParagraph("Solid border below this line.");
+      const dashed = doc.appendParagraph("Dashed border below this line.");
+      const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+      doc.setParagraphStyle(
+        solid,
+        doc.createParagraphStyle({
+          name: "P27 Solid",
+          paragraph: { border: { color: black, width: 2 }, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+      doc.setParagraphStyle(
+        dashed,
+        doc.createParagraphStyle({
+          name: "P27 Dashed",
+          paragraph: { border: { color: black, width: 2, pattern: [4, 2] }, borderPositions: BorderPosition.BOTTOM },
+        }),
       );
     },
   },
