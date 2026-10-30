@@ -17,10 +17,13 @@ import { Image, TSD_TYPE } from "../tsd/schema.ts";
 import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
+import { StyleSuper } from "../tss/schema.ts";
+import { readFill, writeFill, type Fill } from "../tsd/style.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer } from "../tsd/placement.ts";
+import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
+import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
@@ -29,17 +32,26 @@ import {
   KN_REFERENCE_EXTRACTORS,
   KN_TYPE,
   KNDocument,
+  MASTER_ONLY_FIELDS,
   NO_TRANSITION_EFFECT,
   Note,
   Show,
   Slide,
   SlideNode,
+  SlideStyle,
+  SlideStyleProperties,
   SlideTree,
   SLIDE_TYPES,
   Transition,
   TransitionAttributes,
 } from "./schema.ts";
-import { buildsOfSlide, removeBuild, BuildModel } from "./builds.ts";
+import {
+  BuildModel,
+  buildsOfSlide,
+  createBuild,
+  type NewBuild,
+  removeBuild,
+} from "./builds.ts";
 
 /** Shared-family extractors plus the KN types this document mutates. */
 const KEYNOTE_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([
@@ -174,6 +186,69 @@ export class KeynoteSlide {
   /** The master (template) slide this one is based on, if any. */
   get masterId(): bigint | undefined {
     return refId(this.object.message, Slide.TEMPLATE_SLIDE);
+  }
+
+  /**
+   * The slide's background fill, read up the style chain: a slide with a
+   * background of its own carries a variation style whose parent is the
+   * master's; one without shares the master's style outright.
+   */
+  background(): Fill | undefined {
+    let style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    for (let depth = 0; style && depth < 8; depth++) {
+      const fill = readFill(
+        style.message.getMessage(SlideStyle.SLIDE_PROPERTIES)?.getMessage(SlideStyleProperties.FILL),
+      );
+      if (fill) return fill;
+      style = this.store.resolve(refId(style.message.getMessage(SlideStyle.SUPER), StyleSuper.PARENT));
+    }
+    return undefined;
+  }
+
+  /**
+   * Set the slide's background, copying on write.
+   *
+   * A per-slide background is a KN.SlideStyleArchive beside the master's
+   * in the stylesheet's component: unnamed, a variation whose parent is
+   * the master's style and whose stylesheet is the document's, override
+   * count 1, and the fill in its slide properties. Nothing lists it; the
+   * slide's own reference is its only referrer. A slide already carrying
+   * such a variation of its own has the fill replaced in place; one
+   * sharing its style with the master, or with other slides, gets a
+   * variation of its own.
+   * @agentTool set_slide_background
+   */
+  setBackground(fill: Fill): void {
+    const current = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    if (!current) throw new RangeError(`slide ${this.index} has no style`);
+    const head = current.message.getMessage(SlideStyle.SUPER);
+    const isVariation = head?.getBool(StyleSuper.IS_VARIATION) ?? false;
+    const shared = this.store.referrers(current.identifier).some((id) => id !== this.id);
+    if (isVariation && !shared) {
+      const properties = current.message.getMessage(SlideStyle.SLIDE_PROPERTIES) ?? RawMessage.create();
+      properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+      current.message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+      return;
+    }
+    const component = this.store.componentOf(current.identifier);
+    if (!component) throw new RangeError(`slide style ${current.identifier} has no component`);
+    // Variations hang off the master's style, never off each other.
+    const parent = (isVariation ? refId(head, StyleSuper.PARENT) : undefined) ?? current.identifier;
+    const stylesheet = refId(head, StyleSuper.STYLESHEET);
+    const message = RawMessage.create();
+    const variation = RawMessage.create();
+    variation.setMessage(StyleSuper.PARENT, makeRef(parent));
+    variation.setBool(StyleSuper.IS_VARIATION, true);
+    if (stylesheet !== undefined) variation.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheet));
+    message.setMessage(SlideStyle.SUPER, variation);
+    message.setVarint(SlideStyle.OVERRIDE_COUNT, 1);
+    const properties = RawMessage.create();
+    properties.setMessage(SlideStyleProperties.FILL, writeFill(fill));
+    message.setMessage(SlideStyle.SLIDE_PROPERTIES, properties);
+    const style = this.store.createObject(KN_TYPE.SLIDE_STYLE, component);
+    style.setMessageBytes(message.toBytes());
+    this.object.message.setMessage(Slide.STYLE, makeRef(style.identifier));
+    this.store.retargetReference(this.object, current.identifier, style.identifier);
   }
 
   /** Speaker-notes storage, when the slide has one. */
@@ -352,6 +427,52 @@ export class KeynoteSlide {
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
+  }
+
+  /**
+   * Put a text box on this slide, saying `text`, placed and sized by
+   * `placement` (points; the donor's size otherwise). The box is a deep
+   * copy of a text box the deck already carries — this slide's first,
+   * else any slide's or master's — so it has the theme's own style, its
+   * own storage and every field the app writes. Keynote has not yet been
+   * seen to open a box added this way; see docs/VERIFICATION.md.
+   * @agentTool add_text_box
+   */
+  addTextBox(text: string, placement: DrawablePlacement = {}): DrawableModel {
+    const own = this.container().drawables().find((d) => isTextBox(d.object));
+    const donor = own?.object ?? anyTextBox(this.store);
+    if (!donor) throw new RangeError("the deck carries no text box to copy");
+    return addTextBoxFrom(this.store, this.container(), donor, this.id, text, placement);
+  }
+
+  /**
+   * Animate a drawable on this slide: an all-at-once build in the shape
+   * the app writes, played on click. Keynote has not yet been seen to play
+   * a build this library wrote from nothing; see docs/VERIFICATION.md.
+   * @agentTool add_build
+   */
+  addBuild(spec: NewBuild): BuildModel {
+    if (spec.delivery === "byParagraph" && spec.paragraphs === undefined) {
+      const storage =
+        this.storageOfShape(this.store.resolve(spec.drawableId)) ??
+        this.placeholderStorageOf(spec.drawableId);
+      if (!storage) throw new RangeError("a by-paragraph build needs a target with text");
+      return createBuild(this.store, this.object, { ...spec, paragraphs: storage.paragraphs().length });
+    }
+    return createBuild(this.store, this.object, spec);
+  }
+
+  /** The storage of a placeholder drawable the slide lists, by its id. */
+  private placeholderStorageOf(drawableId: bigint): TextStorage | undefined {
+    for (const field of [
+      Slide.TITLE_PLACEHOLDER,
+      Slide.BODY_PLACEHOLDER,
+      Slide.OBJECT_PLACEHOLDER,
+      Slide.SLIDE_NUMBER_PLACEHOLDER,
+    ]) {
+      if (refId(this.object.message, field) === drawableId) return this.placeholderStorage(field);
+    }
+    return undefined;
   }
 
   /**
@@ -678,11 +799,24 @@ export class KeynoteDocument extends IWorkDocument {
    * `after` is a slide index; -1 puts the new slide first. By default the
    * copy is emptied of its drawables, giving a fresh slide on the same
    * layout; pass `withContent` to duplicate outright.
+   *
+   * `master` instead instantiates a layout — one of {@link masterSlides},
+   * by name or id — the way the app's "add slide" does: the master is
+   * deep-copied, its decorations and placeholders included, and the copy
+   * is made a content slide. The corpus states the difference between a
+   * content slide and its master exactly: the slide carries a reference
+   * to the master, a note, and the slide-number placeholder's storage
+   * holds the number attachment; it never carries the master's name,
+   * object placeholder, style lists or thumbnail texts. The title and
+   * body are emptied like a copied slide's.
    * @agentTool manage_slides
    */
-  addSlide(options: { copyOf?: number; after?: number; withContent?: boolean } = {}): KeynoteSlide {
+  addSlide(
+    options: { copyOf?: number; after?: number; withContent?: boolean; master?: string | bigint } = {},
+  ): KeynoteSlide {
     const slides = this.slides();
     if (slides.length === 0) throw new RangeError("document has no slide to copy");
+    if (options.master !== undefined) return this.addSlideFromMaster(options.master, options.after ?? slides.length - 1);
     const sourceIndex = options.copyOf ?? slides.length - 1;
     const source = slides[sourceIndex];
     if (!source) throw new RangeError(`no slide at index ${sourceIndex}`);
@@ -814,6 +948,95 @@ export class KeynoteDocument extends IWorkDocument {
         this.store.moveObjectsToComponent(movers, fresh);
         // The document's own info lists each slide component at component
         // level — mirror that row for the new one.
+        this.store.declareComponentDependency(nodeComponent, slide.identifier);
+      }
+    }
+
+    const created = this.slides().find((s) => s.id === slide.identifier);
+    if (!created) throw new RangeError("slide was created but is not reachable from the tree");
+    return created;
+  }
+
+  /** A master by id, by exact name, then by case-insensitive name. */
+  private resolveMaster(master: string | bigint): IwaObject {
+    const masters = this.masterSlides();
+    const found =
+      typeof master === "bigint"
+        ? masters.find((m) => m.id === master)
+        : (masters.find((m) => m.name === master) ??
+          masters.find((m) => m.name?.toLowerCase() === master.toLowerCase()));
+    const object = found && this.store.object(found.id);
+    if (!object) {
+      throw new RangeError(
+        `no master slide ${String(master)}; the deck offers: ${masters.map((m) => m.name ?? String(m.id)).join(", ")}`,
+      );
+    }
+    return object;
+  }
+
+  private addSlideFromMaster(master: string | bigint, after: number): KeynoteSlide {
+    const masterObject = this.resolveMaster(master);
+    const slides = this.slides();
+    // The slide the new one is modelled on for what a master lacks: a
+    // note and a per-slide component.
+    const model = slides[Math.max(0, Math.min(after, slides.length - 1))]!;
+    const modelComponent = this.store.componentOf(model.object.identifier);
+    if (!modelComponent) throw new RangeError("slide has no component");
+
+    // The object placeholder stays the master's: no content slide carries
+    // one, and cloning it would leave an orphan.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone: slide, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    for (const field of MASTER_ONLY_FIELDS) slide.message.remove(field);
+    slide.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      const kept = slide.message
+        .getMessages(field)
+        .map((ref) => ref.getVarint(1))
+        .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+      if (kept.length > 0) slide.message.setMessages(field, kept.map((id) => makeRef(id)));
+      else slide.message.remove(field);
+    }
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      this.storageOfPlaceholder(slide, field)?.setText("");
+    }
+    // A content slide's slide-number placeholder holds the number
+    // attachment (40 of 44 in the corpus, the rest emptied by hand); the
+    // master's holds nothing.
+    const number = this.storageOfPlaceholder(slide, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The note: the model slide's, copied and emptied.
+    const noteIds: bigint[] = [];
+    const modelNote = this.store.resolve(refId(model.object.message, Slide.NOTE));
+    if (modelNote) {
+      const { clone: note, map: noteMap } = deepCloneObject(this.store, modelNote);
+      const storage = this.store.resolve(refId(note.message, Note.CONTAINED_STORAGE));
+      if (storage) new TextStorage(this.store, storage).setText("");
+      slide.message.setMessage(Slide.NOTE, makeRef(note.identifier));
+      noteIds.push(...noteMap.values());
+    }
+
+    const nodeComponent = this.store.componentOf(model.node.identifier) ?? modelComponent;
+    const node = this.store.createObject(model.node.type, nodeComponent, { cloneFrom: model.node });
+    node.message.remove(SlideNode.CHILDREN);
+    node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
+    node.message.setBool(SlideNode.HAS_NOTE, false);
+    this.insertSlideNode(node.identifier, after);
+
+    // Per-slide components, as addSlide keeps them: the clones were born
+    // beside the master and the note beside its model, and all of them
+    // move into a component of the slide's own, modelled on a content
+    // slide's rather than the master's.
+    if (modelComponent.locator === `Slide-${model.object.identifier}`) {
+      const fresh = this.store.createComponent(`Slide-${slide.identifier}`, modelComponent);
+      if (fresh) {
+        this.store.moveObjectsToComponent([slide.identifier, ...map.values(), ...noteIds], fresh);
         this.store.declareComponentDependency(nodeComponent, slide.identifier);
       }
     }

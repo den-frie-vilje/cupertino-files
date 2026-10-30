@@ -21,6 +21,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
+import { refId } from "../src/tsp/schema.ts";
 import { PagesDocument } from "../src/index.ts";
 import { CharProps } from "../src/tswp/schema.ts";
 import { readCharacterProperties } from "../src/tss/stylesheet.ts";
@@ -1063,5 +1064,23 @@ describe("a hyperlink carries the document's Link character style", () => {
       );
     }
     expect(saved.body.footnotes().length).toBe(1);
+  });
+});
+
+describe("a text box added to a page", () => {
+  it("copies a box the document carries, with its own storage and the new text", () => {
+    const doc = PagesDocument.load(readFileSync(new URL("gomap-v26.1-newest-writer.pages", FIXTURES)));
+    const page = doc.floatingDrawables(0)!;
+    const before = page.ids().length;
+    const box = doc.addTextBox(0, "A caption written by the library", { x: 60, y: 60 });
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.floatingDrawables(0)!.ids().length).toBe(before + 1);
+    const placed = reloaded.floatingDrawables(0)!.drawables().find((d) => d.id === box.id)!;
+    expect(placed.object.type).toBe(2011);
+    const boxes = reloaded.floatingDrawables(0)!.drawables().filter((d) => d.object.type === 2011);
+    expect(boxes.every((d) => refId(d.object.message.getMessage(1)!.getMessage(1), 2) === undefined)).toBe(true);
+    const storages = new Set(boxes.map((d) => refId(d.object.message, 4)));
+    expect(storages.size).toBe(boxes.length);
+    expect(reloaded.textStorages().some((s) => s.text === "A caption written by the library")).toBe(true);
   });
 });

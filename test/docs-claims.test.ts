@@ -21,12 +21,14 @@ import { describe, expect, it } from "./harness.ts";
 import { IWorkDocument } from "../src/index.ts";
 import { Storage, TSWP_TYPE } from "../src/tswp/schema.ts";
 import { STORAGE_KIND } from "../src/tswp/textstorage.ts";
+import { HARVESTED_FUNCTIONS } from "../src/tst/function-names.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const FIXTURES = new URL("fixtures/", ROOT);
 
 /** One sweep of the corpus collects every number the docs state. */
 function measure(): {
+  functions: number;
   iwaPagesFixtures: number;
   storages: number;
   styleSheetCarriers: number;
@@ -46,6 +48,7 @@ function measure(): {
     Storage.TABLE_PARA_BIDI,
   ];
   const out = {
+    functions: HARVESTED_FUNCTIONS.size,
     iwaPagesFixtures: 0,
     storages: 0,
     styleSheetCarriers: 0,
@@ -100,6 +103,24 @@ interface Claim {
 }
 
 const CLAIMS: Claim[] = [
+  {
+    file: "README.md",
+    about: "the number of functions authorable by name",
+    stem: /`=Other::B2` — (\d+) functions/,
+    expected: (m) => [m.functions],
+  },
+  {
+    file: "skills/cupertino-files/SKILL.md",
+    about: "the number of named function ids",
+    stem: /(\d+) ids are named, read from/,
+    expected: (m) => [m.functions],
+  },
+  {
+    file: "docs/FORMAT.md",
+    about: "the complete function table's size",
+    stem: /The complete table — (\d+) names, every function/,
+    expected: (m) => [m.functions],
+  },
   {
     file: "docs/FORMAT.md",
     about: "the paragraph-style preset list is on every IWA Pages fixture",

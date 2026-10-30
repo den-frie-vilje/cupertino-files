@@ -85,6 +85,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves with its indent</sub> | Pages | ✅ read + write | n/a | — |
 | Inline image placement in an indented column<br><sub>exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and on none of its 175 floating drawables; the other values place the drawable against the page and are unnamed in any published schema</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 10 | iwork16→current |
+| Text boxes: adding one<br><sub>addTextBox deep-copies a text box the document already carries — its own storage, style chain and path — into the slide's or page's drawable list, sets the text, places it, and repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry none); a document without any text box has nothing to copy and is refused</sub> | Pages, Keynote | ✅ read + write | 37 | all |
 
 ### Pages
 
@@ -111,12 +112,13 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Table structure (rows, columns, bands, sizes, freeze, repeat)<br><sub>row and column insert/delete rebuild tiles, headers and the row-tile tree</sub> | all | ✅ read + write | 34 | iwork16→current |
 | Merged cell ranges<br><sub>mergeCells/unmergeCells, complete with the calc engine's dependency ledger: the kind-5 owner's (row 0, column = formula_index) record, tile minted on first use. Deleting Apple's last merge in issue102 and remaking it through mergeCells reproduces the whole saved file byte for byte</sub> | all | ✅ read + write | 5 | modern→current |
 | Cell display formats (number, currency, percentage, date, duration, text, boolean)<br><sub>category comes from which record flag carries the id, not from the format's own type code; custom formats are read and preserved but cannot be authored</sub> | all | ✅ read + write | 29 | iwork19→current |
+| Duration default format (a typed duration's stamp)<br><sub>a duration written with setCell is stamped with the app's own fresh duration format — type 268, short style, hour down to second, automatic units on — read from the app's duration format class; explicit duration formats are written as type 268 with the automatic-units flag, where demo-05 proved the earlier 273 shape</sub> | Numbers | ✅ read + write | 22 | iwork16→current |
 | Formula reading (AST rendered to text)<br><sub>not a Numbers feature — Pages and Keynote tables carry the same calc-engine archives</sub> | all | 🔍 read only | 11 | iwork19→current |
-| Formula function names<br><sub>only ids proven by arithmetic are named; the rest render as FUNCTION_&lt;id&gt;. Extend with registerFormulaFunctions()</sub> | all | ⚠️ experimental | 10 | iwork19→current |
+| Formula function names<br><sub>every function Numbers 15.1 registers is named, read from the app's own registry and confirmed by the document harvest; an id outside the table renders as FUNCTION_&lt;id&gt;, and registerFormulaFunctions() extends it</sub> | all | ✅ read + write | 10 | iwork19→current |
 | Cross-table formula references resolved to table names<br><sub>via the calc-engine owner map; all 1020 cross-table references in the corpus name their table</sub> | all | 🔍 read only | 5 | current→current |
 | Cell controls (checkbox, star rating, slider, stepper, pop-up menu)<br><sub>interaction_type was measured from public widget-demo documents, read and discarded (4 stepper, 5 slider, 6 star rating, 7 pop-up menu, 8 checkbox); the corpus now carries one carrier, olekristensen-v26.3-demo07-rules-returned.numbers. setCellControl writes all five widgets, sharing one spec between cells that want the same one, and all five are confirmed drawing in Numbers — the menu's model on its own row below. Shape is still classified by populated fields, so an unrecognised code degrades rather than misreads</sub> | Numbers | ✅ read + write | 4 | current→current |
 | Pop-up menu creation (TST.PopUpMenuModel)<br><sub>The one widget built from the schema rather than measured. A menu is the only control needing a second archive — the model holding its choices — and no document available here contains one, so its shape comes from the vendored proto2 definition: repeated TSCE.CellValueArchive, each item carrying the TSK.FormatStructArchive its schema marks required. Cells sharing choices share one model. Reading, round-tripping and the cell's own format are all checked offline; none of that is the app's opinion</sub> | Numbers | ✅ read + write | n/a | — |
-| Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, cross-table references (`Other::A1`, resolved to the target's owner UUID), nested calls, omitted arguments, and any of the 272 measured functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with its own text saves the whole document byte-identical to the original. Nothing evaluates — pass the cached result as `value`. Arrays and #REF! are refused</sub> | all | ✅ read + write | n/a | — |
+| Formula writing (authoring an AST)<br><sub>setFormula parses infix text and compiles it: operators, parentheses, relative and anchored references, ranges, cross-table references (`Other::A1`, resolved to the target's owner UUID), nested calls, omitted arguments, and any of the 345 named functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with its own text saves the whole document byte-identical to the original. Nothing evaluates — pass the cached result as `value`. Arrays and #REF! are refused</sub> | all | ✅ read + write | n/a | — |
 | Charts (type, categories, series, values) | all | 🔍 read only | 2 | iwork16→iwork16 |
 | Add and remove tables on a sheet<br><sub>copies an existing table and renames it — Numbers addresses tables by name, so a duplicate makes cross-table formulas ambiguous. The copy's calc-engine identity is re-minted too (the whole derived owner family off one fresh base UUID): a byte-copied identity is one table with two names, and the engine resolves either name to whichever registered first — measured when a formula naming a clone read the donor's cells instead</sub> | Numbers | ✅ read + write | 22 | iwork16→current |
 | Chart data editing (values, names, series, categories)<br><sub>the grid's id map and the sparse per-series style arrays are kept in step; appearance has its own rows below</sub> | all | ✅ read + write | 2 | iwork16→iwork16 |
@@ -129,15 +131,18 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Filters: enable, disable, combining mode | all | ✅ read + write | 24 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 1 | current→current |
 | Categories: enable or disable grouping | all | ✅ read + write | 24 | modern→current |
+| Filters: adding a comparison rule<br><sub>addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's app-authored rules — the predicate with its operands and the formula over the table's own identity, counted from the app's host column — grows the boundary list, switches the set on and writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a rule on column 0 is refused until a document shows its offset</sub> | Numbers | ✅ read + write | 22 | iwork16→current |
+| Categories: defining a category by a column<br><sub>addCategory fills the table's existing group-by archive — every table carries one — with the shape every categorised corpus table has: a group column per level (with the app's own bucketing functor for a date bucket), the row-uid lookup, one node per distinct value or bucket at each level with its format manager, a referenced root and its inline copy; the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them</sub> | Numbers | ✅ read + write | 22 | iwork16→current |
 | Categories: regrouping rows after an edit<br><sub>regroupCategories puts rows back in the groups their values now call for, and writes only the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for byte across every by-value table in the fixture. Creating or removing a group is refused: which rows are "Animal" the data answers, but a new group's identity, its sort position and the per-column fields beside the tree are things only the app knows</sub> | all | ✅ read + write | 1 | current→current |
-| Categories: creating a grouping, and per-group summaries<br><sub>creating a group needs its identity, its sort position and the several per-column and per-row fields written alongside the tree, none of which any fixture explains; and no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
+| Categories: per-group summaries<br><sub>defining a category — by value, nested, or bucketed by date — shipped (see its own row); no fixture has a non-empty aggregate list, so summary rows are read but unexercised</sub> | all | ○ roadmap | n/a | — |
 | Row and column identities (TST.ColumnRowUIDMapArchive)<br><sub>resolves the UIDs categories, hidden states and the calc engine use back to positions; row/column insert and delete keep the map in lockstep, minting and retiring identities — read-only means no direct authoring API</sub> | all | 🔍 read only | 34 | iwork16→current |
-| Filters: authoring rules and recomputing hidden rows<br><sub>a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates</sub> | all | ○ roadmap | n/a | — |
+| Filters: function-shaped rules beyond text-contains<br><sub>comparison and text-contains rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written</sub> | all | ○ roadmap | n/a | — |
 
 ### Keynote
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
+| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component, and a by-paragraph build with one chunk per paragraph of the target's text; actions and build order are not authored</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 9 | iwork16→current |
 | Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
@@ -148,8 +153,9 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
 | Master / layout slides | Keynote | 🔍 read only | 9 | iwork16→current |
+| Slide background (read + set)<br><sub>background reads up the style chain; setBackground writes the corpus shape of a per-slide background — an unnamed KN.SlideStyleArchive variation under the master's style, in the stylesheet's component, override count 1, the fill in its slide properties, referenced by the slide alone — measured on the one deck that carries any (11 slides)</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
+| Slides from a layout (addSlide master)<br><sub>addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape the corpus states for all 49 content slides against their masters: template reference, note and slide-number attachment added; name, object placeholder, style lists and thumbnail texts dropped; placeholder presence equal to the master's</sub> | Keynote | ✅ read + write | 9 | iwork16→current |
 | Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 1 | current→current |
-| Builds: creating an animation<br><sub>withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written</sub> | Keynote | ○ roadmap | n/a | — |
 
 ### Concurrency
 
@@ -160,7 +166,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-56 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+63 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -196,6 +202,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Numbers & tables → **Table structure (rows, columns, bands, sizes, freeze, repeat)**
 - 🟠 medium — Numbers & tables → **Merged cell ranges**
 - 🟡 low — Numbers & tables → **Cell display formats (number, currency, percentage, date, duration, text, boolean)**
+- 🟡 low — Numbers & tables → **Duration default format (a typed duration's stamp)**
 - 🟠 medium — Numbers & tables → **Formula reading (AST rendered to text)**
 - 🟠 medium — Numbers & tables → **Formula function names** *(covered by `npm run test:e2e`)*
 - 🟠 medium — Numbers & tables → **Cell controls (checkbox, star rating, slider, stepper, pop-up menu)**
@@ -210,6 +217,10 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Numbers & tables → **Conditional formatting: authoring new rules**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
+- 🟠 medium — Keynote → **Builds: creating an animation**
+- 🟠 medium — Drawables & media → **Text boxes: adding one**
+- 🟠 medium — Numbers & tables → **Filters: adding a comparison rule**
+- 🟠 medium — Numbers & tables → **Categories: defining a category by a column**
 - 🟠 medium — Numbers & tables → **Categories: regrouping rows after an edit**
 - 🔴 high — Keynote → **Slide management (add, duplicate, move, remove)**
 - 🟠 medium — Keynote → **Pictures on slides (addImage)**
@@ -219,6 +230,8 @@ correctly. They are listed with their reasoning and repro steps in
 - 🟠 medium — Keynote → **Presentation settings (mode, loop, autoplay delays, slide size)**
 - 🟠 medium — Keynote → **Slide placeholders (title, body, slide number) — read and fill**
 - 🟠 medium — Keynote → **Skipped slides**
+- 🟠 medium — Keynote → **Slide background (read + set)**
+- 🟠 medium — Keynote → **Slides from a layout (addSlide master)**
 - 🔴 high — Keynote → **Builds (animations): read and retime**
 
 ## Validation gaps

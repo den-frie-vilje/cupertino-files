@@ -9,6 +9,7 @@
  * bookkeeping (see docs/FORMAT.md §14).
  */
 import { protoFields } from "../proto/fields.ts";
+import { writeComparisonPredicate, type FilterOperator } from "./predicates.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -43,9 +44,11 @@ import {
   type ConditionalCondition,
   type ConditionalRule,
 } from "./conditional.ts";
-import { FilterSet, type FilterRule } from "./filters.ts";
+import { FilterSet, type FilterRule, FILTER_HOST_COLUMN } from "./filters.ts";
 import {
   categoriesOf,
+  defineByValueCategory,
+  type CategoryLevel,
   type CategoryGroup,
   type GroupValue,
   type TableCategories,
@@ -102,14 +105,19 @@ import {
  * The format a freshly written value is stamped with, per cell type —
  * the app's own default for a freshly typed value, measured as the
  * dominant archive per type across every plain value cell in the
- * corpus. Durations are absent deliberately: no plain duration cell
- * exists in the corpus to measure one from.
+ * corpus. No plain duration cell exists in the corpus; the duration
+ * default is the app's own, read from its duration format class: short
+ * style, hour down to second, automatic units on.
  */
 const DEFAULT_STAMP_FORMAT_BY_TYPE: ReadonlyMap<number, CellFormat> = new Map<number, CellFormat>([
   [CellType.NUMBER, { kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false }],
   [CellType.TEXT, { kind: "text" }],
   [CellType.DATE, { kind: "date", pattern: "d MMM yyyy" }],
   [CellType.BOOL, { kind: "boolean" }],
+  [
+    CellType.DURATION,
+    { kind: "duration", style: 1, largestUnit: 4, smallestUnit: 16, automaticUnits: true },
+  ],
 ]);
 const DEFAULT_STAMP_FORMATS: readonly CellFormat[] = [...DEFAULT_STAMP_FORMAT_BY_TYPE.values()];
 
@@ -191,6 +199,8 @@ const STROKE_LAYER_TYPE = 6306;
 const HiddenStatesOwner = { HIDDEN_STATES: 2 } as const;
 const HiddenStates = { COLUMN_EXTENT: 2, ROW_EXTENT: 3 } as const;
 const HiddenStateExtent = { STATES: 2, FILTER_SET: 8 } as const;
+/** TST.HiddenStateExtentArchive.RowOrColumnState. */
+const RowOrColumnState = { UID: 1, FILTERED: 3 } as const;
 /** TST.DataStore. */
 export const DataStoreFields = protoFields("TST.DataStore", {
   ROW_HEADERS: "rowHeaders",
@@ -4220,6 +4230,199 @@ export class TableModel {
     );
   }
 
+  /**
+   * Group the table's rows by the values in one column, or nest groups by
+   * several columns in the order given; a level given as
+   * `{ column, bucket }` groups a date column by year, month, quarter,
+   * week, day or weekday, with the app's own bucketing formula.
+   *
+   * Defines a by-value category — one group per distinct value at each
+   * level, listed in text order, each holding its rows — in the shape
+   * every categorised table in the corpus has, and switches it on. The
+   * table must not be categorised already (`regroupCategories` maintains
+   * an existing definition), and every data row needs a value in each
+   * column.
+   *
+   * The app has not yet been seen to draw a category this library
+   * defined; see docs/VERIFICATION.md.
+   * @agentTool add_category
+   */
+  addCategory(column: number | readonly (number | CategoryLevel)[]): TableCategories {
+    this.requireWritable();
+    const levels: CategoryLevel[] = (typeof column === "number" ? [column] : column).map((level) =>
+      typeof level === "number" ? { column: level } : level,
+    );
+    for (const { column: c } of levels) {
+      if (c < 0 || c >= this.columnCount) {
+        throw new RangeError(`column ${c} is outside the table's ${this.columnCount} columns`);
+      }
+    }
+    const definition = this.categories()[0];
+    if (!definition) throw new RangeError("table carries no group-by archive to define a category in");
+    const byPosition = new Map<string, CellValue>();
+    for (const cell of this.cells()) byPosition.set(`${cell.row}:${cell.column}`, cell.value);
+    const dataRows: number[] = [];
+    for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) dataRows.push(row);
+    defineByValueCategory(
+      this.store,
+      definition.object,
+      this.uidMap(),
+      levels,
+      dataRows,
+      (row, col) => groupValueOf(byPosition.get(`${row}:${col}`)),
+      (row, col) => this.rawCellFormat(row, col),
+    );
+    return definition;
+  }
+
+  /**
+   * Add a row-filter rule: show rows whose cell in `column` (absolute;
+   * column 0 is refused, see below) compares to `value` as `operator`
+   * says, or contains it as text when the operator is "contains". The
+   * rule is written the way a rule the app wrote is carried — the
+   * comparison in the predicate and as a formula over the table's own
+   * identity, both counted from the app's host column — the
+   * set is switched on, and the rows the set now hides are written to the
+   * hidden-state extent, evaluated here. The app has not yet been seen to
+   * open a filter written this way; see docs/VERIFICATION.md.
+   * @agentTool add_filter_rule
+   */
+  addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
+    this.requireWritable();
+    if (column < 0 || column >= this.columnCount) {
+      throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    }
+    // Every app-authored rule in the corpus references its column from a
+    // host at column 1; a rule on column 0 would need an offset no document
+    // shows, so it is refused rather than guessed.
+    const offset = column - FILTER_HOST_COLUMN;
+    if (offset < 0) {
+      throw new RangeError(`column ${column} cannot carry a filter rule: the app's rules count from column ${FILTER_HOST_COLUMN}`);
+    }
+    const set = this.filterSets().rows;
+    if (!set) throw new RangeError("table carries no row filter set to add a rule to");
+    const name = this.name;
+    const uid = name === undefined ? undefined : this.owners().tableUid(name);
+    if (!uid) throw new RangeError("table has no calc-engine identity to write the rule against");
+    const literal: FormulaExpression =
+      typeof condition.value === "number"
+        ? { kind: "number", value: condition.value }
+        : { kind: "string", value: condition.value };
+    const cell: FormulaExpression = {
+      kind: "crossRef",
+      table: name!,
+      column: { value: column, absolute: false },
+      row: { value: 0, absolute: false },
+    };
+    const origin = { row: 0, column: FILTER_HOST_COLUMN };
+    const expression: FormulaExpression =
+      condition.operator === "contains"
+        ? {
+            kind: "call",
+            name: "NOT",
+            args: [
+              {
+                kind: "call",
+                name: "ISERROR",
+                args: [{ kind: "call", name: "FIND.CASEINSENSITIVE", args: [literal, cell] }],
+              },
+            ],
+          }
+        : { kind: "binary", op: condition.operator, left: cell, right: literal };
+    const ast = buildFormula(expression, origin, {
+      tableUid: (table) => this.owners().tableUid(table),
+    });
+    const index = set.addRule(writeComparisonPredicate(condition.operator, condition.value, offset, uid, ast));
+    this.refilterRows();
+    return index;
+  }
+
+  /**
+   * Recompute which rows the row filter hides and write them to the
+   * hidden-state extent: one state per hidden row, `filtered` stated,
+   * the way the app records a filter that has run. Every enabled rule
+   * must be a comparison or a text-contains rule; the extent is left
+   * alone when the set is disabled or carries a rule this cannot
+   * evaluate.
+   */
+  refilterRows(): number {
+    const set = this.filterSets().rows;
+    if (!set || !set.enabled) return 0;
+    const rules = set.rules().filter((rule) => rule.enabled && rule.predicate);
+    const tests: ((row: number) => boolean)[] = [];
+    for (const rule of rules) {
+      const predicate = rule.predicate!;
+      const literal = predicate.operands[1];
+      if (rule.column === undefined) {
+        throw new RangeError(`filter rule ${rule.index} names no column; its rows cannot be recomputed here`);
+      }
+      const column = rule.column;
+      if (predicate.operator && literal && (literal.kind === "number" || literal.kind === "string")) {
+        const op = predicate.operator;
+        const expected = literal.kind === "number" ? literal.number : literal.string;
+        tests.push((row) => {
+          const actual = groupValueOf(this.cellValue(row, column));
+          if (actual === undefined || typeof actual !== typeof expected) return op === "<>";
+          const a = actual as number | string;
+          const e = expected as number | string;
+          switch (op) {
+            case "=": return a === e;
+            case "<>": return a !== e;
+            case "<": return a < e;
+            case "<=": return a <= e;
+            case ">": return a > e;
+            case ">=": return a >= e;
+          }
+        });
+      } else if (predicate.predicateType === 3 && literal?.kind === "string") {
+        const needle = literal.string!.toLowerCase();
+        tests.push((row) => {
+          const actual = groupValueOf(this.cellValue(row, column));
+          return typeof actual === "string" && actual.toLowerCase().includes(needle);
+        });
+      } else {
+        throw new RangeError(`filter rule ${rule.index} is not a comparison or text-contains rule; its rows cannot be recomputed here`);
+      }
+    }
+    const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
+    const states = owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES).find((s) => s.has(HiddenStates.ROW_EXTENT));
+    const extent = states?.getMessage(HiddenStates.ROW_EXTENT);
+    if (!owner || !states || !extent) throw new RangeError("table carries no row hidden-state extent to write to");
+    const uids = this.uidMap();
+    const hidden: RawMessage[] = [];
+    for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) {
+      const passes = set.mode === "any" ? tests.some((test) => test(row)) : tests.every((test) => test(row));
+      if (passes) continue;
+      const uid = uids.rowUid(row);
+      if (!uid) continue;
+      const state = RawMessage.create();
+      const id = RawMessage.create();
+      id.setVarint(1, uid.lower);
+      id.setVarint(2, uid.upper);
+      state.setMessage(RowOrColumnState.UID, id);
+      state.setBool(RowOrColumnState.FILTERED, true);
+      hidden.push(state);
+    }
+    extent.setMessages(HiddenStateExtent.STATES, hidden);
+    states.setMessage(HiddenStates.ROW_EXTENT, extent);
+    this.object.message.setMessage(TableModelFields.HIDDEN_STATES_OWNER, owner);
+    return hidden.length;
+  }
+
+  /** The format-table entry a cell's record points at, as stored. */
+  private rawCellFormat(row: number, column: number): RawMessage | undefined {
+    const record = this.recordAt(row, column);
+    if (!record) return undefined;
+    const formats = this.numberFormats();
+    for (const flag of Object.values(FORMAT_FLAG_BY_CATEGORY)) {
+      const id = record.id(flag);
+      if (id === undefined) continue;
+      const format = formats.get(id);
+      if (format) return format;
+    }
+    return undefined;
+  }
+
   /** `cell_style_id` of a cell, if its record carries one. */
   cellStyleId(row: number, column: number): number | undefined {
     const located = this.locateRow(row);
@@ -4494,9 +4697,8 @@ export class TableModel {
    * 60 of 60 booleans, none missing — and a cell without one is
    * app-real only as this library's own output. The archives written
    * are the app's defaults for a freshly typed value, measured as the
-   * dominant shape per type; a duration's is unmeasured (no plain
-   * duration cell exists in the corpus) and is left unwritten rather
-   * than guessed. A format already on the record is kept: a rewrite
+   * dominant shape per type, and for a duration read from the app's
+   * duration format class. A format already on the record is kept: a rewrite
    * must not flatten the cell's chosen presentation to the default.
    */
   private stampDefaultFormat(record: CellRecord): void {

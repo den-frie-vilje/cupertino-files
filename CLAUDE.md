@@ -251,3 +251,17 @@ The traps, each paid for once:
   evidence bundles, snapshots and thinned binaries stay under `/tmp`;
   the repository gets a measured constant, its test and a ledger row
   (docs/LEGAL.md, item 3).
+- **Read the file before decompiling.** The formula registry, the duration
+  initialiser and the group-by sidecar fields were all settled by reading
+  bytes and instructions in node or by a corpus census, in minutes; the
+  Ghidra route costs eleven minutes per TSTables call and its `xrefs`
+  step died twice in provider cleanup. Decompile when the question is a
+  switch or a computed value; measure the data when it is a table.
+- **Every new writer gets a ladder rung before it gets a commit.** The
+  shape audit (`npm run shape:audit`) compares what a rung writes with
+  the corpus in fields and referrers, and in one night it caught a
+  category tree nothing pointed at, a filter field no app-written set
+  carries, and a build aimed at a text storage instead of its
+  placeholder. None of the unit tests saw any of them. A rung is three
+  lines in `make-bisect-docs.ts`, `make-pages-docs.ts` or
+  `make-keynote-docs.ts`; the audit's budget (`shape:check`) is the gate.

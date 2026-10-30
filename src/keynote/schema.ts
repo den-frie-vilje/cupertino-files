@@ -89,6 +89,38 @@ export const Slide = protoFields("KN.SlideArchive", {
   BUILD_CHUNKS: "buildChunks",
   /** TSD.GuideStorageArchive — alignment guides; carried by 148 corpus slides. */
   GUIDE_STORAGE: "userDefinedGuideStorage",
+  CLASSIC_STYLESHEET_RECORD: "classicStylesheetRecord",
+  BODY_PARAGRAPH_STYLES: "bodyParagraphStyles",
+  BODY_LIST_STYLES: "bodyListStyles",
+  THUMBNAIL_TEXT_FOR_TITLE: "thumbnailTextForTitlePlaceholder",
+  THUMBNAIL_TEXT_FOR_BODY: "thumbnailTextForBodyPlaceholder",
+});
+
+/**
+ * What a master carries that a content slide never does: its name, the
+ * object placeholder (0 of 49 corpus content slides carry one), the style
+ * lists the layout offers, and the thumbnail texts.
+ */
+export const MASTER_ONLY_FIELDS: readonly number[] = [
+  Slide.NAME,
+  Slide.OBJECT_PLACEHOLDER,
+  Slide.CLASSIC_STYLESHEET_RECORD,
+  Slide.BODY_PARAGRAPH_STYLES,
+  Slide.BODY_LIST_STYLES,
+  Slide.THUMBNAIL_TEXT_FOR_TITLE,
+  Slide.THUMBNAIL_TEXT_FOR_BODY,
+];
+
+/** KN.SlideStyleArchive. */
+export const SlideStyle = protoFields("KN.SlideStyleArchive", {
+  SUPER: "super",
+  OVERRIDE_COUNT: "override_count",
+  SLIDE_PROPERTIES: "slide_properties",
+});
+
+/** KN.SlideStylePropertiesArchive. */
+export const SlideStyleProperties = protoFields("KN.SlideStylePropertiesArchive", {
+  FILL: "fill",
 });
 
 /** KN.NoteArchive. */

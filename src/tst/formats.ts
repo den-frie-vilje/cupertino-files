@@ -58,6 +58,7 @@ export const FormatFields = protoFields("TSK.FormatStructArchive", {
   DATE_TIME_FORMAT: "date_time_format",
   DURATION_UNIT_LARGEST: "duration_unit_largest",
   DURATION_UNIT_SMALLEST: "duration_unit_smallest",
+  USE_AUTOMATIC_DURATION_UNITS: "use_automatic_duration_units",
   CUSTOM_FORMAT_STRING: "custom_format_string",
   SCALE_FACTOR: "scale_factor",
   CUSTOM_UID: "custom_uid",
@@ -179,7 +180,19 @@ export type CellFormat =
       dateSuppressed?: boolean;
       timeSuppressed?: boolean;
     }
-  | { kind: "duration"; style?: number; largestUnit?: number; smallestUnit?: number }
+  | {
+      /**
+       * `style` is 0 compact, 1 short, 2 long; the units are flags — 1
+       * week, 2 day, 4 hour, 8 minute, 16 second, 32 millisecond. The
+       * app's fresh duration is short style, hour down to second, with
+       * automatic units on.
+       */
+      kind: "duration";
+      style?: number;
+      largestUnit?: number;
+      smallestUnit?: number;
+      automaticUnits?: boolean;
+    }
   | { kind: "text" }
   | { kind: "boolean"; trueString?: string; falseString?: string }
   /**
@@ -298,6 +311,9 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
       return { kind: "checkbox" };
     case FormatType.STAR_RATING:
       return { kind: "starRating" };
+    case FormatType.DURATION:
+    case FormatType.CUSTOM_DURATION:
+      return readDuration(message);
     case FormatType.NUMBER:
       return { kind: "number", ...readNumeric(message) };
     case FormatType.PERCENTAGE:
@@ -334,22 +350,26 @@ export function readFormat(message: RawMessage | undefined): CellFormat | undefi
       if (no !== undefined) out.falseString = no;
       return out;
     }
-    default: {
-      // Duration has no observed builtin code in the corpus, so it is
-      // recognised only through its flag; anything else is reported as-is
-      // rather than guessed at.
-      const style = message.getUint(FormatFields.DURATION_STYLE);
-      if (style !== undefined) {
-        const out: CellFormat = { kind: "duration", style };
-        const largest = message.getUint(FormatFields.DURATION_UNIT_LARGEST);
-        if (largest !== undefined) out.largestUnit = largest;
-        const smallest = message.getUint(FormatFields.DURATION_UNIT_SMALLEST);
-        if (smallest !== undefined) out.smallestUnit = smallest;
-        return out;
-      }
-      return { kind: "unknown", formatType };
-    }
+    default:
+      // An unnamed type carrying duration fields is still a duration;
+      // anything else is reported as-is rather than guessed at.
+      return message.has(FormatFields.DURATION_STYLE)
+        ? readDuration(message)
+        : { kind: "unknown", formatType };
   }
+}
+
+function readDuration(message: RawMessage): CellFormat {
+  const out: CellFormat = { kind: "duration" };
+  const style = message.getUint(FormatFields.DURATION_STYLE);
+  if (style !== undefined) out.style = style;
+  const largest = message.getUint(FormatFields.DURATION_UNIT_LARGEST);
+  if (largest !== undefined) out.largestUnit = largest;
+  const smallest = message.getUint(FormatFields.DURATION_UNIT_SMALLEST);
+  if (smallest !== undefined) out.smallestUnit = smallest;
+  const automatic = message.getUint(FormatFields.USE_AUTOMATIC_DURATION_UNITS);
+  if (automatic !== undefined) out.automaticUnits = automatic !== 0;
+  return out;
 }
 
 /**
@@ -412,13 +432,18 @@ export function writeFormat(format: CellFormat): RawMessage {
       }
       break;
     case "duration":
-      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.CUSTOM_DURATION);
+      // The app's own duration format: the four fields its encoder
+      // states, after the type.
+      m.setVarint(FormatFields.FORMAT_TYPE, FormatType.DURATION);
       if (format.style !== undefined) m.setVarint(FormatFields.DURATION_STYLE, format.style);
       if (format.largestUnit !== undefined) {
         m.setVarint(FormatFields.DURATION_UNIT_LARGEST, format.largestUnit);
       }
       if (format.smallestUnit !== undefined) {
         m.setVarint(FormatFields.DURATION_UNIT_SMALLEST, format.smallestUnit);
+      }
+      if (format.automaticUnits !== undefined) {
+        m.setVarint(FormatFields.USE_AUTOMATIC_DURATION_UNITS, format.automaticUnits ? 1 : 0);
       }
       break;
     case "text":

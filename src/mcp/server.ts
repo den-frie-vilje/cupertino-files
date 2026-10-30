@@ -26,6 +26,7 @@ import { hexColor, solidStroke } from "../tsd/style.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
+import type { DateBucket } from "../tst/categories.ts";
 
 const PROTOCOL_FALLBACK = "2025-06-18";
 const SERVER_INFO = { name: "cupertino-files", version: packageVersion() };
@@ -779,10 +780,145 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_build",
+    description: apiDoc(
+      "add_build",
+      "Animates one drawable on a Keynote slide with an all-at-once build played on click. " +
+        "slide and drawable are 0-based (drawables in the slide's z-order; use " +
+        "describe_document); effect is the identifier the app stores, e.g. \"apple:dissolve\". " +
+        "Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .key document" },
+        slide: { type: "number", description: "0-based slide index" },
+        drawable: { type: "number", description: "0-based index among the slide's drawables" },
+        effect: { type: "string", description: "Effect identifier as the app stores it" },
+        duration: { type: "number", description: "Seconds, default 1" },
+        delay: { type: "number", description: "Seconds before the build starts, default 0" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "slide", "drawable", "effect"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof KeynoteDocument)) {
+        throw new RangeError("add_build writes Keynote documents; this is not one");
+      }
+      const index = num(args.slide);
+      const slides = doc.slides();
+      if (index === undefined || index < 0 || index >= slides.length) {
+        throw new RangeError(`slide must be 0..${slides.length - 1}`);
+      }
+      const slide = slides[index]!;
+      const drawables = slide.drawables();
+      const which = num(args.drawable);
+      const effect = str(args.effect);
+      if (which === undefined || which < 0 || which >= drawables.length || effect === undefined) {
+        throw new RangeError(`drawable must be 0..${drawables.length - 1} and effect is required`);
+      }
+      const build = slide.addBuild({
+        drawableId: drawables[which]!.id,
+        effect,
+        duration: num(args.duration),
+        delay: num(args.delay),
+      });
+      const target = save(doc, path, str(args.output));
+      return `added build ${build.id} (${effect}) to slide ${index} and saved ${target}`;
+    },
+  },
+  {
+    name: "set_slide_background",
+    description: apiDoc(
+      "set_slide_background",
+      "Gives a Keynote slide a flat background colour (hex like #1a3a2a), as a style of its own " +
+        "under the layout's. slide is 0-based. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the .key document" },
+        slide: { type: "number", description: "0-based slide index" },
+        color: { type: "string", description: "Background colour as hex, e.g. #1a3a2a" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "slide", "color"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      if (!(doc instanceof KeynoteDocument)) {
+        throw new RangeError("set_slide_background edits Keynote documents; this is not one");
+      }
+      const index = num(args.slide);
+      const color = str(args.color);
+      if (index === undefined || color === undefined) throw new RangeError("slide and color are required");
+      const slide = doc.slides()[index];
+      if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+      slide.setBackground({ kind: "color", color: hexColor(color) });
+      const target = save(doc, path, str(args.output));
+      return `set the background of slide ${index} and saved ${target}`;
+    },
+  },
+  {
+    name: "add_text_box",
+    description: apiDoc(
+      "add_text_box",
+      "Puts a text box with the given text on a Keynote slide or a Pages page, copied from a " +
+        "text box the document already carries, placed by x, y, width and height in points. " +
+        "slide (Keynote) or page (Pages) is 0-based. Saves over the input unless output names " +
+        "another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        slide: { type: "number", description: "0-based slide index (Keynote)" },
+        page: { type: "number", description: "0-based page index (Pages)" },
+        text: { type: "string" },
+        x: { type: "number" },
+        y: { type: "number" },
+        width: { type: "number" },
+        height: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "text"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const text = str(args.text);
+      if (text === undefined) throw new RangeError("text is required");
+      const placement: { x?: number; y?: number; width?: number; height?: number } = {};
+      for (const key of ["x", "y", "width", "height"] as const) {
+        const value = num(args[key]);
+        if (value !== undefined) placement[key] = value;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        const slide = doc.slides()[index];
+        if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const box = slide.addTextBox(text, placement);
+        const target = save(doc, path, str(args.output));
+        return `added text box ${box.id} to slide ${index} and saved ${target}`;
+      }
+      if (doc instanceof PagesDocument) {
+        const box = doc.addTextBox(num(args.page) ?? 0, text, placement);
+        const target = save(doc, path, str(args.output));
+        return `added text box ${box.id} to page ${num(args.page) ?? 0} and saved ${target}`;
+      }
+      throw new RangeError("add_text_box writes Keynote and Pages documents; this is not one");
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",
-      "Actions: add (copyOf + after, both 0-based slide indexes), duplicate (slide), move " +
+      "Actions: add (copyOf + after, both 0-based slide indexes; or master, a layout's name, " +
+        "to instantiate that layout instead — an unknown name's error lists the deck's), " +
+        "duplicate (slide), move " +
         "(slide + to), remove (slide), set_size (width + height in points). Keynote " +
         "documents only. Saves over the input unless output names another path.",
     ),
@@ -796,6 +932,7 @@ export const TOOLS: readonly Tool[] = [
         },
         slide: { type: "number", description: "0-based slide index the action targets" },
         after: { type: "number", description: "add: insert after this index (default: end)" },
+        master: { type: "string", description: "add: the layout (master slide) to instantiate, by name" },
         to: { type: "number", description: "move: destination index" },
         width: { type: "number", description: "set_size: points" },
         height: { type: "number", description: "set_size: points" },
@@ -813,7 +950,7 @@ export const TOOLS: readonly Tool[] = [
       const slide = num(args.slide);
       switch (action) {
         case "add":
-          doc.addSlide({ copyOf: slide, after: num(args.after) ?? doc.slideCount() - 1 });
+          doc.addSlide({ copyOf: slide, after: num(args.after) ?? doc.slideCount() - 1, master: str(args.master) });
           break;
         case "duplicate":
           if (slide === undefined) throw new RangeError("duplicate needs slide");
@@ -1004,6 +1141,85 @@ export const TOOLS: readonly Tool[] = [
       );
       const target = save(doc, path, str(args.output));
       return `formatted the block at r${row}c${column} of ${JSON.stringify(table.name ?? "")} and saved ${target}`;
+    },
+  },
+  {
+    name: "add_category",
+    description: apiDoc(
+      "add_category",
+      "Groups the table's rows by the values in one 0-based column: one group per distinct " +
+        "value in text order, switched on; with bucket (year, yearAndMonth, yearAndQuarter, " +
+        "yearAndWeek, day, weekday) a date column is grouped by that period instead. The table " +
+        "must not be categorised already, and every data row needs a value in the column. Saves " +
+        "over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column to group by" },
+        bucket: {
+          type: "string",
+          description: "For a date column: year, yearAndMonth, yearAndQuarter, yearAndWeek, day or weekday",
+        },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      if (column === undefined) throw new RangeError("column is required");
+      const bucket = str(args.bucket);
+      const buckets = ["year", "yearAndMonth", "yearAndQuarter", "yearAndWeek", "day", "weekday"];
+      if (bucket !== undefined && !buckets.includes(bucket)) {
+        throw new RangeError(`bucket must be one of ${buckets.join(", ")}`);
+      }
+      const category = table.addCategory(
+        bucket === undefined ? column : [{ column, bucket: bucket as DateBucket }],
+      );
+      const target = save(doc, path, str(args.output));
+      return `grouped by column ${column} into ${category.groups().length} groups and saved ${target}`;
+    },
+  },
+  {
+    name: "add_filter_rule",
+    description: apiDoc(
+      "add_filter_rule",
+      "Adds a row-filter rule to the table: show rows whose cell in the 0-based column compares " +
+        "to value as operator says (=, <>, <, <=, >, >=; value a number or a string), and switches " +
+        "the filter on. Which rows it hides is the app's to recompute. Saves over the input " +
+        "unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column the rule applies to" },
+        operator: { type: "string", description: "One of =, <>, <, <=, >, >=" },
+        value: { description: "A number or a string to compare the cell with" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column", "operator", "value"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      const operator = str(args.operator);
+      const value = args.value;
+      if (column === undefined || operator === undefined || (typeof value !== "number" && typeof value !== "string")) {
+        throw new RangeError("column, operator and a number or string value are required");
+      }
+      if (!["=", "<>", "<", "<=", ">", ">="].includes(operator)) throw new RangeError(`operator must be one of =, <>, <, <=, >, >=`);
+      const index = table.addFilterRule(column, { operator: operator as "=" | "<>" | "<" | "<=" | ">" | ">=", value });
+      const target = save(doc, path, str(args.output));
+      return `added filter rule ${index} on column ${column} and saved ${target}`;
     },
   },
   {

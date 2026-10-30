@@ -433,7 +433,8 @@ cell of a filled-down column.
 
 Two honest gaps, both visible in the output rather than papered over:
 
-- **Function names are not in the format.** 272 measured ids are named;
+- **Function names are not in the format.** 345 ids are named, read from
+  the app's own function registry and confirmed by document harvests;
   an unknown one renders as `FUNCTION_<id>` and is refused for writing.
   Add more with `registerFormulaFunctions({ 42: "AVERAGE" })`, or measure
   on a Mac with `npm run harvest -- --drive`. `functionTableProvenance()`
@@ -581,6 +582,7 @@ const { rows, columns } = t.filterSets();
 rows?.mode;                             // "all" | "any"
 rows?.rules();                          // [{ column, enabled, predicate }]
 rows?.setEnabled(true); rows?.setMode("any");
+t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing, rows hidden; "contains" for text
 ```
 
 Two things to know before relying on this:
@@ -621,6 +623,9 @@ cat.setEnabled(false);                  // ungroup without losing the definition
 
 t.staleCategoryGroups();                // groups whose rows no longer match the data
 t.regroupCategories();                  // put them back; returns how many rows moved
+t.addCategory(1);                       // group an uncategorised table by a column's values
+t.addCategory([1, 2]);                  // or nest: groups by column 1, then by column 2 within each
+t.addCategory([{ column: 3, bucket: "yearAndMonth" }]);  // a date column by period
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -915,6 +920,9 @@ slide.placeholders();        // [{ role, id, kind, storage, text }]
 slide.placeholder("body");   // the TextStorage, editable like any other
 slide.notes = "Remember to mention the caveat.";
 slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.5, direction: 14 });
+slide.background();  slide.setBackground({ kind: "color", color: hexColor("#1a3a2a") }); // a style of the slide's own, under the layout's
+slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
+slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }); // one stage per paragraph
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
 // bespoke family ("com.apple.iWork.Keynote.BLTFadeThruColor"). The id
@@ -926,7 +934,21 @@ Placeholders are the theme's boxes for you to fill. Setting one only works
 where the slide already carries it — creating a placeholder means
 synthesizing the geometry and style the master defines for that role, so a
 slide on a layout without a body box is told so rather than given an
-unstyled box at the origin.
+unstyled box at the origin. A slide on another layout is made from that
+layout instead:
+
+```ts
+doc.masterSlides();                                   // [{ id, name }] — the deck's layouts
+doc.addSlide({ copyOf: 0, after: 0 });                // a fresh slide on slide 0's layout
+doc.addSlide({ master: "Title & Bullets", after: 2 }); // a fresh slide on that layout
+```
+
+A layout slide is instantiated the way the app does it: the master is
+deep-copied, decorations and placeholders included, and the copy becomes
+a content slide — it points at the master, carries a note and the
+slide-number attachment, and drops the master's name, object placeholder,
+style lists and thumbnail texts. Title and body start empty. An unknown
+name's error lists the names the deck offers.
 
 ### Pictures on slides
 
@@ -941,6 +963,19 @@ applied — and the picture joins both of the slide's drawable lists, so
 it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
+
+**Adding a text box copies one.** A text box from nothing would omit
+state only the app knows, so `addTextBox` deep-copies a box the document
+already carries — the slide's own in Keynote, the page's own or any in
+the document in Pages — gives it its own storage, sets the text, places
+it and sets its parent (the slide, or none in Pages). A document without
+a single text box has nothing to copy and is refused: add one in the
+app first.
+
+```ts
+slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });
+doc.addTextBox(0, "Written by the library", { x: 360, y: 560, width: 220, height: 60 }); // Pages, page 0
+```
 
 **Resizing a text box takes two calls.** A shape's path renders scaled
 from its own stored size to the frame, text included, so
@@ -1042,9 +1077,13 @@ throw, naming the object and field, rather than produce the file.
    capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
-   legend, gridlines) all write. Genuinely absent today: authoring
-   filter *rules*, creating category groups, and creating Keynote builds.
-   For those, drop to the low-level `RawMessage` layer and consult
+   legend, gridlines) all write, and so do filter rules (`addFilterRule`),
+   by-value categories (`addCategory`), all-at-once Keynote builds
+   (`addBuild`) and text boxes copied from the document's own
+   (`addTextBox`), none of which the apps have confirmed yet. Genuinely
+   absent today: filter rules on column 0 and function-shaped rules beyond
+   text-contains, category summaries, and build actions and order. For
+   those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md` — §14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`
    lists every claim only Apple's app can settle, with the reasoning and a

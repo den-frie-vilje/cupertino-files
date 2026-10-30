@@ -277,6 +277,37 @@ export const RUNGS: {
       cats.setCell(2, 7, "21: G3 is a new formula, =E3*2, showing 200. Now type 150 into E3 (the 100 on this row). PASS: G3 changes to 300. FAIL: G3 stays 200 — the engine trusted a dependency tracker we did not update.");
     },
   },
+  {
+    name: "22-duration-cell",
+    note: "a typed duration, stamped with the app's fresh duration format",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(1, 0, { type: "duration", seconds: 5400 });
+      table.setCell(1, 1, "22: A2 is a duration of 1h 30m written by the library. PASS: it shows as 1:30:00 with Duration in the inspector. FAIL: a bare number, or an inspector reading other than Duration.");
+    },
+  },
+  {
+    name: "23-filter-rule",
+    note: "a comparison filter rule written from nothing, the set switched on",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      for (let row = 1; row <= 4; row++) table.setCell(row, 1, row * 5);
+      table.setCell(1, 0, "23: column B holds 5, 10, 15, 20 and a filter rule says B > 10. PASS: only the 15 and 20 rows show, with the filter on in the panel. FAIL: every row shows, or another column is filtered.");
+      table.addFilterRule(1, { operator: ">", value: 10 });
+    },
+  },
+  {
+    name: "24-category",
+    note: "a by-value category defined from nothing on a text column",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      const kinds = ["Fruit", "Animal", "Fruit", "Transport", "Animal"];
+      kinds.forEach((kind, i) => { table.setCell(i + 1, 0, kind); });
+      table.setCell(1, 1, "24: column A is categorised by value. PASS: three groups, Animal, Fruit and Transport, each with its rows beneath it. FAIL: flat rows, or a refusal to open.");
+      if (table.rowCount > kinds.length + 1) table.deleteRows(kinds.length + 1, table.rowCount - kinds.length - 1);
+      table.addCategory(0);
+    },
+  },
 ];
 
 function main(argv: string[]): number {

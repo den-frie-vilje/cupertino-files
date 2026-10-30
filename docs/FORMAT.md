@@ -1194,10 +1194,12 @@ Three traps:
   entries are derivable from the corpus by arithmetic — **168 = SUM**
   (`libetonyek-pages5-extra-dir.pages` sums 5500 + 1170 + 1250 to a cached
   7920) and **212 = DURATION** (BLOCKERS ledger) — plus **86 = MEDIAN**
-  from the live-app harvest; with the 271 harvested names (which include
-  SUM and DURATION) the union is 272 authorable in total. Guessing beyond that would convert a visible gap into silent
-  wrong answers, so unknown ids render as `FUNCTION_<id>` and callers can
-  supply their own table.
+  from the live-app harvest. The complete table — 345 names, every function
+the 15.1 build registers — is read from the registration code in the
+app's TSTables framework (`scripts/harvest-functions.ts --binary`), and
+the document harvest confirms every one it reaches. Guessing beyond that would
+convert a visible gap into silent wrong answers, so unknown ids render as
+`FUNCTION_<id>` and callers can supply their own table.
 
 Cross-table references **do** resolve to table names — the `table_id` in
 `AST_cross_table_reference_extra_info` is the target's kind-1 calc-engine
@@ -1287,7 +1289,7 @@ what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons — 5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=` — with filters and conditional formatting
 sharing the encoding. Function-shaped conditions are identified too:
-3 is "text contains" (compiled as `NOT(ISERROR(f_296(needle, cell)))`),
+3 is "text contains" (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`),
 34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
 `undefined` rather than a guess.
 
@@ -1327,11 +1329,12 @@ filter set says *why* rows should be hidden, the hidden-state extent
 records *which* ones are. Changing a rule does not change visibility until
 something re-evaluates the predicates.
 
-A filter set's rules are addressed by column through parallel arrays —
-`filter_offsets[i]` is the column rule `i` tests, `filter_enabled[i]`
-whether it is live — so the three repeated fields must stay the same
-length. Both are written **unpacked** (one varint key per value), the
-proto2 default.
+A filter set's rules each name their column inside their predicate, as an
+offset from a host column (every app-authored rule sits on column 1 or 2
+with offset 0 or 1); `filter_offsets` is a boundary list, one entry more
+than there are rules, written **unpacked** (one varint key per value),
+the proto2 default; `filter_enabled`, a per-rule switch, is absent on
+every app-written set, where absent means on.
 
 #### 14.7.1 A control needs a format, not just a spec
 
@@ -1924,13 +1927,20 @@ covering a single index is written with `range_begin` alone**, no
 a group holding seven scattered rows stores seven entries *without* one.
 Either encoding reads back correctly, so only a byte comparison catches it.
 
-What can be recomputed offline stops at membership. Creating a group would
-mean minting its identity, placing it in whatever order the app sorts
-groups in, and updating the run of fields the archive carries beside the
-tree — eight messages of shape `{ f2: <small int>, f3: 0 }` at fields 7–13
-and 16, a count at 14, and a list of per-row UUID pairs at 15. Their
-meaning is not documented by any fixture, so a group this library invented
-would be a claim about all of them.
+The fields beside the tree are constant. Fields 7–13 and 16 are
+`TSCE.CellCoordinateArchive` coordinates of the eight internal formulas
+the grouping registers with the calc engine — aggregate-type change,
+grouping columns, aggregates in the root, grouping column headers, column
+order, row order, row order ignoring recalc, hidden states — at columns
+0–7 of row 0 of the grouping's own owner in every archive in the corpus,
+categorised or not; `owner_index` (14) is 8 everywhere; `row_uid_lookup`
+(15) is the table's row-uid list in map order. Every table carries the
+archive, so defining a category fills it in: the group column (the
+column's uid, grouping type 0, a fresh grouping-column uid), the lookup
+list, and a tree of one leaf per distinct value, listed in the code-unit
+order of their text, each leaf carrying the value, a format manager that
+restates the value with the cells' format and the row set, and the rows.
+`addCategory` writes that shape; the app has yet to confirm it draws it.
 
 Two further shape notes. A real archive carries **both** `group_node_root`
 (3, inline) and `group_node_root_ref` (18) — the reference is the live tree
@@ -2105,26 +2115,25 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Authoring filter rules** is not implemented (§14.7). Rules read — the
-  common case is measured from a real filter set, and the predicate
-  encoding is shared with conditional formatting — and a filter set can be
-  enabled, disabled or switched between "all" and "any". What keeps
-  authoring here is that writing a rule is only half the feature: which
-  rows it hides is stored separately, and recomputing that means
-  evaluating the predicates. The reading is pinned by the populated set
-  in `olekristensen-v26.3-mac-filters.numbers`, and individual rules can
-  additionally be toggled with `setRuleEnabled`.
-- **Creating a category group** (§14.9). Rows can be *regrouped* among
-  groups that exist, byte-identically to Apple; creating one needs its
-  identity, its sort position and the fields the archive carries beside the
-  tree, which no fixture explains. Bucketed groupings need the grouping
-  formula evaluated.
-- **Creating a Keynote build** (animation). The model reads whole —
-  effect, timing, delivery and chunks, pinned against the three
-  app-authored builds in `olekristensen-v26.3-mac-builds-effects.key` —
-  and retimes or removes existing builds. Creation from nothing stays
-  here: a build the app silently drops is indistinguishable from one
-  never written.
+- **Function-shaped filter rules beyond text-contains** (§14.7).
+  Comparison and text-contains rules are authored (`addFilterRule`),
+  byte for byte as the populated set in
+  `olekristensen-v26.3-mac-filters.numbers` carries them, with the rows
+  they hide written to the hidden-state extent by evaluating them
+  offline; a set can be enabled, disabled or switched between "all" and
+  "any". Is-blank and the other function-shaped conditions are read but
+  not written, and a rule on column 0 waits for a document showing how
+  the app references it.
+- **Category summaries** (§14.9). A category — by value, nested, or
+  bucketed by date with the app's own functor — is defined from nothing
+  (`addCategory`) and rows are regrouped byte-identically to Apple; no
+  fixture carries a summary row to measure one from.
+- **Keynote actions and build order.** The model reads whole — effect,
+  timing, delivery and chunks, pinned against the three app-authored
+  builds in `olekristensen-v26.3-mac-builds-effects.key` — and
+  all-at-once and by-paragraph builds are written from nothing
+  (`addBuild`); actions and build order are not authored, and whether
+  the app plays a written build is unproven.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have — both the practical route the apps themselves take.

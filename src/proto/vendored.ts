@@ -133,6 +133,10 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "build_chunk_identifier": 7,
     "build_id": 8,
   },
+  "KN.BuildChunkIdentifierArchive": {
+    "build_id": 1,
+    "build_chunk_id": 2,
+  },
   "KN.DocumentArchive": {
     "show": 2,
     "super": 3,
@@ -234,6 +238,20 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "template_slide_id": 29,
     "live_video_source_ids": 30,
     "live_video_source_usage_entries": 31,
+  },
+  "KN.SlideStyleArchive": {
+    "super": 1,
+    "override_count": 10,
+    "slide_properties": 11,
+  },
+  "KN.SlideStylePropertiesArchive": {
+    "fill": 1,
+    "transition": 2,
+    "transition_null": 3,
+    "titlePlaceholderVisibility": 4,
+    "bodyPlaceholderVisibility": 5,
+    "slideNumberPlaceholderVisibility": 6,
+    "objectPlaceholderVisibility": 7,
   },
   "KN.SlideTreeArchive": {
     "rootSlideNode": 1,
@@ -1111,6 +1129,12 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "row_indexes": 8,
     "row_lookup_uids": 9,
     "child_ref": 10,
+  },
+  "TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive": {
+    "cell_value": 1,
+    "formats": 2,
+    "row_sets": 3,
+    "row_uid_lookup_sets": 4,
   },
   "TST.GroupColumnArchive": {
     "column_uid": 1,

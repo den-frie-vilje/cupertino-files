@@ -34,9 +34,10 @@ import {
   TSD_TYPE,
 } from "../tsd/schema.ts";
 import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
+import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer } from "../tsd/placement.ts";
+import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -1045,6 +1046,25 @@ export class PagesDocument extends IWorkDocument {
    * for pages 0, 1 and 2, in page order, which is what the insert below
    * preserves.
    */
+  /**
+   * Put a floating text box on a page, saying `text`, placed and sized by
+   * `placement` (points; the donor's size otherwise). The box is a deep
+   * copy of a text box the document already carries — the page's first,
+   * else any page's — so it has the document's own style, its own storage
+   * and every field the app writes; a document with no text box (the
+   * blank has none) cannot grow one this way. Pages has not yet been seen
+   * to open a box added this way; see docs/VERIFICATION.md.
+   * @agentTool add_text_box
+   */
+  addTextBox(pageIndex: number, text: string, placement: DrawablePlacement = {}): DrawableModel {
+    const container = this.floatingDrawables(pageIndex, { create: true });
+    if (!container) throw new RangeError("document has no floating-drawable holder to place a text box in");
+    const own = container.drawables().find((d) => isTextBox(d.object));
+    const donor = own?.object ?? anyTextBox(this.store);
+    if (!donor) throw new RangeError("the document carries no text box to copy; add one in Pages first");
+    return addTextBoxFrom(this.store, container, donor, undefined, text, placement);
+  }
+
   floatingDrawables(
     pageIndex?: number,
     options: { create?: boolean } = {},

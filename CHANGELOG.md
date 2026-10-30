@@ -84,6 +84,10 @@ in commit messages and pull requests.
 
 ### Changed
 
+- Duration formats are written with the app's duration type (268)
+  instead of the custom-duration code, and the automatic-units flag is
+  read and written alongside style and units.
+
 - Field numbers now resolve from schema descriptors extracted from the
   15.1 applications themselves, for all three apps. The Pages-specific
   schema, previously the Pages 5.0 dump from 2013, grows from 21 to 42
@@ -93,6 +97,72 @@ in commit messages and pull requests.
   section-template fields of a Pages section under their current names.
 
 ### Added
+
+- `addFilterRule(column, { operator, value })` adds a row-filter rule
+  comparing a column's cells with a number or a string, written as the
+  app writes one, switches the filter on and writes the rows it hides,
+  evaluated offline. The operator may also be "contains" for a
+  text-contains rule; other function-shaped rules are not authored, and a
+  rule on column 0 is refused until a document shows how the app
+  references it. Numbers has not yet been seen to open a filter written
+  this way.
+- A filter rule's `column` now reads as the absolute column the rule
+  tests; it was the index of a boundary entry before, which happened to
+  be one less.
+
+- `slide.background()` reads a Keynote slide's background fill up its
+  style chain, and `slide.setBackground(fill)` sets one, as the app does:
+  a variation style of the slide's own under the layout's, replaced in
+  place on a second call. Also served as the MCP tool
+  `set_slide_background`. Keynote has not yet been seen to draw a
+  background written this way.
+
+- `doc.addSlide({ master })` makes a Keynote slide from one of the deck's
+  layouts, by name or id, as the app's own "add slide" does: the master is
+  deep-copied and the copy made a content slide, with empty title and body,
+  a note, and the slide-number attachment; the master's name, object
+  placeholder, style lists and thumbnail texts stay the master's. The MCP
+  tool `manage_slides` takes `master` on `add`. Keynote has not yet been
+  seen to open a slide made this way.
+
+- `slide.addTextBox(text, { x, y, width, height })` on a Keynote slide
+  and `doc.addTextBox(pageIndex, text, placement)` in Pages add a text
+  box by deep-copying one the document already carries — its own storage,
+  styles and path — then setting the text, placing it and repointing its
+  parent to the slide (or clearing it, as Pages' floating boxes carry
+  none). A document with no text box to copy is refused. Also served as
+  the MCP tool `add_text_box`. Neither app has yet been seen to draw a
+  box written this way.
+
+- `slide.addBuild({ drawableId, effect, duration, delay })` animates a
+  drawable on a Keynote slide with an all-at-once build played on click,
+  written in the shape the app's own builds have; `delivery:
+  "byParagraph"` instead writes one stage per paragraph of the target's
+  text, each played on click. Actions and build order are not authored.
+  Keynote has not yet been seen to play a build written this way.
+
+- `addCategory(column)` groups a table's rows by the values in a column,
+  and `addCategory([first, second, …])` nests the groups by several:
+  one group per distinct value at each level in text order, each holding
+  its rows, written in the shape every categorised document carries and
+  switched on. A level given as `{ column, bucket }` groups a date column
+  by year, month, quarter, week, day or weekday with the app's own
+  bucketing formula. Summaries are not authored. Numbers has not yet been
+  seen to draw a category defined this way.
+
+- A duration written with `setCell` is stamped with the app's own fresh
+  duration format: short style, hours down to seconds, automatic units
+  on. Before, a typed duration carried no format at all.
+
+- Every spreadsheet function Numbers 15.1 registers is authorable by
+  name: the function index table grows from 272 to 345 entries, read
+  from the application's own function registry (`npm run harvest --
+  --binary <Numbers.app>`) and confirmed by the document harvest. The
+  additions include IF, TRUE, FALSE, NOW, TODAY, XLOOKUP, XMATCH,
+  SWITCH, LET, LAMBDA, FILTER, SORT, UNIQUE, SEQUENCE and the text
+  functions; the "text contains" condition now renders its callee as
+  FIND.CASEINSENSITIVE instead of FUNCTION_296.
+
 
 - `KeynoteDocument.addImage` puts a picture on a slide — the gap that
   made "swap an image" impossible in Keynote. The image arrives in the

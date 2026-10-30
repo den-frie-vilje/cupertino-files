@@ -464,6 +464,19 @@ export const RUNGS: {
       chart.setAxisMajorGridlines("value", false);
     },
   },
+  {
+    name: "P21-text-box",
+    base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
+    note: "a text box copied from the document's own, placed on page 1 with new text",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P21: a text box saying 'Written by cupertino-files' should sit on page 1, " +
+          "near the lower right. No box, a box without the words, or a refused file " +
+          "are each a failure.",
+      );
+      doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
+    },
+  },
 ];
 
 function main(argv: string[]): number {

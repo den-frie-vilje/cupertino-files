@@ -1299,6 +1299,30 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
+    name: "Duration default format (a typed duration's stamp)",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "a duration written with setCell is stamped with the app's own fresh duration format — type 268, " +
+      "short style, hour down to second, automatic units on — read from the app's duration format class; " +
+      "explicit duration formats are written as type 268 with the automatic-units flag, where demo-05 " +
+      "proved the earlier 273 shape",
+    manualProof: {
+      claim: "A duration typed through the library displays in Numbers as a duration typed in the app.",
+      why:
+        "No plain duration cell exists in the corpus, so the default is the app's initialiser rather " +
+        "than a measured file; its rendering has not been seen.",
+      how:
+        "Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where " +
+        "the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the " +
+        "inspector; a failure shows a bare number or an inspector reading other than Duration, " +
+        "which means the written field set differs from a fresh cell's.",
+      risk: "low",
+    },
+  },
+  {
+    group: "Numbers & tables",
     name: "Formula reading (AST rendered to text)",
     apps: "all",
     status: "read",
@@ -1321,7 +1345,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Numbers & tables",
     name: "Formula function names",
     apps: "all",
-    status: "experimental",
+    status: "read+write",
     probe: (c) =>
       safe(() =>
         c.doc
@@ -1332,7 +1356,7 @@ export const CAPABILITIES: Capability[] = [
               t.formulas().some((f) => /[A-Z]+\(/.test(f.formula) && !f.formula.includes("FUNCTION_")),
           ),
       ),
-    note: "only ids proven by arithmetic are named; the rest render as FUNCTION_<id>. Extend with registerFormulaFunctions()",
+    note: "every function Numbers 15.1 registers is named, read from the app's own registry and confirmed by the document harvest; an id outside the table renders as FUNCTION_<id>, and registerFormulaFunctions() extends it",
     manualProof: {
       claim: "The function-index table is incomplete, and every unnamed id is visible rather than guessed.",
       why:
@@ -1345,6 +1369,13 @@ export const CAPABILITIES: Capability[] = [
         "and a generated table. Without a Mac to hand, `--emit-sheet` produces a file to open and save " +
         "in Numbers by hand, then `--ingest`. Procedure in docs/BLOCKERS.md.",
       e2e: true,
+      settled:
+        "**Complete for Numbers 15.1, read from the app itself.** The registration code in the " +
+        "TSTables framework pairs every function name with its index; scripts/function-registry.ts " +
+        "reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with " +
+        "the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, " +
+        "345 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
+        "renders by name",
       risk: "medium",
     },
   },
@@ -1443,7 +1474,7 @@ export const CAPABILITIES: Capability[] = [
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
       "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
-      "target's owner UUID), nested calls, omitted arguments, and any of the 272 measured " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 345 named " +
       "functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula " +
       "rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with " +
       "its own text saves the whole document byte-identical to the original. Nothing " +
@@ -1722,6 +1753,101 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Keynote",
+    name: "Builds: creating an animation",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
+      "app-authored builds carry them, in the slide's component, and a by-paragraph build with one " +
+      "chunk per paragraph of the target's text; actions and build order are not authored",
+    manualProof: {
+      claim: "Keynote plays a build this library wrote from nothing.",
+      why:
+        "The suite proves the archive matches the deck's builds field for field; a build the app " +
+        "silently drops looks exactly like one never written, so only playing the deck can say.",
+      how:
+        "npm run seeds -- out writes seed-build.key; open it in Keynote and play the slide. A pass " +
+        "shows the title dissolving in on the first click; a failure shows it already present, " +
+        "or the deck refused, which means the build needs state only the app writes.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Drawables & media",
+    name: "Text boxes: adding one",
+    apps: ["pages", "keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addTextBox deep-copies a text box the document already carries — its own storage, style " +
+      "chain and path — into the slide's or page's drawable list, sets the text, places it, and " +
+      "repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry " +
+      "none); a document without any text box has nothing to copy and is refused",
+    manualProof: {
+      claim: "Keynote and Pages draw a text box this library copied and re-worded.",
+      why:
+        "The copy matches the donor in every field but text, geometry and parent; a box the app " +
+        "silently drops looks exactly like one never written, so only opening the file can say.",
+      how:
+        "npm run seeds -- out writes seed-text-box.key; open it in Keynote. A pass shows a second " +
+        "box saying 'Written by cupertino-files' below the title; a failure shows only the title, " +
+        "or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Filters: adding a comparison rule",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's " +
+      "app-authored rules — the predicate with its operands and the formula over the table's own " +
+      "identity, counted from the app's host column — grows the boundary list, switches the set on and " +
+      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a rule " +
+      "on column 0 is refused until a document shows its offset",
+    manualProof: {
+      claim: "Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.",
+      why:
+        "The rule's bytes and the hidden states equal an app-authored set's, but the column a rule " +
+        "references is relative to a host column measured from rules on columns 1 and 2 only; a rule " +
+        "elsewhere tells whether the host is column 1 or the first rule's own column.",
+      how:
+        "npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only " +
+        "Pear and Train with the filter on in the panel; column D filtered instead means the host is the " +
+        "first rule's column; every row showing or a refusal to open means the set needs state only the " +
+        "app writes.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Numbers & tables",
+    name: "Categories: defining a category by a column",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addCategory fills the table's existing group-by archive — every table carries one — with the " +
+      "shape every categorised corpus table has: a group column per level (with the app's own " +
+      "bucketing functor for a date bucket), the row-uid lookup, one node per distinct value or bucket " +
+      "at each level with its format manager, a referenced root and its inline copy; " +
+      "the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them",
+    manualProof: {
+      claim: "Numbers draws a category this library defined from nothing, with the groups collapsed under their values.",
+      why:
+        "The suite proves the archive matches the corpus shape field for field; whether the calc engine " +
+        "accepts a grouping whose internal formulas it did not register itself is the app's to say.",
+      how:
+        "npm run seeds -- out writes seed-category.numbers; open it in Numbers. A pass shows three " +
+        "groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows " +
+        "flat or a refusal to open, which means the definition needs state only the app writes.",
+      risk: "medium",
+    },
+  },
+  {
     group: "Numbers & tables",
     name: "Categories: regrouping rows after an edit",
     apps: "all",
@@ -1760,13 +1886,12 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Categories: creating a grouping, and per-group summaries",
+    name: "Categories: per-group summaries",
     apps: "all",
     status: "roadmap",
     note:
-      "creating a group needs its identity, its sort position and the several per-column and " +
-      "per-row fields written alongside the tree, none of which any fixture explains; and no " +
-      "fixture has a non-empty aggregate list, so summary rows are read but unexercised",
+      "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
+      "no fixture has a non-empty aggregate list, so summary rows are read but unexercised",
   },
   {
     group: "Numbers & tables",
@@ -1781,10 +1906,10 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: authoring rules and recomputing hidden rows",
+    name: "Filters: function-shaped rules beyond text-contains",
     apps: "all",
     status: "roadmap",
-    note: "a rule set alone does not hide rows — TST.HiddenStateExtentArchive records the result, and recomputing it means evaluating the predicates",
+    note: "comparison and text-contains rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote
@@ -2013,6 +2138,52 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Keynote",
+    name: "Slide background (read + set)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: (c) => safe(() => (c.keynote?.slides() ?? []).some((s) => s.background() !== undefined)),
+    note:
+      "background reads up the style chain; setBackground writes the corpus shape of a per-slide " +
+      "background — an unnamed KN.SlideStyleArchive variation under the master's style, in the " +
+      "stylesheet's component, override count 1, the fill in its slide properties, referenced by " +
+      "the slide alone — measured on the one deck that carries any (11 slides)",
+    manualProof: {
+      claim: "Keynote draws a background this library set as a variation of the layout's style.",
+      why:
+        "The suite proves the archive matches the corpus's per-slide styles field for field; a " +
+        "style the app ignores looks like a slide left on its theme, so only the app can say.",
+      how:
+        "npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass " +
+        "shows the first slide dark green; the theme's own background, or a refused deck, is a failure.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Slides from a layout (addSlide master)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape " +
+      "the corpus states for all 49 content slides against their masters: template reference, note " +
+      "and slide-number attachment added; name, object placeholder, style lists and thumbnail texts " +
+      "dropped; placeholder presence equal to the master's",
+    manualProof: {
+      claim: "Keynote opens a slide this library instantiated from a layout, drawn as that layout.",
+      why:
+        "The suite proves the archive matches the corpus's content slides field for field; whether " +
+        "the app draws the copied placeholders in the layout's places, or repairs or refuses the " +
+        "slide, only the app can say.",
+      how:
+        "npm run keynote:docs -- out writes K13-slide-from-layout.key; open it in Keynote. A pass " +
+        "shows a last slide on the named layout with the K13 title and a body; a failure shows a " +
+        "blank slide, a slide on the wrong layout, or a refused deck.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
     name: "Builds (animations): read and retime",
     apps: ["keynote"],
     status: "read+write",
@@ -2039,13 +2210,6 @@ export const CAPABILITIES: Capability[] = [
       how: "a three-slide deck with a different effect on each and one text build delivered by line, then `npm run probe -- animated.key`",
       risk: "high",
     },
-  },
-  {
-    group: "Keynote",
-    name: "Builds: creating an animation",
-    apps: ["keynote"],
-    status: "roadmap",
-    note: "withheld until a real animation confirms the read model; a build the app drops is indistinguishable from one never written",
   },
 
   // ------------------------------------------------------------- concurrency

@@ -27,6 +27,8 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { KeynoteDocument } from "../src/index.ts";
+import { Slide } from "../src/keynote/schema.ts";
+import { refId } from "../src/tsp/schema.ts";
 
 /**
  * Two bases, same reasoning as the Pages ladder: a rung proves something
@@ -164,6 +166,49 @@ export const RUNGS: {
     build: (doc) => {
       doc.slides()[0]!.title = "K10: this deck should be 4:3 (1024×768) — squarer than widescreen.";
       doc.setSlideSize(1024, 768);
+    },
+  },
+  {
+    name: "K11-build",
+    note: "the title placeholder animated in with a dissolve build written from nothing — the corpus's builds animate placeholders",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title =
+        "K11: this title should dissolve in on the first click. Already there with no animation is the finding.";
+      // The build targets the placeholder drawable, which the slide lists as
+      // its title placeholder; the placeholder wrapper's object is its storage.
+      const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+      if (title === undefined) throw new Error("K11: base slide has no title placeholder");
+      slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
+    },
+  },
+  {
+    name: "K13-slide-from-layout",
+    note: "a slide instantiated from a named layout, appended last",
+    build: (doc) => {
+      const layout = doc.masterSlides().find((m) => m.name !== undefined && /bullet|punkt/i.test(m.name)) ?? doc.masterSlides()[1];
+      if (!layout) throw new Error("deck has no layouts");
+      const added = doc.addSlide({ master: layout.id, after: doc.slideCount() - 1 });
+      added.title = `K13: this LAST slide was made from the layout '${layout.name}' — it should look like that layout, with this title and a body saying so.`;
+      if (added.placeholders().some((p) => p.role === "body")) added.body = "This body sits where the layout puts it.";
+    },
+  },
+  {
+    name: "K14-slide-background",
+    note: "the first slide's background set to a dark green, as a style of its own",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K14: this slide's background should be dark green (not the theme's). White means the style was ignored.";
+      slide.setBackground({ kind: "color", color: { r: 0.1, g: 0.23, b: 0.16, space: "srgb" } });
+    },
+  },
+  {
+    name: "K12-text-box",
+    note: "a text box copied from the deck's own and placed on the first slide with new text",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title = "K12: a text box saying 'Written by cupertino-files' should sit in the lower half.";
+      slide.addTextBox("Written by cupertino-files", { x: 300, y: 650, width: 1300, height: 120 });
     },
   },
 ];
