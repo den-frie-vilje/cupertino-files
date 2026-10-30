@@ -162,20 +162,34 @@ describe("style value codecs", () => {
     expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
   });
 
-  it("writes the apps' two dash presets, and the corpus knows no other dashes", () => {
-    // Every dashed stroke the apps wrote, at every schema-reachable site
-    // and width, is one of two shapes: [2, 2] butt-capped or
-    // [0.001, 2] round-capped. The presets are those, so the Format
-    // sidebar names them; any other array draws but reads as None there.
-    const dashed = RawMessage.parse(writeStroke({ width: 2, pattern: "dashed" }).toBytes());
-    expect(dashed.getUint(3)).toBe(0);
-    expect(dashed.getMessage(6)!.getUint(3)).toBe(2);
-    expect(dashed.getMessage(6)!.getFloats(4)).toEqual([2, 2, 0, 0, 0, 0]);
+  it("writes the dashed items of Pages' line-style menu, and the corpus knows no other dashes", () => {
+    // The paragraph Borders & Rules line-style menu of Pages 15.4, applied
+    // item by item at 3 pt in black (8-line-styles-3pt.pages, not a
+    // fixture): the stroke archive of each item, as the app wrote it, in
+    // hex. Items 7 to 11 are the brush strokes, solid patterns naming a
+    // smart stroke, which the library does not write.
+    const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+    const menu = {
+      "solid, round caps": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180120012d000080403227080115000000001800250000000025000000002500000000250000000025000000002500000000",
+      solid: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080115000000001800250000000025000000002500000000250000000025000000002500000000",
+      "short-dashed": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000803f250000803f2500000000250000000025000000002500000000",
+      dashed: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000004025000000402500000000250000000025000000002500000000",
+      "long-dashed": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000c040250000c0402500000000250000000025000000002500000000",
+      dotted: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180120012d000080403227080015000000001802256f12833a25000000402500000000250000000025000000002500000000",
+    };
+    const hex = (stroke: Parameters<typeof writeStroke>[0]) => Buffer.from(writeStroke(stroke).toBytes()).toString("hex");
+    expect(hex({ color: black, width: 3, cap: 1, join: 1 })).toBe(menu["solid, round caps"]);
+    expect(hex({ color: black, width: 3 })).toBe(menu.solid);
+    for (const preset of ["short-dashed", "dashed", "long-dashed", "dotted"] as const) {
+      expect(hex({ color: black, width: 3, pattern: preset })).toBe(menu[preset]);
+    }
     const dotted = RawMessage.parse(writeStroke({ width: 2, pattern: "dotted" }).toBytes());
-    expect(dotted.getUint(3)).toBe(1); // round cap, the app's
-    expect(dotted.getMessage(6)!.getFloats(4).slice(1)).toEqual([2, 0, 0, 0, 0]);
-    expect(dotted.getMessage(6)!.getFloats(4)[0]).toBeCloseTo(0.001, 6);
-    expect(RawMessage.parse(writeStroke({ pattern: "dotted", cap: 0 }).toBytes()).getUint(3)).toBe(0);
+    expect(dotted.getUint(3)).toBe(1); // round cap and join, the app's
+    expect(dotted.getUint(4)).toBe(1);
+    expect(RawMessage.parse(writeStroke({ pattern: "dotted", cap: 0, join: 0 }).toBytes()).getUint(4)).toBe(0);
+
+    // Every dashed stroke the apps wrote into the fixtures, at every
+    // schema-reachable site and width, is the dashed or the dotted shape.
 
     const schema = loadSchema();
     const shapes = new Map<string, number>();

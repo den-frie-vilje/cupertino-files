@@ -541,31 +541,34 @@ export const CAPABILITIES: Capability[] = [
         "colourspace tagging works - it's two different greens\"), and a [4, 2] paragraph border drew " +
         "dashed (\"the dashes look fine, as specified\"). Found beside it: the Format sidebar shows " +
         "None as the line style of that [4, 2] border, direct or named, while the app's own on the next " +
-        "line, [2, 2], shows: the sidebar knows only the two dash shapes the apps write, now the " +
-        "\"dashed\" and \"dotted\" presets.",
+        "line, [2, 2], shows: the sidebar knows only its own menu's dash shapes, now the presets.",
       risk: "low",
     },
   },
   {
     group: "Text & styles",
-    name: "Dash presets (dashed, dotted strokes)",
+    name: "Dash presets (short-dashed, dashed, long-dashed, dotted strokes)",
     apps: "all",
     status: "read+write",
     note:
-      "the two dashed shapes the apps write at every stroke site and width, [2, 2] butt-capped and " +
-      "[0.001, 2] round-capped; any other dash array draws but the Format sidebar shows None for it",
+      "the four dashed items of Pages' Borders & Rules line-style menu, byte-identical to the app's own " +
+      "at 3 pt; the menu's five brush strokes (smart strokes by name) are not written; any other dash " +
+      "array draws but the Format sidebar shows None for it",
     manualProof: {
       claim: "A paragraph border written with the \"dotted\" preset shows as dotted in the Format sidebar.",
       why:
         "Pages showed None for a [4, 2] border that drew, and reads the \"dashed\" preset back as dashed " +
         "(Pages rung P28, both as direct formatting and as a named style: \"worked\"). The dotted preset " +
-        "is the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the " +
-        "control showed None for it (\"not showing up\"), and the corpus holds no app-written dotted " +
-        "paragraph border to compare against.",
+        "was the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the " +
+        "control showed None for it (\"not showing up\").",
       how:
-        "Pages rung P29 asks for a dotted bottom border from the app's own line-style pop-up menu; the " +
-        "returned stroke is the shape to copy, or the menu offers no dots and the preset stays an " +
-        "outline shape.",
+        "Pages rung P30 asks for every item of the line-style menu at 3 pt; the returned strokes are the " +
+        "shapes to copy.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P30 with all " +
+        "eleven menu items applied: the menu's dotted item is [0.001, 2] with round caps and round " +
+        "joins, where ours had miter joins, the one byte the control did not match. The preset now " +
+        "writes the app's stroke archive byte for byte, as do dashed, short-dashed and long-dashed.",
       risk: "low",
     },
   },

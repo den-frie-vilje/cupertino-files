@@ -605,13 +605,14 @@ export const RUNGS: {
   {
     name: "P28-border-in-sidebar",
     blank: true,
-    note: "the app's own dash presets on paragraph borders, for the Format sidebar to be read on each: dashed as direct formatting, dashed as a named style, dotted as a named style",
+    note: "the app's own dash presets on paragraph borders, for the Format sidebar to be read on each: dashed as direct formatting, dashed as a named style, dotted, short-dashed and long-dashed as named styles",
     build: (doc) => {
       doc.appendParagraph(
-        "P28: the three lines below carry bottom borders in the app's own line styles. Select each " +
+        "P28: the five lines below carry bottom borders in the app's own line styles. Select each " +
           "line in turn and look at Format > Layout > Borders & Rules (Kanter og linjer). PASS: the " +
-          "sidebar shows a dashed line for lines 1 and 2 and a dotted line for line 3. Otherwise " +
-          "comment on the line whose sidebar shows something else.",
+          "sidebar shows a dashed line for lines 1 and 2, round dots for line 3, square dots for " +
+          "line 4 and long dashes for line 5. Otherwise comment on the line whose sidebar shows " +
+          "something else.",
       );
       const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
       const dashed = { color: black, width: 2, pattern: "dashed" } as const;
@@ -633,35 +634,15 @@ export const RUNGS: {
           paragraph: { border: { color: black, width: 2, pattern: "dotted" }, borderPositions: BorderPosition.BOTTOM },
         }),
       );
-    },
-  },
-  {
-    name: "P29-dotted-your-turn",
-    blank: true,
-    note: "a line for the checker to give a dotted bottom border with the app's own control, since the corpus has dots only on shape outlines and chart gridlines",
-    build: (doc) => {
-      doc.appendParagraph(
-        "P29: YOUR TURN. Give the line below a dotted bottom border with Format > Layout > Borders & " +
-          "Rules (Kanter og linjer), picking the dotted line style from the line-style pop-up menu, " +
-          "then save. If the pop-up menu offers no dotted style, comment \"no dotted\" on the line " +
-          "instead. The app's own dotted border is then in the file for the library to copy.",
-      );
-      doc.appendParagraph("This line gets the app's own dotted bottom border.");
-    },
-  },
-  {
-    name: "P30-line-style-menu",
-    blank: true,
-    note: "one line per item of the Borders & Rules line-style pop-up menu, for the checker to apply at 3 pt, so every preset's stroke is in one file",
-    build: (doc) => {
-      doc.appendParagraph(
-        "P30: YOUR TURN. The line-style pop-up menu in Format > Layout > Borders & Rules (Kanter og " +
-          "linjer) has a number of line styles besides None. Give each numbered line below a bottom " +
-          "border at 3 pt: line 1 the first line style counted from the top, line 2 the second, and so " +
-          "on, in menu order. Leave lines beyond the menu's last item alone, then save. The file then " +
-          "holds every style the menu offers, as the app writes it.",
-      );
-      for (let item = 1; item <= 10; item++) doc.appendParagraph(`${item}. Menu item ${item}, 3 pt.`);
+      for (const [line, preset] of [["4. Short-dashed, as a named style.", "short-dashed"], ["5. Long-dashed, as a named style.", "long-dashed"]] as const) {
+        doc.setParagraphStyle(
+          doc.appendParagraph(line),
+          doc.createParagraphStyle({
+            name: `P28 ${preset}`,
+            paragraph: { border: { color: black, width: 2, pattern: preset }, borderPositions: BorderPosition.BOTTOM },
+          }),
+        );
+      }
     },
   },
   {

@@ -51,11 +51,14 @@ export function readColor(message: RawMessage | undefined): Color | undefined {
  * of the 8,000-plus colours at the measured fill and stroke sites in
  * iwork19/modern/current-era corpus files, not one is bare; bare
  * colours appear only in 2013/2016-era files. An explicit `space` is
- * kept as given, P3 included.
+ * kept as given, P3 included. The 26.x-era apps also stamp a headroom
+ * of 1.0 on every colour, which makes a written colour byte-identical
+ * to the app's own.
  */
 export function writeColor(color: Color): RawMessage {
   const m = makeColor(color.r, color.g, color.b, color.a ?? 1);
   m.setVarint(ColorFields.RGB_SPACE, color.space === "p3" ? RGB_SPACE.P3 : RGB_SPACE.SRGB);
+  m.setFloat(ColorFields.HEADROOM, 1);
   return m;
 }
 
@@ -293,21 +296,23 @@ export interface Stroke {
   cap?: number;
   join?: number;
   /**
-   * "solid", "none", one of the apps' two dash presets, or dash lengths
-   * in points. The apps write exactly two dashed shapes, at every site
-   * and width: "dashed" is [2, 2] with butt caps, which Pages' Borders &
-   * Rules control reads back as its dashed line style, and "dotted" is
-   * [0.001, 2] with round caps, the apps' dots on shape outlines and
-   * chart gridlines. Any other array draws, but the Format sidebar
-   * reports its line style as None; a paragraph border's dotted style
-   * as the app itself writes it is unmeasured, and so is the control's
-   * reading of ours.
+   * "solid", "none", one of the apps' four dash presets, or dash lengths
+   * in points. The presets are the dashed items of Pages' Borders & Rules
+   * line-style menu as the app writes them at any width: "short-dashed"
+   * is [1, 1], "dashed" [2, 2] and "long-dashed" [6, 6], all with butt
+   * caps and miter joins, and "dotted" is [0.001, 2] with round caps and
+   * round joins. The menu's other items are two solid lines (round and
+   * butt caps) and five brush strokes named in a smart-stroke archive,
+   * which this library does not write. The corpus's shape outlines and
+   * chart gridlines use the dashed and dotted shapes too, the dotted
+   * one with miter joins there. Any other array draws, but the Format
+   * sidebar reports its line style as None.
    */
-  pattern?: "solid" | "none" | "dashed" | "dotted" | number[];
+  pattern?: "solid" | "none" | "short-dashed" | "dashed" | "long-dashed" | "dotted" | number[];
 }
 
-/** The apps' dash presets, the same at every width and site. */
-export const DASH_PRESETS = { dashed: [2, 2], dotted: [0.001, 2] } as const;
+/** The dashed items of Pages' line-style menu, the same at every width and site. */
+export const DASH_PRESETS = { "short-dashed": [1, 1], dashed: [2, 2], "long-dashed": [6, 6], dotted: [0.001, 2] } as const;
 
 export function readStroke(message: RawMessage | undefined): Stroke | undefined {
   if (!message) return undefined;
@@ -358,7 +363,8 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
  * given without a pattern is written solid, because the app writes no
  * stroke without one and fills an absent pattern with an empty dash
  * list on resave. The dash presets are the apps' own (`DASH_PRESETS`),
- * a dotted stroke round-capped as the app caps it unless a cap is given.
+ * a dotted stroke round-capped and round-joined as the app writes its
+ * dotted paragraph border, unless a cap or join is given.
  */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
@@ -366,7 +372,7 @@ export function writeStroke(stroke: Stroke): RawMessage {
   if (stroke.color) message.setMessage(StrokeFields.COLOR, writeColor(stroke.color));
   if (stroke.width !== undefined) message.setFloat(StrokeFields.WIDTH, stroke.width);
   message.setVarint(StrokeFields.CAP, stroke.cap ?? (kind === "dotted" ? LineCap.ROUND : 0));
-  message.setVarint(StrokeFields.JOIN, stroke.join ?? 0);
+  message.setVarint(StrokeFields.JOIN, stroke.join ?? (kind === "dotted" ? LineJoin.ROUND : 0));
   message.setFloat(StrokeFields.MITER_LIMIT, 4);
   {
     const pattern = RawMessage.create();
@@ -379,7 +385,7 @@ export function writeStroke(stroke: Stroke): RawMessage {
       pattern.setVarint(StrokePatternFields.COUNT, 0);
       pattern.setFloats(StrokePatternFields.PATTERN, [0, 0, 0, 0, 0, 0]);
     } else {
-      const dashes = kind === "dashed" || kind === "dotted" ? DASH_PRESETS[kind] : kind;
+      const dashes = typeof kind === "string" ? DASH_PRESETS[kind] : kind;
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
       pattern.setFloat(StrokePatternFields.PHASE, 0);
       pattern.setVarint(StrokePatternFields.COUNT, dashes.length);

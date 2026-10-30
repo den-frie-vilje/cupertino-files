@@ -16,30 +16,17 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 1 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟡 low | Text & styles → Dash presets (dashed, dotted strokes) | A paragraph border written with the "dotted" preset shows as dotted in the Format sidebar. | manual |
-
-### 1. Dash presets (dashed, dotted strokes)
-
-**Risk if wrong:** 🟡 low  
-**Group:** Text & styles  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** A paragraph border written with the "dotted" preset shows as dotted in the Format sidebar.
-
-**Why the suite cannot settle it.** Pages showed None for a [4, 2] border that drew, and reads the "dashed" preset back as dashed (Pages rung P28, both as direct formatting and as a named style: "worked"). The dotted preset is the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the control showed None for it ("not showing up"), and the corpus holds no app-written dotted paragraph border to compare against.
-
-**How to settle it.** Pages rung P29 asks for a dotted bottom border from the app's own line-style pop-up menu; the returned stroke is the shape to copy, or the menu offers no dots and the preset stays an outline shape.
 
 ## Settled
 
-66 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+67 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -177,6 +164,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The first demo round proved the halfway state: rules written without ledger records showed correctly in the inspector and never evaluated — no fill until a covered cell was deleted and re-typed, at which point the app registered exactly the re-typed cells (olekristensen-v26.3-demo07-rules-returned.numbers carries that aftermath). This is the opposite behaviour of cell formulas, which the engine recomputes on open with no tracker write at all — so the ledger cannot be assumed either way; each owner kind had to be measured.
 
 **Outcome.** **Confirmed on open, and the app keeps our ledger.** The rebuilt demo drew every fill with no cell touched — the rung that asks for missing cells came back without one — and the app's save preserved all seven library-written records intact (olekristensen-v26.3-demo07-rules-round2.numbers). The reviewer's remaining notes (numbers still left-aligned, but only where no rule matched, plus the slider and stepper) isolated a separate omission: value cells were written without their type's default format, which every app cell carries — fixed on the cell-writing row.
+
+### ✅ Dash presets (short-dashed, dashed, long-dashed, dotted strokes)
+
+**Was claimed.** A paragraph border written with the "dotted" preset shows as dotted in the Format sidebar.
+
+**Why it needed an app.** Pages showed None for a [4, 2] border that drew, and reads the "dashed" preset back as dashed (Pages rung P28, both as direct formatting and as a named style: "worked"). The dotted preset was the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the control showed None for it ("not showing up").
+
+**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P30 with all eleven menu items applied: the menu's dotted item is [0.001, 2] with round caps and round joins, where ours had miter joins, the one byte the control did not match. The preset now writes the app's stroke archive byte for byte, as do dashed, short-dashed and long-dashed.
 
 ### ✅ Date fields and bookmarks (read + create)
 
@@ -440,7 +435,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** Colour space and dash patterns are rendering behaviour. We know 26.x files tag colours with rgbspace and that the dash array is repeated float, but not that a colour we author with space: 'p3' is treated as wide-gamut rather than reinterpreted.
 
-**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: two styles with the same channels, one tagged p3 and one srgb, drew as two greens ("the colourspace tagging works - it's two different greens"), and a [4, 2] paragraph border drew dashed ("the dashes look fine, as specified"). Found beside it: the Format sidebar shows None as the line style of that [4, 2] border, direct or named, while the app's own on the next line, [2, 2], shows: the sidebar knows only the two dash shapes the apps write, now the "dashed" and "dotted" presets.
+**Outcome.** Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: two styles with the same channels, one tagged p3 and one srgb, drew as two greens ("the colourspace tagging works - it's two different greens"), and a [4, 2] paragraph border drew dashed ("the dashes look fine, as specified"). Found beside it: the Format sidebar shows None as the line style of that [4, 2] border, direct or named, while the app's own on the next line, [2, 2], shows: the sidebar knows only its own menu's dash shapes, now the presets.
 
 ### ✅ Sheets (add, duplicate, rename, move, remove)
 

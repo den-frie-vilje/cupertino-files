@@ -944,7 +944,8 @@ describe("a comment always names an author", () => {
 
   it("gives every author the corpus shape: name, colour, is_public_author", () => {
     // The colour is what stood between "renders" and "crashes on open" —
-    // both corpus authors carry the identical comment-yellow TSP.Color and
+    // both corpus authors carry the identical comment-yellow TSP.Color (with
+    // the headroom every current-era colour carries) and
     // the comment UI draws the author's tint. Both also write
     // is_public_author=false explicitly, and both rosters list their
     // author while declaring refs=[]; declaring the reference is a shape
@@ -961,7 +962,7 @@ describe("a comment always names an author", () => {
       if (obj.type !== 212) continue;
       const shape = [...new Set(obj.message.fields.map((f) => f.no))].sort((a, b) => a - b);
       expect(`author fields: ${shape.join(",")}`).toBe("author fields: 1,2,4");
-      const CORPUS_COLOR = "8,1,29,251,250,122,63,37,240,239,111,63,45,181,180,180,62,53,0,0,128,63,96,1";
+      const CORPUS_COLOR = "8,1,29,251,250,122,63,37,240,239,111,63,45,181,180,180,62,53,0,0,128,63,96,1,109,0,0,128,63";
       expect(Array.from(obj.message.getMessage(2)!.toBytes()).join(",")).toBe(CORPUS_COLOR);
     }
     for (const { obj } of saved.store.allObjects()) {

@@ -105,10 +105,12 @@ in commit messages and pull requests.
 
 ### Added
 
-- A stroke's `pattern` takes `"dashed"` and `"dotted"`, the two dashed
-  shapes the apps themselves write. A dashed paragraph border made this
-  way is one Pages' Borders & Rules control reads back as dashed. Dash
-  arrays in points still draw, but the control shows None for them.
+- A stroke's `pattern` takes `"short-dashed"`, `"dashed"`, `"long-dashed"`
+  and `"dotted"`, the four dashed items of Pages' Borders & Rules
+  line-style menu, written as the app writes them. Dash arrays in points
+  still draw, but the control shows None for them.
+- Every written colour carries the HDR headroom the current apps stamp
+  on their own colours.
 - `canvasComments()` on a Numbers document and on a Keynote slide reads
   the comments pinned to a sheet or a slide, with author and date.
 
