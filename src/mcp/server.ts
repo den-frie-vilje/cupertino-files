@@ -13,7 +13,8 @@
  * save in place unless `output` names somewhere else, which mirrors what
  * the apps themselves do to a document.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { createInterface } from "node:readline";
 import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
@@ -23,6 +24,7 @@ import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
 import { hexColor, solidStroke } from "../tsd/style.ts";
+import { fillTable } from "../tst/csv.ts";
 import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
@@ -178,6 +180,7 @@ export const TOOLS: readonly Tool[] = [
       out.charts = chartsOf(doc.store).length;
       if (doc instanceof KeynoteDocument) {
         out.slides = doc.slides().map((s, i) => ({ index: i, title: s.title ?? "" }));
+        out.layouts = doc.masterSlides().map((m) => m.name).filter((name): name is string => name !== undefined && name !== "");
       }
       if (doc instanceof PagesDocument) {
         out.bodyTextLength = doc.body.text.length;
@@ -186,10 +189,67 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "export_document",
+    description: apiDoc(
+      "export_document",
+      "format is markdown (the default: text, tables and charts in the document's structure), " +
+        "csv (one table, chosen by table as a 0-based index or a name; the first by default) or " +
+        "text (every text storage, plain). Returns the result, or writes it to output and " +
+        "returns the path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        format: { type: "string", enum: ["markdown", "csv", "text"] },
+        table: { type: "string", description: "csv: 0-based table index or table name" },
+        assets: { type: "string", description: "markdown: a directory the pictures are written to, linked relative to output" },
+        output: { type: "string", description: "Write here instead of returning the content" },
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const format = str(args.format) ?? "markdown";
+      let content: string;
+      const output = str(args.output);
+      const assets = str(args.assets);
+      if (format === "markdown") {
+        const sink = assets
+          ? (image: { fileName: string; data: Uint8Array }): string => {
+              mkdirSync(assets, { recursive: true });
+              const file = join(assets, image.fileName);
+              writeFileSync(file, image.data);
+              return output ? relative(dirname(output), file) || image.fileName : file;
+            }
+          : undefined;
+        content = doc.toMarkdown(sink ? { images: sink } : {});
+      }
+      else if (format === "text") content = doc.allText();
+      else if (format === "csv") {
+        const tables = doc.tables();
+        const which = str(args.table) ?? "0";
+        const table = /^\d+$/.test(which) ? tables[Number(which)] : tables.find((t) => t.name === which);
+        if (!table) {
+          throw new RangeError(
+            `no table ${which}; the document has ${tables.map((t, i) => `${i}: ${t.name ?? "(unnamed)"}`).join(", ") || "none"}`,
+          );
+        }
+        content = table.toCsv();
+      } else throw new RangeError(`unknown format ${format}; use markdown, csv or text`);
+      if (output) {
+        writeFileSync(output, content);
+        return `wrote ${format} to ${output}`;
+      }
+      return content;
+    },
+  },
+  {
     name: "read_text",
     description:
       "Extract the text of a document: a Pages file's body, or a Keynote deck's titles, " +
-      "bodies and presenter notes per slide. For Numbers, use read_table instead.",
+      "bodies, text boxes and presenter notes per slide. For Numbers, use read_table instead.",
     inputSchema: {
       type: "object",
       properties: { path: PATH_PROP },
@@ -205,6 +265,11 @@ export const TOOLS: readonly Tool[] = [
             const parts = [`--- slide ${i + 1} ---`];
             if (s.title) parts.push(s.title);
             if (s.body) parts.push(s.body);
+            const placeholders = new Set([s.placeholder("title")?.id, s.placeholder("body")?.id, s.placeholder("slideNumber")?.id]);
+            for (const box of s.textStorages()) {
+              const text = box.text.replace(/[\u2029\ufffc]/g, "").trim();
+              if (!placeholders.has(box.id) && text) parts.push(text);
+            }
             if (s.notes) parts.push(`[notes] ${s.notes}`);
             return parts.join("\n");
           })
@@ -412,7 +477,10 @@ export const TOOLS: readonly Tool[] = [
     name: "create_document",
     description: apiDoc(
       "create_document",
-      "kind picks the app, or the path's extension does. Refuses to overwrite an existing file.",
+      "kind picks the app, or the path's extension does. content, when given, is Markdown the " +
+        "document is written from (headings, paragraphs, lists, block quotes, pipe tables), or " +
+        "CSV for a Numbers document when format is csv. template names a document of the same kind to " +
+        "empty and build in. Refuses to overwrite an existing file.",
     ),
     inputSchema: {
       type: "object",
@@ -426,6 +494,11 @@ export const TOOLS: readonly Tool[] = [
           enum: ["pages", "numbers", "keynote"],
           description: "Which app's document to create; defaults to what the extension says",
         },
+        content: { type: "string", description: "Markdown (or CSV) to write the document from" },
+        format: { type: "string", enum: ["markdown", "csv"], description: "What content is; markdown by default" },
+        imageRoot: { type: "string", description: "Directory the Markdown's image paths are relative to" },
+        template: { type: "string", description: "A document of the same kind to empty and build in, keeping its theme and styles" },
+        layout: { type: "string", description: "Keynote: the layout for content slides (default Title & Bullets)" },
       },
       required: ["path"],
     },
@@ -443,13 +516,44 @@ export const TOOLS: readonly Tool[] = [
             : path.endsWith(".key")
               ? "keynote"
               : undefined);
+      const content = str(args.content);
+      const format = str(args.format) ?? "markdown";
+      if (format === "csv" && kind !== "numbers") throw new RangeError("csv content makes a Numbers document");
+      const imageRoot = str(args.imageRoot);
+      const images = (src: string): Uint8Array | undefined => {
+        if (/^[a-z]+:/i.test(src)) return undefined;
+        const file = imageRoot ? join(imageRoot, src) : src;
+        return existsSync(file) ? new Uint8Array(readFileSync(file)) : undefined;
+      };
+      const templatePath = str(args.template);
+      if (templatePath !== undefined && !existsSync(templatePath)) throw new RangeError(`no template at ${templatePath}`);
+      const template = templatePath === undefined ? undefined : new Uint8Array(readFileSync(templatePath));
+      const layout = str(args.layout);
       const doc =
         kind === "pages"
-          ? PagesDocument.blank()
+          ? content === undefined
+            ? template
+              ? PagesDocument.blankFrom(template)
+              : PagesDocument.blank()
+            : PagesDocument.fromMarkdown(content, { images, ...(template ? { template } : {}) })
           : kind === "numbers"
-            ? NumbersDocument.blank()
+            ? content === undefined
+              ? template
+                ? NumbersDocument.blankFrom(template)
+                : NumbersDocument.blank()
+              : format === "csv"
+                ? NumbersDocument.fromCsv(content, undefined, template ? { template } : {})
+                : NumbersDocument.fromMarkdown(content, template ? { template } : {})
             : kind === "keynote"
-              ? KeynoteDocument.blank()
+              ? content === undefined
+                ? template
+                  ? KeynoteDocument.blankFrom(template)
+                  : KeynoteDocument.blank()
+                : KeynoteDocument.fromMarkdown(content, {
+                    images,
+                    ...(template ? { template } : {}),
+                    ...(layout ? { layout } : {}),
+                  })
               : undefined;
       if (!doc) {
         throw new RangeError(
@@ -457,7 +561,7 @@ export const TOOLS: readonly Tool[] = [
         );
       }
       writeFileSync(path, doc.save());
-      return `created a blank ${kind} document at ${path}`;
+      return `created a ${content === undefined ? "blank" : `${format}-built`} ${kind} document at ${path}`;
     },
   },
   {
@@ -913,6 +1017,130 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_table",
+    description: apiDoc(
+      "add_table",
+      "Pages: inline in the body at pos (a character index; omitted means a paragraph of its own at " +
+        "the end). Keynote: on slide (0-based), placed by x and y. rows, when given, is an array of " +
+        "rows of cell strings that sizes and fills the table (numbers and TRUE/FALSE typed). " +
+        "Numbers tables are added with manage_sheets. Saves over the input unless output names " +
+        "another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        slide: { type: "number", description: "Keynote: 0-based slide index" },
+        pos: { type: "number", description: "Pages: body character index to anchor at" },
+        name: { type: "string" },
+        rows: {
+          type: "array",
+          items: { type: "array", items: { type: "string" } },
+          description: "Cell text by row, the first row the header",
+        },
+        x: { type: "number" },
+        y: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const rows = Array.isArray(args.rows)
+        ? (args.rows as unknown[]).map((row) => (Array.isArray(row) ? row.map((cell) => String(cell)) : [String(row)]))
+        : undefined;
+      const name = str(args.name);
+      if (doc instanceof PagesDocument) {
+        const pos = num(args.pos);
+        const table =
+          pos === undefined
+            ? doc.appendTable(rows ?? [], name)
+            : doc.insertInlineTable(pos, { ...(rows ? { rows } : {}), ...(name ? { name } : {}) });
+        const target = save(doc, path, str(args.output));
+        return `added table ${table.name ?? ""} (${table.rowCount}×${table.columnCount}) and saved ${target}`;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        const slide = doc.slides()[index];
+        if (!slide) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const options: { rows?: readonly (readonly string[])[]; name?: string; x?: number; y?: number } = {};
+        if (rows) options.rows = rows;
+        if (name) options.name = name;
+        const x = num(args.x);
+        const y = num(args.y);
+        if (x !== undefined) options.x = x;
+        if (y !== undefined) options.y = y;
+        const table = slide.addTable(options);
+        const target = save(doc, path, str(args.output));
+        return `added table ${table.name ?? ""} (${table.rowCount}×${table.columnCount}) to slide ${index} and saved ${target}`;
+      }
+      throw new RangeError("add_table writes Pages and Keynote documents; Numbers tables are added with manage_sheets");
+    },
+  },
+  {
+    name: "add_image",
+    description: apiDoc(
+      "add_image",
+      "file is the picture on disk (PNG, JPEG or PDF). Pages: inline in the body at pos (a character " +
+        "index; omitted means the end), with wrap text (the default) or page. Keynote: on slide " +
+        "(0-based), placed by x and y, centred when omitted. width, height and maxWidth are points. " +
+        "Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        file: { type: "string", description: "Path to the image file" },
+        slide: { type: "number", description: "Keynote: 0-based slide index" },
+        pos: { type: "number", description: "Pages: body character index (default: end)" },
+        wrap: { type: "string", enum: ["text", "page"], description: "Pages: in the text flow or against the page" },
+        x: { type: "number" },
+        y: { type: "number" },
+        width: { type: "number" },
+        height: { type: "number" },
+        maxWidth: { type: "number" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "file"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const file = str(args.file);
+      if (!file) throw new RangeError("file is required");
+      if (!existsSync(file)) throw new RangeError(`no image at ${file}`);
+      const data = new Uint8Array(readFileSync(file));
+      const fileName = file.split("/").pop() ?? file;
+      const doc = open(path);
+      const sizing: { width?: number; height?: number; maxWidth?: number } = {};
+      for (const key of ["width", "height", "maxWidth"] as const) {
+        const value = num(args[key]);
+        if (value !== undefined) sizing[key] = value;
+      }
+      if (doc instanceof PagesDocument) {
+        const wrap = str(args.wrap);
+        if (wrap !== undefined && wrap !== "text" && wrap !== "page") throw new RangeError("wrap is text or page");
+        const pos = num(args.pos) ?? doc.bodyText.length;
+        const { imageId } = doc.insertInlineImage(pos, data, { fileName, ...sizing, ...(wrap ? { wrap } : {}) });
+        const target = save(doc, path, str(args.output));
+        return `inserted image ${imageId} at ${pos} and saved ${target}`;
+      }
+      if (doc instanceof KeynoteDocument) {
+        const index = num(args.slide) ?? 0;
+        if (!doc.slides()[index]) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+        const placement: { x?: number; y?: number } = {};
+        const x = num(args.x);
+        const y = num(args.y);
+        if (x !== undefined) placement.x = x;
+        if (y !== undefined) placement.y = y;
+        const { imageId } = doc.addImage(index, data, { fileName, ...sizing, ...placement });
+        const target = save(doc, path, str(args.output));
+        return `added image ${imageId} to slide ${index} and saved ${target}`;
+      }
+      throw new RangeError("add_image writes Pages and Keynote documents; this is not one");
+    },
+  },
+  {
     name: "manage_slides",
     description: apiDoc(
       "manage_slides",
@@ -1001,6 +1229,11 @@ export const TOOLS: readonly Tool[] = [
         },
         sheet: { type: "number", description: "0-based sheet index the action targets" },
         name: { type: "string", description: "add_sheet/rename_sheet/add_table: the name" },
+        rows: {
+          type: "array",
+          items: { type: "array", items: { type: "string" } },
+          description: "add_table: cell text by row, the first row the header; sizes and fills the table",
+        },
         copyOf: { type: "number", description: "add_sheet: 0-based sheet to copy" },
         to: { type: "number", description: "move_sheet: destination index" },
         output: OUTPUT_PROP,
@@ -1040,7 +1273,13 @@ export const TOOLS: readonly Tool[] = [
         case "add_table": {
           const id = doc.sheets()[sheet ?? 0]?.id;
           if (id === undefined) throw new RangeError(`no sheet at index ${sheet ?? 0}`);
-          doc.addTable(id, { name: str(args.name) });
+          const table = doc.addTable(id, { name: str(args.name) });
+          if (Array.isArray(args.rows)) {
+            fillTable(
+              table,
+              (args.rows as unknown[]).map((row) => (Array.isArray(row) ? row.map((cell) => String(cell)) : [String(row)])),
+            );
+          }
           break;
         }
         default:

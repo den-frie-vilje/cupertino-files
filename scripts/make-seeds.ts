@@ -168,6 +168,37 @@ function seedBuild(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- tables
+
+const TABLE_ROWS = [
+  ["Item", "Count"],
+  ["Apples", "3"],
+  ["Pears", "5"],
+];
+
+function seedTablePages(): Uint8Array {
+  // The neutral donor is Numbers-born; the shape audit lists seven ways
+  // its archives are wired that no Pages table in the corpus shares, all
+  // at the level of declared references and style listing. Only the app
+  // can say whether any of them matters.
+  const doc = PagesDocument.blank();
+  doc.appendParagraph(
+    "Expected: a 3×2 table below this line, headed Item / Count, with Apples 3 and Pears 5. No table, an empty one, or a refusal to open, is the finding; comment on this line.",
+    "Body",
+  );
+  doc.appendTable(TABLE_ROWS);
+  return doc.save();
+}
+
+function seedTableKeynote(): Uint8Array {
+  const doc = KeynoteDocument.blank();
+  const slide = doc.slides()[0]!;
+  slide.title =
+    "Expected: a 3×2 table on this slide, headed Item / Count, with Apples 3 and Pears 5. No table, an empty one, or a refusal to open, is the finding; comment on the slide.";
+  slide.addTable({ rows: TABLE_ROWS, x: 300, y: 500 });
+  return doc.save();
+}
+
 // ---------------------------------------------------------- text box
 
 function seedTextBox(): Uint8Array {
@@ -232,6 +263,26 @@ const seeds: Seed[] = [
       const builds = slide.builds();
       if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve") throw new Error("build seed: expected one dissolve build");
       if (!slide.title?.includes("Expected")) throw new Error("build seed: expectations missing");
+    },
+  },
+  {
+    name: "seed-table.pages",
+    bytes: seedTablePages(),
+    check: (bytes) => {
+      const doc = PagesDocument.load(bytes);
+      const table = doc.tables()[0];
+      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (pages): the table or its rows are missing");
+      if (!doc.bodyText.includes("Expected")) throw new Error("table seed (pages): expectations missing");
+    },
+  },
+  {
+    name: "seed-table.key",
+    bytes: seedTableKeynote(),
+    check: (bytes) => {
+      const doc = KeynoteDocument.load(bytes);
+      const table = doc.tables()[0];
+      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (keynote): the table or its rows are missing");
+      if (!doc.slides()[0]!.title?.includes("Expected")) throw new Error("table seed (keynote): expectations missing");
     },
   },
   {

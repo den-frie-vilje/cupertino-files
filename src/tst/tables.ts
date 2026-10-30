@@ -87,6 +87,7 @@ import {
 } from "./controls.ts";
 import { decodePreBncRecord, splitPreBncRow, type PreBncRecord } from "./prebnc.ts";
 import { buildFormula, parseFormula, type FormulaExpression } from "./formula-builder.ts";
+import { tableToCsv } from "./csv.ts";
 
 /**
  * One owner registry per store, kept weakly so a closed document is not
@@ -1575,6 +1576,16 @@ export class TableModel {
       if (c.row === row && c.column === column) return c.value;
     }
     return undefined;
+  }
+
+  /**
+   * The table's cells as CSV (RFC 4180): one line per row, fields quoted
+   * when they hold a comma, a quote or a line break. Formulas give their
+   * cached value, like {@link cellText}.
+   * @agentTool export_document
+   */
+  toCsv(): string {
+    return tableToCsv(this);
   }
 
   /** Convenience: cell text/number as a display string ("" for empty). */

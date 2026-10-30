@@ -11,6 +11,12 @@ import { protoEnum } from "../proto/fields.ts";
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { TextStorage } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { ImageModel } from "../tsd/images.ts";
+import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
+import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { fillTable } from "../tst/csv.ts";
+import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { DrawableModel } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import { Image, TSD_TYPE } from "../tsd/schema.ts";
@@ -446,6 +452,39 @@ export class KeynoteSlide {
   }
 
   /**
+   * Put a table on the slide: the neutral table every app shares (the
+   * blank Numbers document's own, Apple-made), its parent the slide, in
+   * both of the slide's drawable lists like the corpus's slide tables.
+   * `rows` fits and fills it; `name` is made unique among the deck's
+   * tables; `x` and `y` place it, else it keeps the donor's position.
+   * @agentTool add_table
+   */
+  addTable(options: { rows?: readonly (readonly string[])[]; name?: string; x?: number; y?: number } = {}): TableModel {
+    const component = this.store.componentOf(this.id);
+    if (!component) throw new RangeError(`slide ${this.index} has no component`);
+    const style = this.store.resolve(refId(this.object.message, Slide.STYLE));
+    const stylesheetId = refId(style?.message.getMessage(SlideStyle.SUPER), StyleSuper.STYLESHEET);
+    const stylesheet =
+      this.document.stylesheets().find((s) => s.id === stylesheetId) ?? this.document.stylesheets()[0];
+    const id = graftNeutralTable(this.store, component, this.id, stylesheet);
+    this.container().attach(id);
+    if (options.x !== undefined || options.y !== undefined) {
+      const placement: { x?: number; y?: number } = {};
+      if (options.x !== undefined) placement.x = options.x;
+      if (options.y !== undefined) placement.y = options.y;
+      drawableById(this.store, id)?.setGeometry(placement);
+    }
+    const table = tablesOf(this.store, [id])[0];
+    if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
+    remintTableIdentity(this.store, id);
+    table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
+    // Slide tables keep their name to themselves: 0 of 3 in the corpus show it.
+    table.nameVisible = false;
+    if (options.rows) fillTable(table, options.rows);
+    return table;
+  }
+
+  /**
    * Animate a drawable on this slide: an all-at-once build in the shape
    * the app writes, played on click. Keynote has not yet been seen to play
    * a build this library wrote from nothing; see docs/VERIFICATION.md.
@@ -708,6 +747,115 @@ export class KeynoteDocument extends IWorkDocument {
   }
 
   /**
+   * A new deck written from Markdown: the first heading titles the blank
+   * deck's title slide and every later heading adds a slide on `layout`
+   * ("Title & Bullets" by default; a theme without it gets copies of the
+   * first slide's layout); the paragraphs and list items under a heading become that
+   * slide's body, one line each, its block quotes its presenter notes
+   * and its pipe tables tables on the slide; an image on a line of its
+   * own lands on the slide when `images` supplies its bytes, and a
+   * thematic break (`---`) starts an untitled slide; links, bold and
+   * italic in the body survive. Text before any heading goes on the
+   * title slide.
+   * With `template`, the deck is that one emptied (`blankFrom`), so its
+   * theme and layouts apply.
+   */
+  static fromMarkdown(
+    markdown: string,
+    options: { images?: ImageResolver; template?: Uint8Array; layout?: string } = {},
+  ): KeynoteDocument {
+    const doc = options.template ? KeynoteDocument.blankFrom(options.template) : KeynoteDocument.blank();
+    let slide = doc.slides()[0]!;
+    // The content layout: the one named, else "Title & Bullets" where the
+    // theme offers it, else a copy of the first slide's own layout.
+    const layouts = doc.masterSlides();
+    const wanted = options.layout ?? "Title & Bullets";
+    const layout = layouts.find((m) => m.name === wanted) ?? layouts.find((m) => m.name?.toLowerCase() === wanted.toLowerCase());
+    let headings = 0;
+    // A thematic break asks for a slide; the next heading or content takes it.
+    let pending = false;
+    const newSlide = (): void => {
+      slide = layout
+        ? doc.addSlide({ master: layout.id, after: doc.slideCount() - 1 })
+        : doc.addSlide({ copyOf: 0, after: doc.slideCount() - 1 });
+      pending = false;
+    };
+    const content = (): void => {
+      if (pending) newSlide();
+    };
+    const body: InlineText[] = [];
+    const notes: string[] = [];
+    const tables: (readonly (readonly string[])[])[] = [];
+    const pictures: { data: Uint8Array; fileName: string }[] = [];
+    const flush = (): void => {
+      if (body.length) {
+        slide.body = body.map((run) => run.text).join("\n");
+        const storage = slide.placeholder("body");
+        const paragraphs = storage?.paragraphs() ?? [];
+        for (const [i, run] of body.entries()) {
+          const start = paragraphs[i]?.start;
+          if (!storage || start === undefined) continue;
+          for (const link of run.links) storage.insertLink(start + link.start, start + link.end, link.url);
+          for (const r of run.bold) storage.range(start + r.start, start + r.end).format({ bold: true });
+          for (const r of run.italic) storage.range(start + r.start, start + r.end).format({ italic: true });
+        }
+      }
+      if (notes.length) slide.notes = notes.join("\n");
+      for (const rows of tables) slide.addTable({ rows });
+      for (const picture of pictures) doc.addImage(slide.index, picture.data, picture);
+      body.length = 0;
+      notes.length = 0;
+      tables.length = 0;
+      pictures.length = 0;
+    };
+    for (const block of parseMarkdown(markdown)) {
+      switch (block.kind) {
+        case "heading":
+          // The first two levels are slides; deeper headings are lines of the body.
+          if (block.level > 2) {
+            content();
+            body.push({ text: block.text, links: [], footnotes: [], bold: [], italic: [] });
+            break;
+          }
+          flush();
+          if (headings++ > 0 || pending) newSlide();
+          slide.title = block.text;
+          break;
+        case "rule":
+          flush();
+          pending = true;
+          break;
+        case "paragraph":
+          content();
+          body.push(block.inline);
+          break;
+        case "list":
+          content();
+          body.push(...block.items);
+          break;
+        case "footnote":
+          break;
+        case "quote":
+          content();
+          notes.push(block.text);
+          break;
+        case "table":
+          content();
+          tables.push(block.rows);
+          break;
+        case "image": {
+          content();
+          const data = options.images?.(block.src);
+          if (data) pictures.push({ data, fileName: block.src.split("/").pop() ?? block.src });
+          break;
+        }
+      }
+    }
+    flush();
+    return doc;
+  }
+
+  /**
    * A new, empty Keynote deck — one slide, 16:9 (1920 × 1080), no template
    * file needed.
    *
@@ -763,6 +911,42 @@ export class KeynoteDocument extends IWorkDocument {
   /** Slides that will actually be presented (skipped ones removed). */
   presentedSlides(): KeynoteSlide[] {
     return this.slides().filter((s) => !s.isSkipped);
+  }
+
+  /**
+   * The deck as Markdown: a section per slide headed by its number and
+   * title, the body's paragraphs as list items, the slide's text boxes,
+   * pictures and tables, the presenter notes as a block quote; then the
+   * tables on no slide, and the charts.
+   */
+  override toMarkdown(options: MarkdownOptions = {}): string {
+    const placed = new Set<bigint>();
+    const slides = this.slides().map((slide) => {
+      const body = slide.placeholder("body");
+      const notes = slide.notes.trim();
+      // The slide's free text boxes: every storage past the placeholders.
+      const placeholders = new Set([slide.placeholder("title")?.id, body?.id, slide.placeholder("slideNumber")?.id]);
+      const boxes = slide.textStorages().filter((s) => !placeholders.has(s.id) && s.text.replace(/[\u2029\ufffc]/g, "").trim() !== "");
+      const own = slide.drawables();
+      for (const d of own) placed.add(d.id);
+      const tables = tablesOf(this.store, own.filter((d) => d.object.type === TST_TYPE.TABLE_INFO).map((d) => d.id));
+      const pictures = own.filter((d) => d.object.type === TSD_TYPE.IMAGE).map((d) => new ImageModel(this.store, d.object));
+      return joinBlocks([
+        `## ${slide.index + 1}. ${(slide.title ?? "").trim() || "(untitled)"}`,
+        body ? storageToMarkdown(body, options) : "",
+        ...boxes.map((s) => storageToMarkdown(s, options)),
+        ...pictures.map((p) => imageToMarkdown(p, options)),
+        ...tables.map((t) => namedTable(t, 3)),
+        notes ? notes.split(/\r?\n/).map((line) => `> ${line}`).join("\n") : "",
+      ]);
+    });
+    return joinBlocks([
+      ...slides,
+      ...this.tables()
+        .filter((t) => !placed.has(t.infoObject?.identifier ?? -1n))
+        .map((t) => namedTable(t, 3)),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Number of slides reachable from the slide tree. */
@@ -1068,6 +1252,7 @@ export class KeynoteDocument extends IWorkDocument {
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
    * `x`/`y` say otherwise the picture is centered on the slide.
+   * @agentTool add_image
    */
   addImage(
     slideIndex: number,

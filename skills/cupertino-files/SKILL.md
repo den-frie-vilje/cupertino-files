@@ -964,6 +964,22 @@ it paints. Sizing works like `insertInlineImage`: explicit dimensions
 win, otherwise the intrinsic size (raster pixels, or a PDF's MediaBox)
 is fitted to `maxWidth`. Without `x`/`y` the picture is centered.
 
+**Adding a table grafts the neutral donor.** A table from nothing would
+omit state only the app knows, so a new table is the blank Numbers
+document's own — Apple-made — copied under the body or the slide, then
+sized and filled from `rows`:
+
+```ts
+doc.appendTable([["Item", "Count"], ["Apples", "3"]]);          // Pages: in a paragraph of its own at the end
+doc.insertInlineTable(pos, { rows, name: "Prices" });          // Pages: inline at a body position
+slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on the slide
+doc.addTable(sheetId, { name });                                 // Numbers: on a sheet (manage_sheets)
+```
+
+The Numbers path is app-confirmed; the Pages and Keynote paths are
+experimental — the donor is Numbers-born, and the shape audit lists ways
+its wiring differs from a table either app makes itself.
+
 **Adding a text box copies one.** A text box from nothing would omit
 state only the app knows, so `addTextBox` deep-copies a box the document
 already carries — the slide's own in Keynote, the page's own or any in
@@ -1002,6 +1018,38 @@ doc.setSlideSize(1024, 768); // objects keep their coordinates — nothing is re
 Defaults come from the schema rather than from zero: every deck examined
 omits several of these fields, and reading an omitted autoplay delay as 0
 instead of 5 would describe a deck that races through itself.
+
+## Exporting and importing
+
+```ts
+doc.toMarkdown();            // any document: text, tables and charts in its own structure
+doc.toMarkdown({ images: ({ fileName, data }) => saveAndLink(fileName, data) });  // pictures too
+doc.tables()[0].toCsv();     // one table, RFC 4180
+doc.allText();               // every text storage, plain
+PagesDocument.fromMarkdown(md, { images: (src) => bytesFor(src) });  // Title/Heading/Body styles, lists, tables, pictures, links, bold/italic, footnotes
+KeynoteDocument.fromMarkdown(md);  // a slide per heading or `---`; lines beneath are the body, quotes the notes
+NumbersDocument.fromMarkdown(md);  // a sheet per top heading, a table per pipe table named by the heading above
+NumbersDocument.fromCsv(csv, "Sales");
+PagesDocument.fromMarkdown(md, { template: letterheadBytes });        // built inside an emptied template
+KeynoteDocument.fromMarkdown(md, { template: deckBytes, layout: "Title & Bullets" });
+```
+
+Pages renders its body — headings from the named styles ("Title",
+"Heading 2", by the template's locale-free identifiers), list
+paragraphs as list items — then its tables under their names and its
+charts; a page-layout document renders each text box instead. Numbers
+is a top-level heading per sheet, each table a pipe table whose first
+row is the header, under its name when it shows one. Keynote is a
+section per slide, "## 1. Title", the body's paragraphs as list items,
+its pictures and tables, and the presenter notes as a block quote.
+Pictures go through an image sink and come back as links; hyperlinks,
+bold, italic and footnotes survive both ways. From
+the shell: `cupertino-files export deck.key`, `--format csv --table
+Sales`, `--format text`, `--out file.md --assets file-assets`; and back, `cupertino-files
+import notes.md deck.key` (a `.csv` source makes a Numbers table). A
+Pages table is not built from Markdown — its rows land as tab-separated
+Body lines — and a Keynote deck's content slides take the "Title &
+Bullets" layout.
 
 ## Editing text in Numbers/Keynote
 

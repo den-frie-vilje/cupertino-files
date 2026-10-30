@@ -12,6 +12,9 @@ npx cupertino-dump compat   Report.pages     # format era + compatibility report
 npx cupertino-dump ls       Report.pages     # every object, typed, with references
 npx cupertino-dump object   Report.pages 42  # one object's protobuf, pretty
 npx cupertino-dump extract  Report.pages out/  # the raw .iwa streams, decompressed
+npx -y cupertino-files export Report.pages                    # Markdown to stdout
+npx -y cupertino-files export Book.numbers --format csv --table 0
+npx -y cupertino-files import notes.md Deck.key               # a deck written from Markdown
 ```
 
 The same commands answer to `npx -y cupertino-files dump <command>`,

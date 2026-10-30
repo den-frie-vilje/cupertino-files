@@ -7,6 +7,10 @@
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
+import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
+import { parseMarkdown, splitFrontMatter, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
+import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
   describeStyle,
@@ -42,7 +46,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
-import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
+import type { Component, ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import {
   TP_REFERENCE_EXTRACTORS,
@@ -292,6 +296,86 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /**
+   * A new document written from Markdown: headings become the template's
+   * Title, Heading, Heading 2 and Heading 3 paragraphs (deeper levels
+   * share Heading 3), paragraphs Body, bullet and numbered lists Body
+   * items with the Bullet or Numbered list style, block quotes Body
+   * paragraphs, each pipe table an inline table in a paragraph of its
+   * own, and each image on a line of its own an inline picture, when
+   * `images` supplies its bytes by the source the Markdown names. Links
+   * become hyperlinks and footnote references with a definition become
+   * footnotes, and bold and italic direct formatting. A front matter
+   * block at the top is left out of the body; its `header` and `footer`
+   * are written where the document has a section to carry them, which a
+   * template has and the blank document has not. With \`template\`, the
+   * document is that one emptied (\`blankFrom\`) and the style names are
+   * looked up in it, so a letterhead's own Title, Heading and Body apply;
+   * a name the template lacks leaves the paragraph in its default style.
+   * @agentTool create_document
+   */
+  static fromMarkdown(markdown: string, options: { images?: ImageResolver; template?: Uint8Array } = {}): PagesDocument {
+    const doc = options.template ? PagesDocument.blankFrom(options.template) : PagesDocument.blank();
+    const names = new Set(doc.paragraphStyles().map((s) => s.name));
+    const style = (name: string): string | undefined => (names.has(name) ? name : undefined);
+    const lists = new Set(doc.listStyles().map((s) => s.name));
+    const list = (name: string): string | undefined => (lists.has(name) ? name : undefined);
+    const heading = ["Title", "Heading", "Heading 2", "Heading 3"];
+    const blocks = parseMarkdown(markdown);
+    const notes = new Map(blocks.flatMap((b) => (b.kind === "footnote" ? [[b.label, b.text] as const] : [])));
+    // Front matter: a header and a footer, where the document has a
+    // section to carry them (a template's; the blank has none).
+    const { meta } = splitFrontMatter(markdown);
+    const section = doc.sections()[0];
+    if (section && meta.header) section.setHeaderText(meta.header);
+    if (section && meta.footer) section.setFooterText(meta.footer);
+    // A paragraph with its links and footnote references: the references
+    // go in last to first, so earlier offsets hold, and the links are
+    // shifted by the marks inserted before them.
+    const appendInline = (inline: InlineText, styleName: string | undefined, list?: string): void => {
+      const index = doc.appendParagraph(inline.text, styleName, list);
+      const start = doc.body.paragraphs()[index]?.start ?? 0;
+      const refs = inline.footnotes.filter((n) => notes.has(n.label)).sort((a, b) => b.index - a.index);
+      for (const ref of refs) doc.body.addFootnote(start + ref.index, notes.get(ref.label)!);
+      const shift = (at: number): number => refs.filter((r) => r.index <= at).length;
+      for (const link of inline.links) {
+        doc.insertLink(start + link.start + shift(link.start), start + link.end + shift(link.end), link.url);
+      }
+      for (const r of inline.bold) doc.applyCharacterFormatting(start + r.start + shift(r.start), start + r.end + shift(r.end), { bold: true });
+      for (const r of inline.italic) doc.applyCharacterFormatting(start + r.start + shift(r.start), start + r.end + shift(r.end), { italic: true });
+    };
+    for (const block of blocks) {
+      switch (block.kind) {
+        case "heading":
+          doc.appendParagraph(block.text, style(heading[Math.min(block.level, 4) - 1]!));
+          break;
+        case "paragraph":
+          appendInline(block.inline, style("Body"));
+          break;
+        case "quote":
+          for (const line of block.text.split("\n")) doc.appendParagraph(line, style("Body"));
+          break;
+        case "list":
+          for (const item of block.items) appendInline(item, style("Body"), list(block.ordered ? "Numbered" : "Bullet"));
+          break;
+        case "footnote":
+          break;
+        case "table":
+          doc.appendTable(block.rows);
+          break;
+        case "image": {
+          const data = options.images?.(block.src);
+          if (!data) break;
+          const body = doc.body;
+          if (body.text.length > 0 && !body.text.endsWith("\n")) doc.appendParagraph("");
+          doc.insertInlineImage(body.text.length, data, { fileName: block.src.split("/").pop() ?? block.src });
+          break;
+        }
+      }
+    }
+    return doc;
+  }
+
+  /**
    * A new, empty Pages document — A4, vanilla styling, no template file
    * needed.
    *
@@ -348,6 +432,53 @@ export class PagesDocument extends IWorkDocument {
   /** Plain body text ("" for page-layout documents). */
   get bodyText(): string {
     return this.bodyOrUndefined?.text ?? "";
+  }
+
+  /**
+   * The document as Markdown: the first section's header and footer as
+   * front matter, then the body with its inline tables and
+   * pictures where they are anchored, the text of the shapes and text
+   * boxes placed on the pages (all the text of a page-layout document),
+   * then every other table under its name, the floating pictures, then
+   * the charts.
+   */
+  override toMarkdown(options: MarkdownOptions = {}): string {
+    const body = this.bodyOrUndefined;
+    // The first section's header and footer lead, as front matter, so a
+    // document built back from this keeps them.
+    const section = this.sections()[0];
+    const front: string[] = [];
+    const header = section?.headerText().trim();
+    const footer = section?.footerText().trim();
+    if (header) front.push(`header: ${JSON.stringify(header)}`);
+    if (footer) front.push(`footer: ${JSON.stringify(footer)}`);
+    // The shapes and text boxes placed on the pages, in page order, each
+    // with text of its own: in a page-layout document that is all the text.
+    const placed: TextStorage[] = [];
+    for (const page of this.floatingDrawablePages()) {
+      for (const drawable of this.floatingDrawables(page)?.drawables() ?? []) {
+        if (drawable.object.type !== TSWP_TYPE.SHAPE_INFO) continue;
+        const storage = this.store.resolve(refId(drawable.object.message, ShapeInfo.OWNED_STORAGE));
+        if (storage?.type === TSWP_TYPE.STORAGE) placed.push(new TextStorage(this.store, storage));
+      }
+    }
+    const text = [
+      body ? storageToMarkdown(body, options) : "",
+      ...placed.map((s) => storageToMarkdown(s, options)),
+    ];
+    // Whatever the body anchors is rendered in place; the rest follows.
+    const anchored = new Set(body?.attachments().map((a) => a.drawableId) ?? []);
+    return joinBlocks([
+      front.length ? `---\n${front.join("\n")}\n---` : "",
+      ...text,
+      ...this.tables()
+        .filter((t) => !anchored.has(t.infoObject?.identifier))
+        .map((t) => namedTable(t, 3)),
+      ...this.images()
+        .filter((i) => !anchored.has(i.id))
+        .map((i) => imageToMarkdown(i, options)),
+      ...this.charts().map((c) => chartToMarkdown(c)),
+    ]);
   }
 
   /** Body paragraphs with resolved style names ([] for page-layout documents). */
@@ -1145,6 +1276,7 @@ export class PagesDocument extends IWorkDocument {
    * other behaviour, where the image is placed against the page margins
    * and text flows around it — with an indented body that means the
    * picture will not line up with the words above it.
+   * @agentTool add_image
    */
   insertInlineImage(
     pos: number,
@@ -1172,8 +1304,20 @@ export class PagesDocument extends IWorkDocument {
       styleId: mediaStyleIdOf(this),
     });
 
+    this.anchorInlineDrawable(pos, image.identifier, component);
+
+    return { imageId: image.identifier, dataId };
+  }
+
+  /**
+   * Anchor a drawable in the body at `pos` as an inline attachment: the
+   * attachment archive with its four offsets, the U+FFFC character, and
+   * the point-anchored entry in the attachment table.
+   */
+  private anchorInlineDrawable(pos: number, drawableId: bigint, component: Component): void {
+    const body = this.body;
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
-    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(image.identifier));
+    attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(drawableId));
     // Zero offsets, explicitly. All four fields are on 101 of 101 corpus
     // attachments; absent is not a value Pages has been observed to write.
     attachment.message.setVarint(DrawableAttachment.H_OFFSET_TYPE, 0);
@@ -1196,19 +1340,28 @@ export class PagesDocument extends IWorkDocument {
       (a, b) => (a.getUint(ENTRY_CHARACTER_INDEX) ?? 0) - (b.getUint(ENTRY_CHARACTER_INDEX) ?? 0),
     );
     table.setMessages(ATTR_TABLE_ENTRIES, entries);
+  }
 
-    return { imageId: image.identifier, dataId };
+  /** Append a table at the end of the body, in a paragraph of its own. */
+  appendTable(rows: readonly (readonly string[])[], name?: string): TableModel {
+    const body = this.body;
+    // The anchor sits in a paragraph of its own: the trailing empty one
+    // when the body ends at a paragraph boundary, a fresh one otherwise.
+    if (body.text.length > 0 && !body.text.endsWith("\n")) this.appendParagraph("");
+    return this.insertInlineTable(body.text.length, { rows, ...(name ? { name } : {}) });
   }
 
   /**
-   * Insert a table inline at a body-text position, cloned from a table
-   * already in the document.
+   * Insert a table inline at a body-text position: the neutral table
+   * every app shares — the blank Numbers document's own, Apple-made —
+   * grafted in, or with `copyOf` a copy of a table already in the
+   * document.
    *
-   * Clone-based like `NumbersDocument.addTable`, because a table's object
+   * Copy-based like `NumbersDocument.addTable`, because a table's object
    * graph — model, data store, tiles, data lists, per-band styles — is
    * far beyond what can be invented safely; every identity in the copy
-   * comes from an Apple-authored source. A document with no table has
-   * nothing to clone, and throws. The copy forks its data lists (the
+   * comes from an Apple-authored source. `rows` fits and fills the
+   * table. A copy forks its data lists (the
    * clone walk follows the whole table subtree), so filling it never
    * touches the source — the save-time integrity gate would refuse the
    * file if it did.
@@ -1217,42 +1370,52 @@ export class PagesDocument extends IWorkDocument {
    * `parent` is the body storage, its geometry sits at the origin with
    * the standard flags, and a five-field attachment ties it to a U+FFFC
    * character.
+   * @agentTool add_table
    */
   insertInlineTable(
     pos: number,
-    options: { copyOf?: bigint; name?: string; withContent?: boolean } = {},
+    options: {
+      copyOf?: bigint;
+      name?: string;
+      withContent?: boolean;
+      rows?: readonly (readonly string[])[];
+    } = {},
   ): TableModel {
     const body = this.body;
     const component = this.store.componentOf(body.id);
     if (!component) throw new RangeError("body component not found");
-    const sourceId =
-      options.copyOf ?? this.tables().find((t) => t.infoObject !== undefined)?.infoObject?.identifier;
+    const sourceId = options.copyOf;
+    let cloneId: bigint;
     if (sourceId === undefined) {
-      throw new RangeError(
-        "no table to copy: this document contains none, and building one from nothing is not supported",
-      );
+      cloneId = graftNeutralTable(this.store, component, body.id, this.stylesheet);
+      // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
+      const grafted = tablesOf(this.store, [cloneId])[0];
+      if (grafted) grafted.nameVisible = false;
+    } else {
+      const source = this.store.object(sourceId);
+      if (source?.type !== TST_TYPE.TABLE_INFO) {
+        throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
+      }
+      const { clone } = deepCloneObject(this.store, source, {
+        component,
+        follow: (candidate, depth) =>
+          defaultFollow(candidate, this.store.typeNameOf(candidate)) && depth <= 8,
+      });
+      const core = findDrawableCore(clone.message);
+      if (core) {
+        core.setMessage(Drawable.PARENT, makeRef(body.id));
+        clone.message.markDirty();
+      }
+      cloneId = clone.identifier;
     }
-    const source = this.store.object(sourceId);
-    if (source?.type !== TST_TYPE.TABLE_INFO) {
-      throw new RangeError(`object ${sourceId} is not a TST.TableInfoArchive`);
-    }
-
-    const { clone } = deepCloneObject(this.store, source, {
-      component,
-      follow: (candidate, depth) =>
-        defaultFollow(candidate, this.store.typeNameOf(candidate)) && depth <= 8,
-    });
-    const core = findDrawableCore(clone.message);
-    if (core) {
-      core.setMessage(Drawable.PARENT, makeRef(body.id));
-      clone.message.markDirty();
-    }
+    const clone = this.store.object(cloneId)!;
 
     const model = tablesOf(this.store, [clone.identifier])[0];
     if (!model) throw new RangeError(`copied table ${clone.identifier} did not resolve`);
     remintTableIdentity(this.store, clone.identifier);
     model.name = this.uniqueTableName(options.name, clone.identifier);
     if (options.withContent === false) model.clearAllCells();
+    if (options.rows) fillTable(model, options.rows);
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(clone.identifier));

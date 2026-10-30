@@ -9,6 +9,12 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- A table this library creates no longer declares its parent — the
+  sheet, body or slide — among its object references. Apple's table
+  infos never do (71 of 71 in the corpus carry a parent, none declares
+  it), and the table info now joins the drawable types the store treats
+  that way.
+
 - A slide added or duplicated into a deck Keynote had saved landed in
   the source slide's component, and Keynote would open and render the
   result but refuse to save it. A copied slide now gets a package
@@ -109,6 +115,66 @@ in commit messages and pull requests.
 - A filter rule's `column` now reads as the absolute column the rule
   tests; it was the index of a boundary entry before, which happened to
   be one less.
+
+- The MCP tool `add_image` puts a picture from a file on disk inline in a
+  Pages body or on a Keynote slide, through `insertInlineImage` and
+  `addImage`, which were API-only before.
+
+- Tables from nothing in Pages and Keynote: `doc.appendTable(rows)` and
+  `doc.insertInlineTable(pos, { rows })` put a table in a Pages body,
+  inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`
+  puts one on a Keynote slide — the neutral table every app shares (the
+  blank Numbers document's own, Apple-made), grafted under the body or the
+  slide and sized and filled from `rows`. `insertInlineTable` takes the
+  neutral table by default and copies a table in the document only when
+  `copyOf` names one; it no longer refuses a document without a table. Served as the MCP tool
+  `add_table`; the Markdown constructors now make real tables of pipe
+  tables. Experimental: neither app has yet been seen to open a table
+  placed this way, and the donor is Numbers-born.
+
+- `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
+  `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
+  build a new document from text: Pages gives headings the template's
+  Title and Heading styles and lists its Bullet and Numbered styles;
+  Pages also turns links into hyperlinks, bold and italic into direct
+  formatting and footnote references with a definition into footnotes;
+  Keynote keeps links, bold and italic in a slide's body; Keynote makes a slide per heading with the
+  lines beneath as its body and block quotes as presenter notes; Numbers makes a sheet per top-level
+  heading and a table per pipe table, named by the heading above, with
+  numbers, TRUE/FALSE and ISO dates typed. `create_document` takes `content`
+  (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
+  the same from a file. An image on a line of its own becomes an inline
+  picture in Pages or a picture on the slide in Keynote when its bytes
+  can be found: through `images` in the API, `imageRoot` on the tool,
+  and beside the source file on the command line. A thematic break
+  (`---`) starts a new slide in Keynote. With `template` — a document of
+  the same kind, emptied the way `blankFrom` does — the result keeps that
+  document's theme and styles, and `layout` names the Keynote layout for
+  content slides; `create_document` takes both, and `import` takes
+  `--template` and `--layout`. A front matter block's `header` and
+  `footer` are written into a Pages template's first section, and a
+  Pages export leads with the first section's header and footer as front
+  matter, so a document comes back with them.
+
+- `doc.toMarkdown()` renders any document as Markdown — a Pages body
+  with headings from the named styles and list paragraphs as list items,
+  Numbers as a section per sheet with each table as a pipe table, Keynote
+  as a section per slide with body items and quoted presenter notes, and
+  charts as a table of their series — and `table.toCsv()` renders a table
+  as RFC 4180 CSV. Inline tables and pictures render where the body
+  anchors them, a slide's pictures and tables under its heading; pictures
+  are written through an image sink (`images` in the API, an `assets`
+  directory on the tool, `--assets` on the command line) and linked.
+  Hyperlinks render as links, bold and italic character styling as
+  markers, and footnotes as references with their definitions after the
+  text; a slide's free text boxes follow its body, and the text of the
+  shapes and text boxes placed on Pages pages follows the body. Comments
+  are quoted where they sit — a cell's after its table, naming the cell;
+  a paragraph's after its text, quoting the words — with their authors. A table's name heads
+  it only when the table shows its name;
+  Numbers sheets are top-level headings and their tables second-level. Served as the MCP tool `export_document`
+  (markdown, csv or text) and the CLI subcommand `cupertino-files export
+  <file>`.
 
 - `slide.background()` reads a Keynote slide's background fill up its
   style chain, and `slide.setBackground(fill)` sets one, as the app does:

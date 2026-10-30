@@ -1084,3 +1084,23 @@ describe("a text box added to a page", () => {
     expect(reloaded.textStorages().some((s) => s.text === "A caption written by the library")).toBe(true);
   });
 });
+
+describe("a table appended to a blank body", () => {
+  it("grafts the neutral donor under the body, anchored inline in its own paragraph, filled and named", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Before the table.", "Body");
+    const table = doc.appendTable([["Item", "Count"], ["Apples", "3"], ["Pears", "5"]]);
+    expect(table.name).toBe("Table");
+    const reloaded = PagesDocument.load(doc.save());
+    const tables = reloaded.tables();
+    expect(tables.length).toBe(1);
+    const placed = tables[0]!;
+    expect([placed.rowCount, placed.columnCount, placed.cellText(2, 0), placed.cellValue(1, 1)?.type]).toEqual([3, 2, "Pears", "number"]);
+    const attachment = reloaded.body.attachments().find((a) => a.drawableId === placed.infoObject?.identifier);
+    expect(attachment !== undefined).toBe(true);
+    expect(reloaded.body.text.endsWith("\uFFFC")).toBe(true);
+    expect(refId(placed.infoObject!.message.getMessage(1), 2)).toBe(reloaded.body.id);
+    expect(reloaded.toMarkdown().includes("| Apples | 3 |")).toBe(true);
+    expect(reloaded.appendTable([["x"]]).name).toBe("Table 2");
+  });
+});

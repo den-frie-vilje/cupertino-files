@@ -44,10 +44,7 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
     "TableModel.clearConditionalStyles",
     "clone hygiene addTable runs itself for content-less copies; rule editing has its own tools",
   ],
-  [
-    "PagesDocument.insertInlineTable",
-    "inline anchoring takes a body position, which the tool surface does not model yet — the same gap that keeps insertInlineImage library-level",
-  ],
+  ["PagesDocument.appendTable", "add_table without pos is this; the tool serves insertInlineTable"],
   [
     "TableModel.textStyleId",
     "read surface the inspect tools compose over; the style-table key is a library-level currency",
@@ -73,6 +70,12 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
 
   // Read surfaces the read tools compose over.
   ["IWorkDocument.allText", READ],
+  ["PagesDocument.toMarkdown", "the Pages arrangement of IWorkDocument.toMarkdown, which export_document serves"],
+  ["NumbersDocument.fromMarkdown", "create_document with content, as PagesDocument.fromMarkdown is tagged"],
+  ["NumbersDocument.fromCsv", "create_document with content and format csv"],
+  ["KeynoteDocument.fromMarkdown", "create_document with content, as PagesDocument.fromMarkdown is tagged"],
+  ["NumbersDocument.toMarkdown", "the Numbers arrangement of IWorkDocument.toMarkdown, which export_document serves"],
+  ["KeynoteDocument.toMarkdown", "the Keynote arrangement of IWorkDocument.toMarkdown, which export_document serves"],
   ["IWorkDocument.charts", READ],
   ["IWorkDocument.compatibility", READ],
   ["IWorkDocument.compatibilitySummary", READ],
@@ -187,8 +190,6 @@ const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   ["PagesDocument.setListStyle", "list styling needs the same find-based design work"],
   ["PagesDocument.unlistParagraphStyle", "style-management edge case, not an editing task"],
   ["PagesDocument.insertSectionBreak", "section semantics need more than a position to be safe over JSON"],
-  ["PagesDocument.insertInlineImage", "image bytes do not travel well as JSON tool arguments; the API takes them directly"],
-  ["KeynoteDocument.addImage", "same byte-argument class as insertInlineImage; the API takes the picture directly"],
   ["TableModel.setCellControl", "control creation is app-unverified (see docs/BLOCKERS.md); the tool waits for the app's word"],
   ["TableModel.setPopupMenu", "same app-unverified class as setCellControl"],
   ["TableModel.removeCellControl", "paired with control creation; ships with it"],

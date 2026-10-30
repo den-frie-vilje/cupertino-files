@@ -254,7 +254,8 @@ export const RUNGS: {
     build: (doc) => {
       const cats = doc.tables().find((t) => t.name === "Cats")!;
       cats.setFormula(6, 2, "=SUM(C3:K5)");
-      cats.setCell(6, 4, "19: C7 now =SUM(C3:K5). PASS: C7 shows 1300 (or shows it after any edit elsewhere). FAIL: stays 1500 forever, errors, or the file will not open.");
+      // Row 7 is merged from C across, so the note sits in the free cell above.
+      cats.setCell(5, 5, "19: C7 now =SUM(C3:K5). PASS: C7 shows 1300 (or shows it after any edit elsewhere). FAIL: stays 1500 forever, errors, or the file will not open.");
     },
   },
   {
