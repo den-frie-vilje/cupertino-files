@@ -211,7 +211,11 @@ function cellRows(table: TableModel): string[][] {
   return rows;
 }
 
-const pipeCell = (text: string): string => text.replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>");
+const pipeCell = (text: string): string =>
+  text
+    .replace(/\\/g, "\\\\")
+    .replace(/\|/g, "\\|")
+    .replace(/\r?\n/g, "<br>");
 
 /** A comment as a quoted line: the author, then the words; replies indented beneath. */
 function commentLine(where: string, author: string | undefined, text: string): string {
