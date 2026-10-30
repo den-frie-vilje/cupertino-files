@@ -1180,3 +1180,71 @@ carries it is not included even when the licence would allow it.
 ```sh
 node scripts/scan-fixture-privacy.ts
 ```
+
+### olekristensen-v26.0-mac-authored.numbers
+- 148,643 bytes, md5 `d3ba0988a0f215958df28af56986f03d`
+- Saved by M15.1-7044.0.271-2 (macOS Numbers) over a seed this library
+  wrote, with constructs built by the app's own controls on request: a
+  "starts with" row filter rule on column A (predicate_type 1, the host
+  column's offset −1 stored as 2^64 − 1), a category on column B with a
+  group summary (the live GroupByArchive behind the model's category
+  owner, with its aggregator and column aggregate type), a second table
+  from Insert ▸ Table (10×5, one header row and column, 98-point columns)
+  and a cell comment. Text is placeholder data and the request itself.
+
+### olekristensen-v26.0-mac-authored.pages
+- 164,667 bytes, md5 `0a1852f53b7e8818b63eb6b747f5927d`
+- Saved by M15.1.1-7044.0.273-2 (macOS Pages) over a seed this library
+  wrote: a table from Insert ▸ Table (5×4, one header row and column,
+  name hidden), a text box from Insert ▸ Text Box (anchored inline), a
+  shape moved to the section master, a page break from Insert ▸ Page
+  Break (U+0005) and a comment on one word. Text is the request itself.
+
+### olekristensen-v26.0-mac-authored.key
+- 644,199 bytes, md5 `3d6e486b96329806f2e1517c66b697df`
+- Saved by M15.1.1-7044.0.273-2 (macOS Keynote) over a seed this library
+  wrote: a slide whose layout was changed to Title & Bullets, a table
+  from Insert ▸ Table (5×4, one header row and column, name hidden), a
+  text box and a slide background colour, and a wipe build on a title.
+  Text is the request itself.
+
+### olekristensen-v26.0-mac-category-seed.numbers
+- 134,859 bytes, md5 `3ab17bc798b99f1af49dcecb22fa0a1a`
+- Saved by M15.1-7044.0.271-2 (macOS Numbers) over seed-category.numbers,
+  a blank document whose table this library categorised by its Kind
+  column from nothing. The app regrouped it and the checker commented
+  "Works" on the sheet. The table's name is the request itself.
+
+### olekristensen-v26.0-mac-build-seed.key
+- 544,864 bytes, md5 `dd7ae923d66ca55d71ca4a28dbbd2bd8`
+- Saved by M15.1.1-7044.0.273-2 (macOS Keynote) over seed-build.key, a
+  blank deck whose title this library gave a dissolve build from nothing.
+  The app played it and the checker commented "It worked" on the slide.
+  The title is the request itself.
+
+### olekristensen-v26.0-mac-filter-seed.numbers
+- 114,526 bytes, md5 `beaec9c35f1be5e6da02631805a819a9`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-filter.numbers, a
+  blank document whose table this library gave an Amount > 10 filter rule
+  from nothing. The app applied it; the checker commented on the sheet
+  that it worked and that the instruction in the table name was not
+  sized to show. The table's name is the request itself.
+
+### olekristensen-v26.0-mac-table-seed.pages
+- 123,714 bytes, md5 `c95bea156ea4a55469a7bfe5ca988d46`
+- Saved by M15.4-7051.0.79-2 (macOS Pages) over seed-table.pages, a blank
+  document with a 3×2 table this library grafted from the Numbers donor.
+  The checker commented "worked great" on the request line.
+
+### olekristensen-v26.0-mac-table-seed.key
+- 571,729 bytes, md5 `f1538b4e4d817949b39f16ed0db5afbd`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-table.key, a blank
+  deck with a 3×2 table this library grafted from the Numbers donor at the
+  donor's cell size. The checker commented on the slide that the table was
+  there but not sized to its contents. The title is the request itself.
+
+### olekristensen-v26.0-mac-text-box-seed.key
+- 562,288 bytes, md5 `644f79fd9e06e5bb4cd8e00da1135b2a`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-text-box.key, a
+  blank deck with a text box this library copied and re-worded. The
+  checker commented "works" on the slide. The title is the request itself.

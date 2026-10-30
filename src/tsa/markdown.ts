@@ -12,7 +12,9 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { FOOTNOTE_MARK_CHARACTER, OBJECT_REPLACEMENT_CHARACTER, type TextStorage } from "../tswp/textstorage.ts";
 
 /** Characters that mark attachments and notes in the text, not words. */
-const MARKS = new RegExp(`[\\u2029${FOOTNOTE_MARK_CHARACTER}${OBJECT_REPLACEMENT_CHARACTER}]`, "g");
+const MARK_CHARACTERS = `\u2029${FOOTNOTE_MARK_CHARACTER}${OBJECT_REPLACEMENT_CHARACTER}`;
+const MARKS = new RegExp(`[${MARK_CHARACTERS}]`, "g");
+const IS_MARK = new RegExp(`^[${MARK_CHARACTERS}]$`);
 
 /**
  * A paragraph's heading level from its named style, read up the style
@@ -155,8 +157,7 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     for (let k = from; k < to; k++) {
       const mark = marks.get(k);
       if (mark !== undefined) out += mark;
-      else if (!MARKS.test(full[k]!)) out += full[k]!;
-      MARKS.lastIndex = 0;
+      else if (!IS_MARK.test(full[k]!)) out += full[k]!;
     }
     return out;
   }

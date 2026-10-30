@@ -106,7 +106,7 @@ const CLAIMS: Claim[] = [
   {
     file: "README.md",
     about: "the number of functions authorable by name",
-    stem: /`=Other::B2` — (\d+) functions/,
+    stem: /`=Other::B2`\); (\d+) functions/,
     expected: (m) => [m.functions],
   },
   {
@@ -118,7 +118,7 @@ const CLAIMS: Claim[] = [
   {
     file: "docs/FORMAT.md",
     about: "the complete function table's size",
-    stem: /The complete table — (\d+) names, every function/,
+    stem: /The complete table—(\d+) names, every function/,
     expected: (m) => [m.functions],
   },
   {

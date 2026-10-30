@@ -29,6 +29,7 @@ import type { CharacterFormatting } from "../tss/stylesheet.ts";
 import type { CellFormat } from "../tst/formats.ts";
 import { TOOL_DOCS } from "./tool-docs.generated.ts";
 import type { DateBucket } from "../tst/categories.ts";
+import type { CanvasComment } from "../tswp/comments.ts";
 
 const PROTOCOL_FALLBACK = "2025-06-18";
 const SERVER_INFO = { name: "cupertino-files", version: packageVersion() };
@@ -359,7 +360,7 @@ export const TOOLS: readonly Tool[] = [
     name: "list_comments",
     description: apiDoc(
       "list_comments",
-      "Omit table to list every table. Reviewers answer as comments on cells, so read " +
+      "Omit table to list every table, and the comments pinned to a sheet or a slide canvas with them. Reviewers answer as comments on cells, so read " +
         "these before anything else on a returned file. Coordinates are 0-based.",
     ),
     inputSchema: {
@@ -374,7 +375,13 @@ export const TOOLS: readonly Tool[] = [
       const doc = open(requirePath(args));
       const name = str(args.table);
       const tables = name ? [tableIn(doc, name)] : tablesOf(doc.store);
-      const out = tables.map((t) => ({ table: t.name, comments: t.cellComments() }));
+      const out: unknown[] = tables.map((t) => ({ table: t.name, comments: t.cellComments() }));
+      // Canvas comments carry bigint ids; the agent needs the words, the author, and the date.
+      const plain = (c: CanvasComment) => ({ text: c.text, authorName: c.authorName, created: c.created });
+      if (!name && doc instanceof NumbersDocument) out.push({ canvas: doc.canvasComments().map(plain) });
+      if (!name && doc instanceof KeynoteDocument) {
+        out.push(...doc.slides().map((s) => ({ slide: s.index, canvas: s.canvasComments().map(plain) })));
+      }
       return JSON.stringify(out, null, 2);
     },
   },
@@ -1146,7 +1153,7 @@ export const TOOLS: readonly Tool[] = [
       "manage_slides",
       "Actions: add (copyOf + after, both 0-based slide indexes; or master, a layout's name, " +
         "to instantiate that layout instead — an unknown name's error lists the deck's), " +
-        "duplicate (slide), move " +
+        "duplicate (slide), set_layout (slide + master, a layout's name), move " +
         "(slide + to), remove (slide), set_size (width + height in points). Keynote " +
         "documents only. Saves over the input unless output names another path.",
     ),
@@ -1156,11 +1163,11 @@ export const TOOLS: readonly Tool[] = [
         path: { type: "string", description: "Path to the .key document" },
         action: {
           type: "string",
-          enum: ["add", "duplicate", "move", "remove", "set_size"],
+          enum: ["add", "duplicate", "set_layout", "move", "remove", "set_size"],
         },
         slide: { type: "number", description: "0-based slide index the action targets" },
         after: { type: "number", description: "add: insert after this index (default: end)" },
-        master: { type: "string", description: "add: the layout (master slide) to instantiate, by name" },
+        master: { type: "string", description: "add/set_layout: the layout (master slide), by name" },
         to: { type: "number", description: "move: destination index" },
         width: { type: "number", description: "set_size: points" },
         height: { type: "number", description: "set_size: points" },
@@ -1184,6 +1191,14 @@ export const TOOLS: readonly Tool[] = [
           if (slide === undefined) throw new RangeError("duplicate needs slide");
           doc.duplicateSlide(slide);
           break;
+        case "set_layout": {
+          const master = str(args.master);
+          if (slide === undefined || master === undefined) throw new RangeError("set_layout needs slide and master");
+          const target = doc.slides()[slide];
+          if (!target) throw new RangeError(`slide must be 0..${doc.slides().length - 1}`);
+          target.setLayout(master);
+          break;
+        }
         case "move": {
           const to = num(args.to);
           if (slide === undefined || to === undefined) throw new RangeError("move needs slide and to");

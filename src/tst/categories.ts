@@ -94,7 +94,7 @@ const FormatManagerFields = protoFields("TST.GroupByArchive.GroupNodeArchive.For
 const ROW_UID_LOOKUP = 15;
 
 /** Archive type id of `TST.GroupByArchive.GroupNodeArchive`. */
-const GROUP_NODE_TYPE = 6383;
+export const GROUP_NODE_TYPE = 6383;
 
 /** TST.ColumnAggregateArchive — the per-group summary of one column. */
 export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
@@ -207,9 +207,9 @@ export interface ColumnAggregate {
   /** Category depth this summary is shown at. */
   level: number;
   /**
-   * Raw `agg_type`. Numbers offers sum, average, count and so on, but no
-   * fixture carries a non-empty aggregate list, so the codes are passed
-   * through rather than named.
+   * Raw `agg_type`. Numbers offers sum, average, count and so on; 1 is
+   * Count, measured (its per-group accumulator is a string count on a
+   * text column). The rest are passed through rather than named.
    */
   aggType: number;
   showAsType: number | undefined;
@@ -817,9 +817,14 @@ export function defineByValueCategory(
   // The references the app declares: each node lists its children, the
   // archive lists its root, both beside the messages that carry them.
   root.setObjectReferences(tree.objects.map((object) => object.identifier));
+  const previousRoot = refId(m, GroupByFields.GROUP_NODE_ROOT_REF);
   m.setMessage(GroupByFields.GROUP_NODE_ROOT, rootMessage(tree.inline));
   m.setMessage(GroupByFields.GROUP_NODE_ROOT_REF, makeRef(root.identifier));
-  groupBy.setObjectReferences([...groupBy.getObjectReferences(), root.identifier]);
+  groupBy.setObjectReferences([
+    ...groupBy.getObjectReferences().filter((id) => id !== previousRoot),
+    root.identifier,
+  ]);
+  if (previousRoot !== undefined) store.discardUnreachable(groupBy.identifier, [previousRoot]);
   m.setBool(GroupByFields.IS_ENABLED, true);
 }
 

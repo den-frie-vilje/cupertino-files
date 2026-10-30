@@ -258,18 +258,17 @@ describe("slide management", () => {
     expect(info.getVarint(1)).toBe(copy.id);
     expect(info.getString(2)).toBe("Slide");
     // Versions, save token and the external references mirror the donor
-    // — the copy shares its master and styles. The save pass then adds
-    // one row the donor does not carry: an object row for the master the
-    // copy references. Apple names the master's component with no object
-    // row, and what lets its writer omit them is unmeasured — the
-    // superset is the shape the app-side control accepted.
+    // — the copy shares its master and styles. The master is the root
+    // object of its own component, and a reference to a component's root
+    // is recorded as the component-level row the donor already carries
+    // (every such reference in the corpus is), so the save pass adds
+    // nothing.
     expect(info.getVarint(12)).toBe(donorInfo.getVarint(12));
     const row = (er: RawMessage) => `${er.getVarint(1)}:${er.getVarint(2) ?? "-"}`;
     const donorRows = new Set(donorInfo.getMessages(6).map(row));
     const extras = info.getMessages(6).map(row).filter((r) => !donorRows.has(r));
-    const master = reloaded.slides()[2]!.masterId;
-    expect(extras).toEqual([`${master}:${master}`]);
-    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length + 1);
+    expect(extras).toEqual([]);
+    expect(info.getMessages(6).length).toBe(donorInfo.getMessages(6).length);
     const documentInfo = infos.find((ci) => ci.getString(2) === "Document" && !ci.has(3))!;
     const reciprocal = documentInfo
       .getMessages(6)
@@ -961,5 +960,30 @@ describe("a table added to a slide", () => {
     expect([placed.rowCount, placed.columnCount, placed.cellText(0, 0), placed.cellValue(1, 1)?.type]).toEqual([2, 2, "Item", "number"]);
     expect(info.geometry()?.x).toBe(300);
     expect(again.addTable({}).name).toBe("Table 2");
+  });
+});
+
+describe("a slide moved to another layout", () => {
+  it("takes fresh placeholders from the new master, keeps its text and drawables, drops the old placeholders", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    slide.title = "Carried";
+    const box = slide.addTextBox("Kept", { x: 100, y: 100, width: 400, height: 80 });
+    const oldPlaceholders = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER].map((f) => refId(slide.object.message, f)!);
+    slide.setLayout("Title & Bullets");
+    const reloaded = KeynoteDocument.load(doc.save());
+    const again = reloaded.slides()[0]!;
+    expect(reloaded.masterSlides().find((m) => m.id === again.masterId)?.name).toBe("Title & Bullets");
+    expect(again.title).toBe("Carried");
+    const fields: number[] = [];
+    for (let n = 1; n <= 40; n++) if (again.object.message.has(n)) fields.push(n);
+    expect(fields).toEqual([1, 4, 5, 6, 7, 17, 19, 20, 27, 28, 36]);
+    for (const f of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER]) {
+      expect(oldPlaceholders.includes(refId(again.object.message, f)!)).toBe(false);
+    }
+    for (const id of oldPlaceholders) expect(reloaded.store.object(id)).toBe(undefined);
+    expect(again.container().ids().includes(box.id)).toBe(true);
+    expect(again.placeholders().map((p) => [p.role, p.text])).toEqual([["title", "Carried"], ["body", ""], ["slideNumber", "\uFFFC"]]);
+    expect(reloaded.store.componentOf(refId(again.object.message, Slide.TITLE_PLACEHOLDER)!)).toBe(reloaded.store.componentOf(again.id));
   });
 });

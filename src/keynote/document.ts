@@ -1,7 +1,7 @@
 /**
  * KeynoteDocument — Apple Keynote (.key), extending the shared
  * IWorkDocument with the KN object graph: the show, its slide tree, slides
- * with their placeholders, speaker notes and transitions.
+ * with their placeholders, presenter notes, and transitions.
  *
  * Transitions are deliberately modeled here and not in the shared layer:
  * they are a Keynote-only concept (inline on KN.SlideArchive), unlike
@@ -14,12 +14,12 @@ import { TextStorage } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { ImageModel } from "../tsd/images.ts";
 import { parseMarkdown, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, appCellSize, fitNewTable, graftNeutralTable, uniqueTableName } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
-import { DrawableModel } from "../tsd/drawables.ts";
+import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
-import { Image, TSD_TYPE } from "../tsd/schema.ts";
+import { Drawable, Image, TSD_TYPE } from "../tsd/schema.ts";
 import { drawableById } from "../tsd/placement.ts";
 import { makeRef, pushRef, refId, SizeFields } from "../tsp/schema.ts";
 import { ShapeInfo, StorageKind, TSWP_TYPE } from "../tswp/schema.ts";
@@ -30,6 +30,7 @@ import { RawMessage } from "../base/protobuf.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
 import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
 import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
 import type { ObjectStore, ReferenceExtractor } from "../tsp/store.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
@@ -195,6 +196,19 @@ export class KeynoteSlide {
   }
 
   /**
+   * Put this slide on another layout, as Format ▸ Slide Layout does: the
+   * title, body and slide-number placeholders become fresh copies of the
+   * new master's, the title and body text carries over, every other
+   * drawable the slide owns stays, the old placeholders go, and the slide
+   * takes the master's style and tag map. Measured on the app's own
+   * change in olekristensen-v26.0-mac-authored.key.
+   * @agentTool manage_slides
+   */
+  setLayout(master: string | bigint): void {
+    this.document.relayoutSlide(this, master);
+  }
+
+  /**
    * The slide's background fill, read up the style chain: a slide with a
    * background of its own carries a variation style whose parent is the
    * master's; one without shares the master's style outright.
@@ -257,7 +271,7 @@ export class KeynoteSlide {
     this.store.retargetReference(this.object, current.identifier, style.identifier);
   }
 
-  /** Speaker-notes storage, when the slide has one. */
+  /** Presenter-notes storage, when the slide has one. */
   notesStorage(): TextStorage | undefined {
     const note = this.store.resolve(refId(this.object.message, Slide.NOTE));
     if (!note) return undefined;
@@ -265,7 +279,7 @@ export class KeynoteSlide {
     return storage ? new TextStorage(this.store, storage) : undefined;
   }
 
-  /** Speaker-notes text ("" when the slide has no notes). */
+  /** Presenter-notes text ("" when the slide has no notes). */
   get notes(): string {
     return this.notesStorage()?.text ?? "";
   }
@@ -350,7 +364,7 @@ export class KeynoteSlide {
    * Set a placeholder's text.
    *
    * Only replaces text in a placeholder the slide already has. Creating one
-   * means synthesizing a shape with the theme's geometry and style for that
+   * means synthesising a shape with the theme's geometry and style for that
    * role, which lives in the master — so a slide whose layout has no body
    * box is told so rather than given an unstyled one floating at the origin.
    */
@@ -430,6 +444,14 @@ export class KeynoteSlide {
     return buildsOfSlide(this.store, this.object);
   }
 
+  /**
+   * The comments pinned to this slide's canvas.
+   * @agentTool list_comments
+   */
+  canvasComments(): CanvasComment[] {
+    return canvasComments(this.store, this.id);
+  }
+
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
@@ -451,6 +473,16 @@ export class KeynoteSlide {
     return addTextBoxFrom(this.store, this.container(), donor, this.id, text, placement);
   }
 
+  /** The master's object placeholder frame, where the app puts an inserted table or picture. */
+  private objectPlaceholderFrame(): { x: number; y: number; width: number; height: number } | undefined {
+    const master = this.store.object(this.masterId ?? -1n);
+    const placeholder = master && this.store.resolve(refId(master.message, Slide.OBJECT_PLACEHOLDER));
+    const geometry = placeholder && new DrawableModel(this.store, placeholder).geometry();
+    return geometry?.width !== undefined && geometry.height !== undefined
+      ? { x: geometry.x ?? 0, y: geometry.y ?? 0, width: geometry.width, height: geometry.height }
+      : undefined;
+  }
+
   /**
    * Put a table on the slide: the neutral table every app shares (the
    * blank Numbers document's own, Apple-made), its parent the slide, in
@@ -468,19 +500,28 @@ export class KeynoteSlide {
       this.document.stylesheets().find((s) => s.id === stylesheetId) ?? this.document.stylesheets()[0];
     const id = graftNeutralTable(this.store, component, this.id, stylesheet);
     this.container().attach(id);
-    if (options.x !== undefined || options.y !== undefined) {
-      const placement: { x?: number; y?: number } = {};
-      if (options.x !== undefined) placement.x = options.x;
-      if (options.y !== undefined) placement.y = options.y;
-      drawableById(this.store, id)?.setGeometry(placement);
-    }
     const table = tablesOf(this.store, [id])[0];
     if (!table) throw new RangeError(`grafted table ${id} did not resolve`);
+    // The frame Insert ▸ Table fills: the layout's object placeholder when
+    // the master has one, else the slide; 5 by 4 with one header row and
+    // column, rows deciding the counts when given.
+    const frame = this.objectPlaceholderFrame() ?? { x: 0, y: 0, width: this.document.slideSize()?.width ?? 1920, height: 650 };
+    const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
+    const rows = given?.length ?? APP_TABLE_DEFAULTS.keynote.rows;
+    const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.keynote.columns;
+    const cell = appCellSize("keynote", frame);
+    fitNewTable(table, { rows, columns, ...cell });
+    drawableById(this.store, id)?.setGeometry({
+      x: options.x ?? frame.x,
+      y: options.y ?? frame.y,
+      width: columns * cell.columnWidth + APP_TABLE_DEFAULTS.keynote.borderAllowance,
+      height: rows * cell.rowHeight + APP_TABLE_DEFAULTS.keynote.borderAllowance,
+    });
     remintTableIdentity(this.store, id);
     table.name = uniqueTableName(this.document.tables().filter((t) => t.infoObject?.identifier !== id).map((t) => t.name), options.name);
     // Slide tables keep their name to themselves: 0 of 3 in the corpus show it.
     table.nameVisible = false;
-    if (options.rows) fillTable(table, options.rows);
+    if (options.rows && options.rows.length > 0) fillTable(table, options.rows);
     return table;
   }
 
@@ -1230,6 +1271,90 @@ export class KeynoteDocument extends IWorkDocument {
     return created;
   }
 
+  /** The work behind {@link KeynoteSlide.setLayout}. */
+  relayoutSlide(slide: KeynoteSlide, master: string | bigint): void {
+    const masterObject = this.resolveMaster(master);
+    const target = slide.object;
+    const component = this.store.componentOf(target.identifier);
+    if (!component) throw new RangeError("slide has no component");
+    const PLACEHOLDERS = [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER, Slide.SLIDE_NUMBER_PLACEHOLDER];
+    const oldText = new Map<number, string>();
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      const text = this.storageOfPlaceholder(target, field)?.text ?? "";
+      if (text.replace(/[\u2029\ufffc]/g, "").trim()) oldText.set(field, text);
+    }
+    const oldPlaceholders = new Set(PLACEHOLDERS.map((f) => refId(target.message, f)).filter((id): id is bigint => id !== undefined));
+    // What the old placeholders reach — their storages and direct styles —
+    // goes with them unless something else still points at it.
+    const oldClosure = new Set(oldPlaceholders);
+    for (const id of [...oldClosure]) {
+      const object = this.store.object(id);
+      if (!object) continue;
+      for (const next of this.store.currentReferencesOf(object)) {
+        oldClosure.add(next);
+        const sub = this.store.object(next);
+        if (sub) for (const deeper of this.store.currentReferencesOf(sub)) oldClosure.add(deeper);
+      }
+    }
+
+    // A fresh instantiation of the new master, as addSlide({ master })
+    // makes one; this slide then takes its placeholders and drawables.
+    const excluded = new Set<bigint>();
+    const objectPlaceholder = refId(masterObject.message, Slide.OBJECT_PLACEHOLDER);
+    if (objectPlaceholder !== undefined) excluded.add(objectPlaceholder);
+    const { clone, map } = deepCloneObject(this.store, masterObject, {
+      follow: (object, depth) =>
+        !excluded.has(object.identifier) && defaultFollow(object, this.store.typeNameOf(object)) && depth <= 8,
+    });
+    // The instantiation's drawables answer to this slide, not to the
+    // throwaway clone they were born under.
+    for (const id of map.values()) {
+      const object = this.store.object(id);
+      const core = object && findDrawableCore(object.message);
+      if (core && refId(core, Drawable.PARENT) === clone.identifier) {
+        core.setMessage(Drawable.PARENT, makeRef(target.identifier));
+        object.message.markDirty();
+      }
+    }
+    for (const field of PLACEHOLDERS) {
+      const id = refId(clone.message, field);
+      if (id === undefined) target.message.remove(field);
+      else target.message.setMessage(field, makeRef(id));
+    }
+    const fresh = clone.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !excluded.has(id));
+    const kept = target.message
+      .getMessages(Slide.OWNED_DRAWABLES)
+      .map((ref) => ref.getVarint(1))
+      .filter((id): id is bigint => id !== undefined && !oldPlaceholders.has(id));
+    const owned = [...fresh, ...kept];
+    for (const field of [Slide.OWNED_DRAWABLES, Slide.DRAWABLES_Z_ORDER]) {
+      if (owned.length > 0) target.message.setMessages(field, owned.map((id) => makeRef(id)));
+      else target.message.remove(field);
+    }
+    for (const field of [Slide.STYLE, Slide.TRANSITION]) {
+      const value = clone.message.getMessage(field);
+      if (value) target.message.setMessage(field, value);
+    }
+    target.message.setMessages(28, clone.message.getMessages(28));
+    target.message.setMessage(Slide.TEMPLATE_SLIDE, makeRef(masterObject.identifier));
+    target.message.markDirty();
+    for (const [field, text] of oldText) this.storageOfPlaceholder(target, field)?.setText(text);
+    for (const field of [Slide.TITLE_PLACEHOLDER, Slide.BODY_PLACEHOLDER]) {
+      if (!oldText.has(field)) this.storageOfPlaceholder(target, field)?.setText("");
+    }
+    const number = this.storageOfPlaceholder(target, Slide.SLIDE_NUMBER_PLACEHOLDER);
+    if (number && number.text === "") number.insertPageNumber(0);
+
+    // The new placeholders and drawables join the slide's component; the
+    // instantiation's own slide object and the old placeholders, with
+    // what only they reached, go.
+    this.store.moveObjectsToComponent([...map.values()].filter((id) => id !== clone.identifier), component);
+    this.store.discardUnreachable(target.identifier, [clone.identifier, ...map.values(), ...oldClosure]);
+  }
+
   /**
    * Duplicate a slide, content and all.
    *
@@ -1251,7 +1376,7 @@ export class KeynoteDocument extends IWorkDocument {
    * drawable lists — ownership and paint order. Sized like
    * `insertInlineImage`: explicit `width`/`height` win, otherwise the
    * intrinsic size is fitted to `maxWidth` (default 400 pt). Unless
-   * `x`/`y` say otherwise the picture is centered on the slide.
+   * `x`/`y` say otherwise the picture is centred on the slide.
    * @agentTool add_image
    */
   addImage(
@@ -1416,7 +1541,7 @@ export class KeynoteDocument extends IWorkDocument {
     this.writeSlideNodeOrder(ids.filter((id) => id !== nodeId));
   }
 
-  /** Speaker notes of every slide, in order. */
+  /** Presenter notes of every slide, in order. */
   allNotes(): { slide: number; notes: string }[] {
     return this.slides().map((s) => ({ slide: s.index, notes: s.notes }));
   }

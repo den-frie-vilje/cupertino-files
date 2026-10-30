@@ -5,7 +5,7 @@ npm install cupertino-files
 ```
 
 That's the whole setup. No runtime dependencies, no native modules, no
-Apple software. It runs in Node 22 and up, and in the browser — bytes in,
+Apple software. It runs in Node 22 or later, and in the browser—bytes in,
 bytes out.
 
 ## Open. Edit. Save.
@@ -30,7 +30,7 @@ without a file at all also works: `PagesDocument.blank()` is a fresh A4
 document, `NumbersDocument.blank()` a fresh spreadsheet,
 `KeynoteDocument.blank()` a fresh 16:9 deck.
 
-Everything you leave alone is preserved, byte for byte — even in
+Everything you leave alone is preserved, byte for byte—even in
 documents from app versions newer than this library.
 
 ## Spreadsheets and slides
@@ -51,6 +51,7 @@ const deck = KeynoteDocument.load(bytes);
 deck.slides()[0]!.title = "Q3";
 deck.slides()[0]!.notes = "Pause here. Let it land.";
 deck.addSlide({ copyOf: 0 });
+deck.addImage(1, pngBytes, { fileName: "chart.png" });
 ```
 
 From here, the [full tour](/guide/documents) covers text, styles, tables,
@@ -59,9 +60,9 @@ everything.
 
 ## Some documents are politely declined
 
-- **Password-protected documents** — refused; this library decrypts
+- **Password-protected documents**—refused; this library decrypts
   nothing (see [legal posture](/LEGAL)).
-- **iWork '09 XML documents** — a different, older format; refused with
+- **iWork ’09 XML documents**—a different, older format; refused with
   a clear error.
 
 When something can't be done, the error says why, and usually what to do

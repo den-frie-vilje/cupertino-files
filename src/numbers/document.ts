@@ -6,7 +6,7 @@
  */
 import { IWorkDocument } from "../tsa/document.ts";
 import { blankDonorBytes } from "../tsa/numbers-blank-donor.generated.ts";
-import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { SHARED_REFERENCE_EXTRACTORS } from "../tsa/extractors.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { IWorkContainer } from "../tsp/package.ts";
@@ -19,6 +19,7 @@ import { chartToMarkdown, joinBlocks, namedTable, type MarkdownOptions } from ".
 import { parseMarkdown } from "../tsa/markdown-parser.ts";
 import { fillTable, parseCsv } from "../tst/csv.ts";
 import { drawableById } from "../tsd/placement.ts";
+import { canvasComments, type CanvasComment } from "../tswp/comments.ts";
 
 /** TN.DocumentArchive (type 1 in the Numbers registry): sheets = 1. */
 const TN_TYPE_DOCUMENT = 1;
@@ -216,6 +217,14 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
+   * The comments pinned to the sheets' canvases, every sheet in tab order; `cellComments()` on a table reads the ones on cells.
+   * @agentTool list_comments
+   */
+  canvasComments(): CanvasComment[] {
+    return this.sheets().flatMap((sheet) => canvasComments(this.store, sheet.id));
+  }
+
+  /**
    * The document as Markdown: a top-level heading per sheet, each table
    * under its name (when it shows one) as a pipe table and each chart as
    * a table of its series, in the sheet's own order.
@@ -353,14 +362,16 @@ export class NumbersDocument extends IWorkDocument {
   }
 
   /**
-   * Make a sheet the one the document opens on.
+   * Re-point the stored sheet selections at a sheet, best-effort.
    *
-   * Numbers remembers the selected tab in its UI state — every
-   * `TN.SheetSelectionArchive` names a sheet through a reference — and
-   * ignores tab order when deciding where to open, so a document
-   * rearranged with {@link moveSheet} still opens on whatever sheet was
-   * active at the last save. This re-points every stored sheet
-   * selection at the given sheet.
+   * Numbers ignores tab order when deciding where a document opens, so
+   * a document rearranged with {@link moveSheet} still opens on whatever
+   * sheet was active at the last save. Every `TN.SheetSelectionArchive`
+   * in the UI state names a sheet through a reference, and this
+   * re-points all of them at the given sheet. That has proved necessary
+   * but not sufficient: a document with every selection re-pointed has
+   * opened on the chosen sheet in one review round and elsewhere in
+   * another, so the state that decides it is still unmeasured.
    *
    * @agentTool manage_sheets
    */
@@ -459,6 +470,9 @@ export class NumbersDocument extends IWorkDocument {
     if (!component) throw new RangeError(`sheet ${sheetId} has no component`);
     const id = graftNeutralTable(this.store, component, sheetId);
     this.sheetContainer(sheetId).attach(id);
+    // The shape Insert ▸ Table gives: 10 by 5, one header row and column, 98-point columns.
+    const table = tablesOf(this.store, [id])[0];
+    if (table) fitNewTable(table, APP_TABLE_DEFAULTS.numbers);
     if (Object.keys(placement).length > 0) drawableById(this.store, id)?.setGeometry(placement);
     return id;
   }

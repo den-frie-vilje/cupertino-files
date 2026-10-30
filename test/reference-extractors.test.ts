@@ -39,6 +39,7 @@ import {
 } from "../src/index.ts";
 import { typeName } from "../src/tsp/registry.ts";
 import { drawableParent } from "../src/tsd/schema.ts";
+import { tableInfoOwner } from "../src/tst/tables.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 
@@ -133,8 +134,9 @@ describe("reference extractors agree with Apple", () => {
   });
 
   it("storages and text styles reproduce Apple's list exactly", () => {
-    // The four types the Pages ladder actually exercises.
-    const EXACT = [2001, 2021, 2022, 2024];
+    // The four types the Pages ladder actually exercises, and the table
+    // model every table writer creates.
+    const EXACT = [2001, 2021, 2022, 2024, 6001];
     const failing = EXACT.filter((t) => (TALLY.byType.get(t) ?? 0) > 0).map(
       (t) => `${typeName(t) ?? t}=${TALLY.byType.get(t)}`,
     );
@@ -157,9 +159,11 @@ describe("reference extractors agree with Apple", () => {
     // Two instances of that container rule hold elsewhere — a storage must
     // not declare its stylesheet, a drawable must not declare its parent —
     // and this comparison is exactly what catches a violation of either.
+    // The three authored-twin fixtures added 21 in the same two classes:
+    // 17 Keynote slides and four stylesheets.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=233: ${disagree <= 233} (${disagree})`).toBe(
-      `disagree<=233: true (${disagree})`,
+    expect(`disagree<=312: ${disagree <= 312} (${disagree})`).toBe(
+      `disagree<=312: true (${disagree})`,
     );
   });
 
@@ -184,6 +188,42 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     ["TSD.MovieArchive", 0],
     ["TST.TableInfoArchive", 0],
   ]);
+
+  it("matches the corpus for every owner-side archive that carries its table info", () => {
+    const tally = new Map<string, { carry: number; declare: number }>();
+    for (const name of readdirSync(FIXTURES)) {
+      const Doc = name.endsWith(".pages")
+        ? PagesDocument
+        : name.endsWith(".numbers")
+          ? NumbersDocument
+          : name.endsWith(".key")
+            ? KeynoteDocument
+            : undefined;
+      if (!Doc) continue;
+      let doc: PagesDocument | NumbersDocument | KeynoteDocument;
+      try {
+        doc = (Doc as typeof PagesDocument).load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        const info = tableInfoOwner(obj.type, obj.message);
+        if (info === undefined) continue;
+        const key = typeName(obj.type) ?? String(obj.type);
+        let t = tally.get(key);
+        if (!t) tally.set(key, (t = { carry: 0, declare: 0 }));
+        t.carry++;
+        if (obj.getObjectReferences().includes(info)) t.declare++;
+      }
+    }
+    const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
+    expect(summary).toEqual([
+      "TSCE.FormulaOwnerDependenciesArchive 0/79",
+      "TST.CategoryOrderArchive 0/73",
+      "TST.SummaryCellVendorArchive 0/73",
+      "TST.SummaryModelArchive 0/73",
+    ]);
+  });
 
   it("matches the corpus for every drawable type the store subtracts", () => {
     const tally = new Map<number, { carry: number; declare: number }>();

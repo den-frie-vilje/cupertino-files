@@ -9,7 +9,7 @@ import { blankDonorBytes } from "./blank-donor.generated.ts";
 import { OBJECT_REPLACEMENT_CHARACTER, TextStorage, type ParagraphInfo } from "../tswp/textstorage.ts";
 import { chartToMarkdown, joinBlocks, namedTable, storageToMarkdown, imageToMarkdown, type MarkdownOptions } from "../tsa/markdown.ts";
 import { parseMarkdown, splitFrontMatter, type ImageResolver, type InlineText } from "../tsa/markdown-parser.ts";
-import { graftNeutralTable } from "../tsa/table-donor.ts";
+import { APP_TABLE_DEFAULTS, appCellSize, fitNewTable, graftNeutralTable } from "../tsa/table-donor.ts";
 import { fillTable } from "../tst/csv.ts";
 import { ParagraphHandle, TextRange } from "../tswp/range.ts";
 import {
@@ -41,7 +41,7 @@ import { DrawableModel, findDrawableCore } from "../tsd/drawables.ts";
 import { addTextBoxFrom, anyTextBox, isTextBox } from "../tswp/textbox.ts";
 import { remintTableIdentity, tablesOf, TST_TYPE, type TableModel } from "../tst/tables.ts";
 import { deepCloneObject, defaultFollow } from "../tsp/clone.ts";
-import { DrawableContainer, type DrawablePlacement } from "../tsd/placement.ts";
+import { DrawableContainer, drawableById, type DrawablePlacement } from "../tsd/placement.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { buildImageDrawable } from "../tsd/images.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
@@ -206,6 +206,34 @@ export class PagesSection {
    * Drawables placed on this section's master pages (watermarks, logos,
    * repeating page furniture), keyed by page-master role.
    */
+  /**
+   * Move a drawable from its page onto this section's master, so it
+   * repeats on every page the master draws: the app's Arrange ▸ Section
+   * Masters ▸ Move Object to Section Master. The drawable leaves its
+   * page group and paint order and loses its parent, and the master
+   * names it in its own list — the shape of every master drawable in
+   * the corpus, app-written on request and in two earlier documents.
+   * `role` picks which master; the app uses the odd one.
+   */
+  moveToSectionMaster(drawableId: bigint, role: "first" | "even" | "odd" = "odd"): void {
+    const doc = this.document;
+    const template = this.templates().find((t) => t.role === role);
+    const templateObject = template && doc.store.object(template.templateId);
+    if (!templateObject) throw new RangeError(`section ${this.index} has no ${role} master`);
+    const drawable = doc.store.object(drawableId);
+    if (!drawable) throw new RangeError(`no drawable ${drawableId}`);
+    for (const page of doc.floatingDrawablePages()) doc.floatingDrawables(page)?.remove(drawableId);
+    const core = findDrawableCore(drawable.message);
+    if (core?.has(Drawable.PARENT)) {
+      core.remove(Drawable.PARENT);
+      drawable.message.markDirty();
+    }
+    if (!templateObject.message.getMessages(SectionTemplate.SECTION_TEMPLATE_DRAWABLES).some((r) => r.getVarint(1) === drawableId)) {
+      templateObject.message.addMessage(SectionTemplate.SECTION_TEMPLATE_DRAWABLES, makeRef(drawableId));
+      doc.store.declareReference(templateObject, drawableId);
+    }
+  }
+
   masterDrawables(): { role: "first" | "even" | "odd"; drawables: DrawableModel[] }[] {
     return this.templates().map((t) => {
       const template = this.document.store.object(t.templateId);
@@ -1073,6 +1101,23 @@ export class PagesDocument extends IWorkDocument {
    * editable. `inherit_previous_header_footer` is set, matching Pages'
    * "Create a new section" default. Returns the new section.
    */
+  /**
+   * End a paragraph with a page break, so the next one starts a new
+   * page: the paragraph's terminator becomes U+0005, which is what
+   * Insert ▸ Page Break writes and what every one of the corpus's
+   * page-break characters is, a terminator in place of the U+000A.
+   * Same length, so every attribute table keeps its indexes.
+   */
+  insertPageBreak(paragraphIndex: number): void {
+    const body = this.body;
+    const paragraph = body.paragraphs()[paragraphIndex];
+    if (!paragraph) throw new RangeError(`paragraph ${paragraphIndex} out of range`);
+    const terminator = body.text[paragraph.end];
+    if (terminator === "\u0005") return;
+    if (terminator !== "\n") throw new RangeError(`paragraph ${paragraphIndex} ends with a break of another kind`);
+    body.replaceRange(paragraph.end, paragraph.end + 1, "\u0005");
+  }
+
   insertSectionBreak(
     paragraphIndex: number,
     options: { name?: string; pageNumberStart?: number } = {},
@@ -1343,7 +1388,7 @@ export class PagesDocument extends IWorkDocument {
   }
 
   /** Append a table at the end of the body, in a paragraph of its own. */
-  appendTable(rows: readonly (readonly string[])[], name?: string): TableModel {
+  appendTable(rows: readonly (readonly string[])[] = [], name?: string): TableModel {
     const body = this.body;
     // The anchor sits in a paragraph of its own: the trailing empty one
     // when the body ends at a paragraph boundary, a fresh one otherwise.
@@ -1388,9 +1433,24 @@ export class PagesDocument extends IWorkDocument {
     let cloneId: bigint;
     if (sourceId === undefined) {
       cloneId = graftNeutralTable(this.store, component, body.id, this.stylesheet);
-      // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
       const grafted = tablesOf(this.store, [cloneId])[0];
-      if (grafted) grafted.nameVisible = false;
+      if (grafted) {
+        // Pages tables keep their name to themselves: 0 of 18 in the corpus show it.
+        grafted.nameVisible = false;
+        // The shape Insert ▸ Table gives: 5 by 4 across the body, one
+        // header row and column; rows, when given, decide the counts.
+        const setup = this.pageSetup();
+        const hostWidth = (setup.pageWidth ?? 595.28) - (setup.leftMargin ?? 56.69) - (setup.rightMargin ?? 56.69);
+        const given = options.rows && options.rows.length > 0 ? options.rows : undefined;
+        const rows = given?.length ?? APP_TABLE_DEFAULTS.pages.rows;
+        const columns = given ? Math.max(1, ...given.map((r) => r.length)) : APP_TABLE_DEFAULTS.pages.columns;
+        const cell = appCellSize("pages", { width: hostWidth });
+        fitNewTable(grafted, { rows, columns, ...cell });
+        drawableById(this.store, cloneId)?.setGeometry({
+          width: columns * cell.columnWidth + APP_TABLE_DEFAULTS.pages.borderAllowance,
+          height: rows * cell.rowHeight + APP_TABLE_DEFAULTS.pages.borderAllowance,
+        });
+      }
     } else {
       const source = this.store.object(sourceId);
       if (source?.type !== TST_TYPE.TABLE_INFO) {
@@ -1415,7 +1475,7 @@ export class PagesDocument extends IWorkDocument {
     remintTableIdentity(this.store, clone.identifier);
     model.name = this.uniqueTableName(options.name, clone.identifier);
     if (options.withContent === false) model.clearAllCells();
-    if (options.rows) fillTable(model, options.rows);
+    if (options.rows && options.rows.length > 0) fillTable(model, options.rows);
 
     const attachment = this.store.createObject(TSWP_TYPE.DRAWABLE_ATTACHMENT, component);
     attachment.message.setMessage(DrawableAttachment.DRAWABLE, makeRef(clone.identifier));

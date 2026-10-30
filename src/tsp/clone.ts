@@ -145,7 +145,7 @@ export function deepCloneObject(
  * common, so shape alone is not enough — the identifier must also be one
  * this clone is remapping. Anything else is left untouched.
  */
-function remapReferences(message: RawMessage, map: ReadonlyMap<bigint, bigint>, depth = 0): void {
+export function remapReferences(message: RawMessage, map: ReadonlyMap<bigint, bigint>, depth = 0): void {
   if (depth > 16) return;
   for (const field of message.fields) {
     if (field.wire !== WireType.Bytes) continue;

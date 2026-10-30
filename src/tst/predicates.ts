@@ -164,6 +164,7 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  * showed it.
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
+  [1, "FIND.CASEINSENSITIVE"],
   [3, "FIND.CASEINSENSITIVE"],
   [34, "ISBLANK"],
   [54, "SUM"],
@@ -430,7 +431,7 @@ function decimalOf(value: RawMessage): number {
  * they are asking about B4 gets `B4 < 0` rather than `THIS_CELL<0`.
  */
 /** What a written rule can say: a comparison, or that the text contains a needle. */
-export type FilterOperator = PredicateOperator | "contains";
+export type FilterOperator = PredicateOperator | "contains" | "startsWith";
 
 /** TST.FormulaPredArgArchive.arg_type codes, as the corpus's rules carry them. */
 const PRED_ARG_TYPE = { UNUSED: 0, NUMBER: 1, STRING: 3, CELL: 4 } as const;
@@ -452,11 +453,14 @@ export function writeComparisonPredicate(
   ast: RawMessage,
 ): RawMessage {
   // Text-contains is predicate type 3, the function-shaped condition
-  // whose formula is NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell))).
+  // whose formula is NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)));
+  // starts-with is type 1, FIND.CASEINSENSITIVE(needle, cell) = 1.
   const type =
     operator === "contains"
       ? 3
-      : [...PREDICATE_TYPE_OPERATORS].find(([, op]) => op === operator)?.[0];
+      : operator === "startsWith"
+        ? 1
+        : [...PREDICATE_TYPE_OPERATORS].find(([, op]) => op === operator)?.[0];
   if (type === undefined) throw new RangeError(`no predicate type for operator ${operator}`);
   const predicate = RawMessage.create();
   predicate.setVarint(PredicateFields.PREDICATE_TYPE, type);
@@ -467,7 +471,9 @@ export function writeComparisonPredicate(
   cell.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.CELL);
   const relative = RawMessage.create();
   relative.setVarint(1, 0);
-  relative.setVarint(2, column);
+  // A signed offset in an unsigned field: column A from the host at
+  // column 1 is −1, written as 2^64 − 1, as the app writes it.
+  relative.setVarint(2, column < 0 ? (1n << 64n) + BigInt(column) : column);
   const uid = RawMessage.create();
   uid.setVarint(1, tableUid.lo);
   uid.setVarint(2, tableUid.hi);

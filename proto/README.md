@@ -18,9 +18,9 @@ Nothing has been edited.
 
 - `current/` — the **shared** iWork families (TSP, TSK, TSS, TSD, TSWP,
   TSA, TSCH, TST, TSCK, TSCE), identical in every bundle.
-- `pages-15.1/` — the Pages-specific `TP*` files.
-- `keynote-15.1/` — the Keynote-specific `KN*` files.
-- `numbers-15.1/` — the Numbers-specific `TN*` files.
+- `pages-15.4/` — the Pages-specific `TP*` files.
+- `keynote-15.4/` — the Keynote-specific `KN*` files.
+- `numbers-15.4/` — the Numbers-specific `TN*` files.
 
 ## Provenance
 
@@ -35,19 +35,27 @@ tree, main executable and frameworks alike.
 
 | Directory | Files | Extracted from | App version (build) | Main executable, SHA-256 |
 |---|---|---|---|---|
-| `current/` | 29 × `TS*.proto` | Pages.app (byte-identical in Numbers.app and Keynote.app) | Pages 15.1.1 (7044.0.273) | `0ba0bd6990ff0c1d0636fa478a418a577902d6ab3ca39c24a51108c67f2d887b` |
-| `pages-15.1/` | 3 × `TP*.proto` | Pages.app | Pages 15.1.1 (7044.0.273) | as above |
-| `keynote-15.1/` | 4 × `KN*.proto` | Keynote.app | Keynote 15.1.1 (7044.0.273) | `26a3d93f615a92f30a8462b93c70d5e6dccba9a3d905bf89f23ab383fed437a3` |
-| `numbers-15.1/` | 4 × `TN*.proto` | Numbers.app | Numbers 15.1 (7044.0.271) | `c9b1d2e23e07ecfa6ebdc62fe7c5f2ae9327be3ce87ae36a9492db7e841fa735` |
+| `current/` | 29 × `TS*.proto` | Pages.app (byte-identical in Numbers.app and Keynote.app) | Pages 15.4 (7051.0.79) | `66afd6fceae42033155d42f12e3bbb4fab9000d358926a48b7db6090e01e5ca1` |
+| `pages-15.4/` | 3 × `TP*.proto` | Pages.app | Pages 15.4 (7051.0.79) | as above |
+| `keynote-15.4/` | 4 × `KN*.proto` | Keynote.app | Keynote 15.4 (7051.0.79) | `e5c3e6eee9891e9d806028328139fd7500247e5bc25017797dffb5ba277ac065` |
+| `numbers-15.4/` | 4 × `TN*.proto` | Numbers.app | Numbers 15.4 (7051.0.79) | `372357ba69beb6561fbcd4b529d3f24bf50a0de4452ff95b8146df07c5d64182` |
 
 The digests are of the universal (x86_64 + arm64) executables as
 installed. The 29 shared files dumped from the three bundles are
 byte-identical to one another, which is the cross-check that they are
-one schema and not three.
+one schema and not three. Pages 15.4's own framework also embeds the
+`TN*` descriptors, byte-identical to Numbers 15.4's, which no earlier
+Pages did.
 
-Earlier sets — numbers-parser's and keynote-parser's 14.4 dumps and
-obriensp/iWorkFileFormat's Pages 5.0 dump from 2013 — are in git history
-at the tag `proto-before-15.1`.
+Earlier sets are in git history: the 15.1 release (Pages 15.1.1,
+Numbers 15.1, Keynote 15.1.1) under the directories `pages-15.1/`,
+`keynote-15.1/` and `numbers-15.1/` before this refresh, and
+numbers-parser's and keynote-parser's 14.4 dumps and
+obriensp/iWorkFileFormat's Pages 5.0 dump from 2013 at the tag
+`proto-before-15.1`. From 15.1 to 15.4 the `TP*` files did not change;
+`TSS.StylesheetArchive` gained three versioned-style snapshots,
+`TN.SheetArchive` a hidden flag and a tab colour, and Keynote's build and
+transition attributes custom angle, blur and text-alignment options.
 
 ## Refreshing a dump
 

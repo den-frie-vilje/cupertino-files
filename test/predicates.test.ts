@@ -431,7 +431,10 @@ describe("writing a filter rule", () => {
     const extentAfter = table.object.message.getMessage(70)!.getMessages(2)[0]!.getMessage(3)!;
     const ours = extentAfter.getMessages(2).map((s) => Buffer.from(s.toBytes()).toString("hex")).sort();
     expect(ours).toEqual(theirs);
-    expect(() => table.addFilterRule(0, { operator: "=", value: "x" })).toThrow(/count from column/);
+    // Column A sits at offset −1 from the host column, stored unsigned.
+    const onA = table.addFilterRule(0, { operator: "=", value: "x" });
+    expect(set.rules()[onA]!.column).toBe(0);
+    expect(set.object.message.getMessages(7)[onA]!.getMessage(1)!.getMessage(4)!.getMessage(4)!.getVarint(2)).toBe((1n << 64n) - 1n);
   });
 
   it("adds an enabled rule to a blank table and reads it back", () => {

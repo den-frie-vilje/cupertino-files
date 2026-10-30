@@ -477,6 +477,46 @@ export const RUNGS: {
       doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
     },
   },
+  {
+    name: "P23-section-master",
+    base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
+    note: "the page-1 graphic moved onto the section master — it should repeat on every page",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P23: the graphic that sat on page 1 was moved to the section master; it should now show on " +
+          "EVERY page of this section, in the same place. Only on page 1, or gone, is a failure.",
+      );
+      const page = doc.floatingDrawablePages()[0];
+      if (page === undefined) throw new Error("base has no floating drawables");
+      const drawable = doc.floatingDrawables(page)!.drawables()[0];
+      if (!drawable) throw new Error("no drawable to move");
+      doc.sections()[0]!.moveToSectionMaster(drawable.id);
+    },
+  },
+  {
+    name: "P24-page-break",
+    note: "a page break after the first paragraph",
+    build: (doc) => {
+      doc.appendParagraph("P24: this line should be alone on page 1; the next line should start page 2.");
+      doc.appendParagraph("This line should be the first on page 2. Both on one page is a failure.");
+      doc.insertPageBreak(doc.body.paragraphs().length - 2);
+    },
+  },
+  {
+    name: "P22-inline-table",
+    note: "a table appended to the body from the neutral donor, wired to the theme's first preset, filled with three rows",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P22: below this line a 3×2 table should follow, headed Item / Count, with Apples 3 and " +
+          "Pears 5. No table, an empty one, or a refused file are each a failure.",
+      );
+      doc.appendTable([
+        ["Item", "Count"],
+        ["Apples", "3"],
+        ["Pears", "5"],
+      ]);
+    },
+  },
 ];
 
 function main(argv: string[]): number {

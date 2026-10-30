@@ -965,6 +965,10 @@ export const CAPABILITIES: Capability[] = [
         "with what it should look like. The in-flow picture starting where its own paragraph " +
         "starts is the pass.",
       risk: "high",
+      settled:
+        "**Opened in Pages 15.4 and returned without a comment**, which the seeds' protocol reads as " +
+        "as expected: the in-flow picture starts in the indented column and the page-placed one at " +
+        "the margin. A look, not a measurement; the returned file is not kept as a fixture.",
     },
   },
   {
@@ -985,11 +989,14 @@ export const CAPABILITIES: Capability[] = [
   // ------------------------------------------------------------------- pages
   {
     group: "Pages",
-    name: "Sections (read + insert)",
+    name: "Sections (read + insert) and page breaks",
     apps: ["pages"],
     status: "read+write",
     probe: (c) => safe(() => (c.pages?.sections().length ?? 0) > 1),
-    note: "validation counts multi-section documents only",
+    note:
+      "validation counts multi-section documents only; insertPageBreak ends a paragraph with U+0005, " +
+      "what Insert ▸ Page Break writes and what every corpus page-break character is (rung P24 asks " +
+      "Pages whether it paginates one written here)",
     manualProof: {
       claim: "a section break this library inserts starts a new section on a new page",
       settled:
@@ -1054,7 +1061,7 @@ export const CAPABILITIES: Capability[] = [
     group: "Pages",
     name: "Master-page drawables",
     apps: ["pages"],
-    status: "read",
+    status: "read+write",
     probe: (c) =>
       safe(
         () =>
@@ -1062,6 +1069,18 @@ export const CAPABILITIES: Capability[] = [
             ?.sections()
             .some((s) => s.masterDrawables().some((m) => m.drawables.length > 0)) ?? false,
       ),
+    note:
+      "moveToSectionMaster writes the shape every master drawable in the corpus has — a plain " +
+      "reference from the master's list, the drawable without a parent, on no page — measured on " +
+      "the app's own move in olekristensen-v26.0-mac-authored.pages and two iWork '19 documents",
+    manualProof: {
+      claim: "Pages repeats a drawable this library moved to the section master on every page.",
+      why: "The archive matches the app's own move field for field; whether the app draws it on every page only the app shows.",
+      how:
+        "node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the " +
+        "page-1 graphic on every page of the section; only on page 1, or gone, is a failure.",
+      risk: "medium",
+    },
   },
   {
     group: "Pages",
@@ -1398,7 +1417,7 @@ export const CAPABILITIES: Capability[] = [
         "TSTables framework pairs every function name with its index; scripts/function-registry.ts " +
         "reads both calling shapes it uses and harvest-functions.ts --binary merges the reading with " +
         "the recorded document harvest, refusing any disagreement. All 270 harvested entries agree, " +
-        "345 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
+        "363 functions are named, and 296 is FIND.CASEINSENSITIVE, so the text-contains condition " +
         "renders by name",
       risk: "medium",
     },
@@ -1498,7 +1517,7 @@ export const CAPABILITIES: Capability[] = [
     note:
       "setFormula parses infix text and compiles it: operators, parentheses, relative and " +
       "anchored references, ranges, cross-table references (`Other::A1`, resolved to the " +
-      "target's owner UUID), nested calls, omitted arguments, and any of the 345 named " +
+      "target's owner UUID), nested calls, omitted arguments, and any of the 363 named " +
       "functions. Whole-column spans (`SUM(D)`) write too. Every parseable corpus formula " +
       "rebuilds byte-identical to Apple's AST (1242 of 1242), and replacing a formula with " +
       "its own text saves the whole document byte-identical to the original. Nothing " +
@@ -1796,34 +1815,46 @@ export const CAPABILITIES: Capability[] = [
         "shows the title dissolving in on the first click; a failure shows it already present, " +
         "or the deck refused, which means the build needs state only the app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote " +
+        "\"It worked\" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app " +
+        "kept the build and its chunk field for field, reseeded the random number and minted new " +
+        "chunk uids, and dropped the two references the library had declared on them: a build's " +
+        "drawable and a chunk's build are carried and never declared, which the container rule now states.",
     },
   },
   {
     group: "Numbers & tables",
     name: "Tables from nothing on a page or a slide",
     apps: ["pages", "keynote"],
-    status: "experimental",
+    status: "read+write",
     probe: () => true,
     note:
       "appendTable/insertInlineTable (Pages) and slide.addTable (Keynote) graft the neutral donor — " +
       "the blank Numbers document's own table — under the body storage or the slide, anchored the " +
       "way the corpus's 18 inline Pages tables are (a five-field attachment at a U+FFFC, parent the " +
       "body) and listed the way its 3 slide tables are (parent the slide, in both drawable lists); " +
-      "rows size and fill it. Experimental because the shape audit lists seven ways a Numbers-born " +
-      "table's archives are referenced that no Pages or Keynote table shares — declared parents and " +
-      "calc-engine back-references, the style preset outside the theme, a paragraph style outside " +
-      "the style network — so the seeds, not the audited ladders, carry it",
+      "rows size and fill it. The table takes the host theme's first preset — its model's styles " +
+      "the preset network's members, its cell-level styles re-parented onto them and listed nowhere, " +
+      "as every corpus table's are — and the shape audit finds nothing a Pages or Keynote table lacks",
     manualProof: {
       claim: "Pages and Keynote draw a table grafted from the Numbers donor onto a page or a slide.",
       why:
-        "The donor is Apple-made and the anchoring matches the corpus, but the audit's seven " +
-        "findings are exactly the class only the app can judge, and a table the app repairs or " +
-        "drops looks like one never placed.",
+        "The donor is Apple-made, the anchoring and style wiring match the corpus field for field, " +
+        "and a table the app repairs or drops looks like one never placed.",
       how:
         "npm run seeds -- out writes seed-table.pages and seed-table.key; open each. A pass shows " +
         "the 3×2 table with its three rows where the text says; a missing or empty table, or a " +
         "refused file, is a failure.",
-      risk: "high",
+      risk: "medium",
+      settled:
+        "**Confirmed in Pages 15.4 and Keynote 15.4.** On the page the checker wrote \"worked great\" " +
+        "(`olekristensen-v26.0-mac-table-seed.pages`); on the slide \"The table is there but you've not " +
+        "sized it to fit it's contents\" (`olekristensen-v26.0-mac-table-seed.key`): the seed carried the " +
+        "Numbers donor's 20-point rows and 200-point columns onto a 1920-point slide, and the app keeps " +
+        "whatever sizes a file states. A new table now takes the app's own cell size in both " +
+        "dimensions — Keynote 432.25 by 129.8 in the layout's frame, Pages 120.386 by 22.73 — whatever " +
+        "its row and column count, and its geometry is the cells plus the border allowance.",
     },
   },
   {
@@ -1847,6 +1878,9 @@ export const CAPABILITIES: Capability[] = [
         "box saying 'Written by cupertino-files' below the title; a failure shows only the title, " +
         "or the deck refused. The Pages rung P21 of npm run pages:docs asks the same on a page.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote 15.4** — the checker wrote \"works\" on the slide " +
+        "(`olekristensen-v26.0-mac-text-box-seed.key`). The Pages side still rides rung P21.",
     },
   },
   {
@@ -1859,20 +1893,26 @@ export const CAPABILITIES: Capability[] = [
       "addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's " +
       "app-authored rules — the predicate with its operands and the formula over the table's own " +
       "identity, counted from the app's host column — grows the boundary list, switches the set on and " +
-      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a rule " +
-      "on column 0 is refused until a document shows its offset",
+      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a " +
+      "starts-with rule is written byte for byte as the app wrote one on column A, whose offset from " +
+      "the host at column 1 is −1 stored unsigned",
     manualProof: {
       claim: "Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.",
       why:
-        "The rule's bytes and the hidden states equal an app-authored set's, but the column a rule " +
-        "references is relative to a host column measured from rules on columns 1 and 2 only; a rule " +
-        "elsewhere tells whether the host is column 1 or the first rule's own column.",
+        "The rule's bytes and the hidden states equal app-authored sets', on columns A, B and C; " +
+        "whether the app re-evaluates a rule it did not author is what only opening the file shows.",
       how:
         "npm run seeds -- out writes seed-filter.numbers, whose rule sits on column C. A pass shows only " +
         "Pear and Train with the filter on in the panel; column D filtered instead means the host is the " +
         "first rule's column; every row showing or a refusal to open means the set needs state only the " +
         "app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Numbers 15.4** — only Pear and Train showed, so the rule applied to column C and " +
+        "the host is column 1. The checker wrote \"It worked, but you did not size the first row to show " +
+        "all content, and you put a long instruction line there\" (`olekristensen-v26.0-mac-filter-seed.numbers`): " +
+        "the seed had put its instruction in the table name, which the app shows on one unwrapped line. " +
+        "Seeds now keep names short and put the instruction in a wrapped first content row.",
     },
   },
   {
@@ -1897,6 +1937,12 @@ export const CAPABILITIES: Capability[] = [
         "groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows " +
         "flat or a refusal to open, which means the definition needs state only the app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Numbers 15.1.** The checker opened seed-category.numbers and wrote \"Works\" " +
+        "as a comment on the sheet (`olekristensen-v26.0-mac-category-seed.numbers`). The app kept the " +
+        "group column, the tree and its node ids, re-minted the node uids, and dropped the donor's " +
+        "old root node, whose declaration the library had left on the archive; addCategory now " +
+        "retires it with the node.",
     },
   },
   {
@@ -1943,7 +1989,9 @@ export const CAPABILITIES: Capability[] = [
     status: "roadmap",
     note:
       "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
-      "no fixture has a non-empty aggregate list, so summary rows are read but unexercised",
+      "the reader is exercised by one app-written summary (column_agg_type on the grouping column, " +
+      "level 1, agg_type 1 = Count); writing one needs the aggregator tree with an accumulator per group, " +
+      "the root node's agg_formula_coords and the summary model's cells, none of which is written yet",
   },
   {
     group: "Numbers & tables",
@@ -1958,10 +2006,10 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: function-shaped rules beyond text-contains",
+    name: "Filters: function-shaped rules beyond text-contains and starts-with",
     apps: "all",
     status: "roadmap",
-    note: "comparison and text-contains rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
+    note: "comparison, text-contains and starts-with rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote
@@ -2207,6 +2255,27 @@ export const CAPABILITIES: Capability[] = [
       how:
         "npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass " +
         "shows the first slide dark green; the theme's own background, or a refused deck, is a failure.",
+      risk: "medium",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Slides: changing the layout (setLayout)",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "setLayout re-instantiates the title, body and slide-number placeholders from the new master, " +
+      "carries the text, keeps every other drawable and drops the old placeholders — the shape the " +
+      "app's own Format ▸ Slide Layout left in olekristensen-v26.0-mac-authored.key",
+    manualProof: {
+      claim: "Keynote draws a slide this library moved to another layout as that layout.",
+      why:
+        "The slide's field set and placeholders match the app's own change; whether the app draws " +
+        "the carried title in the new layout's place only the app shows.",
+      how:
+        "npm run keynote:docs -- out writes K16-set-layout.key; open it. A pass shows the first slide " +
+        "on Title & Bullets with its title and a bullet body; the old layout, or a refused deck, is a failure.",
       risk: "medium",
     },
   },

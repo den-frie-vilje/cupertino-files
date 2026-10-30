@@ -1,0 +1,281 @@
+{
+  "file": "olekristensen-v26.0-mac-category-seed.numbers",
+  "sha1": "8133fcca35ec893319c407591dcbbc8de6da1d9c",
+  "app": "numbers",
+  "fileFormatVersion": "26.0.0",
+  "objects": 630,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 39
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 48
+    },
+    {
+      "name": "Index/Tables/DataList-904539.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904540.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904543.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904544.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904546.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904550.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904551.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904552.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904554.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904555.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905280-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 487
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 5,
+      "text": "Works"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Expected: three groups, Animal, Fruit and Transport, each with its rows beneath it. Flat rows or a refusal to open is the finding; comment on any cell.",
+            "rows": 7,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Item"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Kind"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Pear"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Cat"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Bicycle"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Transport"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Dog"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Train"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Transport"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

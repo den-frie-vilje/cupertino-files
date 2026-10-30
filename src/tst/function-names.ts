@@ -10,8 +10,8 @@
  * author formulas; the two must agree. See docs/BLOCKERS.md for the
  * ledger of who ran which against which version.
  *
- * Harvested: 2026-10-13 from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)
- * Coverage:  345 functions named; 298 probe candidates
+ * Harvested: 2026-10-14 from Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)
+ * Coverage:  363 functions named; 298 probe candidates
  */
 export const HARVESTED_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [1, "ABS"],
@@ -359,12 +359,30 @@ export const HARVESTED_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [371, "ISOMITTED"],
   [372, "LAMBDA.APPLY"],
   [373, "ISNUMBERORDATE"],
+  [374, "ACOT"],
+  [375, "ACOTH"],
+  [376, "COT"],
+  [377, "COTH"],
+  [378, "CSC"],
+  [379, "CSCH"],
+  [380, "SEC"],
+  [381, "SECH"],
+  [382, "XOR"],
+  [383, "COMBINA"],
+  [384, "GAMMA"],
+  [385, "PHI"],
+  [386, "FISHER"],
+  [387, "FISHERINV"],
+  [388, "PERMUTATIONA"],
+  [389, "DAYS"],
+  [390, "PEARSON"],
+  [391, "RSQ"],
 ]);
 
 /** Provenance of the table above, surfaced for diagnostics. */
 export const HARVEST_PROVENANCE = {
-  app: "Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
-  harvestedAt: "2026-10-13",
-  functions: 345,
+  app: "Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
+  harvestedAt: "2026-10-14",
+  functions: 363,
   candidates: 298,
 } as const;

@@ -25,7 +25,11 @@ Where an instruction names a menu the checker must find in a Danish
 UI, give the English path with the Danish label in parentheses once.
 The checker's own words stay verbatim in whatever language they
 arrive in — quotes in the ledger are evidence, and evidence is not
-translated away.
+translated away. The shipped prose (README, changelog, skill, docs
+site, and docblocks) follows the Apple Style Guide: closed em dashes, the serial
+comma, no Latin abbreviations, and Apple's own names for the apps'
+controls (Format sidebar, slide layout, presenter notes). Spelling
+stays British; the style guide's American spelling does not apply.
 
 ## A returned file is read notes-first
 
@@ -291,3 +295,11 @@ The traps, each paid for once:
   and the Keynote reader made a slide of every heading. Any writer with
   a matching reader gets a corpus round trip (`test/markdown-corpus.test.ts`
   is the pattern), comparing the structure the pair claims to carry.
+- **A reference extractor must reproduce Apple's order, not just its
+  set.** The table-model extractor matched every corpus model as a set
+  on the first try and broke a byte-identical round trip on the second,
+  because a dirtied Apple-written object is re-declared by the extractor
+  and the apps declare in a field sequence that is not field order.
+  Measure the sequence per field (single-field scans, nested stores
+  included) and compare lists, not sets, before registering; the merge
+  fixture's round trip is the gate.
