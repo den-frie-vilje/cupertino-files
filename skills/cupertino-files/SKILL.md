@@ -1005,9 +1005,10 @@ already carries — the slide's own in Keynote, the page's own or any in
 the document in Pages — gives it its own storage, sets the text, places
 it and sets its parent (the slide, or none in Pages). A document without
 a single text box has nothing to copy and is refused: add one in the
-app first. Keynote draws the copy; Pages lists it with its position and
-size but draws nothing for it yet, so a Pages text box is a placed
-object, not visible text, until that is settled.
+app first. Both apps draw the copy. The placement is in page points
+from the page's top left, and a box past the page edge is listed all
+the same and draws only the part on the page, so size it against
+`pageSetup()` rather than a guessed paper size.
 
 ```ts
 slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });

@@ -469,20 +469,24 @@ export const RUNGS: {
   {
     name: "P21-text-box",
     base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
-    note: "a text box copied from the document's own, placed on page 1 with new text, beside a slot for the checker to insert one with the app's own control",
+    note: "a text box copied from the document's own, placed inside the margins at the lower right of page 1 with new text",
     build: (doc) => {
       doc.appendParagraph(
         "P21: a text box saying 'Written by cupertino-files' should sit on page 1, " +
-          "near the lower right. No box, a box without the words, or a refused file " +
-          "are each a failure; comment on this line with what you see.",
+          "inside the margins at the lower right. No box, a box without the words, or a " +
+          "refused file are each a failure; comment on this line with what you see.",
       );
-      doc.appendParagraph(
-        "YOUR TURN: insert a text box with Insert > Text Box (Indsæt > Tekstfelt), type " +
-          "'Authored in Pages' into it, drag it to the lower left of page 1, and save. The " +
-          "app's own box then sits in the file beside ours, and the difference between the two " +
-          "is the measurement.",
-      );
-      doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
+      // Page points: the base is a 396 by 612 page, and a Letter-sized
+      // guess once left only the tip of the W on it.
+      const setup = doc.pageSetup();
+      const width = 220;
+      const height = 60;
+      doc.addTextBox(0, "Written by cupertino-files", {
+        x: (setup.pageWidth ?? 612) - (setup.rightMargin ?? 36) - width,
+        y: (setup.pageHeight ?? 792) - (setup.bottomMargin ?? 36) - height,
+        width,
+        height,
+      });
     },
   },
   {

@@ -1949,7 +1949,11 @@ export const CAPABILITIES: Capability[] = [
       risk: "medium",
       settled:
         "**Confirmed in Keynote 15.4** — the checker wrote \"works\" on the slide " +
-        "(`olekristensen-v26.0-mac-text-box-seed.key`). The Pages side still rides rung P21.",
+        "(`olekristensen-v26.0-mac-text-box-seed.key`). **Confirmed in Pages 15.4** on rung P21 " +
+        "with the app's own box authored beside it: ours drew, placed by a Letter-sized guess on a " +
+        "396 by 612 page so that only \"the tip of a W character\" showed at the lower right " +
+        "corner; the app's box differs from ours in nothing but text, geometry and the page's " +
+        "text-box style. Placement is in page points inside the page, from pageSetup().",
     },
   },
   {

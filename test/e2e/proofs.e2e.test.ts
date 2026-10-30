@@ -222,13 +222,22 @@ describe("proofs: Pages", () => {
     session!.remember("Pages");
     const path = session!.path("page-text-box.pages");
     const doc = PagesDocument.load(load(PAGES_BASE));
-    doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
+    // Inside the page: a box placed past the page edge is listed all the
+    // same and draws only the part on the page.
+    const setup = doc.pageSetup();
+    const placement = {
+      x: (setup.pageWidth ?? 612) - (setup.rightMargin ?? 36) - 220,
+      y: (setup.pageHeight ?? 792) - (setup.bottomMargin ?? 36) - 60,
+      width: 220,
+      height: 60,
+    };
+    doc.addTextBox(0, "Written by cupertino-files", placement);
     writeFileSync(path, doc.save());
 
     const reported = inDocument("Pages", path, describeItems("text items", "theDoc"));
     const line = reported.split("\n").find((l) => l.startsWith("Written by cupertino-files@"));
     const [, x, y, w, h] = /@(.+),(.+)#(.+)x(.+)$/.exec(line ?? "") ?? [];
-    expect([x, y, w, h].map(num)).toEqual([360, 560, 220, 60]);
+    expect([x, y, w, h].map(num)).toEqual([placement.x, placement.y, 220, 60]);
   });
 
   it("a drawable moved to the section master shows on every page of its section", { skip: rendering("Pages") }, () => {
