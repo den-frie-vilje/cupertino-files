@@ -4262,8 +4262,8 @@ export class TableModel {
    * an existing definition), and every data row needs a value in each
    * column.
    *
-   * The app has not yet been seen to draw a category this library
-   * defined; see docs/VERIFICATION.md.
+   * Numbers draws a category defined this way and keeps the group column,
+   * the tree and its node ids, re-minting the node uids on save.
    * @agentTool add_category
    */
   addCategory(column: number | readonly (number | CategoryLevel)[]): TableCategories {
@@ -4302,8 +4302,8 @@ export class TableModel {
    * comparison in the predicate and as a formula over the table's own
    * identity, both counted from the app's host column — the
    * set is switched on, and the rows the set now hides are written to the
-   * hidden-state extent, evaluated here. The app has not yet been seen to
-   * open a filter written this way; see docs/VERIFICATION.md.
+   * hidden-state extent, evaluated here. Numbers opens a filter written this
+   * way and shows the rows the rule keeps.
    * @agentTool add_filter_rule
    */
   addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
