@@ -30,14 +30,16 @@ export type MarkdownBlock =
 /** Supplies a picture's bytes for an image block, by the source it names; undefined skips it. */
 export type ImageResolver = (src: string) => Uint8Array | undefined;
 
-const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
-const BULLET = /^\s*[-*+]\s+(.*)$/;
-const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
+const HEADING = /^(#{1,6})\s+(.*)/;
+const BULLET = /^\s*[-*+]\s+(.*)/;
+const NUMBERED = /^\s*\d+[.)]\s+(.*)/;
 const QUOTE = /^>\s?(.*)$/;
-const IMAGE = /^\s*!\[([^\]]*)\]\(([^)\s]+)[^)]*\)\s*$/;
+const IMAGE = /^\s*!\[([^[\]]*)\]\(([^()\s]+)(?:\s[^()]*)?\)\s*$/;
 const RULE = /^\s*([-*_])(\s*\1){2,}\s*$/;
-const FOOTNOTE = /^\[\^([^\]]+)\]:\s*(.*)$/;
-const INLINE = /\[\^([^\]]+)\]|!\[([^\]]*)\]\([^)]*\)|\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g;
+const FOOTNOTE = /^\[\^([^[\]]+)\]:\s*(.*)/;
+// Every class stops at the next bracket, so a scan that fails never rescans
+// what an earlier start already covered: the whole pass is linear.
+const INLINE = /\[\^([^[\]]+)\]|!\[([^[\]]*)\]\((?:[^()\s]*)(?:\s[^()]*)?\)|\[([^[\]]*)\]\(([^()\s]+)(?:\s[^()]*)?\)/g;
 
 /**
  * Emphasis markers and code spans taken out of `pre`: the plain text, the
@@ -147,13 +149,29 @@ export function inlineText(raw: string): InlineText {
   };
 }
 const TABLE_ROW = /^\s*\|.*\|\s*$/;
-const TABLE_SEPARATOR = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
+const SEPARATOR_CELL = /^:?-{3,}:?$/;
+const isTableSeparator = (line: string): boolean =>
+  line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .every((cell) => SEPARATOR_CELL.test(cell.trim()));
+
+/** A heading's text without its closing hashes, which count only after a space. */
+function headingText(rest: string): string {
+  const text = rest.trimEnd();
+  let i = text.length;
+  while (i > 0 && text[i - 1] === "#") i--;
+  if (i === text.length) return text;
+  return i === 0 || text[i - 1] === " " || text[i - 1] === "\t" ? text.slice(0, i).trimEnd() : text;
+}
 
 /** Inline markup reduced to its text. */
 export function plainInline(text: string): string {
   return text
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/!\[([^[\]]*)\]\([^()]*\)/g, "$1")
+    .replace(/\[([^[\]]*)\]\([^()]*\)/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/__([^_]+)__/g, "$1")
@@ -168,8 +186,8 @@ function splitRow(line: string): string[] {
   let current = "";
   for (let i = 0; i < inner.length; i++) {
     const ch = inner[i]!;
-    if (ch === "\\" && inner[i + 1] === "|") {
-      current += "|";
+    if (ch === "\\" && (inner[i + 1] === "|" || inner[i + 1] === "\\")) {
+      current += inner[i + 1]!;
       i++;
     } else if (ch === "|") {
       cells.push(current);
@@ -189,7 +207,7 @@ export function splitFrontMatter(source: string): { meta: Record<string, string>
   if (!m) return { meta: {}, body: source };
   const meta: Record<string, string> = {};
   for (const line of m[1]!.split(/\r?\n/)) {
-    const pair = /^([A-Za-z_][\w-]*)\s*:\s*(.*)$/.exec(line);
+    const pair = /^([A-Za-z_][\w-]*)\s*:\s*(.*)/.exec(line);
     if (pair) meta[pair[1]!] = pair[2]!.replace(/^(["'])(.*)\1$/, "$2").trim();
   }
   return { meta, body: source.slice(m[0].length) };
@@ -223,7 +241,7 @@ export function parseMarkdown(source: string): MarkdownBlock[] {
     const heading = HEADING.exec(line);
     if (heading) {
       flush();
-      blocks.push({ kind: "heading", level: heading[1]!.length, text: plainInline(heading[2]!) });
+      blocks.push({ kind: "heading", level: heading[1]!.length, text: plainInline(headingText(heading[2]!)) });
       continue;
     }
     if (RULE.test(line)) {
@@ -245,7 +263,7 @@ export function parseMarkdown(source: string): MarkdownBlock[] {
     }
     if (TABLE_ROW.test(line)) {
       if (paragraph.length || list || quote.length) flush();
-      if (!TABLE_SEPARATOR.test(line)) table.push(splitRow(line));
+      if (!isTableSeparator(line)) table.push(splitRow(line));
       continue;
     }
     if (table.length) flush();

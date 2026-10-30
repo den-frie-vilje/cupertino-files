@@ -6,7 +6,7 @@ import { PagesDocument } from "../src/pages/document.ts";
 import { IWorkDocument } from "../src/tsa/document.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { blockPng } from "../scripts/png.ts";
-import { inlineText, parseMarkdown, splitFrontMatter } from "../src/tsa/markdown-parser.ts";
+import { inlineText, parseMarkdown, plainInline, splitFrontMatter } from "../src/tsa/markdown-parser.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -384,5 +384,36 @@ describe("building in a template", () => {
     const named = KeynoteDocument.fromMarkdown(md, { template: fixture("zenodo-v26.0-ios-writer.key"), layout: "Titel & Punkt" });
     const second = named.slides()[1]!;
     expect(named.masterSlides().find((m) => m.id === second.masterId)?.name).toBe("Titel & Punkt");
+  });
+});
+
+describe("Markdown parsing on hostile input", () => {
+  it("scans brackets, bangs and runs of spaces in linear time", () => {
+    const n = 20000;
+    const runs = [
+      () => inlineText("[^".repeat(n)),
+      () => plainInline("![".repeat(n)),
+      () => parseMarkdown(`![](!${"!".repeat(n)}\n`),
+      () => parseMarkdown(`|---|${" ".repeat(n)}x\n`),
+      () => parseMarkdown(`* ${" ".repeat(n)}\n[^a]:${" ".repeat(n)}\n`),
+    ];
+    for (const run of runs) {
+      const started = performance.now();
+      run();
+      expect(performance.now() - started).toBeLessThan(500);
+    }
+  });
+
+  it("keeps a backslash and a pipe in a table cell through export and import", () => {
+    const doc = NumbersDocument.fromMarkdown("| a |\n| --- |\n| C:\\\\path\\|x |\n");
+    const table = doc.tables()[0]!;
+    expect(table.cellText(1, 0)).toBe("C:\\path|x");
+    expect(doc.toMarkdown()).toContain("| C:\\\\path\\|x |");
+    expect(NumbersDocument.fromMarkdown(doc.toMarkdown()).tables()[0]!.cellText(1, 0)).toBe("C:\\path|x");
+  });
+
+  it("strips a heading's closing hashes only after a space", () => {
+    expect(parseMarkdown("# Sharp ##\n")).toEqual([{ kind: "heading", level: 1, text: "Sharp" }]);
+    expect(parseMarkdown("# C#\n")).toEqual([{ kind: "heading", level: 1, text: "C#" }]);
   });
 });
