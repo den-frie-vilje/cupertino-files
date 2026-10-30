@@ -38,7 +38,7 @@
  * Usage: `npm run pages:docs -- ~/Desktop/pages-rungs`
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { PagesDocument } from "../src/index.ts";
+import { BorderPosition, PagesDocument, tablesOfContents } from "../src/index.ts";
 import { chartsOf } from "../src/tsch/charts.ts";
 
 /**
@@ -58,12 +58,12 @@ export const BASES: { tag: string; url: URL; note: string }[] = [
   {
     tag: "v26",
     url: new URL("../fixtures/patrickomatic-termpaper-footers-masks.pages", import.meta.url),
-    note: "file format 26.1.0 — written by a current Pages",
+    note: "file format 26.1.0 — written by a current Pages; its body is placeholder text, which appended paragraphs join, so a line cannot be selected on its own in the app",
   },
   {
     tag: "v14",
     url: new URL("../fixtures/iwork-mcp-v14.5-sample.pages", import.meta.url),
-    note: "file format 14.4.1 — an older document Pages upgrades on open",
+    note: "file format 14.4.1 — an older document Pages upgrades on open; the upgrade drops every paragraph style outside the theme's listed set, the document's own and any a rung creates, so style rungs are invisible on it",
   },
 ];
 
@@ -109,6 +109,8 @@ export const RUNGS: {
   name: string;
   note: string;
   base?: URL;
+  /** Built on the embedded blank donor instead of a base; emitted once. */
+  blank?: true;
   build: (doc: PagesDocument) => void;
 }[] = [
   {
@@ -467,14 +469,24 @@ export const RUNGS: {
   {
     name: "P21-text-box",
     base: new URL("../fixtures/patrickomatic-pages26-sections-masks.pages", import.meta.url),
-    note: "a text box copied from the document's own, placed on page 1 with new text",
+    note: "a text box copied from the document's own, placed inside the margins at the lower right of page 1 with new text",
     build: (doc) => {
       doc.appendParagraph(
         "P21: a text box saying 'Written by cupertino-files' should sit on page 1, " +
-          "near the lower right. No box, a box without the words, or a refused file " +
-          "are each a failure.",
+          "inside the margins at the lower right. No box, a box without the words, or a " +
+          "refused file are each a failure; comment on this line with what you see.",
       );
-      doc.addTextBox(0, "Written by cupertino-files", { x: 360, y: 560, width: 220, height: 60 });
+      // Page points: the base is a 396 by 612 page, and a Letter-sized
+      // guess once left only the tip of the W on it.
+      const setup = doc.pageSetup();
+      const width = 220;
+      const height = 60;
+      doc.addTextBox(0, "Written by cupertino-files", {
+        x: (setup.pageWidth ?? 612) - (setup.rightMargin ?? 36) - width,
+        y: (setup.pageHeight ?? 792) - (setup.bottomMargin ?? 36) - height,
+        width,
+        height,
+      });
     },
   },
   {
@@ -500,6 +512,147 @@ export const RUNGS: {
       doc.appendParagraph("P24: this line should be alone on page 1; the next line should start page 2.");
       doc.appendParagraph("This line should be the first on page 2. Both on one page is a failure.");
       doc.insertPageBreak(doc.body.paragraphs().length - 2);
+    },
+  },
+  {
+    name: "P25-p3-colour",
+    note: "the same green as a Display P3 style and as an sRGB style, and a paragraph border dashed 4 on, 2 off",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P25: the next two lines are the same green numbers, the first tagged Display P3, the second sRGB. " +
+          "On a P3 display the first should be visibly more saturated. Two identical greens mean the P3 tag " +
+          "was reinterpreted as sRGB.",
+      );
+      const first = doc.appendParagraph("This line is Display P3 green.");
+      const second = doc.appendParagraph("This line is sRGB green.");
+      const dashed = doc.appendParagraph(
+        "This line carries a dashed bottom border, 4 pt dash and 2 pt gap. In the Format sidebar's " +
+          "border controls the dash should read as that pattern; a solid line, or no line, is a failure.",
+      );
+      const green = { r: 0, g: 0.85, b: 0.2 };
+      doc.setParagraphStyle(
+        first,
+        doc.createParagraphStyle({
+          name: "P25 P3",
+          character: { fontSize: 24, fontColor: { ...green, space: "p3" } },
+        }),
+      );
+      doc.setParagraphStyle(
+        second,
+        doc.createParagraphStyle({
+          name: "P25 sRGB",
+          character: { fontSize: 24, fontColor: { ...green, space: "srgb" } },
+        }),
+      );
+      doc.setParagraphStyle(
+        dashed,
+        doc.createParagraphStyle({
+          name: "P25 Dashed",
+          paragraph: {
+            border: { color: { r: 0, g: 0, b: 0, space: "srgb" }, width: 2, pattern: [4, 2] },
+            borderPositions: BorderPosition.BOTTOM,
+          },
+        }),
+      );
+    },
+  },
+  {
+    name: "P26-toc-rule",
+    base: new URL("../fixtures/picopalette-v3.2-multisection-footnotes.pages", import.meta.url),
+    note: "the table of contents told to stop collecting its first included paragraph style",
+    build: (doc) => {
+      const toc = tablesOfContents(doc.store)[0];
+      if (!toc) throw new Error("base has no table of contents");
+      const rule = toc.rules().find((r) => r.included && r.paragraphStyleId !== undefined);
+      if (!rule) throw new Error("no included TOC rule to switch off");
+      const style = doc.paragraphStyles().find((s) => s.id === rule.paragraphStyleId);
+      const before = toc.entries();
+      const dropped = before.filter((e) => doc.body.paragraphs()[e.paragraphIndex]?.styleId === rule.paragraphStyleId);
+      toc.setIncluded(rule.paragraphStyleId!, false);
+      doc.appendParagraph(
+        `P26: the table of contents at the top listed ${before.length} entries when this file was built, ` +
+          `${dropped.length} of them in the paragraph style "${style?.name ?? "?"}" (the first: ` +
+          `${dropped.slice(0, 3).map((e) => `"${e.heading.trim()}"`).join(", ")}). The library switched that style off ` +
+          "in the TOC's settings. PASS: after Pages redraws the TOC those headings are gone from it, and Edit > " +
+          "Table of Contents shows the style unticked. FAIL: the list is unchanged, or the style is still ticked.",
+      );
+    },
+  },
+  {
+    name: "P27-dashed-border",
+    blank: true,
+    note: "on the blank donor: a paragraph border dashed 4 on, 2 off, beside a solid one, and a line for the checker to border with the app's own controls",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P27: the next line carries a solid 2 pt bottom border, the line after it the same border " +
+          "dashed, 4 pt on and 2 pt off. PASS: two rules, the second visibly dashed. FAIL: one rule, " +
+          "both solid, or none.",
+      );
+      const solid = doc.appendParagraph("Solid border below this line.");
+      const dashed = doc.appendParagraph("Dashed border below this line.");
+      doc.appendParagraph(
+        "YOUR TURN: give this line a dashed bottom border yourself with Format > Layout > Borders & " +
+          "Rules (Format > Layout > Kanter og linjer), then save. The app's own construction is then " +
+          "in the file beside the library's.",
+      );
+      const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+      doc.setParagraphStyle(
+        solid,
+        doc.createParagraphStyle({
+          name: "P27 Solid",
+          paragraph: { border: { color: black, width: 2 }, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+      doc.setParagraphStyle(
+        dashed,
+        doc.createParagraphStyle({
+          name: "P27 Dashed",
+          paragraph: { border: { color: black, width: 2, pattern: [4, 2] }, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+    },
+  },
+  {
+    name: "P28-border-in-sidebar",
+    blank: true,
+    note: "the app's own dash presets on paragraph borders, for the Format sidebar to be read on each: dashed as direct formatting, dashed as a named style, dotted, short-dashed and long-dashed as named styles",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P28: the five lines below carry bottom borders in the app's own line styles. Select each " +
+          "line in turn and look at Format > Layout > Borders & Rules (Kanter og linjer). PASS: the " +
+          "sidebar shows a dashed line for lines 1 and 2, round dots for line 3, square dots for " +
+          "line 4 and long dashes for line 5. Otherwise comment on the line whose sidebar shows " +
+          "something else.",
+      );
+      const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+      const dashed = { color: black, width: 2, pattern: "dashed" } as const;
+      const direct = doc.appendParagraph("1. Dashed, as direct formatting.");
+      doc.paragraph(direct).format({ border: dashed, borderPositions: BorderPosition.BOTTOM });
+      const named = doc.appendParagraph("2. Dashed, as a named style.");
+      doc.setParagraphStyle(
+        named,
+        doc.createParagraphStyle({
+          name: "P28 Dashed",
+          paragraph: { border: dashed, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+      const dotted = doc.appendParagraph("3. Dotted, as a named style.");
+      doc.setParagraphStyle(
+        dotted,
+        doc.createParagraphStyle({
+          name: "P28 Dotted",
+          paragraph: { border: { color: black, width: 2, pattern: "dotted" }, borderPositions: BorderPosition.BOTTOM },
+        }),
+      );
+      for (const [line, preset] of [["4. Short-dashed, as a named style.", "short-dashed"], ["5. Long-dashed, as a named style.", "long-dashed"]] as const) {
+        doc.setParagraphStyle(
+          doc.appendParagraph(line),
+          doc.createParagraphStyle({
+            name: `P28 ${preset}`,
+            paragraph: { border: { color: black, width: 2, pattern: preset }, borderPositions: BorderPosition.BOTTOM },
+          }),
+        );
+      }
     },
   },
   {
@@ -530,10 +683,12 @@ function main(argv: string[]): number {
     console.log(`\n=== ${base.tag}: ${base.note} ===`);
     for (const rung of RUNGS) {
       // A rung with its own base is emitted once, not per base.
-      if (rung.base && base !== BASES[0]) continue;
+      if ((rung.base || rung.blank) && base !== BASES[0]) continue;
       const path = `${outDir}/${base.tag}-${rung.name}.pages`;
       try {
-        const doc = PagesDocument.load(rung.base ? new Uint8Array(readFileSync(rung.base)) : bytes);
+        const doc = rung.blank
+          ? PagesDocument.blank()
+          : PagesDocument.load(rung.base ? new Uint8Array(readFileSync(rung.base)) : bytes);
         rung.build(doc);
         writeFileSync(path, doc.save());
         console.log(`${(base.tag + "-" + rung.name).padEnd(28)} ${rung.note}`);

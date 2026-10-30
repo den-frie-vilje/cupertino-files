@@ -75,6 +75,7 @@ import {
   mintTableOwnerArchive,
   remintFormulaOwnerIdentity,
   TiledDependenciesFields,
+  ownerUuidString,
 } from "../tsce/owners.ts";
 import {
   controlsOf,
@@ -151,6 +152,7 @@ const ParagraphStyleBags = protoFields("TSWP.ParagraphStyleArchive", {
 });
 
 export const TableModelFields = protoFields("TST.TableModelArchive", {
+  TABLE_ID: "table_id",
   BASE_DATA_STORE: "base_data_store",
   NUMBER_OF_ROWS: "number_of_rows",
   NUMBER_OF_COLUMNS: "number_of_columns",
@@ -1243,7 +1245,15 @@ export class TableModel {
     if (id === undefined) return undefined;
     const formula = this.formulaTable().get(id);
     if (!formula) return undefined;
-    return renderFormula(formula, { row, column }, { owners: this.owners() });
+    return renderFormula(formula, { row, column }, { owners: this.owners(), hostOwner: this.ownerBaseUid() });
+  }
+
+  /** The table's kind-1 owner identity: its haunted owner's uid less the haunted kind. */
+  private ownerBaseUid(): OwnerUid | undefined {
+    const haunted = readOwnerUid(
+      this.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID),
+    );
+    return haunted ? { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi } : undefined;
   }
 
   /**
@@ -3613,16 +3623,14 @@ export class TableModel {
   }
 
   /**
-   * The second conditional id a cell record carries, meaning unconfirmed.
+   * The second conditional id a cell record carries: a per-set value the
+   * app assigns, not the rule that last matched.
    *
    * Sits in the `COND_RULE_STYLE_ID` slot, which by position corresponds to
-   * `CellArchive.conditional_style_applied_rule` — the rule that last
-   * matched. The corpus does not bear that out: in the one fixture with
-   * real rules, every cell sharing a one-rule set carries the same value
-   * (15) regardless of content, and cells on other sets carry 0, which is
-   * not a valid key in any of the table's lists. So it is exposed raw and
-   * preserved byte-for-byte rather than interpreted. See
-   * `docs/VERIFICATION.md`.
+   * `CellArchive.conditional_style_applied_rule`, but Numbers gives every
+   * cell on one set the same value (15 on one set, 0 on another) whatever
+   * the cell's content, and leaves it alone when a different rule starts
+   * to fire. Exposed raw and preserved byte-for-byte.
    */
   conditionalRuleId(row: number, column: number): number | undefined {
     return this.recordAt(row, column)?.id(CellFlag.COND_RULE_STYLE_ID);
@@ -4254,8 +4262,8 @@ export class TableModel {
    * an existing definition), and every data row needs a value in each
    * column.
    *
-   * The app has not yet been seen to draw a category this library
-   * defined; see docs/VERIFICATION.md.
+   * Numbers draws a category defined this way and keeps the group column,
+   * the tree and its node ids, re-minting the node uids on save.
    * @agentTool add_category
    */
   addCategory(column: number | readonly (number | CategoryLevel)[]): TableCategories {
@@ -4294,8 +4302,8 @@ export class TableModel {
    * comparison in the predicate and as a formula over the table's own
    * identity, both counted from the app's host column — the
    * set is switched on, and the rows the set now hides are written to the
-   * hidden-state extent, evaluated here. The app has not yet been seen to
-   * open a filter written this way; see docs/VERIFICATION.md.
+   * hidden-state extent, evaluated here. Numbers opens a filter written this
+   * way and shows the rows the rule keeps.
    * @agentTool add_filter_rule
    */
   addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
@@ -5053,6 +5061,9 @@ export function remintTableIdentity(store: ObjectStore, tableInfoId: bigint): vo
   model.clearStoredHiddenStates();
   const newBase = remintFormulaOwnerIdentity(model.object, objects);
   if (newBase) {
+    // The model states the same identity once more as a string; a clone
+    // still carrying the donor's is re-minted by the app on open.
+    model.object.message.setString(TableModelFields.TABLE_ID, ownerUuidString(newBase));
     mintTableOwnerArchive(store, tableInfoId, newBase, {
       rows: model.rowCount,
       columns: model.columnCount,

@@ -9,6 +9,23 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- Copying a table that was added to a Pages document (`insertInlineTable`
+  with `copyOf`) copies that table alone. Before, the copy could bring
+  the whole document along, every other table included.
+- A stroke given without a pattern (`{ color, width }`) is written solid,
+  with the whole pattern message the apps write; before, the stroke had
+  no pattern at all, which Pages filled with an empty dash list.
+- Direct paragraph and character formatting creates a style marked as a
+  variation of its parent, as the apps mark every parented style.
+- A table copied with `addTable({ copyOf })` kept its donor's table id
+  string beside the fresh calc-engine identity the copy was given, and
+  Numbers re-minted the copy on open, so a formula in another table
+  naming the copy read `#REF!`. The copy's id is now its own identity,
+  the way every app-written table states it.
+- A formula's reference to its own table that the app had stored as a
+  cross-table node (what a copied or renamed table leaves behind)
+  rendered with the table's name in front, `CrossCheck::C3`, where the
+  app's formula bar shows `C3`. It now renders as the app shows it.
 - A table added to a Pages page or a Keynote slide takes the app's own
   cell size in both dimensions whatever its row and column count
   (Keynote 432.25 by 129.8 points in the layout's frame, Pages 120.386
@@ -91,6 +108,12 @@ in commit messages and pull requests.
 
 ### Added
 
+- A stroke's `pattern` takes `"short-dashed"`, `"dashed"`, `"long-dashed"`
+  and `"dotted"`, the four dashed items of Pages' Borders & Rules
+  line-style menu, written as the app writes them. Dash arrays in points
+  still draw, but the control shows None for them.
+- Every written colour carries the HDR headroom the current apps stamp
+  on their own colours.
 - `canvasComments()` on a Numbers document and on a Keynote slide reads
   the comments pinned to a sheet or a slide, with author and date.
 

@@ -32,7 +32,9 @@ import {
   writeStroke,
   type Stroke,
 } from "../src/index.ts";
-import { RawMessage } from "../src/base/protobuf.ts";
+import { RawMessage, WireType } from "../src/base/protobuf.ts";
+import { typeName } from "../src/tsp/registry.ts";
+import { loadSchema } from "../scripts/check-required-fields.ts";
 import {
   deprecatedBorders,
   ParaProps,
@@ -127,6 +129,12 @@ describe("style value codecs", () => {
       const round = readStroke(RawMessage.parse(writeStroke({ pattern }).toBytes()))!;
       expect(round.pattern).toBe(pattern);
     }
+    // No pattern given means solid, written whole: the app writes no
+    // stroke without a pattern message.
+    const bare = writeStroke({ color: { r: 0, g: 0, b: 0 }, width: 2 });
+    expect(bare.getMessage(6)!.getUint(1)).toBe(1);
+    expect(bare.getMessage(6)!.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(readStroke(RawMessage.parse(bare.toBytes()))!.pattern).toBe("solid");
 
     // On the wire a dashed pattern has the app's whole shape: phase 0,
     // the run count, and the float list padded to six.
@@ -152,6 +160,69 @@ describe("style value codecs", () => {
     expect(pattern.getFloat(2)).toBe(0); // phase
     expect(pattern.getUint(3)).toBe(0); // count
     expect(pattern.getFloats(4)).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it("writes the dashed items of Pages' line-style menu, and the corpus knows no other dashes", () => {
+    // The paragraph Borders & Rules line-style menu of Pages 15.4, applied
+    // item by item at 3 pt in black (8-line-styles-3pt.pages, not a
+    // fixture): the stroke archive of each item, as the app wrote it, in
+    // hex. Items 7 to 11 are the brush strokes, solid patterns naming a
+    // smart stroke, which the library does not write.
+    const black = { r: 0, g: 0, b: 0, space: "srgb" } as const;
+    const menu = {
+      "solid, round caps": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180120012d000080403227080115000000001800250000000025000000002500000000250000000025000000002500000000",
+      solid: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080115000000001800250000000025000000002500000000250000000025000000002500000000",
+      "short-dashed": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000803f250000803f2500000000250000000025000000002500000000",
+      dashed: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000004025000000402500000000250000000025000000002500000000",
+      "long-dashed": "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180020002d000080403227080015000000001802250000c040250000c0402500000000250000000025000000002500000000",
+      dotted: "0a1d08011d0000000025000000002d00000000350000803f60016d0000803f1500004040180120012d000080403227080015000000001802256f12833a25000000402500000000250000000025000000002500000000",
+    };
+    const hex = (stroke: Parameters<typeof writeStroke>[0]) => Buffer.from(writeStroke(stroke).toBytes()).toString("hex");
+    expect(hex({ color: black, width: 3, cap: 1, join: 1 })).toBe(menu["solid, round caps"]);
+    expect(hex({ color: black, width: 3 })).toBe(menu.solid);
+    for (const preset of ["short-dashed", "dashed", "long-dashed", "dotted"] as const) {
+      expect(hex({ color: black, width: 3, pattern: preset })).toBe(menu[preset]);
+    }
+    const dotted = RawMessage.parse(writeStroke({ width: 2, pattern: "dotted" }).toBytes());
+    expect(dotted.getUint(3)).toBe(1); // round cap and join, the app's
+    expect(dotted.getUint(4)).toBe(1);
+    expect(RawMessage.parse(writeStroke({ pattern: "dotted", cap: 0, join: 0 }).toBytes()).getUint(4)).toBe(0);
+
+    // Every dashed stroke the apps wrote into the fixtures, at every
+    // schema-reachable site and width, is the dashed or the dotted shape.
+
+    const schema = loadSchema();
+    const shapes = new Map<string, number>();
+    const walk = (m: RawMessage, name: string, depth: number) => {
+      if (name === "TSD.StrokeArchive") {
+        const p = m.getMessage(6);
+        if (p?.getUint(1) !== 0 || !p.getUint(3)) return;
+        const key = `cap ${m.getUint(3)} [${p.getFloats(4).slice(0, p.getUint(3)).map((f) => f.toFixed(3)).join(", ")}]`;
+        shapes.set(key, (shapes.get(key) ?? 0) + 1);
+        return;
+      }
+      const def = schema.get(name);
+      if (!def || depth > 12) return;
+      for (const f of def.values()) {
+        if (!schema.has(f.type) || !m.fields.some((x) => x.no === f.number && x.wire === WireType.Bytes)) continue;
+        for (const child of m.getMessages(f.number)) walk(child, f.type, depth + 1);
+      }
+    };
+    for (const name of readdirSync(FIXTURES).filter((n) => /\.(pages|numbers|key)$/.test(n))) {
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(fixture(name));
+      } catch {
+        continue;
+      }
+      for (const { obj } of doc.store.allObjects()) {
+        const type = typeName(obj.type, doc.app.toLowerCase() as never);
+        if (type && schema.has(type)) walk(obj.message, type, 0);
+      }
+    }
+    expect([...shapes.keys()].sort()).toEqual(["cap 0 [2.000, 2.000]", "cap 1 [0.001, 2.000]"]);
+    expect((shapes.get("cap 0 [2.000, 2.000]") ?? 0) > 10).toBe(true);
+    expect((shapes.get("cap 1 [0.001, 2.000]") ?? 0) > 10).toBe(true);
   });
 
   it("writes line spacing the way the app does: amount only", () => {
@@ -675,6 +746,14 @@ describe("direct formatting through the fluent API", () => {
     expect(paragraph.leftIndent).toBe(48);
     expect(paragraph.borderPositions).toBe(BorderPosition.BOTTOM);
     expect(paragraph.border!.width).toBe(1);
+    // Direct formatting is a variation of the paragraph's style, as the
+    // apps write every parented style.
+    {
+      const styled = doc.body.paragraphs()[0]!.styleId!;
+      const sup = doc.store.resolve(styled)!.message.getMessage(1)!;
+      expect(sup.getMessage(3) !== undefined).toBe(true);
+      expect(sup.getBool(4)).toBe(true);
+    }
   });
 
   it("keeps every fixture's styles readable", () => {

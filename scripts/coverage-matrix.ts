@@ -535,6 +535,40 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Write a saturated P3 green and the same values as sRGB side by side, open on a P3 display, and " +
         "confirm they differ. For dashes, write [4, 2] and compare against a 4/2 dash set in the inspector.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own saves of Pages rungs P25 and P27: " +
+        "two styles with the same channels, one tagged p3 and one srgb, drew as two greens (\"the " +
+        "colourspace tagging works - it's two different greens\"), and a [4, 2] paragraph border drew " +
+        "dashed (\"the dashes look fine, as specified\"). Found beside it: the Format sidebar shows " +
+        "None as the line style of that [4, 2] border, direct or named, while the app's own on the next " +
+        "line, [2, 2], shows: the sidebar knows only its own menu's dash shapes, now the presets.",
+      risk: "low",
+    },
+  },
+  {
+    group: "Text & styles",
+    name: "Dash presets (short-dashed, dashed, long-dashed, dotted strokes)",
+    apps: "all",
+    status: "read+write",
+    note:
+      "the four dashed items of Pages' Borders & Rules line-style menu, byte-identical to the app's own " +
+      "at 3 pt; the menu's five brush strokes (smart strokes by name) are not written; any other dash " +
+      "array draws but the Format sidebar shows None for it",
+    manualProof: {
+      claim: "A paragraph border written with the \"dotted\" preset shows as dotted in the Format sidebar.",
+      why:
+        "Pages showed None for a [4, 2] border that drew, and reads the \"dashed\" preset back as dashed " +
+        "(Pages rung P28, both as direct formatting and as a named style: \"worked\"). The dotted preset " +
+        "was the apps' dotted shape on shape outlines and chart gridlines; on a paragraph border the " +
+        "control showed None for it (\"not showing up\").",
+      how:
+        "Pages rung P30 asks for every item of the line-style menu at 3 pt; the returned strokes are the " +
+        "shapes to copy.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P30 with all " +
+        "eleven menu items applied: the menu's dotted item is [0.001, 2] with round caps and round " +
+        "joins, where ours had miter joins, the one byte the control did not match. The preset now " +
+        "writes the app's stroke archive byte for byte, as do dashed, short-dashed and long-dashed.",
       risk: "low",
     },
   },
@@ -768,6 +802,11 @@ export const CAPABILITIES: Capability[] = [
       how:
         "Turn a heading style off in the TOC settings, save, open in Pages, and check the TOC drops those " +
         "headings after it redraws.",
+      settled:
+        "Settled, Pages 15.4 (M15.4-7051.0.79-2), the checker's own save of Pages rung P26: with the " +
+        "Subtitle rule switched off, the TOC reopened without its twelve Subtitle headings, 49 entries " +
+        "where 61 were cached, and the style was unticked in the TOC settings (\"PASS - the subtitles " +
+        "were not included in the TOC when the doc opened. And subtitle was unticked\").",
       risk: "low",
     },
   },
@@ -981,7 +1020,11 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "a drawable copied into a page's floating list is placed and rendered by Pages",
       why: "the suite proves the copy resolves, keeps its media and survives a save, not that the app lays it out",
-      how: "copy an image onto a page at a known position, open in Pages, and confirm it appears there and is independently editable from its source",
+      how:
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a text box on a page reads back where placed' pins the placement; the rendering has no probe until the box draws.",
+      e2e: true,
+      settled:
+        "Refuted for a text box, Pages 15.4: doc.addTextBox lands the box in the page's floating list and Pages lists it there with the asked position and size, but the PDF export carries neither its words nor any ink in its rectangle, with a top-level donor (gomap-v26.1-newest-writer) and a grouped one (patrickomatic-pages26-sections-masks) alike; Keynote's twin draws. Images are unmeasured.",
       risk: "medium",
     },
   },
@@ -1077,8 +1120,10 @@ export const CAPABILITIES: Capability[] = [
       claim: "Pages repeats a drawable this library moved to the section master on every page.",
       why: "The archive matches the app's own move field for field; whether the app draws it on every page only the app shows.",
       how:
-        "node scripts/make-pages-docs.ts out writes P23-section-master.pages; open it. A pass shows the " +
-        "page-1 graphic on every page of the section; only on page 1, or gone, is a failure.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a drawable moved to the section master shows on every page of its section' exports the untouched and the edited document and compares each page's ink in the graphic's rectangle.",
+      e2e: true,
+      settled:
+        "Pages 15.4: moving the first section's graphic to the section master inks its rectangle on pages 2, 3, 8 and 16 of the sixteen-page section (0.57, 0.56, 0.13 and 0.13 of the rectangle more than the untouched export) and leaves page 17, the next section's first, unchanged.",
       risk: "medium",
     },
   },
@@ -1254,8 +1299,10 @@ export const CAPABILITIES: Capability[] = [
         "question no archive inspection answers. Our 'body border' setter writes both the horizontal and " +
         "vertical border strokes on the assumption the inspector's single control does the same.",
       how:
-        "Set bandedRows with a banded fill and a body grid stroke, open in Numbers, and compare against " +
-        "the same settings applied through the Table inspector on an untouched copy.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'banded rows draw in the band fill' counts the band colour in the PDF export of a blank document; grid strokes and the visibility toggles have no probe yet.",
+      e2e: true,
+      settled:
+        "Banded rows, Numbers 15.4: a (0.6, 0.8, 1) band fill set on a blank document's table is in the PDF export (over 50 pixels of that colour at 36 dpi). Grid strokes and the visibility toggles are unmeasured.",
       risk: "medium",
     },
   },
@@ -1273,9 +1320,10 @@ export const CAPABILITIES: Capability[] = [
         "Whether the app agrees a header count is legal for a given table — and whether frozen or repeating " +
         "headers need companion state we are not writing — only the app can say.",
       how:
-        "Set headerRows/footerRows plus freezeHeaderRows and repeatHeaderRows, open in Numbers, and check " +
-        "the header/footer controls in the inspector show what we set and that scrolling freezes correctly. " +
-        "For repeating headers, print to PDF from Pages and confirm the header repeats on page 2.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'bands, a row height and a column width take effect' reads the counts, the height and the width back through Numbers' scripting dictionary.",
+      e2e: true,
+      settled:
+        "Numbers 15.4 reports header row count 2, footer row count 1, row 3 at 44 points and column 2 at 180 points, as set on a blank document. The freeze and repeat flags are not in the scripting dictionary and stay unmeasured.",
       risk: "medium",
     },
   },
@@ -1357,10 +1405,10 @@ export const CAPABILITIES: Capability[] = [
         "No plain duration cell exists in the corpus, so the default is the app's initialiser rather " +
         "than a measured file; its rendering has not been seen.",
       how:
-        "Write a 1h 30m duration into a blank document and open it in Numbers beside a cell where " +
-        "the same duration was typed by hand. A pass shows both as 1:30:00 with Duration in the " +
-        "inspector; a failure shows a bare number or an inspector reading other than Duration, " +
-        "which means the written field set differs from a fresh cell's.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a duration we type shows as a duration, not a number' reads the cell's formatted value back.",
+      e2e: true,
+      settled:
+        "Numbers 15.4 (Danish UI) shows a 5400-second duration written to a blank document as '1t 30m': the short duration style in the UI's language, which a bare number or a text cell never gets.",
       risk: "low",
     },
   },
@@ -1378,9 +1426,10 @@ export const CAPABILITIES: Capability[] = [
         "values, but the archive records no brackets and no function names, so the rendering is a " +
         "reconstruction. Only the app can confirm the reconstruction reads the same.",
       how:
-        "Open libetonyek-pages5-extra-dir.pages in Pages and numbers-parser-v14.4-issue102.numbers " +
-        "in Numbers, click the formula cells, and compare the formula bar with cellFormula(). " +
-        "Expect =B2*C2 and =SUM(C3:K6).",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'formula text matches what Numbers shows' asks the formula bar for every formula cell of two fixtures and compares references, ranges and operators; function names and decimal literals are the UI locale's and are not compared.",
+      e2e: true,
+      settled:
+        "Numbers 15.4: 33 formulas of numbers-parser-v26.1-xlsx-lineage and olekristensen-v26.3-demo06-formulas-returned match the formula bar in references, ranges and operators. The one real difference, a reference to the formula's own table stored as a cross-table node and rendered CrossCheck::C3 where the app shows C3, is fixed. Function names and decimal literals read in the UI's language (MIDDEL, AFRUND, 3,7).",
       risk: "medium",
     },
   },
@@ -1577,12 +1626,13 @@ export const CAPABILITIES: Capability[] = [
         "engine sites (archives, tracker list, owner map, internals past the map's max); " +
         "whether that is the whole acceptance test only an open can say.",
       how:
-        "npm run demos -- out, open demo-06-formler.numbers. F-03: the C cell under the rung " +
-        "shows 5 and, tapped, the formula bar shows =CrossCheck::B3; F-06 likewise 8 with " +
-        "=NoCalc::B2; CrossCheck's top row 7. A bare number with no formula behind it means " +
-        "the app again reduced the reference to its cached value, and the next site to write " +
-        "is the engine's uuid_reference_map, populated in the round-five return by the " +
-        "checker's own typed twins.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a formula referring to a cloned table computes on first open' is the probe, on since the identity holds.",
+      settled:
+        "Settled, Numbers 15.4 (M15.4-7051.0.79-2): once the re-mint also writes the table model's " +
+        "table_id string as the new base, the app's own save keeps both clones' identities (id strings " +
+        "and owner bases unchanged), formulas in the donor naming the clones read 5 and 8, a formula the " +
+        "checker typed naming the clone read 10, and the clone's own cross reference and =SUM(B) read " +
+        "7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on.",
       risk: "medium",
     },
   },
@@ -1678,6 +1728,13 @@ export const CAPABILITIES: Capability[] = [
         "the second conditional id in a cell record (COND_RULE_STYLE_ID) is a cache the app rewrites, so preserving it verbatim is enough",
       why: "its value contradicts the obvious reading — every cell on a one-rule set carries 15 regardless of content, and cells on other sets carry 0, which is not a valid key in any of the table's lists",
       how: "author two conditional rules, note the value on cells matching each, then change a cell's content so a different rule fires and re-read; if it tracks the match it is a live cache, if not it means something else",
+      settled:
+        "Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 26: the id " +
+        "does not track the match. Two sets, > 5 green on C2:C4 and = 4 yellow on C5, written with no " +
+        "id; after the checker typed 8 into C2 (now matching) and 7 into C5 (no longer matching), the " +
+        "app had given every cell on the first set 0 and the cell on the second set 15. It is a " +
+        "per-set value the app assigns, so preserving it verbatim is enough and reading it as the " +
+        "applied rule would be wrong.",
       risk: "low",
     },
   },
@@ -1690,7 +1747,11 @@ export const CAPABILITIES: Capability[] = [
     manualProof: {
       claim: "re-pointing a cell's conditional-style key makes Numbers apply that rule set to it",
       why: "the fixture suite proves the key changes and the file reloads, not that the app honours it — evaluation happens in the calc engine",
-      how: "open a document with two conditional rules, move a cell onto the other set with setConditionalStyleKey, open in Numbers and confirm the cell picks up the second rule's styling",
+      how:
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a conditional fill draws, and draws again on a cell re-pointed to its rule set' counts the rule's fill colour in the PDF export before and after the re-pointing.",
+      e2e: true,
+      settled:
+        "Numbers 15.4: the rule's fill is in the export of the one-cell document, and re-pointing a second matching cell to the set multiplies the count by between 1.6 and 2.6.",
       risk: "medium",
     },
   },
@@ -1792,6 +1853,14 @@ export const CAPABILITIES: Capability[] = [
       claim: "flipping is_enabled makes Numbers group or ungroup the rows",
       why: "the suite proves the flag round-trips and the tree survives, not that the app acts on it",
       how: "take a categorised table, disable it with setEnabled(false), open in Numbers and confirm the rows are flat and the category can be switched back on",
+      settled:
+        "Settled, Numbers 15.4 (M15.4-7051.0.79-2), the checker's own save of Numbers rung 25: the " +
+        "table opened flat, the category was there to switch on and regrouped the rows, and switching " +
+        "it off again flattened them (\"i turned it on and off - it worked\"). In the bytes the app " +
+        "left the disabled definition untouched, re-sorted the rows into group order and kept that " +
+        "order when disabled, so a disabled definition's cached tree is stale by index; it also " +
+        "synced the inline copy under the table model's category_owner_deprecated to the flag, which " +
+        "setEnabled leaves as it was.",
       risk: "low",
     },
   },
@@ -1880,7 +1949,11 @@ export const CAPABILITIES: Capability[] = [
       risk: "medium",
       settled:
         "**Confirmed in Keynote 15.4** — the checker wrote \"works\" on the slide " +
-        "(`olekristensen-v26.0-mac-text-box-seed.key`). The Pages side still rides rung P21.",
+        "(`olekristensen-v26.0-mac-text-box-seed.key`). **Confirmed in Pages 15.4** on rung P21 " +
+        "with the app's own box authored beside it: ours drew, placed by a Letter-sized guess on a " +
+        "396 by 612 page so that only \"the tip of a W character\" showed at the lower right " +
+        "corner; the app's box differs from ours in nothing but text, geometry and the page's " +
+        "text-box style. Placement is in page points inside the page, from pageSetup().",
     },
   },
   {
@@ -2070,9 +2143,10 @@ export const CAPABILITIES: Capability[] = [
         "linkage is the invisible-control failure class: valid, complete, never drawn. Only the " +
         "app can say it paints.",
       how:
-        "`addImage` a PNG onto a fresh deck's first slide, open in Keynote: the picture must show " +
-        "centered at its intrinsic size, selectable and movable like an inserted one. A blank " +
-        "slide means the linkage failed somewhere the audit cannot see; say which slide you see.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a picture added to a slide sits where asked, at the size asked' reads the image's position and size back through Keynote's scripting dictionary.",
+      e2e: true,
+      settled:
+        "Keynote 15.4 reports one image on the blank deck's first slide at (100, 200), 300 by 150 points, as asked.",
       risk: "medium",
     },
   },
@@ -2098,10 +2172,10 @@ export const CAPABILITIES: Capability[] = [
         "never exercised together: no per-object UUID map entries, and one object-level row " +
         "for the master where the app writes a component-level row alone.",
       how:
-        "Load a deck Keynote has saved (per-slide `Slide-<id>` components in Index/), " +
-        "`duplicateSlide` any slide, save, open in Keynote, edit something small, and let it " +
-        "save (autosave or ⌘S). The failure mode of the old shape was at SAVE, not open — a " +
-        "deck that opens and renders proves nothing yet.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'Keynote saves a deck we added and duplicated slides in' has Keynote save the deck on command; a save error fails the probe.",
+      e2e: true,
+      settled:
+        "Keynote 15.4: olekristensen-v26.0-mac-authored.key (per-slide components) with duplicateSlide(0) and addSlide({ copyOf: 0 }) opened, reported two slides more, and saved on command without error; the library reloads the saved deck with the same count.",
       risk: "high",
     },
   },
@@ -2253,8 +2327,10 @@ export const CAPABILITIES: Capability[] = [
         "The suite proves the archive matches the corpus's per-slide styles field for field; a " +
         "style the app ignores looks like a slide left on its theme, so only the app can say.",
       how:
-        "npm run keynote:docs -- out writes K14-slide-background.key; open it in Keynote. A pass " +
-        "shows the first slide dark green; the theme's own background, or a refused deck, is a failure.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a background we set is the colour Keynote draws' rasterises the PDF export and counts the colour.",
+      e2e: true,
+      settled:
+        "Keynote 15.4: the export of a blank deck whose first slide got a (0.1, 0.23, 0.16) background is more than half that colour at 18 dpi.",
       risk: "medium",
     },
   },
@@ -2274,8 +2350,10 @@ export const CAPABILITIES: Capability[] = [
         "The slide's field set and placeholders match the app's own change; whether the app draws " +
         "the carried title in the new layout's place only the app shows.",
       how:
-        "npm run keynote:docs -- out writes K16-set-layout.key; open it. A pass shows the first slide " +
-        "on Title & Bullets with its title and a bullet body; the old layout, or a refused deck, is a failure.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a slide moved to another layout is on that layout, to Keynote' reads the slide's base layout, title and body back.",
+      e2e: true,
+      settled:
+        "Keynote 15.4 reports the moved slide's base layout as Title & Bullets, its title and its body as written.",
       risk: "medium",
     },
   },
@@ -2297,9 +2375,10 @@ export const CAPABILITIES: Capability[] = [
         "the app draws the copied placeholders in the layout's places, or repairs or refuses the " +
         "slide, only the app can say.",
       how:
-        "npm run keynote:docs -- out writes K13-slide-from-layout.key; open it in Keynote. A pass " +
-        "shows a last slide on the named layout with the K13 title and a body; a failure shows a " +
-        "blank slide, a slide on the wrong layout, or a refused deck.",
+        "npm run test:e2e on a Mac: test/e2e/proofs.e2e.test.ts 'a slide made from a layout is on that layout, to Keynote' reads the appended slide's base layout and title back.",
+      e2e: true,
+      settled:
+        "Keynote 15.4 reports the appended slide's base layout as the chosen master and its title as written.",
       risk: "medium",
     },
   },

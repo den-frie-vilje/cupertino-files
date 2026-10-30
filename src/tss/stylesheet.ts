@@ -529,7 +529,12 @@ function buildStyleSuper(
   const sup = RawMessage.create();
   if (name !== undefined) sup.setString(StyleSuper.NAME, name);
   if (identifier !== undefined) sup.setString(StyleSuper.STYLE_IDENTIFIER, identifier);
-  if (parentId !== undefined) sup.setMessage(StyleSuper.PARENT, makeRef(parentId));
+  if (parentId !== undefined) {
+    sup.setMessage(StyleSuper.PARENT, makeRef(parentId));
+    // Every parented style in the corpus is a variation of its parent,
+    // across all style types; the apps write no parent without the flag.
+    sup.setBool(StyleSuper.IS_VARIATION, true);
+  }
   sup.setMessage(StyleSuper.STYLESHEET, makeRef(stylesheetId));
   return sup;
 }

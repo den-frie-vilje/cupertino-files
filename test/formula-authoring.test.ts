@@ -48,6 +48,29 @@ describe("authored formulas are visible to the sweep", () => {
   });
 });
 
+/**
+ * A reference to the formula's own table that Apple stored as a cross-table
+ * node (what a copied or renamed table leaves behind). It renders as the
+ * plain address the app shows, which parses back to a plain node, so these
+ * cannot rebuild byte-identically by design.
+ */
+const SELF_REFERENCE_AS_CROSS_TABLE = new Set([
+  "olekristensen-v26.3-demo06-formulas-returned.numbers CrossCheck r0c2",
+  "olekristensen-v26.3-demo06-formulas-round2.numbers CrossCheck r1c2",
+  "olekristensen-v26.3-demo06-formulas-round4.numbers CrossCheck r1c2",
+  "olekristensen-v26.3-demo06-formulas-round8.numbers CrossCheck r1c2",
+]);
+
+describe("a self-reference stored as a cross-table node", () => {
+  it("renders as the plain address the app shows", () => {
+    const doc = IWorkDocument.open(
+      new Uint8Array(readFileSync(new URL("olekristensen-v26.3-demo06-formulas-returned.numbers", FIXTURES))),
+    );
+    const table = tablesOf(doc.store).find((t) => t.name === "CrossCheck")!;
+    expect(table.cellFormula(0, 2)).toBe("=C3");
+  });
+});
+
 describe("every parseable corpus formula rebuilds byte-identically", () => {
   it("matches Apple's AST for all of them, with measured floors", () => {
     let total = 0;
@@ -72,6 +95,7 @@ describe("every parseable corpus formula rebuilds byte-identically", () => {
           if (!detail?.text || detail.unknownFunctions.length > 0) continue;
           const apple = table.formulaArchiveAt(row, column)?.getMessage(1);
           if (!apple) continue;
+          if (SELF_REFERENCE_AS_CROSS_TABLE.has(`${name} ${table.name} r${row}c${column}`)) continue;
           let ours: Uint8Array;
           try {
             ours = buildFormula(parseFormula(detail.text), { row, column }, options).toBytes();

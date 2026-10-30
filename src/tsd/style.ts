@@ -51,11 +51,14 @@ export function readColor(message: RawMessage | undefined): Color | undefined {
  * of the 8,000-plus colours at the measured fill and stroke sites in
  * iwork19/modern/current-era corpus files, not one is bare; bare
  * colours appear only in 2013/2016-era files. An explicit `space` is
- * kept as given, P3 included.
+ * kept as given, P3 included. The 26.x-era apps also stamp a headroom
+ * of 1.0 on every colour, which makes a written colour byte-identical
+ * to the app's own.
  */
 export function writeColor(color: Color): RawMessage {
   const m = makeColor(color.r, color.g, color.b, color.a ?? 1);
   m.setVarint(ColorFields.RGB_SPACE, color.space === "p3" ? RGB_SPACE.P3 : RGB_SPACE.SRGB);
+  m.setFloat(ColorFields.HEADROOM, 1);
   return m;
 }
 
@@ -292,9 +295,24 @@ export interface Stroke {
   width?: number;
   cap?: number;
   join?: number;
-  /** "solid" | "none" | dash lengths in points. */
-  pattern?: "solid" | "none" | number[];
+  /**
+   * "solid", "none", one of the apps' four dash presets, or dash lengths
+   * in points. The presets are the dashed items of Pages' Borders & Rules
+   * line-style menu as the app writes them at any width: "short-dashed"
+   * is [1, 1], "dashed" [2, 2] and "long-dashed" [6, 6], all with butt
+   * caps and miter joins, and "dotted" is [0.001, 2] with round caps and
+   * round joins. The menu's other items are two solid lines (round and
+   * butt caps) and five brush strokes named in a smart-stroke archive,
+   * which this library does not write. The corpus's shape outlines and
+   * chart gridlines use the dashed and dotted shapes too, the dotted
+   * one with miter joins there. Any other array draws, but the Format
+   * sidebar reports its line style as None.
+   */
+  pattern?: "solid" | "none" | "short-dashed" | "dashed" | "long-dashed" | "dotted" | number[];
 }
+
+/** The dashed items of Pages' line-style menu, the same at every width and site. */
+export const DASH_PRESETS = { "short-dashed": [1, 1], dashed: [2, 2], "long-dashed": [6, 6], dotted: [0.001, 2] } as const;
 
 export function readStroke(message: RawMessage | undefined): Stroke | undefined {
   if (!message) return undefined;
@@ -341,30 +359,37 @@ export function readStroke(message: RawMessage | undefined): Stroke | undefined 
  * six — solid and empty state count 0 with six zeros, a dashed border
  * states its dashes and zero-fill. A stroke stating only type renders
  * as no border: the app shows the width but "None" for the stroke,
- * draws nothing, and zeroes `border_positions` on resave.
+ * draws nothing, and zeroes `border_positions` on resave. A stroke
+ * given without a pattern is written solid, because the app writes no
+ * stroke without one and fills an absent pattern with an empty dash
+ * list on resave. The dash presets are the apps' own (`DASH_PRESETS`),
+ * a dotted stroke round-capped and round-joined as the app writes its
+ * dotted paragraph border, unless a cap or join is given.
  */
 export function writeStroke(stroke: Stroke): RawMessage {
   const message = RawMessage.create();
+  const kind = stroke.pattern ?? "solid";
   if (stroke.color) message.setMessage(StrokeFields.COLOR, writeColor(stroke.color));
   if (stroke.width !== undefined) message.setFloat(StrokeFields.WIDTH, stroke.width);
-  message.setVarint(StrokeFields.CAP, stroke.cap ?? 0);
-  message.setVarint(StrokeFields.JOIN, stroke.join ?? 0);
+  message.setVarint(StrokeFields.CAP, stroke.cap ?? (kind === "dotted" ? LineCap.ROUND : 0));
+  message.setVarint(StrokeFields.JOIN, stroke.join ?? (kind === "dotted" ? LineJoin.ROUND : 0));
   message.setFloat(StrokeFields.MITER_LIMIT, 4);
-  if (stroke.pattern !== undefined) {
+  {
     const pattern = RawMessage.create();
-    if (stroke.pattern === "solid" || stroke.pattern === "none") {
+    if (kind === "solid" || kind === "none") {
       pattern.setVarint(
         StrokePatternFields.TYPE,
-        stroke.pattern === "solid" ? StrokePatternType.SOLID : StrokePatternType.EMPTY,
+        kind === "solid" ? StrokePatternType.SOLID : StrokePatternType.EMPTY,
       );
       pattern.setFloat(StrokePatternFields.PHASE, 0);
       pattern.setVarint(StrokePatternFields.COUNT, 0);
       pattern.setFloats(StrokePatternFields.PATTERN, [0, 0, 0, 0, 0, 0]);
     } else {
+      const dashes = typeof kind === "string" ? DASH_PRESETS[kind] : kind;
       pattern.setVarint(StrokePatternFields.TYPE, StrokePatternType.PATTERN);
       pattern.setFloat(StrokePatternFields.PHASE, 0);
-      pattern.setVarint(StrokePatternFields.COUNT, stroke.pattern.length);
-      const floats = [...stroke.pattern];
+      pattern.setVarint(StrokePatternFields.COUNT, dashes.length);
+      const floats = [...dashes];
       while (floats.length < 6) floats.push(0);
       pattern.setFloats(StrokePatternFields.PATTERN, floats);
     }

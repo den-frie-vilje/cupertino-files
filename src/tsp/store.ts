@@ -789,9 +789,12 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * Every object id a message could be pointing at.
  *
  * Recursive over submessages, and deliberately shape-based: a `TSP.Reference`
- * is a message whose sole field is varint 1, so anything matching that is
- * treated as a pointer. See {@link ObjectStore.prune} for why guessing wide
- * is the safe direction here.
+ * is a message whose sole field is varint 1, so any submessage matching
+ * that is treated as a pointer. The root is never one: an object's own
+ * archive is not a reference, and an empty header bucket, whose sole
+ * field is its hash function 1, would otherwise read as a pointer to
+ * object 1, the document. See {@link ObjectStore.prune} for why guessing
+ * wide is the safe direction below the root.
  */
 export function referencedIds(message: RawMessage): bigint[] {
   const out: bigint[] = [];
@@ -800,7 +803,7 @@ export function referencedIds(message: RawMessage): bigint[] {
     // but unbounded recursion on hostile input is not worth the risk.
     if (depth > 24) return;
     const fields = node.fields;
-    if (fields.length === 1 && fields[0]!.no === 1 && fields[0]!.wire === 0) {
+    if (depth > 0 && fields.length === 1 && fields[0]!.no === 1 && fields[0]!.wire === 0) {
       const id = node.getVarint(1);
       if (id !== undefined && id > 0n) out.push(id);
       return;

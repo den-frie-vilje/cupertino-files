@@ -1228,8 +1228,10 @@ export class PagesDocument extends IWorkDocument {
    * copy of a text box the document already carries — the page's first,
    * else any page's — so it has the document's own style, its own storage
    * and every field the app writes; a document with no text box (the
-   * blank has none) cannot grow one this way. Pages has not yet been seen
-   * to open a box added this way; see docs/VERIFICATION.md.
+   * blank has none) cannot grow one this way. The placement is in page
+   * points from the page's top left; a box past the page edge is listed
+   * all the same and draws only the part on the page, so size it against
+   * `pageSetup()`.
    * @agentTool add_text_box
    */
   addTextBox(pageIndex: number, text: string, placement: DrawablePlacement = {}): DrawableModel {

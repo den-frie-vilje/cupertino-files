@@ -380,8 +380,14 @@ import { colorFill, linearGradient, solidStroke, hexColor, allBorders } from "cu
 colorFill(1, 0.9, 0.2);                                 // flat colour
 linearGradient(hexColor("#fff"), hexColor("#0066ff"));  // two-stop gradient
 solidStroke({ r: 0, g: 0, b: 0 }, 1);                   // 1 pt solid border
-({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: [4, 2] });  // dashed
+({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: "dashed" });  // the app's dashes, [2, 2]
+({ color: { r: 0, g: 0, b: 0 }, width: 1, pattern: "dotted" });  // the app's round dots
+// also "short-dashed" ([1, 1]) and "long-dashed" ([6, 6]); the brush strokes are not written
 ```
+
+`pattern` also takes dash lengths in points (`[4, 2]`). The apps draw
+them, but their line-style control knows only the four presets and shows
+None for anything else.
 
 ## Tables
 
@@ -556,8 +562,10 @@ doc.removeTable(sheet.id, table.infoObject!.identifier);
 Tables are created by **copying**—building one from nothing means
 synthesising tiles, header buckets, data lists, and a calc-engine owner. The
 copy is always renamed, because Numbers addresses tables by name and two
-"Table 1"s on one sheet make every cross-table formula ambiguous. Uniqueness
-is per sheet, so a copy onto another sheet may keep the original name.
+"Table 1"s on one sheet make every cross-table formula ambiguous. The copy
+gets its own calc-engine identity, which Numbers keeps, so formulas in other
+tables may name it. Uniqueness is per sheet, so a copy onto another sheet may
+keep the original name.
 
 **A clone keeps everything its donor had, and none of it fits by
 default.** `withContent: false` clears the values, not the shape: the
@@ -987,9 +995,9 @@ slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on 
 doc.addTable(sheetId, { name });                                 // Numbers: on a sheet (manage_sheets)
 ```
 
-The Numbers path is app-confirmed; the Pages and Keynote paths are
-experimental — the donor is Numbers-born, and the shape audit lists ways
-its wiring differs from a table either app makes itself.
+All three paths are app-confirmed. On a page or a slide the table is
+wired like one the app inserts: it takes the host theme's first table
+style preset and the app's own cell size.
 
 **Adding a text box copies one.** A text box from nothing would omit
 state only the app knows, so `addTextBox` deep-copies a box the document
@@ -997,7 +1005,10 @@ already carries — the slide's own in Keynote, the page's own or any in
 the document in Pages — gives it its own storage, sets the text, places
 it and sets its parent (the slide, or none in Pages). A document without
 a single text box has nothing to copy and is refused: add one in the
-app first.
+app first. Both apps draw the copy. The placement is in page points
+from the page's top left, and a box past the page edge is listed all
+the same and draws only the part on the page, so size it against
+`pageSetup()` rather than a guessed paper size.
 
 ```ts
 slide.addTextBox("Written by the library", { x: 300, y: 650, width: 1300, height: 120 });

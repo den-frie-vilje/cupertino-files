@@ -462,8 +462,8 @@ export class KeynoteSlide {
    * `placement` (points; the donor's size otherwise). The box is a deep
    * copy of a text box the deck already carries — this slide's first,
    * else any slide's or master's — so it has the theme's own style, its
-   * own storage and every field the app writes. Keynote has not yet been
-   * seen to open a box added this way; see docs/VERIFICATION.md.
+   * own storage and every field the app writes. Keynote draws a box added
+   * this way; its own differs in nothing but text, geometry and style.
    * @agentTool add_text_box
    */
   addTextBox(text: string, placement: DrawablePlacement = {}): DrawableModel {
@@ -527,8 +527,9 @@ export class KeynoteSlide {
 
   /**
    * Animate a drawable on this slide: an all-at-once build in the shape
-   * the app writes, played on click. Keynote has not yet been seen to play
-   * a build this library wrote from nothing; see docs/VERIFICATION.md.
+   * the app writes, played on click. Keynote plays a build written this way
+   * and keeps it field for field, reseeding the random number and minting
+   * new chunk uids on save.
    * @agentTool add_build
    */
   addBuild(spec: NewBuild): BuildModel {

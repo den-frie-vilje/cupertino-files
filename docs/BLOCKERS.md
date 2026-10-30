@@ -62,25 +62,15 @@ that rebuild the structures from them.
   `--drive`) confirms it and supplies T, which the registry registers
   by another route. A new release means a new `--binary` run; the merge
   refuses any disagreement between the two sources.
-- **Tables on pages and slides: shipped, unproven.** The neutral donor
-  that Numbers' `addTable` grafts lands under a Pages body or a Keynote
-  slide anchored as the corpus's inline and slide tables are, wired to
-  the host theme's first preset as an app-inserted table is, and the
-  shape audit finds nothing a Pages or Keynote table lacks. Whether the
-  apps draw it is `seed-table.pages` and `seed-table.key`'s question,
-  and `seed-authored.*` asks for the app's own twin beside it. Open
-  beside it: copying a grafted table that had been resized
-  (`insertInlineTable` with `copyOf`, four calls over a corpus round
-  trip) left seven tables in the document, not four; the default source
-  is the donor now, and the copy path's surplus is unmeasured.
-- **Slide backgrounds: shipped, unproven.** `setBackground` writes the
-  variation-style shape the corpus's one deck with per-slide backgrounds
-  carries; whether Keynote draws one it did not write is rung K14's
-  question.
-- **Slides from a layout: shipped, unproven.** `addSlide({ master })`
-  instantiates a master in the shape every corpus content slide has
-  against its master; whether Keynote draws one it did not instantiate
-  is rung K13's question.
+- **Tables on pages and slides: the apps read them.** Pages and
+  Keynote 15.4 each list the grafted table and answer its cells through
+  their scripting dictionaries, and Keynote's own resave keeps it
+  (`test/e2e/proofs.e2e.test.ts`).
+- **Slide backgrounds, slides from a layout, layout changes: the app
+  draws them.** Keynote 15.4's PDF export is the set background's colour,
+  and the app reports a slide made from a layout and a slide moved to
+  one as being on that layout with the written title and body
+  (VERIFICATION, the Keynote rows).
 - **Authored twins requested.** `seed-authored.numbers`, `.pages` and
   `.key` ask the checker to build, with the apps' own controls, the
   constructs no corpus document carries app-written: a function-shaped
@@ -90,29 +80,28 @@ that rebuild the structures from them.
   that settles its row; until then the writers for tables on pages and
   slides, filter rules beyond comparison and summaries stay measured
   against nothing the app wrote.
-- **Text boxes: creation shipped, unproven.** `addTextBox` deep-copies a
-  box the document carries, re-words, places and re-parents it; the
-  corpus says a Keynote box's parent is its slide and a Pages floating
-  box has none, and the shape audit finds nothing the donor does not
-  have. Whether the apps draw one is `seed-text-box.key`'s and rung
-  P21's question.
-- **Keynote builds: creation shipped, unproven.** Reading is measured
+- **Keynote builds: creation shipped, kept by the app.** Reading is measured
   whole — effect, timing and delivery decode from `animationAttributes`
   against the fixture deck — retiming writes the same fields, and
-  `addBuild` now writes an all-at-once build and its chunk field for
-  field as the deck's app-authored builds carry them. Whether the app
-  plays one it did not author is `seed-build.key`'s question: a build
-  the app silently drops looks exactly like one never written. (Cell-control creation shipped and is app-confirmed; see
+  `addBuild` writes an all-at-once build and its chunk field for
+  field as the deck's app-authored builds carry them. Keynote 15.4's
+  resave keeps a build the library added, effect and all; whether it
+  plays is still only the app's word, and the scripting dictionary has
+  no builds to ask. (Cell-control creation shipped and is app-confirmed; see
   VERIFICATION.)
-- **Creating a category: shipped, unproven.** `addCategory` defines a
+- **Creating a category: shipped, kept by the app.** `addCategory` defines a
   by-value category from nothing in the corpus shape (the eight sidecar
   fields are constant calc-engine coordinates, the lookup list is the
-  row-uid map, groups list in text order), and `seed-category.numbers`
-  asks the app whether that is enough. Bucketed groupings ("dates by
+  row-uid map, groups list in text order), and Numbers 15.4's resave
+  keeps the definition with its three groups in order and no stale
+  group; whether it draws the groups is `seed-category.numbers`'s
+  question still. Bucketed groupings ("dates by
   quarter") still mean evaluating the grouping formula and are not
-  authored. **Filter rules are now authored** (`addFilterRule`, comparison and
-  text-contains rules, written byte for byte as the fixture's app-authored rules and
-  asked of the app by `seed-filter.numbers`); **recomputing filtered
+  authored. **Filter rules are authored and hide their rows** (`addFilterRule`,
+  comparison and text-contains rules, written byte for byte as the
+  fixture's app-authored rules; Numbers 15.4's PDF export of a blank
+  document with a B > 10 rule shows the two rows above 10 and not the
+  two below); **recomputing filtered
   rows** stays the app's: which rows a filter hides lives in
   `TST.HiddenStateExtentArchive`, and computing it means evaluating
   predicates. (Filter *rule* reading is pinned against
@@ -191,6 +180,18 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-10-27 | does a Display P3 colour render as P3, and a dashed border with our dash lengths? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own saves | **settled, pass**: two greens from the same channels tagged p3 and srgb ("the colourspace tagging works - it's two different greens"); the [4, 2] rule drew dashed ("the dashes look fine, as specified"). The checker's own dashed border, authored in the Borders & Rules controls, is an anonymous variation of Body carrying [2, 2] at 2 pt with the same three paragraph fields as ours. | Pages rungs P25 and P27 as saved by the app |
+| 2026-10-27 | does Pages honour a TOC rule we switched off? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: the TOC reopened with 49 entries where 61 were cached, none in Subtitle, and the style unticked ("PASS - the subtitles were not included in the TOC when the doc opened. And subtitle was unticked"). | Pages rung P26 as saved by the app |
+| 2026-10-27 | do a created style's paragraph borders draw, solid and dashed? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **no verdict on the write, the base refuted**: on the 14.4.1 base (`iwork-mcp-v14.5-sample.pages`) no rule drew ("no borders in 4b"), and the app's save had moved every paragraph, the document's own headings included, onto the theme's Default style and dropped every style outside the theme's listed set, ours among them. The upgrade path discards them; the rung moved to the blank donor with an authoring slot beside it. | Pages rung P27 as saved by the app |
+| 2026-10-27 | does Numbers act on `is_enabled` both ways? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: opened flat, switched on and regrouped, switched off and flattened ("i turned it on and off - it worked"). The app re-sorts rows into group order on enabling and keeps the order when disabled; the disabled definition's archive came back byte-identical, and the table model's `category_owner_deprecated` copy of the flag was synced to 0. | Numbers rung 25, saved by the app |
+| 2026-10-27 | is the second conditional id the applied rule? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, refuted**: after the checker changed which rule fired, cells on the first set carried 0 and the cell on the second set 15, matching no change in content. The value is per set, assigned by the app; preserving it verbatim is right. | Numbers rung 26, saved by the app |
+| 2026-10-27 | why does the Format sidebar show no line style for a paragraph border we write? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's reading of rung P28, and a corpus census | **settled, the dash array**: the same [4, 2] border as direct formatting (an anonymous variation of the paragraph's style, the app's own header) and as a named style both drew and both showed None in Borders & Rules ("none of them showed their border style in the editor"); the app's own dashed border from rung P27 differs from ours in nothing but its dashes, [2, 2]. A schema walk over every stroke at every site in the corpus finds exactly two dashed shapes at any width: [2, 2] with butt caps and [0.001, 2] with round caps, at paragraph borders, table bands, shape outlines and chart gridlines alike. The checker named the cause ("maybe your stroke type is not covered by the gui?"). `Stroke.pattern` gains `"dashed"` and `"dotted"` writing those shapes; arrays still draw and still read as None in the sidebar. The presets' own showing in the sidebar is rung P28's question now. | `src/tsd/style.ts`, test/styling.test.ts; Pages rung P28 |
+| 2026-10-27 | does the Borders & Rules control read our dash presets back? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of rung P28 | **dashed settled, pass; dotted refuted**: the [2, 2] border as direct formatting and as a named style both read back as dashed ("worked", "worked"); the [0.001, 2] round-capped border, the apps' dotted shape on every outline and gridline in the corpus, drew (its style came back intact, positions kept) but the control showed None ("not showing up"). The corpus has no app-written dotted paragraph border, so the paragraph control's dots may be another shape; rung P29 asks the app for one. | `src/tsd/style.ts`; Pages rung P29 |
+| 2026-10-30 | does Pages draw a text box the library copied, and what does its own box carry that ours lacks? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of rung P21 with a box inserted by Insert > Text Box beside ours | **settled, pass, and the earlier "no ink" was the placement**: the checker's comment on the P21 line, "It was almost not visible, think about how you place and format stuff, it was just the tip of a W character visible in the lower right corner of the page." The base is a 396 by 612 page and the rung placed the box at x 360 with a width of 220, so 36 points of it were on the page; the e2e probe's empty rectangle was the same box off the same edge. The app's own box is a floating ShapeInfo in the page group and the z-order list exactly as ours is, with its storage, two stand-in captions and the theme's textbox-0 shape style; ours carries a variation of that style from its grouped donor instead, and the app's resave gave our storage a placeholder smart field the donor's placeholder text brought along. The rung and the probe now place from pageSetup(). | Pages rung P21 as saved by the app; `scripts/make-pages-docs.ts`, test/e2e/proofs.e2e.test.ts |
+| 2026-10-30 | why did copying a grafted table leave seven tables where four were built? | the Markdown round trip of the four-table Pages fixtures with the old copy path replayed, and the clone walk traced | **settled, the reference scanner**: the grafted donor's two summary header buckets carry only their hash function, 1, which the shape-based scan of library-created objects read as a reference to object 1, the document. The clone walk then reached the body storage, its attachments and every other table, so each copy grew by the tables before it (1, 2, 3: seven). The root message is never a reference now; a copy clones the table's own 60-odd objects and nothing of the document's. | `src/tsp/store.ts`, test/tables.test.ts |
+| 2026-10-30 | what does Pages' paragraph line-style menu offer, and how does it write each item? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of rung P30 with all eleven items applied at 3 pt, and a screenshot of the menu | **settled**: eleven items after None. Two solid lines (round caps and joins; butt caps and miter joins), four dashed ones ([1, 1], [2, 2] and [6, 6] with butt caps, [0.001, 2] with round caps and round joins), and five brush strokes (Chalk2, Feathered Brush, Calligraphy, Dry Brush, Pen), each a solid pattern plus a smart-stroke archive holding only the name. The dotted item differs from the library's earlier dotted preset in its join alone; with round joins the written stroke is byte-identical to the app's, so the control's None on rung P28 line 3 was the join. `Stroke.pattern` gains `"short-dashed"` and `"long-dashed"`; the brush strokes stay unwritten. Beside it: every 26.x-era colour carries `headroom` 1.0, which `writeColor` now stamps too. | `src/tsd/style.ts`, `src/tsp/schema.ts`, test/styling.test.ts; Pages rung P28 |
+| 2026-10-27 | does Numbers keep a cloned table's identity once its `table_id` string is the re-minted base? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: both clones kept their id strings and owner bases through the app's save; `=CrossCheck::B3` read 5, `=NoCalc::B2` read 8, a typed `=CrossCheck::B4` read 10; the clone's `='Table 1'::C4` read 7 and `=SUM(B)` 30. No comments on the file. | demo-06-formler.numbers, saved by the app; `test/e2e/proofs.e2e.test.ts` probe switched on |
+| 2026-10-26 | the open VERIFICATION claims, asked by script | Pages, Numbers, Keynote 15.4 (macOS, Danish UI), `npm run test:e2e` | **thirteen settled, two refuted**: Keynote saves a per-slide-component deck with added and duplicated slides; pictures, text boxes, tables, layouts, layout changes and backgrounds on slides read back or render as written; a build and a category survive the apps' resave; a filter rule hides its rows; band counts, heights and widths, a conditional fill and its re-pointing, banded rows, a typed duration and the formula bar (references and operators) agree. Refuted: a Pages text box is listed but not drawn; a cloned table's identity is re-minted by Numbers (references to it `#REF!`). Found and fixed: a self-reference stored as a cross-table node rendered with a table prefix. | `test/e2e/proofs.e2e.test.ts`, VERIFICATION |
 | — | function-index harvest (probe sheet) | — | superseded: 271 names harvested from public documents instead; table in effect | `src/tst/function-names.ts` |
 | 2026-08-03 | border positions | Pages (macOS, Danish UI), via seed-borders | **solved, and the old guess refuted**: a *bitmask* — 1 top, 2 bottom, 3 top+bottom, 15 all four; the enum reading (ALL = 4) would have drawn one vertical edge. Which of bits 4/8 is left vs right — and whether the pair is visual or logical (an RTL paragraph flips a logical pair) — remains unassigned | `src/tswp/schema.ts`, test/styling.test.ts |
 | 2026-08-03 | border bits 4/8 + RTL | Pages (macOS, Danish UI), via seed-borders v2 | **left and right assigned**: red left-only = 4, blue right-only = 8, the probe's stroke colours naming their paragraphs. The RTL leg failed its precondition — the Hebrew-first paragraph rendered LTR with the Danish tail folded into the same line, so unset `writing_direction` is not "natural" — leaving visual-vs-logical open; the regenerated seed writes an explicit RTL paragraph style instead | `src/tswp/schema.ts`, test/styling.test.ts |
