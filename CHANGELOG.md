@@ -9,6 +9,9 @@ in commit messages and pull requests.
 
 ### Fixed
 
+- Copying a table that was added to a Pages document (`insertInlineTable`
+  with `copyOf`) copies that table alone. Before, the copy could bring
+  the whole document along, every other table included.
 - A stroke given without a pattern (`{ color, width }`) is written solid,
   with the whole pattern message the apps write; before, the stroke had
   no pattern at all, which Pages filled with an empty dash list.

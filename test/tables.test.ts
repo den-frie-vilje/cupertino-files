@@ -1674,6 +1674,25 @@ describe("Pages inline table insertion", () => {
     expect([table.name, table.rowCount, table.columnCount]).toEqual(["Table", 2, 1]);
     expect(PagesDocument.load(doc.save()).tables().length).toBe(1);
   });
+
+  it("copying a grafted table copies the table alone", () => {
+    // The grafted donor's summary buckets hold nothing but their hash
+    // function, 1, the shape of a reference to object 1: the document.
+    // Read as one, a copy of the table once brought the whole document
+    // along, the other tables included, so a four-table document rebuilt
+    // by copying its first table held seven.
+    const doc = PagesDocument.blank();
+    const first = doc.appendTable([["a", "b"], ["1", "2"]]);
+    doc.insertInlineTable(doc.body.text.length, { copyOf: first.infoObject!.identifier, rows: [["x"]] });
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== 6006 /* TST.HeaderStorageBucket */) continue;
+      expect(doc.store.currentReferencesOf(obj).includes(1n)).toBe(false);
+    }
+    doc.insertInlineTable(doc.body.text.length, { copyOf: first.infoObject!.identifier, rows: [["y"]] });
+    const saved = PagesDocument.load(doc.save());
+    const count = (type: string) => [...saved.store.allObjects()].filter(({ obj }) => saved.store.typeNameOf(obj) === type).length;
+    expect([count("TP.DocumentArchive"), count("TSWP.StorageArchive"), saved.tables().length]).toEqual([1, 1, 3]);
+  });
 });
 
 describe("inserted rows and columns inherit band styling", () => {
