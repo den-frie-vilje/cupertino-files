@@ -650,6 +650,21 @@ export const RUNGS: {
     },
   },
   {
+    name: "P30-line-style-menu",
+    blank: true,
+    note: "one line per item of the Borders & Rules line-style pop-up menu, for the checker to apply at 3 pt, so every preset's stroke is in one file",
+    build: (doc) => {
+      doc.appendParagraph(
+        "P30: YOUR TURN. The line-style pop-up menu in Format > Layout > Borders & Rules (Kanter og " +
+          "linjer) has a number of line styles besides None. Give each numbered line below a bottom " +
+          "border at 3 pt: line 1 the first line style counted from the top, line 2 the second, and so " +
+          "on, in menu order. Leave lines beyond the menu's last item alone, then save. The file then " +
+          "holds every style the menu offers, as the app writes it.",
+      );
+      for (let item = 1; item <= 10; item++) doc.appendParagraph(`${item}. Menu item ${item}, 3 pt.`);
+    },
+  },
+  {
     name: "P22-inline-table",
     note: "a table appended to the body from the neutral donor, wired to the theme's first preset, filled with three rows",
     build: (doc) => {

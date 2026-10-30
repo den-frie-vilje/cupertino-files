@@ -255,6 +255,34 @@ The traps, each paid for once:
   evidence bundles, snapshots and thinned binaries stay under `/tmp`;
   the repository gets a measured constant, its test and a ledger row
   (docs/LEGAL.md, item 3).
+- **The CLI did the work, not the MCP tools.** Every measured fact came
+  from `pnpm dlx rea-agents@6.4.0 <analyze|decompile|function|search|xrefs|
+  inspect-native-dispatch-metadata> <thin slice> --provider ghidra
+  --snapshot /tmp/rea-snapshots/<FW>.json --format json > out.json`, run
+  in the background with `GHIDRA_INSTALL_DIR=~/Applications/
+  ghidra_12.1.4_PUBLIC`, `JAVA_HOME=~/.pkgx/openjdk.org/v21.0.8.7` and
+  `REA_GHIDRA_STARTUP_TIMEOUT_MS=5400000` exported. The output file may
+  carry pnpm noise before the JSON, so parse from the first `{`; the
+  pseudocode sits at `normalized_result`. `--token-limit` and
+  `--format json` do not combine.
+- **Name forms.** An address from `nm -n` always works and
+  `Class::selector:` works; `-[Class sel:]` and underscore forms are
+  rejected. `xrefs` returns a bare array of addresses. Dispatch metadata
+  lands at `.normalized_result.result.objc_classes[].methods[]` with
+  `selector` and `address`, capped at 20000 records. Between app
+  versions, map addresses by symbol name with `nm -n`.
+- **Timings on the 15.4 slices.** TSStyles analyses in 75 s and
+  decompiles in about a minute, TSKit about 150 s per decompile,
+  TSUtility about 300 s, TSTables 673 s to analyse and 610 to 760 s per
+  call, past the foreground shell limit. Two Ghidra jobs take 1 to 1.6
+  GB each; a failed cleanup leaves an orphan java and `rea-ghidra-*`
+  directories under `$TMPDIR` to remove by hand. Snapshots and slices
+  vanish on reboot and nothing in the repository depends on them.
+- **When Ghidra fails, `otool` does.** `otool -tv -p <symbol>` reads one
+  function's instructions, `otool -ov` the Objective-C class and method
+  tables, and a node read of `__DATA_CONST` settled the whole formula
+  registry (`scripts/function-registry.ts`); a duration format's
+  defaults were four `mov` immediates read that way.
 - **Read the file before decompiling.** The formula registry, the duration
   initialiser and the group-by sidecar fields were all settled by reading
   bytes and instructions in node or by a corpus census, in minutes; the
