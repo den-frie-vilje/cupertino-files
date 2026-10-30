@@ -995,9 +995,9 @@ slide.addTable({ rows, x: 300, y: 500 });                        // Keynote: on 
 doc.addTable(sheetId, { name });                                 // Numbers: on a sheet (manage_sheets)
 ```
 
-The Numbers path is app-confirmed; the Pages and Keynote paths are
-experimental — the donor is Numbers-born, and the shape audit lists ways
-its wiring differs from a table either app makes itself.
+All three paths are app-confirmed. On a page or a slide the table is
+wired like one the app inserts: it takes the host theme's first table
+style preset and the app's own cell size.
 
 **Adding a text box copies one.** A text box from nothing would omit
 state only the app knows, so `addTextBox` deep-copies a box the document
