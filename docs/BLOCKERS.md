@@ -51,13 +51,13 @@ that rebuild the structures from them.
 
 ## Blocked on evaluation or the app — not on format knowledge
 
-- **Formula authoring: the function table is complete for 15.1.** Authoring
+- **Formula authoring: the function table is complete for 15.4.** Authoring
   is shipped and proven — every parseable corpus formula rebuilds
   byte-identical to Apple's AST, and the e2e recompute probe settled the
   dependency-ledger question (Numbers rebuilds it on open; see
-  VERIFICATION). The index table now comes from the app itself:
+  VERIFICATION). The index table comes from the app itself:
   `npm run harvest -- --binary /Applications/Numbers.app` reads the
-  registration code in TSTables and names all 345 functions the build
+  registration code in TSTables and names all 363 functions the build
   registers; the document harvest (`--ingest`, `--emit-sheet`,
   `--drive`) confirms it and supplies T, which the registry registers
   by another route. A new release means a new `--binary` run; the merge
@@ -71,42 +71,33 @@ that rebuild the structures from them.
   and the app reports a slide made from a layout and a slide moved to
   one as being on that layout with the written title and body
   (VERIFICATION, the Keynote rows).
-- **Authored twins requested.** `seed-authored.numbers`, `.pages` and
-  `.key` ask the checker to build, with the apps' own controls, the
-  constructs no corpus document carries app-written: a function-shaped
-  filter rule, a category summary, a table inserted by Numbers, Pages
-  and Keynote, a section-master object, a page break, a layout change,
-  a slide background and a build. Each returned file is the fixture
-  that settles its row; until then the writers for tables on pages and
-  slides, filter rules beyond comparison and summaries stay measured
-  against nothing the app wrote.
-- **Keynote builds: creation shipped, kept by the app.** Reading is measured
+- **The authored twins are fixtures.** `olekristensen-v26.0-mac-authored.numbers`,
+  `.pages` and `.key` carry, built with the apps' own controls, the
+  constructs no other corpus document had app-written: a function-shaped
+  filter rule, a category summary, a table inserted by each app, a
+  section-master object, a page break, a layout change, a slide
+  background and a build. Each settled its row (VERIFICATION). What the
+  twins show and the library still does not author: function-shaped
+  filter rules beyond text-contains and starts-with, and per-group
+  category summaries — the two roadmap rows of the matrix.
+- **Keynote builds: creation shipped and played.** Reading is measured
   whole — effect, timing and delivery decode from `animationAttributes`
   against the fixture deck — retiming writes the same fields, and
-  `addBuild` writes an all-at-once build and its chunk field for
-  field as the deck's app-authored builds carry them. Keynote 15.4's
-  resave keeps a build the library added, effect and all; whether it
-  plays is still only the app's word, and the scripting dictionary has
-  no builds to ask. (Cell-control creation shipped and is app-confirmed; see
-  VERIFICATION.)
-- **Creating a category: shipped, kept by the app.** `addCategory` defines a
-  by-value category from nothing in the corpus shape (the eight sidecar
-  fields are constant calc-engine coordinates, the lookup list is the
-  row-uid map, groups list in text order), and Numbers 15.4's resave
-  keeps the definition with its three groups in order and no stale
-  group; whether it draws the groups is `seed-category.numbers`'s
-  question still. Bucketed groupings ("dates by
-  quarter") still mean evaluating the grouping formula and are not
-  authored. **Filter rules are authored and hide their rows** (`addFilterRule`,
-  comparison and text-contains rules, written byte for byte as the
-  fixture's app-authored rules; Numbers 15.4's PDF export of a blank
-  document with a B > 10 rule shows the two rows above 10 and not the
-  two below); **recomputing filtered
-  rows** stays the app's: which rows a filter hides lives in
-  `TST.HiddenStateExtentArchive`, and computing it means evaluating
-  predicates. (Filter *rule* reading is pinned against
-  the populated set in `olekristensen-v26.3-mac-filters.numbers`; rule
-  *synthesis* waits for an app round-trip of a library-written rule.)
+  `addBuild` writes an all-at-once or by-paragraph build and its chunks
+  field for field as the deck's app-authored builds carry them; Keynote
+  15.1.1 played one (VERIFICATION). Not authored: actions and build
+  order. The scripting dictionary has no builds to ask, so a played
+  build stays a person's observation.
+- **Categories and filters: shipped and drawn.** `addCategory` defines a
+  by-value, nested or date-bucketed category from nothing in the corpus
+  shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
+  group are not authored. `addFilterRule` writes comparison,
+  text-contains and starts-with rules byte for byte as the twin's
+  app-authored rules, recomputes the hidden rows offline into
+  `TST.HiddenStateExtentArchive`, and Numbers 15.4 opens the result with
+  the right rows hidden. A set carrying a rule the library cannot
+  evaluate (is-blank and the other function-shaped rules) is left with
+  its extent untouched; authoring those rules is the open row.
 - **Chart appearance: only the app's word left.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives. Remaining:
@@ -126,8 +117,10 @@ that rebuild the structures from them.
   a `TSP.DataReference` field inside the archive, not through the
   reference list this library maintains. A reachability scan keyed on
   the list would delete every image in the corpus. Doing this properly
-  means finding data references by schema position, which is exactly the
-  knowledge `referencedIds` deliberately does without.
+  means finding data references by schema position, which
+  `schemaReferencedIds` now does for created objects — it walks the
+  vendored schema and collects `TSP.DataReference` fields too — so the
+  collector is a small step from here, not a new kind of knowledge.
 - **Collaboration components: framing decoded, payload unmeasured.**
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
