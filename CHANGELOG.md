@@ -161,9 +161,9 @@ versions that confirmed them are named below.
   block quotes as presenter notes, keeping links, bold, and italic in
   the body; a thematic break (`---`) starts a new slide, and a slide
   heading numbered the way the export numbers them (`## 3. Title`) reads
-  back as its title alone. Numbers makes
-  a sheet per top-level heading and a table per pipe table, named by
-  the heading above, with numbers, TRUE/FALSE, and ISO dates typed. An
+  back as its title alone. Numbers makes a sheet per top-level heading
+  and a table per pipe table, named by the heading above, with numbers,
+  TRUE/FALSE, and ISO dates typed. An
   image on a line of its own becomes an inline picture in Pages or a
   picture on the slide in Keynote when its bytes can be found: through
   `images` in the API, `imageRoot` on the tool, and beside the source
