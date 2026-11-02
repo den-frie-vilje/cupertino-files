@@ -53,6 +53,7 @@ import {
   TransitionAttributes,
 } from "./schema.ts";
 import {
+  BuildFields,
   BuildModel,
   buildsOfSlide,
   createBuild,
@@ -861,7 +862,11 @@ export class KeynoteDocument extends IWorkDocument {
           }
           flush();
           if (headings++ > 0 || pending) newSlide();
-          slide.title = block.text;
+          {
+            // The export numbers slides ("## 3. Title"): a number that is the slide's place is not the title.
+            const numbered = /^(\d+)\.\s+(.*)/.exec(block.text);
+            slide.title = numbered && Number(numbered[1]) === headings ? numbered[2]! : block.text;
+          }
           break;
         case "rule":
           flush();
@@ -1284,7 +1289,8 @@ export class KeynoteDocument extends IWorkDocument {
       const text = this.storageOfPlaceholder(target, field)?.text ?? "";
       if (text.replace(/[\u2029\ufffc]/g, "").trim()) oldText.set(field, text);
     }
-    const oldPlaceholders = new Set(PLACEHOLDERS.map((f) => refId(target.message, f)).filter((id): id is bigint => id !== undefined));
+    const oldByField = new Map(PLACEHOLDERS.map((f) => [f, refId(target.message, f)] as const));
+    const oldPlaceholders = new Set([...oldByField.values()].filter((id): id is bigint => id !== undefined));
     // What the old placeholders reach — their storages and direct styles —
     // goes with them unless something else still points at it.
     const oldClosure = new Set(oldPlaceholders);
@@ -1321,6 +1327,21 @@ export class KeynoteDocument extends IWorkDocument {
       const id = refId(clone.message, field);
       if (id === undefined) target.message.remove(field);
       else target.message.setMessage(field, makeRef(id));
+    }
+    // A build aimed at an old placeholder follows the text to its
+    // successor, as the app's own layout change keeps it; one whose
+    // placeholder has no successor goes with the placeholder.
+    for (const build of slide.builds()) {
+      const was = build.read().drawableId;
+      if (was === undefined || !oldPlaceholders.has(was)) continue;
+      const field = PLACEHOLDERS.find((f) => oldByField.get(f) === was);
+      const now = field === undefined ? undefined : refId(clone.message, field);
+      if (now === undefined) {
+        slide.removeBuild(build.id);
+      } else {
+        build.object.message.setMessage(BuildFields.DRAWABLE, makeRef(now));
+        build.object.message.markDirty();
+      }
     }
     const fresh = clone.message
       .getMessages(Slide.OWNED_DRAWABLES)

@@ -222,7 +222,11 @@ export class PagesSection {
     if (!templateObject) throw new RangeError(`section ${this.index} has no ${role} master`);
     const drawable = doc.store.object(drawableId);
     if (!drawable) throw new RangeError(`no drawable ${drawableId}`);
-    for (const page of doc.floatingDrawablePages()) doc.floatingDrawables(page)?.remove(drawableId);
+    const pages = doc.floatingDrawablePages().filter((page) => doc.floatingDrawables(page)?.drawables().some((d) => d.id === drawableId));
+    if (pages.length === 0) {
+      throw new RangeError(`drawable ${drawableId} floats on no page; a drawable anchored in the text cannot move to the master`);
+    }
+    for (const page of pages) doc.floatingDrawables(page)?.remove(drawableId);
     const core = findDrawableCore(drawable.message);
     if (core?.has(Drawable.PARENT)) {
       core.remove(Drawable.PARENT);
@@ -364,7 +368,7 @@ export class PagesDocument extends IWorkDocument {
       const start = doc.body.paragraphs()[index]?.start ?? 0;
       const refs = inline.footnotes.filter((n) => notes.has(n.label)).sort((a, b) => b.index - a.index);
       for (const ref of refs) doc.body.addFootnote(start + ref.index, notes.get(ref.label)!);
-      const shift = (at: number): number => refs.filter((r) => r.index <= at).length;
+      const shift = (at: number): number => refs.filter((r) => r.index < at).length;
       for (const link of inline.links) {
         doc.insertLink(start + link.start + shift(link.start), start + link.end + shift(link.end), link.url);
       }

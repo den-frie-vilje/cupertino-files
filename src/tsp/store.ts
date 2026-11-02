@@ -24,6 +24,7 @@ import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
 import { typeName, type IWorkApp } from "./registry.ts";
 import { embeddedRequiredSchema, missingRequired } from "./required.ts";
+import { REQUIRED_SCHEMA } from "../proto/vendored.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -706,9 +707,9 @@ export class ObjectStore {
     if (extractor) return dedupe(extractor(obj.message));
     if (this.created.has(obj.identifier)) {
       const container = this.containerParentOf(obj.type, obj.message);
-      return dedupe(
-        referencedIds(obj.message).filter((id) => this.index.has(id) && id !== container),
-      );
+      const name = this.typeNameOf(obj);
+      const scanned = name !== undefined && name in REQUIRED_SCHEMA ? schemaReferencedIds(obj.message, name) : referencedIds(obj.message);
+      return dedupe(scanned.filter((id) => this.index.has(id) && id !== container));
     }
     return obj.getObjectReferences();
   }
@@ -796,6 +797,51 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * object 1, the document. See {@link ObjectStore.prune} for why guessing
  * wide is the safe direction below the root.
  */
+const REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.Reference", "TSP.DataReference"]);
+
+/**
+ * Every object id a message of a known archive type points at, read by
+ * the apps' own descriptors: a reference is a field the schema types as
+ * one, so a formula's operator node or a header bucket's hash function,
+ * each a lone varint 1, is never mistaken for a pointer. Fields the
+ * schema does not name in a known message are its scalars and are
+ * skipped; a submessage of a type the schema does not know falls back
+ * to the shape scan.
+ */
+export function schemaReferencedIds(message: RawMessage, typeName: string): bigint[] {
+  const out: bigint[] = [];
+  const visit = (node: RawMessage, name: string, depth: number): void => {
+    if (depth > 24) return;
+    const definition = REQUIRED_SCHEMA[name];
+    if (!definition) {
+      out.push(...referencedIds(node));
+      return;
+    }
+    const types = new Map(definition.map(([no, , , type]) => [no, type]));
+    const seen = new Set<number>();
+    for (const field of node.fields) {
+      if (field.wire !== 2 || seen.has(field.no)) continue;
+      seen.add(field.no);
+      const type = types.get(field.no);
+      if (type === undefined || type === "") continue;
+      let subs: RawMessage[];
+      try {
+        subs = node.getMessages(field.no);
+      } catch {
+        continue;
+      }
+      for (const sub of subs) {
+        if (REFERENCE_TYPES.has(type)) {
+          const id = sub.getVarint(1);
+          if (id !== undefined && id > 0n) out.push(id);
+        } else if (sub.fields.length > 0) visit(sub, type, depth + 1);
+      }
+    }
+  };
+  visit(message, typeName, 0);
+  return out;
+}
+
 export function referencedIds(message: RawMessage): bigint[] {
   const out: bigint[] = [];
   const visit = (node: RawMessage, depth: number): void => {

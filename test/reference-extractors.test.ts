@@ -151,7 +151,6 @@ describe("reference extractors agree with Apple", () => {
     //     guide storages and text styles. Omission is the worse direction:
     //     an undeclared cross-component reference is what makes an app call
     //     a document damaged.
-    //   * TSWP.SectionPlaceholderArchive (47) — we omit one each.
     //   * TSS.StylesheetArchive (36) — we ADD hundreds, declaring the styles
     //     the sheet contains. This is the container rule again and it is on
     //     a live path: creating a character style dirties the stylesheet.
@@ -162,8 +161,8 @@ describe("reference extractors agree with Apple", () => {
     // The three authored-twin fixtures added 21 in the same two classes:
     // 17 Keynote slides and four stylesheets.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=312: ${disagree <= 312} (${disagree})`).toBe(
-      `disagree<=312: true (${disagree})`,
+    expect(`disagree<=254: ${disagree <= 254} (${disagree})`).toBe(
+      `disagree<=254: true (${disagree})`,
     );
   });
 

@@ -1683,6 +1683,8 @@ describe("Pages inline table insertion", () => {
     // by copying its first table held seven.
     const doc = PagesDocument.blank();
     const first = doc.appendTable([["a", "b"], ["1", "2"]]);
+    // A formula's operator node is the same lone varint 1; `=A2+1` is {1: 1}.
+    first.setFormula(1, 1, "=A2+1");
     doc.insertInlineTable(doc.body.text.length, { copyOf: first.infoObject!.identifier, rows: [["x"]] });
     for (const { obj } of doc.store.allObjects()) {
       if (obj.type !== 6006 /* TST.HeaderStorageBucket */) continue;

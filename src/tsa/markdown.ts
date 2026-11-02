@@ -147,7 +147,7 @@ export function storageToMarkdown(storage: TextStorage, options: MarkdownOptions
     let i = from;
     for (const link of links.filter((l) => l.start >= from && l.end <= to).sort((a, b) => a.start - b.start)) {
       out += spans(i, link.start);
-      out += `[${spans(link.start, link.end)}](${link.url})`;
+      out += `[${spans(link.start, link.end)}](${/[\s()]/.test(link.url) ? `<${link.url}>` : link.url})`;
       i = link.end;
     }
     return out + spans(i, to);

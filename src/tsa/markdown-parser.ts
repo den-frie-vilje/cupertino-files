@@ -39,7 +39,7 @@ const RULE = /^\s*([-*_])(\s*\1){2,}\s*$/;
 const FOOTNOTE = /^\[\^([^[\]]+)\]:\s*(.*)/;
 // Every class stops at the next bracket, so a scan that fails never rescans
 // what an earlier start already covered: the whole pass is linear.
-const INLINE = /\[\^([^[\]]+)\]|!\[([^[\]]*)\]\((?:[^()\s]*)(?:\s[^()]*)?\)|\[([^[\]]*)\]\(([^()\s]+)(?:\s[^()]*)?\)/g;
+const INLINE = /\[\^([^[\]]+)\]|!\[([^[\]]*)\]\((?:[^()\s]*)(?:\s[^()]*)?\)|\[([^[\]]*)\]\((?:<([^<>]*)>|([^()\s]+))(?:\s[^()]*)?\)/g;
 
 /**
  * Emphasis markers and code spans taken out of `pre`: the plain text, the
@@ -55,6 +55,16 @@ function scanEmphasis(pre: string): { text: string; map: number[]; bold: { start
   let italicAt: { at: number; marker: string } | undefined;
   const boundaryBefore = (i: number): boolean => i === 0 || /[\s(["']/.test(pre[i - 1]!);
   const boundaryAfter = (i: number): boolean => i >= pre.length || /[\s.,;:!?)\]"']/.test(pre[i]!);
+  // An opener nothing closed was a literal character after all.
+  const restore = (at: number, marker: string): void => {
+    text = text.slice(0, at) + marker + text.slice(at);
+    for (let k = 0; k <= pre.length; k++) if ((map[k] ?? 0) > at) map[k] = (map[k] ?? 0) + marker.length;
+    for (const r of [...bold, ...italic]) {
+      if (r.start > at) r.start += marker.length;
+      if (r.end > at) r.end += marker.length;
+    }
+    if (boldAt !== undefined && boldAt > at) boldAt += marker.length;
+  };
   let i = 0;
   while (i < pre.length) {
     map[i] = text.length;
@@ -73,26 +83,36 @@ function scanEmphasis(pre: string): { text: string; map: number[]; bold: { start
     }
     const pair = pre.slice(i, i + 2);
     if (pair === "**" || pair === "__") {
+      // A run opens only before a non-space and closes only after one.
+      const opens = boldAt === undefined && !/\s/.test(pre[i + 2] ?? " ");
+      const closes = boldAt !== undefined && !/\s/.test(pre[i - 1] ?? " ");
       map[i + 1] = text.length;
-      if (boldAt === undefined) boldAt = text.length;
-      else {
-        if (text.length > boldAt) bold.push({ start: boldAt, end: text.length });
+      if (opens) boldAt = text.length;
+      else if (closes) {
+        if (text.length > boldAt!) bold.push({ start: boldAt!, end: text.length });
         boldAt = undefined;
+      } else {
+        map[i + 1] = text.length + 1;
+        text += pair;
       }
       i += 2;
       continue;
     }
     if (ch === "*" || ch === "_") {
-      const opens = italicAt === undefined && !/\s/.test(pre[i + 1] ?? " ") && (ch === "*" || boundaryBefore(i));
-      const closes = italicAt?.marker === ch && (ch === "*" || boundaryAfter(i + 1));
-      if (opens) {
-        italicAt = { at: text.length, marker: ch };
-        i++;
-        continue;
-      }
+      // A closer pairs with the nearest opener; an opener before it that
+      // nothing closed was a literal. A run opens only before a non-space
+      // and closes only after one.
+      const closes = italicAt?.marker === ch && !/\s/.test(pre[i - 1] ?? " ") && (ch === "*" || boundaryAfter(i + 1));
+      const opens = !closes && !/\s/.test(pre[i + 1] ?? " ") && (ch === "*" || boundaryBefore(i));
       if (closes) {
         if (text.length > italicAt!.at) italic.push({ start: italicAt!.at, end: text.length });
         italicAt = undefined;
+        i++;
+        continue;
+      }
+      if (opens) {
+        if (italicAt !== undefined) restore(italicAt.at, italicAt.marker);
+        italicAt = { at: text.length, marker: ch };
         i++;
         continue;
       }
@@ -100,15 +120,6 @@ function scanEmphasis(pre: string): { text: string; map: number[]; bold: { start
     text += ch;
     i++;
   }
-  // An opener nothing closed was a literal character after all.
-  const restore = (at: number, marker: string): void => {
-    text = text.slice(0, at) + marker + text.slice(at);
-    for (let k = 0; k <= pre.length; k++) if ((map[k] ?? 0) > at) map[k] = (map[k] ?? 0) + marker.length;
-    for (const r of [...bold, ...italic]) {
-      if (r.start > at) r.start += marker.length;
-      if (r.end > at) r.end += marker.length;
-    }
-  };
   if (italicAt !== undefined) restore(italicAt.at, italicAt.marker);
   if (boldAt !== undefined) restore(boldAt, "**");
   map[pre.length] = text.length;
@@ -129,7 +140,7 @@ export function inlineText(raw: string): InlineText {
     else {
       const start = pre.length;
       pre += m[3] ?? "";
-      links.push({ start, end: pre.length, url: m[4] ?? "" });
+      links.push({ start, end: pre.length, url: m[4] ?? m[5] ?? "" });
     }
     last = m.index + m[0].length;
   }
@@ -139,7 +150,7 @@ export function inlineText(raw: string): InlineText {
   const lead = scanned.text.length - scanned.text.trimStart().length;
   const text = scanned.text.trim();
   const at = (offset: number): number => Math.max(0, Math.min(text.length, (scanned.map[offset] ?? scanned.text.length) - lead));
-  const range = (r: { start: number; end: number }): { start: number; end: number } => ({ start: r.start - lead, end: Math.min(text.length, r.end - lead) });
+  const range = (r: { start: number; end: number }): { start: number; end: number } => ({ start: Math.max(0, r.start - lead), end: Math.min(text.length, r.end - lead) });
   return {
     text,
     links: links.map((l) => ({ start: at(l.start), end: at(l.end), url: l.url })).filter((l) => l.end > l.start),
@@ -171,7 +182,7 @@ function headingText(rest: string): string {
 export function plainInline(text: string): string {
   return text
     .replace(/!\[([^[\]]*)\]\([^()]*\)/g, "$1")
-    .replace(/\[([^[\]]*)\]\([^()]*\)/g, "$1")
+    .replace(/\[([^[\]]*)\]\((?:<[^<>]*>|[^()]*)\)/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/__([^_]+)__/g, "$1")
@@ -207,10 +218,25 @@ export function splitFrontMatter(source: string): { meta: Record<string, string>
   if (!m) return { meta: {}, body: source };
   const meta: Record<string, string> = {};
   for (const line of m[1]!.split(/\r?\n/)) {
+    if (line.trim() === "") continue;
     const pair = /^([A-Za-z_][\w-]*)\s*:\s*(.*)/.exec(line);
-    if (pair) meta[pair[1]!] = pair[2]!.replace(/^(["'])(.*)\1$/, "$2").trim();
+    // A block that is not all `key: value` lines is a thematic break and what follows it.
+    if (!pair) return { meta: {}, body: source };
+    meta[pair[1]!] = unquote(pair[2]!.trim());
   }
   return { meta, body: source.slice(m[0].length) };
+}
+
+/** A front matter value: JSON when quoted that way, as the export writes it, else the bare text. */
+function unquote(value: string): string {
+  const bare = value.replace(/^(["'])(.*)\1$/, "$2");
+  if (!value.startsWith('"')) return bare;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return typeof parsed === "string" ? parsed : bare;
+  } catch {
+    return bare;
+  }
 }
 
 export function parseMarkdown(source: string): MarkdownBlock[] {

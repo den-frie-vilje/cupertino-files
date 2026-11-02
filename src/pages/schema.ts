@@ -91,6 +91,7 @@ export const Section = protoFields("TP.SectionArchive", {
   FIRST_SECTION_TEMPLATE_PAGE: "first_section_template_page",
   EVEN_SECTION_TEMPLATE_PAGE: "even_section_template_page",
   ODD_SECTION_TEMPLATE_PAGE: "odd_section_template_page",
+  USER_DEFINED_GUIDE_STORAGE: "user_defined_guide_storage",
   NAME: "name",
   FIRST_PAGE_HIDES_HEADER_FOOTER: "section_template_first_page_hides_header_footer",
 });
@@ -142,6 +143,7 @@ const sectionExtractor: ReferenceExtractor = (m) => {
   pushRef(out, m, Section.FIRST_SECTION_TEMPLATE_PAGE);
   pushRef(out, m, Section.EVEN_SECTION_TEMPLATE_PAGE);
   pushRef(out, m, Section.ODD_SECTION_TEMPLATE_PAGE);
+  pushRef(out, m, Section.USER_DEFINED_GUIDE_STORAGE);
   return out;
 };
 

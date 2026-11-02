@@ -987,3 +987,17 @@ describe("a slide moved to another layout", () => {
     expect(reloaded.store.componentOf(refId(again.object.message, Slide.TITLE_PLACEHOLDER)!)).toBe(reloaded.store.componentOf(again.id));
   });
 });
+
+describe("a layout change and the builds on the old placeholders", () => {
+  it("carries a build to the new placeholder of the same kind", () => {
+    const doc = KeynoteDocument.load(readFileSync("fixtures/olekristensen-v26.3-mac-builds-effects.key"));
+    const slide = doc.slides()[0]!;
+    const before = slide.builds().length;
+    expect(before > 0).toBe(true);
+    slide.setLayout("Title & Photo");
+    const after = KeynoteDocument.load(doc.save()).slides()[0]!;
+    const owned = new Set(after.drawables().map((d) => d.id));
+    expect(after.builds().length).toBe(before);
+    for (const build of after.builds()) expect(owned.has(build.read().drawableId!)).toBe(true);
+  });
+});

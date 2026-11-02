@@ -417,3 +417,52 @@ describe("Markdown parsing on hostile input", () => {
     expect(parseMarkdown("# C#\n")).toEqual([{ kind: "heading", level: 1, text: "C#" }]);
   });
 });
+
+describe("round trips the inline syntax exactly", () => {
+  it("keeps a footnote reference out of the link before it", () => {
+    const md = "Read [foo](http://x)[^1] now.\n\n[^1]: A note.\n";
+    expect(PagesDocument.fromMarkdown(md).toMarkdown()).toContain("[foo](http://x)[^1] now.");
+  });
+
+  it("reads a slide's title back without the number the export gives it", () => {
+    const deck = KeynoteDocument.fromMarkdown("## Hello\n\nBody\n\n## 5. Quarter\n\nMore\n");
+    const again = KeynoteDocument.fromMarkdown(deck.toMarkdown());
+    expect(again.slides().map((s) => s.title)).toEqual(["Hello", "5. Quarter"]);
+    expect(KeynoteDocument.fromMarkdown("## 7. Seven\n").slides()[0]!.title).toBe("7. Seven");
+  });
+
+  it("puts unclosed markers back where they were", () => {
+    expect(inlineText("*foo **bar").text).toBe("*foo **bar");
+    expect(inlineText("a*b **c").text).toBe("a*b **c");
+  });
+
+  it("opens and closes emphasis only against a non-space", () => {
+    const spaced = inlineText("**  bold** then *x*");
+    expect([spaced.text, spaced.bold, spaced.italic]).toEqual(["**  bold** then x", [], [{ start: 16, end: 17 }]]);
+    const label = inlineText("[a*b](http://x) *c*");
+    expect([label.text, label.links, label.italic]).toEqual(["a*b c", [{ start: 0, end: 3, url: "http://x" }], [{ start: 4, end: 5 }]]);
+  });
+
+  it("reads a quoted front matter value as the export wrote it, and leaves a leading rule alone", () => {
+    expect(splitFrontMatter('---\nheader: "Acme \\"Q3\\" draft"\n---\nBody\n').meta).toEqual({ header: 'Acme "Q3" draft' });
+    expect(parseMarkdown("---\n\n| a |\n| --- |\n| 1 |\n\n---\n").map((b) => b.kind)).toEqual(["rule", "table", "rule"]);
+  });
+
+  it("carries a link whose URL holds parentheses in angle brackets", () => {
+    const url = "https://en.wikipedia.org/wiki/Foo_(bar)";
+    expect(inlineText(`[Foo](<${url}>)`).links).toEqual([{ start: 0, end: 3, url }]);
+    const md = PagesDocument.fromMarkdown(`See [Foo](<${url}>).\n`).toMarkdown();
+    expect(md).toContain(`[Foo](<${url}>)`);
+  });
+});
+
+describe("the section master takes floating drawables only", () => {
+  it("refuses a picture anchored in the text", () => {
+    const doc = PagesDocument.load(readFileSync("fixtures/patrickomatic-pages26-sections-masks.pages"));
+    doc.insertInlineImage(0, blockPng(20, 10), { fileName: "dot.png" });
+    const image = [...doc.store.allObjects()].find(({ obj }) => doc.store.typeNameOf(obj) === "TSD.ImageArchive")!.obj.identifier;
+    expect(() => {
+      doc.sections()[0]!.moveToSectionMaster(image);
+    }).toThrow(/floats on no page/);
+  });
+});
