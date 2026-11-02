@@ -93,4 +93,7 @@ Over MCP, `create_document` takes `content` (Markdown, or CSV with
 Styling beyond bold and italic, page layout, headers and footers,
 comments, charts (they export, but are not built), and anything a table
 holds beyond its cell text: formulas export their cached value, formats
-their display text.
+their display text. Body text is written as it is, not escaped: a
+paragraph that itself looks like Markdown, one starting with `1.`, `-`,
+`#`, or `|`, or holding `*` or a backtick, reads back as that syntax,
+and a quoted comment reads back as a block quote.

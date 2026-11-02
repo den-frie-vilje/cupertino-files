@@ -7,11 +7,26 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+The vendored schema is now the apps' own, read from the 15.4
+applications, so every archive they write today is addressable by name.
+Numbers gains writers for categories and filter rules; Keynote for
+builds, slides made from a layout, slide backgrounds and text boxes;
+Pages for text boxes and tables, with tables on Keynote slides too.
+Every document can be built from Markdown or CSV and exported back to
+it. Each of the new writers has been opened in its app, and the
+versions that confirmed them are named below.
+
 ### Fixed
 
-- Copying a table that was added to a Pages document (`insertInlineTable`
-  with `copyOf`) copies that table alone. Before, the copy could bring
-  the whole document along, every other table included.
+- Copying a table (`addTable` and `insertInlineTable` with `copyOf`)
+  copies that table alone. Before, a copy could bring the whole document
+  along, every other table included, once the table held a formula or
+  an empty summary bucket: an object this library creates now declares
+  the references the apps' own schema types as references, so a
+  formula's operator node is never read as a pointer.
+- A section this library writes or copies (`insertSectionBreak`,
+  `setPageNumberStart`, `moveToSectionMaster`) declares the guide
+  storage the apps' sections carry, which it left undeclared before.
 - A stroke given without a pattern (`{ color, width }`) is written solid,
   with the whole pattern message the apps write; before, the stroke had
   no pattern at all, which Pages filled with an empty dash list.
@@ -21,247 +36,215 @@ in commit messages and pull requests.
   string beside the fresh calc-engine identity the copy was given, and
   Numbers re-minted the copy on open, so a formula in another table
   naming the copy read `#REF!`. The copy's id is now its own identity,
-  the way every app-written table states it.
+  the way every app-written table states it; Numbers 15.4 keeps both
+  the original's and the copy's identities on save, and formulas naming
+  the copy compute.
 - A formula's reference to its own table that the app had stored as a
   cross-table node (what a copied or renamed table leaves behind)
   rendered with the table's name in front, `CrossCheck::C3`, where the
   app's formula bar shows `C3`. It now renders as the app shows it.
-- A table added to a Pages page or a Keynote slide takes the app's own
-  cell size in both dimensions whatever its row and column count
-  (Keynote 432.25 by 129.8 points in the layout's frame, Pages 120.386
-  by 22.73), with a geometry to match, instead of the Numbers donor's
-  20-point rows and an equal share of the width.
-
-- A build and its chunk no longer declare the drawable and the build they
-  point at; the apps never do, and Keynote dropped the declarations on
-  resave.
-
-- `addCategory` retires the table's previous root group node with its
-  declaration instead of leaving both beside the new root.
-
-- Reading a filter rule on a table's first column threw: the rule's
-  column is a signed offset from the app's host column stored in an
-  unsigned field, and column A reads as the wrapped value. The reader
-  takes the sign, and `addFilterRule` writes a rule on column A the same
-  way instead of refusing it.
-
-- A table grafted onto a Pages page or a Keynote slide now takes the
-  host theme's first table style preset: its styles are the preset
-  network's members and its cell-level styles hang off them, the way a
-  table the app inserts is wired, instead of carrying a Numbers theme's
-  styles along. The feature is no longer marked experimental.
-
+- Reading a filter rule on a table's first column threw, and a rule's
+  `column` on any other column read one less than the column it
+  tests: the rule's column is a signed offset from the app's host
+  column stored in an unsigned field. `column` now reads as the
+  absolute column the rule tests, column A included, and
+  `addFilterRule` writes a rule on column A the same way instead of
+  refusing it.
 - The calc engine's formula-owner dependencies and a table's summary
-  model, summary cell vendor and category order no longer declare the
+  model, summary cell vendor, and category order no longer declare the
   table info they belong to; none written by the apps does.
-
 - A table model this library creates or edits declares its references
-  the way the apps do: every one but the style preset (no corpus model
-  declares it) and none of the numbers inside its merge owner and
-  deprecated category owner, in the apps' own order. Measured against
-  all 71 corpus models, the lists match exactly.
-
+  the way the apps do—every one but the style preset, none of the
+  numbers inside its merge owner and deprecated category owner, and in
+  the apps' own order—and no longer declares its parent sheet, body,
+  or slide, which the apps' table infos never do.
 - A reference to a component's root object—a tile, a data list, a
   slide—is now recorded in the package metadata as a component-level
   row, the way the apps record a whole-component dependency, rather
-  than a row per object. Every such reference in the corpus is recorded
-  that way; a document edited and saved keeps its metadata byte for byte.
-
-- A table this library creates no longer declares its parent—the
-  sheet, body or slide—among its object references. Apple's table
-  infos never do (71 of 71 in the corpus carry a parent, none declares
-  it), and the table info now joins the drawable types the store treats
-  that way.
-
-- A document whose filter the library disabled could open filtered
-  with a toggle that died after one use, when a copied table had
-  inherited its donor's hidden-row state list—entries naming the
-  donor's rows. A fresh copy now starts with no state list, and
-  `setEnabled(false)` flips the flag and leaves the list alone: the
-  app keeps it across enable/disable, and removing it left the filter
-  permanently inert. Known limitation: copying a table into a
-  document whose filters have actually run still breaks that
-  document's filter toggle in Numbers—every registration shape
-  measured so far does—so until the app's own duplicate is
-  measured, avoid table copies in filter-bearing documents.
+  than a row per object. A document edited and saved keeps its metadata
+  byte for byte.
 
 ### Changed
 
 - A new table takes the shape the apps' Insert ▸ Table gives: 10 rows by
   5 columns of 98 points in Numbers, 5 by 4 across the body in Pages and
   across the layout's object frame in Keynote, each with one header row
-  and one header column. `addTable`, `appendTable` and `insertInlineTable`
-  without rows produce it; given rows, the counts follow the rows and the
-  columns still fill the host.
-
+  and one header column. `addTable`, `appendTable`, and
+  `insertInlineTable` without rows produce it; given rows, the counts
+  follow the rows and the columns still fill the host.
 - Duration formats are written with the app's duration type (268)
   instead of the custom-duration code, and the automatic-units flag is
   read and written alongside style and units.
-
 - Field numbers now resolve from schema descriptors extracted from the
-  15.1 applications themselves, for all three apps. The Pages-specific
+  15.4 applications themselves, for all three apps. The Pages-specific
   schema, previously the Pages 5.0 dump from 2013, grows from 21 to 42
   messages, so every Pages archive the apps write today is addressable
   by name. Additions to the shared families since 14.4 are named too:
-  a colour's `headroom`, a placeholder field's `localizable`, and the
-  section-template fields of a Pages section under their current names.
+  a colour's `headroom`, a placeholder field's `localizable`, the
+  section-template fields of a Pages section under their current
+  names, the stylesheet's versioned-style snapshots for 15.2 to 15.4,
+  a sheet's hidden flag and tab colour, and Keynote's custom build
+  angle, blur, and text-alignment attributes.
 
 ### Added
 
-- A stroke's `pattern` takes `"short-dashed"`, `"dashed"`, `"long-dashed"`
+- A stroke's `pattern` takes `"short-dashed"`, `"dashed"`, `"long-dashed"`,
   and `"dotted"`, the four dashed items of Pages' Borders & Rules
-  line-style menu, written as the app writes them. Dash arrays in points
-  still draw, but the control shows None for them.
+  line-style menu, written byte for byte as the app writes them. Dash
+  arrays in points still draw, but the control shows None for them.
 - Every written colour carries the HDR headroom the current apps stamp
   on their own colours.
 - `canvasComments()` on a Numbers document and on a Keynote slide reads
   the comments pinned to a sheet or a slide, with author and date.
-
-- The vendored schemas are the 15.4 applications': the stylesheet's
-  versioned-style snapshots for 15.2 to 15.4, a sheet's hidden flag and
-  tab colour, and Keynote's custom build angle, blur and text-alignment
-  attributes are now named fields.
-
-- Formulas may use the 18 functions Numbers 15.4 adds (ACOT, ACOTH, COT,
-  COTH, CSC, CSCH, SEC, SECH, XOR, COMBINA, GAMMA, PHI, FISHER,
-  FISHERINV, PERMUTATIONA, DAYS, PEARSON, RSQ); 363 are named.
-
+- Every spreadsheet function Numbers 15.4 registers is authorable by
+  name: the function index grows from 272 to 363 entries, read from the
+  application's own function registry (`npm run harvest -- --binary
+  <Numbers.app>`) and confirmed by the document harvest. The additions
+  include IF, TRUE, FALSE, NOW, TODAY, XLOOKUP, XMATCH, SWITCH, LET,
+  LAMBDA, FILTER, SORT, UNIQUE, SEQUENCE, the text functions, and the
+  18 functions Numbers 15.4 adds (ACOT, ACOTH, COT, COTH, CSC, CSCH,
+  SEC, SECH, XOR, COMBINA, GAMMA, PHI, FISHER, FISHERINV, PERMUTATIONA,
+  DAYS, PEARSON, RSQ); the "text contains" condition now renders its
+  callee as FIND.CASEINSENSITIVE instead of FUNCTION_296.
 - `addFilterRule(column, { operator, value })` adds a row-filter rule
   comparing a column's cells with a number or a string, written as the
-  app writes one, switches the filter on and writes the rows it hides,
+  app writes one, switches the filter on, and writes the rows it hides,
   evaluated offline. The operator may also be "contains" for a
   text-contains rule or "startsWith" for a starts-with rule, each written
   as the app writes it; other function-shaped rules are not authored.
-  Numbers has not yet been seen to open a filter written this way.
-
-- A filter rule's `column` now reads as the absolute column the rule
-  tests; it was the index of a boundary entry before, which happened to
-  be one less.
-
+  Text is compared without regard to case, as Numbers compares it, and
+  a set with no active rule hides nothing. Numbers 15.4 opens a filter
+  written this way with the rule applied to the column it names and the
+  non-matching rows hidden.
 - The MCP tool `add_image` puts a picture from a file on disk inline in a
   Pages body or on a Keynote slide, through `insertInlineImage` and
   `addImage`, which were API-only before.
-
 - Tables from nothing in Pages and Keynote: `doc.appendTable(rows)` and
   `doc.insertInlineTable(pos, { rows })` put a table in a Pages body,
   inline in a paragraph of its own, and `slide.addTable({ rows, x, y })`
   puts one on a Keynote slide—the neutral table every app shares (the
-  blank Numbers document's own, Apple-made), grafted under the body or the
-  slide and sized and filled from `rows`, its styles listed in the host
-  stylesheet and its preset in the host theme. `insertInlineTable` takes the
-  neutral table by default and copies a table in the document only when
-  `copyOf` names one; it no longer refuses a document without a table. Served as the MCP tool
-  `add_table`; the Markdown constructors now make real tables of pipe
-  tables. Neither app has yet been seen to open a table placed this way.
-
+  blank Numbers document's own, Apple-made), grafted under the body or
+  the slide and sized and filled from `rows`. The table takes the host
+  theme's first table style preset, its styles listed in the host
+  stylesheet and its cell-level styles hanging off them, the way a table
+  the app inserts is wired, and the app's own cell size in both
+  dimensions whatever its row and column count (Keynote 432.25 by 129.8
+  points in the layout's frame, Pages 120.386 by 22.73), with a
+  geometry to match. `insertInlineTable` takes the neutral table by
+  default and copies a table in the document only when `copyOf` names
+  one; it no longer refuses a document without a table. Served as the
+  MCP tool `add_table`; the Markdown constructors now make real tables
+  of pipe tables. Pages 15.4 and Keynote 15.4 draw a table placed this
+  way.
 - `slide.setLayout(master)` puts a Keynote slide on another layout the
   way Format ▸ Slide Layout does: fresh placeholders from the new master,
   the title and body text carried over, every other drawable kept, the
-  old placeholders gone. `manage_slides` takes `set_layout`. Keynote has
-  not yet been seen to open a slide changed this way.
-
+  old placeholders gone. `manage_slides` takes `set_layout`. Keynote
+  15.4 reports a slide changed this way as being on the chosen layout,
+  with its title and body as written.
 - `section.moveToSectionMaster(drawableId)` moves a drawable from its
   page onto the section master so it repeats on every page, and
   `doc.insertPageBreak(paragraphIndex)` ends a paragraph with a page
-  break, each written as Pages writes it. Pages has not yet been seen to
-  open either.
-
+  break, each written as Pages writes it. Pages 15.4 draws a drawable
+  moved this way on every page of its section and on none of the next,
+  and starts a new page at a break written this way. A drawable anchored
+  in the text, such as an inline picture, is refused by the move.
 - `PagesDocument.fromMarkdown(md)`, `KeynoteDocument.fromMarkdown(md)`,
-  `NumbersDocument.fromMarkdown(md)` and `NumbersDocument.fromCsv(csv)`
-  build a new document from text: Pages gives headings the template's
-  Title and Heading styles and lists its Bullet and Numbered styles;
-  Pages also turns links into hyperlinks, bold and italic into direct
-  formatting and footnote references with a definition into footnotes;
-  Keynote keeps links, bold and italic in a slide's body; Keynote makes a slide per heading with the
-  lines beneath as its body and block quotes as presenter notes; Numbers makes a sheet per top-level
-  heading and a table per pipe table, named by the heading above, with
-  numbers, TRUE/FALSE and ISO dates typed. `create_document` takes `content`
-  (and `format: "csv"`), and `cupertino-files import <src> <doc>` does
-  the same from a file. An image on a line of its own becomes an inline
-  picture in Pages or a picture on the slide in Keynote when its bytes
-  can be found: through `images` in the API, `imageRoot` on the tool,
-  and beside the source file on the command line. A thematic break
-  (`---`) starts a new slide in Keynote. With `template`—a document of
-  the same kind, emptied the way `blankFrom` does—the result keeps that
-  document's theme and styles, and `layout` names the Keynote layout for
-  content slides; `create_document` takes both, and `import` takes
-  `--template` and `--layout`. A front matter block's `header` and
-  `footer` are written into a Pages template's first section, and a
-  Pages export leads with the first section's header and footer as front
-  matter, so a document comes back with them.
-
+  `NumbersDocument.fromMarkdown(md)`, and `NumbersDocument.fromCsv(csv)`
+  build a new document from text. Pages gives headings the template's
+  Title and Heading styles and lists its Bullet and Numbered styles, and
+  turns links into hyperlinks, bold and italic into direct formatting,
+  and footnote references with a definition into footnotes. Keynote
+  makes a slide per heading with the lines beneath as its body and
+  block quotes as presenter notes, keeping links, bold, and italic in
+  the body; a thematic break (`---`) starts a new slide, and a slide
+  heading numbered the way the export numbers them (`## 3. Title`) reads
+  back as its title alone. Numbers makes
+  a sheet per top-level heading and a table per pipe table, named by
+  the heading above, with numbers, TRUE/FALSE, and ISO dates typed. An
+  image on a line of its own becomes an inline picture in Pages or a
+  picture on the slide in Keynote when its bytes can be found: through
+  `images` in the API, `imageRoot` on the tool, and beside the source
+  file on the command line. With `template`—a document of the same
+  kind, emptied the way `blankFrom` does—the result keeps that
+  document's theme and styles, and `layout` names the Keynote layout
+  for content slides. A front matter block's `header` and `footer` are
+  written into a Pages template's first section, and a Pages export
+  leads with the first section's header and footer as front matter, so
+  a document comes back with them. `create_document` takes `content`
+  (and `format: "csv"`), `template`, and `layout`; `cupertino-files
+  import <src> <doc>` does the same from a file, with `--template` and
+  `--layout`.
 - `doc.toMarkdown()` renders any document as Markdown—a Pages body
   with headings from the named styles and list paragraphs as list items,
   Numbers as a section per sheet with each table as a pipe table, Keynote
   as a section per slide with body items and quoted presenter notes, and
   charts as a table of their series—and `table.toCsv()` renders a table
   as RFC 4180 CSV. Inline tables and pictures render where the body
-  anchors them, a slide's pictures and tables under its heading; pictures
-  are written through an image sink (`images` in the API, an `assets`
-  directory on the tool, `--assets` on the command line) and linked.
-  Hyperlinks render as links, bold and italic character styling as
-  markers, and footnotes as references with their definitions after the
-  text; a slide's free text boxes follow its body, and the text of the
-  shapes and text boxes placed on Pages pages follows the body. Comments
-  are quoted where they sit—a cell's after its table, naming the cell;
-  a paragraph's after its text, quoting the words—with their authors. A table's name heads
-  it only when the table shows its name;
-  Numbers sheets are top-level headings and their tables second-level. Served as the MCP tool `export_document`
-  (markdown, csv or text) and the CLI subcommand `cupertino-files export
-  <file>`.
-
+  anchors them, a slide's pictures and tables under its heading;
+  pictures are written through an image sink (`images` in the API, an
+  `assets` directory on the tool, `--assets` on the command line) and
+  linked. Hyperlinks render as links, bold and italic character styling
+  as markers, and footnotes as references with their definitions after
+  the text; a slide's free text boxes follow its body, and the text of
+  the shapes and text boxes placed on Pages pages follows the body.
+  Comments are quoted where they sit—a cell's after its table, naming
+  the cell; a paragraph's after its text, quoting the words—with their
+  authors. A table's name heads it only when the table shows its name;
+  Numbers sheets are top-level headings and their tables second-level.
+  A link whose URL holds spaces or parentheses is written in angle
+  brackets, and a table cell's pipes and backslashes are escaped.
+  Served as the MCP tool `export_document` (markdown, csv, or text) and
+  the CLI subcommand `cupertino-files export <file>`. Known limitation:
+  body text is written as it is, so a paragraph that itself looks like
+  Markdown—one starting with `1.`, `-`, `#`, or `|`, or holding `*` or a
+  backtick—reads back as that syntax, and a quoted comment reads back
+  as a block quote.
 - `slide.background()` reads a Keynote slide's background fill up its
   style chain, and `slide.setBackground(fill)` sets one, as the app does:
   a variation style of the slide's own under the layout's, replaced in
   place on a second call. Also served as the MCP tool
-  `set_slide_background`. Keynote has not yet been seen to draw a
-  background written this way.
-
+  `set_slide_background`. Keynote 15.4 draws a background set this way.
 - `doc.addSlide({ master })` makes a Keynote slide from one of the deck's
-  layouts, by name or id, as the app's own "add slide" does: the master is
-  deep-copied and the copy made a content slide, with empty title and body,
-  a note, and the slide-number attachment; the master's name, object
-  placeholder, style lists and thumbnail texts stay the master's. The MCP
-  tool `manage_slides` takes `master` on `add`. Keynote has not yet been
-  seen to open a slide made this way.
-
+  layouts, by name or id, as the app's own "add slide" does: the master
+  is deep-copied and the copy made a content slide, with empty title and
+  body, a note, and the slide-number attachment; the master's name,
+  object placeholder, style lists, and thumbnail texts stay the
+  master's. The MCP tool `manage_slides` takes `master` on `add`.
+  Keynote 15.4 reports a slide made this way as being on the chosen
+  layout, with its title as written.
 - `slide.addTextBox(text, { x, y, width, height })` on a Keynote slide
   and `doc.addTextBox(pageIndex, text, placement)` in Pages add a text
   box by deep-copying one the document already carries—its own storage,
-  styles and path—then setting the text, placing it and repointing its
+  styles, and path—then setting the text, placing it, and repointing its
   parent to the slide (or clearing it, as Pages' floating boxes carry
   none). A document with no text box to copy is refused. Also served as
-  the MCP tool `add_text_box`. Neither app has yet been seen to draw a
-  box written this way.
-
+  the MCP tool `add_text_box`. Keynote 15.4 and Pages 15.4 draw a box
+  added this way; in Pages the placement is in page points inside the
+  page, so take the page size from `pageSetup()` rather than assuming
+  one.
 - `slide.addBuild({ drawableId, effect, duration, delay })` animates a
   drawable on a Keynote slide with an all-at-once build played on click,
-  written in the shape the app's own builds have; `delivery:
-  "byParagraph"` instead writes one stage per paragraph of the target's
-  text, each played on click. Actions and build order are not authored.
-  Keynote has not yet been seen to play a build written this way.
-
+  written in the shape the app's own builds have, declaring neither the
+  drawable nor the build it points at, as the app never does;
+  `delivery: "byParagraph"` instead writes one stage per paragraph of
+  the target's text, each played on click. Actions and build order are
+  not authored. Keynote 15.1.1 plays a build written this way, and a
+  layout change carries a build to the new placeholder of its kind.
 - `addCategory(column)` groups a table's rows by the values in a column,
   and `addCategory([first, second, …])` nests the groups by several:
   one group per distinct value at each level in text order, each holding
   its rows, written in the shape every categorised document carries and
-  switched on. A level given as `{ column, bucket }` groups a date column
-  by year, month, quarter, week, day or weekday with the app's own
-  bucketing formula. Summaries are not authored. Numbers has not yet been
-  seen to draw a category defined this way.
-
+  switched on, the table's previous root group node retired with its
+  declaration. A level given as `{ column, bucket }` groups a date
+  column by year, month, quarter, week, day, or weekday with the app's
+  own bucketing formula. Summaries are not authored. Numbers 15.1 draws
+  a category defined this way, with the groups collapsed under their
+  values.
 - A duration written with `setCell` is stamped with the app's own fresh
   duration format: short style, hours down to seconds, automatic units
-  on. Before, a typed duration carried no format at all.
-
-- Every spreadsheet function Numbers 15.1 registers is authorable by
-  name: the function index table grows from 272 to 345 entries, read
-  from the application's own function registry (`npm run harvest --
-  --binary <Numbers.app>`) and confirmed by the document harvest. The
-  additions include IF, TRUE, FALSE, NOW, TODAY, XLOOKUP, XMATCH,
-  SWITCH, LET, LAMBDA, FILTER, SORT, UNIQUE, SEQUENCE and the text
-  functions; the "text contains" condition now renders its callee as
-  FIND.CASEINSENSITIVE instead of FUNCTION_296.
+  on. Before, a typed duration carried no format at all; Numbers 15.4
+  now shows it as a duration in the app's short style.
 
 ## 0.5.0 — 2026-10-25
 
