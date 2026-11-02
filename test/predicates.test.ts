@@ -457,4 +457,29 @@ describe("writing a filter rule", () => {
     const extent = reloaded.object.message.getMessage(70)!.getMessages(2)[0]!.getMessage(3)!;
     expect(extent.getMessages(2).length).toBe(1);
   });
+
+  it("hides nothing while no rule is active, whatever the mode", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    [5, 15, 20].forEach((value, i) => {
+      table.setCell(i + 1, 1, value);
+    });
+    table.deleteRows(4, table.rowCount - 4);
+    table.addFilterRule(1, { operator: ">", value: 10 });
+    const set = table.filterSets().rows!;
+    set.setMode("any");
+    set.setRuleEnabled(0, false);
+    expect(table.refilterRows()).toBe(0);
+  });
+
+  it("compares text without regard to case, as Numbers does", () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    ["Apple", "apple", "Pear"].forEach((value, i) => {
+      table.setCell(i + 1, 1, value);
+    });
+    table.deleteRows(4, table.rowCount - 4);
+    table.addFilterRule(1, { operator: "=", value: "apple" });
+    expect(table.refilterRows()).toBe(1);
+  });
 });

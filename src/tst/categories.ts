@@ -747,9 +747,9 @@ export function defineByValueCategory(
   };
 
   /** A node's message, without its children; `inline` nodes carry children inline. */
-  const nodeMessage = (group: { value: GroupValue; rows: number[] }, column: number, type: number): RawMessage => {
+  const nodeMessage = (group: { value: GroupValue; rows: number[] }, column: number, type: number, uid: ReturnType<typeof randomUid>): RawMessage => {
     const node = RawMessage.create();
-    node.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    node.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(uid));
     const format =
       type === GroupingType.BY_VALUE
         ? formatAt(group.rows[0]!, column) ?? RawMessage.create()
@@ -777,8 +777,10 @@ export function defineByValueCategory(
     const objects: IwaObject[] = [];
     const inline: RawMessage[] = [];
     for (const group of partition(rows, column, type)) {
-      const base = nodeMessage(group, column, type);
-      const referenced = nodeMessage(group, column, type);
+      // The inline copy and the referenced node are one group, under one uid.
+      const uid = randomUid();
+      const base = nodeMessage(group, column, type, uid);
+      const referenced = nodeMessage(group, column, type, uid);
       const inlineNode = base;
       if (level + 1 < columns.length) {
         const children = buildLevel(group.rows, level + 1);
@@ -799,9 +801,10 @@ export function defineByValueCategory(
   };
 
   const tree = buildLevel(dataRows, 0);
+  const rootUid = randomUid();
   const rootMessage = (children: readonly RawMessage[] | undefined): RawMessage => {
     const root = RawMessage.create();
-    root.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(randomUid()));
+    root.setMessage(GroupNodeFields.GROUP_UID, writeUidMessage(rootUid));
     if (children) root.setMessages(GroupNodeFields.CHILD, children);
     root.setMessage(GroupNodeFields.FORMAT_MANAGER, RawMessage.create());
     root.setMessage(GroupNodeFields.ROW_LOOKUP_UIDS, writeIndexSet([...dataRows]));

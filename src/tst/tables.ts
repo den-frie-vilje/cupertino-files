@@ -4375,9 +4375,7 @@ export class TableModel {
     for (const rule of rules) {
       const predicate = rule.predicate!;
       const literal = predicate.operands[1];
-      if (rule.column === undefined) {
-        throw new RangeError(`filter rule ${rule.index} names no column; its rows cannot be recomputed here`);
-      }
+      if (rule.column === undefined) return 0;
       const column = rule.column;
       if (predicate.predicateType === 1 && literal?.kind === "string") {
         // Starts-with: FIND.CASEINSENSITIVE(needle, cell) = 1.
@@ -4392,8 +4390,9 @@ export class TableModel {
         tests.push((row) => {
           const actual = groupValueOf(this.cellValue(row, column));
           if (actual === undefined || typeof actual !== typeof expected) return op === "<>";
-          const a = actual as number | string;
-          const e = expected as number | string;
+          // Numbers compares text without regard to case, in a filter as in `=`.
+          const a = typeof actual === "string" ? actual.toLowerCase() : (actual as number);
+          const e = typeof expected === "string" ? expected.toLowerCase() : (expected as number);
           switch (op) {
             case "=": return a === e;
             case "<>": return a !== e;
@@ -4409,9 +4408,7 @@ export class TableModel {
           const actual = groupValueOf(this.cellValue(row, column));
           return typeof actual === "string" && actual.toLowerCase().includes(needle);
         });
-      } else {
-        throw new RangeError(`filter rule ${rule.index} is not a comparison, text-contains or starts-with rule; its rows cannot be recomputed here`);
-      }
+      } else return 0;
     }
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
     const states = owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES).find((s) => s.has(HiddenStates.ROW_EXTENT));
@@ -4420,7 +4417,7 @@ export class TableModel {
     const uids = this.uidMap();
     const hidden: RawMessage[] = [];
     for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) {
-      const passes = set.mode === "any" ? tests.some((test) => test(row)) : tests.every((test) => test(row));
+      const passes = tests.length === 0 || (set.mode === "any" ? tests.some((test) => test(row)) : tests.every((test) => test(row)));
       if (passes) continue;
       const uid = uids.rowUid(row);
       if (!uid) continue;

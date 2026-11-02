@@ -328,6 +328,11 @@ describe("defining a category", () => {
     expect([1, 3, 4, 5, 6, 7, 8, 9, 10].filter((f) => leaf.has(f))).toEqual([1, 6, 7, 9]);
     expect([1, 2, 3, 4].filter((f) => leaf.getMessage(GroupNodeFields.FORMAT_MANAGER)!.has(f))).toEqual([1, 2, 4]);
     expect(gb.getMessage(GroupByFields.GROUP_NODE_ROOT)!.getMessages(GroupNodeFields.CHILD).length).toBe(3);
+    // The inline copy and the referenced tree name each group by one uid.
+    const inlineRoot = gb.getMessage(GroupByFields.GROUP_NODE_ROOT)!;
+    const uid = (node: RawMessage): string => Buffer.from(node.getMessage(GroupNodeFields.GROUP_UID)!.toBytes()).toString("hex");
+    expect(uid(inlineRoot)).toBe(uid(root));
+    expect(uid(inlineRoot.getMessages(GroupNodeFields.CHILD)[0]!)).toBe(uid(leaf));
   });
 
   it("refuses a second definition and an empty grouping cell", () => {
