@@ -181,7 +181,8 @@ describe("proofs: Keynote", () => {
     const line = reported.split("\n").find((l) => l.startsWith("Written by cupertino-files@"));
     const [, x, y, w, h] = /@(.+),(.+)#(.+)x(.+)$/.exec(line ?? "") ?? [];
     expect([x, y, w, h].map(num)).toEqual([300, 650, 1300, 120]);
-    if (!poppler) expect(pdfText(exported("Keynote", path))[0] ?? "").toContain("Written by cupertino-files");
+    // The PDF's text puts the "fi" ligature of "files" on a line of its own.
+    if (!poppler) expect(pdfText(exported("Keynote", path))[0] ?? "").toContain("Written by cupertino");
   });
 
   it("a build we added survives Keynote's resave", { skip: skip.Keynote ?? false }, () => {
@@ -245,9 +246,11 @@ describe("proofs: Pages", () => {
     const before = session!.stageFixture(SECTIONS_BASE);
     const after = session!.path("section-master.pages");
     // The base's first section runs sixteen pages and carries one floating
-    // graphic on its first; the second section starts on page 17. Body text
-    // already inks the graphic's rectangle, so each page is read against
-    // the untouched document's export of the same page.
+    // graphic on its first; the second section starts on page 17. A master
+    // drawable draws behind the body text, so on a dense page it changes
+    // few pixels: each page is read against the untouched document's export
+    // of the same page, counting the pixels inside the graphic's rectangle
+    // that differ, which nothing else on the page does.
     const doc = PagesDocument.load(readFileSync(before));
     const drawable = doc.floatingDrawables(0)!.drawables()[0]!;
     const g = drawable.geometry()!;
@@ -255,15 +258,26 @@ describe("proofs: Pages", () => {
     doc.sections()[0]!.moveToSectionMaster(drawable.id);
     writeFileSync(after, doc.save());
 
-    const ink = (pdf: string, page: number): number => {
-      const raster = rasterize(pdf, page, 18);
-      const area = Math.ceil(rect.width / raster.scale) * Math.ceil(rect.height / raster.scale);
-      return 1 - countPixels(raster, [255, 255, 255], 6, rect) / area;
-    };
     const plain = exported("Pages", before);
     const moved = exported("Pages", after);
-    const gained = [2, 3, 8, 16, 17].map((page) => ink(moved, page) - ink(plain, page) > 0.08);
-    expect(gained).toEqual([true, true, true, true, false]);
+    const changed = (page: number): number => {
+      const a = rasterize(plain, page, 18);
+      const b = rasterize(moved, page, 18);
+      let inside = 0;
+      let differing = 0;
+      for (let y = 0; y < a.height; y++) {
+        for (let x = 0; x < a.width; x++) {
+          const px = x * a.scale;
+          const py = y * a.scale;
+          if (px < rect.x || px >= rect.x + rect.width || py < rect.y || py >= rect.y + rect.height) continue;
+          inside++;
+          const i = (y * a.width + x) * 3;
+          if ([0, 1, 2].some((c) => Math.abs(a.rgb[i + c]! - b.rgb[i + c]!) > 24)) differing++;
+        }
+      }
+      return differing / inside;
+    };
+    expect([2, 3, 8, 16, 17].map((page) => changed(page) > 0.02)).toEqual([true, true, true, true, false]);
   });
 
   it("a table appended to the body is a table to Pages", { skip: skip.Pages ?? false }, () => {
