@@ -7,6 +7,8 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+## 0.6.0 — 2026-11-02
+
 The vendored schema is now the apps' own, read from the 15.4
 applications, so every archive they write today is addressable by name.
 Numbers gains writers for categories and filter rules; Keynote for
