@@ -1,8 +1,8 @@
 syntax = "proto2";
 
 import "TSCH3DArchives.proto";
-import "TSCHArchives_Common.proto";
-import "TSCHArchives_GEN.proto";
+import "TSCHArchives.Common.proto";
+import "TSCHArchives.GEN.proto";
 import "TSCHArchives.proto";
 import "TSDArchives.proto";
 import "TSDCommandArchives.proto";

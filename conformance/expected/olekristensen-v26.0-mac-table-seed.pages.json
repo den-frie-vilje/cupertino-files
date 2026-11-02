@@ -1,0 +1,263 @@
+{
+  "file": "olekristensen-v26.0-mac-table-seed.pages",
+  "sha1": "b5da99b32c4a75fd43819d506d8d1489a1bf5486",
+  "app": "pages",
+  "fileFormatVersion": "26.4.0",
+  "objects": 641,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 55
+    },
+    {
+      "name": "Index/ViewState-2000130.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 41
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-2000009-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-2000059-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-2000060-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000062-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000063-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000064-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000065-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000066-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000067-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000068-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000069-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000070-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000071-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000072-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-2000115-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000116-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000117-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000118-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000119-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000120-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000121-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000122-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000123-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000124-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000125-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000127-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-2000193-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 493
+    },
+    {
+      "name": "Index/ObjectContainer.iwa",
+      "objects": 3
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 172,
+      "text": "Expected: a 3×2 table below this line, headed Item / Count, with Apples 3 and Pears 5. No table, an empty one, or a refusal to open, is the finding; comment on this line.\n￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 2
+  }
+}

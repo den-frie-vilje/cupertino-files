@@ -40,11 +40,10 @@
  *
  * ## The escape hatch, and why it is deliberately awkward
  *
- * Not every number is in a dump. The shared families are Numbers 14.4 and
- * the Pages-specific `TP*` schemas are Pages 5.0 from 2013, while the
- * documents this library reads are written by version 26. Fields added
- * since are real, they are measured from the corpus, and they cannot be
- * looked up.
+ * Not every number is in a dump. The schemas are extracted from one
+ * release of the applications, and a document written by a newer release
+ * may carry fields that release added. Such fields are real, they are
+ * measured from the corpus, and they cannot be looked up.
  *
  * {@link measuredFields} takes them — and refuses a number the schema
  * *does* have, so a field that appears in a future dump forces the

@@ -191,12 +191,21 @@ describe("an authored cell has what a real one has", () => {
     table.setCell(1, 1, "text");
     table.setCell(1, 2, true);
     table.setCell(1, 3, { type: "date", value: new Date("2026-08-14T00:00:00Z") });
+    table.setCell(1, 4, { type: "duration", seconds: 5400 });
 
     const after = NumbersDocument.load(doc.save()).tables()[0]!;
     expect(after.cellFormat(1, 0)?.kind).toBe("number");
     expect(after.cellFormat(1, 1)?.kind).toBe("text");
     expect(after.cellFormat(1, 2)?.kind).toBe("boolean");
     expect(after.cellFormat(1, 3)?.kind).toBe("date");
+    // The duration's is the app's own fresh duration format.
+    expect(after.cellFormat(1, 4)).toEqual({
+      kind: "duration",
+      style: 1,
+      largestUnit: 4,
+      smallestUnit: 16,
+      automaticUnits: true,
+    });
     // The number's is the app's automatic default, not an invention.
     const format = after.cellFormat(1, 0);
     expect(format?.kind === "number" && format.decimals).toBe("auto");

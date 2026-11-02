@@ -8,7 +8,7 @@ import "TSSArchives.proto";
 import "TSCEArchives.proto";
 import "TSWPArchives.proto";
 import "TSTArchives.proto";
-import "TSTArchives_sos.proto";
+import "TSTArchives.sos.proto";
 package TST;
 
 enum TableArea {
@@ -734,7 +734,7 @@ message CommandTransposeTableArchive {
 
 message CommandSetStructuredTextImportRecordArchive {
   required .TST.TableCommandArchive super = 1;
-  optional .TST.StructuredTextImportRecord new_import_record = 2;
+  optional .TST.StructuredTextImportRecordUID new_import_record = 2;
   optional .TST.StructuredTextImportRecord old_import_record = 3;
 }
 

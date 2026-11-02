@@ -254,7 +254,8 @@ export const RUNGS: {
     build: (doc) => {
       const cats = doc.tables().find((t) => t.name === "Cats")!;
       cats.setFormula(6, 2, "=SUM(C3:K5)");
-      cats.setCell(6, 4, "19: C7 now =SUM(C3:K5). PASS: C7 shows 1300 (or shows it after any edit elsewhere). FAIL: stays 1500 forever, errors, or the file will not open.");
+      // Row 7 is merged from C across, so the note sits in the free cell above.
+      cats.setCell(5, 5, "19: C7 now =SUM(C3:K5). PASS: C7 shows 1300 (or shows it after any edit elsewhere). FAIL: stays 1500 forever, errors, or the file will not open.");
     },
   },
   {
@@ -275,6 +276,61 @@ export const RUNGS: {
       const cats = doc.tables().find((t) => t.name === "Cats")!;
       cats.setFormula(2, 6, "=E3*2", { value: 200 });
       cats.setCell(2, 7, "21: G3 is a new formula, =E3*2, showing 200. Now type 150 into E3 (the 100 on this row). PASS: G3 changes to 300. FAIL: G3 stays 200 — the engine trusted a dependency tracker we did not update.");
+    },
+  },
+  {
+    name: "22-duration-cell",
+    note: "a typed duration, stamped with the app's fresh duration format",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(1, 0, { type: "duration", seconds: 5400 });
+      table.setCell(1, 1, "22: A2 is a duration of 1h 30m written by the library. PASS: it shows as 1:30:00 with Duration in the inspector. FAIL: a bare number, or an inspector reading other than Duration.");
+    },
+  },
+  {
+    name: "23-filter-rule",
+    note: "a comparison filter rule written from nothing, the set switched on",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      for (let row = 1; row <= 4; row++) table.setCell(row, 1, row * 5);
+      table.setCell(1, 0, "23: column B holds 5, 10, 15, 20 and a filter rule says B > 10. PASS: only the 15 and 20 rows show, with the filter on in the panel. FAIL: every row shows, or another column is filtered.");
+      table.addFilterRule(1, { operator: ">", value: 10 });
+    },
+  },
+  {
+    name: "24-category",
+    note: "a by-value category defined from nothing on a text column",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      const kinds = ["Fruit", "Animal", "Fruit", "Transport", "Animal"];
+      kinds.forEach((kind, i) => { table.setCell(i + 1, 0, kind); });
+      table.setCell(1, 1, "24: column A is categorised by value. PASS: three groups, Animal, Fruit and Transport, each with its rows beneath it. FAIL: flat rows, or a refusal to open.");
+      if (table.rowCount > kinds.length + 1) table.deleteRows(kinds.length + 1, table.rowCount - kinds.length - 1);
+      table.addCategory(0);
+    },
+  },
+  {
+    name: "25-category-off",
+    note: "the template's grouped Categories table ungrouped with setEnabled(false), its definition kept",
+    build: (doc) => {
+      const table = doc.tables().find((t) => t.name === "Uncategorized")!;
+      table.setCell(1, 0, "25: the Categories table in this document was grouped by Numbers; the library switched the grouping OFF and kept the definition. PASS: its rows are flat, and Organise > Categories (Organiser > Kategorier) offers the same category to switch back on. FAIL: still grouped, no category to re-enable, or a refusal to open.");
+      const categories = doc.tables().find((t) => t.name === "Categories")?.activeCategories();
+      if (!categories) throw new Error("template's Categories table is not grouped");
+      categories.setEnabled(false);
+    },
+  },
+  {
+    name: "26-conditional-cache",
+    note: "two rule sets on column C, so the second conditional id can be read back after a value changes which rule fires",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      table.setCell(1, 0, "26: C2 to C4 carry the rule '> 5 is green', C5 carries '= 4 is yellow'. PASS on open: C2 plain, C3 and C4 green, C5 yellow. YOUR TURN: type 8 into C2 and 7 into C5, then save with Cmd-S. The library reads the saved file back; the colours are all there is to look at.");
+      [3, 7, 9, 4].forEach((v, i) => { table.setCell(i + 1, 2, v); });
+      const green = { kind: "color", color: { r: 0.31, g: 0.6, b: 0.32, space: "srgb" } } as const;
+      const yellow = { kind: "color", color: { r: 1, g: 0.92, b: 0.55, space: "srgb" } } as const;
+      table.setConditionalRules(1, 2, [{ operator: ">", value: 5, cell: { fill: green } }], { rowCount: 3 });
+      table.setConditionalRules(4, 2, [{ operator: "=", value: 4, cell: { fill: yellow } }]);
     },
   },
 ];

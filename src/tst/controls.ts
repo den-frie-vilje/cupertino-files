@@ -85,7 +85,11 @@ export const InteractionType = measuredEnum(
   "There is no enum to look up: `interaction_type` is a plain uint32 in " +
     "TSTArchives.proto. Every value here was established in the app — a " +
     "document authoring one control of each kind was opened in Numbers and " +
-    "each drew as labelled, which is also what separated 4 from 5.",
+    "each drew as labelled, which is also what separated 4 from 5. The " +
+    "app's own code agrees and bounds the set: TSTables converts interaction " +
+    "types 4 through 8, and no others, to its control format codes 104 " +
+    "through 108, which TSUtility names Stepper, Slider, Star Rating, " +
+    "Pop-Up Menu and Checkbox in that order.",
 );
 
 /** Display names for {@link InteractionType}; `undefined` when unrecognised. */

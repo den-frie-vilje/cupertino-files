@@ -1,9 +1,9 @@
 syntax = "proto2";
 
-import "TSDArchives_sos.proto";
-import "TSSArchives_sos.proto";
+import "TSDArchives.sos.proto";
+import "TSSArchives.sos.proto";
 import "TSTStylePropertyArchiving.proto";
-import "TSWPArchives_sos.proto";
+import "TSWPArchives.sos.proto";
 package TSTSOS;
 
 message SpecSetTableStrokePresetListArchive {

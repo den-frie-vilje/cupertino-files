@@ -24,6 +24,7 @@ import { sha1 } from "../base/sha1.ts";
 import { bytesEqual } from "../base/bytes.ts";
 import { typeName, type IWorkApp } from "./registry.ts";
 import { embeddedRequiredSchema, missingRequired } from "./required.ts";
+import { REQUIRED_SCHEMA } from "../proto/vendored.ts";
 
 // TSP.PackageMetadata field numbers.
 const PKG_LAST_OBJECT_IDENTIFIER = 1;
@@ -322,6 +323,54 @@ export class ObjectStore {
     return removed;
   }
 
+  /**
+   * Drop the `candidates` that `from` no longer reaches — the same crude
+   * walk as {@link prune}, confined to a set this library just created,
+   * so an object the walk cannot see is never at risk. Returns how many
+   * were dropped.
+   */
+  discardUnreachable(from: bigint, candidates: Iterable<bigint>): number {
+    const pool = new Set(candidates);
+    const reachable = new Set<bigint>();
+    const queue = [from];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      if (reachable.has(id)) continue;
+      reachable.add(id);
+      const object = this.index.get(id)?.obj;
+      if (!object) continue;
+      for (const next of referencedIds(object.message)) if (this.index.has(next) && !reachable.has(next)) queue.push(next);
+    }
+    // A candidate something outside the drop set still points at stays:
+    // a style the stylesheet lists, a storage another slide shares.
+    const dropping = new Set<bigint>();
+    for (const id of pool) if (this.index.has(id) && !reachable.has(id)) dropping.add(id);
+    for (const id of [...dropping]) {
+      const held = this.referrers(id).some((referrer) => {
+        if (dropping.has(referrer)) return false;
+        // Declarations lag edits until save; the live references decide.
+        const object = this.index.get(referrer)?.obj;
+        return object !== undefined && this.currentReferencesOf(object).includes(id);
+      });
+      if (held) dropping.delete(id);
+    }
+    let removed = 0;
+    for (const component of this.components) {
+      if (component.isOpaque) continue;
+      const drop = component.objects.filter((o) => dropping.has(o.identifier));
+      if (drop.length === 0) continue;
+      for (const object of drop) {
+        component.byId.delete(object.identifier);
+        this.index.delete(object.identifier);
+        this.created.delete(object.identifier);
+        removed++;
+      }
+      component.objects = component.objects.filter((o) => !drop.includes(o));
+      component.structurallyDirty = true;
+    }
+    return removed;
+  }
+
   // ------------------------------------------------------------- Data/ files
 
   /** Files to add to the package on save (e.g. "Data/photo.png"). */
@@ -411,6 +460,15 @@ export class ObjectStore {
     if (!fromInfo || !toInfo) return; // metadata-less packages: nothing to maintain
     const toComponentId = toInfo.getVarint(COMPONENT_IDENTIFIER);
     if (toComponentId === undefined) return;
+    // A reference to a component's root object — the one whose id is the
+    // component's own identifier (a tile, a data list, a slide) — is a
+    // whole-component dependency: the apps record it as a component-level
+    // row, never per object (1,641 such references across the corpus, none
+    // listed by object id).
+    if (toComponentId === toId) {
+      this.declareComponentDependency(fromComponent, toComponentId);
+      return;
+    }
     for (const er of fromInfo.getMessages(COMPONENT_EXTERNAL_REFERENCES)) {
       if (
         er.getVarint(EXTREF_COMPONENT_IDENTIFIER) === toComponentId &&
@@ -649,9 +707,9 @@ export class ObjectStore {
     if (extractor) return dedupe(extractor(obj.message));
     if (this.created.has(obj.identifier)) {
       const container = this.containerParentOf(obj.type, obj.message);
-      return dedupe(
-        referencedIds(obj.message).filter((id) => this.index.has(id) && id !== container),
-      );
+      const name = this.typeNameOf(obj);
+      const scanned = name !== undefined && name in REQUIRED_SCHEMA ? schemaReferencedIds(obj.message, name) : referencedIds(obj.message);
+      return dedupe(scanned.filter((id) => this.index.has(id) && id !== container));
     }
     return obj.getObjectReferences();
   }
@@ -732,18 +790,66 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * Every object id a message could be pointing at.
  *
  * Recursive over submessages, and deliberately shape-based: a `TSP.Reference`
- * is a message whose sole field is varint 1, so anything matching that is
- * treated as a pointer. See {@link ObjectStore.prune} for why guessing wide
- * is the safe direction here.
+ * is a message whose sole field is varint 1, so any submessage matching
+ * that is treated as a pointer. The root is never one: an object's own
+ * archive is not a reference, and an empty header bucket, whose sole
+ * field is its hash function 1, would otherwise read as a pointer to
+ * object 1, the document. See {@link ObjectStore.prune} for why guessing
+ * wide is the safe direction below the root.
  */
-function referencedIds(message: RawMessage): bigint[] {
+const REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.Reference", "TSP.DataReference"]);
+
+/**
+ * Every object id a message of a known archive type points at, read by
+ * the apps' own descriptors: a reference is a field the schema types as
+ * one, so a formula's operator node or a header bucket's hash function,
+ * each a lone varint 1, is never mistaken for a pointer. Fields the
+ * schema does not name in a known message are its scalars and are
+ * skipped; a submessage of a type the schema does not know falls back
+ * to the shape scan.
+ */
+export function schemaReferencedIds(message: RawMessage, typeName: string): bigint[] {
+  const out: bigint[] = [];
+  const visit = (node: RawMessage, name: string, depth: number): void => {
+    if (depth > 24) return;
+    const definition = REQUIRED_SCHEMA[name];
+    if (!definition) {
+      out.push(...referencedIds(node));
+      return;
+    }
+    const types = new Map(definition.map(([no, , , type]) => [no, type]));
+    const seen = new Set<number>();
+    for (const field of node.fields) {
+      if (field.wire !== 2 || seen.has(field.no)) continue;
+      seen.add(field.no);
+      const type = types.get(field.no);
+      if (type === undefined || type === "") continue;
+      let subs: RawMessage[];
+      try {
+        subs = node.getMessages(field.no);
+      } catch {
+        continue;
+      }
+      for (const sub of subs) {
+        if (REFERENCE_TYPES.has(type)) {
+          const id = sub.getVarint(1);
+          if (id !== undefined && id > 0n) out.push(id);
+        } else if (sub.fields.length > 0) visit(sub, type, depth + 1);
+      }
+    }
+  };
+  visit(message, typeName, 0);
+  return out;
+}
+
+export function referencedIds(message: RawMessage): bigint[] {
   const out: bigint[] = [];
   const visit = (node: RawMessage, depth: number): void => {
     // Deep nesting is real (an AST inside a formula inside a list entry),
     // but unbounded recursion on hostile input is not worth the risk.
     if (depth > 24) return;
     const fields = node.fields;
-    if (fields.length === 1 && fields[0]!.no === 1 && fields[0]!.wire === 0) {
+    if (depth > 0 && fields.length === 1 && fields[0]!.no === 1 && fields[0]!.wire === 0) {
       const id = node.getVarint(1);
       if (id !== undefined && id > 0n) out.push(id);
       return;

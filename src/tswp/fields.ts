@@ -260,17 +260,16 @@ export function buildDateField(
 }
 
 /**
- * `TSWP.PlaceholderSmartFieldArchive` field numbers. The archive is in no
- * vendored .proto; the shape is measured across 73 instances (the
- * corpus's 64 plus a document donated for the question): the smart-field
- * super, and one varint whose value is 1 in every modern instance (a
- * single v10-era file carries 0). The varint's meaning is unnamed; 1 is
- * what the apps write. A placeholder may span an attachment's U+FFFC —
- * that is how a body document marks an image placeholder, with no
- * separate drawable archive involved.
+ * `TSWP.PlaceholderSmartFieldArchive`: the smart-field super and
+ * `localizable`, which every modern instance in the corpus sets (a
+ * single v10-era file carries 0). A placeholder may span an attachment's
+ * U+FFFC — that is how a body document marks an image placeholder, with
+ * no separate drawable archive involved.
  */
-const PLACEHOLDER_SUPER = 1;
-const PLACEHOLDER_FLAG = 2;
+const Placeholder = protoFields("TSWP.PlaceholderSmartFieldArchive", {
+  SUPER: "super",
+  LOCALIZABLE: "localizable",
+});
 
 /**
  * Build a `TSWP.PlaceholderSmartFieldArchive` — template ghost text the
@@ -280,8 +279,8 @@ export function buildPlaceholderField(store: ObjectStore, component: Component):
   const message = RawMessage.create();
   const smartField = RawMessage.create();
   smartField.setString(SmartField.TEXT_ATTRIBUTE_UUID, randomUuid());
-  message.setMessage(PLACEHOLDER_SUPER, smartField);
-  message.setVarint(PLACEHOLDER_FLAG, 1);
+  message.setMessage(Placeholder.SUPER, smartField);
+  message.setVarint(Placeholder.LOCALIZABLE, 1);
   const object = store.createObject(SMART_FIELD_TYPE.PLACEHOLDER, component);
   object.setMessageBytes(message.toBytes());
   return object;

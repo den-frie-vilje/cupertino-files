@@ -98,11 +98,10 @@ describe("e2e: authored from nothing", () => {
 
   // The donor deck is Apple's Basic White theme (13.2). A failure at
   // `open` means Keynote rejects the embedded donor itself and it needs
-  // remaking (scripts/make-blanks.ts). The body-font readback checks the
-  // house typography: the theme's Body style says Palatino, and typed
-  // placeholder text must come back serif. A Helvetica answer means the
-  // placeholder does not draw from the named Body style — which names
-  // the next probe, not a broken deck.
+  // remaking (scripts/make-blanks.ts). The body-font readback checks that
+  // typed placeholder text takes the font the library resolves from the
+  // deck's own styles for that placeholder; a disagreement names a style
+  // the reader resolves wrong, not a broken deck.
   it("Keynote opens a blank() deck and reads our note", { skip: skip.Keynote ?? false }, () => {
     session!.remember("Keynote");
     const path = session!.path("from-nothing.key");
@@ -110,6 +109,9 @@ describe("e2e: authored from nothing", () => {
     const doc = KeynoteDocument.blank();
     doc.slides()[0]!.notes = marker;
     writeFileSync(path, doc.save());
+    const probe = KeynoteDocument.blank().slides()[0]!.placeholder("body")!;
+    probe.setText("serif check");
+    const resolved = probe.characterFormattingAt(0).fontName;
 
     const reported = osascript(
       `tell application "Keynote"\n` +
@@ -125,7 +127,7 @@ describe("e2e: authored from nothing", () => {
     );
     const [note, bodyFont] = reported.split("|");
     expect(note).toContain(marker);
-    expect(bodyFont).toContain("Palatino");
+    expect(bodyFont).toBe(resolved);
   });
 
   // A merge this library wrote must survive Numbers rewriting the entire

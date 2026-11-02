@@ -1,0 +1,269 @@
+{
+  "file": "olekristensen-v26.0-mac-authored.pages",
+  "sha1": "09c9f00e3bb9379758d108e0736808850a928df0",
+  "app": "pages",
+  "fileFormatVersion": "26.0.0",
+  "objects": 651,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 66
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 10
+    },
+    {
+      "name": "Index/CalculationEngine-1732611.iwa",
+      "objects": 42
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733170-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733171-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733174-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733175-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733177-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733178-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733179-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733181-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733184-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733187-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733194-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733207-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733211-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1733235-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1733751-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733752-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733753-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733754-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733755-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733756-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733757-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733758-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733759-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733760-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733761-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1733762-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1735200-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage-1732610.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 494
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 6
+    }
+  ],
+  "storages": [
+    {
+      "kind": "BODY",
+      "characters": 591,
+      "text": "Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.\nInsert > Table (Indsaet > Tabel), here:￼\n2) Insert > Text Box (Tekstfelt), anywhere on this page.￼\n3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.\n4) Insert > Page Break (Sideskift), right after this line.\u0005\n5) Select the word twin in this line and add a comment on it: the twin.\n"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "TEXTBOX",
+      "characters": 27,
+      "text": "Skriv for at indtaste tekst"
+    }
+  ],
+  "pages": {
+    "isPageLayout": false,
+    "sections": 1,
+    "paragraphs": 7
+  }
+}

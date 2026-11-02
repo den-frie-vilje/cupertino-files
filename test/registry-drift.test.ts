@@ -84,6 +84,7 @@ const EXPECTED_NAMES: Readonly<Record<string, string>> = {
   "TSWP_TYPE.HYPERLINK_FIELD": "TSWP.HyperlinkFieldArchive",
   "TSWP_TYPE.BOOKMARK_FIELD": "TSWP.BookmarkFieldArchive",
   "COMMENT_TYPE.HIGHLIGHT": "TSWP.HighlightArchive",
+  "COMMENT_TYPE.CANVAS_COMMENT": "TSWP.CommentInfoArchive",
   "COMMENT_TYPE.COMMENT_STORAGE": "TSD.CommentStorageArchive",
   "COMMENT_TYPE.AUTHOR": "TSK.AnnotationAuthorArchive",
   "COMMENT_TYPE.AUTHOR_STORAGE": "TSK.AnnotationAuthorStorageArchive",

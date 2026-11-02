@@ -1,0 +1,438 @@
+{
+  "file": "olekristensen-v26.0-mac-authored.numbers",
+  "sha1": "8839575cf7b64f2369597bed2b631bcde13f7581",
+  "app": "numbers",
+  "fileFormatVersion": "26.0.0",
+  "objects": 692,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 35
+    },
+    {
+      "name": "Index/ViewState-909544.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 83
+    },
+    {
+      "name": "Index/Tables/DataList-904539.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904540.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904543.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904544.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904546.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904550.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904551.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904552.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904554.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-904555.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905280-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917302.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-917303.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917308.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-917309.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917313.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917314.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917315.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917316.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917317.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917323.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917324.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917325.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-917354.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-917357.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917365.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-917367.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-917381.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-917873.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917874.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917875.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917876.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917877.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917878.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917879.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917880.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917881.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917882.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917883.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-917884.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-918096.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 487
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filter); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Item"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Kind"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Amount"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Pear"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Cat"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Train"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Transport"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "40"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Dog"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Bicycle"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Transport"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2"
+              }
+            ]
+          },
+          {
+            "name": "Tabel 1",
+            "rows": 10,
+            "columns": 5,
+            "truncated": false,
+            "cells": []
+          }
+        ]
+      }
+    ]
+  }
+}

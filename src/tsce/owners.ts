@@ -199,6 +199,21 @@ export interface OwnerUid {
   hi: bigint;
 }
 
+/**
+ * The owner identity as the UUID string a table model carries in
+ * `table_id`: the two little-endian words' sixteen bytes in order,
+ * hex, upper case, 8-4-4-4-12. Every corpus table's `table_id` is its
+ * kind-1 owner base written this way.
+ */
+export function ownerUuidString(uid: OwnerUid): string {
+  const bytes = new Uint8Array(16);
+  const view = new DataView(bytes.buffer);
+  view.setBigUint64(0, uid.lo, true);
+  view.setBigUint64(8, uid.hi, true);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 /** Stable key for map lookups. */
 export function ownerKey(uid: OwnerUid | undefined): string {
   return uid ? `${uid.lo}:${uid.hi}` : "";

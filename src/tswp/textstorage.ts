@@ -120,8 +120,8 @@ export const STORAGE_KIND = protoEnum("TSWP.StorageArchive.KindType", {
  * | --- | ---: | --- |
  * | `U+000A` | 2002 | line feed |
  * | `U+0004` | 28 | section break |
- * | `U+0005` | 17 | layout/column break |
- * | `U+000C` | 1 | page break |
+ * | `U+0005` | 17 | page break (what Insert ▸ Page Break writes) |
+ * | `U+000C` | 1 | a break of an unmeasured kind |
  *
  * `U+2028` is the instructive one: it occurs 205 times in the same corpus
  * and is **never** followed by an entry. It is a soft line break inside a

@@ -162,6 +162,7 @@ export const DRAWABLE_SUPER_DEPTH: ReadonlyMap<number, number> = new Map([
   [3007, 1], // TSD.MovieArchive
   [3008, 1], // TSD.GroupArchive
   [2011, 2], // TSWP.ShapeInfoArchive → TSD.ShapeArchive → TSD.DrawableArchive
+  [6000, 1], // TST.TableInfoArchive
 ]);
 
 /**
@@ -174,6 +175,7 @@ export const DRAWABLE_SUPER_DEPTH: ReadonlyMap<number, number> = new Map([
  * | `TSD.MaskArchive` | 79 | 0 |
  * | `TSD.GroupArchive` | 13 | 0 |
  * | `TSD.MovieArchive` | 8 | 0 |
+ * | `TST.TableInfoArchive` | 71 | 0 |
  * | `TSD.ConnectionLineArchive` | 36 | **36** |
  *
  * The connection line is the exception and is deliberately absent from the

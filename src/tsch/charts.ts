@@ -85,7 +85,7 @@ const GridValue = {
 } as const;
 
 /**
- * TSCH.ChartType enum values, complete against `TSCHArchives_Common.proto`.
+ * TSCH.ChartType enum values, complete against `TSCHArchives.Common.proto`.
  *
  * Completeness matters: types 22 (`bubble2D`) and 25 (`donut2D`) occur in
  * real documents, and any id the table lacks renders as its bare number,

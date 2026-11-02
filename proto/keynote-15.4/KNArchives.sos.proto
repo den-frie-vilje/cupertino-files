@@ -2,8 +2,8 @@ syntax = "proto2";
 
 import "TSPMessages.proto";
 import "KNArchives.proto";
-import "TSDArchives_sos.proto";
-import "TSSArchives_sos.proto";
+import "TSDArchives.sos.proto";
+import "TSSArchives.sos.proto";
 package KNSOS;
 
 message SpecSetTransitionAttributesArchive {

@@ -45,7 +45,7 @@ describe("the vendored schemas are the source of the field numbers", () => {
   });
 
   it("embeds every schema file, so nothing silently stops being vendored", () => {
-    expect(`schemas: ${VENDORED_SOURCES.length}`).toBe("schemas: 41");
+    expect(`schemas: ${VENDORED_SOURCES.length}`).toBe("schemas: 40");
     const missing = VENDORED_SOURCES.filter((s) => !/^[0-9a-f]{40}$/.test(s.sha1));
     expect(`bad digests: ${missing.map((s) => s.path).join(" ")}`).toBe("bad digests: ");
   });

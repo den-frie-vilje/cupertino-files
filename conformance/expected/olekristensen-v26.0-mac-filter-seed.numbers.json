@@ -1,0 +1,331 @@
+{
+  "file": "olekristensen-v26.0-mac-filter-seed.numbers",
+  "sha1": "1a86134a53507ecaa8e33ae893f9335ad518e581",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 632,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 39
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 23
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-916217.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916218.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916219.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916220.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916221.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916222.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916223.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916224.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916225.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916226.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916227.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916229.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-916384.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 487
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 109,
+      "text": "It worked, but you did not size the first row to show all content, and you put a long instruction line there."
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Expected: only the rows with Amount above 10 show (Pear 12 and Train 40), filter on in the panel. All rows showing, column D filtered instead, or a refusal to open, is the finding; comment on any cell.",
+            "rows": 6,
+            "columns": 4,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Item"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Colour"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Amount"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "Note"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Pear"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "green"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "a"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Cat"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "grey"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "b"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "red"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "c"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Train"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "blue"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "40"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "d"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Dog"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "brown"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "e"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

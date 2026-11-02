@@ -29,9 +29,9 @@ export const StylesheetFields = protoFields("TSS.StylesheetArchive", {
   IS_LOCKED: "is_locked",
   PARENT_TO_CHILDREN_STYLE_MAP: "parent_to_children_style_map",
   CAN_CULL_STYLES: "can_cull_styles",
-  // styles_for_10_0 .. styles_for_14_4 compatibility snapshots.
+  // styles_for_10_0 .. styles_for_15_4 compatibility snapshots.
   VERSIONED_FIRST: "styles_for_10_0",
-  VERSIONED_LAST: "styles_for_14_4",
+  VERSIONED_LAST: "styles_for_15_4",
 });
 export const IdentifiedStyleEntry = protoFields("TSS.StylesheetArchive", { IDENTIFIER: "styles", STYLE: "identifier_to_style_map" });
 export const StyleChildrenEntry = protoFields("TSS.StylesheetArchive", { PARENT: "styles", CHILDREN: "identifier_to_style_map" });

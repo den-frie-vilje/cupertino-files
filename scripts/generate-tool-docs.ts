@@ -24,7 +24,9 @@ import type { DeclarationReflection, CommentDisplayPart } from "typedoc";
 
 const OUT = new URL("../src/mcp/tool-docs.generated.ts", import.meta.url);
 /** The classes whose public surface the census covers. */
-const CENSUS_CLASSES = ["IWorkDocument", "PagesDocument", "NumbersDocument", "KeynoteDocument", "TableModel"];
+const CENSUS_CLASSES = ["IWorkDocument", "PagesDocument", "NumbersDocument", "KeynoteDocument", "TableModel",
+  "KeynoteSlide",
+];
 
 function textOf(parts: readonly CommentDisplayPart[] | undefined): string {
   if (!parts) return "";

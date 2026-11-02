@@ -9,7 +9,8 @@
  * embeds them:
  *
  *   data/blanks/blank.{pages,numbers,key}     the donor packages
- *   src/<app>/blank-donor.generated.ts        the same bytes, base64
+ *   src/<app>/blank-donor.generated.ts        the same bytes, base64 (the Numbers
+ *   donor under src/tsa/, where every app reaches it for a neutral table)
  *
  * Choices, and why:
  *  - Pages:   iwork-mcp-v14.5-sample.pages (MIT) — made from Apple's Blank
@@ -137,7 +138,7 @@ const DONORS: readonly Donor[] = [
     kind: "numbers",
     fixture: "numbers-parser-v26.1-date-formats.numbers",
     file: "blank.numbers",
-    module: "src/numbers/blank-donor.generated.ts",
+    module: "src/tsa/numbers-blank-donor.generated.ts",
     make: (template) => stripPreviews(NumbersDocument.blankFrom(template).save()),
   },
   {

@@ -33,7 +33,7 @@ import type { RawMessage } from "../base/protobuf.ts";
 import { decodeDecimal128 } from "./cellrecord.ts";
 import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
 import { BUILTIN_FUNCTIONS } from "./function-builtins.ts";
-import { readCfUid } from "../tsce/owners.ts";
+import { ownerKey, readCfUid, type OwnerUid } from "../tsce/owners.ts";
 export {
   AstNodeArrayFields,
   AstNodeFields,
@@ -211,6 +211,12 @@ interface Operand {
 /** Adjustments to how a formula renders. */
 export interface RenderOptions {
   /**
+   * The formula's own table, as its kind-1 owner identity. A reference
+   * that names it through a cross-table node (what a renamed or copied
+   * table leaves behind) renders as the plain address the app shows.
+   */
+  hostOwner?: OwnerUid;
+  /**
    * Address to substitute for a coordinate-less linked cell reference —
    * the "cell under test" in a filter or conditional-style predicate.
    * Defaults to {@link SELF_CELL_MARKER}.
@@ -232,6 +238,12 @@ export interface RenderOptions {
  * a space or a character that would parse as an operator is wrapped in
  * single quotes, with embedded quotes doubled.
  */
+function refersToHost(node: RawMessage, options: RenderOptions): boolean {
+  if (!options.hostOwner) return false;
+  const target = readCfUid(node.getMessage(AstNodeFields.CROSS_TABLE_INFO)?.getMessage(1));
+  return target !== undefined && ownerKey(target) === ownerKey(options.hostOwner);
+}
+
 function crossTableName(node: RawMessage, options: RenderOptions): string | undefined {
   const info = node.getMessage(AstNodeFields.CROSS_TABLE_INFO);
   const name = options.owners?.tableName(readCfUid(info?.getMessage(1)));
@@ -368,7 +380,7 @@ export function renderFormula(
       case AstNodeType.CELL_REFERENCE:
       case AstNodeType.LOCAL_CELL_REFERENCE:
       case AstNodeType.CROSS_TABLE_CELL_REFERENCE: {
-        const crossTable = node.has(AstNodeFields.CROSS_TABLE_INFO);
+        const crossTable = node.has(AstNodeFields.CROSS_TABLE_INFO) && !refersToHost(node, options);
         if (crossTable) hasCrossTableReferences = true;
         const address = renderCellReference(node, origin);
         let text = address;

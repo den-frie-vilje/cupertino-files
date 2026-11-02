@@ -21,6 +21,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
+import { refId } from "../src/tsp/schema.ts";
 import { PagesDocument } from "../src/index.ts";
 import { CharProps } from "../src/tswp/schema.ts";
 import { readCharacterProperties } from "../src/tss/stylesheet.ts";
@@ -943,7 +944,8 @@ describe("a comment always names an author", () => {
 
   it("gives every author the corpus shape: name, colour, is_public_author", () => {
     // The colour is what stood between "renders" and "crashes on open" —
-    // both corpus authors carry the identical comment-yellow TSP.Color and
+    // both corpus authors carry the identical comment-yellow TSP.Color (with
+    // the headroom every current-era colour carries) and
     // the comment UI draws the author's tint. Both also write
     // is_public_author=false explicitly, and both rosters list their
     // author while declaring refs=[]; declaring the reference is a shape
@@ -960,7 +962,7 @@ describe("a comment always names an author", () => {
       if (obj.type !== 212) continue;
       const shape = [...new Set(obj.message.fields.map((f) => f.no))].sort((a, b) => a - b);
       expect(`author fields: ${shape.join(",")}`).toBe("author fields: 1,2,4");
-      const CORPUS_COLOR = "8,1,29,251,250,122,63,37,240,239,111,63,45,181,180,180,62,53,0,0,128,63,96,1";
+      const CORPUS_COLOR = "8,1,29,251,250,122,63,37,240,239,111,63,45,181,180,180,62,53,0,0,128,63,96,1,109,0,0,128,63";
       expect(Array.from(obj.message.getMessage(2)!.toBytes()).join(",")).toBe(CORPUS_COLOR);
     }
     for (const { obj } of saved.store.allObjects()) {
@@ -1063,5 +1065,43 @@ describe("a hyperlink carries the document's Link character style", () => {
       );
     }
     expect(saved.body.footnotes().length).toBe(1);
+  });
+});
+
+describe("a text box added to a page", () => {
+  it("copies a box the document carries, with its own storage and the new text", () => {
+    const doc = PagesDocument.load(readFileSync(new URL("gomap-v26.1-newest-writer.pages", FIXTURES)));
+    const page = doc.floatingDrawables(0)!;
+    const before = page.ids().length;
+    const box = doc.addTextBox(0, "A caption written by the library", { x: 60, y: 60 });
+    const reloaded = PagesDocument.load(doc.save());
+    expect(reloaded.floatingDrawables(0)!.ids().length).toBe(before + 1);
+    const placed = reloaded.floatingDrawables(0)!.drawables().find((d) => d.id === box.id)!;
+    expect(placed.object.type).toBe(2011);
+    const boxes = reloaded.floatingDrawables(0)!.drawables().filter((d) => d.object.type === 2011);
+    expect(boxes.every((d) => refId(d.object.message.getMessage(1)!.getMessage(1), 2) === undefined)).toBe(true);
+    const storages = new Set(boxes.map((d) => refId(d.object.message, 4)));
+    expect(storages.size).toBe(boxes.length);
+    expect(reloaded.textStorages().some((s) => s.text === "A caption written by the library")).toBe(true);
+  });
+});
+
+describe("a table appended to a blank body", () => {
+  it("grafts the neutral donor under the body, anchored inline in its own paragraph, filled and named", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("Before the table.", "Body");
+    const table = doc.appendTable([["Item", "Count"], ["Apples", "3"], ["Pears", "5"]]);
+    expect(table.name).toBe("Table");
+    const reloaded = PagesDocument.load(doc.save());
+    const tables = reloaded.tables();
+    expect(tables.length).toBe(1);
+    const placed = tables[0]!;
+    expect([placed.rowCount, placed.columnCount, placed.cellText(2, 0), placed.cellValue(1, 1)?.type]).toEqual([3, 2, "Pears", "number"]);
+    const attachment = reloaded.body.attachments().find((a) => a.drawableId === placed.infoObject?.identifier);
+    expect(attachment !== undefined).toBe(true);
+    expect(reloaded.body.text.endsWith("\uFFFC")).toBe(true);
+    expect(refId(placed.infoObject!.message.getMessage(1), 2)).toBe(reloaded.body.id);
+    expect(reloaded.toMarkdown().includes("| Apples | 3 |")).toBe(true);
+    expect(reloaded.appendTable([["x"]]).name).toBe("Table 2");
   });
 });

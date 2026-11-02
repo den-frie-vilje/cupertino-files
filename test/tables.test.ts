@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { FormulaOwnerRegistry, OwnerKind, ownerRegistrationState } from "../src/tsce/owners.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { FormulaOwnerRegistry, HAUNTED_OWNER, HauntedOwnerFields, OwnerKind, ownerRegistrationState, ownerUuidString, readOwnerUid } from "../src/tsce/owners.ts";
 import { describe, expect, it } from "./harness.ts";
 import {
   allBorders,
@@ -1285,13 +1285,13 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     const neutral = document.addTable(sheet.id, { name: "Neutral" });
 
-    // Empty, and shaped by the embedded Apple-made blank donor rather
-    // than by whatever table the document happens to contain.
-    const donor = NumbersDocument.blank().tables()[0]!;
+    // Empty, grafted from the embedded Apple-made blank donor rather than
+    // from whatever table the document happens to contain, and cut to the
+    // shape Insert ▸ Table gives: 10 by 5, one header row and column,
+    // 98-point columns.
     expect(neutral.cells().length).toBe(0);
-    expect(neutral.rowCount).toBe(donor.rowCount);
-    expect(neutral.columnCount).toBe(donor.columnCount);
-    expect(neutral.columnWidth(0)).toBe(donor.columnWidth(0));
+    expect([neutral.rowCount, neutral.columnCount, neutral.headerRowCount, neutral.headerColumnCount]).toEqual([10, 5, 1, 1]);
+    expect(neutral.columnWidth(0)).toBe(98);
 
     const reloaded = NumbersDocument.load(document.save());
     const again = reloaded.tables().find((t) => t.name === "Neutral")!;
@@ -1363,6 +1363,55 @@ describe("adding and removing tables", () => {
     const sheet = document.sheets()[0]!;
     expect(() => document.addTable(sheet.id, { copyOf: 1n })).toThrow();
     expect(() => document.addTable(999999n)).toThrow();
+  });
+
+  it("gives a copy its own table id, the owner base it was re-minted to", () => {
+    // The table model states its kind-1 owner identity twice: as the
+    // haunted owner (base + 35) and as the `table_id` string. A copy that
+    // kept the donor's string beside a fresh family is a duplicate the
+    // app resolves by re-minting the copy on open.
+    const document = load();
+    const sheet = document.sheets()[0]!;
+    const donor = document.tables()[0]!;
+    const copy = document.addTable(sheet.id, { copyOf: donor.infoObject!.identifier, name: "Own id" });
+    const tableId = (t: TableModel) => t.object.message.getString(TableModelFields.TABLE_ID);
+    const base = (t: TableModel) => {
+      const haunted = readOwnerUid(t.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID))!;
+      return { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi };
+    };
+    expect(tableId(copy) === tableId(donor)).toBe(false);
+    expect(tableId(copy)).toBe(ownerUuidString(base(copy)));
+    expect(tableId(donor)).toBe(ownerUuidString(base(donor)));
+  });
+
+  it("every app-written corpus table's id string is its owner base", () => {
+    // Tables this library cloned before the id string was re-minted, in
+    // returned demos: they carry the blank donor's id beside their own
+    // family, and the app left the string as it found it.
+    const CLONED_BEFORE_THE_FIX = new Set([
+      "olekristensen-v26.3-demo06-formulas-round4.numbers NoCalc",
+      "olekristensen-v26.3-demo06-formulas-round8.numbers NoCalc",
+      "olekristensen-v26.3-demo08-structure-round2.numbers Instructions",
+      "olekristensen-v26.3-demo08-structure-round6.numbers Instructions",
+    ]);
+    let checked = 0;
+    for (const name of readdirSync(new URL("../fixtures/", import.meta.url))) {
+      if (!name.endsWith(".numbers")) continue;
+      let doc: NumbersDocument;
+      try {
+        doc = NumbersDocument.load(readFileSync(new URL(`../fixtures/${name}`, import.meta.url)));
+      } catch {
+        continue;
+      }
+      for (const table of doc.tables()) {
+        const haunted = readOwnerUid(table.object.message.getMessage(HAUNTED_OWNER)?.getMessage(HauntedOwnerFields.OWNER_UID));
+        if (!haunted || CLONED_BEFORE_THE_FIX.has(`${name} ${table.name}`)) continue;
+        checked++;
+        const base = { lo: (haunted.lo - 35n) & 0xffffffffffffffffn, hi: haunted.hi };
+        expect(`${name} ${table.name}: ${table.object.message.getString(TableModelFields.TABLE_ID)}`).toBe(`${name} ${table.name}: ${ownerUuidString(base)}`);
+      }
+    }
+    expect(checked).toBeGreaterThan(40);
   });
 
   it("registers a copy with the calc engine, the way the app registers a new table", () => {
@@ -1465,9 +1514,10 @@ describe("adding and removing tables", () => {
       const spanning = obj.message.getMessage(7)!.getMessage(2)!;
       const spanningShape = [1, 2, 3, 4].map((n) => spanning.getVarint(n)).join(",");
       if (kind === 1) {
-        // The table's own owner states the real extent (the donor-sized
-        // clone at mint time); derived kinds state the no-extent sentinels.
-        expect(spanningShape.endsWith(",10")).toBe(true);
+        // The table's own owner states the real extent — the ten rows and
+        // five columns Insert ▸ Table gives, so 0,0,4,9 — and derived
+        // kinds state the no-extent sentinels.
+        expect(spanningShape).toBe("0,0,4,9");
       } else {
         expect(spanningShape).toBe("32767,2147483647,32767,2147483647");
       }
@@ -1618,9 +1668,32 @@ describe("Pages inline table insertion", () => {
     expect(reloaded.tables().map((t) => t.name).at(-1)).toBe("Ny tabel");
   });
 
-  it("throws without a donor rather than inventing a table", () => {
+  it("grafts the neutral donor when the document has no table to copy", () => {
     const doc = PagesDocument.blank();
-    expect(() => doc.insertInlineTable(0)).toThrow(/no table to copy/);
+    const table = doc.insertInlineTable(0, { rows: [["a"], ["1"]] });
+    expect([table.name, table.rowCount, table.columnCount]).toEqual(["Table", 2, 1]);
+    expect(PagesDocument.load(doc.save()).tables().length).toBe(1);
+  });
+
+  it("copying a grafted table copies the table alone", () => {
+    // The grafted donor's summary buckets hold nothing but their hash
+    // function, 1, the shape of a reference to object 1: the document.
+    // Read as one, a copy of the table once brought the whole document
+    // along, the other tables included, so a four-table document rebuilt
+    // by copying its first table held seven.
+    const doc = PagesDocument.blank();
+    const first = doc.appendTable([["a", "b"], ["1", "2"]]);
+    // A formula's operator node is the same lone varint 1; `=A2+1` is {1: 1}.
+    first.setFormula(1, 1, "=A2+1");
+    doc.insertInlineTable(doc.body.text.length, { copyOf: first.infoObject!.identifier, rows: [["x"]] });
+    for (const { obj } of doc.store.allObjects()) {
+      if (obj.type !== 6006 /* TST.HeaderStorageBucket */) continue;
+      expect(doc.store.currentReferencesOf(obj).includes(1n)).toBe(false);
+    }
+    doc.insertInlineTable(doc.body.text.length, { copyOf: first.infoObject!.identifier, rows: [["y"]] });
+    const saved = PagesDocument.load(doc.save());
+    const count = (type: string) => [...saved.store.allObjects()].filter(({ obj }) => saved.store.typeNameOf(obj) === type).length;
+    expect([count("TP.DocumentArchive"), count("TSWP.StorageArchive"), saved.tables().length]).toEqual([1, 1, 3]);
   });
 });
 

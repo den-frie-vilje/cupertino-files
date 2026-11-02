@@ -23,9 +23,9 @@ export const SizeFields = protoFields("TSP.Point", { WIDTH: "x", HEIGHT: "y" });
  * TSP.Color. CMYK channels (c/m/y/k = 7..10) and white (w = 11) exist too;
  * `RGB_SPACE` (12) is written by every 26.x-era colour.
  *
- * Field 13 is a fixed32 that first appears in the 26.x era, always paired
- * with an explicit `rgbspace` and always 1.0 in every document examined.
- * Its meaning is unknown; it is preserved verbatim like any unknown field.
+ * `HEADROOM` (13) is the HDR headroom, stamped 1.0 on every colour the
+ * 26.x-era apps write beside `rgbspace`; 13.x and 14.x files carry the
+ * space without it, and 2013-era files neither.
  */
 export const ColorFields = protoFields("TSP.Color", {
   MODEL: "model",
@@ -39,6 +39,7 @@ export const ColorFields = protoFields("TSP.Color", {
   K: "k",
   W: "w",
   RGB_SPACE: "rgbspace",
+  HEADROOM: "headroom",
 });
 export const COLOR_MODEL_RGB = 1;
 export const COLOR_MODEL_CMYK = 2;

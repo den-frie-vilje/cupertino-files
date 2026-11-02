@@ -76,7 +76,7 @@ describe("the schema parser", () => {
     // The extended type has to be declared here. A real parser attaches an
     // extension to a type that exists and drops one that does not — only a
     // parser that invents targets would accept this snippet without the
-    // declaration. In the vendored set every target exists — all 41 files
+    // declaration. In the vendored set every target exists — all 40 files
     // are parsed into one root precisely so they do.
     const parsed = parseProtoText(
       `package TSCH;
