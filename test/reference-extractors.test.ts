@@ -159,10 +159,11 @@ describe("reference extractors agree with Apple", () => {
     // not declare its stylesheet, a drawable must not declare its parent —
     // and this comparison is exactly what catches a violation of either.
     // The three authored-twin fixtures added 21 in the same two classes:
-    // 17 Keynote slides and four stylesheets.
+    // 17 Keynote slides and four stylesheets; the filter-conditions
+    // fixture one more stylesheet.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=254: ${disagree <= 254} (${disagree})`).toBe(
-      `disagree<=254: true (${disagree})`,
+    expect(`disagree<=255: ${disagree <= 255} (${disagree})`).toBe(
+      `disagree<=255: true (${disagree})`,
     );
   });
 
@@ -217,10 +218,10 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     }
     const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
     expect(summary).toEqual([
-      "TSCE.FormulaOwnerDependenciesArchive 0/79",
-      "TST.CategoryOrderArchive 0/73",
-      "TST.SummaryCellVendorArchive 0/73",
-      "TST.SummaryModelArchive 0/73",
+      "TSCE.FormulaOwnerDependenciesArchive 0/85",
+      "TST.CategoryOrderArchive 0/79",
+      "TST.SummaryCellVendorArchive 0/79",
+      "TST.SummaryModelArchive 0/79",
     ]);
   });
 

@@ -1288,10 +1288,16 @@ meaning is visible in any formula bar. So the formula is authoritative for
 what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons—5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=`—with filters and conditional formatting
-sharing the encoding. Function-shaped conditions are identified too:
-3 is "text contains" (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`),
-34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
-`undefined` rather than a guess.
+sharing the encoding. The filter menu's eight text conditions are
+identified from a document that authored each on its own column: 1 starts
+with, 2 ends with, 3 contains (compiled as
+`NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`), 4 does not contain,
+36 is, 37 is not, 61 does not start with, 62 does not end with
+(`PREDICATE_TYPE_CONDITIONS`); 34 is `ISBLANK`, 54 `SUM`. The "is" and
+"is not" formulas wrap their IF branches in `BEGIN_THUNK_NODE` (34) and
+`END_THUNK_NODE` (35), brackets around a lazily evaluated argument that
+carry no operand. A value outside the known set reads as `undefined`
+rather than a guess.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -1553,7 +1559,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3445 of 3445 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3451 of 3451 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1715,7 +1721,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3445 storages carry the field and **zero** declare it. What
+fixtures here, 3451 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1752,7 +1758,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3445 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3451 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |

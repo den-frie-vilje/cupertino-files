@@ -553,7 +553,7 @@ const seeds: Seed[] = [
       for (const [kind, spec] of Object.entries(FILTER_CONDITIONS)) {
         const parts = tables.filter(
           (t) =>
-            t.name === `${kind} rules` || t.name.startsWith(`${kind} rules `),
+            t.name === `${kind} rules` || t.name?.startsWith(`${kind} rules `) === true,
         );
         if (parts.length === 0)
           throw new Error(

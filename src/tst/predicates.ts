@@ -165,9 +165,33 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [1, "FIND.CASEINSENSITIVE"],
+  [2, "FIND.CASEINSENSITIVE"],
   [3, "FIND.CASEINSENSITIVE"],
+  [4, "ISERROR"],
   [34, "ISBLANK"],
+  [36, "IF"],
+  [37, "IF"],
   [54, "SUM"],
+  [61, "IFERROR"],
+  [62, "IFERROR"],
+]);
+
+/**
+ * The filter menu's text conditions by `predicate_type`, as the app
+ * writes them: each code paired with the condition the rule was authored
+ * under in `olekristensen-v26.0-mac-filter-conditions-text.numbers`, one
+ * rule per column, column named for its condition. The formulas the app
+ * compiles for "is" and "is not" wrap their IF branches in thunk nodes.
+ */
+export const PREDICATE_TYPE_CONDITIONS: ReadonlyMap<number, string> = new Map([
+  [1, "starts with"],
+  [2, "ends with"],
+  [3, "contains"],
+  [4, "does not contain"],
+  [36, "is"],
+  [37, "is not"],
+  [61, "does not start with"],
+  [62, "does not end with"],
 ]);
 
 /**

@@ -1248,3 +1248,13 @@ node scripts/scan-fixture-privacy.ts
 - Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-text-box.key, a
   blank deck with a text box this library copied and re-worded. The
   checker commented "works" on the slide. The title is the request itself.
+
+### olekristensen-v26.0-mac-filter-conditions-text.numbers
+- 224,055 bytes, md5 `b54a5991934190eafa077783069bf966`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-filter-conditions.numbers,
+  whose Text table names one filter condition per column; the checker
+  added the first eight rules with the filter panel, one per column,
+  and reached the panel's limit of eight rules on a table. The Read me
+  table is the request itself. Its five grafted tables each carry a copy
+  of the donor's identified styles, the graft's shape before it took the
+  host theme's preset; the app kept them.

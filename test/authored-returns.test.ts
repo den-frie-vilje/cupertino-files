@@ -52,6 +52,25 @@ describe("a starts-with filter rule the app wrote", () => {
   });
 });
 
+describe("the eight text conditions the app wrote, one rule per column", () => {
+  it("carry the predicate type and formula of their column's condition", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-filter-conditions-text.numbers"));
+    const table = doc.tables().find((t) => t.name === "Text rules")!;
+    const rules = table.filterSets().rows!.rules();
+    const cell = "OTHER_TABLE::R[0]C";
+    expect(rules.map((r) => [table.cellText(0, r.column!), r.predicate?.predicateType, r.predicate?.text])).toEqual([
+      ["is", 36, `IF(LEN("Pear")=LEN(${cell}[0]),FIND.CASEINSENSITIVE("Pear",${cell}[0])=1)`],
+      ["is not", 37, `IF(LEN("Pear")<>LEN(${cell}[1]),TRUE,IF(ISERROR(FIND.CASEINSENSITIVE("Pear",${cell}[1])),TRUE,FIND.CASEINSENSITIVE("Pear",${cell}[1])<>1))`],
+      ["starts with", 1, `FIND.CASEINSENSITIVE("P",${cell}[2])=1`],
+      ["ends with", 2, `FIND.CASEINSENSITIVE("r",RIGHT(${cell}[3],LEN("r")))`],
+      ["contains", 3, `NOT(ISERROR(FIND.CASEINSENSITIVE("ea",${cell}[4])))`],
+      ["not contain", 4, `ISERROR(FIND.CASEINSENSITIVE("ea",${cell}[5]))`],
+      ["not start with", 61, `IFERROR(FIND.CASEINSENSITIVE("P",${cell}[6])<>1,TRUE)`],
+      ["not end with", 62, `IFERROR(NOT(FIND.CASEINSENSITIVE("r",RIGHT(${cell}[7],LEN("r")))),TRUE)`],
+    ]);
+  });
+});
+
 describe("a per-group summary the app wrote", () => {
   it("reads as one aggregate on the grouping column, level 1, agg_type 1 (Count)", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));

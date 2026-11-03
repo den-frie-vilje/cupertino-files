@@ -447,6 +447,11 @@ export function renderFormula(
       case AstNodeType.DURATION:
         stack.push({ text: formatNumber(node), precedence: PRIMARY_PRECEDENCE });
         break;
+      case AstNodeType.BEGIN_THUNK:
+      case AstNodeType.END_THUNK:
+        // Brackets around an argument the engine evaluates lazily (an IF
+        // branch); they carry no operand of their own.
+        break;
       default:
         if (!unknownNodeTypes.includes(type)) unknownNodeTypes.push(type);
         stack.push({ text: `NODE_${type}`, precedence: PRIMARY_PRECEDENCE });
