@@ -422,7 +422,7 @@ function seedFilterConditions(): Uint8Array {
   readme.setCell(
     1,
     1,
-    "For each table below, add one filter rule per column: select the table, choose Organise > Filter (Organiser > Filter), add a filter on the column, and pick the condition the column's first row names, with the value it states. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
+    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
   );
   readme.setColumnWidth(0, 40);
   readme.setColumnWidth(1, 440);
