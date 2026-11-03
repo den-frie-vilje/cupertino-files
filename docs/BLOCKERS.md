@@ -20,9 +20,26 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — nothing staged
+## Needs a Mac — three seeds staged
 
-Every seed and rung staged so far is returned and banked.
+`npm run seeds -- out` writes them beside the returned ones; each
+carries its own instructions, and none passes or fails: what the
+checker builds is the measurement.
+
+- `seed-summaries.numbers` — **a comparison.** A table grouped by Kind
+  with four number columns headed Sum, Average, Min and Max; the checker
+  sets that summary in a group row of each. The returned file gives the
+  accumulator shape the aggregator cache holds for each aggregate type,
+  which a summary writer needs beside the one Count instance measured.
+- `seed-duration-conditions.numbers` — **a comparison.** One rule per
+  column on a duration column: not equal to, greater than or equal to,
+  less than, less than or equal to. The four duration codes still
+  unseen (equal to, greater than and between are measured).
+- `seed-build-order.key` — **a comparison.** One slide whose title the
+  library gave a dissolve build; the checker adds a build to the body,
+  moves it first in the Build Order panel, and gives the title a Move
+  action. The returned deck carries the ordering fields and an action
+  build, neither of which any fixture has.
 
 - The collaboration seed is withdrawn: sharing needs iCloud Drive, and
   the checker will not enable it on the work Mac (»skip the collaboration

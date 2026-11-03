@@ -159,6 +159,95 @@ function seedCategory(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- summaries
+
+function seedSummaries(): Uint8Array {
+  // The one app-written summary in the corpus is a Count on a text column.
+  // Sum, Average, Min and Max each carry an accumulator of their own in the
+  // aggregator cache, unmeasured until the app writes one.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Summaries";
+  table.insertColumns(table.columnCount, 6 - table.columnCount);
+  ["Item", "Kind", "Sum", "Average", "Min", "Max"].forEach((label, c) => { table.setCell(0, c, label); });
+  const rows: [string, string, number][] = [
+    ["Pear", "Fruit", 3],
+    ["Cat", "Animal", 12],
+    ["Apple", "Fruit", 7],
+    ["Bicycle", "Transport", 40],
+    ["Dog", "Animal", 10],
+    ["Train", "Transport", 25],
+  ];
+  rows.forEach(([item, kind, amount], i) => {
+    table.setCell(i + 1, 0, item);
+    table.setCell(i + 1, 1, kind);
+    for (const c of [2, 3, 4, 5]) table.setCell(i + 1, c, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  instructionRow(
+    table,
+    "The rows are grouped by Kind. In any one group's row, tap the cell under Sum and choose Sum, under Average choose Average, under Min choose Min, under Max choose Max (the summary pop-up in a group row). Then save. Count is already measured, so leave it out.",
+    { 1: "Note", 2: 1, 3: 1, 4: 1, 5: 1 },
+  );
+  for (const c of [2, 3, 4, 5]) table.setColumnWidth(c, 72);
+  table.addCategory(1);
+  return doc.save();
+}
+
+// -------------------------------------------------- duration conditions
+
+function seedDurationConditions(): Uint8Array {
+  // Equal to, greater than and between are measured on a duration
+  // column; the other four comparisons are the codes still unseen.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Duration rules";
+  table.insertColumns(table.columnCount, 5 - table.columnCount);
+  const conditions: [string, string][] = [
+    ["not equal to", "not equal to 1h"],
+    ["greater or equal", "greater than or equal to 1h"],
+    ["less than", "less than 1h"],
+    ["less or equal", "less than or equal to 1h"],
+  ];
+  table.setCell(0, 0, "Duration");
+  table.setCell(1, 0, "Add rule");
+  table.setCellFormatting(1, 0, { textWrap: true });
+  table.setColumnWidth(0, 60);
+  const values = [3600, 7200, 600, 90];
+  values.forEach((_, r) => { table.setCell(r + 2, 0, String(r + 1)); });
+  conditions.forEach(([label, rule], i) => {
+    const column = i + 1;
+    table.setCell(0, column, label);
+    table.setCell(1, column, rule);
+    table.setCellFormatting(1, column, { textWrap: true });
+    table.setColumnWidth(column, 84);
+    values.forEach((seconds, r) => { table.setCell(r + 2, column, { type: "duration", seconds }); });
+  });
+  table.deleteRows(values.length + 2, table.rowCount - values.length - 2);
+  table.setRowHeight(1, 56);
+  return doc.save();
+}
+
+// ---------------------------------------------------------- build order
+
+function seedBuildOrder(): Uint8Array {
+  // Reading builds is whole and the library writes one build per object;
+  // the order two builds play in and an action build are the shapes no
+  // fixture carries.
+  const doc = KeynoteDocument.blank();
+  const slide = doc.slides()[0]!;
+  slide.title = "Build order: a second build, moved first, and an action";
+  slide.body =
+    "1. This body gets a build in: select it, Animate > Build In > Add an Effect > Appear.\n" +
+    "2. Open Build Order (bottom of the Animate panel) and drag the body's build above the title's, so the body appears first.\n" +
+    "3. Give the title an action: select it, Animate > Action > Add an Effect > Move, and drag its ghost a little to the right.\n" +
+    "4. Save. Nothing here passes or fails; what you build is the measurement.";
+  const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+  if (title === undefined) throw new Error("build order seed: blank deck has no title placeholder");
+  slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
+  return doc.save();
+}
+
 // ---------------------------------------------------------- build
 
 function seedBuild(): Uint8Array {
@@ -704,6 +793,34 @@ const seeds: Seed[] = [
       }
       if (table.staleCategoryGroups().length !== 0)
         throw new Error("category seed: tree disagrees with cells");
+    },
+  },
+  {
+    name: "seed-summaries.numbers",
+    bytes: seedSummaries(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      const groups = table.activeCategories()?.groups() ?? [];
+      if (groups.length !== 4) throw new Error(`summaries seed: expected four groups, got ${groups.length}`);
+      if (table.cellText(0, 5) !== "Max" || !JSON.stringify(table.cellValue(1, 0)).includes("Sum")) throw new Error("summaries seed: columns or instruction missing");
+    },
+  },
+  {
+    name: "seed-duration-conditions.numbers",
+    bytes: seedDurationConditions(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      if (table.columnCount !== 5 || table.cellText(1, 4) !== "less than or equal to 1h") throw new Error("duration seed: rules missing");
+      if (table.cellValue(2, 1)?.type !== "duration") throw new Error("duration seed: cells are not durations");
+    },
+  },
+  {
+    name: "seed-build-order.key",
+    bytes: seedBuildOrder(),
+    check: (bytes) => {
+      const slide = KeynoteDocument.load(bytes).slides()[0]!;
+      if (slide.builds().length !== 1) throw new Error("build order seed: expected the title's one build");
+      if (!slide.body?.includes("Build Order")) throw new Error("build order seed: instructions missing");
     },
   },
   {
