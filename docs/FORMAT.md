@@ -1308,7 +1308,10 @@ from now). The "is" and "is not" formulas wrap their IF branches in
 lazily evaluated argument that carry no operand; the checkbox formulas
 call function index 326, which the registry does not name, and compare
 it with the checkbox control's interaction type 8. A value outside the
-known set reads as `undefined` rather than a guess.
+known set reads as `undefined` rather than a guess. Every one of these
+conditions is written too (`addFilterRule`), its predicate and formula
+byte for byte as the app's, which test/filter-conditions.test.ts holds
+against every app-written rule in the fixtures.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -2132,16 +2135,6 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Function-shaped filter rules beyond text-contains** (§14.7).
-  Comparison, text-contains and starts-with rules are authored
-  (`addFilterRule`), byte for byte as the populated set in
-  `olekristensen-v26.3-mac-filters.numbers` and the starts-with rule in
-  `olekristensen-v26.0-mac-authored.numbers` carry them, with the rows
-  they hide written to the hidden-state extent by evaluating them
-  offline; a set can be enabled, disabled, or switched between "all" and
-  "any". Every other condition the filter menu offers is measured
-  (`PREDICATE_TYPE_CONDITIONS`, with the app's formula for each) but
-  not written.
 - **Category summaries** (§14.9). A category—by value, nested, or
   bucketed by date with the app's own functor—is defined from nothing
   (`addCategory`) and rows are regrouped byte-identically to Apple.

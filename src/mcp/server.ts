@@ -13,6 +13,7 @@
  * save in place unless `output` names somewhere else, which mirrors what
  * the apps themselves do to a document.
  */
+import type { FilterCondition } from "../tst/filter-conditions.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { createInterface } from "node:readline";
@@ -1443,9 +1444,19 @@ export const TOOLS: readonly Tool[] = [
     name: "add_filter_rule",
     description: apiDoc(
       "add_filter_rule",
-      "Adds a row-filter rule to the table: show rows whose cell in the 0-based column compares " +
-        "to value as operator says (=, <>, <, <=, >, >=; value a number or a string), and switches " +
-        "the filter on. Which rows it hides is the app's to recompute. Saves over the input " +
+      "Adds a row-filter rule to the table on the 0-based column and switches the filter on. " +
+        "Either operator and value (=, <>, <, <=, >, >=, contains, startsWith, endsWith, " +
+        "notContains, notStartsWith, notEndsWith, is, isNot; value a number or a string), or " +
+        "condition, an object naming any condition the filter menu offers: {operator} for isBlank, " +
+        "isNotBlank, aboveAverage, belowAverage, duplicate, unique, today, yesterday, tomorrow, " +
+        "checked, unchecked; {operator, from, to} for between, notBetween, durationBetween " +
+        "(seconds); {operator, count} for top, bottom; {operator, percent} for topPercent, " +
+        "bottomPercent; {operator, date} (ISO date) for dateIs, dateBefore, dateAfter and {from, to} " +
+        "for dateInRange; {operator, unit} for dateInThis; {operator, count, unit} for dateInLast, " +
+        "dateInNext; {operator, count, unit, direction} for dateExactly, dateBeforeRelative, " +
+        "dateAfterRelative and {from, to, unit, direction} for dateBetweenRelative (unit day, week, " +
+        "month, quarter or year; direction ago or fromNow); {operator, seconds} for durationEquals, " +
+        "durationGreaterThan. The rows the rule hides are written too. Saves over the input " +
         "unless output names another path.",
     ),
     inputSchema: {
@@ -1454,24 +1465,38 @@ export const TOOLS: readonly Tool[] = [
         path: PATH_PROP,
         table: TABLE_PROP,
         column: { type: "number", description: "0-based column the rule applies to" },
-        operator: { type: "string", description: "One of =, <>, <, <=, >, >=" },
+        operator: { type: "string", description: "A comparison or text condition, with value" },
         value: { description: "A number or a string to compare the cell with" },
+        condition: { type: "object", description: "Any filter-menu condition as an object; see the description" },
         output: OUTPUT_PROP,
       },
-      required: ["path", "column", "operator", "value"],
+      required: ["path", "column"],
     },
     handler: (args) => {
       const path = requirePath(args);
       const doc = open(path);
       const table = tableIn(doc, str(args.table));
       const column = num(args.column);
-      const operator = str(args.operator);
-      const value = args.value;
-      if (column === undefined || operator === undefined || (typeof value !== "number" && typeof value !== "string")) {
-        throw new RangeError("column, operator and a number or string value are required");
+      if (column === undefined) throw new RangeError("column is required");
+      let condition: FilterCondition;
+      if (args.condition !== undefined && typeof args.condition === "object" && args.condition !== null) {
+        const given = args.condition as Record<string, unknown>;
+        if (typeof given.operator !== "string") throw new RangeError("condition.operator is required");
+        // Dates arrive as ISO text; the condition takes Date objects.
+        const dated: Record<string, unknown> = { ...given };
+        for (const key of ["date", "from", "to"]) {
+          if (typeof dated[key] === "string" && /^\d{4}-\d{2}-\d{2}/.test(dated[key])) dated[key] = new Date(dated[key]);
+        }
+        condition = dated as unknown as FilterCondition;
+      } else {
+        const operator = str(args.operator);
+        const value = args.value;
+        if (operator === undefined || (typeof value !== "number" && typeof value !== "string")) {
+          throw new RangeError("operator with a number or string value, or a condition object, is required");
+        }
+        condition = { operator, value } as FilterCondition;
       }
-      if (!["=", "<>", "<", "<=", ">", ">="].includes(operator)) throw new RangeError(`operator must be one of =, <>, <, <=, >, >=`);
-      const index = table.addFilterRule(column, { operator: operator as "=" | "<>" | "<" | "<=" | ">" | ">=", value });
+      const index = table.addFilterRule(column, condition);
       const target = save(doc, path, str(args.output));
       return `added filter rule ${index} on column ${column} and saved ${target}`;
     },

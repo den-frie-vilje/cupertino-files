@@ -90,13 +90,12 @@ that rebuild the structures from them.
   draws its count, so the app reads the aggregator cache and the
   summary model's cells rather than rebuilding them. A writer has to
   produce all three, and only one Count instance is measured.
-  `addFilterRule` writes comparison, text-contains and starts-with
-  rules byte for byte as the twin's
-  app-authored rules, recomputes the hidden rows offline into
-  `TST.HiddenStateExtentArchive`, and Numbers 15.4 opens the result with
-  the right rows hidden. A set carrying a rule the library cannot
-  evaluate (is-blank and the other function-shaped rules) is left with
-  its extent untouched; authoring those rules is the open row.
+  `addFilterRule` writes every condition the filter menu offers, byte
+  for byte as the app-authored rules in the three filter-conditions
+  fixtures, and recomputes the hidden rows offline into
+  `TST.HiddenStateExtentArchive`; Numbers 15.4 opened a comparison rule
+  written this way with the right rows hidden, and the other conditions
+  wait for the same look.
 - **Chart appearance: the corpus is thin.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
   and write, copy-on-write against shared style archives, and Pages'
@@ -162,6 +161,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | can every measured filter condition be written as the app writes it? | the 44 app-written rules of the three filter-conditions fixtures, each re-authored on its own table and column and compared byte for byte; no app round | **settled, all 44 identical**: `compileCondition` rebuilds each condition's formula from the measured templates (one relative-point shape covers the date family in every unit and both directions), `writePredicate` the codes and operands, and the formula builder gained date, duration, thunk, group and index-call nodes and the whole-column cross reference to carry them; `conditionHolds` evaluates each offline for the hidden rows. The only mismatch on the first run was the parenthesis the app keeps as a one-item list node in the quarter formula. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
 | 2026-11-03 | the number conditions beyond comparisons: which `predicate_type` does each write? | Numbers for iOS 15.4.2 (T15.4.2 7377.1.21), the checker's own save on the phone of a one-table seed, returned as `olekristensen-v26.0-ios-filter-number-conditions.numbers` | **settled, all eight**: 11 above average, 12 below average, 15 is a duplicate, 16 is unique, 30 in the top and 31 in the bottom with qualifier1 10 for values and 9 for percent, the N in the formula's trailing constant; each formula is a whole-column SUM, so the engine evaluates these by code, not by formula. The same table in the Mac save had come back empty, so the phone round settled it. Every condition the filter menu offers is now measured. Beside it, the table model's inline hidden-states store carried the rules' formulas, and the `+2` of a top-values rule is an addition node, a lone varint 1 the model's reference extractor took for object 1; that field is walked by the schema now. | `src/tst/predicates.ts`, `src/tsa/extractors.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | does a build the library wrote play after Keynote converts a 14.x deck? | Keynote 15.4 (macOS), the checker playing rung v14-K11 | **settled, pass**: "the title dissolved in on the first click - confirmed". The whole v14 ladder is now app-answered. | Keynote rung v14-K11 |

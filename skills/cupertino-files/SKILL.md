@@ -589,7 +589,10 @@ const { rows, columns } = t.filterSets();
 rows?.mode;                             // "all" | "any"
 rows?.rules();                          // [{ column, enabled, predicate }]
 rows?.setEnabled(true); rows?.setMode("any");
-t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing, rows hidden; "contains" for text
+t.addFilterRule(1, { operator: ">", value: 10 });        // a rule from nothing, rows hidden
+t.addFilterRule(0, { operator: "isNot", value: "Pear" }); // every condition the filter menu offers: text,
+t.addFilterRule(2, { operator: "dateInLast", count: 3, unit: "day" }); // number, date, duration, checkbox
+t.addFilterRule(3, { operator: "top", count: 2 });        // see FilterCondition for the whole set
 ```
 
 Two things to know before relying on this:
@@ -610,10 +613,10 @@ encoding; each code is measured from a real document's own formula, and
 filters share the encoding. Covered cells are also registered in the calc
 engine's dependency ledger: a rule is a formula, and one the engine has no
 record for shows in the Format sidebar without ever drawing its fill—cell
-formulas are recomputed on open, rule formulas are not. **Filter rules do
-not write**—reading is measured from a real filter set, but authoring a
-rule also means recomputing which rows it hides, which needs the calc
-engine.
+formulas are recomputed on open, rule formulas are not. Filter rules write
+in every condition the filter menu offers, each byte for byte as the app
+writes it, and the rows a rule hides are evaluated here and written beside
+it, so the document opens filtered.
 
 ### Categories (row grouping)
 
@@ -1146,12 +1149,11 @@ throw, naming the object and field, rather than produce the file.
    capability. Formulas (`setFormula`, byte-identical to Apple's ASTs,
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
-   legend, gridlines) all write, and so do filter rules (`addFilterRule`),
-   by-value categories (`addCategory`), all-at-once Keynote builds
-   (`addBuild`) and text boxes copied from the document's own
-   (`addTextBox`), none of which the apps have confirmed yet. Genuinely
-   absent today: function-shaped filter rules beyond text-contains and
-   starts-with, category summaries, and build actions and order. For
+   legend, gridlines) all write, and so do filter rules (`addFilterRule`,
+   every condition the filter menu offers), by-value categories
+   (`addCategory`), all-at-once Keynote builds (`addBuild`) and text
+   boxes copied from the document's own (`addTextBox`). Genuinely absent
+   today: category summaries, and build actions and order. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md`—§14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

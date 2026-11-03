@@ -410,6 +410,49 @@ describe("proofs: Numbers", () => {
     expect(/alpha|beta/.test(text)).toBe(false);
   });
 
+  it("every condition family we write hides the rows it should", { skip: rendering("Numbers") }, () => {
+    session!.remember("Numbers");
+    const path = session!.path("filter-conditions.numbers");
+    const doc = NumbersDocument.blank();
+    const sheet = doc.sheets()[0]!;
+    // One table per family: column A carries a word unique to the row, so
+    // the export says which rows survived; column B carries the tested value.
+    const families: { name: string; values: (string | number | boolean | Date | { type: "duration"; seconds: number })[]; condition: Parameters<typeof doc.tables>[0] extends never ? never : import("../../src/index.ts").FilterCondition; keep: number[] }[] = [
+      { name: "Text", values: ["Pear", "Apple", "Cat"], condition: { operator: "isNot", value: "pear" }, keep: [1, 2] },
+      { name: "Blank", values: ["x", "", "y"], condition: { operator: "isBlank" }, keep: [1] },
+      { name: "Between", values: [3, 12, 7], condition: { operator: "between", from: 5, to: 10 }, keep: [2] },
+      { name: "Top", values: [3, 12, 7], condition: { operator: "top", count: 2 }, keep: [1, 2] },
+      { name: "Date", values: [new Date(Date.UTC(2026, 10, 1)), new Date(Date.UTC(2026, 9, 15)), new Date(Date.UTC(2025, 2, 3))], condition: { operator: "dateBefore", date: new Date(Date.UTC(2026, 10, 1)) }, keep: [1, 2] },
+      { name: "Duration", values: [{ type: "duration", seconds: 3600 }, { type: "duration", seconds: 7200 }, { type: "duration", seconds: 600 }], condition: { operator: "durationGreaterThan", seconds: 3600 }, keep: [1] },
+      { name: "Checkbox", values: [true, false, true], condition: { operator: "checked" }, keep: [0, 2] },
+    ];
+    let y = 0;
+    for (const family of families) {
+      const table = family.name === families[0]!.name ? doc.tables()[0]! : doc.addTable(sheet.id, { name: family.name, x: 0, y });
+      table.name = family.name;
+      if (table.columnCount > 2) table.deleteColumns(2, table.columnCount - 2);
+      if (table.rowCount > 4) table.deleteRows(4, table.rowCount - 4);
+      family.values.forEach((value, i) => {
+        table.setCell(i + 1, 0, `${family.name.toLowerCase()}row${i}`);
+        if (typeof value === "boolean") table.setCellControl(i + 1, 1, { widget: "checkbox", value });
+        else if (value !== "") table.setCell(i + 1, 1, value);
+      });
+      table.addFilterRule(1, family.condition);
+      y += 160;
+    }
+    writeFileSync(path, doc.save());
+
+    const text = pdfText(exported("Numbers", path)).join("\n");
+    const seen: string[] = [];
+    for (const family of families) {
+      family.values.forEach((_, i) => {
+        const word = `${family.name.toLowerCase()}row${i}`;
+        if (text.includes(word) !== family.keep.includes(i)) seen.push(`${word} ${text.includes(word) ? "shown" : "hidden"}`);
+      });
+    }
+    expect(seen).toEqual([]);
+  });
+
   it("a category we defined survives Numbers' resave", { skip: skip.Numbers ?? false }, () => {
     session!.remember("Numbers");
     const path = session!.path("category.numbers");

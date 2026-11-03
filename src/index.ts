@@ -257,6 +257,7 @@ export {
   PREDICATE_TYPE_OPERATORS,
   PREDICATE_TYPE_FUNCTIONS,
   PREDICATE_TYPE_CONDITIONS,
+  type PredicateLiteral,
 } from "./tst/predicates.ts";
 export type {
   Predicate,
@@ -408,3 +409,5 @@ export { readUvarint, writeUvarint, uvarintLength, zigzagDecode, zigzagEncode } 
 export { ByteWriter, concatBytes, bytesEqual, utf8Decode, utf8Encode } from "./base/bytes.ts";
 export { parseBinaryPlist, xmlPlistStrings } from "./base/plist.ts";
 export type { PlistValue } from "./base/plist.ts";
+export { conditionHolds, conditionOf, compileCondition } from "./tst/filter-conditions.ts";
+export type { FilterCondition, DateUnit, RelativeDirection, PlainCellValue } from "./tst/filter-conditions.ts";
