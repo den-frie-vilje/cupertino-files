@@ -35,7 +35,11 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import {
+  KeynoteDocument,
+  NumbersDocument,
+  PagesDocument,
+} from "../src/index.ts";
 import { Slide } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Storage } from "../src/tswp/schema.ts";
@@ -55,14 +59,19 @@ const outDir = process.argv[2] ?? "out";
  * never in the table's name or its header row: the app shows the name on
  * one unwrapped line and pins the header on every screen.
  */
-function instructionRow(table: TableModel, text: string, cells: Record<number, string | number> = {}): void {
+function instructionRow(
+  table: TableModel,
+  text: string,
+  cells: Record<number, string | number> = {},
+): void {
   table.insertRows(1, 1);
   table.setCell(1, 0, text);
   table.setCellFormatting(1, 0, { textWrap: true });
   table.setColumnWidth(0, 260);
   // shortcut: the height is estimated from the width at the donor's text size, until the app's fit is measured
   table.setRowHeight(1, Math.ceil(text.length / 48) * 13 + 8);
-  for (const [column, value] of Object.entries(cells)) table.setCell(1, Number(column), value);
+  for (const [column, value] of Object.entries(cells))
+    table.setCell(1, Number(column), value);
 }
 
 // ------------------------------------------------------------ inline image
@@ -160,7 +169,8 @@ function seedBuild(): Uint8Array {
   slide.title =
     "Expected: this title dissolves in on the first click. Already there with no animation, or a refusal to open, is the finding; comment on the slide.";
   const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
-  if (title === undefined) throw new Error("build seed: blank deck has no title placeholder");
+  if (title === undefined)
+    throw new Error("build seed: blank deck has no title placeholder");
   slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
   return doc.save();
 }
@@ -211,7 +221,14 @@ function seedAuthoredNumbers(): Uint8Array {
   table.setCell(0, 0, "Item");
   table.setCell(0, 1, "Kind");
   table.setCell(0, 2, "Amount");
-  const rows: [string, string, number][] = [["Pear", "Fruit", 12], ["Cat", "Animal", 3], ["Apple", "Fruit", 7], ["Train", "Transport", 40], ["Dog", "Animal", 10], ["Bicycle", "Transport", 2]];
+  const rows: [string, string, number][] = [
+    ["Pear", "Fruit", 12],
+    ["Cat", "Animal", 3],
+    ["Apple", "Fruit", 7],
+    ["Train", "Transport", 40],
+    ["Dog", "Animal", 10],
+    ["Bicycle", "Transport", 2],
+  ];
   rows.forEach(([item, kind, amount], i) => {
     table.setCell(i + 1, 0, item);
     table.setCell(i + 1, 1, kind);
@@ -228,21 +245,38 @@ function seedAuthoredNumbers(): Uint8Array {
 
 function seedAuthoredPages(): Uint8Array {
   const doc = PagesDocument.blank();
-  doc.appendParagraph("Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.", "Body");
+  doc.appendParagraph(
+    "Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.",
+    "Body",
+  );
   doc.appendParagraph("1) Insert > Table (Indsaet > Tabel), here:", "Body");
   doc.appendParagraph("", "Body");
-  doc.appendParagraph("2) Insert > Text Box (Tekstfelt), anywhere on this page.", "Body");
-  doc.appendParagraph("3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.", "Body");
-  doc.appendParagraph("4) Insert > Page Break (Sideskift), right after this line.", "Body");
-  doc.appendParagraph("5) Select the word twin in this line and add a comment on it: the twin.", "Body");
+  doc.appendParagraph(
+    "2) Insert > Text Box (Tekstfelt), anywhere on this page.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "4) Insert > Page Break (Sideskift), right after this line.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "5) Select the word twin in this line and add a comment on it: the twin.",
+    "Body",
+  );
   return doc.save();
 }
 
 function seedAuthoredKeynote(): Uint8Array {
   const doc = KeynoteDocument.blank();
   const first = doc.slides()[0]!;
-  first.title = "Please build each of these with Keynote's own controls, on the slide that asks, then send the deck back.";
-  first.body = "Nothing here is expected to look any particular way; what you build is the measurement.";
+  first.title =
+    "Please build each of these with Keynote's own controls, on the slide that asks, then send the deck back.";
+  first.body =
+    "Nothing here is expected to look any particular way; what you build is the measurement.";
   const asks = [
     "2) Change this slide's layout to Title & Bullets: Format > Slide Layout (Format > Layout).",
     "3) Insert > Table (Indsaet > Tabel) on this slide.",
@@ -266,7 +300,12 @@ function seedTextBox(): Uint8Array {
   const slide = doc.slides()[0]!;
   slide.title =
     "Expected: a second text box saying 'Written by cupertino-files' in the lower half of this slide. No box, a box without the words, or a refusal to open, is the finding; comment on the slide.";
-  slide.addTextBox("Written by cupertino-files", { x: 300, y: 650, width: 1300, height: 120 });
+  slide.addTextBox("Written by cupertino-files", {
+    x: 300,
+    y: 650,
+    width: 1300,
+    height: 120,
+  });
   return doc.save();
 }
 
@@ -289,7 +328,13 @@ function seedFilter(): Uint8Array {
   table.setCell(0, 1, "Colour");
   table.setCell(0, 2, "Amount");
   table.setCell(0, 3, "Note");
-  const rows: [string, string, number, string][] = [["Pear", "green", 12, "a"], ["Cat", "grey", 3, "b"], ["Apple", "red", 7, "c"], ["Train", "blue", 40, "d"], ["Dog", "brown", 10, "e"]];
+  const rows: [string, string, number, string][] = [
+    ["Pear", "green", 12, "a"],
+    ["Cat", "grey", 3, "b"],
+    ["Apple", "red", 7, "c"],
+    ["Train", "blue", 40, "d"],
+    ["Dog", "brown", 10, "e"],
+  ];
   rows.forEach(([item, colour, amount, note], i) => {
     table.setCell(i + 1, 0, item);
     table.setCell(i + 1, 1, colour);
@@ -315,8 +360,17 @@ function seedFilter(): Uint8Array {
  * qualifiers are what the returned file measures, one column per
  * condition so a rule maps to its condition by column, not by order.
  */
-type SeedCellValue = string | number | Date | boolean | { type: "duration"; seconds: number } | null;
-const FILTER_CONDITIONS: Record<string, { rows: SeedCellValue[]; conditions: [string, string][] }> = {
+type SeedCellValue =
+  | string
+  | number
+  | Date
+  | boolean
+  | { type: "duration"; seconds: number }
+  | null;
+const FILTER_CONDITIONS: Record<
+  string,
+  { rows: SeedCellValue[]; conditions: [string, string][] }
+> = {
   Text: {
     rows: ["Pear", "Apple", "Cat", null, "Peach"],
     conditions: [
@@ -355,7 +409,13 @@ const FILTER_CONDITIONS: Record<string, { rows: SeedCellValue[]; conditions: [st
     ],
   },
   Date: {
-    rows: [new Date(Date.UTC(2026, 10, 1)), new Date(Date.UTC(2026, 9, 15)), new Date(Date.UTC(2026, 10, 20)), null, new Date(Date.UTC(2025, 2, 3))],
+    rows: [
+      new Date(Date.UTC(2026, 10, 1)),
+      new Date(Date.UTC(2026, 9, 15)),
+      new Date(Date.UTC(2026, 10, 20)),
+      null,
+      new Date(Date.UTC(2025, 2, 3)),
+    ],
     conditions: [
       ["is", "is 1 Nov 2026"],
       ["before", "before 1 Nov 2026"],
@@ -430,32 +490,54 @@ function seedFilterConditions(): Uint8Array {
   readme.setCellFormatting(1, 1, { textWrap: true });
   readme.setRowHeight(1, 150);
 
+  // The filter panel takes at most eight rules on one table, so a kind
+  // with more conditions is dealt out over several tables.
+  const RULES_PER_TABLE = 8;
   let y = 220;
-  for (const [kind, spec] of Object.entries(FILTER_CONDITIONS)) {
-    const table = doc.addTable(sheet.id, { name: `${kind} rules`, x: 0, y });
-    const columns = spec.conditions.length + 1;
-    if (table.columnCount < columns) table.insertColumns(table.columnCount, columns - table.columnCount);
-    else if (table.columnCount > columns) table.deleteColumns(columns, table.columnCount - columns);
-    const rows = spec.rows.length + 2;
-    if (table.rowCount > rows) table.deleteRows(rows, table.rowCount - rows);
-    table.setCell(0, 0, kind);
-    table.setCell(1, 0, "Add rule");
-    table.setColumnWidth(0, 60);
-    spec.rows.forEach((_, r) => { table.setCell(r + 2, 0, String(r + 1)); });
-    spec.conditions.forEach(([label, rule], i) => {
-      const column = i + 1;
-      table.setCell(0, column, label);
-      table.setCell(1, column, rule);
-      table.setCellFormatting(1, column, { textWrap: true });
-      table.setColumnWidth(column, 84);
-      spec.rows.forEach((value, r) => {
-        const row = r + 2;
-        if (kind === "Checkbox") table.setCellControl(row, column, { widget: "checkbox", value: value as boolean });
-        else if (value !== null) table.setCell(row, column, value);
+  for (const [kind, whole] of Object.entries(FILTER_CONDITIONS)) {
+    const parts = Math.ceil(whole.conditions.length / RULES_PER_TABLE);
+    for (let part = 0; part < parts; part++) {
+      const spec = {
+        rows: whole.rows,
+        conditions: whole.conditions.slice(
+          part * RULES_PER_TABLE,
+          (part + 1) * RULES_PER_TABLE,
+        ),
+      };
+      const name = parts === 1 ? `${kind} rules` : `${kind} rules ${part + 1}`;
+      const table = doc.addTable(sheet.id, { name, x: 0, y });
+      const columns = spec.conditions.length + 1;
+      if (table.columnCount < columns)
+        table.insertColumns(table.columnCount, columns - table.columnCount);
+      else if (table.columnCount > columns)
+        table.deleteColumns(columns, table.columnCount - columns);
+      const rows = spec.rows.length + 2;
+      if (table.rowCount > rows) table.deleteRows(rows, table.rowCount - rows);
+      table.setCell(0, 0, kind);
+      table.setCell(1, 0, "Add rule");
+      table.setColumnWidth(0, 60);
+      spec.rows.forEach((_, r) => {
+        table.setCell(r + 2, 0, String(r + 1));
       });
-    });
-    table.setRowHeight(1, 56);
-    y += 240;
+      spec.conditions.forEach(([label, rule], i) => {
+        const column = i + 1;
+        table.setCell(0, column, label);
+        table.setCell(1, column, rule);
+        table.setCellFormatting(1, column, { textWrap: true });
+        table.setColumnWidth(column, 84);
+        spec.rows.forEach((value, r) => {
+          const row = r + 2;
+          if (kind === "Checkbox")
+            table.setCellControl(row, column, {
+              widget: "checkbox",
+              value: value as boolean,
+            });
+          else if (value !== null) table.setCell(row, column, value);
+        });
+      });
+      table.setRowHeight(1, 56);
+      y += 240;
+    }
   }
   return doc.save();
 }
@@ -468,19 +550,40 @@ const seeds: Seed[] = [
       const doc = NumbersDocument.load(bytes);
       const tables = doc.tables();
       const names = tables.map((t) => t.name);
-      for (const kind of Object.keys(FILTER_CONDITIONS)) {
-        const table = tables.find((t) => t.name === `${kind} rules`);
-        if (!table) throw new Error(`filter conditions: table ${kind} rules missing from ${names.join(", ")}`);
-        const spec = FILTER_CONDITIONS[kind]!;
-        if (table.columnCount !== spec.conditions.length + 1) throw new Error(`filter conditions: ${kind} has ${table.columnCount} columns`);
-        spec.conditions.forEach(([label, rule], i) => {
-          if (table.cellText(0, i + 1) !== label || table.cellText(1, i + 1) !== rule) {
-            throw new Error(`filter conditions: ${kind} column ${i + 1} does not name its rule`);
-          }
+      for (const [kind, spec] of Object.entries(FILTER_CONDITIONS)) {
+        const parts = tables.filter(
+          (t) =>
+            t.name === `${kind} rules` || t.name.startsWith(`${kind} rules `),
+        );
+        if (parts.length === 0)
+          throw new Error(
+            `filter conditions: table ${kind} rules missing from ${names.join(", ")}`,
+          );
+        const seen = parts.flatMap((t) => {
+          if (t.columnCount > 9)
+            throw new Error(
+              `filter conditions: ${t.name} has ${t.columnCount - 1} rules, more than the panel takes`,
+            );
+          if (t.filterSets().rows?.rules().length)
+            throw new Error(
+              `filter conditions: ${t.name} already carries rules`,
+            );
+          return Array.from({ length: t.columnCount - 1 }, (_, i) => [
+            t.cellText(0, i + 1),
+            t.cellText(1, i + 1),
+          ]);
         });
-        if (table.filterSets().rows?.rules().length) throw new Error(`filter conditions: ${kind} already carries rules`);
+        if (JSON.stringify(seen) !== JSON.stringify(spec.conditions))
+          throw new Error(
+            `filter conditions: ${kind} tables do not name every rule once`,
+          );
       }
-      if (!JSON.stringify(tables.find((t) => t.name === "Read me")?.cellValue(1, 1)).includes("Organise")) throw new Error("filter conditions: instructions missing");
+      if (
+        !JSON.stringify(
+          tables.find((t) => t.name === "Read me")?.cellValue(1, 1),
+        ).includes("Organise")
+      )
+        throw new Error("filter conditions: instructions missing");
     },
   },
   {
@@ -489,7 +592,12 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const set = NumbersDocument.load(bytes).tables()[0]!.filterSets().rows;
       const rules = set?.rules() ?? [];
-      if (!set?.enabled || rules.length !== 1 || rules[0]!.predicate?.operator !== ">") throw new Error("filter seed: expected one enabled > rule");
+      if (
+        !set?.enabled ||
+        rules.length !== 1 ||
+        rules[0]!.predicate?.operator !== ">"
+      )
+        throw new Error("filter seed: expected one enabled > rule");
     },
   },
   {
@@ -498,8 +606,10 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const slide = KeynoteDocument.load(bytes).slides()[0]!;
       const builds = slide.builds();
-      if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve") throw new Error("build seed: expected one dissolve build");
-      if (!slide.title?.includes("Expected")) throw new Error("build seed: expectations missing");
+      if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve")
+        throw new Error("build seed: expected one dissolve build");
+      if (!slide.title?.includes("Expected"))
+        throw new Error("build seed: expectations missing");
     },
   },
   {
@@ -508,8 +618,12 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const doc = PagesDocument.load(bytes);
       const table = doc.tables()[0];
-      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (pages): the table or its rows are missing");
-      if (!doc.bodyText.includes("Expected")) throw new Error("table seed (pages): expectations missing");
+      if (!table || table.cellText(2, 0) !== "Pears")
+        throw new Error(
+          "table seed (pages): the table or its rows are missing",
+        );
+      if (!doc.bodyText.includes("Expected"))
+        throw new Error("table seed (pages): expectations missing");
     },
   },
   {
@@ -518,8 +632,12 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const doc = KeynoteDocument.load(bytes);
       const table = doc.tables()[0];
-      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (keynote): the table or its rows are missing");
-      if (!doc.slides()[0]!.title?.includes("Expected")) throw new Error("table seed (keynote): expectations missing");
+      if (!table || table.cellText(2, 0) !== "Pears")
+        throw new Error(
+          "table seed (keynote): the table or its rows are missing",
+        );
+      if (!doc.slides()[0]!.title?.includes("Expected"))
+        throw new Error("table seed (keynote): expectations missing");
     },
   },
   {
@@ -527,7 +645,12 @@ const seeds: Seed[] = [
     bytes: seedAuthoredNumbers(),
     check: (bytes) => {
       const doc = NumbersDocument.load(bytes);
-      if (!JSON.stringify(doc.tables()[0]?.cellValue(1, 0)).includes("Please build")) throw new Error("authored seed (numbers): instructions missing");
+      if (
+        !JSON.stringify(doc.tables()[0]?.cellValue(1, 0)).includes(
+          "Please build",
+        )
+      )
+        throw new Error("authored seed (numbers): instructions missing");
     },
   },
   {
@@ -535,7 +658,11 @@ const seeds: Seed[] = [
     bytes: seedAuthoredPages(),
     check: (bytes) => {
       const doc = PagesDocument.load(bytes);
-      if (!doc.bodyText.includes("Please build") || !doc.bodyText.includes("5)")) throw new Error("authored seed (pages): instructions missing");
+      if (
+        !doc.bodyText.includes("Please build") ||
+        !doc.bodyText.includes("5)")
+      )
+        throw new Error("authored seed (pages): instructions missing");
     },
   },
   {
@@ -543,7 +670,11 @@ const seeds: Seed[] = [
     bytes: seedAuthoredKeynote(),
     check: (bytes) => {
       const doc = KeynoteDocument.load(bytes);
-      if (doc.slideCount() !== 5 || !doc.slides()[4]!.title?.includes("Dissolve")) throw new Error("authored seed (keynote): slides missing");
+      if (
+        doc.slideCount() !== 5 ||
+        !doc.slides()[4]!.title?.includes("Dissolve")
+      )
+        throw new Error("authored seed (keynote): slides missing");
     },
   },
   {
@@ -551,8 +682,14 @@ const seeds: Seed[] = [
     bytes: seedTextBox(),
     check: (bytes) => {
       const slide = KeynoteDocument.load(bytes).slides()[0]!;
-      if (!slide.textStorages().some((s) => s.text === "Written by cupertino-files")) throw new Error("text box seed: the box's text is missing");
-      if (!slide.title?.includes("Expected")) throw new Error("text box seed: expectations missing");
+      if (
+        !slide
+          .textStorages()
+          .some((s) => s.text === "Written by cupertino-files")
+      )
+        throw new Error("text box seed: the box's text is missing");
+      if (!slide.title?.includes("Expected"))
+        throw new Error("text box seed: expectations missing");
     },
   },
   {
@@ -564,7 +701,8 @@ const seeds: Seed[] = [
       if (groups.map((g) => g.value).join() !== "Animal,Fruit,Note,Transport") {
         throw new Error("category seed: expected four groups in text order");
       }
-      if (table.staleCategoryGroups().length !== 0) throw new Error("category seed: tree disagrees with cells");
+      if (table.staleCategoryGroups().length !== 0)
+        throw new Error("category seed: tree disagrees with cells");
     },
   },
   {
@@ -572,25 +710,35 @@ const seeds: Seed[] = [
     bytes: seedInlineImage(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
-      if (d.images().length !== 2) throw new Error("inline image: expected 2 images");
-      if (!d.bodyText.includes("EXPECTED")) throw new Error("inline image: expectations missing");
-      if (!d.bodyText.includes("Send the file back")) throw new Error("inline image: return ask missing");
+      if (d.images().length !== 2)
+        throw new Error("inline image: expected 2 images");
+      if (!d.bodyText.includes("EXPECTED"))
+        throw new Error("inline image: expectations missing");
+      if (!d.bodyText.includes("Send the file back"))
+        throw new Error("inline image: return ask missing");
       // Each picture alone in its paragraph, and every paragraph but the
       // first indented — the precondition the whole check rests on.
       const paragraphs = d.paragraphs();
       const withImage = paragraphs.filter((p) => p.text.includes("￼"));
-      if (withImage.length !== 2) throw new Error("inline image: pictures not in their own paragraphs");
+      if (withImage.length !== 2)
+        throw new Error("inline image: pictures not in their own paragraphs");
       if (withImage.some((p) => p.text.trim() !== "￼")) {
-        throw new Error("inline image: a picture shares its paragraph with text");
+        throw new Error(
+          "inline image: a picture shares its paragraph with text",
+        );
       }
       const sheet = d.body.sheet();
       const starts = d.body.paragraphStarts();
       const indents = starts.map((start) => {
         const id = d.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
-        return id === undefined ? 0 : (sheet?.style(id)?.resolved().paragraph.leftIndent ?? 0);
+        return id === undefined
+          ? 0
+          : (sheet?.style(id)?.resolved().paragraph.leftIndent ?? 0);
       });
       if (indents.slice(1).some((v) => Math.round(v) !== 113)) {
-        throw new Error(`inline image: paragraphs not indented (${indents.join(", ")})`);
+        throw new Error(
+          `inline image: paragraphs not indented (${indents.join(", ")})`,
+        );
       }
     },
   },
@@ -604,6 +752,8 @@ if (seeds.length === 0) {
     const path = join(outDir, seed.name);
     writeFileSync(path, seed.bytes);
     seed.check(new Uint8Array(readFileSync(path)));
-    console.log(`${seed.name}: ${seed.bytes.length} bytes, instructions verified`);
+    console.log(
+      `${seed.name}: ${seed.bytes.length} bytes, instructions verified`,
+    );
   }
 }
