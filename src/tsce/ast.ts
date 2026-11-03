@@ -45,6 +45,11 @@ export const AstNodeFields = protoFields("TSCE.ASTNodeArrayArchive.ASTNodeArchiv
   COLON_TRACT: "AST_colon_tract",
   NUMBER_DECIMAL_LOW: "AST_number_node_decimal_low",
   NUMBER_DECIMAL_HIGH: "AST_number_node_decimal_high",
+  /** A date literal: seconds since 2001-01-01. */
+  DATE_NUM: "AST_date_node_dateNum",
+  /** A duration literal: its length in seconds, whatever unit it was typed in. */
+  DURATION_SECONDS: "AST_duration_node_unitNum",
+  LIST_NUM_ARGS: "AST_list_node_numArgs",
 });
 
 /** ASTColumnCoordinateArchive / ASTRowCoordinateArchive. */

@@ -20,28 +20,14 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — one seed and one rung staged
+## Needs a Mac — nothing staged
 
-`npm run seeds -- out` writes the seed (beside the earlier ones, all
-returned) and `npm run keynote:docs -- out` the rung (beside the rest of
-both ladders); each carries its own instructions and its own expected
-result.
+Every seed and rung staged so far is returned and banked. The number
+conditions the filter menu offers beyond comparisons (above and below
+average, top and bottom values and percent, duplicate, unique) are the
+one unmeasured group; `seed-filter-conditions.numbers` still carries
+their table.
 
-- `seed-filter-conditions.numbers` — **a comparison, not a probe.** Five
-  tables, one per column type (text, number, date, duration, checkbox),
-  each with one column per condition Numbers' filter menu offers, the
-  app's own English labels read from `TSTables.strings`. The checker adds
-  one rule per column with the app's controls, picking the condition the
-  column's first row names. The returned file maps every condition to
-  its `predicate_type`, qualifiers and operands by column, which is what
-  authoring is-blank, between, ends-with and the date conditions waits
-  on; `npm run harvest:predicates -- <file>` reads them back. A condition
-  the menu lacks is commented »not in menu«.
-- `v14-K11-build.key` — **an eye, not a probe.** The only rung of the
-  Keynote ladder on the 14.4.1 base that no script can answer: whether a
-  build the library wrote still plays after Keynote converts the old
-  deck. The other sixteen rungs are answered by the app itself in
-  `test/e2e/keynote-ladder.e2e.test.ts`.
 - The collaboration seed is withdrawn: sharing needs iCloud Drive, and
   the checker will not enable it on the work Mac (»skip the collaboration
   features for now, i don't want to enable icloud drive on my work mac«).
@@ -122,13 +108,12 @@ that rebuild the structures from them.
   gridlines the library switched off. The corpus still has only two
   charts, so a document with several chart types would widen the
   evidence.
-- **Keynote v14 upgrade path: the app answers sixteen of seventeen
-  rungs.** The same rungs against the 14.4.1 base — the deck Keynote
-  converts on open, a different code path — open in Keynote 15.4, which
-  reports each change through its scripting dictionary and draws the
-  set background in its export (`test/e2e/keynote-ladder.e2e.test.ts`).
-  Whether the written build plays after the conversion is the staged
-  rung above.
+- **Keynote v14 upgrade path: settled.** The same rungs against the
+  14.4.1 base — the deck Keynote converts on open, a different code path
+  — open in Keynote 15.4, which reports each change through its
+  scripting dictionary and draws the set background in its export
+  (`test/e2e/keynote-ladder.e2e.test.ts`), and the checker played the
+  written build on the converted deck.
 - **Collaboration components: framing decoded, payload unmeasured.**
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
@@ -181,6 +166,9 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |
+| 2026-11-03 | does a build the library wrote play after Keynote converts a 14.x deck? | Keynote 15.4 (macOS), the checker playing rung v14-K11 | **settled, pass**: "the title dissolved in on the first click - confirmed". The whole v14 ladder is now app-answered. | Keynote rung v14-K11 |
+| 2026-11-03 | does a table grafted with the host theme's preset draw in Numbers? | Numbers 15.4 (macOS) driven by script: a blank document with two tables added by `addTable`, opened and exported | **settled, pass**: the app lists three tables and draws the two added ones in the theme's table style, header row and column shaded, cells as written, with no duplicate identified style in the file. | the render is not kept; `src/tsa/table-donor.ts` |
 | 2026-11-03 | the filter menu's text conditions: which `predicate_type` does each write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-filter-conditions.numbers` with eight rules on the Text table, one per column, returned as `olekristensen-v26.0-mac-filter-conditions-text.numbers` | **settled for the eight text conditions**: 1 starts with, 2 ends with, 3 contains, 4 does not contain, 36 is, 37 is not, 61 does not start with, 62 does not end with, each paired with the formula the app compiled (is: `IF(LEN(needle)=LEN(cell), FIND.CASEINSENSITIVE(needle, cell)=1)`; is not: the length test, then `IF(ISERROR(FIND…), TRUE, FIND…<>1)`; ends with: FIND over `RIGHT(cell, LEN(needle))`; the negations through `IFERROR(…, TRUE)`). The IF branches sit between AST node types 34 and 35, `BEGIN_THUNK_NODE` and `END_THUNK_NODE` in the apps' schema, which the renderer now passes through. The panel takes at most eight rules on one table, so the seed deals its conditions out eight per table; the number, date, duration and checkbox tables are still out. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | does Numbers fill a group row's summary from the `column_agg_type` entry alone? | Numbers 15.4 (macOS) driven by script: a blank-donor category with the entry written in the twin's shape (column uid, level 1, agg_type 1, show_as_type 0) exported to PDF, beside the export of `olekristensen-v26.0-mac-authored.numbers` | **refuted**: the twin's export carries »Tæl (alle): 2« in every group row and the entry-only document's group rows are empty, the groups themselves drawn. The app reads the aggregator cache and the summary model's cells it wrote; the entry does not make it rebuild them. The writer was not kept. | the renders are not kept; no code |
 | 2026-11-03 | can a Data/ file nothing points at be reclaimed safely? | every fixture in the corpus, each object's `data_references` list against a schema-position walk for `TSP.DataReference` fields; no app round | **settled, both lists are complete**: in all 68 decodable fixtures every `DataInfo` is named by some object's message-info list, and the schema walk over the vendored types names exactly the same set, 0 missing in either; the earlier reading that the lists leave most entries unnamed does not reproduce. `compact()` now drops the entries and files neither names, refuses a document with an opaque component, and is a no-op over the corpus. | `ObjectStore.collectData`, test/blank-documents.test.ts |

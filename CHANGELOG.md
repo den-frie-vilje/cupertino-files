@@ -7,7 +7,22 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+### Fixed
+
+- Formula reading renders date and duration literals, which read as 0,
+  lists inside a function call, which rendered empty, and the thunk
+  nodes the apps write around an IF branch, which rendered as unknown
+  nodes. Every rule the Numbers filter menu writes now renders whole.
+- A table added to a Numbers document takes the theme's table style
+  preset, as Insert > Table does, instead of bringing its own copy of
+  every preset style along.
+
 ### Added
+
+- `PREDICATE_TYPE_CONDITIONS` names the filter condition behind every
+  `predicate_type` the Numbers filter menu writes, text, number, date,
+  duration and checkbox conditions alike, so a rule reads back as the
+  condition it was authored under.
 
 - `compact()` now also reclaims the Data/ files no object refers to, so
   removing a picture and compacting takes its bytes out of the package.

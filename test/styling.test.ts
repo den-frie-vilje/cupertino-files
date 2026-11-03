@@ -966,12 +966,15 @@ describe("drawable styling", () => {
     // 18554 identified styles across the corpus, zero collisions — an
     // identifier names exactly one style, and a clone keeping its
     // source's would put two behind one: the corrupt-stylesheet state.
-    // The one exception carries five tables grafted before the graft took
-    // the host theme's preset, each with its own copy of the donor's
+    // The two exceptions carry tables grafted before the graft took the
+    // host theme's preset, each with its own copy of the donor's
     // identified styles, which the app kept on save.
-    const GRAFTED_COPIES = "olekristensen-v26.0-mac-filter-conditions-text.numbers";
+    const GRAFTED_COPIES = new Set([
+      "olekristensen-v26.0-mac-filter-conditions-text.numbers",
+      "olekristensen-v26.0-mac-filter-conditions.numbers",
+    ]);
     for (const name of readdirSync(FIXTURES)) {
-      if (!/\.(pages|numbers|key)$/.test(name) || name === GRAFTED_COPIES) continue;
+      if (!/\.(pages|numbers|key)$/.test(name) || GRAFTED_COPIES.has(name)) continue;
       let doc: IWorkDocument;
       try {
         doc = IWorkDocument.open(fixture(name));

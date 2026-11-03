@@ -1258,3 +1258,12 @@ node scripts/scan-fixture-privacy.ts
   table is the request itself. Its five grafted tables each carry a copy
   of the donor's identified styles, the graft's shape before it took the
   host theme's preset; the app kept them.
+
+### olekristensen-v26.0-mac-filter-conditions.numbers
+- 294,373 bytes, md5 `71dfad97c0499006f1562a66f0a5a93a`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-filter-conditions.numbers
+  dealt out at eight conditions per table; the checker added one rule
+  per column with the filter panel on every table but "Number rules 2".
+  The Read me table is the request itself. Its ten grafted tables carry
+  copies of the donor's identified styles, the graft's shape before it
+  took the host theme's preset.
