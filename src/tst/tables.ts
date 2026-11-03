@@ -9,7 +9,8 @@
  * bookkeeping (see docs/FORMAT.md §14).
  */
 import { protoFields } from "../proto/fields.ts";
-import { writeComparisonPredicate, type FilterOperator } from "./predicates.ts";
+import { writePredicate } from "./predicates.ts";
+import { compileCondition, conditionHolds, conditionOf, type FilterCondition, type PlainCellValue } from "./filter-conditions.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
@@ -1840,7 +1841,7 @@ export class TableModel {
           const uid = registry.tableUid(e.table);
           const internal = uid ? ownerInternalId(this.store, uid) : undefined;
           if (uid && internal !== undefined) {
-            crossRows.push(e.row.value);
+            crossRows.push(e.row?.value ?? 0);
             crossCols.push(e.column.value);
             crossInternals.push(internal);
           }
@@ -4295,18 +4296,19 @@ export class TableModel {
   }
 
   /**
-   * Add a row-filter rule: show rows whose cell in `column` (absolute;
-   * column 0 is refused, see below) compares to `value` as `operator`
-   * says, or contains it as text when the operator is "contains". The
-   * rule is written the way a rule the app wrote is carried — the
-   * comparison in the predicate and as a formula over the table's own
-   * identity, both counted from the app's host column — the
-   * set is switched on, and the rows the set now hides are written to the
-   * hidden-state extent, evaluated here. Numbers opens a filter written this
-   * way and shows the rows the rule keeps.
+   * Add a row-filter rule on `column` (absolute): show the rows whose
+   * cell meets `condition`, any condition the filter menu offers, from a
+   * comparison or a text test to a date relative to today, a rank in the
+   * column, a duration or a checkbox state. The rule is written the way
+   * the app writes the same condition: its codes and operands in the
+   * predicate, its formula over the table's own identity, both counted
+   * from the app's host column; the set is switched on, and the rows the
+   * set now hides are evaluated here and written to the hidden-state
+   * extent. Numbers opens a filter written this way and shows the rows
+   * the rule keeps. Returns the new rule's index.
    * @agentTool add_filter_rule
    */
-  addFilterRule(column: number, condition: { operator: FilterOperator; value: number | string }): number {
+  addFilterRule(column: number, condition: FilterCondition): number {
     this.requireWritable();
     if (column < 0 || column >= this.columnCount) {
       throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
@@ -4319,42 +4321,18 @@ export class TableModel {
     const name = this.name;
     const uid = name === undefined ? undefined : this.owners().tableUid(name);
     if (!uid) throw new RangeError("table has no calc-engine identity to write the rule against");
-    const literal: FormulaExpression =
-      typeof condition.value === "number"
-        ? { kind: "number", value: condition.value }
-        : { kind: "string", value: condition.value };
     const cell: FormulaExpression = {
       kind: "crossRef",
       table: name!,
       column: { value: column, absolute: false },
       row: { value: 0, absolute: false },
     };
-    const origin = { row: 0, column: FILTER_HOST_COLUMN };
-    const expression: FormulaExpression =
-      condition.operator === "contains"
-        ? {
-            kind: "call",
-            name: "NOT",
-            args: [
-              {
-                kind: "call",
-                name: "ISERROR",
-                args: [{ kind: "call", name: "FIND.CASEINSENSITIVE", args: [literal, cell] }],
-              },
-            ],
-          }
-        : condition.operator === "startsWith"
-          ? {
-              kind: "binary",
-              op: "=",
-              left: { kind: "call", name: "FIND.CASEINSENSITIVE", args: [literal, cell] },
-              right: { kind: "number", value: 1 },
-            }
-          : { kind: "binary", op: condition.operator, left: cell, right: literal };
-    const ast = buildFormula(expression, origin, {
+    const wholeColumn: FormulaExpression = { kind: "crossRef", table: name!, column: { value: column, absolute: false } };
+    const compiled = compileCondition(condition, cell, wholeColumn);
+    const ast = buildFormula(compiled.expression, { row: 0, column: FILTER_HOST_COLUMN }, {
       tableUid: (table) => this.owners().tableUid(table),
     });
-    const index = set.addRule(writeComparisonPredicate(condition.operator, condition.value, offset, uid, ast));
+    const index = set.addRule(writePredicate(compiled, offset, uid, ast));
     this.refilterRows();
     return index;
   }
@@ -4362,53 +4340,29 @@ export class TableModel {
   /**
    * Recompute which rows the row filter hides and write them to the
    * hidden-state extent: one state per hidden row, `filtered` stated,
-   * the way the app records a filter that has run. Every enabled rule
-   * must be a comparison or a text-contains rule; the extent is left
-   * alone when the set is disabled or carries a rule this cannot
-   * evaluate.
+   * the way the app records a filter that has run. The extent is left
+   * alone when the set is disabled or carries a rule whose condition is
+   * not one this library can read back.
    */
   refilterRows(): number {
     const set = this.filterSets().rows;
     if (!set || !set.enabled) return 0;
     const rules = set.rules().filter((rule) => rule.enabled && rule.predicate);
     const tests: ((row: number) => boolean)[] = [];
+    const dataRows: number[] = [];
+    for (let row = this.headerRowCount; row < this.rowCount - this.footerRowCount; row++) dataRows.push(row);
+    const plain = (row: number, column: number): PlainCellValue => {
+      const value = this.cellValue(row, column);
+      if (value === undefined || value.type === "empty" || value.type === "error") return undefined;
+      if (value.type === "duration") return { seconds: value.seconds };
+      return value.value;
+    };
     for (const rule of rules) {
-      const predicate = rule.predicate!;
-      const literal = predicate.operands[1];
-      if (rule.column === undefined) return 0;
+      const condition = conditionOf(rule.predicate!);
+      if (rule.column === undefined || condition === undefined) return 0;
       const column = rule.column;
-      if (predicate.predicateType === 1 && literal?.kind === "string") {
-        // Starts-with: FIND.CASEINSENSITIVE(needle, cell) = 1.
-        const needle = literal.string!.toLowerCase();
-        tests.push((row) => {
-          const actual = groupValueOf(this.cellValue(row, column));
-          return typeof actual === "string" && actual.toLowerCase().startsWith(needle);
-        });
-      } else if (predicate.operator && literal && (literal.kind === "number" || literal.kind === "string")) {
-        const op = predicate.operator;
-        const expected = literal.kind === "number" ? literal.number : literal.string;
-        tests.push((row) => {
-          const actual = groupValueOf(this.cellValue(row, column));
-          if (actual === undefined || typeof actual !== typeof expected) return op === "<>";
-          // Numbers compares text without regard to case, in a filter as in `=`.
-          const a = typeof actual === "string" ? actual.toLowerCase() : (actual as number);
-          const e = typeof expected === "string" ? expected.toLowerCase() : (expected as number);
-          switch (op) {
-            case "=": return a === e;
-            case "<>": return a !== e;
-            case "<": return a < e;
-            case "<=": return a <= e;
-            case ">": return a > e;
-            case ">=": return a >= e;
-          }
-        });
-      } else if (predicate.predicateType === 3 && literal?.kind === "string") {
-        const needle = literal.string!.toLowerCase();
-        tests.push((row) => {
-          const actual = groupValueOf(this.cellValue(row, column));
-          return typeof actual === "string" && actual.toLowerCase().includes(needle);
-        });
-      } else return 0;
+      const values = dataRows.map((row) => plain(row, column));
+      tests.push((row) => conditionHolds(condition, plain(row, column), values));
     }
     const owner = this.object.message.getMessage(TableModelFields.HIDDEN_STATES_OWNER);
     const states = owner?.getMessages(HiddenStatesOwner.HIDDEN_STATES).find((s) => s.has(HiddenStates.ROW_EXTENT));

@@ -1964,17 +1964,16 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     group: "Numbers & tables",
-    name: "Filters: adding a comparison rule",
+    name: "Filters: adding a rule",
     apps: ["numbers"],
     status: "read+write",
     probe: () => true,
     note:
-      "addFilterRule writes a comparison or text-contains rule byte for byte as the fixture's " +
-      "app-authored rules — the predicate with its operands and the formula over the table's own " +
-      "identity, counted from the app's host column — grows the boundary list, switches the set on and " +
-      "writes the hidden-state extent by evaluating the rules, entry for entry as the fixture's; a " +
-      "starts-with rule is written byte for byte as the app wrote one on column A, whose offset from " +
-      "the host at column 1 is −1 stored unsigned",
+      "addFilterRule writes any condition the filter menu offers byte for byte as the fixtures' " +
+      "app-authored rules — the predicate with its codes and operands and the formula over the table's " +
+      "own identity, counted from the app's host column — grows the boundary list, switches the set on " +
+      "and writes the hidden-state extent by evaluating the rules; every one of the 44 app-written " +
+      "rules in the three filter-conditions fixtures reproduces identically",
     manualProof: {
       claim: "Numbers opens a filter this library wrote with the right rows hidden, on the column the rule names.",
       why:
@@ -2014,7 +2013,7 @@ export const CAPABILITIES: Capability[] = [
       how:
         "npm run seeds -- out writes seed-category.numbers; open it in Numbers. A pass shows three " +
         "groups, Animal, Fruit and Transport, each with its rows beneath it; a failure shows the rows " +
-        "flat or a refusal to open, which means the definition needs state only the app writes.",
+        "flat or a refusal to open, which means the definition needs state only the app writes. The same probe file now carries one table per condition family (a text test, blank, between, a rank, a date, a duration, a checkbox), and Numbers 15.4 exports each with the rows the condition keeps and no other.",
       risk: "medium",
       settled:
         "**Confirmed in Numbers 15.1.** The checker opened seed-category.numbers and wrote \"Works\" " +

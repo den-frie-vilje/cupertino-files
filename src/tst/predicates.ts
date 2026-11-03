@@ -516,43 +516,40 @@ function decimalOf(value: RawMessage): number {
 export type FilterOperator = PredicateOperator | "contains" | "startsWith";
 
 /** TST.FormulaPredArgArchive.arg_type codes, as the corpus's rules carry them. */
-const PRED_ARG_TYPE = { UNUSED: 0, NUMBER: 1, STRING: 3, CELL: 4 } as const;
+const PRED_ARG_TYPE = { UNUSED: 0, NUMBER: 1, DATE: 2, STRING: 3, CELL: 4, DURATION: 5 } as const;
+
+/** A literal operand a predicate stores beside its formula. */
+export type PredicateLiteral =
+  | { kind: "number"; value: number }
+  | { kind: "string"; value: string }
+  | { kind: "date"; seconds: number }
+  | { kind: "duration"; seconds: number; units: number };
 
 /**
- * Write a comparison predicate the way a filter rule the app wrote carries
- * one: the comparison's code as `predicate_type`, zero qualifiers, the
- * cell operand as a relative reference to the host table, row offset zero
- * and the rule's column as the column offset, the literal operand with its value (a number with its decimal pair), an
- * unused third operand, the compiled formula, and the conditional-style
- * flag stated false. `ast` is the formula the rule evaluates, compiled by
- * the caller so the table identity in it is the host's.
+ * Write a filter predicate the way a rule the app wrote carries one: the
+ * condition's code and qualifiers, the cell operand as a relative
+ * reference to the host table (row offset zero and the rule's column as
+ * the column offset, or the column alone for a whole-column condition),
+ * up to two literal operands with the unused slots stated, the compiled
+ * formula, and the conditional-style flag stated false. `ast` is the
+ * formula the rule evaluates, compiled by the caller so the table
+ * identity in it is the host's.
  */
-export function writeComparisonPredicate(
-  operator: FilterOperator,
-  value: number | string,
+export function writePredicate(
+  rule: { predicateType: number; qualifier1: number; qualifier2: number; operands: readonly PredicateLiteral[]; wholeColumn: boolean },
   column: number,
   tableUid: OwnerUid,
   ast: RawMessage,
 ): RawMessage {
-  // Text-contains is predicate type 3, the function-shaped condition
-  // whose formula is NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)));
-  // starts-with is type 1, FIND.CASEINSENSITIVE(needle, cell) = 1.
-  const type =
-    operator === "contains"
-      ? 3
-      : operator === "startsWith"
-        ? 1
-        : [...PREDICATE_TYPE_OPERATORS].find(([, op]) => op === operator)?.[0];
-  if (type === undefined) throw new RangeError(`no predicate type for operator ${operator}`);
   const predicate = RawMessage.create();
-  predicate.setVarint(PredicateFields.PREDICATE_TYPE, type);
-  predicate.setVarint(PredicateFields.QUALIFIER1, 0);
-  predicate.setVarint(PredicateFields.QUALIFIER2, 0);
+  predicate.setVarint(PredicateFields.PREDICATE_TYPE, rule.predicateType);
+  predicate.setVarint(PredicateFields.QUALIFIER1, rule.qualifier1);
+  predicate.setVarint(PredicateFields.QUALIFIER2, rule.qualifier2);
 
   const cell = RawMessage.create();
   cell.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.CELL);
   const relative = RawMessage.create();
-  relative.setVarint(1, 0);
+  if (!rule.wholeColumn) relative.setVarint(1, 0);
   // A signed offset in an unsigned field: column A from the host at
   // column 1 is −1, written as 2^64 − 1, as the app writes it.
   relative.setVarint(2, column < 0 ? (1n << 64n) + BigInt(column) : column);
@@ -562,38 +559,81 @@ export function writeComparisonPredicate(
   relative.setMessage(3, uid);
   relative.setBool(4, false);
   relative.setBool(5, false);
-  relative.setBool(6, false);
+  relative.setBool(6, rule.wholeColumn);
   relative.setBool(7, false);
   cell.setMessage(PredArgFields.RELATIVE_CELL_REF, relative);
   cell.setBool(PredArgFields.PRESERVE_ROW, false);
   cell.setBool(PredArgFields.PRESERVE_COLUMN, false);
   predicate.setMessage(PredicateFields.PARAM_VALUE0, cell);
 
-  const literal = RawMessage.create();
-  const data = RawMessage.create();
-  if (typeof value === "number") {
-    literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.NUMBER);
-    data.setDouble(PredArgDataFields.DOUBLE_VALUE, value);
-    const decimal = formulaDecimal(value);
-    const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
-    data.setVarint(PredArgDataFields.DECIMAL_LOW, view.getBigUint64(0, true));
-    data.setVarint(PredArgDataFields.DECIMAL_HIGH, view.getBigUint64(8, true));
-  } else {
-    literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.STRING);
-    data.setString(PredArgDataFields.STRING_VALUE, value);
+  for (const [slot, field] of [[0, PredicateFields.PARAM_VALUE1], [1, PredicateFields.PARAM_VALUE2]] as const) {
+    const operand = rule.operands[slot];
+    const literal = RawMessage.create();
+    if (!operand) {
+      literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.UNUSED);
+      predicate.setMessage(field, literal);
+      continue;
+    }
+    const data = RawMessage.create();
+    switch (operand.kind) {
+      case "number": {
+        literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.NUMBER);
+        data.setDouble(PredArgDataFields.DOUBLE_VALUE, operand.value);
+        const decimal = formulaDecimal(operand.value);
+        const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
+        data.setVarint(PredArgDataFields.DECIMAL_LOW, view.getBigUint64(0, true));
+        data.setVarint(PredArgDataFields.DECIMAL_HIGH, view.getBigUint64(8, true));
+        break;
+      }
+      case "string":
+        literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.STRING);
+        data.setString(PredArgDataFields.STRING_VALUE, operand.value);
+        break;
+      case "date":
+        literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.DATE);
+        data.setDouble(PredArgDataFields.DATE_VALUE, operand.seconds);
+        break;
+      case "duration":
+        literal.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.DURATION);
+        data.setDouble(PredArgDataFields.DURATION_TIMEINTERVAL, operand.seconds);
+        data.setVarint(PredArgDataFields.DURATION_UNITS, operand.units);
+        break;
+    }
+    literal.setMessage(PredArgFields.ARG_VALUE, data);
+    if (operand.kind === "duration") {
+      // A duration operand carries an empty host cell coordinate beside its value, as the app writes it.
+      const host = RawMessage.create();
+      host.setVarint(2, 0);
+      host.setVarint(3, 0);
+      literal.setMessage(PredArgFields.HOST_CELL_COORD, host);
+    }
+    predicate.setMessage(field, literal);
   }
-  literal.setMessage(PredArgFields.ARG_VALUE, data);
-  predicate.setMessage(PredicateFields.PARAM_VALUE1, literal);
-
-  const unused = RawMessage.create();
-  unused.setVarint(PredArgFields.ARG_TYPE, PRED_ARG_TYPE.UNUSED);
-  predicate.setMessage(PredicateFields.PARAM_VALUE2, unused);
 
   const formula = RawMessage.create();
   formula.setMessage(FormulaFields.AST_NODE_ARRAY, ast);
   predicate.setMessage(PredicateFields.FORMULA, formula);
   predicate.setBool(PredicateFields.FOR_CONDITIONAL_STYLE, false);
   return predicate;
+}
+
+/** A comparison, text-contains or starts-with predicate; see {@link writePredicate}. */
+export function writeComparisonPredicate(
+  operator: FilterOperator,
+  value: number | string,
+  column: number,
+  tableUid: OwnerUid,
+  ast: RawMessage,
+): RawMessage {
+  const type =
+    operator === "contains"
+      ? 3
+      : operator === "startsWith"
+        ? 1
+        : [...PREDICATE_TYPE_OPERATORS].find(([, op]) => op === operator)?.[0];
+  if (type === undefined) throw new RangeError(`no predicate type for operator ${operator}`);
+  const operand: PredicateLiteral = typeof value === "number" ? { kind: "number", value } : { kind: "string", value };
+  return writePredicate({ predicateType: type, qualifier1: 0, qualifier2: 0, operands: [operand], wholeColumn: false }, column, tableUid, ast);
 }
 
 export function describePredicate(predicate: Predicate, subject?: string): string {

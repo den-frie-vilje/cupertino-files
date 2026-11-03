@@ -19,6 +19,13 @@ in commit messages and pull requests.
 
 ### Added
 
+- `addFilterRule` writes every condition the Numbers filter menu offers,
+  not only comparisons and text-contains: text tests, blank tests,
+  between, averages, ranks, duplicates, every date condition relative to
+  today or to a date, durations and checkboxes (`FilterCondition`), each
+  predicate and formula byte for byte as the app writes it, with the rows
+  it hides evaluated and written beside it. The `add_filter_rule` tool
+  takes the same conditions as an object.
 - `PREDICATE_TYPE_CONDITIONS` names the filter condition behind every
   `predicate_type` the Numbers filter menu writes, text, number, date,
   duration and checkbox conditions alike, so a rule reads back as the

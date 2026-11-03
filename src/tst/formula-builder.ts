@@ -68,8 +68,8 @@ export type FormulaExpression =
   | { kind: "boolean"; value: boolean }
   /** A cell, as an offset or an absolute index; `undefined` means "same". */
   | { kind: "ref"; column: Coordinate; row: Coordinate }
-  /** A cell on another table: `Other::A1`. Compiling needs a resolver. */
-  | { kind: "crossRef"; table: string; column: Coordinate; row: Coordinate }
+  /** A cell on another table: `Other::A1`, or its whole column with `row` left out. Compiling needs a resolver. */
+  | { kind: "crossRef"; table: string; column: Coordinate; row?: Coordinate }
   /** A whole column, as in `SUM(D)`: a reference with no row at all. */
   | { kind: "columnRef"; column: Coordinate }
   /**
@@ -79,7 +79,19 @@ export type FormulaExpression =
    * `=SUM(C3:K6)` is relative on both axes.
    */
   | { kind: "range"; from: { column: Coordinate; row: Coordinate }; to: { column: Coordinate; row: Coordinate } }
-  | { kind: "call"; name: string; args: FormulaExpression[] }
+  /** A function by name, or by registry index where the registry names none (`index` wins). */
+  | { kind: "call"; name: string; args: FormulaExpression[]; index?: number }
+  /** A date literal, as a filter rule carries one: seconds since 2001-01-01. */
+  | { kind: "date"; seconds: number }
+  /**
+   * A duration literal with the display fields the app writes beside its
+   * length: the unit it was typed in and the format it shows in.
+   */
+  | { kind: "duration"; seconds: number; unit: number; style: number; largestUnit: number; smallestUnit: number }
+  /** An argument the engine evaluates lazily (an IF branch): the expression between thunk brackets. */
+  | { kind: "thunk"; expression: FormulaExpression }
+  /** A parenthesised expression, which the apps keep as a one-item list node. */
+  | { kind: "group"; expression: FormulaExpression }
   | { kind: "binary"; op: BinaryOperator; left: FormulaExpression; right: FormulaExpression }
   | { kind: "unary"; op: UnaryOperator; operand: FormulaExpression }
   /** An omitted argument, as in `DURATION(,,8)`. */
@@ -224,6 +236,35 @@ function emit(
 ): void {
   const node = RawMessage.create();
   switch (expression.kind) {
+    case "date":
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.DATE);
+      node.setDouble(AstNodeFields.DATE_NUM, expression.seconds);
+      node.setVarint(AstNodeFields.DATE_SUPPRESS_DATE_FORMAT, 0);
+      node.setVarint(AstNodeFields.DATE_SUPPRESS_TIME_FORMAT, 0);
+      node.setString(AstNodeFields.DATE_TIME_FORMAT, "");
+      break;
+    case "duration":
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.DURATION);
+      node.setDouble(AstNodeFields.DURATION_SECONDS, expression.seconds);
+      node.setVarint(AstNodeFields.DURATION_UNIT, expression.unit);
+      node.setVarint(AstNodeFields.DURATION_STYLE, expression.style);
+      node.setVarint(AstNodeFields.DURATION_UNIT_LARGEST, expression.largestUnit);
+      node.setVarint(AstNodeFields.DURATION_UNIT_SMALLEST, expression.smallestUnit);
+      node.setVarint(AstNodeFields.DURATION_AUTOMATIC_UNITS, 1);
+      break;
+    case "group":
+      emit(expression.expression, origin, push, options);
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.LIST);
+      node.setVarint(AstNodeFields.LIST_NUM_ARGS, 1);
+      break;
+    case "thunk": {
+      const begin = RawMessage.create();
+      begin.setVarint(AstNodeFields.TYPE, AstNodeType.BEGIN_THUNK);
+      push(begin);
+      emit(expression.expression, origin, push, options);
+      node.setVarint(AstNodeFields.TYPE, AstNodeType.END_THUNK);
+      break;
+    }
     case "number": {
       node.setVarint(AstNodeFields.TYPE, AstNodeType.NUMBER);
       node.setDouble(AstNodeFields.NUMBER, expression.value);
@@ -295,7 +336,7 @@ function emit(
       // is a byte mismatch against every one of them.
       node.setVarint(AstNodeFields.TYPE, AstNodeType.CELL_REFERENCE);
       node.setMessage(AstNodeFields.COLUMN, coordinate(relativise(expression.column, origin.column)));
-      node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
+      if (expression.row) node.setMessage(AstNodeFields.ROW, coordinate(relativise(expression.row, origin.row)));
       const cf = RawMessage.create();
       cf.setVarint(CfUuidWordFields.LOWER_LOW, uid.lo & 0xffffffffn);
       cf.setVarint(CfUuidWordFields.LOWER_HIGH, uid.lo >> 32n);
@@ -365,7 +406,7 @@ function emit(
       node.setVarint(AstNodeFields.TYPE, BINARY_NODE[expression.op]);
       break;
     case "call": {
-      const index = FUNCTION_INDEXES.get(expression.name.toUpperCase());
+      const index = expression.index ?? FUNCTION_INDEXES.get(expression.name.toUpperCase());
       if (index === undefined) {
         throw new RangeError(
           `no index is known for the function ${JSON.stringify(expression.name)}; ` +

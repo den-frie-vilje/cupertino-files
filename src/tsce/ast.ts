@@ -47,8 +47,16 @@ export const AstNodeFields = protoFields("TSCE.ASTNodeArrayArchive.ASTNodeArchiv
   NUMBER_DECIMAL_HIGH: "AST_number_node_decimal_high",
   /** A date literal: seconds since 2001-01-01. */
   DATE_NUM: "AST_date_node_dateNum",
+  DATE_SUPPRESS_DATE_FORMAT: "AST_date_node_suppress_date_format",
+  DATE_SUPPRESS_TIME_FORMAT: "AST_date_node_suppress_time_format",
+  DATE_TIME_FORMAT: "AST_date_node_date_time_format",
   /** A duration literal: its length in seconds, whatever unit it was typed in. */
   DURATION_SECONDS: "AST_duration_node_unitNum",
+  DURATION_UNIT: "AST_duration_node_unit",
+  DURATION_STYLE: "AST_duration_node_style",
+  DURATION_UNIT_LARGEST: "AST_duration_node_duration_unit_largest",
+  DURATION_UNIT_SMALLEST: "AST_duration_node_duration_unit_smallest",
+  DURATION_AUTOMATIC_UNITS: "AST_duration_node_use_automatic_units",
   LIST_NUM_ARGS: "AST_list_node_numArgs",
 });
 
