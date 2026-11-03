@@ -9,7 +9,7 @@
  * persistence layer stay ignorant of every family above it — the layering
  * test holds `tsp` to that.
  */
-import { referencedIds, type ReferenceExtractor } from "../tsp/store.ts";
+import { referencedIds, schemaReferencedIds, type ReferenceExtractor } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { TSWP_REFERENCE_EXTRACTORS } from "../tswp/schema.ts";
 import { TSS_REFERENCE_EXTRACTORS } from "../tss/schema.ts";
@@ -20,21 +20,16 @@ const TABLE_MODEL_STYLE_PRESET = 48;
 /** The model's base data store, whose references the apps declare in their own order. */
 const TABLE_MODEL_DATA_STORE = 4;
 
-/**
- * The model's two inline stores whose nested numbers the wide scan would
- * take for pointers: `merge_owner` (47, a formula store) and
- * `category_owner_deprecated` (81). Neither holds a reference Apple
- * declares.
- */
-const TABLE_MODEL_UNDECLARED = new Set([47, 81, TABLE_MODEL_STYLE_PRESET]);
+/** The model's references Apple never declares: the style preset alone. */
+const TABLE_MODEL_UNDECLARED = new Set([TABLE_MODEL_STYLE_PRESET]);
 
 /**
  * The order the apps declare a table model's references in, by field —
- * not field order, but one sequence shared by 70 of the corpus's 71
- * models; and inside the data store, the sequence 65 of them share
- * (tiles, column headers, row headers, the tables, then the rest).
- * Fields absent from a message are skipped; fields not listed follow,
- * in field order.
+ * not field order, but one sequence nearly every corpus model shares;
+ * and inside the data store, the sequence most of them share (tiles,
+ * column headers, row headers, the tables, then the rest). Fields absent
+ * from a message are skipped; fields not listed follow, in field order.
+ * test/reference-extractors.test.ts holds the extractor to the corpus.
  */
 const TABLE_MODEL_DECLARATION_ORDER = [
   4, 3, 19, 20, 21, 18, 25, 26, 27, 24, 60, 61, 62, 63, 64, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 30, 36,
@@ -43,12 +38,18 @@ const TABLE_MODEL_DECLARATION_ORDER = [
 const DATA_STORE_DECLARATION_ORDER = [3, 2, 1, 4, 5, 6, 12, 17, 19, 20, 18, 11, 16, 21, 22];
 const HIGHEST_FIELD = 130;
 
-/** The wide scan over a message, one field at a time in the given order. */
+/**
+ * The references of a message, one field at a time in the given order:
+ * by the schema where the message's type is known, so an operator node
+ * or a hash function (a lone varint 1) is never taken for a pointer, and
+ * by shape otherwise.
+ */
 function orderedScan(
   m: RawMessage,
   order: readonly number[],
   skip: ReadonlySet<number>,
   nested: ReadonlyMap<number, readonly number[]>,
+  typeName?: string,
 ): bigint[] {
   const fields: number[] = [];
   for (let field = 1; field <= HIGHEST_FIELD; field++) if (m.has(field) && !skip.has(field)) fields.push(field);
@@ -64,17 +65,16 @@ function orderedScan(
     const alone = m.clone();
     for (const other of fields) if (other !== field) alone.remove(other);
     for (const other of skip) alone.remove(other);
-    out.push(...referencedIds(alone));
+    out.push(...(typeName === undefined ? referencedIds(alone) : schemaReferencedIds(alone, typeName)));
   }
   return out;
 }
 
 /**
  * TST.TableModelArchive declares every reference it carries but the
- * style preset and the numbers inside its two inline stores, in the
- * sequences above, repeats kept at their first place. Measured against
- * all 71 corpus models: the same set on every one, the same order on 64,
- * the exceptions iWork '13 and '16 files.
+ * style preset, in the sequences above, repeats kept at their first
+ * place; the same set as the app's on every corpus model, the same
+ * order on all but the iWork '13 and '16 files.
  */
 const tableModelExtractor: ReferenceExtractor = (m) =>
   orderedScan(
@@ -82,6 +82,7 @@ const tableModelExtractor: ReferenceExtractor = (m) =>
     TABLE_MODEL_DECLARATION_ORDER,
     TABLE_MODEL_UNDECLARED,
     new Map([[TABLE_MODEL_DATA_STORE, DATA_STORE_DECLARATION_ORDER]]),
+    "TST.TableModelArchive",
   );
 
 export const SHARED_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = new Map([

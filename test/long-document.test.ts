@@ -257,8 +257,9 @@ describe("an inline image rides the text", () => {
 
     expect(doc.body.removeAttachment(attachmentId)).toBe(true);
     expect(doc.store.object(imageId) !== undefined).toBe(true);
-    // Image, attachment, and the two title/caption stand-ins die together.
-    expect(doc.compact()).toBe(4);
+    // Image, attachment, the two title/caption stand-ins and the picture's
+    // Data/ file die together.
+    expect(doc.compact()).toBe(5);
     expect(doc.store.object(imageId)).toBe(undefined);
     expect(PagesDocument.load(doc.save()).images().length).toBe(0);
   });

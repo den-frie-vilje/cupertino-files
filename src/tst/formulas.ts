@@ -34,6 +34,7 @@ import { decodeDecimal128 } from "./cellrecord.ts";
 import { HARVESTED_FUNCTIONS, HARVEST_PROVENANCE } from "./function-names.ts";
 import { BUILTIN_FUNCTIONS } from "./function-builtins.ts";
 import { ownerKey, readCfUid, type OwnerUid } from "../tsce/owners.ts";
+import { APPLE_EPOCH_MS } from "../base/bytes.ts";
 export {
   AstNodeArrayFields,
   AstNodeFields,
@@ -370,7 +371,7 @@ export function renderFormula(
         break;
       case AstNodeType.LIST:
       case AstNodeType.ARRAY: {
-        const count = node.getUint(AstNodeFields.FUNCTION_NUM_ARGS) ?? 0;
+        const count = node.getUint(AstNodeFields.LIST_NUM_ARGS) ?? node.getUint(AstNodeFields.FUNCTION_NUM_ARGS) ?? 0;
         const items = pop(count).map((a) => a.text);
         const open = type === AstNodeType.ARRAY ? "{" : "(";
         const close = type === AstNodeType.ARRAY ? "}" : ")";
@@ -444,8 +445,15 @@ export function renderFormula(
         break;
       }
       case AstNodeType.DATE:
+        stack.push({ text: formatDateLiteral(node), precedence: PRIMARY_PRECEDENCE });
+        break;
       case AstNodeType.DURATION:
-        stack.push({ text: formatNumber(node), precedence: PRIMARY_PRECEDENCE });
+        stack.push({ text: formatDurationLiteral(node), precedence: PRIMARY_PRECEDENCE });
+        break;
+      case AstNodeType.BEGIN_THUNK:
+      case AstNodeType.END_THUNK:
+        // Brackets around an argument the engine evaluates lazily (an IF
+        // branch); they carry no operand of their own.
         break;
       default:
         if (!unknownNodeTypes.includes(type)) unknownNodeTypes.push(type);
@@ -574,6 +582,39 @@ function int32(raw: bigint | undefined): number | undefined {
  * decimal is authoritative, for the same reason cells store decimals — it
  * is what stops 0.1 from rendering as 0.1000000000000000055.
  */
+/** A date literal as an ISO date, with the time of day when it has one. */
+function formatDateLiteral(node: RawMessage): string {
+  const seconds = node.getDouble(AstNodeFields.DATE_NUM);
+  if (seconds === undefined) return formatNumber(node);
+  const date = new Date(APPLE_EPOCH_MS + seconds * 1000);
+  if (Number.isNaN(date.getTime())) return String(seconds);
+  const iso = date.toISOString();
+  return iso.endsWith("T00:00:00.000Z") ? iso.slice(0, 10) : iso.slice(0, 19).replace("T", " ");
+}
+
+/**
+ * A duration literal in whole units, largest first ("1d", "1h30m"). The
+ * node stores the length in seconds; how the apps spell the literal in
+ * the formula bar is unmeasured, so this is the readable form, not a
+ * claim about theirs.
+ */
+function formatDurationLiteral(node: RawMessage): string {
+  let seconds = node.getDouble(AstNodeFields.DURATION_SECONDS);
+  if (seconds === undefined) return formatNumber(node);
+  const sign = seconds < 0 ? "-" : "";
+  seconds = Math.abs(seconds);
+  const parts: string[] = [];
+  for (const [unit, size] of [["w", 604800], ["d", 86400], ["h", 3600], ["m", 60]] as const) {
+    const n = Math.floor(seconds / size);
+    if (n > 0) {
+      parts.push(`${n}${unit}`);
+      seconds -= n * size;
+    }
+  }
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+  return sign + parts.join("");
+}
+
 function formatNumber(node: RawMessage): string {
   const low = node.getVarint(AstNodeFields.NUMBER_DECIMAL_LOW);
   const high = node.getVarint(AstNodeFields.NUMBER_DECIMAL_HIGH);

@@ -165,9 +165,88 @@ export const PREDICATE_TYPE_OPERATORS: ReadonlyMap<number, PredicateOperator> = 
  */
 export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [1, "FIND.CASEINSENSITIVE"],
+  [2, "FIND.CASEINSENSITIVE"],
   [3, "FIND.CASEINSENSITIVE"],
+  [4, "ISERROR"],
+  [11, "SUM"],
+  [12, "SUM"],
+  [15, "SUM"],
+  [16, "SUM"],
+  [30, "SUM"],
+  [31, "SUM"],
   [34, "ISBLANK"],
+  [36, "IF"],
+  [37, "IF"],
   [54, "SUM"],
+  [61, "IFERROR"],
+  [62, "IFERROR"],
+]);
+
+/**
+ * The filter menu's conditions by `predicate_type`, as the app writes
+ * them: each code paired with the condition the rule was authored under
+ * in `olekristensen-v26.0-mac-filter-conditions.numbers` and its text
+ * predecessor, one rule per column, column named for its condition.
+ *
+ * A date condition over a unit carries the unit in `qualifier1` (2 day,
+ * 3 week, 4 month, 5 year, 8 quarter) and, where it points, the direction
+ * in `qualifier2` (6 ago, 7 from now); "this week" and the rest of the
+ * "this" family share code 33 and differ by the unit alone. "In the top"
+ * and "in the bottom" are 30 and 31, `qualifier1` saying values (10) or
+ * percent (9); the average, duplicate and unique conditions carry a
+ * whole-column SUM as their formula, which the engine evaluates by the
+ * code rather than the formula. Duration
+ * comparisons have their own codes (38 equal, 40 greater than, 44
+ * between measured; the rest of the duration family is unmeasured), and
+ * a checkbox test compiles to a function the registry does not name,
+ * index 326, compared with the checkbox control's interaction type 8.
+ * The formulas for "is" and "is not" wrap their IF branches in thunk
+ * nodes.
+ */
+export const PREDICATE_TYPE_CONDITIONS: ReadonlyMap<number, string> = new Map([
+  [1, "starts with"],
+  [2, "ends with"],
+  [3, "contains"],
+  [4, "does not contain"],
+  [5, "equal to"],
+  [6, "not equal to"],
+  [7, "greater than"],
+  [8, "greater than or equal to"],
+  [9, "less than"],
+  [10, "less than or equal to"],
+  [11, "above average"],
+  [12, "below average"],
+  [13, "between"],
+  [15, "is a duplicate"],
+  [16, "is unique"],
+  [17, "date is today"],
+  [18, "date is yesterday"],
+  [19, "date is tomorrow"],
+  [20, "date is"],
+  [21, "date is before"],
+  [22, "date is after"],
+  [23, "date is in the range"],
+  [24, "date is in the next"],
+  [25, "date is in the last"],
+  [26, "date is exactly"],
+  [27, "date is before (relative)"],
+  [28, "date is after (relative)"],
+  [29, "date is between (relative)"],
+  [30, "in the top"],
+  [31, "in the bottom"],
+  [32, "not between"],
+  [33, "date is in this"],
+  [34, "is blank"],
+  [35, "is not blank"],
+  [36, "is"],
+  [37, "is not"],
+  [38, "duration equal to"],
+  [40, "duration greater than"],
+  [44, "duration between"],
+  [55, "is checked"],
+  [56, "is not checked"],
+  [61, "does not start with"],
+  [62, "does not end with"],
 ]);
 
 /**
@@ -234,6 +313,8 @@ export interface PredicateOperand {
 export interface Predicate {
   /** Raw `predicate_type`; see {@link PREDICATE_TYPE_OPERATORS}. */
   predicateType: number | undefined;
+  /** The filter-menu condition {@link predicateType} names, where measured ({@link PREDICATE_TYPE_CONDITIONS}). */
+  condition: string | undefined;
   qualifier1: number | undefined;
   qualifier2: number | undefined;
   /** Set on conditional-formatting predicates, absent on filters. */
@@ -332,6 +413,7 @@ export function readPredicate(
 
   return {
     predicateType,
+    condition: predicateType === undefined ? undefined : PREDICATE_TYPE_CONDITIONS.get(predicateType),
     qualifier1: message.getUint(fields.QUALIFIER1),
     qualifier2: message.getUint(fields.QUALIFIER2),
     forConditionalStyle: message.getBool(PredicateFields.FOR_CONDITIONAL_STYLE) ?? false,

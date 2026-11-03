@@ -256,6 +256,7 @@ export {
   PredArgDataFields,
   PREDICATE_TYPE_OPERATORS,
   PREDICATE_TYPE_FUNCTIONS,
+  PREDICATE_TYPE_CONDITIONS,
 } from "./tst/predicates.ts";
 export type {
   Predicate,

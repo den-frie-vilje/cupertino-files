@@ -375,6 +375,53 @@ export class ObjectStore {
 
   /** Files to add to the package on save (e.g. "Data/photo.png"). */
   readonly pendingFiles = new Map<string, Uint8Array>();
+  /** Files to leave out of the package on save; see {@link collectData}. */
+  readonly removedFiles = new Set<string>();
+
+  /**
+   * Drop the Data/ files no object refers to, returning how many went.
+   *
+   * A data file is live when any object names its identifier, either in
+   * the `data_references` list of its message info or in a
+   * `TSP.DataReference` field the vendored schema places inside the
+   * archive; both are read, and an entry has to be absent from both to
+   * go. On every app-written document in the corpus the two agree and
+   * cover every `DataInfo`, so an untouched document loses nothing. A
+   * document with a component this library could not decode is left
+   * whole: a reference inside it would be invisible.
+   */
+  collectData(): number {
+    if (this.components.some((c) => c.isOpaque)) return 0;
+    const live = new Set<bigint>();
+    for (const { obj } of this.allObjects()) {
+      for (const id of obj.getDataReferences()) live.add(id);
+      const name = this.typeNameOf(obj);
+      // An archive of a type the schema knows is walked by type; one it
+      // does not is scanned by shape, which can only keep too much.
+      const ids =
+        name !== undefined && name in REQUIRED_SCHEMA
+          ? schemaReferencedIds(obj.message, name, DATA_REFERENCE_TYPES)
+          : referencedIds(obj.message);
+      for (const id of ids) live.add(id);
+    }
+    const pkg = this.packageMetadata.message;
+    const infos = pkg.getMessages(PKG_DATAS);
+    // An entry without an identifier or a stored file name is kept: there
+    // is nothing to match it against, and nothing to remove with it.
+    const keep = infos.filter((info) => {
+      const id = info.getVarint(DATA_IDENTIFIER);
+      return id === undefined || live.has(id) || !info.has(DATA_FILE_NAME);
+    });
+    if (keep.length === infos.length) return 0;
+    for (const info of infos) {
+      if (keep.includes(info)) continue;
+      const fileName = info.getString(DATA_FILE_NAME)!;
+      this.removedFiles.add(`Data/${fileName}`);
+      this.pendingFiles.delete(`Data/${fileName}`);
+    }
+    pkg.setMessages(PKG_DATAS, keep);
+    return infos.length - keep.length;
+  }
 
   /**
    * Register media bytes as a Data/ file: dedupes by SHA-1 digest against
@@ -770,7 +817,7 @@ export class ObjectStore {
     for (const component of this.components) {
       if (component.dirty) replacements.set(component.name, component.serialize());
     }
-    return this.container.toBytes(replacements, this.pendingFiles);
+    return this.container.toBytes(replacements, this.pendingFiles, this.removedFiles);
   }
 }
 
@@ -798,6 +845,7 @@ function dedupe(ids: readonly bigint[]): bigint[] {
  * wide is the safe direction below the root.
  */
 const REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.Reference", "TSP.DataReference"]);
+const DATA_REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.DataReference"]);
 
 /**
  * Every object id a message of a known archive type points at, read by
@@ -806,9 +854,14 @@ const REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.Reference", "TSP.Data
  * each a lone varint 1, is never mistaken for a pointer. Fields the
  * schema does not name in a known message are its scalars and are
  * skipped; a submessage of a type the schema does not know falls back
- * to the shape scan.
+ * to the shape scan. `kinds` narrows the result to one reference type,
+ * as {@link ObjectStore.collectData} does for `TSP.DataReference`.
  */
-export function schemaReferencedIds(message: RawMessage, typeName: string): bigint[] {
+export function schemaReferencedIds(
+  message: RawMessage,
+  typeName: string,
+  kinds: ReadonlySet<string> = REFERENCE_TYPES,
+): bigint[] {
   const out: bigint[] = [];
   const visit = (node: RawMessage, name: string, depth: number): void => {
     if (depth > 24) return;
@@ -831,10 +884,10 @@ export function schemaReferencedIds(message: RawMessage, typeName: string): bigi
         continue;
       }
       for (const sub of subs) {
-        if (REFERENCE_TYPES.has(type)) {
+        if (kinds.has(type)) {
           const id = sub.getVarint(1);
           if (id !== undefined && id > 0n) out.push(id);
-        } else if (sub.fields.length > 0) visit(sub, type, depth + 1);
+        } else if (!REFERENCE_TYPES.has(type) && sub.fields.length > 0) visit(sub, type, depth + 1);
       }
     }
   };

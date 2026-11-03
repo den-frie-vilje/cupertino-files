@@ -35,7 +35,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** the clone itself is first-class — two rounds opened it, showed its cells, and the checker's own formula referencing it by name computed — but both rounds the app discarded the written identity and re-registered, tombstoning the library's stored references into ref errors. The mint now enrolls the full owner family at all three engine sites (archives, tracker list, owner map, internals past the map's max); whether that is the whole acceptance test only an open can say.
 
-**Outcome.** Settled, Numbers 15.4 (M15.4-7051.0.79-2): once the re-mint also writes the table model's table_id string as the new base, the app's own save keeps both clones' identities (id strings and owner bases unchanged), formulas in the donor naming the clones read 5 and 8, a formula the checker typed naming the clone read 10, and the clone's own cross reference and =SUM(B) read 7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on.
+**Outcome.** Settled, Numbers 15.4 (M15.4-7051.0.79-2): once the re-mint also writes the table model's table_id string as the new base, the app's own save keeps both clones' identities (id strings and owner bases unchanged), formulas in the donor naming the clones read 5 and 8, a formula the checker typed naming the clone read 10, and the clone's own cross reference and =SUM(B) read 7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on. A table added since takes the theme's first table preset, as Insert &gt; Table does, instead of a copy of every preset style; Numbers 15.4 opened a document with two such tables and drew them in the theme's table style (its PDF export, no person).
 
 ### ✅ Builds (animations): read and retime
 
@@ -115,7 +115,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The archives round-trip and copy-on-write correctly, which is the file's side of the story; only the app can say the toggle changes what is drawn rather than being ignored.
 
-**Outcome.** **Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were switched off by the library and the app drew the chart without them, with the library-rewritten data and renamed series drawn as written
+**Outcome.** **Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were switched off by the library and the app drew the chart without them, with the library-rewritten data and renamed series drawn as written. Pages 15.4's own export of rung P20 differs from its base's only inside the chart's box and on the page carrying the rung's appended paragraph, the gridlines absent.
 
 ### ✅ Chart appearance: type and series colours
 

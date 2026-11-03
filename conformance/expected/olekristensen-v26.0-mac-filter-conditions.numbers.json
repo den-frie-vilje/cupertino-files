@@ -1,0 +1,3546 @@
+{
+  "file": "olekristensen-v26.0-mac-filter-conditions.numbers",
+  "sha1": "dc8618169d0d149ba0235a5f7d803a223cf8d963",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 1627,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 44
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 374
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000061.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000062.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000063.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000064.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000065.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000066.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000067.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000068.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000070.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000071.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000072.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000073.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000074.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000075.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000113.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000163.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000164.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000165.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000166.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000167.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000168.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000169.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000170.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000171.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000172.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000173.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000176.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000177.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000209.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000210.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000259.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000260.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000261.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000262.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000263.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000264.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000265.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000266.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000267.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000268.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000269.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000270.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000271.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000272.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000273.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000311.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000312.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000361.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000362.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000363.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000364.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000365.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000366.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000367.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000368.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000369.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000370.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000371.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000372.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000373.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000374.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000375.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000413.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000414.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000463.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000464.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000465.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000466.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000467.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000468.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000469.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000470.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000471.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000472.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000473.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000474.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000475.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000476.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000477.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000508.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000509.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000558.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000559.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000560.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000561.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000562.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000563.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000564.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000565.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000566.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000567.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000568.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000569.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000570.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000571.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000572.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000610.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000611.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000660.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000661.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000662.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000663.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000664.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000665.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000666.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000667.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000668.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000669.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000670.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000671.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000672.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000673.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000674.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000712.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000713.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000762.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000763.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000764.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000765.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000766.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000767.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000768.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000769.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000770.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000771.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000772.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000773.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000774.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000775.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000776.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000813.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000814.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000863.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000864.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000865.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000866.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000867.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000868.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000869.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000870.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000871.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000872.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000873.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000874.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000875.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000876.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000877.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000911.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000912.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000961.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000962.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000963.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000964.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000965.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000966.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000967.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000968.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000969.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000970.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000971.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000972.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000973.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000974.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000975.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000998.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000999.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001000.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001001.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001002.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001003.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001004.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001005.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001006.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001007.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001008.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001020.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001021.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001034.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001036.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001037.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001038.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001039.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001040.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001041.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001042.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001043.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001044.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001045.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001046.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001047.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001049.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001050.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001051.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001052.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001053.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001054.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001055.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001056.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001057.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001058.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001059.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001060.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001062.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001063.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001064.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001065.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001066.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001067.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001068.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001070.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001071.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001072.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001073.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001075.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001076.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001077.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001078.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001079.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001080.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001081.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001082.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001083.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001084.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001085.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001086.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001088.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001089.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001090.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001091.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001092.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001093.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001094.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001095.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001096.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001097.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001098.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001099.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001101.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001102.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001103.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001104.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001105.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001106.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001107.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001108.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001109.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001110.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001111.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001112.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001114.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001117.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001118.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001119.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001120.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001121.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001122.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001123.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001124.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001125.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001127.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1001128.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001129.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001130.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001131.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001132.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001133.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001134.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001135.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001136.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001137.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001138.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001140.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001524.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001525.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001527.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001530.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001533.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001534.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001535.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001536.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001537.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001538.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1001539.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 854
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Read me",
+            "rows": 2,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Step"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "What to do"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails."
+              }
+            ]
+          },
+          {
+            "name": "Text rules 1",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Text"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "is not"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "starts with"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "ends with"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "contains"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "not contain"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "not start with"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "not end with"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is “Pear”"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "is not “Pear”"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "starts with “P”"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "ends with “r”"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "contains “ea”"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "does not contain “ea”"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "does not start with “P”"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "does not end with “r”"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "Pear"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "Apple"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "Cat"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "Peach"
+              }
+            ]
+          },
+          {
+            "name": "Text rules 2",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Text"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is blank"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "is not blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "is not blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "Pear"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "Apple"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "Cat"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "Peach"
+              }
+            ]
+          },
+          {
+            "name": "Number rules 1",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Number"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "equal to"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "not equal to"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "greater than"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "greater or equal"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "less than"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "less or equal"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "between"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "not between"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "equal to 12"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "not equal to 12"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "greater than 7"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "greater than or equal to 7"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "less than 7"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "less than or equal to 7"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "between 5 and 10"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "not between 5 and 10"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "12"
+              }
+            ]
+          },
+          {
+            "name": "Number rules 2",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Number"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "above average"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "below average"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "top values"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "bottom values"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "top percent"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "duplicate"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "unique"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "above average"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "below average"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "in the top 2 values"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "in the bottom 2 values"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "in the top 50 percent"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "is a duplicate"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "is unique"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "is blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "12"
+              }
+            ]
+          },
+          {
+            "name": "Number rules 3",
+            "rows": 7,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Number"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is not blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is not blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "12"
+              }
+            ]
+          },
+          {
+            "name": "Date rules 1",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Date"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "before"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "after"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "in the range"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "today"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "yesterday"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "tomorrow"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "this week"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "before 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "after 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "in the range 1 Oct 2026 to 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "today"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "yesterday"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "tomorrow"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "this week"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "2025-03-03T00:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "name": "Date rules 2",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Date"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "this month"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "this quarter"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "this year"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "last days"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "last weeks"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "last months"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "last quarters"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "last years"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "this month"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "this quarter"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "this year"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "in the last 3 days"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "in the last 2 weeks"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "in the last 1 month"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "in the last 1 quarter"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "in the last 1 year"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "2025-03-03T00:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "name": "Date rules 3",
+            "rows": 7,
+            "columns": 8,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Date"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "next days"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "exactly ago"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "exactly from now"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "before ago"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "after from now"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "between ago"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "in the next 3 days"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "exactly 2 days ago"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "exactly 1 week from now"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "before 2 months ago"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "after 1 year from now"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "between 1 and 3 days ago"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "is blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "2025-03-03T00:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "name": "Duration rules",
+            "rows": 7,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Duration"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "equal to"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "greater than"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "between"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "equal to 1h"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "greater than 1h"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "between 10m and 1h 30m"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "is blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3600s"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "7200s"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "600s"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "90s"
+              }
+            ]
+          },
+          {
+            "name": "Checkbox rules",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Checkbox"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is checked"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "is not checked"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is checked"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "is not checked"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "FALSE"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "FALSE"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "FALSE"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "FALSE"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "TRUE"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

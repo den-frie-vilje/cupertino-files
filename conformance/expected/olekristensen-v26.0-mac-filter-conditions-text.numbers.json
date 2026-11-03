@@ -1,0 +1,2371 @@
+{
+  "file": "olekristensen-v26.0-mac-filter-conditions-text.numbers",
+  "sha1": "58342589aa8cd349f0ae9964065314e7f30bd9ac",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 1153,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 39
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 200
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000061.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000062.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000063.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000064.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000065.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000066.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000067.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000068.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000070.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000071.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000072.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000073.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000074.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000075.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000115.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000116.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000165.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000166.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000167.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000168.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000169.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000170.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000171.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000172.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000173.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000174.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000175.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000176.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000177.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000178.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000179.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000226.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000227.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000276.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000277.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000278.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000279.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000280.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000281.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000282.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000283.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000284.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000285.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000286.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000287.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000288.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000289.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000290.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000343.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000344.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000393.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000394.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000395.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000396.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000397.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000398.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000399.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000400.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000401.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000402.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000403.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000404.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000405.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000406.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000407.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000441.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000442.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000491.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000492.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-1000493.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000494.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000495.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000496.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000497.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000498.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000499.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000500.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000501.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000502.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000503.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000504.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000505.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000528.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000529.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000530.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000531.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000532.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000533.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000534.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000535.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000536.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000537.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000538.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000540.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000541.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000542.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000543.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000544.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000545.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000546.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000547.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000548.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000549.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000550.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000551.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000553.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000554.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000555.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000556.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000557.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000558.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000559.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000560.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000561.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000562.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000563.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000564.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000566.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000567.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000568.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000569.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000570.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000571.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000572.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000573.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000574.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000575.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000576.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000577.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000579.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000580.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000581.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000582.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000583.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000584.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000585.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000586.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000587.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000588.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000589.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000590.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000592.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000593.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000594.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000595.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000596.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000597.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000598.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000599.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000600.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000601.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000602.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000603.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000605.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000834.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000835.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000838.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000839.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000840.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000841.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 699
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Read me",
+            "rows": 2,
+            "columns": 2,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Step"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "What to do"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails."
+              }
+            ]
+          },
+          {
+            "name": "Text rules",
+            "rows": 7,
+            "columns": 11,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Text"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "is not"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "starts with"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "ends with"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "contains"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "not contain"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "not start with"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "not end with"
+              },
+              {
+                "r": 0,
+                "c": 9,
+                "v": "is blank"
+              },
+              {
+                "r": 0,
+                "c": 10,
+                "v": "is not blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is “Pear”"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "is not “Pear”"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "starts with “P”"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "ends with “r”"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "contains “ea”"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "does not contain “ea”"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "does not start with “P”"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "does not end with “r”"
+              },
+              {
+                "r": 1,
+                "c": 9,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 10,
+                "v": "is not blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 9,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 10,
+                "v": "Pear"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 9,
+                "v": "Apple"
+              },
+              {
+                "r": 3,
+                "c": 10,
+                "v": "Apple"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 9,
+                "v": "Cat"
+              },
+              {
+                "r": 4,
+                "c": 10,
+                "v": "Cat"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 9,
+                "v": "Peach"
+              },
+              {
+                "r": 6,
+                "c": 10,
+                "v": "Peach"
+              }
+            ]
+          },
+          {
+            "name": "Number rules",
+            "rows": 7,
+            "columns": 18,
+            "truncated": true,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Number"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "equal to"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "not equal to"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "greater than"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "greater or equal"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "less than"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "less or equal"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "between"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "not between"
+              },
+              {
+                "r": 0,
+                "c": 9,
+                "v": "above average"
+              },
+              {
+                "r": 0,
+                "c": 10,
+                "v": "below average"
+              },
+              {
+                "r": 0,
+                "c": 11,
+                "v": "top values"
+              },
+              {
+                "r": 0,
+                "c": 12,
+                "v": "bottom values"
+              },
+              {
+                "r": 0,
+                "c": 13,
+                "v": "top percent"
+              },
+              {
+                "r": 0,
+                "c": 14,
+                "v": "duplicate"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "equal to 12"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "not equal to 12"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "greater than 7"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "greater than or equal to 7"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "less than 7"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "less than or equal to 7"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "between 5 and 10"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "not between 5 and 10"
+              },
+              {
+                "r": 1,
+                "c": 9,
+                "v": "above average"
+              },
+              {
+                "r": 1,
+                "c": 10,
+                "v": "below average"
+              },
+              {
+                "r": 1,
+                "c": 11,
+                "v": "in the top 2 values"
+              },
+              {
+                "r": 1,
+                "c": 12,
+                "v": "in the bottom 2 values"
+              },
+              {
+                "r": 1,
+                "c": 13,
+                "v": "in the top 50 percent"
+              },
+              {
+                "r": 1,
+                "c": 14,
+                "v": "is a duplicate"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 9,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 10,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 11,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 12,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 13,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 14,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 9,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 10,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 11,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 12,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 13,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 14,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 9,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 10,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 11,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 12,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 13,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 14,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 9,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 10,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 11,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 12,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 13,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 14,
+                "v": "12"
+              }
+            ]
+          },
+          {
+            "name": "Date rules",
+            "rows": 7,
+            "columns": 24,
+            "truncated": true,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Date"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "before"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "after"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "in the range"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "today"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "yesterday"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "tomorrow"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "this week"
+              },
+              {
+                "r": 0,
+                "c": 9,
+                "v": "this month"
+              },
+              {
+                "r": 0,
+                "c": 10,
+                "v": "this quarter"
+              },
+              {
+                "r": 0,
+                "c": 11,
+                "v": "this year"
+              },
+              {
+                "r": 0,
+                "c": 12,
+                "v": "last days"
+              },
+              {
+                "r": 0,
+                "c": 13,
+                "v": "last weeks"
+              },
+              {
+                "r": 0,
+                "c": 14,
+                "v": "last months"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "before 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "after 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "in the range 1 Oct 2026 to 1 Nov 2026"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "today"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "yesterday"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "tomorrow"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "this week"
+              },
+              {
+                "r": 1,
+                "c": 9,
+                "v": "this month"
+              },
+              {
+                "r": 1,
+                "c": 10,
+                "v": "this quarter"
+              },
+              {
+                "r": 1,
+                "c": 11,
+                "v": "this year"
+              },
+              {
+                "r": 1,
+                "c": 12,
+                "v": "in the last 3 days"
+              },
+              {
+                "r": 1,
+                "c": 13,
+                "v": "in the last 2 weeks"
+              },
+              {
+                "r": 1,
+                "c": 14,
+                "v": "in the last 1 month"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 9,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 10,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 11,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 12,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 13,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 2,
+                "c": 14,
+                "v": "2026-11-01T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 9,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 10,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 11,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 12,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 13,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 3,
+                "c": 14,
+                "v": "2026-10-15T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 9,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 10,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 11,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 12,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 13,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 4,
+                "c": 14,
+                "v": "2026-11-20T00:00:00.000Z"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 9,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 10,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 11,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 12,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 13,
+                "v": "2025-03-03T00:00:00.000Z"
+              },
+              {
+                "r": 6,
+                "c": 14,
+                "v": "2025-03-03T00:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "name": "Duration rules",
+            "rows": 7,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Duration"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "equal to"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "greater than"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "between"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "is blank"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "equal to 1h"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "greater than 1h"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "between 10m and 1h 30m"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "is blank"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3600s"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "7200s"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "600s"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "90s"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "90s"
+              }
+            ]
+          },
+          {
+            "name": "Checkbox rules",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Checkbox"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "is checked"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "is not checked"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "is checked"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "is not checked"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "FALSE"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "FALSE"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "TRUE"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "FALSE"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "FALSE"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "TRUE"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "TRUE"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -10,8 +10,9 @@
  * the one command the file names. A refusal or a surprising result is a
  * finding, not a failure; every seed says so.
  *
- * The registry below is empty when nothing needs a person. To stage a new
- * question, add an entry:
+ * A returned seed stays in the registry: its builder is the recipe the
+ * fixture it became was made from, and a re-run reproduces the file.
+ * To stage a new question, add an entry:
  *
  *   const seeds: Seed[] = [
  *     {
@@ -34,7 +35,11 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import {
+  KeynoteDocument,
+  NumbersDocument,
+  PagesDocument,
+} from "../src/index.ts";
 import { Slide } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Storage } from "../src/tswp/schema.ts";
@@ -54,14 +59,19 @@ const outDir = process.argv[2] ?? "out";
  * never in the table's name or its header row: the app shows the name on
  * one unwrapped line and pins the header on every screen.
  */
-function instructionRow(table: TableModel, text: string, cells: Record<number, string | number> = {}): void {
+function instructionRow(
+  table: TableModel,
+  text: string,
+  cells: Record<number, string | number> = {},
+): void {
   table.insertRows(1, 1);
   table.setCell(1, 0, text);
   table.setCellFormatting(1, 0, { textWrap: true });
   table.setColumnWidth(0, 260);
   // shortcut: the height is estimated from the width at the donor's text size, until the app's fit is measured
   table.setRowHeight(1, Math.ceil(text.length / 48) * 13 + 8);
-  for (const [column, value] of Object.entries(cells)) table.setCell(1, Number(column), value);
+  for (const [column, value] of Object.entries(cells))
+    table.setCell(1, Number(column), value);
 }
 
 // ------------------------------------------------------------ inline image
@@ -77,7 +87,7 @@ function seedInlineImage(): Uint8Array {
   const png = blockPng(240, 120);
 
   doc.appendParagraph(
-    "SEED · indrykket billede (docs/BLOCKERS.md). Brødteksten herunder er rykket 113 pt ind fra sidens margen. Spørgsmålet er, hvor de to billeder starter.",
+    "SEED: an indented picture (docs/BLOCKERS.md). The body text below is indented 113 pt from the page margin. The question is where the two pictures start.",
   );
 
   // Every paragraph first, images after: an empty paragraph appended at
@@ -85,17 +95,17 @@ function seedInlineImage(): Uint8Array {
   // that index lands in the paragraph before it.
   const indent = { leftIndent: 113.4 };
   const first = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter i SAMME lodrette linje som denne sætnings første bogstav — altså langt inde på siden, ikke ude ved sidens venstre margen. Hele denne tekst skal også stå indrykket.",
+    "EXPECTED: the picture below starts on the SAME vertical line as this sentence's first letter, well inside the page, not out at the page's left margin. This whole text should be indented too.",
     "Body",
   );
   const firstImage = doc.appendParagraph(" ", "Body");
   const second = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter derimod ude ved sidens venstre margen, ikke i tekstspalten — det er skrevet med den anden tilstand, så de to billeder skal stå forskellige steder.",
+    "EXPECTED: the picture below starts out at the page's left margin instead, not in the text column; it is written with the other mode, so the two pictures should sit in different places.",
     "Body",
   );
   const secondImage = doc.appendParagraph(" ", "Body");
   const last = doc.appendParagraph(
-    "Kig på de to billeders venstre kant. Forskellige = begge tilstande virker. Ens = kun den ene bliver brugt, uanset hvad filen siger. Står teksten heller ikke indrykket, er dét fundet i stedet. Send filen retur uden at ændre noget.",
+    "Look at the two pictures' left edges. Different means both modes work. The same means only one is ever used, whatever the file says. If the text is not indented either, that is the finding instead. Send the file back without changing anything.",
     "Body",
   );
   for (const index of [first, firstImage, second, secondImage, last]) {
@@ -103,12 +113,12 @@ function seedInlineImage(): Uint8Array {
   }
 
   doc.insertInlineImage(doc.body.paragraphStarts()[firstImage]!, png, {
-    fileName: "i-tekstspalten.png",
+    fileName: "in-the-text-column.png",
     width: 200,
     height: 100,
   });
   doc.insertInlineImage(doc.body.paragraphStarts()[secondImage]!, png, {
-    fileName: "ved-sidemargenen.png",
+    fileName: "at-the-page-margin.png",
     width: 200,
     height: 100,
     wrap: "page",
@@ -159,7 +169,8 @@ function seedBuild(): Uint8Array {
   slide.title =
     "Expected: this title dissolves in on the first click. Already there with no animation, or a refusal to open, is the finding; comment on the slide.";
   const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
-  if (title === undefined) throw new Error("build seed: blank deck has no title placeholder");
+  if (title === undefined)
+    throw new Error("build seed: blank deck has no title placeholder");
   slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
   return doc.save();
 }
@@ -210,7 +221,14 @@ function seedAuthoredNumbers(): Uint8Array {
   table.setCell(0, 0, "Item");
   table.setCell(0, 1, "Kind");
   table.setCell(0, 2, "Amount");
-  const rows: [string, string, number][] = [["Pear", "Fruit", 12], ["Cat", "Animal", 3], ["Apple", "Fruit", 7], ["Train", "Transport", 40], ["Dog", "Animal", 10], ["Bicycle", "Transport", 2]];
+  const rows: [string, string, number][] = [
+    ["Pear", "Fruit", 12],
+    ["Cat", "Animal", 3],
+    ["Apple", "Fruit", 7],
+    ["Train", "Transport", 40],
+    ["Dog", "Animal", 10],
+    ["Bicycle", "Transport", 2],
+  ];
   rows.forEach(([item, kind, amount], i) => {
     table.setCell(i + 1, 0, item);
     table.setCell(i + 1, 1, kind);
@@ -227,21 +245,38 @@ function seedAuthoredNumbers(): Uint8Array {
 
 function seedAuthoredPages(): Uint8Array {
   const doc = PagesDocument.blank();
-  doc.appendParagraph("Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.", "Body");
+  doc.appendParagraph(
+    "Please build each of these with Pages' own controls, right below its line, then send the file back. Nothing here is expected to look any particular way; what you build is the measurement.",
+    "Body",
+  );
   doc.appendParagraph("1) Insert > Table (Indsaet > Tabel), here:", "Body");
   doc.appendParagraph("", "Body");
-  doc.appendParagraph("2) Insert > Text Box (Tekstfelt), anywhere on this page.", "Body");
-  doc.appendParagraph("3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.", "Body");
-  doc.appendParagraph("4) Insert > Page Break (Sideskift), right after this line.", "Body");
-  doc.appendParagraph("5) Select the word twin in this line and add a comment on it: the twin.", "Body");
+  doc.appendParagraph(
+    "2) Insert > Text Box (Tekstfelt), anywhere on this page.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "3) Draw a shape, then Arrange > Section Masters > Move Object to Section Master (Arranger > Sektionsmastere > Flyt objekt til sektionsmaster), so it repeats on every page.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "4) Insert > Page Break (Sideskift), right after this line.",
+    "Body",
+  );
+  doc.appendParagraph(
+    "5) Select the word twin in this line and add a comment on it: the twin.",
+    "Body",
+  );
   return doc.save();
 }
 
 function seedAuthoredKeynote(): Uint8Array {
   const doc = KeynoteDocument.blank();
   const first = doc.slides()[0]!;
-  first.title = "Please build each of these with Keynote's own controls, on the slide that asks, then send the deck back.";
-  first.body = "Nothing here is expected to look any particular way; what you build is the measurement.";
+  first.title =
+    "Please build each of these with Keynote's own controls, on the slide that asks, then send the deck back.";
+  first.body =
+    "Nothing here is expected to look any particular way; what you build is the measurement.";
   const asks = [
     "2) Change this slide's layout to Title & Bullets: Format > Slide Layout (Format > Layout).",
     "3) Insert > Table (Indsaet > Tabel) on this slide.",
@@ -265,7 +300,12 @@ function seedTextBox(): Uint8Array {
   const slide = doc.slides()[0]!;
   slide.title =
     "Expected: a second text box saying 'Written by cupertino-files' in the lower half of this slide. No box, a box without the words, or a refusal to open, is the finding; comment on the slide.";
-  slide.addTextBox("Written by cupertino-files", { x: 300, y: 650, width: 1300, height: 120 });
+  slide.addTextBox("Written by cupertino-files", {
+    x: 300,
+    y: 650,
+    width: 1300,
+    height: 120,
+  });
   return doc.save();
 }
 
@@ -288,7 +328,13 @@ function seedFilter(): Uint8Array {
   table.setCell(0, 1, "Colour");
   table.setCell(0, 2, "Amount");
   table.setCell(0, 3, "Note");
-  const rows: [string, string, number, string][] = [["Pear", "green", 12, "a"], ["Cat", "grey", 3, "b"], ["Apple", "red", 7, "c"], ["Train", "blue", 40, "d"], ["Dog", "brown", 10, "e"]];
+  const rows: [string, string, number, string][] = [
+    ["Pear", "green", 12, "a"],
+    ["Cat", "grey", 3, "b"],
+    ["Apple", "red", 7, "c"],
+    ["Train", "blue", 40, "d"],
+    ["Dog", "brown", 10, "e"],
+  ];
   rows.forEach(([item, colour, amount, note], i) => {
     table.setCell(i + 1, 0, item);
     table.setCell(i + 1, 1, colour);
@@ -305,14 +351,254 @@ function seedFilter(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------- filter conditions
+
+/**
+ * Every condition Numbers' filter menu offers, by column type, with the
+ * value the checker types. The labels are the app's own English strings
+ * (TSTables.strings in the 15.4 bundle); a rule's `predicate_type` and
+ * qualifiers are what the returned file measures, one column per
+ * condition so a rule maps to its condition by column, not by order.
+ */
+type SeedCellValue =
+  | string
+  | number
+  | Date
+  | boolean
+  | { type: "duration"; seconds: number }
+  | null;
+const FILTER_CONDITIONS: Record<
+  string,
+  { rows: SeedCellValue[]; conditions: [string, string][] }
+> = {
+  Text: {
+    rows: ["Pear", "Apple", "Cat", null, "Peach"],
+    conditions: [
+      ["is", "is “Pear”"],
+      ["is not", "is not “Pear”"],
+      ["starts with", "starts with “P”"],
+      ["ends with", "ends with “r”"],
+      ["contains", "contains “ea”"],
+      ["not contain", "does not contain “ea”"],
+      ["not start with", "does not start with “P”"],
+      ["not end with", "does not end with “r”"],
+      ["is blank", "is blank"],
+      ["is not blank", "is not blank"],
+    ],
+  },
+  Number: {
+    rows: [3, 12, 7, null, 12],
+    conditions: [
+      ["equal to", "equal to 12"],
+      ["not equal to", "not equal to 12"],
+      ["greater than", "greater than 7"],
+      ["greater or equal", "greater than or equal to 7"],
+      ["less than", "less than 7"],
+      ["less or equal", "less than or equal to 7"],
+      ["between", "between 5 and 10"],
+      ["not between", "not between 5 and 10"],
+      ["above average", "above average"],
+      ["below average", "below average"],
+      ["top values", "in the top 2 values"],
+      ["bottom values", "in the bottom 2 values"],
+      ["top percent", "in the top 50 percent"],
+      ["bottom percent", "in the bottom 50 percent"],
+      ["duplicate", "is a duplicate"],
+      ["unique", "is unique"],
+      ["is blank", "is blank"],
+      ["is not blank", "is not blank"],
+    ],
+  },
+  Date: {
+    rows: [
+      new Date(Date.UTC(2026, 10, 1)),
+      new Date(Date.UTC(2026, 9, 15)),
+      new Date(Date.UTC(2026, 10, 20)),
+      null,
+      new Date(Date.UTC(2025, 2, 3)),
+    ],
+    conditions: [
+      ["is", "is 1 Nov 2026"],
+      ["before", "before 1 Nov 2026"],
+      ["after", "after 1 Nov 2026"],
+      ["in the range", "in the range 1 Oct 2026 to 1 Nov 2026"],
+      ["today", "today"],
+      ["yesterday", "yesterday"],
+      ["tomorrow", "tomorrow"],
+      ["this week", "this week"],
+      ["this month", "this month"],
+      ["this quarter", "this quarter"],
+      ["this year", "this year"],
+      ["last days", "in the last 3 days"],
+      ["last weeks", "in the last 2 weeks"],
+      ["last months", "in the last 1 month"],
+      ["last quarters", "in the last 1 quarter"],
+      ["last years", "in the last 1 year"],
+      ["next days", "in the next 3 days"],
+      ["exactly ago", "exactly 2 days ago"],
+      ["exactly from now", "exactly 1 week from now"],
+      ["before ago", "before 2 months ago"],
+      ["after from now", "after 1 year from now"],
+      ["between ago", "between 1 and 3 days ago"],
+      ["is blank", "is blank"],
+    ],
+  },
+  Duration: {
+    rows: [
+      { type: "duration", seconds: 3600 },
+      { type: "duration", seconds: 7200 },
+      { type: "duration", seconds: 600 },
+      null,
+      { type: "duration", seconds: 90 },
+    ],
+    conditions: [
+      ["equal to", "equal to 1h"],
+      ["greater than", "greater than 1h"],
+      ["between", "between 10m and 1h 30m"],
+      ["is blank", "is blank"],
+    ],
+  },
+  Checkbox: {
+    rows: [true, false, true, false, true],
+    conditions: [
+      ["is checked", "is checked"],
+      ["is not checked", "is not checked"],
+    ],
+  },
+};
+
+function seedFilterConditions(): Uint8Array {
+  // The library writes comparison, text-contains and starts-with rules,
+  // each byte for byte as an app-written rule. Every other condition in
+  // the filter menu is an unmeasured predicate_type and qualifier pair;
+  // the app writing each one, on a column named for it, is the
+  // measurement.
+  const doc = NumbersDocument.blank();
+  const sheet = doc.sheets()[0]!;
+  const readme = doc.tables()[0]!;
+  readme.name = "Read me";
+  readme.deleteRows(2, readme.rowCount - 2);
+  readme.setCell(0, 0, "Step");
+  readme.setCell(0, 1, "What to do");
+  readme.setCell(1, 0, "1");
+  readme.setCell(
+    1,
+    1,
+    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
+  );
+  readme.setColumnWidth(0, 40);
+  readme.setColumnWidth(1, 440);
+  readme.setCellFormatting(1, 1, { textWrap: true });
+  readme.setRowHeight(1, 150);
+
+  // The filter panel takes at most eight rules on one table, so a kind
+  // with more conditions is dealt out over several tables.
+  const RULES_PER_TABLE = 8;
+  let y = 220;
+  for (const [kind, whole] of Object.entries(FILTER_CONDITIONS)) {
+    const parts = Math.ceil(whole.conditions.length / RULES_PER_TABLE);
+    for (let part = 0; part < parts; part++) {
+      const spec = {
+        rows: whole.rows,
+        conditions: whole.conditions.slice(
+          part * RULES_PER_TABLE,
+          (part + 1) * RULES_PER_TABLE,
+        ),
+      };
+      const name = parts === 1 ? `${kind} rules` : `${kind} rules ${part + 1}`;
+      const table = doc.addTable(sheet.id, { name, x: 0, y });
+      const columns = spec.conditions.length + 1;
+      if (table.columnCount < columns)
+        table.insertColumns(table.columnCount, columns - table.columnCount);
+      else if (table.columnCount > columns)
+        table.deleteColumns(columns, table.columnCount - columns);
+      const rows = spec.rows.length + 2;
+      if (table.rowCount > rows) table.deleteRows(rows, table.rowCount - rows);
+      table.setCell(0, 0, kind);
+      table.setCell(1, 0, "Add rule");
+      table.setColumnWidth(0, 60);
+      spec.rows.forEach((_, r) => {
+        table.setCell(r + 2, 0, String(r + 1));
+      });
+      spec.conditions.forEach(([label, rule], i) => {
+        const column = i + 1;
+        table.setCell(0, column, label);
+        table.setCell(1, column, rule);
+        table.setCellFormatting(1, column, { textWrap: true });
+        table.setColumnWidth(column, 84);
+        spec.rows.forEach((value, r) => {
+          const row = r + 2;
+          if (kind === "Checkbox")
+            table.setCellControl(row, column, {
+              widget: "checkbox",
+              value: value as boolean,
+            });
+          else if (value !== null) table.setCell(row, column, value);
+        });
+      });
+      table.setRowHeight(1, 56);
+      y += 240;
+    }
+  }
+  return doc.save();
+}
+
 const seeds: Seed[] = [
+  {
+    name: "seed-filter-conditions.numbers",
+    bytes: seedFilterConditions(),
+    check: (bytes) => {
+      const doc = NumbersDocument.load(bytes);
+      const tables = doc.tables();
+      const names = tables.map((t) => t.name);
+      for (const [kind, spec] of Object.entries(FILTER_CONDITIONS)) {
+        const parts = tables.filter(
+          (t) =>
+            t.name === `${kind} rules` || t.name?.startsWith(`${kind} rules `) === true,
+        );
+        if (parts.length === 0)
+          throw new Error(
+            `filter conditions: table ${kind} rules missing from ${names.join(", ")}`,
+          );
+        const seen = parts.flatMap((t) => {
+          if (t.columnCount > 9)
+            throw new Error(
+              `filter conditions: ${t.name} has ${t.columnCount - 1} rules, more than the panel takes`,
+            );
+          if (t.filterSets().rows?.rules().length)
+            throw new Error(
+              `filter conditions: ${t.name} already carries rules`,
+            );
+          return Array.from({ length: t.columnCount - 1 }, (_, i) => [
+            t.cellText(0, i + 1),
+            t.cellText(1, i + 1),
+          ]);
+        });
+        if (JSON.stringify(seen) !== JSON.stringify(spec.conditions))
+          throw new Error(
+            `filter conditions: ${kind} tables do not name every rule once`,
+          );
+      }
+      if (
+        !JSON.stringify(
+          tables.find((t) => t.name === "Read me")?.cellValue(1, 1),
+        ).includes("Organise")
+      )
+        throw new Error("filter conditions: instructions missing");
+    },
+  },
   {
     name: "seed-filter.numbers",
     bytes: seedFilter(),
     check: (bytes) => {
       const set = NumbersDocument.load(bytes).tables()[0]!.filterSets().rows;
       const rules = set?.rules() ?? [];
-      if (!set?.enabled || rules.length !== 1 || rules[0]!.predicate?.operator !== ">") throw new Error("filter seed: expected one enabled > rule");
+      if (
+        !set?.enabled ||
+        rules.length !== 1 ||
+        rules[0]!.predicate?.operator !== ">"
+      )
+        throw new Error("filter seed: expected one enabled > rule");
     },
   },
   {
@@ -321,8 +607,10 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const slide = KeynoteDocument.load(bytes).slides()[0]!;
       const builds = slide.builds();
-      if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve") throw new Error("build seed: expected one dissolve build");
-      if (!slide.title?.includes("Expected")) throw new Error("build seed: expectations missing");
+      if (builds.length !== 1 || builds[0]!.read().effect !== "apple:dissolve")
+        throw new Error("build seed: expected one dissolve build");
+      if (!slide.title?.includes("Expected"))
+        throw new Error("build seed: expectations missing");
     },
   },
   {
@@ -331,8 +619,12 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const doc = PagesDocument.load(bytes);
       const table = doc.tables()[0];
-      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (pages): the table or its rows are missing");
-      if (!doc.bodyText.includes("Expected")) throw new Error("table seed (pages): expectations missing");
+      if (!table || table.cellText(2, 0) !== "Pears")
+        throw new Error(
+          "table seed (pages): the table or its rows are missing",
+        );
+      if (!doc.bodyText.includes("Expected"))
+        throw new Error("table seed (pages): expectations missing");
     },
   },
   {
@@ -341,8 +633,12 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const doc = KeynoteDocument.load(bytes);
       const table = doc.tables()[0];
-      if (!table || table.cellText(2, 0) !== "Pears") throw new Error("table seed (keynote): the table or its rows are missing");
-      if (!doc.slides()[0]!.title?.includes("Expected")) throw new Error("table seed (keynote): expectations missing");
+      if (!table || table.cellText(2, 0) !== "Pears")
+        throw new Error(
+          "table seed (keynote): the table or its rows are missing",
+        );
+      if (!doc.slides()[0]!.title?.includes("Expected"))
+        throw new Error("table seed (keynote): expectations missing");
     },
   },
   {
@@ -350,7 +646,12 @@ const seeds: Seed[] = [
     bytes: seedAuthoredNumbers(),
     check: (bytes) => {
       const doc = NumbersDocument.load(bytes);
-      if (!JSON.stringify(doc.tables()[0]?.cellValue(1, 0)).includes("Please build")) throw new Error("authored seed (numbers): instructions missing");
+      if (
+        !JSON.stringify(doc.tables()[0]?.cellValue(1, 0)).includes(
+          "Please build",
+        )
+      )
+        throw new Error("authored seed (numbers): instructions missing");
     },
   },
   {
@@ -358,7 +659,11 @@ const seeds: Seed[] = [
     bytes: seedAuthoredPages(),
     check: (bytes) => {
       const doc = PagesDocument.load(bytes);
-      if (!doc.bodyText.includes("Please build") || !doc.bodyText.includes("5)")) throw new Error("authored seed (pages): instructions missing");
+      if (
+        !doc.bodyText.includes("Please build") ||
+        !doc.bodyText.includes("5)")
+      )
+        throw new Error("authored seed (pages): instructions missing");
     },
   },
   {
@@ -366,7 +671,11 @@ const seeds: Seed[] = [
     bytes: seedAuthoredKeynote(),
     check: (bytes) => {
       const doc = KeynoteDocument.load(bytes);
-      if (doc.slideCount() !== 5 || !doc.slides()[4]!.title?.includes("Dissolve")) throw new Error("authored seed (keynote): slides missing");
+      if (
+        doc.slideCount() !== 5 ||
+        !doc.slides()[4]!.title?.includes("Dissolve")
+      )
+        throw new Error("authored seed (keynote): slides missing");
     },
   },
   {
@@ -374,8 +683,14 @@ const seeds: Seed[] = [
     bytes: seedTextBox(),
     check: (bytes) => {
       const slide = KeynoteDocument.load(bytes).slides()[0]!;
-      if (!slide.textStorages().some((s) => s.text === "Written by cupertino-files")) throw new Error("text box seed: the box's text is missing");
-      if (!slide.title?.includes("Expected")) throw new Error("text box seed: expectations missing");
+      if (
+        !slide
+          .textStorages()
+          .some((s) => s.text === "Written by cupertino-files")
+      )
+        throw new Error("text box seed: the box's text is missing");
+      if (!slide.title?.includes("Expected"))
+        throw new Error("text box seed: expectations missing");
     },
   },
   {
@@ -387,7 +702,8 @@ const seeds: Seed[] = [
       if (groups.map((g) => g.value).join() !== "Animal,Fruit,Note,Transport") {
         throw new Error("category seed: expected four groups in text order");
       }
-      if (table.staleCategoryGroups().length !== 0) throw new Error("category seed: tree disagrees with cells");
+      if (table.staleCategoryGroups().length !== 0)
+        throw new Error("category seed: tree disagrees with cells");
     },
   },
   {
@@ -395,25 +711,35 @@ const seeds: Seed[] = [
     bytes: seedInlineImage(),
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
-      if (d.images().length !== 2) throw new Error("inline image: expected 2 images");
-      if (!d.bodyText.includes("FORVENTET")) throw new Error("inline image: expectations missing");
-      if (!d.bodyText.includes("Send filen retur")) throw new Error("inline image: return ask missing");
+      if (d.images().length !== 2)
+        throw new Error("inline image: expected 2 images");
+      if (!d.bodyText.includes("EXPECTED"))
+        throw new Error("inline image: expectations missing");
+      if (!d.bodyText.includes("Send the file back"))
+        throw new Error("inline image: return ask missing");
       // Each picture alone in its paragraph, and every paragraph but the
       // first indented — the precondition the whole check rests on.
       const paragraphs = d.paragraphs();
       const withImage = paragraphs.filter((p) => p.text.includes("￼"));
-      if (withImage.length !== 2) throw new Error("inline image: pictures not in their own paragraphs");
+      if (withImage.length !== 2)
+        throw new Error("inline image: pictures not in their own paragraphs");
       if (withImage.some((p) => p.text.trim() !== "￼")) {
-        throw new Error("inline image: a picture shares its paragraph with text");
+        throw new Error(
+          "inline image: a picture shares its paragraph with text",
+        );
       }
       const sheet = d.body.sheet();
       const starts = d.body.paragraphStarts();
       const indents = starts.map((start) => {
         const id = d.body.effectiveObjectAt(Storage.TABLE_PARA_STYLE, start);
-        return id === undefined ? 0 : (sheet?.style(id)?.resolved().paragraph.leftIndent ?? 0);
+        return id === undefined
+          ? 0
+          : (sheet?.style(id)?.resolved().paragraph.leftIndent ?? 0);
       });
       if (indents.slice(1).some((v) => Math.round(v) !== 113)) {
-        throw new Error(`inline image: paragraphs not indented (${indents.join(", ")})`);
+        throw new Error(
+          `inline image: paragraphs not indented (${indents.join(", ")})`,
+        );
       }
     },
   },
@@ -427,6 +753,8 @@ if (seeds.length === 0) {
     const path = join(outDir, seed.name);
     writeFileSync(path, seed.bytes);
     seed.check(new Uint8Array(readFileSync(path)));
-    console.log(`${seed.name}: ${seed.bytes.length} bytes, instructions verified`);
+    console.log(
+      `${seed.name}: ${seed.bytes.length} bytes, instructions verified`,
+    );
   }
 }

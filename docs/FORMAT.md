@@ -1288,10 +1288,27 @@ meaning is visible in any formula bar. So the formula is authoritative for
 what a condition means, and `predicate_type` is carried through opaquely.
 The corpus supplies all six comparisons—5 = `=`, 6 = `<>`, 7 = `>`,
 8 = `>=`, 9 = `<`, 10 = `<=`—with filters and conditional formatting
-sharing the encoding. Function-shaped conditions are identified too:
-3 is "text contains" (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle, cell)))`),
-34 is `ISBLANK`, 54 `SUM`. A value outside the known set reads as
-`undefined` rather than a guess.
+sharing the encoding. The filter menu's conditions are identified from
+a document that authored each on its own column
+(`PREDICATE_TYPE_CONDITIONS`): text 1 starts with, 2 ends with, 3
+contains (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle,
+cell)))`), 4 does not contain, 36 is, 37 is not, 61 does not start with,
+62 does not end with; 11 above average, 12 below average, 13 between,
+32 not between, 15 is a duplicate, 16 is unique, 30 in the top and 31
+in the bottom with `qualifier1` saying values (10) or percent (9); 34
+is blank and 35 is not blank; dates 17 today, 18 yesterday, 19 tomorrow, 20 is, 21
+before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26
+exactly, 27 before and 28 after a relative point, 29 between two
+relative points, 33 in this unit; durations 38 equal to, 40 greater
+than, 44 between; checkboxes 55 is checked, 56 is not checked. A date
+condition over a unit carries it in `qualifier1` (2 day, 3 week, 4
+month, 5 year, 8 quarter) and a direction in `qualifier2` (6 ago, 7
+from now). The "is" and "is not" formulas wrap their IF branches in
+`BEGIN_THUNK_NODE` (34) and `END_THUNK_NODE` (35), brackets around a
+lazily evaluated argument that carry no operand; the checkbox formulas
+call function index 326, which the registry does not name, and compare
+it with the checkbox control's interaction type 8. A value outside the
+known set reads as `undefined` rather than a guess.
 
 The operand under test carries **no address**. A predicate is written once
 and applied to a whole range, so Apple encodes the tested cell as a
@@ -1553,7 +1570,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3445 of 3445 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3463 of 3463 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1715,7 +1732,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3445 storages carry the field and **zero** declare it. What
+fixtures here, 3463 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1752,7 +1769,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3445 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3463 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -2116,24 +2133,29 @@ ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
 - **Function-shaped filter rules beyond text-contains** (§14.7).
-  Comparison and text-contains rules are authored (`addFilterRule`),
-  byte for byte as the populated set in
-  `olekristensen-v26.3-mac-filters.numbers` carries them, with the rows
+  Comparison, text-contains and starts-with rules are authored
+  (`addFilterRule`), byte for byte as the populated set in
+  `olekristensen-v26.3-mac-filters.numbers` and the starts-with rule in
+  `olekristensen-v26.0-mac-authored.numbers` carry them, with the rows
   they hide written to the hidden-state extent by evaluating them
   offline; a set can be enabled, disabled, or switched between "all" and
-  "any". Is-blank and the other function-shaped conditions are read but
-  not written, and a rule on column 0 waits for a document showing how
-  the app references it.
+  "any". Every other condition the filter menu offers is measured
+  (`PREDICATE_TYPE_CONDITIONS`, with the app's formula for each) but
+  not written.
 - **Category summaries** (§14.9). A category—by value, nested, or
   bucketed by date with the app's own functor—is defined from nothing
-  (`addCategory`) and rows are regrouped byte-identically to Apple; no
-  fixture carries a summary row to measure one from.
+  (`addCategory`) and rows are regrouped byte-identically to Apple.
+  One fixture, `olekristensen-v26.0-mac-authored.numbers`, carries a
+  Count summary, and its aggregator entry written alone draws nothing:
+  the app reads its aggregator cache and the summary model's cells as
+  well, so a writer has to produce all three.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and
   all-at-once and by-paragraph builds are written from nothing
-  (`addBuild`); actions and build order are not authored, and whether
-  the app plays a written build is unproven.
+  (`addBuild`), and Keynote plays one on a current deck; actions and
+  build order are not authored, and whether a written build plays after
+  the app converts a 14.x deck is unmeasured.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

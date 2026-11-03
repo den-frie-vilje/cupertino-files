@@ -20,17 +20,10 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — two seeds staged
+## Needs a Mac — nothing staged
 
-`npm run seeds -- out` writes both; each carries its own instructions
-and its own expected result.
+Every seed and rung staged so far is returned and banked.
 
-- `seed-inline-image.pages` — **an eye, not a probe.** Two pictures in a
-  paragraph indented 113 pt from the page margin: the first written
-  with the in-the-text-flow wrap, the second placed against the page.
-  The first starting where its own paragraph's text starts is the pass;
-  the two looking identical means only one mode is ever used, whatever
-  the file says. Nothing to run, just open and look.
 - The collaboration seed is withdrawn: sharing needs iCloud Drive, and
   the checker will not enable it on the work Mac (»skip the collaboration
   features for now, i don't want to enable icloud drive on my work mac«).
@@ -91,36 +84,32 @@ that rebuild the structures from them.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
-  group are not authored. `addFilterRule` writes comparison,
-  text-contains and starts-with rules byte for byte as the twin's
+  group are not authored, and the cheap route is closed: a
+  `column_agg_type` entry written alone, in the twin's exact shape,
+  draws nothing in Numbers 15.4's export where the twin's own summary
+  draws its count, so the app reads the aggregator cache and the
+  summary model's cells rather than rebuilding them. A writer has to
+  produce all three, and only one Count instance is measured.
+  `addFilterRule` writes comparison, text-contains and starts-with
+  rules byte for byte as the twin's
   app-authored rules, recomputes the hidden rows offline into
   `TST.HiddenStateExtentArchive`, and Numbers 15.4 opens the result with
   the right rows hidden. A set carrying a rule the library cannot
   evaluate (is-blank and the other function-shaped rules) is left with
   its extent untouched; authoring those rules is the open row.
-- **Chart appearance: only the app's word left.** Type, series colours,
+- **Chart appearance: the corpus is thin.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
-  and write, copy-on-write against shared style archives. Remaining:
-  Pages ladder rung `P20-chart-gridlines` in the app (the corpus still
-  has only two charts, so a document with several chart types would
-  widen the evidence).
-- **Keynote v14 upgrade path.** The current-format ladder (v26, all
-  eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
-  — the deck Keynote converts on open, a different code path — are
-  generated (`npm run keynote:docs`) and unchecked.
-- **Reclaiming a Data/ file nothing points at.** `compact()` collects
-  unreachable *archives*, so removing a picture's anchor and compacting
-  takes the drawable and its attachment; the image bytes stay. The
-  obvious collector is unsafe: every one of the 46 corpus documents has
-  `DataInfo` entries that no object's data-reference list mentions —
-  most of them all of their entries — because the apps link data through
-  a `TSP.DataReference` field inside the archive, not through the
-  reference list this library maintains. A reachability scan keyed on
-  the list would delete every image in the corpus. Doing this properly
-  means finding data references by schema position, which
-  `schemaReferencedIds` now does for created objects — it walks the
-  vendored schema and collects `TSP.DataReference` fields too — so the
-  collector is a small step from here, not a new kind of knowledge.
+  and write, copy-on-write against shared style archives, and Pages'
+  own export of rung `P20-chart-gridlines` draws the chart without the
+  gridlines the library switched off. The corpus still has only two
+  charts, so a document with several chart types would widen the
+  evidence.
+- **Keynote v14 upgrade path: settled.** The same rungs against the
+  14.4.1 base — the deck Keynote converts on open, a different code path
+  — open in Keynote 15.4, which reports each change through its
+  scripting dictionary and draws the set background in its export
+  (`test/e2e/keynote-ladder.e2e.test.ts`), and the checker played the
+  written build on the converted deck.
 - **Collaboration components: framing decoded, payload unmeasured.**
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
@@ -173,6 +162,15 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | the number conditions beyond comparisons: which `predicate_type` does each write? | Numbers for iOS 15.4.2 (T15.4.2 7377.1.21), the checker's own save on the phone of a one-table seed, returned as `olekristensen-v26.0-ios-filter-number-conditions.numbers` | **settled, all eight**: 11 above average, 12 below average, 15 is a duplicate, 16 is unique, 30 in the top and 31 in the bottom with qualifier1 10 for values and 9 for percent, the N in the formula's trailing constant; each formula is a whole-column SUM, so the engine evaluates these by code, not by formula. The same table in the Mac save had come back empty, so the phone round settled it. Every condition the filter menu offers is now measured. Beside it, the table model's inline hidden-states store carried the rules' formulas, and the `+2` of a top-values rule is an addition node, a lone varint 1 the model's reference extractor took for object 1; that field is walked by the schema now. | `src/tst/predicates.ts`, `src/tsa/extractors.ts`, test/authored-returns.test.ts |
+| 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |
+| 2026-11-03 | does a build the library wrote play after Keynote converts a 14.x deck? | Keynote 15.4 (macOS), the checker playing rung v14-K11 | **settled, pass**: "the title dissolved in on the first click - confirmed". The whole v14 ladder is now app-answered. | Keynote rung v14-K11 |
+| 2026-11-03 | does a table grafted with the host theme's preset draw in Numbers? | Numbers 15.4 (macOS) driven by script: a blank document with two tables added by `addTable`, opened and exported | **settled, pass**: the app lists three tables and draws the two added ones in the theme's table style, header row and column shaded, cells as written, with no duplicate identified style in the file. | the render is not kept; `src/tsa/table-donor.ts` |
+| 2026-11-03 | the filter menu's text conditions: which `predicate_type` does each write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-filter-conditions.numbers` with eight rules on the Text table, one per column, returned as `olekristensen-v26.0-mac-filter-conditions-text.numbers` | **settled for the eight text conditions**: 1 starts with, 2 ends with, 3 contains, 4 does not contain, 36 is, 37 is not, 61 does not start with, 62 does not end with, each paired with the formula the app compiled (is: `IF(LEN(needle)=LEN(cell), FIND.CASEINSENSITIVE(needle, cell)=1)`; is not: the length test, then `IF(ISERROR(FIND…), TRUE, FIND…<>1)`; ends with: FIND over `RIGHT(cell, LEN(needle))`; the negations through `IFERROR(…, TRUE)`). The IF branches sit between AST node types 34 and 35, `BEGIN_THUNK_NODE` and `END_THUNK_NODE` in the apps' schema, which the renderer now passes through. The panel takes at most eight rules on one table, so the seed deals its conditions out eight per table; the number, date, duration and checkbox tables are still out. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, test/authored-returns.test.ts |
+| 2026-11-03 | does Numbers fill a group row's summary from the `column_agg_type` entry alone? | Numbers 15.4 (macOS) driven by script: a blank-donor category with the entry written in the twin's shape (column uid, level 1, agg_type 1, show_as_type 0) exported to PDF, beside the export of `olekristensen-v26.0-mac-authored.numbers` | **refuted**: the twin's export carries »Tæl (alle): 2« in every group row and the entry-only document's group rows are empty, the groups themselves drawn. The app reads the aggregator cache and the summary model's cells it wrote; the entry does not make it rebuild them. The writer was not kept. | the renders are not kept; no code |
+| 2026-11-03 | can a Data/ file nothing points at be reclaimed safely? | every fixture in the corpus, each object's `data_references` list against a schema-position walk for `TSP.DataReference` fields; no app round | **settled, both lists are complete**: in all 68 decodable fixtures every `DataInfo` is named by some object's message-info list, and the schema walk over the vendored types names exactly the same set, 0 missing in either; the earlier reading that the lists leave most entries unnamed does not reproduce. `compact()` now drops the entries and files neither names, refuses a document with an opaque component, and is a no-op over the corpus. | `ObjectStore.collectData`, test/blank-documents.test.ts |
+| 2026-11-03 | does Pages draw the chart without the gridlines the library switched off, on the 14.x-lineage base? | Pages 15.4 (M15.4-7051.0.79-2, macOS) driven by script: rung P20 and its untouched base exported to PDF and rasterised | **settled, pass**: the two exports differ on the chart page alone inside the chart's own box and on the page carrying the rung's appended paragraph (349 and 3153 differing pixels at 60 dpi, none elsewhere); the chart's horizontal gridlines are absent in the rung's export and present in the base's. | `scripts/make-pages-docs.ts` P20; the renders are not kept |
+| 2026-11-03 | does Keynote accept every ladder rung on the 14.4.1 base it converts on open? | Keynote 15.4 (macOS) driven by script: all seventeen v14 rungs opened, read through the scripting dictionary, the background rung exported | **settled for sixteen rungs**: every rung opened; slide counts, titles, layouts, the skipped flag, the 1024 by 768 size, the body, the presenter notes, the 2-second automatic transition, the text box's text, the table's six cells and the layout change all read back as written, and the first slide of the background rung exports as the dark green set. The build's playing is a person's observation and is staged. | `test/e2e/keynote-ladder.e2e.test.ts` |
 | 2026-10-27 | does a Display P3 colour render as P3, and a dashed border with our dash lengths? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own saves | **settled, pass**: two greens from the same channels tagged p3 and srgb ("the colourspace tagging works - it's two different greens"); the [4, 2] rule drew dashed ("the dashes look fine, as specified"). The checker's own dashed border, authored in the Borders & Rules controls, is an anonymous variation of Body carrying [2, 2] at 2 pt with the same three paragraph fields as ours. | Pages rungs P25 and P27 as saved by the app |
 | 2026-10-27 | does Pages honour a TOC rule we switched off? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: the TOC reopened with 49 entries where 61 were cached, none in Subtitle, and the style unticked ("PASS - the subtitles were not included in the TOC when the doc opened. And subtitle was unticked"). | Pages rung P26 as saved by the app |
 | 2026-10-27 | do a created style's paragraph borders draw, solid and dashed? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **no verdict on the write, the base refuted**: on the 14.4.1 base (`iwork-mcp-v14.5-sample.pages`) no rule drew ("no borders in 4b"), and the app's save had moved every paragraph, the document's own headings included, onto the theme's Default style and dropped every style outside the theme's listed set, ours among them. The upgrade path discards them; the rung moved to the blank donor with an authoring slot beside it. | Pages rung P27 as saved by the app |

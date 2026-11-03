@@ -22,11 +22,14 @@
     "numbers-parser-v26.1-form-sheet.numbers",
     "numbers-parser-v26.1-xlsx-lineage.numbers",
     "olekristensen-v14.4-placeholders-image.pages",
+    "olekristensen-v26.0-ios-filter-number-conditions.numbers",
     "olekristensen-v26.0-mac-authored.key",
     "olekristensen-v26.0-mac-authored.numbers",
     "olekristensen-v26.0-mac-authored.pages",
     "olekristensen-v26.0-mac-build-seed.key",
     "olekristensen-v26.0-mac-category-seed.numbers",
+    "olekristensen-v26.0-mac-filter-conditions-text.numbers",
+    "olekristensen-v26.0-mac-filter-conditions.numbers",
     "olekristensen-v26.0-mac-filter-seed.numbers",
     "olekristensen-v26.0-mac-table-seed.key",
     "olekristensen-v26.0-mac-table-seed.pages",
@@ -112,8 +115,8 @@
       }
     },
     "TSA.FunctionBrowserStateArchive": {
-      "count": 68,
-      "referenced": 68,
+      "count": 71,
+      "referenced": 71,
       "fields": {
         "1": {
           "name": "recent_functions",
@@ -121,7 +124,7 @@
         },
         "2": {
           "name": "back_functions",
-          "share": 0.0294
+          "share": 0.0282
         },
         "4": {
           "name": "current_function",
@@ -129,7 +132,7 @@
         }
       },
       "referrerSets": {
-        "type 1": 38,
+        "type 1": 41,
         "type 10000": 30
       }
     },
@@ -147,8 +150,8 @@
       }
     },
     "TSCE.CalculationEngineArchive": {
-      "count": 68,
-      "referenced": 68,
+      "count": 71,
+      "referenced": 71,
       "fields": {
         "2": {
           "name": "dependency_tracker",
@@ -160,57 +163,57 @@
         },
         "4": {
           "name": "excel_import_date_mode",
-          "share": 0.9853
+          "share": 0.9859
         },
         "5": {
           "name": "saved_locale_identifier_for_4_2",
-          "share": 0.9265
+          "share": 0.9296
         },
         "6": {
           "name": "document_random_seed",
-          "share": 0.9853
+          "share": 0.9859
         },
         "7": {
           "name": "uuid_reference_map",
-          "share": 0.9412
+          "share": 0.9437
         },
         "9": {
           "name": "document_timestamp",
-          "share": 0.9853
+          "share": 0.9859
         },
         "10": {
           "name": "document_timezone",
-          "share": 0.9853
+          "share": 0.9859
         },
         "11": {
           "name": "table_uid_history",
-          "share": 0.1176
+          "share": 0.1127
         },
         "13": {
           "name": "group_node_map",
-          "share": 0.8382
+          "share": 0.8451
         },
         "14": {
           "name": "header_name_manager",
-          "share": 0.7941
+          "share": 0.8028
         },
         "15": {
           "name": "refs_to_dirty",
-          "share": 0.6176
+          "share": 0.6338
         },
         "16": {
           "name": "saved_locale_identifier",
-          "share": 0.7206
+          "share": 0.7324
         }
       },
       "referrerSets": {
-        "type 1": 38,
+        "type 1": 41,
         "type 10000": 30
       }
     },
     "TSCE.CellRecordTileArchive": {
-      "count": 299,
-      "referenced": 299,
+      "count": 339,
+      "referenced": 339,
       "fields": {
         "1": {
           "name": "internal_owner_id",
@@ -226,16 +229,16 @@
         },
         "4": {
           "name": "cell_records",
-          "share": 0.6856
+          "share": 0.6637
         }
       },
       "referrerSets": {
-        "TSCE.FormulaOwnerDependenciesArchive": 299
+        "TSCE.FormulaOwnerDependenciesArchive": 339
       }
     },
     "TSCE.FormulaOwnerDependenciesArchive": {
-      "count": 909,
-      "referenced": 909,
+      "count": 1113,
+      "referenced": 1113,
       "fields": {
         "1": {
           "name": "formula_owner_uid",
@@ -251,11 +254,11 @@
         },
         "4": {
           "name": "cell_dependencies",
-          "share": 0.9439
+          "share": 0.9542
         },
         "5": {
           "name": "range_dependencies",
-          "share": 0.9439
+          "share": 0.9542
         },
         "6": {
           "name": "volatile_dependencies",
@@ -271,7 +274,7 @@
         },
         "9": {
           "name": "whole_owner_dependencies",
-          "share": 0.9439
+          "share": 0.9542
         },
         "10": {
           "name": "cell_errors",
@@ -279,36 +282,36 @@
         },
         "11": {
           "name": "formula_owner",
-          "share": 0.0869
+          "share": 0.0872
         },
         "12": {
           "name": "base_owner_uid",
-          "share": 0.7976
+          "share": 0.8158
         },
         "13": {
           "name": "tiled_cell_dependencies",
-          "share": 0.8944
+          "share": 0.9137
         },
         "14": {
           "name": "uuid_references",
-          "share": 0.8944
+          "share": 0.9137
         },
         "15": {
           "name": "tiled_range_dependencies",
-          "share": 0.8944
+          "share": 0.9137
         },
         "16": {
           "name": "spill_range_sizes",
-          "share": 0.8152
+          "share": 0.8491
         }
       },
       "referrerSets": {
-        "TSCE.CalculationEngineArchive": 909
+        "TSCE.CalculationEngineArchive": 1113
       }
     },
     "TSCE.NamedReferenceManagerArchive": {
-      "count": 68,
-      "referenced": 68,
+      "count": 71,
+      "referenced": 71,
       "fields": {
         "1": {
           "name": "reference_tracker",
@@ -316,7 +319,7 @@
         }
       },
       "referrerSets": {
-        "TSCE.CalculationEngineArchive": 68
+        "TSCE.CalculationEngineArchive": 71
       }
     },
     "TSCE.RangePrecedentsTileArchive": {
@@ -337,16 +340,16 @@
       }
     },
     "TSCE.ReferencesToDirtyArchive": {
-      "count": 42,
-      "referenced": 42,
+      "count": 45,
+      "referenced": 45,
       "fields": {},
       "referrerSets": {
-        "TSCE.CalculationEngineArchive": 42
+        "TSCE.CalculationEngineArchive": 45
       }
     },
     "TSCE.TrackedReferenceStoreArchive": {
-      "count": 147,
-      "referenced": 147,
+      "count": 168,
+      "referenced": 168,
       "fields": {
         "1": {
           "name": "uuid",
@@ -354,12 +357,12 @@
         },
         "3": {
           "name": "contained_tracked_reference",
-          "share": 0.2449
+          "share": 0.2321
         }
       },
       "referrerSets": {
-        "TSCE.NamedReferenceManagerArchive": 68,
-        "TST.TableModelArchive": 79
+        "TSCE.NamedReferenceManagerArchive": 71,
+        "TST.TableModelArchive": 97
       }
     },
     "TSCH.ChartAxisNonStyleArchive": {
@@ -388,8 +391,8 @@
       }
     },
     "TSCH.ChartAxisStyleArchive": {
-      "count": 1239,
-      "referenced": 1239,
+      "count": 1293,
+      "referenced": 1293,
       "fields": {
         "1": {
           "name": "super",
@@ -401,11 +404,11 @@
         },
         "10001": {
           "name": "axis_supports_radar",
-          "share": 0.7627
+          "share": 0.7726
         }
       },
       "referrerSets": {
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 1230,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 1284,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 3,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartAxisStyleArchive": 3,
         "TSCH.ChartDrawableArchive": 3
@@ -472,8 +475,8 @@
       }
     },
     "TSCH.ChartSeriesStyleArchive": {
-      "count": 2476,
-      "referenced": 2476,
+      "count": 2584,
+      "referenced": 2584,
       "fields": {
         "1": {
           "name": "super",
@@ -485,23 +488,23 @@
         },
         "10001": {
           "name": "series_supports_donut",
-          "share": 0.8788
+          "share": 0.8839
         },
         "10002": {
           "name": "series_supports_radar",
-          "share": 0.7625
+          "share": 0.7724
         }
       },
       "referrerSets": {
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 2458,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 2566,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 6,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive + TSCH.ChartSeriesStyleArchive": 6,
         "TSCH.ChartDrawableArchive": 6
       }
     },
     "TSCH.ChartStyleArchive": {
-      "count": 413,
-      "referenced": 413,
+      "count": 431,
+      "referenced": 431,
       "fields": {
         "1": {
           "name": "super",
@@ -513,19 +516,19 @@
         },
         "10001": {
           "name": "chart_supports_series_summary_labels",
-          "share": 0.7627
+          "share": 0.7726
         }
       },
       "referrerSets": {
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 410,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 428,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 1,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartStyleArchive": 1,
         "TSCH.ChartDrawableArchive": 1
       }
     },
     "TSCH.ChartStylePreset": {
-      "count": 413,
-      "referenced": 413,
+      "count": 431,
+      "referenced": 431,
       "fields": {
         "1": {
           "name": "chart_style",
@@ -557,13 +560,13 @@
         },
         "10000": {
           "name": "preset_reference_line_styles",
-          "share": 0.9855
+          "share": 0.9861
         }
       },
       "referrerSets": {
         "type 10": 79,
         "type 10001": 180,
-        "type 12009": 153,
+        "type 12009": 171,
         "type 19": 1
       }
     },
@@ -585,8 +588,8 @@
       }
     },
     "TSCH.LegendStyleArchive": {
-      "count": 413,
-      "referenced": 413,
+      "count": 431,
+      "referenced": 431,
       "fields": {
         "1": {
           "name": "super",
@@ -598,15 +601,15 @@
         }
       },
       "referrerSets": {
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 410,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 428,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 1,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.LegendStyleArchive": 1,
         "TSCH.ChartDrawableArchive": 1
       }
     },
     "TSCH.ReferenceLineStyleArchive": {
-      "count": 407,
-      "referenced": 407,
+      "count": 425,
+      "referenced": 425,
       "fields": {
         "1": {
           "name": "super",
@@ -618,23 +621,23 @@
         }
       },
       "referrerSets": {
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 404,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 422,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 1,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ReferenceLineStyleArchive": 1,
         "TSCH.ChartDrawableArchive": 1
       }
     },
     "TSD.CanvasSelectionArchive": {
-      "count": 168,
-      "referenced": 60,
+      "count": 183,
+      "referenced": 66,
       "fields": {
         "1": {
           "name": "infos",
-          "share": 0.4881
+          "share": 0.5027
         }
       },
       "referrerSets": {
-        "type 12026": 60
+        "type 12026": 66
       }
     },
     "TSD.CommentStorageArchive": {
@@ -694,8 +697,8 @@
       }
     },
     "TSD.DrawableSelectionArchive": {
-      "count": 84,
-      "referenced": 33,
+      "count": 94,
+      "referenced": 37,
       "fields": {
         "2": {
           "name": "infos",
@@ -704,12 +707,12 @@
       },
       "referrerSets": {
         "type 10133": 2,
-        "type 12026": 31
+        "type 12026": 35
       }
     },
     "TSD.FreehandDrawingToolkitUIState": {
-      "count": 58,
-      "referenced": 58,
+      "count": 61,
+      "referenced": 61,
       "fields": {
         "1": {
           "name": "current_color",
@@ -774,7 +777,7 @@
       },
       "referrerSets": {
         "type 10133": 24,
-        "type 12026": 24,
+        "type 12026": 27,
         "type 3": 10
       }
     },
@@ -798,18 +801,18 @@
       }
     },
     "TSD.GuideStorageArchive": {
-      "count": 543,
-      "referenced": 543,
+      "count": 546,
+      "referenced": 546,
       "fields": {
         "1": {
           "name": "userDefinedGuides",
-          "share": 0.2615
+          "share": 0.2601
         }
       },
       "referrerSets": {
         "type 10016": 262,
         "type 10017": 1,
-        "type 2": 33,
+        "type 2": 36,
         "type 3": 3,
         "type 5": 244
       }
@@ -921,8 +924,8 @@
       }
     },
     "TSD.MediaStyleArchive": {
-      "count": 903,
-      "referenced": 903,
+      "count": 942,
+      "referenced": 942,
       "fields": {
         "1": {
           "name": "super",
@@ -945,9 +948,9 @@
         "type 10 + TSS.StylesheetArchive + TSD.MovieArchive": 8,
         "TSD.ImageArchive": 20,
         "TSD.MediaStyleArchive": 3,
-        "TSS.StylesheetArchive": 61,
+        "TSS.StylesheetArchive": 64,
         "TSS.StylesheetArchive + type 10001": 342,
-        "TSS.StylesheetArchive + type 12009": 300,
+        "TSS.StylesheetArchive + type 12009": 336,
         "TSS.StylesheetArchive + TSD.ImageArchive": 2,
         "TSS.StylesheetArchive + TSD.ImageArchive + type 10001": 11,
         "TSS.StylesheetArchive + TSD.ImageArchive + TSD.MediaStyleArchive + type 10001": 3,
@@ -1034,8 +1037,8 @@
       }
     },
     "TSD.StandinCaptionArchive": {
-      "count": 2436,
-      "referenced": 2436,
+      "count": 2472,
+      "referenced": 2472,
       "fields": {},
       "referrerSets": {
         "TSWP.ShapeInfoArchive": 796,
@@ -1045,7 +1048,7 @@
         "TSD.MovieArchive": 32,
         "TSD.GroupArchive": 26,
         "TSD.ConnectionLineArchive": 72,
-        "TST.TableInfoArchive": 122,
+        "TST.TableInfoArchive": 158,
         "type 7": 1090
       }
     },
@@ -1080,44 +1083,44 @@
       }
     },
     "TSK.AnnotationAuthorStorageArchive": {
-      "count": 68,
-      "referenced": 68,
+      "count": 71,
+      "referenced": 71,
       "fields": {
         "1": {
           "name": "annotation_author",
-          "share": 0.3235
+          "share": 0.3099
         }
       },
       "referrerSets": {
-        "type 1": 38,
+        "type 1": 41,
         "type 10000": 30
       }
     },
     "TSK.CustomFormatListArchive": {
-      "count": 67,
-      "referenced": 67,
+      "count": 70,
+      "referenced": 70,
       "fields": {
         "1": {
           "name": "uuids",
-          "share": 0.3433
+          "share": 0.3714
         },
         "2": {
           "name": "custom_formats",
-          "share": 0.3433
+          "share": 0.3714
         }
       },
       "referrerSets": {
-        "type 1": 38,
+        "type 1": 41,
         "type 10000": 29
       }
     },
     "TSK.DocumentSelectionArchive": {
-      "count": 235,
-      "referenced": 127,
+      "count": 250,
+      "referenced": 133,
       "fields": {},
       "referrerSets": {
         "type 10133": 53,
-        "type 12026": 62,
+        "type 12026": 68,
         "type 3": 12
       }
     },
@@ -1159,26 +1162,26 @@
       }
     },
     "TSK.TreeNode": {
-      "count": 116,
-      "referenced": 116,
+      "count": 140,
+      "referenced": 140,
       "fields": {
         "2": {
           "name": "children",
-          "share": 0.5
+          "share": 0.4571
         },
         "3": {
           "name": "object",
-          "share": 0.7845
+          "share": 0.8
         }
       },
       "referrerSets": {
-        "type 1": 25,
-        "TSK.TreeNode": 91
+        "type 1": 28,
+        "TSK.TreeNode": 112
       }
     },
     "TSK.ViewStateArchive": {
-      "count": 66,
-      "referenced": 66,
+      "count": 69,
+      "referenced": 69,
       "fields": {
         "1": {
           "name": "view_state_root",
@@ -1186,13 +1189,13 @@
         }
       },
       "referrerSets": {
-        "type 1": 37,
+        "type 1": 40,
         "type 10000": 29
       }
     },
     "TSP.DataMetadata": {
-      "count": 256,
-      "referenced": 256,
+      "count": 265,
+      "referenced": 265,
       "fields": {
         "1": {
           "name": "fallback_color",
@@ -1200,24 +1203,24 @@
         }
       },
       "referrerSets": {
-        "TSP.DataMetadataMap": 256
+        "TSP.DataMetadataMap": 265
       }
     },
     "TSP.DataMetadataMap": {
-      "count": 63,
-      "referenced": 63,
+      "count": 66,
+      "referenced": 66,
       "fields": {
         "1": {
           "name": "data_metadata_entries",
-          "share": 0.9841
+          "share": 0.9848
         }
       },
       "referrerSets": {
-        "TSP.PackageMetadata": 63
+        "TSP.PackageMetadata": 66
       }
     },
     "TSP.DocumentMetadata": {
-      "count": 67,
+      "count": 70,
       "referenced": 0,
       "fields": {
         "1": {
@@ -1226,7 +1229,7 @@
         },
         "3": {
           "name": "data_properties_v1",
-          "share": 0.791
+          "share": 0.8
         }
       },
       "referrerSets": {}
@@ -1247,7 +1250,7 @@
       "referrerSets": {}
     },
     "TSP.PackageMetadata": {
-      "count": 68,
+      "count": 71,
       "referenced": 0,
       "fields": {
         "1": {
@@ -1284,14 +1287,14 @@
         },
         "10": {
           "name": "data_metadata_map",
-          "share": 0.9265
+          "share": 0.9296
         }
       },
       "referrerSets": {}
     },
     "TSS.StylesheetArchive": {
-      "count": 69,
-      "referenced": 69,
+      "count": 72,
+      "referenced": 72,
       "fields": {
         "1": {
           "name": "styles",
@@ -1303,43 +1306,43 @@
         },
         "3": {
           "name": "parent",
-          "share": 0.0145
+          "share": 0.0139
         },
         "4": {
           "name": "is_locked",
-          "share": 0.9855
+          "share": 0.9861
         },
         "5": {
           "name": "parent_to_children_style_map",
-          "share": 0.9855
+          "share": 0.9861
         },
         "6": {
           "name": "can_cull_styles",
-          "share": 0.9855
+          "share": 0.9861
         },
         "7": {
           "name": "styles_for_10_0",
-          "share": 0.7826
+          "share": 0.7917
         },
         "8": {
           "name": "styles_for_10_1",
-          "share": 0.7681
+          "share": 0.7778
         },
         "14": {
           "name": "styles_for_12_1",
-          "share": 0.1449
+          "share": 0.1389
         }
       },
       "referrerSets": {
-        "type 1": 25,
+        "type 1": 28,
         "type 10000": 30,
         "type 2": 13,
         "TSS.StylesheetArchive + type 10001": 1
       }
     },
     "TST.CategoryOrderArchive": {
-      "count": 73,
-      "referenced": 73,
+      "count": 91,
+      "referenced": 91,
       "fields": {
         "1": {
           "name": "table_info",
@@ -1351,12 +1354,12 @@
         }
       },
       "referrerSets": {
-        "TST.TableInfoArchive": 73
+        "TST.TableInfoArchive": 91
       }
     },
     "TST.CategoryOwnerRefArchive": {
-      "count": 61,
-      "referenced": 61,
+      "count": 79,
+      "referenced": 79,
       "fields": {
         "1": {
           "name": "group_by",
@@ -1364,12 +1367,12 @@
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 61
+        "TST.TableModelArchive": 79
       }
     },
     "TST.CellStyleArchive": {
-      "count": 6432,
-      "referenced": 6432,
+      "count": 7116,
+      "referenced": 7116,
       "fields": {
         "1": {
           "name": "super",
@@ -1377,62 +1380,62 @@
         },
         "10": {
           "name": "override_count",
-          "share": 0.99
+          "share": 0.991
         },
         "11": {
           "name": "cell_properties",
-          "share": 0.99
+          "share": 0.991
         }
       },
       "referrerSets": {
         "type 19 + TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 4,
         "TSS.StylesheetArchive": 159,
         "TSS.StylesheetArchive + TST.TableModelArchive + TST.CellStyleArchive + TST.TableStyleNetworkArchive": 16,
-        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 498,
+        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 549,
         "TSS.StylesheetArchive + TST.CellStyleArchive + TST.TableStyleNetworkArchive": 84,
-        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 5208,
-        "TST.TableModelArchive": 81,
+        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 5463,
+        "TST.TableModelArchive": 336,
         "TST.TableModelArchive + TST.TableStyleNetworkArchive": 25,
-        "TST.TableDataList": 158,
+        "TST.TableDataList": 281,
         "TST.HeaderStorageBucket": 1,
         "TST.ConditionalStyleSetArchive": 17,
         "TST.TableStyleNetworkArchive": 181
       }
     },
     "TST.ColumnRowUIDMapArchive": {
-      "count": 237,
-      "referenced": 237,
+      "count": 291,
+      "referenced": 291,
       "fields": {
         "1": {
           "name": "sorted_column_uids",
-          "share": 0.4304
+          "share": 0.4124
         },
         "2": {
           "name": "column_index_for_uid",
-          "share": 0.4304
+          "share": 0.4124
         },
         "3": {
           "name": "column_uid_for_index",
-          "share": 0.4304
+          "share": 0.4124
         },
         "4": {
           "name": "sorted_row_uids",
-          "share": 0.4768
+          "share": 0.4502
         },
         "5": {
           "name": "row_index_for_uid",
-          "share": 0.4768
+          "share": 0.4502
         },
         "6": {
           "name": "row_uid_for_index",
-          "share": 0.4768
+          "share": 0.4502
         }
       },
       "referrerSets": {
         "TST.TableInfoArchive": 12,
-        "TST.TableModelArchive": 79,
-        "TST.SummaryModelArchive": 73,
-        "TST.CategoryOrderArchive": 73
+        "TST.TableModelArchive": 97,
+        "TST.SummaryModelArchive": 91,
+        "TST.CategoryOrderArchive": 91
       }
     },
     "TST.ConditionalStyleSetArchive": {
@@ -1457,8 +1460,8 @@
       }
     },
     "TST.FilterSetArchive": {
-      "count": 185,
-      "referenced": 185,
+      "count": 235,
+      "referenced": 235,
       "fields": {
         "1": {
           "name": "type",
@@ -1470,7 +1473,7 @@
         },
         "3": {
           "name": "filter_rules_prepivot",
-          "share": 0.0324
+          "share": 0.0553
         },
         "4": {
           "name": "needs_formula_rewrite_for_import",
@@ -1482,16 +1485,16 @@
         },
         "7": {
           "name": "filter_rules",
-          "share": 0.0378
+          "share": 0.0766
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 185
+        "TST.TableModelArchive": 235
       }
     },
     "TST.GroupByArchive": {
-      "count": 61,
-      "referenced": 61,
+      "count": 79,
+      "referenced": 79,
       "fields": {
         "1": {
           "name": "group_by_uid",
@@ -1499,7 +1502,7 @@
         },
         "2": {
           "name": "group_column",
-          "share": 0.1967
+          "share": 0.1519
         },
         "3": {
           "name": "group_node_root",
@@ -1507,11 +1510,11 @@
         },
         "4": {
           "name": "aggregator",
-          "share": 0.0164
+          "share": 0.0127
         },
         "5": {
           "name": "column_agg_type",
-          "share": 0.0164
+          "share": 0.0127
         },
         "6": {
           "name": "is_enabled",
@@ -1551,7 +1554,7 @@
         },
         "15": {
           "name": "row_uid_lookup",
-          "share": 0.2131
+          "share": 0.1646
         },
         "16": {
           "name": "hidden_states_changed_formula",
@@ -1559,7 +1562,7 @@
         },
         "17": {
           "name": "aggregator_ref",
-          "share": 0.0164
+          "share": 0.0127
         },
         "18": {
           "name": "group_node_root_ref",
@@ -1567,7 +1570,7 @@
         }
       },
       "referrerSets": {
-        "TST.CategoryOwnerRefArchive": 61
+        "TST.CategoryOwnerRefArchive": 79
       }
     },
     "TST.GroupByArchive.AggregatorArchive": {
@@ -1588,8 +1591,8 @@
       }
     },
     "TST.GroupByArchive.GroupNodeArchive": {
-      "count": 267,
-      "referenced": 267,
+      "count": 285,
+      "referenced": 285,
       "fields": {
         "1": {
           "name": "group_uid",
@@ -1597,7 +1600,7 @@
         },
         "5": {
           "name": "agg_formula_coords",
-          "share": 0.015
+          "share": 0.014
         },
         "6": {
           "name": "format_manager",
@@ -1605,25 +1608,25 @@
         },
         "7": {
           "name": "group_cell_value",
-          "share": 0.7715
+          "share": 0.7228
         },
         "9": {
           "name": "row_lookup_uids",
-          "share": 0.8202
+          "share": 0.7684
         },
         "10": {
           "name": "child_ref",
-          "share": 0.1423
+          "share": 0.1333
         }
       },
       "referrerSets": {
-        "TST.GroupByArchive": 61,
+        "TST.GroupByArchive": 79,
         "TST.GroupByArchive.GroupNodeArchive": 206
       }
     },
     "TST.HeaderNameMgrArchive": {
-      "count": 54,
-      "referenced": 54,
+      "count": 57,
+      "referenced": 57,
       "fields": {
         "1": {
           "name": "owner_uid",
@@ -1635,20 +1638,20 @@
         },
         "3": {
           "name": "per_tables",
-          "share": 0.6296
+          "share": 0.6491
         },
         "4": {
           "name": "name_frag_tiles",
-          "share": 0.537
+          "share": 0.5614
         }
       },
       "referrerSets": {
-        "TSCE.CalculationEngineArchive": 54
+        "TSCE.CalculationEngineArchive": 57
       }
     },
     "TST.HeaderNameMgrTileArchive": {
-      "count": 29,
-      "referenced": 29,
+      "count": 32,
+      "referenced": 32,
       "fields": {
         "1": {
           "name": "first_fragment",
@@ -1664,12 +1667,12 @@
         }
       },
       "referrerSets": {
-        "TST.HeaderNameMgrArchive": 29
+        "TST.HeaderNameMgrArchive": 32
       }
     },
     "TST.HeaderStorageBucket": {
-      "count": 312,
-      "referenced": 312,
+      "count": 384,
+      "referenced": 384,
       "fields": {
         "1": {
           "name": "bucketHashFunction",
@@ -1677,21 +1680,25 @@
         },
         "2": {
           "name": "headers",
-          "share": 0.5128
+          "share": 0.5104
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 162,
-        "TST.SummaryModelArchive": 150
+        "TST.TableModelArchive": 198,
+        "TST.SummaryModelArchive": 186
       }
     },
     "TST.HiddenStateFormulaOwnerArchive": {
-      "count": 158,
-      "referenced": 158,
+      "count": 194,
+      "referenced": 194,
       "fields": {
         "1": {
           "name": "owner_id",
           "share": 1
+        },
+        "2": {
+          "name": "threshold_value",
+          "share": 0.0052
         },
         "3": {
           "name": "needs_to_update_filter_set_for_import",
@@ -1699,7 +1706,7 @@
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 158
+        "TST.TableModelArchive": 194
       }
     },
     "TST.LayoutHintArchive": {
@@ -1770,8 +1777,8 @@
       }
     },
     "TST.SelectionArchive": {
-      "count": 66,
-      "referenced": 27,
+      "count": 76,
+      "referenced": 31,
       "fields": {
         "4": {
           "name": "selection_type",
@@ -1791,28 +1798,28 @@
         },
         "9": {
           "name": "table_info",
-          "share": 0.9697
+          "share": 0.9737
         },
         "10": {
           "name": "cell_uid_region",
-          "share": 0.9697
+          "share": 0.9737
         },
         "11": {
           "name": "base_uid_region",
-          "share": 0.9697
+          "share": 0.9737
         },
         "12": {
           "name": "anchor_cell_uid",
-          "share": 0.9697
+          "share": 0.9737
         },
         "13": {
           "name": "cursor_cell_uid",
-          "share": 0.9697
+          "share": 0.9737
         }
       },
       "referrerSets": {
         "type 10133": 2,
-        "type 12026": 25
+        "type 12026": 29
       }
     },
     "TST.StrokeLayerArchive": {
@@ -1833,8 +1840,8 @@
       }
     },
     "TST.StrokeSidecarArchive": {
-      "count": 68,
-      "referenced": 68,
+      "count": 86,
+      "referenced": 86,
       "fields": {
         "1": {
           "name": "max_order",
@@ -1850,28 +1857,28 @@
         },
         "4": {
           "name": "left_column_stroke_layers",
-          "share": 0.1471
+          "share": 0.1163
         },
         "5": {
           "name": "right_column_stroke_layers",
-          "share": 0.1324
+          "share": 0.1047
         },
         "6": {
           "name": "top_row_stroke_layers",
-          "share": 0.1471
+          "share": 0.1163
         },
         "7": {
           "name": "bottom_row_stroke_layers",
-          "share": 0.1471
+          "share": 0.1163
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 68
+        "TST.TableModelArchive": 86
       }
     },
     "TST.SummaryCellVendorArchive": {
-      "count": 73,
-      "referenced": 73,
+      "count": 91,
+      "referenced": 91,
       "fields": {
         "1": {
           "name": "table_info",
@@ -1879,16 +1886,16 @@
         },
         "2": {
           "name": "entries",
-          "share": 0.0137
+          "share": 0.011
         }
       },
       "referrerSets": {
-        "TST.SummaryModelArchive": 73
+        "TST.SummaryModelArchive": 91
       }
     },
     "TST.SummaryModelArchive": {
-      "count": 73,
-      "referenced": 73,
+      "count": 91,
+      "referenced": 91,
       "fields": {
         "1": {
           "name": "table_info",
@@ -1928,16 +1935,16 @@
         },
         "29": {
           "name": "group_sort_order",
-          "share": 0.8356
+          "share": 0.8681
         }
       },
       "referrerSets": {
-        "TST.TableInfoArchive": 73
+        "TST.TableInfoArchive": 91
       }
     },
     "TST.TableDataList": {
-      "count": 1856,
-      "referenced": 1856,
+      "count": 2288,
+      "referenced": 2288,
       "fields": {
         "1": {
           "name": "listType",
@@ -1949,22 +1956,22 @@
         },
         "3": {
           "name": "entries",
-          "share": 0.153
+          "share": 0.1486
         },
         "5": {
           "name": "is_new_for_bnc",
-          "share": 0.1352
+          "share": 0.1412
         }
       },
       "referrerSets": {
         "type 10000": 1,
-        "TST.TableModelArchive": 955,
-        "TST.SummaryModelArchive": 900
+        "TST.TableModelArchive": 1171,
+        "TST.SummaryModelArchive": 1116
       }
     },
     "TST.TableInfoArchive": {
-      "count": 79,
-      "referenced": 79,
+      "count": 97,
+      "referenced": 97,
       "fields": {
         "1": {
           "name": "super",
@@ -1976,46 +1983,46 @@
         },
         "4": {
           "name": "summary_model",
-          "share": 0.9241
+          "share": 0.9381
         },
         "5": {
           "name": "category_order",
-          "share": 0.9241
+          "share": 0.9381
         },
         "6": {
           "name": "view_column_row_uids",
-          "share": 0.1519
+          "share": 0.1237
         },
         "7": {
           "name": "group_by_uuid",
-          "share": 0.9241
+          "share": 0.9381
         },
         "8": {
           "name": "hidden_states_uuid",
-          "share": 0.9241
+          "share": 0.9381
         },
         "9": {
           "name": "formula_coord_space_in_pre40",
-          "share": 0.0633
+          "share": 0.0515
         },
         "10": {
           "name": "formula_coord_space",
-          "share": 0.8608
+          "share": 0.8866
         },
         "14": {
           "name": "layout_engine",
-          "share": 0.7975
+          "share": 0.8351
         }
       },
       "referrerSets": {
-        "type 2 + TSK.TreeNode": 54,
+        "type 2 + TSK.TreeNode": 72,
         "TSWP.DrawableAttachmentArchive": 20,
         "type 5": 5
       }
     },
     "TST.TableModelArchive": {
-      "count": 79,
-      "referenced": 79,
+      "count": 97,
+      "referenced": 97,
       "fields": {
         "1": {
           "name": "table_id",
@@ -2043,23 +2050,23 @@
         },
         "9": {
           "name": "number_of_header_rows",
-          "share": 0.7975
+          "share": 0.8351
         },
         "10": {
           "name": "number_of_header_columns",
-          "share": 0.1772
+          "share": 0.3093
         },
         "11": {
           "name": "number_of_footer_rows",
-          "share": 0.038
+          "share": 0.0309
         },
         "12": {
           "name": "header_rows_frozen",
-          "share": 0.6456
+          "share": 0.7113
         },
         "13": {
           "name": "header_columns_frozen",
-          "share": 0.7595
+          "share": 0.8041
         },
         "16": {
           "name": "default_row_height",
@@ -2087,7 +2094,7 @@
         },
         "22": {
           "name": "table_name_enabled",
-          "share": 0.6582
+          "share": 0.7216
         },
         "24": {
           "name": "body_text_style",
@@ -2107,7 +2114,7 @@
         },
         "29": {
           "name": "repeating_header_rows_enabled",
-          "share": 0.9367
+          "share": 0.9485
         },
         "30": {
           "name": "table_name_style",
@@ -2119,7 +2126,7 @@
         },
         "32": {
           "name": "repeating_header_columns_enabled",
-          "share": 0.9367
+          "share": 0.9485
         },
         "33": {
           "name": "table_name_height",
@@ -2139,7 +2146,7 @@
         },
         "38": {
           "name": "row_filter_set_pre_pivot",
-          "share": 0.7975
+          "share": 0.7938
         },
         "39": {
           "name": "conditional_style_formula_owner_id",
@@ -2163,136 +2170,136 @@
         },
         "48": {
           "name": "table_style_preset",
-          "share": 0.8861
+          "share": 0.9072
         },
         "49": {
           "name": "stroke_sidecar",
-          "share": 0.8608
+          "share": 0.8866
         },
         "60": {
           "name": "category_level_1_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "61": {
           "name": "category_level_2_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "62": {
           "name": "category_level_3_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "63": {
           "name": "category_level_4_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "64": {
           "name": "category_level_5_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "65": {
           "name": "category_level_1_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "66": {
           "name": "category_level_2_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "67": {
           "name": "category_level_3_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "68": {
           "name": "category_level_4_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "69": {
           "name": "category_level_5_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "70": {
           "name": "hidden_states_owner",
-          "share": 0.9241
+          "share": 0.9381
         },
         "71": {
           "name": "label_level_1_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "72": {
           "name": "label_level_2_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "73": {
           "name": "label_level_3_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "74": {
           "name": "label_level_4_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "75": {
           "name": "label_level_5_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "76": {
           "name": "label_level_1_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "77": {
           "name": "label_level_2_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "78": {
           "name": "label_level_3_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "79": {
           "name": "label_level_4_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "80": {
           "name": "label_level_5_text_style",
-          "share": 0.9241
+          "share": 0.9381
         },
         "81": {
           "name": "category_owner_deprecated",
-          "share": 0.9241
+          "share": 0.9381
         },
         "82": {
           "name": "pencil_annotation_owner",
-          "share": 0.9241
+          "share": 0.9381
         },
         "84": {
           "name": "haunted_owner",
-          "share": 0.7975
+          "share": 0.8351
         },
         "86": {
           "name": "category_owner",
-          "share": 0.7722
+          "share": 0.8144
         },
         "87": {
           "name": "pivot_body_summary_row_style",
-          "share": 0.7722
+          "share": 0.8144
         },
         "88": {
           "name": "pivot_body_summary_column_style",
-          "share": 0.7722
+          "share": 0.8144
         },
         "89": {
           "name": "pivot_header_column_summary_style",
-          "share": 0.7722
+          "share": 0.8144
         },
         "93": {
           "name": "spill_owner",
-          "share": 0.7215
+          "share": 0.7732
         }
       },
       "referrerSets": {
-        "TST.TableInfoArchive": 79
+        "TST.TableInfoArchive": 97
       }
     },
     "TST.TableStyleArchive": {
-      "count": 447,
-      "referenced": 447,
+      "count": 498,
+      "referenced": 498,
       "fields": {
         "1": {
           "name": "super",
@@ -2312,14 +2319,15 @@
         "TSS.StylesheetArchive": 3,
         "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleArchive + TST.TableStyleNetworkArchive": 2,
         "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 12,
-        "TSS.StylesheetArchive + TST.TableStyleArchive + TST.TableStyleNetworkArchive": 28,
-        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 370,
-        "TST.TableModelArchive": 31
+        "TSS.StylesheetArchive + TST.TableStyleArchive + TST.TableStyleNetworkArchive": 31,
+        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 385,
+        "TST.TableModelArchive": 49,
+        "TST.TableStyleArchive": 15
       }
     },
     "TST.TableStyleNetworkArchive": {
-      "count": 413,
-      "referenced": 413,
+      "count": 431,
+      "referenced": 431,
       "fields": {
         "1": {
           "name": "body_text_style",
@@ -2371,108 +2379,108 @@
         },
         "13": {
           "name": "category_level_1_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "14": {
           "name": "category_level_2_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "15": {
           "name": "category_level_3_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "16": {
           "name": "category_level_4_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "17": {
           "name": "category_level_5_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "18": {
           "name": "category_level_1_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "19": {
           "name": "category_level_2_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "20": {
           "name": "category_level_3_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "21": {
           "name": "category_level_4_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "22": {
           "name": "category_level_5_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "23": {
           "name": "label_level_1_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "24": {
           "name": "label_level_2_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "25": {
           "name": "label_level_3_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "26": {
           "name": "label_level_4_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "27": {
           "name": "label_level_5_text_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "28": {
           "name": "label_level_1_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "29": {
           "name": "label_level_2_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "30": {
           "name": "label_level_3_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "31": {
           "name": "label_level_4_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "32": {
           "name": "label_level_5_style",
-          "share": 0.8814
+          "share": 0.8863
         },
         "33": {
           "name": "pivot_body_summary_row_style",
-          "share": 0.7651
+          "share": 0.7749
         },
         "34": {
           "name": "pivot_body_summary_column_style",
-          "share": 0.7651
+          "share": 0.7749
         },
         "35": {
           "name": "pivot_header_column_summary_style",
-          "share": 0.7651
+          "share": 0.7749
         }
       },
       "referrerSets": {
-        "TST.TableStylePresetArchive": 413
+        "TST.TableStylePresetArchive": 431
       }
     },
     "TST.TableStylePresetArchive": {
-      "count": 413,
-      "referenced": 413,
+      "count": 431,
+      "referenced": 431,
       "fields": {
         "1": {
           "name": "index",
-          "share": 0.0145
+          "share": 0.0139
         },
         "3": {
           "name": "style_network",
@@ -2482,12 +2490,12 @@
       "referrerSets": {
         "type 10": 79,
         "type 10001": 180,
-        "type 12009": 154
+        "type 12009": 172
       }
     },
     "TST.Tile": {
-      "count": 155,
-      "referenced": 155,
+      "count": 191,
+      "referenced": 191,
       "fields": {
         "1": {
           "name": "maxColumn",
@@ -2507,7 +2515,7 @@
         },
         "5": {
           "name": "rowInfos",
-          "share": 0.4968
+          "share": 0.4974
         },
         "6": {
           "name": "storage_version",
@@ -2515,12 +2523,12 @@
         },
         "7": {
           "name": "last_saved_in_BNC",
-          "share": 0.9613
+          "share": 0.9686
         }
       },
       "referrerSets": {
-        "TST.TableModelArchive": 80,
-        "TST.SummaryModelArchive": 75
+        "TST.TableModelArchive": 98,
+        "TST.SummaryModelArchive": 93
       }
     },
     "TSWP.BookmarkFieldArchive": {
@@ -2596,8 +2604,8 @@
       }
     },
     "TSWP.CharacterStyleArchive": {
-      "count": 608,
-      "referenced": 608,
+      "count": 629,
+      "referenced": 629,
       "fields": {
         "1": {
           "name": "super",
@@ -2605,11 +2613,11 @@
         },
         "10": {
           "name": "override_count",
-          "share": 0.8865
+          "share": 0.8855
         },
         "11": {
           "name": "char_properties",
-          "share": 0.8865
+          "share": 0.8855
         }
       },
       "referrerSets": {
@@ -2618,12 +2626,12 @@
         "type 10 + TSS.StylesheetArchive + TSWP.StorageArchive": 1,
         "type 10 + TSS.StylesheetArchive + TSWP.CharacterStyleArchive": 4,
         "type 10001": 140,
-        "type 12009": 121,
+        "type 12009": 136,
         "TSWP.StorageArchive": 145,
         "TSWP.StorageArchive + type 10001": 3,
         "TSS.StylesheetArchive": 1,
         "TSS.StylesheetArchive + type 10001": 51,
-        "TSS.StylesheetArchive + type 12009": 48,
+        "TSS.StylesheetArchive + type 12009": 54,
         "TSS.StylesheetArchive + TSWP.StorageArchive + type 10001": 4,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.CharacterStyleArchive": 1,
         "TSS.StylesheetArchive + TSWP.CharacterStyleArchive": 1,
@@ -2746,8 +2754,8 @@
       }
     },
     "TSWP.DropCapStyleArchive": {
-      "count": 378,
-      "referenced": 378,
+      "count": 399,
+      "referenced": 399,
       "fields": {
         "1": {
           "name": "super",
@@ -2768,9 +2776,9 @@
       },
       "referrerSets": {
         "type 10 + TSS.StylesheetArchive": 60,
-        "TSS.StylesheetArchive": 54,
+        "TSS.StylesheetArchive": 57,
         "TSS.StylesheetArchive + type 10001": 119,
-        "TSS.StylesheetArchive + type 12009": 144,
+        "TSS.StylesheetArchive + type 12009": 162,
         "TSS.StylesheetArchive + TSWP.StorageArchive + type 10001": 1
       }
     },
@@ -2864,8 +2872,8 @@
       }
     },
     "TSWP.ListStyleArchive": {
-      "count": 624,
-      "referenced": 624,
+      "count": 654,
+      "referenced": 654,
       "fields": {
         "1": {
           "name": "super",
@@ -2877,59 +2885,59 @@
         },
         "11": {
           "name": "label_types",
-          "share": 0.8862
+          "share": 0.8914
         },
         "12": {
           "name": "text_indents",
-          "share": 0.9599
+          "share": 0.9618
         },
         "13": {
           "name": "indents",
-          "share": 0.9199
+          "share": 0.9235
         },
         "14": {
           "name": "geometries",
-          "share": 0.8894
+          "share": 0.8945
         },
         "15": {
           "name": "number_types",
-          "share": 0.3253
+          "share": 0.3196
         },
         "16": {
           "name": "strings",
-          "share": 0.3494
+          "share": 0.3379
         },
         "17": {
           "name": "images",
-          "share": 0.1346
+          "share": 0.133
         },
         "18": {
           "name": "shadow_null",
-          "share": 0.0032
+          "share": 0.0031
         },
         "20": {
           "name": "font_color_null",
-          "share": 0.2035
+          "share": 0.1942
         },
         "21": {
           "name": "font_color",
-          "share": 0.0112
+          "share": 0.0107
         },
         "22": {
           "name": "font_name_null",
-          "share": 0.1378
+          "share": 0.1315
         },
         "23": {
           "name": "font_name",
-          "share": 0.0032
+          "share": 0.0031
         },
         "24": {
           "name": "writing_direction",
-          "share": 0.0016
+          "share": 0.0015
         },
         "25": {
           "name": "tiered_numbers",
-          "share": 0.2933
+          "share": 0.289
         }
       },
       "referrerSets": {
@@ -2940,14 +2948,14 @@
         "type 19 + TSWP.ParagraphStyleArchive": 2,
         "TSWP.StorageArchive": 10,
         "TSWP.StorageArchive + TSWP.ParagraphStyleArchive": 30,
-        "TSWP.ParagraphStyleArchive": 23,
+        "TSWP.ParagraphStyleArchive": 38,
         "TSS.StylesheetArchive": 44,
         "TSS.StylesheetArchive + type 10001": 240,
-        "TSS.StylesheetArchive + type 12009": 103,
+        "TSS.StylesheetArchive + type 12009": 115,
         "TSS.StylesheetArchive + TSWP.StorageArchive + type 10001": 14,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive": 14,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + type 10001": 2,
-        "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + type 12009": 21,
+        "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + type 12009": 24,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + TSWP.ListStyleArchive + type 10001": 3,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + TSWP.ListStyleArchive + type 12009": 1,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive + TSWP.ListStyleArchive + TSWP.TOCEntryStyleArchive + type 10001": 8,
@@ -3009,8 +3017,8 @@
       }
     },
     "TSWP.NumberAttachmentArchive": {
-      "count": 107,
-      "referenced": 107,
+      "count": 110,
+      "referenced": 110,
       "fields": {
         "1": {
           "name": "super",
@@ -3022,20 +3030,20 @@
         },
         "3": {
           "name": "string_value",
-          "share": 0.1308
+          "share": 0.1273
         },
         "4": {
           "name": "number_format_name",
-          "share": 0.9439
+          "share": 0.9455
         }
       },
       "referrerSets": {
-        "TSWP.StorageArchive": 107
+        "TSWP.StorageArchive": 110
       }
     },
     "TSWP.ParagraphStyleArchive": {
-      "count": 14262,
-      "referenced": 14262,
+      "count": 15150,
+      "referenced": 15150,
       "fields": {
         "1": {
           "name": "super",
@@ -3073,12 +3081,13 @@
         "TSWP.StorageArchive + TSWP.ShapeStyleArchive": 30,
         "TSWP.StorageArchive + TST.TableModelArchive": 3,
         "TSWP.StorageArchive + TST.TableDataList": 7,
+        "TSWP.ParagraphStyleArchive + TST.TableModelArchive": 30,
         "TSWP.ShapeStyleArchive": 21,
         "TSWP.ShapeStyleArchive + TST.TableModelArchive": 1,
-        "TSS.StylesheetArchive": 1010,
+        "TSS.StylesheetArchive": 1037,
         "TSS.StylesheetArchive + type 10001": 212,
-        "TSS.StylesheetArchive + type 12009": 131,
-        "TSS.StylesheetArchive + TSWP.StorageArchive": 50,
+        "TSS.StylesheetArchive + type 12009": 146,
+        "TSS.StylesheetArchive + TSWP.StorageArchive": 53,
         "TSS.StylesheetArchive + TSWP.StorageArchive + type 10001": 56,
         "TSS.StylesheetArchive + TSWP.StorageArchive + type 12009": 1,
         "TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive": 4,
@@ -3104,19 +3113,19 @@
         "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TSWP.TOCSettingsArchive + type 10001": 2,
         "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 4,
         "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TST.TableModelArchive + TST.ConditionalStyleSetArchive + TST.TableStyleNetworkArchive": 3,
-        "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 47,
+        "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 53,
         "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive + type 12009": 2,
         "TSS.StylesheetArchive + TSWP.ParagraphStyleArchive + TST.TableStyleNetworkArchive": 34,
-        "TSS.StylesheetArchive + TSWP.ShapeStyleArchive": 130,
+        "TSS.StylesheetArchive + TSWP.ShapeStyleArchive": 139,
         "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + type 10001": 66,
-        "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + type 12009": 72,
+        "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + type 12009": 81,
         "TSS.StylesheetArchive + TSWP.TOCSettingsArchive": 12,
         "TSS.StylesheetArchive + TSWP.TOCSettingsArchive + type 10001": 61,
-        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 9369,
+        "TSS.StylesheetArchive + TSCH.ChartStylePreset": 9909,
         "TSS.StylesheetArchive + TSCH.ChartStylePreset + TSCH.ChartDrawableArchive": 17,
-        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 197,
+        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 215,
         "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive + type 12009": 1,
-        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 1984,
+        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 2089,
         "TSS.StylesheetArchive + TST.TableStyleNetworkArchive + type 12009": 5,
         "type 5 + type 10 + type 19 + TSS.StylesheetArchive + TSWP.StorageArchive": 3,
         "type 5 + type 10 + type 19 + TSS.StylesheetArchive + TSWP.StorageArchive + TSWP.ParagraphStyleArchive": 1,
@@ -3127,9 +3136,9 @@
         "type 5 + type 19 + TSWP.StorageArchive": 1,
         "type 5 + TSWP.StorageArchive": 2,
         "TSCH.ChartDrawableArchive": 7,
-        "TST.TableModelArchive": 30,
+        "TST.TableModelArchive": 120,
         "TST.TableModelArchive + TST.TableStyleNetworkArchive": 5,
-        "TST.TableDataList": 96,
+        "TST.TableDataList": 132,
         "TST.HeaderStorageBucket": 1,
         "TST.ConditionalStyleSetArchive": 8,
         "TST.TableStyleNetworkArchive": 43
@@ -3245,8 +3254,8 @@
       }
     },
     "TSWP.ShapeStyleArchive": {
-      "count": 1827,
-      "referenced": 1827,
+      "count": 1920,
+      "referenced": 1920,
       "fields": {
         "1": {
           "name": "super",
@@ -3254,11 +3263,11 @@
         },
         "10": {
           "name": "override_count",
-          "share": 0.9967
+          "share": 0.9969
         },
         "11": {
           "name": "shape_properties",
-          "share": 0.9967
+          "share": 0.9969
         }
       },
       "referrerSets": {
@@ -3271,9 +3280,9 @@
         "TSWP.ShapeInfoArchive": 99,
         "TSWP.TOCInfoArchive": 2,
         "TSD.ConnectionLineArchive": 3,
-        "TSS.StylesheetArchive": 231,
+        "TSS.StylesheetArchive": 246,
         "TSS.StylesheetArchive + type 10001": 407,
-        "TSS.StylesheetArchive + type 12009": 372,
+        "TSS.StylesheetArchive + type 12009": 417,
         "TSS.StylesheetArchive + TSWP.ShapeInfoArchive + type 10001": 8,
         "TSS.StylesheetArchive + TSWP.ShapeInfoArchive + type 12009": 1,
         "TSS.StylesheetArchive + TSWP.ShapeInfoArchive + TSWP.ShapeStyleArchive + type 10001": 6,
@@ -3281,10 +3290,10 @@
         "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + type 10001": 14,
         "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + type 12009": 1,
         "TSS.StylesheetArchive + TSWP.ShapeStyleArchive + TST.TableStyleNetworkArchive": 3,
-        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 39,
-        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 366,
+        "TSS.StylesheetArchive + TST.TableModelArchive + TST.TableStyleNetworkArchive": 42,
+        "TSS.StylesheetArchive + TST.TableStyleNetworkArchive": 381,
         "TSS.StylesheetArchive + TSA.CaptionInfoArchive": 2,
-        "TST.TableModelArchive": 3,
+        "TST.TableModelArchive": 18,
         "type 7": 54,
         "type 7 + type 10 + TSS.StylesheetArchive + TSWP.ShapeInfoArchive + TSWP.ShapeStyleArchive": 1,
         "type 7 + type 10 + TSS.StylesheetArchive + TSWP.ShapeStyleArchive": 1,
@@ -3293,12 +3302,12 @@
       }
     },
     "TSWP.StorageArchive": {
-      "count": 3445,
-      "referenced": 3445,
+      "count": 3463,
+      "referenced": 3463,
       "fields": {
         "1": {
           "name": "kind",
-          "share": 0.6
+          "share": 0.6021
         },
         "2": {
           "name": "style_sheet",
@@ -3306,7 +3315,7 @@
         },
         "3": {
           "name": "text",
-          "share": 0.4435
+          "share": 0.4421
         },
         "5": {
           "name": "table_para_style",
@@ -3322,11 +3331,11 @@
         },
         "8": {
           "name": "table_char_style",
-          "share": 0.1965
+          "share": 0.1955
         },
         "9": {
           "name": "table_attachment",
-          "share": 0.0383
+          "share": 0.039
         },
         "10": {
           "name": "in_document",
@@ -3358,7 +3367,7 @@
         },
         "19": {
           "name": "table_language",
-          "share": 0.0911
+          "share": 0.0907
         },
         "20": {
           "name": "table_dictation",
@@ -3382,14 +3391,14 @@
         },
         "28": {
           "name": "table_drop_cap_style",
-          "share": 0.3393
+          "share": 0.3376
         }
       },
       "referrerSets": {
         "type 10000 + type 10015": 30,
         "type 10143": 1044,
         "type 15": 57,
-        "type 2": 190,
+        "type 2": 208,
         "TSWP.FootnoteReferenceAttachmentArchive": 8,
         "TSWP.ShapeInfoArchive": 463,
         "TSWP.ShapeInfoArchive + TSWP.FlowInfoArchive": 1,
@@ -3576,48 +3585,48 @@
       }
     },
     "type 1": {
-      "count": 38,
+      "count": 41,
       "referenced": 2,
       "fields": {
         "1": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "2": {
           "name": null,
-          "share": 0.3421
+          "share": 0.3171
         },
         "3": {
           "name": null,
-          "share": 0.3421
+          "share": 0.3171
         },
         "4": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "5": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "6": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "8": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "10": {
           "name": null,
-          "share": 0.0263
+          "share": 0.0244
         },
         "11": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         },
         "12": {
           "name": null,
-          "share": 0.6579
+          "share": 0.6829
         }
       },
       "referrerSets": {
@@ -4325,8 +4334,8 @@
       }
     },
     "type 12009": {
-      "count": 25,
-      "referenced": 25,
+      "count": 28,
+      "referenced": 28,
       "fields": {
         "1": {
           "name": null,
@@ -4334,12 +4343,12 @@
         }
       },
       "referrerSets": {
-        "type 1": 25
+        "type 1": 28
       }
     },
     "type 12026": {
-      "count": 25,
-      "referenced": 25,
+      "count": 28,
+      "referenced": 28,
       "fields": {
         "1": {
           "name": null,
@@ -4347,7 +4356,7 @@
         },
         "3": {
           "name": null,
-          "share": 0.04
+          "share": 0.0357
         },
         "6": {
           "name": null,
@@ -4387,7 +4396,7 @@
         },
         "23": {
           "name": null,
-          "share": 0.04
+          "share": 0.0357
         },
         "24": {
           "name": null,
@@ -4399,40 +4408,40 @@
         },
         "27": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         },
         "28": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         },
         "29": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         },
         "31": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         },
         "32": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         },
         "33": {
           "name": null,
-          "share": 0.96
+          "share": 0.9643
         }
       },
       "referrerSets": {
-        "TSK.ViewStateArchive": 25
+        "TSK.ViewStateArchive": 28
       }
     },
     "type 12028": {
-      "count": 170,
-      "referenced": 62,
+      "count": 185,
+      "referenced": 68,
       "fields": {
         "1": {
           "name": null,
-          "share": 0.9294
+          "share": 0.9351
         },
         "2": {
           "name": null,
@@ -4440,7 +4449,7 @@
         }
       },
       "referrerSets": {
-        "type 12026": 62
+        "type 12026": 68
       }
     },
     "type 12040": {
@@ -4461,8 +4470,8 @@
       }
     },
     "type 12050": {
-      "count": 24,
-      "referenced": 24,
+      "count": 27,
+      "referenced": 27,
       "fields": {
         "1": {
           "name": null,
@@ -4479,7 +4488,7 @@
       },
       "referrerSets": {
         "type 2 + type 3 + TSS.StylesheetArchive": 1,
-        "type 2 + TSS.StylesheetArchive": 23
+        "type 2 + TSS.StylesheetArchive": 26
       }
     },
     "type 15": {
@@ -4589,12 +4598,12 @@
       }
     },
     "type 2": {
-      "count": 46,
-      "referenced": 46,
+      "count": 49,
+      "referenced": 49,
       "fields": {
         "1": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "2": {
           "name": null,
@@ -4606,7 +4615,7 @@
         },
         "4": {
           "name": null,
-          "share": 0.2826
+          "share": 0.2653
         },
         "5": {
           "name": null,
@@ -4614,11 +4623,11 @@
         },
         "6": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "7": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "8": {
           "name": null,
@@ -4626,7 +4635,7 @@
         },
         "9": {
           "name": null,
-          "share": 0.2826
+          "share": 0.2653
         },
         "10": {
           "name": null,
@@ -4638,23 +4647,23 @@
         },
         "12": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "13": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "14": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "15": {
           "name": null,
-          "share": 0.2826
+          "share": 0.2653
         },
         "16": {
           "name": null,
-          "share": 0.2826
+          "share": 0.2653
         },
         "17": {
           "name": null,
@@ -4666,32 +4675,32 @@
         },
         "19": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "20": {
           "name": null,
-          "share": 0.7174
+          "share": 0.7347
         },
         "21": {
           "name": null,
-          "share": 0.6739
+          "share": 0.6939
         },
         "22": {
           "name": null,
-          "share": 0.6739
+          "share": 0.6939
         },
         "23": {
           "name": null,
-          "share": 0.6739
+          "share": 0.6939
         },
         "24": {
           "name": null,
-          "share": 0.6739
+          "share": 0.6939
         }
       },
       "referrerSets": {
         "type 1": 13,
-        "type 1 + TSK.TreeNode": 33
+        "type 1 + TSK.TreeNode": 36
       }
     },
     "type 20": {

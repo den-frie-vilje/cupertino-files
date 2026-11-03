@@ -204,8 +204,7 @@ doc.paragraphStylesInUse();   // [{ name, count }], most-used first
 - **No API restarts list numbering.** Keep the source's own numbers as
   text when a document needs "1." to start again.
 - **Removing a picture**: `removeAttachment` unlinks it; `doc.compact()`
-  then reclaims the archives. The image bytes stay in the package—nothing
-  traces a Data/ file safely enough to collect one.
+  then reclaims the archives and the image's Data/ file.
 
 ### Placeholders—fill-in templates without styled-token hacks
 

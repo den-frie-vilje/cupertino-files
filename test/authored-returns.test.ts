@@ -7,6 +7,8 @@ import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Slide } from "../src/keynote/schema.ts";
 import { GROUP_NODE_TYPE } from "../src/tst/categories.ts";
+import { FilterSetFields } from "../src/tst/filters.ts";
+import { PredicateFields, PREDICATE_TYPE_CONDITIONS, PREDICATE_TYPE_OPERATORS } from "../src/tst/predicates.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const fixture = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -49,6 +51,101 @@ describe("a starts-with filter rule the app wrote", () => {
     const rule = reloaded.tables()[0]!.filterSets().rows!.rules()[0]!;
     expect([rule.column, rule.predicate?.predicateType]).toEqual([0, 1]);
     expect(reloaded.tables()[0]!.refilterRows()).toBe(4);
+  });
+});
+
+describe("the eight text conditions the app wrote, one rule per column", () => {
+  it("carry the predicate type and formula of their column's condition", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-filter-conditions-text.numbers"));
+    const table = doc.tables().find((t) => t.name === "Text rules")!;
+    const rules = table.filterSets().rows!.rules();
+    const cell = "OTHER_TABLE::R[0]C";
+    expect(rules.map((r) => [table.cellText(0, r.column!), r.predicate?.predicateType, r.predicate?.text])).toEqual([
+      ["is", 36, `IF(LEN("Pear")=LEN(${cell}[0]),FIND.CASEINSENSITIVE("Pear",${cell}[0])=1)`],
+      ["is not", 37, `IF(LEN("Pear")<>LEN(${cell}[1]),TRUE,IF(ISERROR(FIND.CASEINSENSITIVE("Pear",${cell}[1])),TRUE,FIND.CASEINSENSITIVE("Pear",${cell}[1])<>1))`],
+      ["starts with", 1, `FIND.CASEINSENSITIVE("P",${cell}[2])=1`],
+      ["ends with", 2, `FIND.CASEINSENSITIVE("r",RIGHT(${cell}[3],LEN("r")))`],
+      ["contains", 3, `NOT(ISERROR(FIND.CASEINSENSITIVE("ea",${cell}[4])))`],
+      ["not contain", 4, `ISERROR(FIND.CASEINSENSITIVE("ea",${cell}[5]))`],
+      ["not start with", 61, `IFERROR(FIND.CASEINSENSITIVE("P",${cell}[6])<>1,TRUE)`],
+      ["not end with", 62, `IFERROR(NOT(FIND.CASEINSENSITIVE("r",RIGHT(${cell}[7],LEN("r")))),TRUE)`],
+    ]);
+  });
+});
+
+describe("every filter condition the app wrote, one rule per column", () => {
+  const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-filter-conditions.numbers"));
+  const rules = doc.tables().flatMap((table) => {
+    const set = table.filterSets().rows;
+    const raw = set?.object.message.getMessages(FilterSetFields.RULES) ?? [];
+    return (set?.rules() ?? []).map((rule, i) => {
+      const predicate = raw[i]!.getMessage(1)!;
+      return {
+        table: table.name,
+        label: table.cellText(0, rule.column!),
+        type: Number(predicate.getVarint(PredicateFields.PREDICATE_TYPE)),
+        q1: Number(predicate.getVarint(PredicateFields.QUALIFIER1) ?? 0n),
+        q2: Number(predicate.getVarint(PredicateFields.QUALIFIER2) ?? 0n),
+        text: rule.predicate?.text ?? "",
+      };
+    });
+  });
+
+  it("carry the predicate type and qualifiers of their column's condition", () => {
+    expect(rules.map((r) => [r.label, r.type, r.q1, r.q2])).toEqual([
+      ["is", 36, 0, 0], ["is not", 37, 0, 0], ["starts with", 1, 0, 0], ["ends with", 2, 0, 0],
+      ["contains", 3, 0, 0], ["not contain", 4, 0, 0], ["not start with", 61, 0, 0], ["not end with", 62, 0, 0],
+      ["is blank", 34, 0, 0], ["is not blank", 35, 0, 0],
+      ["equal to", 5, 0, 0], ["not equal to", 6, 0, 0], ["greater than", 7, 0, 0], ["greater or equal", 8, 0, 0],
+      ["less than", 9, 0, 0], ["less or equal", 10, 0, 0], ["between", 13, 0, 0], ["not between", 32, 0, 0],
+      ["is not blank", 35, 0, 0],
+      ["is", 20, 0, 0], ["before", 21, 0, 0], ["after", 22, 0, 0], ["in the range", 23, 0, 0],
+      ["today", 17, 0, 0], ["yesterday", 18, 0, 0], ["tomorrow", 19, 0, 0], ["this week", 33, 3, 0],
+      ["this month", 33, 4, 0], ["this quarter", 33, 8, 0], ["this year", 33, 5, 0],
+      ["last days", 25, 2, 0], ["last weeks", 25, 3, 0], ["last months", 25, 4, 0], ["last quarters", 25, 8, 0], ["last years", 25, 5, 0],
+      ["next days", 24, 2, 0], ["exactly ago", 26, 2, 6], ["exactly from now", 26, 3, 7], ["before ago", 27, 4, 6],
+      ["after from now", 28, 5, 7], ["between ago", 29, 2, 6], ["is blank", 34, 0, 0],
+      ["equal to", 38, 0, 0], ["greater than", 40, 0, 0], ["between", 44, 0, 0], ["is blank", 34, 0, 0],
+      ["is checked", 55, 0, 0], ["is not checked", 56, 0, 0],
+    ]);
+    for (const r of rules) expect(PREDICATE_TYPE_CONDITIONS.has(r.type) || PREDICATE_TYPE_OPERATORS.has(r.type)).toBe(true);
+  });
+
+  it("render whole: date and duration literals, lists, thunks", () => {
+    expect(rules.filter((r) => /NODE_/.test(r.text)).map((r) => r.label)).toEqual([]);
+    const text = (label: string) => rules.find((r) => r.label === label)!.text;
+    expect(text("today")).toBe("AND(OTHER_TABLE::R[0]C[4]>=TODAY(),OTHER_TABLE::R[0]C[4]<TODAY()+1d)");
+    expect(text("before")).toBe("AND(OTHER_TABLE::R[0]C[1]<2026-11-01,NOT(ISBLANK(OTHER_TABLE::R[0]C[1])))");
+    expect(text("this quarter")).toBe(
+      "AND(OTHER_TABLE::R[0]C[1]>=DATE(YEAR(TODAY()),(CEILING(MONTH(TODAY())/3,1)-1)*3+1,1),OTHER_TABLE::R[0]C[1]<DATE(YEAR(TODAY()),(CEILING(MONTH(TODAY())/3,1)-1)*3+4,1))",
+    );
+    expect(rules.find((r) => r.type === 38)!.text).toBe("OTHER_TABLE::R[0]C[0]=1h");
+    expect(rules.find((r) => r.type === 44)!.text.startsWith("IF(10m<=1h30m,AND(")).toBe(true);
+    expect(rules.find((r) => r.type === 55)!.text).toBe("IF(AND(OTHER_TABLE::R[0]C[0],FUNCTION_326(OTHER_TABLE::R[0]C[0])=8),TRUE,FALSE)");
+  });
+});
+
+describe("the number conditions beyond comparisons, written on the phone", () => {
+  it("carry their predicate type, values or percent in qualifier1, and a whole-column SUM", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-ios-filter-number-conditions.numbers"));
+    const table = doc.tables()[0]!;
+    const set = table.filterSets().rows!;
+    const raw = set.object.message.getMessages(FilterSetFields.RULES);
+    const rules = set.rules().map((rule, i) => {
+      const p = raw[i]!.getMessage(1)!;
+      return [table.cellText(0, rule.column!), Number(p.getVarint(PredicateFields.PREDICATE_TYPE)), Number(p.getVarint(PredicateFields.QUALIFIER1) ?? 0n), rule.predicate?.text];
+    });
+    expect(rules).toEqual([
+      ["above average", 11, 0, "SUM(OTHER_TABLE::C[0])"],
+      ["below average", 12, 0, "SUM(OTHER_TABLE::C[1])"],
+      ["top values", 30, 10, "SUM(OTHER_TABLE::C[2])+2"],
+      ["bottom values", 31, 10, "SUM(OTHER_TABLE::C[3])+2"],
+      ["top percent", 30, 9, "SUM(OTHER_TABLE::C[4])+50"],
+      ["bottom percent", 31, 9, "SUM(OTHER_TABLE::C[5])+50"],
+      ["duplicate", 15, 0, "SUM(OTHER_TABLE::C[6])"],
+      ["unique", 16, 0, "SUM(OTHER_TABLE::C[7])"],
+    ]);
+    for (const [, type] of rules) expect(PREDICATE_TYPE_CONDITIONS.has(type as number)).toBe(true);
   });
 });
 

@@ -244,11 +244,10 @@ export function graftNeutralTable(
   stylesheet?: StylesheetModel,
 ): bigint {
   const donor = neutralTableDonor();
-  // With a host stylesheet (Pages, Keynote) the table takes the host
-  // theme's first preset, as a table inserted in the app does, and the
-  // donor's own styles go; without one (Numbers) the donor's preset and
-  // styles come along, the app-confirmed shape.
-  const hostPreset = stylesheet ? hostTablePreset(store) : undefined;
+  // The table takes the host theme's first preset, as a table inserted in
+  // any of the apps does, and the donor's own styles go; a host whose
+  // theme lists no preset gets the donor's preset and styles instead.
+  const hostPreset = hostTablePreset(store);
   const { clone, map } = deepCloneObjectInto(store, donor.store, donor.info, {
     component,
     rebind: new Map([[donor.parentId, parentId]]),
