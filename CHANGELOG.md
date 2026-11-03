@@ -7,6 +7,14 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+### Added
+
+- `compact()` now also reclaims the Data/ files no object refers to, so
+  removing a picture and compacting takes its bytes out of the package.
+  A file is kept while any object names it, in its reference list or in
+  a schema-typed data field; a document with an undecodable component is
+  left whole.
+
 ## 0.6.0 — 2026-11-02
 
 The vendored schema is now the apps' own, read from the 15.4

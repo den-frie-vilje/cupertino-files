@@ -1493,9 +1493,7 @@ export class TextStorage {
    * makes the field disappear from the text. The archives it left behind
    * — for an image, the drawable and its attachment — are reclaimed by
    * `IWorkDocument.compact()`, which collects whatever the document no
-   * longer reaches. The image *bytes* stay: a Data/ file's link to its
-   * object is not something this library can safely trace, so nothing
-   * collects one (see docs/BLOCKERS.md).
+   * longer reaches, the image's Data/ file included.
    */
   removeAttachment(objectId: bigint): boolean {
     const found = this.attachments().find((entry) => entry.objectId === objectId);

@@ -350,16 +350,19 @@ export class IWorkDocument {
    * every table it ever knew, so those archives stay genuinely reachable.
    * The gap is in *removal* — unregistering a table's formula owners is
    * calc-engine surgery this library does not do yet — not in the walk.
-   * What compaction does reclaim is objects created and then abandoned.
+   * What compaction does reclaim is objects created and then abandoned,
+   * and the Data/ files (a removed picture's bytes) that no surviving
+   * object names; the count is archives and files together.
    *
    * Roots are the package metadata, each component's first object, and
    * every selection archive; see {@link ObjectStore.prune} for the scan and
-   * for why it errs towards keeping things. It is a no-op on every
+   * for why it errs towards keeping things, and {@link ObjectStore.collectData}
+   * for how a file is known to be live. It is a no-op on every
    * untouched document in the corpus, which is the property that matters:
    * a collector that trims a file nobody edited is broken.
    */
   compact(): number {
-    return this.store.prune(this.pruneRoots());
+    return this.store.prune(this.pruneRoots()) + this.store.collectData();
   }
 
   /**

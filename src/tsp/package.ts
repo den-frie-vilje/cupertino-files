@@ -139,13 +139,17 @@ export class IWorkContainer {
    * new bytes). Preserves layout, entry order, timestamps and all non-IWA
    * bytes; appends entries for canonical names that did not previously
    * exist. `additions` adds arbitrary non-IWA files (e.g. Data/ media) at
-   * the package level, next to the existing Metadata/Data entries.
+   * the package level, next to the existing Metadata/Data entries;
+   * `removals` names non-IWA files (relative, e.g. "Data/photo.png") to
+   * leave out.
    */
   toBytes(
     replacements: ReadonlyMap<string, Uint8Array>,
     additions: ReadonlyMap<string, Uint8Array> = new Map(),
+    removals: ReadonlySet<string> = new Set(),
   ): Uint8Array {
     const remaining = new Map(replacements);
+    const kept = this.outer.filter((e) => e.isDirectory || !removals.has(e.name.slice(this.prefix.length)));
 
     if (this.indexZipEntry !== undefined) {
       const innerEntries: ZipWriteEntry[] = [];
@@ -176,7 +180,7 @@ export class IWorkContainer {
         innerEntries.push({ name: canonical, data });
       }
       const newIndexZip = buildZip(innerEntries);
-      const outerEntries: ZipWriteEntry[] = this.outer.map((e) => ({
+      const outerEntries: ZipWriteEntry[] = kept.map((e) => ({
         name: e.name,
         data: e.name === this.indexZipEntry ? newIndexZip : e.data,
         dosTime: e.dosTime,
@@ -191,7 +195,7 @@ export class IWorkContainer {
     }
 
     const outerEntries: ZipWriteEntry[] = [];
-    for (const e of this.outer) {
+    for (const e of kept) {
       if (e.isDirectory) {
         outerEntries.push({
           name: e.name,

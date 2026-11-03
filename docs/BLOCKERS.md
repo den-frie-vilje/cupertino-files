@@ -121,19 +121,6 @@ that rebuild the structures from them.
   set background in its export (`test/e2e/keynote-ladder.e2e.test.ts`).
   Whether the written build plays after the conversion is the staged
   rung above.
-- **Reclaiming a Data/ file nothing points at.** `compact()` collects
-  unreachable *archives*, so removing a picture's anchor and compacting
-  takes the drawable and its attachment; the image bytes stay. The
-  obvious collector is unsafe: every one of the 46 corpus documents has
-  `DataInfo` entries that no object's data-reference list mentions —
-  most of them all of their entries — because the apps link data through
-  a `TSP.DataReference` field inside the archive, not through the
-  reference list this library maintains. A reachability scan keyed on
-  the list would delete every image in the corpus. Doing this properly
-  means finding data references by schema position, which
-  `schemaReferencedIds` now does for created objects — it walks the
-  vendored schema and collects `TSP.DataReference` fields too — so the
-  collector is a small step from here, not a new kind of knowledge.
 - **Collaboration components: framing decoded, payload unmeasured.**
   `decodeLzfseStream` reads the LZFSE container (raw and LZVN blocks;
   FSE blocks refused precisely) and the probe reports what it makes of
@@ -186,6 +173,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | can a Data/ file nothing points at be reclaimed safely? | every fixture in the corpus, each object's `data_references` list against a schema-position walk for `TSP.DataReference` fields; no app round | **settled, both lists are complete**: in all 68 decodable fixtures every `DataInfo` is named by some object's message-info list, and the schema walk over the vendored types names exactly the same set, 0 missing in either; the earlier reading that the lists leave most entries unnamed does not reproduce. `compact()` now drops the entries and files neither names, refuses a document with an opaque component, and is a no-op over the corpus. | `ObjectStore.collectData`, test/blank-documents.test.ts |
 | 2026-11-03 | does Pages draw the chart without the gridlines the library switched off, on the 14.x-lineage base? | Pages 15.4 (M15.4-7051.0.79-2, macOS) driven by script: rung P20 and its untouched base exported to PDF and rasterised | **settled, pass**: the two exports differ on the chart page alone inside the chart's own box and on the page carrying the rung's appended paragraph (349 and 3153 differing pixels at 60 dpi, none elsewhere); the chart's horizontal gridlines are absent in the rung's export and present in the base's. | `scripts/make-pages-docs.ts` P20; the renders are not kept |
 | 2026-11-03 | does Keynote accept every ladder rung on the 14.4.1 base it converts on open? | Keynote 15.4 (macOS) driven by script: all seventeen v14 rungs opened, read through the scripting dictionary, the background rung exported | **settled for sixteen rungs**: every rung opened; slide counts, titles, layouts, the skipped flag, the 1024 by 768 size, the body, the presenter notes, the 2-second automatic transition, the text box's text, the table's six cells and the layout change all read back as written, and the first slide of the background rung exports as the dark green set. The build's playing is a person's observation and is staged. | `test/e2e/keynote-ladder.e2e.test.ts` |
 | 2026-10-27 | does a Display P3 colour render as P3, and a dashed border with our dash lengths? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own saves | **settled, pass**: two greens from the same channels tagged p3 and srgb ("the colourspace tagging works - it's two different greens"); the [4, 2] rule drew dashed ("the dashes look fine, as specified"). The checker's own dashed border, authored in the Borders & Rules controls, is an anonymous variation of Body carrying [2, 2] at 2 pt with the same three paragraph fields as ours. | Pages rungs P25 and P27 as saved by the app |

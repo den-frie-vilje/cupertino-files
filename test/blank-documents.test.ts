@@ -37,9 +37,10 @@
  * *removal*, not in the collector, and the tests below say so rather than
  * papering over it.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { IWorkDocument, KeynoteDocument, NumbersDocument, PagesDocument } from "../src/index.ts";
+import { blockPng } from "../scripts/png.ts";
 
 const FIXTURES = new URL("../fixtures/", import.meta.url);
 const bytes = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
@@ -227,6 +228,38 @@ describe("compaction", () => {
       const doc = IWorkDocument.open(bytes(name));
       expect(`${name}: ${doc.compact()}`).toBe(`${name}: 0`);
     }
+  });
+
+  it("removes nothing from any document in the corpus", () => {
+    // The Data/ collector's gate: every app-written DataInfo is named by
+    // some object, so an untouched package keeps every file.
+    for (const name of readdirSync(FIXTURES).filter((n) => /\.(pages|numbers|key)$/.test(n)).sort()) {
+      let doc: IWorkDocument;
+      try {
+        doc = IWorkDocument.open(bytes(name));
+      } catch {
+        continue; // iWork '09 and encrypted fixtures are refused before any collector runs
+      }
+      expect(`${name}: ${doc.compact()}`).toBe(`${name}: 0`);
+    }
+  });
+
+  it("reclaims a picture's Data/ file once its attachment is removed", () => {
+    const doc = PagesDocument.blank();
+    doc.appendParagraph("A picture follows: ");
+    doc.insertInlineImage(doc.body.text.length, blockPng(4, 4), { fileName: "dot.png", width: 20, height: 20 });
+    const dataFiles = (d: PagesDocument) => [...d.store.container.otherFiles().keys()].filter((f) => f.startsWith("Data/")).sort();
+    const saved = PagesDocument.load(doc.save());
+    const before = dataFiles(saved);
+    expect(before.some((f) => f.endsWith("dot.png"))).toBe(true);
+
+    const picture = saved.body.attachments().find((a) => a.drawableId !== undefined)!;
+    expect(saved.body.removeAttachment(picture.objectId)).toBe(true);
+    expect(saved.compact()).toBeGreaterThan(1);
+    const after = PagesDocument.load(saved.save());
+    expect(dataFiles(after)).toEqual(before.filter((f) => !f.endsWith("dot.png")));
+    expect(after.images().length).toBe(0);
+    expect(after.compact()).toBe(0);
   });
 
   it("leaves a compacted document readable and re-editable", () => {
