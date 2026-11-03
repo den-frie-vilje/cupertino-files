@@ -966,9 +966,9 @@ describe("drawable styling", () => {
     // 18554 identified styles across the corpus, zero collisions — an
     // identifier names exactly one style, and a clone keeping its
     // source's would put two behind one: the corrupt-stylesheet state.
-    // The two exceptions carry tables grafted before the graft took the
-    // host theme's preset, each with its own copy of the donor's
-    // identified styles, which the app kept on save.
+    // Two fixtures carry grafted tables with their own copies of the
+    // donor's identified styles, duplicates the app accepted on save;
+    // they are the exception, not the rule.
     const GRAFTED_COPIES = new Set([
       "olekristensen-v26.0-mac-filter-conditions-text.numbers",
       "olekristensen-v26.0-mac-filter-conditions.numbers",

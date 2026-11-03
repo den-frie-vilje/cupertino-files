@@ -396,21 +396,28 @@ export class ObjectStore {
     for (const { obj } of this.allObjects()) {
       for (const id of obj.getDataReferences()) live.add(id);
       const name = this.typeNameOf(obj);
-      if (name !== undefined && name in REQUIRED_SCHEMA) {
-        for (const id of schemaReferencedIds(obj.message, name, DATA_REFERENCE_TYPES)) live.add(id);
-      }
+      // An archive of a type the schema knows is walked by type; one it
+      // does not is scanned by shape, which can only keep too much.
+      const ids =
+        name !== undefined && name in REQUIRED_SCHEMA
+          ? schemaReferencedIds(obj.message, name, DATA_REFERENCE_TYPES)
+          : referencedIds(obj.message);
+      for (const id of ids) live.add(id);
     }
     const pkg = this.packageMetadata.message;
     const infos = pkg.getMessages(PKG_DATAS);
-    const keep = infos.filter((info) => live.has(info.getVarint(DATA_IDENTIFIER) ?? 0n));
+    // An entry without an identifier or a stored file name is kept: there
+    // is nothing to match it against, and nothing to remove with it.
+    const keep = infos.filter((info) => {
+      const id = info.getVarint(DATA_IDENTIFIER);
+      return id === undefined || live.has(id) || !info.has(DATA_FILE_NAME);
+    });
     if (keep.length === infos.length) return 0;
     for (const info of infos) {
       if (keep.includes(info)) continue;
-      const fileName = info.getString(DATA_FILE_NAME) ?? info.getString(DATA_PREFERRED_FILE_NAME);
-      if (fileName !== undefined) {
-        this.removedFiles.add(`Data/${fileName}`);
-        this.pendingFiles.delete(`Data/${fileName}`);
-      }
+      const fileName = info.getString(DATA_FILE_NAME)!;
+      this.removedFiles.add(`Data/${fileName}`);
+      this.pendingFiles.delete(`Data/${fileName}`);
     }
     pkg.setMessages(PKG_DATAS, keep);
     return infos.length - keep.length;

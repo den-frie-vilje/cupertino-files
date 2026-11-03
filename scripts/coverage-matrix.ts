@@ -1633,7 +1633,10 @@ export const CAPABILITIES: Capability[] = [
         "table_id string as the new base, the app's own save keeps both clones' identities (id strings " +
         "and owner bases unchanged), formulas in the donor naming the clones read 5 and 8, a formula the " +
         "checker typed naming the clone read 10, and the clone's own cross reference and =SUM(B) read " +
-        "7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on.",
+        "7 and 30. The probe in test/e2e/proofs.e2e.test.ts is on. A table added since takes the " +
+        "theme's first table preset, as Insert > Table does, instead of a copy of every preset style; " +
+        "Numbers 15.4 opened a document with two such tables and drew them in the theme's table " +
+        "style (its PDF export, no person).",
       risk: "medium",
     },
   },

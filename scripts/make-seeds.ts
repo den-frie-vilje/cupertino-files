@@ -402,6 +402,7 @@ const FILTER_CONDITIONS: Record<
       ["top values", "in the top 2 values"],
       ["bottom values", "in the bottom 2 values"],
       ["top percent", "in the top 50 percent"],
+      ["bottom percent", "in the bottom 50 percent"],
       ["duplicate", "is a duplicate"],
       ["unique", "is unique"],
       ["is blank", "is blank"],

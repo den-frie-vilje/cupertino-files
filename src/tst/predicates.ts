@@ -168,6 +168,12 @@ export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
   [2, "FIND.CASEINSENSITIVE"],
   [3, "FIND.CASEINSENSITIVE"],
   [4, "ISERROR"],
+  [11, "SUM"],
+  [12, "SUM"],
+  [15, "SUM"],
+  [16, "SUM"],
+  [30, "SUM"],
+  [31, "SUM"],
   [34, "ISBLANK"],
   [36, "IF"],
   [37, "IF"],
@@ -307,6 +313,8 @@ export interface PredicateOperand {
 export interface Predicate {
   /** Raw `predicate_type`; see {@link PREDICATE_TYPE_OPERATORS}. */
   predicateType: number | undefined;
+  /** The filter-menu condition {@link predicateType} names, where measured ({@link PREDICATE_TYPE_CONDITIONS}). */
+  condition: string | undefined;
   qualifier1: number | undefined;
   qualifier2: number | undefined;
   /** Set on conditional-formatting predicates, absent on filters. */
@@ -405,6 +413,7 @@ export function readPredicate(
 
   return {
     predicateType,
+    condition: predicateType === undefined ? undefined : PREDICATE_TYPE_CONDITIONS.get(predicateType),
     qualifier1: message.getUint(fields.QUALIFIER1),
     qualifier2: message.getUint(fields.QUALIFIER2),
     forConditionalStyle: message.getBool(PredicateFields.FOR_CONDITIONAL_STYLE) ?? false,

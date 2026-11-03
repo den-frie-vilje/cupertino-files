@@ -586,7 +586,9 @@ function int32(raw: bigint | undefined): number | undefined {
 function formatDateLiteral(node: RawMessage): string {
   const seconds = node.getDouble(AstNodeFields.DATE_NUM);
   if (seconds === undefined) return formatNumber(node);
-  const iso = new Date(APPLE_EPOCH_MS + seconds * 1000).toISOString();
+  const date = new Date(APPLE_EPOCH_MS + seconds * 1000);
+  if (Number.isNaN(date.getTime())) return String(seconds);
+  const iso = date.toISOString();
   return iso.endsWith("T00:00:00.000Z") ? iso.slice(0, 10) : iso.slice(0, 19).replace("T", " ");
 }
 
