@@ -100,7 +100,12 @@ that rebuild the structures from them.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
-  group are not authored. `addFilterRule` writes comparison,
+  group are not authored, and the cheap route is closed: a
+  `column_agg_type` entry written alone, in the twin's exact shape,
+  draws nothing in Numbers 15.4's export where the twin's own summary
+  draws its count, so the app reads the aggregator cache and the
+  summary model's cells rather than rebuilding them. A writer has to
+  produce all three, and only one Count instance is measured. `addFilterRule` writes comparison,
   text-contains and starts-with rules byte for byte as the twin's
   app-authored rules, recomputes the hidden rows offline into
   `TST.HiddenStateExtentArchive`, and Numbers 15.4 opens the result with
@@ -173,6 +178,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | does Numbers fill a group row's summary from the `column_agg_type` entry alone? | Numbers 15.4 (macOS) driven by script: a blank-donor category with the entry written in the twin's shape (column uid, level 1, agg_type 1, show_as_type 0) exported to PDF, beside the export of `olekristensen-v26.0-mac-authored.numbers` | **refuted**: the twin's export carries »Tæl (alle): 2« in every group row and the entry-only document's group rows are empty, the groups themselves drawn. The app reads the aggregator cache and the summary model's cells it wrote; the entry does not make it rebuild them. The writer was not kept. | the renders are not kept; no code |
 | 2026-11-03 | can a Data/ file nothing points at be reclaimed safely? | every fixture in the corpus, each object's `data_references` list against a schema-position walk for `TSP.DataReference` fields; no app round | **settled, both lists are complete**: in all 68 decodable fixtures every `DataInfo` is named by some object's message-info list, and the schema walk over the vendored types names exactly the same set, 0 missing in either; the earlier reading that the lists leave most entries unnamed does not reproduce. `compact()` now drops the entries and files neither names, refuses a document with an opaque component, and is a no-op over the corpus. | `ObjectStore.collectData`, test/blank-documents.test.ts |
 | 2026-11-03 | does Pages draw the chart without the gridlines the library switched off, on the 14.x-lineage base? | Pages 15.4 (M15.4-7051.0.79-2, macOS) driven by script: rung P20 and its untouched base exported to PDF and rasterised | **settled, pass**: the two exports differ on the chart page alone inside the chart's own box and on the page carrying the rung's appended paragraph (349 and 3153 differing pixels at 60 dpi, none elsewhere); the chart's horizontal gridlines are absent in the rung's export and present in the base's. | `scripts/make-pages-docs.ts` P20; the renders are not kept |
 | 2026-11-03 | does Keynote accept every ladder rung on the 14.4.1 base it converts on open? | Keynote 15.4 (macOS) driven by script: all seventeen v14 rungs opened, read through the scripting dictionary, the background rung exported | **settled for sixteen rungs**: every rung opened; slide counts, titles, layouts, the skipped flag, the 1024 by 768 size, the body, the presenter notes, the 2-second automatic transition, the text box's text, the table's six cells and the layout change all read back as written, and the first slide of the background rung exports as the dark green set. The build's playing is a person's observation and is staged. | `test/e2e/keynote-ladder.e2e.test.ts` |
