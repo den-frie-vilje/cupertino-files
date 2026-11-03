@@ -305,7 +305,183 @@ function seedFilter(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------- filter conditions
+
+/**
+ * Every condition Numbers' filter menu offers, by column type, with the
+ * value the checker types. The labels are the app's own English strings
+ * (TSTables.strings in the 15.4 bundle); a rule's `predicate_type` and
+ * qualifiers are what the returned file measures, one column per
+ * condition so a rule maps to its condition by column, not by order.
+ */
+type SeedCellValue = string | number | Date | boolean | { type: "duration"; seconds: number } | null;
+const FILTER_CONDITIONS: Record<string, { rows: SeedCellValue[]; conditions: [string, string][] }> = {
+  Text: {
+    rows: ["Pear", "Apple", "Cat", null, "Peach"],
+    conditions: [
+      ["is", "is “Pear”"],
+      ["is not", "is not “Pear”"],
+      ["starts with", "starts with “P”"],
+      ["ends with", "ends with “r”"],
+      ["contains", "contains “ea”"],
+      ["not contain", "does not contain “ea”"],
+      ["not start with", "does not start with “P”"],
+      ["not end with", "does not end with “r”"],
+      ["is blank", "is blank"],
+      ["is not blank", "is not blank"],
+    ],
+  },
+  Number: {
+    rows: [3, 12, 7, null, 12],
+    conditions: [
+      ["equal to", "equal to 12"],
+      ["not equal to", "not equal to 12"],
+      ["greater than", "greater than 7"],
+      ["greater or equal", "greater than or equal to 7"],
+      ["less than", "less than 7"],
+      ["less or equal", "less than or equal to 7"],
+      ["between", "between 5 and 10"],
+      ["not between", "not between 5 and 10"],
+      ["above average", "above average"],
+      ["below average", "below average"],
+      ["top values", "in the top 2 values"],
+      ["bottom values", "in the bottom 2 values"],
+      ["top percent", "in the top 50 percent"],
+      ["duplicate", "is a duplicate"],
+      ["unique", "is unique"],
+      ["is blank", "is blank"],
+      ["is not blank", "is not blank"],
+    ],
+  },
+  Date: {
+    rows: [new Date(Date.UTC(2026, 10, 1)), new Date(Date.UTC(2026, 9, 15)), new Date(Date.UTC(2026, 10, 20)), null, new Date(Date.UTC(2025, 2, 3))],
+    conditions: [
+      ["is", "is 1 Nov 2026"],
+      ["before", "before 1 Nov 2026"],
+      ["after", "after 1 Nov 2026"],
+      ["in the range", "in the range 1 Oct 2026 to 1 Nov 2026"],
+      ["today", "today"],
+      ["yesterday", "yesterday"],
+      ["tomorrow", "tomorrow"],
+      ["this week", "this week"],
+      ["this month", "this month"],
+      ["this quarter", "this quarter"],
+      ["this year", "this year"],
+      ["last days", "in the last 3 days"],
+      ["last weeks", "in the last 2 weeks"],
+      ["last months", "in the last 1 month"],
+      ["last quarters", "in the last 1 quarter"],
+      ["last years", "in the last 1 year"],
+      ["next days", "in the next 3 days"],
+      ["exactly ago", "exactly 2 days ago"],
+      ["exactly from now", "exactly 1 week from now"],
+      ["before ago", "before 2 months ago"],
+      ["after from now", "after 1 year from now"],
+      ["between ago", "between 1 and 3 days ago"],
+      ["is blank", "is blank"],
+    ],
+  },
+  Duration: {
+    rows: [
+      { type: "duration", seconds: 3600 },
+      { type: "duration", seconds: 7200 },
+      { type: "duration", seconds: 600 },
+      null,
+      { type: "duration", seconds: 90 },
+    ],
+    conditions: [
+      ["equal to", "equal to 1h"],
+      ["greater than", "greater than 1h"],
+      ["between", "between 10m and 1h 30m"],
+      ["is blank", "is blank"],
+    ],
+  },
+  Checkbox: {
+    rows: [true, false, true, false, true],
+    conditions: [
+      ["is checked", "is checked"],
+      ["is not checked", "is not checked"],
+    ],
+  },
+};
+
+function seedFilterConditions(): Uint8Array {
+  // The library writes comparison, text-contains and starts-with rules,
+  // each byte for byte as an app-written rule. Every other condition in
+  // the filter menu is an unmeasured predicate_type and qualifier pair;
+  // the app writing each one, on a column named for it, is the
+  // measurement.
+  const doc = NumbersDocument.blank();
+  const sheet = doc.sheets()[0]!;
+  const readme = doc.tables()[0]!;
+  readme.name = "Read me";
+  readme.deleteRows(2, readme.rowCount - 2);
+  readme.setCell(0, 0, "Step");
+  readme.setCell(0, 1, "What to do");
+  readme.setCell(1, 0, "1");
+  readme.setCell(
+    1,
+    1,
+    "For each table below, add one filter rule per column: select the table, choose Organise > Filter (Organiser > Filter), add a filter on the column, and pick the condition the column's first row names, with the value it states. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
+  );
+  readme.setColumnWidth(0, 40);
+  readme.setColumnWidth(1, 440);
+  readme.setCellFormatting(1, 1, { textWrap: true });
+  readme.setRowHeight(1, 150);
+
+  let y = 220;
+  for (const [kind, spec] of Object.entries(FILTER_CONDITIONS)) {
+    const table = doc.addTable(sheet.id, { name: `${kind} rules`, x: 0, y });
+    const columns = spec.conditions.length + 1;
+    if (table.columnCount < columns) table.insertColumns(table.columnCount, columns - table.columnCount);
+    else if (table.columnCount > columns) table.deleteColumns(columns, table.columnCount - columns);
+    const rows = spec.rows.length + 2;
+    if (table.rowCount > rows) table.deleteRows(rows, table.rowCount - rows);
+    table.setCell(0, 0, kind);
+    table.setCell(1, 0, "Add rule");
+    table.setColumnWidth(0, 60);
+    spec.rows.forEach((_, r) => { table.setCell(r + 2, 0, String(r + 1)); });
+    spec.conditions.forEach(([label, rule], i) => {
+      const column = i + 1;
+      table.setCell(0, column, label);
+      table.setCell(1, column, rule);
+      table.setCellFormatting(1, column, { textWrap: true });
+      table.setColumnWidth(column, 84);
+      spec.rows.forEach((value, r) => {
+        const row = r + 2;
+        if (kind === "Checkbox") table.setCellControl(row, column, { widget: "checkbox", value: value as boolean });
+        else if (value !== null) table.setCell(row, column, value);
+      });
+    });
+    table.setRowHeight(1, 56);
+    y += 240;
+  }
+  return doc.save();
+}
+
 const seeds: Seed[] = [
+  {
+    name: "seed-filter-conditions.numbers",
+    bytes: seedFilterConditions(),
+    check: (bytes) => {
+      const doc = NumbersDocument.load(bytes);
+      const tables = doc.tables();
+      const names = tables.map((t) => t.name);
+      for (const kind of Object.keys(FILTER_CONDITIONS)) {
+        const table = tables.find((t) => t.name === `${kind} rules`);
+        if (!table) throw new Error(`filter conditions: table ${kind} rules missing from ${names.join(", ")}`);
+        const spec = FILTER_CONDITIONS[kind]!;
+        if (table.columnCount !== spec.conditions.length + 1) throw new Error(`filter conditions: ${kind} has ${table.columnCount} columns`);
+        spec.conditions.forEach(([label, rule], i) => {
+          if (table.cellText(0, i + 1) !== label || table.cellText(1, i + 1) !== rule) {
+            throw new Error(`filter conditions: ${kind} column ${i + 1} does not name its rule`);
+          }
+        });
+        if (table.filterSets().rows?.rules().length) throw new Error(`filter conditions: ${kind} already carries rules`);
+      }
+      if (!JSON.stringify(tables.find((t) => t.name === "Read me")?.cellValue(1, 1)).includes("Organise")) throw new Error("filter conditions: instructions missing");
+    },
+  },
   {
     name: "seed-filter.numbers",
     bytes: seedFilter(),

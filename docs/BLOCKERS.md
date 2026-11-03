@@ -20,17 +20,26 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — two seeds staged
+## Needs a Mac — one seed and one rung staged
 
-`npm run seeds -- out` writes both; each carries its own instructions
-and its own expected result.
+`npm run seeds -- out` writes the seed and `npm run keynote:docs -- out`
+the rung; each carries its own instructions and its own expected result.
 
-- `seed-inline-image.pages` — **an eye, not a probe.** Two pictures in a
-  paragraph indented 113 pt from the page margin: the first written
-  with the in-the-text-flow wrap, the second placed against the page.
-  The first starting where its own paragraph's text starts is the pass;
-  the two looking identical means only one mode is ever used, whatever
-  the file says. Nothing to run, just open and look.
+- `seed-filter-conditions.numbers` — **a comparison, not a probe.** Five
+  tables, one per column type (text, number, date, duration, checkbox),
+  each with one column per condition Numbers' filter menu offers, the
+  app's own English labels read from `TSTables.strings`. The checker adds
+  one rule per column with the app's controls, picking the condition the
+  column's first row names. The returned file maps every condition to
+  its `predicate_type`, qualifiers and operands by column, which is what
+  authoring is-blank, between, ends-with and the date conditions waits
+  on; `npm run harvest:predicates -- <file>` reads them back. A condition
+  the menu lacks is commented »not in menu«.
+- `v14-K11-build.key` — **an eye, not a probe.** The only rung of the
+  Keynote ladder on the 14.4.1 base that no script can answer: whether a
+  build the library wrote still plays after Keynote converts the old
+  deck. The other sixteen rungs are answered by the app itself in
+  `test/e2e/keynote-ladder.e2e.test.ts`.
 - The collaboration seed is withdrawn: sharing needs iCloud Drive, and
   the checker will not enable it on the work Mac (»skip the collaboration
   features for now, i don't want to enable icloud drive on my work mac«).
@@ -98,16 +107,20 @@ that rebuild the structures from them.
   the right rows hidden. A set carrying a rule the library cannot
   evaluate (is-blank and the other function-shaped rules) is left with
   its extent untouched; authoring those rules is the open row.
-- **Chart appearance: only the app's word left.** Type, series colours,
+- **Chart appearance: the corpus is thin.** Type, series colours,
   axis visibility and gridlines, tick marks and legend styling all read
-  and write, copy-on-write against shared style archives. Remaining:
-  Pages ladder rung `P20-chart-gridlines` in the app (the corpus still
-  has only two charts, so a document with several chart types would
-  widen the evidence).
-- **Keynote v14 upgrade path.** The current-format ladder (v26, all
-  eleven rungs) is app-confirmed; the same rungs against the 14.4.1 base
-  — the deck Keynote converts on open, a different code path — are
-  generated (`npm run keynote:docs`) and unchecked.
+  and write, copy-on-write against shared style archives, and Pages'
+  own export of rung `P20-chart-gridlines` draws the chart without the
+  gridlines the library switched off. The corpus still has only two
+  charts, so a document with several chart types would widen the
+  evidence.
+- **Keynote v14 upgrade path: the app answers sixteen of seventeen
+  rungs.** The same rungs against the 14.4.1 base — the deck Keynote
+  converts on open, a different code path — open in Keynote 15.4, which
+  reports each change through its scripting dictionary and draws the
+  set background in its export (`test/e2e/keynote-ladder.e2e.test.ts`).
+  Whether the written build plays after the conversion is the staged
+  rung above.
 - **Reclaiming a Data/ file nothing points at.** `compact()` collects
   unreachable *archives*, so removing a picture's anchor and compacting
   takes the drawable and its attachment; the image bytes stay. The
@@ -173,6 +186,8 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | does Pages draw the chart without the gridlines the library switched off, on the 14.x-lineage base? | Pages 15.4 (M15.4-7051.0.79-2, macOS) driven by script: rung P20 and its untouched base exported to PDF and rasterised | **settled, pass**: the two exports differ on the chart page alone inside the chart's own box and on the page carrying the rung's appended paragraph (349 and 3153 differing pixels at 60 dpi, none elsewhere); the chart's horizontal gridlines are absent in the rung's export and present in the base's. | `scripts/make-pages-docs.ts` P20; the renders are not kept |
+| 2026-11-03 | does Keynote accept every ladder rung on the 14.4.1 base it converts on open? | Keynote 15.4 (macOS) driven by script: all seventeen v14 rungs opened, read through the scripting dictionary, the background rung exported | **settled for sixteen rungs**: every rung opened; slide counts, titles, layouts, the skipped flag, the 1024 by 768 size, the body, the presenter notes, the 2-second automatic transition, the text box's text, the table's six cells and the layout change all read back as written, and the first slide of the background rung exports as the dark green set. The build's playing is a person's observation and is staged. | `test/e2e/keynote-ladder.e2e.test.ts` |
 | 2026-10-27 | does a Display P3 colour render as P3, and a dashed border with our dash lengths? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own saves | **settled, pass**: two greens from the same channels tagged p3 and srgb ("the colourspace tagging works - it's two different greens"); the [4, 2] rule drew dashed ("the dashes look fine, as specified"). The checker's own dashed border, authored in the Borders & Rules controls, is an anonymous variation of Body carrying [2, 2] at 2 pt with the same three paragraph fields as ours. | Pages rungs P25 and P27 as saved by the app |
 | 2026-10-27 | does Pages honour a TOC rule we switched off? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **settled, pass**: the TOC reopened with 49 entries where 61 were cached, none in Subtitle, and the style unticked ("PASS - the subtitles were not included in the TOC when the doc opened. And subtitle was unticked"). | Pages rung P26 as saved by the app |
 | 2026-10-27 | do a created style's paragraph borders draw, solid and dashed? | Pages 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save | **no verdict on the write, the base refuted**: on the 14.4.1 base (`iwork-mcp-v14.5-sample.pages`) no rule drew ("no borders in 4b"), and the app's save had moved every paragraph, the document's own headings included, onto the theme's Default style and dropped every style outside the theme's listed set, ours among them. The upgrade path discards them; the rung moved to the blank donor with an authoring slot beside it. | Pages rung P27 as saved by the app |
