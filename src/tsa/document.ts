@@ -340,7 +340,6 @@ export class IWorkDocument {
     );
   }
 
-  /** Serialize the document back to package bytes. */
   /**
    * Drop archives nothing can reach, returning how many went.
    *

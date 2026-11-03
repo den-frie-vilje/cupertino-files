@@ -260,8 +260,9 @@ export const CAPABILITIES: Capability[] = [
     probe: () => true,
     note:
       "correct but currently collects little: removing a sheet leaves calc-engine references to " +
-      "its tables, so they stay reachable. A no-op on every untouched fixture, which is the " +
-      "property that matters",
+      "its tables, so they stay reachable. Also drops the Data/ files no object names, in its " +
+      "data-reference list or in a schema-typed field, so a removed picture's bytes leave the " +
+      "package. A no-op on every untouched fixture, which is the property that matters",
   },
   {
     group: "Container",
@@ -1708,7 +1709,9 @@ export const CAPABILITIES: Capability[] = [
       settled:
         "**Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were " +
         "switched off by the library and the app drew the chart without them, with the " +
-        "library-rewritten data and renamed series drawn as written",
+        "library-rewritten data and renamed series drawn as written. Pages 15.4's own export " +
+        "of rung P20 differs from its base's only inside the chart's box and on the page carrying " +
+        "the rung's appended paragraph, the gridlines absent.",
       risk: "low",
     },
   },

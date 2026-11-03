@@ -2116,9 +2116,10 @@ ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
 - **Function-shaped filter rules beyond text-contains** (§14.7).
-  Comparison and text-contains rules are authored (`addFilterRule`),
-  byte for byte as the populated set in
-  `olekristensen-v26.3-mac-filters.numbers` carries them, with the rows
+  Comparison, text-contains and starts-with rules are authored
+  (`addFilterRule`), byte for byte as the populated set in
+  `olekristensen-v26.3-mac-filters.numbers` and the starts-with rule in
+  `olekristensen-v26.0-mac-authored.numbers` carry them, with the rows
   they hide written to the hidden-state extent by evaluating them
   offline; a set can be enabled, disabled, or switched between "all" and
   "any". Is-blank and the other function-shaped conditions are read but
@@ -2126,14 +2127,18 @@ writing and chart appearance all used to be here.
   the app references it.
 - **Category summaries** (§14.9). A category—by value, nested, or
   bucketed by date with the app's own functor—is defined from nothing
-  (`addCategory`) and rows are regrouped byte-identically to Apple; no
-  fixture carries a summary row to measure one from.
+  (`addCategory`) and rows are regrouped byte-identically to Apple.
+  One fixture, `olekristensen-v26.0-mac-authored.numbers`, carries a
+  Count summary, and its aggregator entry written alone draws nothing:
+  the app reads its aggregator cache and the summary model's cells as
+  well, so a writer has to produce all three.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and
   all-at-once and by-paragraph builds are written from nothing
-  (`addBuild`); actions and build order are not authored, and whether
-  the app plays a written build is unproven.
+  (`addBuild`), and Keynote plays one on a current deck; actions and
+  build order are not authored, and whether a written build plays after
+  the app converts a 14.x deck is unmeasured.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

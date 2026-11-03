@@ -10,8 +10,9 @@
  * the one command the file names. A refusal or a surprising result is a
  * finding, not a failure; every seed says so.
  *
- * The registry below is empty when nothing needs a person. To stage a new
- * question, add an entry:
+ * A returned seed stays in the registry: its builder is the recipe the
+ * fixture it became was made from, and a re-run reproduces the file.
+ * To stage a new question, add an entry:
  *
  *   const seeds: Seed[] = [
  *     {
@@ -77,7 +78,7 @@ function seedInlineImage(): Uint8Array {
   const png = blockPng(240, 120);
 
   doc.appendParagraph(
-    "SEED · indrykket billede (docs/BLOCKERS.md). Brødteksten herunder er rykket 113 pt ind fra sidens margen. Spørgsmålet er, hvor de to billeder starter.",
+    "SEED: an indented picture (docs/BLOCKERS.md). The body text below is indented 113 pt from the page margin. The question is where the two pictures start.",
   );
 
   // Every paragraph first, images after: an empty paragraph appended at
@@ -85,17 +86,17 @@ function seedInlineImage(): Uint8Array {
   // that index lands in the paragraph before it.
   const indent = { leftIndent: 113.4 };
   const first = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter i SAMME lodrette linje som denne sætnings første bogstav — altså langt inde på siden, ikke ude ved sidens venstre margen. Hele denne tekst skal også stå indrykket.",
+    "EXPECTED: the picture below starts on the SAME vertical line as this sentence's first letter, well inside the page, not out at the page's left margin. This whole text should be indented too.",
     "Body",
   );
   const firstImage = doc.appendParagraph(" ", "Body");
   const second = doc.appendParagraph(
-    "FORVENTET: billedet herunder starter derimod ude ved sidens venstre margen, ikke i tekstspalten — det er skrevet med den anden tilstand, så de to billeder skal stå forskellige steder.",
+    "EXPECTED: the picture below starts out at the page's left margin instead, not in the text column; it is written with the other mode, so the two pictures should sit in different places.",
     "Body",
   );
   const secondImage = doc.appendParagraph(" ", "Body");
   const last = doc.appendParagraph(
-    "Kig på de to billeders venstre kant. Forskellige = begge tilstande virker. Ens = kun den ene bliver brugt, uanset hvad filen siger. Står teksten heller ikke indrykket, er dét fundet i stedet. Send filen retur uden at ændre noget.",
+    "Look at the two pictures' left edges. Different means both modes work. The same means only one is ever used, whatever the file says. If the text is not indented either, that is the finding instead. Send the file back without changing anything.",
     "Body",
   );
   for (const index of [first, firstImage, second, secondImage, last]) {
@@ -103,12 +104,12 @@ function seedInlineImage(): Uint8Array {
   }
 
   doc.insertInlineImage(doc.body.paragraphStarts()[firstImage]!, png, {
-    fileName: "i-tekstspalten.png",
+    fileName: "in-the-text-column.png",
     width: 200,
     height: 100,
   });
   doc.insertInlineImage(doc.body.paragraphStarts()[secondImage]!, png, {
-    fileName: "ved-sidemargenen.png",
+    fileName: "at-the-page-margin.png",
     width: 200,
     height: 100,
     wrap: "page",
@@ -572,8 +573,8 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const d = PagesDocument.load(bytes);
       if (d.images().length !== 2) throw new Error("inline image: expected 2 images");
-      if (!d.bodyText.includes("FORVENTET")) throw new Error("inline image: expectations missing");
-      if (!d.bodyText.includes("Send filen retur")) throw new Error("inline image: return ask missing");
+      if (!d.bodyText.includes("EXPECTED")) throw new Error("inline image: expectations missing");
+      if (!d.bodyText.includes("Send the file back")) throw new Error("inline image: return ask missing");
       // Each picture alone in its paragraph, and every paragraph but the
       // first indented — the precondition the whole check rests on.
       const paragraphs = d.paragraphs();

@@ -115,7 +115,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The archives round-trip and copy-on-write correctly, which is the file's side of the story; only the app can say the toggle changes what is drawn rather than being ignored.
 
-**Outcome.** **Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were switched off by the library and the app drew the chart without them, with the library-rewritten data and renamed series drawn as written
+**Outcome.** **Confirmed in Pages — demo-04 pass.** The value axis's horizontal gridlines were switched off by the library and the app drew the chart without them, with the library-rewritten data and renamed series drawn as written. Pages 15.4's own export of rung P20 differs from its base's only inside the chart's box and on the page carrying the rung's appended paragraph, the gridlines absent.
 
 ### ✅ Chart appearance: type and series colours
 

@@ -847,7 +847,8 @@ const DATA_REFERENCE_TYPES: ReadonlySet<string> = new Set(["TSP.DataReference"])
  * each a lone varint 1, is never mistaken for a pointer. Fields the
  * schema does not name in a known message are its scalars and are
  * skipped; a submessage of a type the schema does not know falls back
- * to the shape scan.
+ * to the shape scan. `kinds` narrows the result to one reference type,
+ * as {@link ObjectStore.collectData} does for `TSP.DataReference`.
  */
 export function schemaReferencedIds(
   message: RawMessage,

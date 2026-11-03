@@ -22,8 +22,10 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ## Needs a Mac — one seed and one rung staged
 
-`npm run seeds -- out` writes the seed and `npm run keynote:docs -- out`
-the rung; each carries its own instructions and its own expected result.
+`npm run seeds -- out` writes the seed (beside the earlier ones, all
+returned) and `npm run keynote:docs -- out` the rung (beside the rest of
+both ladders); each carries its own instructions and its own expected
+result.
 
 - `seed-filter-conditions.numbers` — **a comparison, not a probe.** Five
   tables, one per column type (text, number, date, duration, checkbox),
@@ -105,8 +107,9 @@ that rebuild the structures from them.
   draws nothing in Numbers 15.4's export where the twin's own summary
   draws its count, so the app reads the aggregator cache and the
   summary model's cells rather than rebuilding them. A writer has to
-  produce all three, and only one Count instance is measured. `addFilterRule` writes comparison,
-  text-contains and starts-with rules byte for byte as the twin's
+  produce all three, and only one Count instance is measured.
+  `addFilterRule` writes comparison, text-contains and starts-with
+  rules byte for byte as the twin's
   app-authored rules, recomputes the hidden rows offline into
   `TST.HiddenStateExtentArchive`, and Numbers 15.4 opens the result with
   the right rows hidden. A set carrying a rule the library cannot
