@@ -1267,3 +1267,10 @@ node scripts/scan-fixture-privacy.ts
   The Read me table is the request itself. Its ten grafted tables carry
   copies of the donor's identified styles, the graft's shape before it
   took the host theme's preset.
+
+### olekristensen-v26.0-ios-filter-number-conditions.numbers
+- 127,710 bytes, md5 `101e687b5515a2fe618bd8eb4a73df52`
+- Saved by T15.4.2 (7377.1.21) (Numbers for iOS) over a one-table seed
+  naming the eight number conditions beyond comparisons, one per column;
+  the checker added each rule with the filter panel on the phone. The
+  table's first row is the request itself.

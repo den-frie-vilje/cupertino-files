@@ -125,6 +125,30 @@ describe("every filter condition the app wrote, one rule per column", () => {
   });
 });
 
+describe("the number conditions beyond comparisons, written on the phone", () => {
+  it("carry their predicate type, values or percent in qualifier1, and a whole-column SUM", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-ios-filter-number-conditions.numbers"));
+    const table = doc.tables()[0]!;
+    const set = table.filterSets().rows!;
+    const raw = set.object.message.getMessages(FilterSetFields.RULES);
+    const rules = set.rules().map((rule, i) => {
+      const p = raw[i]!.getMessage(1)!;
+      return [table.cellText(0, rule.column!), Number(p.getVarint(PredicateFields.PREDICATE_TYPE)), Number(p.getVarint(PredicateFields.QUALIFIER1) ?? 0n), rule.predicate?.text];
+    });
+    expect(rules).toEqual([
+      ["above average", 11, 0, "SUM(OTHER_TABLE::C[0])"],
+      ["below average", 12, 0, "SUM(OTHER_TABLE::C[1])"],
+      ["top values", 30, 10, "SUM(OTHER_TABLE::C[2])+2"],
+      ["bottom values", 31, 10, "SUM(OTHER_TABLE::C[3])+2"],
+      ["top percent", 30, 9, "SUM(OTHER_TABLE::C[4])+50"],
+      ["bottom percent", 31, 9, "SUM(OTHER_TABLE::C[5])+50"],
+      ["duplicate", 15, 0, "SUM(OTHER_TABLE::C[6])"],
+      ["unique", 16, 0, "SUM(OTHER_TABLE::C[7])"],
+    ]);
+    for (const [, type] of rules) expect(PREDICATE_TYPE_CONDITIONS.has(type as number)).toBe(true);
+  });
+});
+
 describe("a per-group summary the app wrote", () => {
   it("reads as one aggregate on the grouping column, level 1, agg_type 1 (Count)", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));

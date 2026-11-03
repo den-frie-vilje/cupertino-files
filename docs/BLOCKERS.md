@@ -22,11 +22,7 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ## Needs a Mac — nothing staged
 
-Every seed and rung staged so far is returned and banked. The number
-conditions the filter menu offers beyond comparisons (above and below
-average, top and bottom values and percent, duplicate, unique) are the
-one unmeasured group; `seed-filter-conditions.numbers` still carries
-their table.
+Every seed and rung staged so far is returned and banked.
 
 - The collaboration seed is withdrawn: sharing needs iCloud Drive, and
   the checker will not enable it on the work Mac (»skip the collaboration
@@ -166,6 +162,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-03 | the number conditions beyond comparisons: which `predicate_type` does each write? | Numbers for iOS 15.4.2 (T15.4.2 7377.1.21), the checker's own save on the phone of a one-table seed, returned as `olekristensen-v26.0-ios-filter-number-conditions.numbers` | **settled, all eight**: 11 above average, 12 below average, 15 is a duplicate, 16 is unique, 30 in the top and 31 in the bottom with qualifier1 10 for values and 9 for percent, the N in the formula's trailing constant; each formula is a whole-column SUM, so the engine evaluates these by code, not by formula. The same table in the Mac save had come back empty, so the phone round settled it. Every condition the filter menu offers is now measured. Beside it, the table model's inline hidden-states store carried the rules' formulas, and the `+2` of a top-values rule is an addition node, a lone varint 1 the model's reference extractor took for object 1; that field is walked by the schema now. | `src/tst/predicates.ts`, `src/tsa/extractors.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | does a build the library wrote play after Keynote converts a 14.x deck? | Keynote 15.4 (macOS), the checker playing rung v14-K11 | **settled, pass**: "the title dissolved in on the first click - confirmed". The whole v14 ladder is now app-answered. | Keynote rung v14-K11 |
 | 2026-11-03 | does a table grafted with the host theme's preset draw in Numbers? | Numbers 15.4 (macOS) driven by script: a blank document with two tables added by `addTable`, opened and exported | **settled, pass**: the app lists three tables and draws the two added ones in the theme's table style, header row and column shaded, cells as written, with no duplicate identified style in the file. | the render is not kept; `src/tsa/table-donor.ts` |

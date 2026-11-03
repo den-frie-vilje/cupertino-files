@@ -9,7 +9,7 @@
  * persistence layer stay ignorant of every family above it — the layering
  * test holds `tsp` to that.
  */
-import { referencedIds, type ReferenceExtractor } from "../tsp/store.ts";
+import { referencedIds, schemaReferencedIds, type ReferenceExtractor } from "../tsp/store.ts";
 import type { RawMessage } from "../base/protobuf.ts";
 import { TSWP_REFERENCE_EXTRACTORS } from "../tswp/schema.ts";
 import { TSS_REFERENCE_EXTRACTORS } from "../tss/schema.ts";
@@ -19,6 +19,13 @@ import { TSD_REFERENCE_EXTRACTORS } from "../tsd/schema.ts";
 const TABLE_MODEL_STYLE_PRESET = 48;
 /** The model's base data store, whose references the apps declare in their own order. */
 const TABLE_MODEL_DATA_STORE = 4;
+/**
+ * The model's inline hidden-states store, walked by the schema: a filter
+ * rule's formula sits inside it, and a formula's operator node is a lone
+ * varint the shape scan would take for a reference to object 1.
+ */
+const TABLE_MODEL_HIDDEN_STATES = 70;
+const TABLE_MODEL_HIDDEN_STATES_TYPE = "TST.HiddenStatesOwnerArchive";
 
 /**
  * The model's two inline stores whose nested numbers the wide scan would
@@ -59,6 +66,10 @@ function orderedScan(
     const inner = nested.get(field);
     if (inner) {
       for (const sub of m.getMessages(field)) out.push(...orderedScan(sub, inner, new Set(), new Map()));
+      continue;
+    }
+    if (field === TABLE_MODEL_HIDDEN_STATES) {
+      for (const sub of m.getMessages(field)) out.push(...schemaReferencedIds(sub, TABLE_MODEL_HIDDEN_STATES_TYPE));
       continue;
     }
     const alone = m.clone();

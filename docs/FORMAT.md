@@ -1293,8 +1293,10 @@ a document that authored each on its own column
 (`PREDICATE_TYPE_CONDITIONS`): text 1 starts with, 2 ends with, 3
 contains (compiled as `NOT(ISERROR(FIND.CASEINSENSITIVE(needle,
 cell)))`), 4 does not contain, 36 is, 37 is not, 61 does not start with,
-62 does not end with; 13 between and 32 not between; 34 is blank and 35
-is not blank; dates 17 today, 18 yesterday, 19 tomorrow, 20 is, 21
+62 does not end with; 11 above average, 12 below average, 13 between,
+32 not between, 15 is a duplicate, 16 is unique, 30 in the top and 31
+in the bottom with `qualifier1` saying values (10) or percent (9); 34
+is blank and 35 is not blank; dates 17 today, 18 yesterday, 19 tomorrow, 20 is, 21
 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26
 exactly, 27 before and 28 after a relative point, 29 between two
 relative points, 33 in this unit; durations 38 equal to, 40 greater
@@ -1568,7 +1570,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3457 of 3457 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3463 of 3463 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1730,7 +1732,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3457 storages carry the field and **zero** declare it. What
+fixtures here, 3463 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1767,7 +1769,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3457 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3463 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -2139,9 +2141,7 @@ writing and chart appearance all used to be here.
   offline; a set can be enabled, disabled, or switched between "all" and
   "any". Every other condition the filter menu offers is measured
   (`PREDICATE_TYPE_CONDITIONS`, with the app's formula for each) but
-  not written; the number conditions beyond comparisons (above and
-  below average, top and bottom values and percent, duplicate, unique)
-  are unmeasured.
+  not written.
 - **Category summaries** (§14.9). A category—by value, nested, or
   bucketed by date with the app's own functor—is defined from nothing
   (`addCategory`) and rows are regrouped byte-identically to Apple.

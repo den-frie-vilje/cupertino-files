@@ -185,7 +185,11 @@ export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
  * A date condition over a unit carries the unit in `qualifier1` (2 day,
  * 3 week, 4 month, 5 year, 8 quarter) and, where it points, the direction
  * in `qualifier2` (6 ago, 7 from now); "this week" and the rest of the
- * "this" family share code 33 and differ by the unit alone. Duration
+ * "this" family share code 33 and differ by the unit alone. "In the top"
+ * and "in the bottom" are 30 and 31, `qualifier1` saying values (10) or
+ * percent (9); the average, duplicate and unique conditions carry a
+ * whole-column SUM as their formula, which the engine evaluates by the
+ * code rather than the formula. Duration
  * comparisons have their own codes (38 equal, 40 greater than, 44
  * between measured; the rest of the duration family is unmeasured), and
  * a checkbox test compiles to a function the registry does not name,
@@ -204,7 +208,11 @@ export const PREDICATE_TYPE_CONDITIONS: ReadonlyMap<number, string> = new Map([
   [8, "greater than or equal to"],
   [9, "less than"],
   [10, "less than or equal to"],
+  [11, "above average"],
+  [12, "below average"],
   [13, "between"],
+  [15, "is a duplicate"],
+  [16, "is unique"],
   [17, "date is today"],
   [18, "date is yesterday"],
   [19, "date is tomorrow"],
@@ -218,6 +226,8 @@ export const PREDICATE_TYPE_CONDITIONS: ReadonlyMap<number, string> = new Map([
   [27, "date is before (relative)"],
   [28, "date is after (relative)"],
   [29, "date is between (relative)"],
+  [30, "in the top"],
+  [31, "in the bottom"],
   [32, "not between"],
   [33, "date is in this"],
   [34, "is blank"],

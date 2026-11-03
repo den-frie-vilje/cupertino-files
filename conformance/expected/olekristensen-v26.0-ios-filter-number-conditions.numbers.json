@@ -1,0 +1,481 @@
+{
+  "file": "olekristensen-v26.0-ios-filter-number-conditions.numbers",
+  "sha1": "482a8c0d7681cde7a86bc631e554c13c4e8c7368",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 639,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 44
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000020.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000022.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000056.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 496
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Number rules",
+            "rows": 7,
+            "columns": 9,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Number"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "above average"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "below average"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "top values"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "bottom values"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "top percent"
+              },
+              {
+                "r": 0,
+                "c": 6,
+                "v": "bottom percent"
+              },
+              {
+                "r": 0,
+                "c": 7,
+                "v": "duplicate"
+              },
+              {
+                "r": 0,
+                "c": 8,
+                "v": "unique"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "above average"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "below average"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "in the top 2 values"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "in the bottom 2 values"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "in the top 50 percent"
+              },
+              {
+                "r": 1,
+                "c": 6,
+                "v": "in the bottom 50 percent"
+              },
+              {
+                "r": 1,
+                "c": 7,
+                "v": "is a duplicate"
+              },
+              {
+                "r": 1,
+                "c": 8,
+                "v": "is unique"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 6,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 7,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 8,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 8,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 6,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 7,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 8,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "5"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 6,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 7,
+                "v": "12"
+              },
+              {
+                "r": 6,
+                "c": 8,
+                "v": "12"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
