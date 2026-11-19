@@ -22,6 +22,9 @@ in commit messages and pull requests.
 
 - A field a document did not carry before is now written in field-number
   order, as the apps write it, instead of after every existing field.
+- A build added to a slide is stored where Keynote keeps its own, right
+  after the slide archive with the chunks behind the builds, instead of
+  at the end of the slide's component.
 
 ### Fixed
 

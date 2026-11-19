@@ -162,10 +162,10 @@ describe("reference extractors agree with Apple", () => {
     // 17 Keynote slides and four stylesheets; the filter-conditions
     // fixtures one stylesheet each, three of them; the build-order deck
     // and the two summary and duration documents 20 more in the same two
-    // classes.
+    // classes, the pinned-dissolve deck 18 more.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=277: ${disagree <= 277} (${disagree})`).toBe(
-      `disagree<=277: true (${disagree})`,
+    expect(`disagree<=295: ${disagree <= 295} (${disagree})`).toBe(
+      `disagree<=295: true (${disagree})`,
     );
   });
 

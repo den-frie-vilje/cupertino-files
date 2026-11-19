@@ -396,7 +396,13 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
   }
 
-  const build = store.createObject(BUILD_TYPE.BUILD, component);
+  // The apps keep a slide's builds right after the slide archive in its
+  // component, then its chunks, each block in list order, and Keynote
+  // orders a build appended elsewhere behind every other.
+  const slideAt = component.objects.indexOf(slide);
+  const buildCount = slide.message.getMessages(Slide.BUILDS).length;
+  const chunkCount = slide.message.getMessages(Slide.BUILD_CHUNKS).length;
+  const build = store.createObject(BUILD_TYPE.BUILD, component, { at: slideAt + 1 + buildCount });
   const message = RawMessage.create();
   message.setMessage(BuildFields.DRAWABLE, makeRef(spec.drawableId));
   message.setString(BuildFields.DELIVERY, byParagraph ? "By Paragraph" : "All at Once");
@@ -417,7 +423,7 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     const identifier = RawMessage.create();
     identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid());
     identifier.setVarint(BuildChunkIdentifierFields.BUILD_CHUNK_ID, stage);
-    const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component);
+    const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component, { at: slideAt + 1 + buildCount + 1 + chunkCount + chunks.length });
     const chunkMessage = RawMessage.create();
     chunkMessage.setMessage(BuildChunkFields.BUILD, makeRef(build.identifier));
     chunkMessage.setDouble(BuildChunkFields.DELAY, delay);
@@ -467,6 +473,28 @@ export function setBuildOrder(store: ObjectStore, slide: IwaObject, order: reado
   const strays = chunks.filter((ref) => !wanted.includes(chunkBuild(ref) ?? -1n));
   slide.message.setMessages(Slide.BUILDS, wanted.map((id) => makeRef(id)));
   slide.message.setMessages(Slide.BUILD_CHUNKS, [...orderedChunks, ...strays]);
+  layoutBuildObjects(store, slide);
+}
+
+/**
+ * Put a slide's build and chunk archives where the apps keep them in the
+ * slide's component: right after the slide, builds then chunks, each
+ * block in the slide's list order.
+ */
+export function layoutBuildObjects(store: ObjectStore, slide: IwaObject): void {
+  const component = store.componentOf(slide.identifier);
+  if (!component) return;
+  const ordered = [...slide.message.getMessages(Slide.BUILDS), ...slide.message.getMessages(Slide.BUILD_CHUNKS)]
+    .map((ref) => component.byId.get(ref.getVarint(1)!))
+    .filter((object): object is IwaObject => object !== undefined);
+  const moving = new Set(ordered);
+  const rest = component.objects.filter((object) => !moving.has(object));
+  const slideAt = rest.indexOf(slide);
+  if (slideAt < 0) return;
+  const laid = [...rest.slice(0, slideAt + 1), ...ordered, ...rest.slice(slideAt + 1)];
+  if (laid.every((object, i) => object === component.objects[i])) return;
+  component.objects = laid;
+  component.structurallyDirty = true;
 }
 
 /** Take a build off a slide. The archive stays; the slide stops listing it. */

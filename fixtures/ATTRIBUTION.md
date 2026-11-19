@@ -1301,3 +1301,13 @@ node scripts/scan-fixture-privacy.ts
   first in the Build Order, it remains third no matter what I do. The
   other animations I can move freely, though not after the dissolve in
   of the title." The body text is the request itself.
+
+### olekristensen-v26.0-mac-pinned-dissolve.key
+- 575,084 bytes, md5 `84672597898e5f0dc5f82cd653542566`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  third form: slide 1 with the library's dissolve on the title, slide 2
+  empty. The checker gave each body an Appear and slide 2's title the
+  app's own Dissolve, and commented on slide 1 "Nonsensical task, as the
+  dissolve landed last by itself. So I did not attempt to drag it. The
+  start popup says 'Ved klik'" and on slide 2 "It moved… here it
+  worked". The bodies are the request itself.

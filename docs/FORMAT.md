@@ -1575,7 +1575,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3559 of 3559 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3648 of 3648 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1737,7 +1737,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3559 storages carry the field and **zero** declare it. What
+fixtures here, 3648 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1774,7 +1774,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3559 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3648 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -2151,8 +2151,12 @@ writing and chart appearance all used to be here.
   all-at-once and by-paragraph builds are written from nothing
   (`addBuild`), Keynote plays one on a current deck and on a converted
   14.x deck, and `setBuildOrder` writes the order the Build Order drag
-  writes (the slide's build list and chunk list); actions are read, their
-  shape measured, and not authored.
+  writes (the slide's build list and chunk list, and the archives' place
+  in the slide's component: right after the slide, builds then chunks,
+  as every app-written deck keeps them); actions are read, their shape
+  measured, and not authored. The app writes a text placeholder's
+  dissolve as `apple:dissolve character`; whether Keynote orders a build
+  with another id behind its own is the open question.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

@@ -246,13 +246,17 @@ export class ObjectStore {
    * exists (falling back to [1, 0, 5], which is what numbers-parser writes).
    * `cloneFrom` seeds the payload with a copy of another object's message.
    */
-  createObject(type: number, component: Component, options: { cloneFrom?: IwaObject } = {}): IwaObject {
+  createObject(type: number, component: Component, options: { cloneFrom?: IwaObject; at?: number } = {}): IwaObject {
     const id = this.allocateId();
     const obj = IwaObject.create(id, type, [1, 0, 5]);
     const sibling = options.cloneFrom ?? this.findByType(type);
     if (sibling) obj.copyVersionsFrom(sibling);
     if (options.cloneFrom) obj.setMessageBytes(options.cloneFrom.message.toBytes());
-    component.objects.push(obj);
+    // `at` places the object in the component's stream; the apps keep
+    // some families at a fixed place (a slide's builds right after the
+    // slide), and the end is where everything else goes.
+    if (options.at !== undefined && options.at >= 0 && options.at < component.objects.length) component.objects.splice(options.at, 0, obj);
+    else component.objects.push(obj);
     component.byId.set(id, obj);
     component.structurallyDirty = true;
     this.index.set(id, { obj, component });
