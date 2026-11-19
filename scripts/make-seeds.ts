@@ -231,20 +231,29 @@ function seedDurationConditions(): Uint8Array {
 // ---------------------------------------------------------- build order
 
 function seedBuildOrder(): Uint8Array {
-  // The returned first round measured the order (the slide's two lists)
-  // and an action, and the checker could not drag the library's dissolve
-  // first. That seed wrote the slide's build lists after a higher field;
-  // this one writes them in number order, and asks the one question left.
+  // Two rounds have shown the library's dissolve pinned last in Build
+  // Order, with the slide's lists in and out of field order alike, while
+  // the build, its chunk, their component and the slide's declarations
+  // match the app's own field for field. Two slides ask the app itself:
+  // its own dissolve on the same title beside ours, and ours on a body.
   const doc = KeynoteDocument.blank();
-  const slide = doc.slides()[0]!;
-  slide.title = "Build order, second try: can the dissolve be dragged first?";
-  slide.body =
-    "1. Give this body a build in: select it, Animate > Build In > Add an Effect > Appear (Animer > Byg ind > Tilføj en effekt > Vises).\n" +
-    "2. Open Build Order (Bygrækkefølge) at the bottom of the Animate panel and drag the title's Dissolve (Opløs) to the top.\n" +
-    "3. Save, and comment on the slide: moved, or still pinned.";
-  const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+  const first = doc.slides()[0]!;
+  first.title = "Pinned dissolve, slide 1: the app's own beside ours";
+  first.body =
+    "1. Open Build Order (Bygrækkefølge) and try to drag this title's Dissolve (Opløs) below nothing: it is the only build. Then add an Appear to this body (Animer > Byg ind > Tilføj en effekt > Vises) and try to drag the Dissolve below it.\n" +
+    "2. Whatever happened, keep ours and add a second build to the title with the app: Animate > Build In > Add an Effect > Dissolve (Animer > Byg ind > Tilføj en effekt > Opløs). Try to drag that one too.\n" +
+    "3. Comment on this slide: which builds moved and which stayed.";
+  const title = refId(first.object.message, Slide.TITLE_PLACEHOLDER);
   if (title === undefined) throw new Error("build order seed: blank deck has no title placeholder");
-  slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
+  first.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
+
+  const second = doc.addSlide();
+  second.title = "Pinned dissolve, slide 2: ours on the body";
+  second.body =
+    "This body has the library's dissolve. Add an Appear to the title (Animer > Byg ind > Tilføj en effekt > Vises), then try to drag the body's Dissolve (Opløs) above it in Bygrækkefølge. Comment on this slide: moved, or pinned. Save.";
+  const body = refId(second.object.message, Slide.BODY_PLACEHOLDER);
+  if (body === undefined) throw new Error("build order seed: added slide has no body placeholder");
+  second.addBuild({ drawableId: body, effect: "apple:dissolve", duration: 1 });
   return doc.save();
 }
 
@@ -818,9 +827,9 @@ const seeds: Seed[] = [
     name: "seed-build-order.key",
     bytes: seedBuildOrder(),
     check: (bytes) => {
-      const slide = KeynoteDocument.load(bytes).slides()[0]!;
-      if (slide.builds().length !== 1) throw new Error("build order seed: expected the title's one build");
-      if (!slide.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
+      const slides = KeynoteDocument.load(bytes).slides();
+      if (slides.length !== 2 || slides.some((slide) => slide.builds().length !== 1)) throw new Error("build order seed: expected two slides with one build each");
+      if (!slides[1]!.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
     },
   },
   {

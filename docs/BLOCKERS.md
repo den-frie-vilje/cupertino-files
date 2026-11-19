@@ -24,14 +24,15 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 `npm run seeds -- out` writes it beside the returned ones.
 
-- `seed-build-order.key` — **one question.** The first round's deck
-  came back with its dissolve build pinned third in Build Order
-  (Bygrækkefølge), and that seed had written the slide's build lists
-  after a higher-numbered field, which the app moved into place on
-  save. This deck writes them in number order and asks only whether the
-  dissolve can be dragged to the top now; the other candidate is the
-  build's attribute the app re-stamps, which the next round isolates if
-  the drag still pins.
+- `seed-build-order.key` — **two slides, one question.** The library's
+  dissolve build stays pinned last in Build Order (Bygrækkefølge)
+  whether the slide's lists are in field order or not, and offline the
+  build, its chunk, their component and the slide's declarations match
+  the app's own field for field. Slide 1 carries ours on the title and
+  asks the checker to add the app's own Dissolve to the same title and
+  drag both; slide 2 carries ours on the body. The returned deck holds
+  an app-authored dissolve beside ours in one document, which is the
+  byte diff this needs, and says whether the title is the condition.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
@@ -167,6 +168,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-19 | is the pinned dissolve the slide's field order? | Keynote 15.4 (macOS, Danish UI), the checker dragging in a regenerated deck whose slide lists are in field order: "still pinned" | **refuted**: the order of the slide's fields is not the cause. The build archive, its chunk, the component both sit in and the slide's declared references are the app's own shape field for field in the returned deck, so what pins it is not visible offline; the staged deck asks the app to write its own dissolve beside ours. | `scripts/make-seeds.ts` |
 | 2026-11-19 | the other summaries: which `agg_type` is each, and what does the aggregator cache hold? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-summaries.numbers`, returned as `olekristensen-v26.0-mac-summaries-seed.numbers`; the checker on C3: "The rows only show the summary numbers for animals and note, nothing is shown in the summary cells for fruit and transport" | **settled, the codes and the record**: `agg_type` 2 Sum, 3 Average, 4 Min, 5 Max (Danish Sum, Gennemsnit, Minimum, Maksimum), one `AggregatorArchive` per summarised column, referenced from the group-by and inlined again in its field 4; every aggregator carries the same `TST.AccumulatorArchive` whatever its type, which the apps' schema names field for field (per-kind counts, min, max, sum and product as cell values, a duration total in seconds), the root over all rows and one per group, all four groups correct. The two empty group rows the checker saw are in the summary model, not the cache: its tile holds cell records for two of the four group rows only. A summary writer therefore produces the entry, the record per node and the summary model's cells; which group rows the app materialises is the app's own choice. | `src/tst/categories.ts`, test/authored-returns.test.ts |
 | 2026-11-19 | the duration comparisons: which `predicate_type` does each write? | Numbers 15.4 (M15.4-7051.0.79-2, macOS), the checker's own save of `seed-duration-conditions.numbers`, returned as `olekristensen-v26.0-mac-duration-conditions.numbers` | **settled, the family is complete**: 39 not equal to, 41 greater than or equal to, 42 less than, 43 less than or equal to, beside 38, 40 and 44; each formula the comparison over a 1h literal, the operand a duration with units 4. `addFilterRule` writes all six comparisons byte for byte as the fixture's. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
 | 2026-11-19 | build order and an action build: how does the app write them, and why could the library's build not be moved first? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-build-order.key`, returned as `olekristensen-v26.0-mac-build-order-seed.key`; the checker on the slide: "The preexisting dissolve build on the title had some kind of defect, I cannot move it first in the Build Order, it remains third no matter what I do. The other animations I can move freely, though not after the dissolve in of the title." | **the order settled, the pin not**: build order is the order of the slide archive's build list and chunk list, chunks staying with their build; the app rewrote both as action, appear, dissolve. An Appear build is the library's shape with effect `apple:bc-appear`; a Move action is the same frame with type Action, effect `apple:action-motion-path`, an acceleration and a motion path of two bezier points, no delivery fields. The app also set the library's dissolve to 1.25 s from the 1 s asked and re-stamped its attribute seed. `setBuildOrder` writes the drag. The seed had written the slide's two lists after a higher field; every new field now goes in number order, and a regenerated deck is staged to ask whether the dissolve moves. | `src/keynote/builds.ts`, `src/base/protobuf.ts`, test/keynote.test.ts |
