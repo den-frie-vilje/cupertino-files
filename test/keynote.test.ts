@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { MASTER_ONLY_FIELDS, Slide } from "../src/keynote/schema.ts";
+import { MASTER_ONLY_FIELDS, Slide, SlideNode } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
@@ -679,6 +679,26 @@ describe("build order", () => {
     expect(layout(reloaded)).toEqual(["slide", "BuildArchive", "BuildArchive", "BuildChunkArchive", "BuildChunkArchive"]);
     const component = reloaded.store.componentOf(reloaded.slides()[0]!.id)!;
     expect(component.objects.slice(1, 3).map((o) => o.identifier)).toEqual([ids[1], ids[0]]);
+  });
+
+  it("marks the slide's node as carrying explicit builds, as every app-written slide with a build is", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) ?? false).toBe(false);
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:dissolve character" });
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(true);
+    slide.removeBuild(build.id);
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(false);
+    // The corpus: no app-written slide that lists a build says false; the
+    // flag is set, or absent where the node's caches were never computed.
+    for (const name of readdirSync(FIXTURES).filter((n) => n.endsWith(".key"))) {
+      const deck = KeynoteDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      for (const s of deck.slides()) {
+        if (s.object.message.getMessages(Slide.BUILDS).length === 0) continue;
+        if (name.includes("build-seed")) continue; // the library's build as Keynote 15.1.1 resaved it, flag left false
+        expect(`${name} ${s.id}: ${s.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) !== false}`).toBe(`${name} ${s.id}: true`);
+      }
+    }
   });
 
   it("reads the app's own dissolve on a title as apple:dissolve character, beside the library's", () => {

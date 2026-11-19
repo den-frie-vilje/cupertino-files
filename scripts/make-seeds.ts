@@ -40,7 +40,7 @@ import {
   NumbersDocument,
   PagesDocument,
 } from "../src/index.ts";
-import { Slide } from "../src/keynote/schema.ts";
+import { Slide, SlideNode } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Storage } from "../src/tswp/schema.ts";
 import type { TableModel } from "../src/tst/tables.ts";
@@ -231,29 +231,20 @@ function seedDurationConditions(): Uint8Array {
 // ---------------------------------------------------------- build order
 
 function seedBuildOrder(): Uint8Array {
-  // Three rounds pinned the library's dissolve last in Build Order. Two
-  // differences from the app's own files remained: the build and chunk
-  // archives' place in the slide's component, now the app's, and the
-  // effect id, which the app writes as "apple:dissolve character" on a
-  // text placeholder where the library wrote "apple:dissolve". One slide
-  // per id, both placed the app's way, isolates the two.
+  // Four rounds pinned the library's dissolve last in Build Order. The
+  // slide node's has_explicit_builds, set on every app-written slide
+  // with a build and unset on the library's, is the remaining
+  // difference; addBuild sets it now, and the deck asks the drag again.
   const doc = KeynoteDocument.blank();
-  const ask =
+  const slide = doc.slides()[0]!;
+  slide.title = "The library's dissolve is on this title";
+  slide.body =
     "Give this body a build in: Animate > Build In > Add an Effect > Appear (Animer > Byg ind > Tilføj en effekt > Vises). " +
     "Open Build Order (Bygrækkefølge): if the title's Dissolve (Opløs) is not already first, drag it first. " +
-    "Comment on this slide: moved, or pinned.";
-  const first = doc.slides()[0]!;
-  first.title = "Slide 1: the library's dissolve, effect apple:dissolve";
-  first.body = ask;
-  const title = refId(first.object.message, Slide.TITLE_PLACEHOLDER);
+    "Comment on this slide: moved, or pinned. Save.";
+  const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
   if (title === undefined) throw new Error("build order seed: blank deck has no title placeholder");
-  first.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
-  const second = doc.addSlide();
-  second.title = "Slide 2: the library's dissolve, effect apple:dissolve character";
-  second.body = ask + " Then save.";
-  const title2 = refId(second.object.message, Slide.TITLE_PLACEHOLDER);
-  if (title2 === undefined) throw new Error("build order seed: added slide has no title placeholder");
-  second.addBuild({ drawableId: title2, effect: "apple:dissolve character", duration: 1 });
+  slide.addBuild({ drawableId: title, effect: "apple:dissolve character", duration: 1 });
   return doc.save();
 }
 
@@ -827,10 +818,10 @@ const seeds: Seed[] = [
     name: "seed-build-order.key",
     bytes: seedBuildOrder(),
     check: (bytes) => {
-      const slides = KeynoteDocument.load(bytes).slides();
-      if (slides.length !== 2 || slides.some((slide) => slide.builds().length !== 1)) throw new Error("build order seed: expected two slides with one build each");
-      if (slides[1]!.builds()[0]!.read().effect !== "apple:dissolve character") throw new Error("build order seed: slide 2 should carry the app's effect id");
-      if (!slides[1]!.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
+      const slide = KeynoteDocument.load(bytes).slides()[0]!;
+      if (slide.builds().length !== 1) throw new Error("build order seed: expected the title's one build");
+      if (slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) !== true) throw new Error("build order seed: the slide node must say it carries explicit builds");
+      if (!slide.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
     },
   },
   {

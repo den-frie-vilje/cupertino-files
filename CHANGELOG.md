@@ -26,7 +26,8 @@ in commit messages and pull requests.
   order, as the apps write it, instead of after every existing field.
 - A build added to a slide is stored where Keynote keeps its own, right
   after the slide archive with the chunks behind the builds, instead of
-  at the end of the slide's component.
+  at the end of the slide's component, and the slide's node says it
+  carries explicit builds, as every app-written slide with a build does.
 
 ### Fixed
 

@@ -1311,3 +1311,12 @@ node scripts/scan-fixture-privacy.ts
   dissolve landed last by itself. So I did not attempt to drag it. The
   start popup says 'Ved klik'" and on slide 2 "It moved… here it
   worked". The bodies are the request itself.
+
+### olekristensen-v26.0-mac-pinned-dissolve-placed.key
+- 580,375 bytes, md5 `abc60503a9da03649c7b747059f6cc98`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  fourth form: the library's dissolve on each of two titles, its build
+  and chunk placed after the slide, effect `apple:dissolve` on slide 1
+  and `apple:dissolve character` on slide 2. The checker gave each body
+  an Appear and commented "Pinned, still" and "Also pinned". The bodies
+  are the request itself.

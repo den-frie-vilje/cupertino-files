@@ -67,6 +67,8 @@ export const SlideNode = protoFields("KN.SlideNodeArchive", {
   HAS_TRANSITION: "hasTransition",
   HAS_NOTE: "hasNote",
   DEPTH: "depth",
+  /** True or absent on every app-written slide that carries a build, never false; a build on a slide that says false is one Keynote shows but will not reorder. */
+  HAS_EXPLICIT_BUILDS: "has_explicit_builds",
 });
 
 /** KN.SlideArchive. */

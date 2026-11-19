@@ -456,7 +456,9 @@ export class KeynoteSlide {
 
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
-    return removeBuild(this.object, buildId);
+    const removed = removeBuild(this.object, buildId);
+    if (removed && this.builds().length === 0) this.node.message.setBool(SlideNode.HAS_EXPLICIT_BUILDS, false);
+    return removed;
   }
 
   /**
@@ -548,9 +550,15 @@ export class KeynoteSlide {
         this.storageOfShape(this.store.resolve(spec.drawableId)) ??
         this.placeholderStorageOf(spec.drawableId);
       if (!storage) throw new RangeError("a by-paragraph build needs a target with text");
-      return createBuild(this.store, this.object, { ...spec, paragraphs: storage.paragraphs().length });
+      return this.explicit(createBuild(this.store, this.object, { ...spec, paragraphs: storage.paragraphs().length }));
     }
-    return createBuild(this.store, this.object, spec);
+    return this.explicit(createBuild(this.store, this.object, spec));
+  }
+
+  /** Mark the slide's node as carrying explicit builds, as every app-written slide with a build is. */
+  private explicit(build: BuildModel): BuildModel {
+    this.node.message.setBool(SlideNode.HAS_EXPLICIT_BUILDS, true);
+    return build;
   }
 
   /** The storage of a placeholder drawable the slide lists, by its id. */

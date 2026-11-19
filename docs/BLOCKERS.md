@@ -24,17 +24,14 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 `npm run seeds -- out` writes it beside the returned ones.
 
-- `seed-build-order.key` — **two slides, two candidates.** Three rounds
-  pinned the library's dissolve last in Build Order (Bygrækkefølge).
-  Two differences from the app's own files remained after everything
-  else matched field for field: the build and chunk archives sat at the
-  end of the slide's component where every app-written deck keeps them
-  right after the slide, builds then chunks in list order, which the
-  library now does too; and the effect id, `apple:dissolve`, which the
-  app never writes on a build in (its own dissolve on a text placeholder
-  is `apple:dissolve character`). Slide 1 carries the old id placed the
-  app's way, slide 2 the app's id; each asks whether the dissolve is
-  first or can be dragged first once the body has an Appear.
+- `seed-build-order.key` — **one slide, the slide node.** Four rounds
+  pinned the library's dissolve last in Build Order (Bygrækkefølge);
+  field order, the archives' place in the component and the effect id
+  are refuted. What remained is the slide node's `has_explicit_builds`:
+  1 or absent on the app-written slides that carry a build, the blank's
+  explicit 0 on the library's; a build the app regards as not explicit
+  is one it shows and will not reorder. `addBuild` sets it now. The
+  deck asks the drag once more.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
@@ -176,6 +173,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-19 | the pinned dissolve, fourth round: placement or effect id? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve-placed.key`: "Pinned, still" and "Also pinned" | **both refuted, and the node found**: with the build and chunk placed as the app places them and with the app's own effect id, the app still put its new Appear ahead of the library's in both lists. A whole-document diff of a fresh library deck against the app's resave of the same deck, by archive, left the slide's `KN.SlideNodeArchive`: the app's save sets `build_event_count` and its cache version where the library leaves the blank's none and −1, and across the app-written slides with a build `has_explicit_builds` is 1, or absent where the node's caches were never computed, where the library's slides carry their build with the blank's explicit 0. The library sets it with every build now and clears it with the last; the staged deck asks the drag once more. | `src/keynote/document.ts`, test/keynote.test.ts |
 | 2026-11-19 | the pinned dissolve, third round: is the cause in the build's bytes? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve.key`; on slide 1 "Nonsensical task, as the dissolve landed last by itself. So I did not attempt to drag it. The start popup says 'Ved klik'", on slide 2 "It moved… here it worked", and on the resaved first-round deck "It worked" | **two candidates left, both now addressed**: on slide 1 the app placed the body's new Appear chunk ahead of the library's without a drag, where on slide 2 its own dissolve took the drag; the resaved deck's save carries no new build, so its "worked" is the checker's word alone. Offline, the one layout difference between the library's deck and the app's resave of it is the place of the build and chunk archives in the slide's component: every app-written deck keeps them right after the slide, builds then chunks in list order, and the library appended them last; `createBuild` and `setBuildOrder` now lay them out the app's way. The effect-id census is the other: `apple:dissolve` occurs only on builds the library wrote, and the app's own dissolve on a text placeholder is `apple:dissolve character`. The staged deck isolates the two. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |
 | 2026-11-19 | is the pinned dissolve the slide's field order? | Keynote 15.4 (macOS, Danish UI), the checker dragging in a regenerated deck whose slide lists are in field order: "still pinned" | **refuted**: the order of the slide's fields is not the cause. The build archive, its chunk, the component both sit in and the slide's declared references are the app's own shape field for field in the returned deck, so what pins it is not visible offline; the staged deck asks the app to write its own dissolve beside ours. | `scripts/make-seeds.ts` |
 | 2026-11-19 | the other summaries: which `agg_type` is each, and what does the aggregator cache hold? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-summaries.numbers`, returned as `olekristensen-v26.0-mac-summaries-seed.numbers`; the checker on C3: "The rows only show the summary numbers for animals and note, nothing is shown in the summary cells for fruit and transport" | **settled, the codes and the record**: `agg_type` 2 Sum, 3 Average, 4 Min, 5 Max (Danish Sum, Gennemsnit, Minimum, Maksimum), one `AggregatorArchive` per summarised column, referenced from the group-by and inlined again in its field 4; every aggregator carries the same `TST.AccumulatorArchive` whatever its type, which the apps' schema names field for field (per-kind counts, min, max, sum and product as cell values, a duration total in seconds), the root over all rows and one per group, all four groups correct. The two empty group rows the checker saw are in the summary model, not the cache: read with the table's decoders (`summaryModel()`), it holds the four summaries for Note and Animal, the rows the checker had set them in, and nothing for Fruit and Transport, each cell a formula whose one node is a category reference naming the table, the aggregator and the group. A summary writer therefore produces the entry, the record per node and the summary model's cells; which group rows the app materialises is the app's own choice. | `src/tst/categories.ts`, test/authored-returns.test.ts |
