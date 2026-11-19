@@ -87,6 +87,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "KeynoteSlide.placeholders", tool: null },
   { api: "KeynoteSlide.removeBuild", tool: null },
   { api: "KeynoteSlide.setBackground", tool: "set_slide_background" },
+  { api: "KeynoteSlide.setBuildOrder", tool: null },
   { api: "KeynoteSlide.setLayout", tool: "manage_slides" },
   { api: "KeynoteSlide.setPlaceholderText", tool: null },
   { api: "KeynoteSlide.setTransition", tool: null },

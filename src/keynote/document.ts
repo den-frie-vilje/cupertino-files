@@ -59,6 +59,7 @@ import {
   createBuild,
   type NewBuild,
   removeBuild,
+  setBuildOrder,
 } from "./builds.ts";
 
 /** Shared-family extractors plus the KN types this document mutates. */
@@ -456,6 +457,14 @@ export class KeynoteSlide {
   /** Take an animation off this slide. */
   removeBuild(buildId: bigint): boolean {
     return removeBuild(this.object, buildId);
+  }
+
+  /**
+   * Play this slide's builds in `order` (their ids, each named once):
+   * the Build Order panel's drag, written as the app writes it.
+   */
+  setBuildOrder(order: readonly bigint[]): void {
+    setBuildOrder(this.store, this.object, order);
   }
 
   /**

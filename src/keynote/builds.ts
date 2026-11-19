@@ -57,7 +57,7 @@ import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUid } from "../tst/uidmap.ts";
-import { Slide } from "./schema.ts";
+import { Slide, BuildChunkOwner } from "./schema.ts";
 
 /** KN archive types in the build graph. */
 export const BUILD_TYPE = {
@@ -444,6 +444,29 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     ...chunks.map((chunk) => chunk.identifier),
   ]);
   return new BuildModel(store, build);
+}
+
+/**
+ * Put a slide's builds in `order`, the order they play in: the slide's
+ * build list and its chunk list, each chunk staying with its build, as
+ * the app rewrites both lists when a build is dragged in Build Order.
+ * Every build on the slide must be named exactly once.
+ */
+export function setBuildOrder(store: ObjectStore, slide: IwaObject, order: readonly bigint[]): void {
+  const builds = slide.message.getMessages(Slide.BUILDS).map((ref) => ref.getVarint(1)!);
+  const wanted = [...order];
+  if (wanted.length !== builds.length || new Set(wanted).size !== wanted.length || wanted.some((id) => !builds.includes(id))) {
+    throw new RangeError(`the order must name each of the slide's ${builds.length} builds once`);
+  }
+  const chunks = slide.message.getMessages(Slide.BUILD_CHUNKS);
+  const chunkBuild = (ref: RawMessage): bigint | undefined => {
+    const chunk = store.object(ref.getVarint(1)!);
+    return chunk ? refId(chunk.message, BuildChunkOwner.BUILD) : undefined;
+  };
+  const orderedChunks = wanted.flatMap((id) => chunks.filter((ref) => chunkBuild(ref) === id));
+  const strays = chunks.filter((ref) => !wanted.includes(chunkBuild(ref) ?? -1n));
+  slide.message.setMessages(Slide.BUILDS, wanted.map((id) => makeRef(id)));
+  slide.message.setMessages(Slide.BUILD_CHUNKS, [...orderedChunks, ...strays]);
 }
 
 /** Take a build off a slide. The archive stays; the slide stops listing it. */

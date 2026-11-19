@@ -7,6 +7,22 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+### Added
+
+- `addFilterRule` writes the four remaining duration comparisons (not
+  equal to, greater than or equal to, less than, less than or equal to),
+  so the duration family is complete.
+- `SlideModel.setBuildOrder` puts a slide's builds in the order they
+  play, as the Build Order panel's drag writes it.
+- A category's aggregates name their type (`aggregate`: count, sum,
+  average, min or max), and `AGGREGATE_TYPE_NAMES` and
+  `AccumulatorFields` name the codes and the record under them.
+
+### Fixed
+
+- A field a document did not carry before is now written in field-number
+  order, as the apps write it, instead of after every existing field.
+
 ### Fixed
 
 - Formula reading renders date and duration literals, which read as 0,

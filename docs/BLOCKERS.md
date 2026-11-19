@@ -20,31 +20,18 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — three seeds staged
+## Needs a Mac — one seed staged
 
-`npm run seeds -- out` writes them beside the returned ones; each
-carries its own instructions, and none passes or fails: what the
-checker builds is the measurement.
+`npm run seeds -- out` writes it beside the returned ones.
 
-- `seed-summaries.numbers` — **a comparison.** A table grouped by Kind
-  with four number columns headed Sum, Average, Min and Max; the checker
-  sets that summary in a group row of each. The returned file gives the
-  accumulator shape the aggregator cache holds for each aggregate type,
-  which a summary writer needs beside the one Count instance measured.
-- `seed-duration-conditions.numbers` — **a comparison.** One rule per
-  column on a duration column: not equal to, greater than or equal to,
-  less than, less than or equal to. The four duration codes still
-  unseen (equal to, greater than and between are measured).
-- `seed-build-order.key` — **a comparison.** One slide whose title the
-  library gave a dissolve build; the checker adds a build to the body,
-  moves it first in the Build Order panel, and gives the title a Move
-  action. The returned deck carries the ordering fields and an action
-  build, neither of which any fixture has.
-
-- The collaboration seed is withdrawn: sharing needs iCloud Drive, and
-  the checker will not enable it on the work Mac (»skip the collaboration
-  features for now, i don't want to enable icloud drive on my work mac«).
-  The question it carried stays open below.
+- `seed-build-order.key` — **one question.** The first round's deck
+  came back with its dissolve build pinned third in Build Order
+  (Bygrækkefølge), and that seed had written the slide's build lists
+  after a higher-numbered field, which the app moved into place on
+  save. This deck writes them in number order and asks only whether the
+  dissolve can be dragged to the top now; the other candidate is the
+  build's attribute the app re-stamps, which the next round isolates if
+  the drag still pins.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
@@ -90,14 +77,16 @@ that rebuild the structures from them.
   twins show and the library still does not author: function-shaped
   filter rules beyond text-contains and starts-with, and per-group
   category summaries — the two roadmap rows of the matrix.
-- **Keynote builds: creation shipped and played.** Reading is measured
-  whole — effect, timing and delivery decode from `animationAttributes`
-  against the fixture deck — retiming writes the same fields, and
-  `addBuild` writes an all-at-once or by-paragraph build and its chunks
-  field for field as the deck's app-authored builds carry them; Keynote
-  15.1.1 played one (VERIFICATION). Not authored: actions and build
-  order. The scripting dictionary has no builds to ask, so a played
-  build stays a person's observation.
+- **Keynote builds: creation, order and a played build.** Reading is
+  measured whole — effect, timing and delivery decode from
+  `animationAttributes` against the fixture deck — retiming writes the
+  same fields, `addBuild` writes an all-at-once or by-paragraph build
+  and its chunks field for field as the deck's app-authored builds
+  carry them, Keynote 15.1.1 played one and 15.4 played one on a
+  converted 14.x deck (VERIFICATION), and `setBuildOrder` writes the
+  order the Build Order drag writes. Not authored: actions, whose shape
+  the returned deck now carries. Whether the app lets the library's
+  build be dragged first is the staged question.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
@@ -178,6 +167,9 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-19 | the other summaries: which `agg_type` is each, and what does the aggregator cache hold? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-summaries.numbers`, returned as `olekristensen-v26.0-mac-summaries-seed.numbers`; the checker on C3: "The rows only show the summary numbers for animals and note, nothing is shown in the summary cells for fruit and transport" | **settled, the codes and the record**: `agg_type` 2 Sum, 3 Average, 4 Min, 5 Max (Danish Sum, Gennemsnit, Minimum, Maksimum), one `AggregatorArchive` per summarised column, referenced from the group-by and inlined again in its field 4; every aggregator carries the same `TST.AccumulatorArchive` whatever its type, which the apps' schema names field for field (per-kind counts, min, max, sum and product as cell values, a duration total in seconds), the root over all rows and one per group, all four groups correct. The two empty group rows the checker saw are in the summary model, not the cache: its tile holds cell records for two of the four group rows only. A summary writer therefore produces the entry, the record per node and the summary model's cells; which group rows the app materialises is the app's own choice. | `src/tst/categories.ts`, test/authored-returns.test.ts |
+| 2026-11-19 | the duration comparisons: which `predicate_type` does each write? | Numbers 15.4 (M15.4-7051.0.79-2, macOS), the checker's own save of `seed-duration-conditions.numbers`, returned as `olekristensen-v26.0-mac-duration-conditions.numbers` | **settled, the family is complete**: 39 not equal to, 41 greater than or equal to, 42 less than, 43 less than or equal to, beside 38, 40 and 44; each formula the comparison over a 1h literal, the operand a duration with units 4. `addFilterRule` writes all six comparisons byte for byte as the fixture's. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
+| 2026-11-19 | build order and an action build: how does the app write them, and why could the library's build not be moved first? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-build-order.key`, returned as `olekristensen-v26.0-mac-build-order-seed.key`; the checker on the slide: "The preexisting dissolve build on the title had some kind of defect, I cannot move it first in the Build Order, it remains third no matter what I do. The other animations I can move freely, though not after the dissolve in of the title." | **the order settled, the pin not**: build order is the order of the slide archive's build list and chunk list, chunks staying with their build; the app rewrote both as action, appear, dissolve. An Appear build is the library's shape with effect `apple:bc-appear`; a Move action is the same frame with type Action, effect `apple:action-motion-path`, an acceleration and a motion path of two bezier points, no delivery fields. The app also set the library's dissolve to 1.25 s from the 1 s asked and re-stamped its attribute seed. `setBuildOrder` writes the drag. The seed had written the slide's two lists after a higher field; every new field now goes in number order, and a regenerated deck is staged to ask whether the dissolve moves. | `src/keynote/builds.ts`, `src/base/protobuf.ts`, test/keynote.test.ts |
 | 2026-11-03 | can every measured filter condition be written as the app writes it? | the 44 app-written rules of the three filter-conditions fixtures, each re-authored on its own table and column and compared byte for byte; no app round | **settled, all 44 identical**: `compileCondition` rebuilds each condition's formula from the measured templates (one relative-point shape covers the date family in every unit and both directions), `writePredicate` the codes and operands, and the formula builder gained date, duration, thunk, group and index-call nodes and the whole-column cross reference to carry them; `conditionHolds` evaluates each offline for the hidden rows. The only mismatch on the first run was the parenthesis the app keeps as a one-item list node in the quarter formula. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
 | 2026-11-03 | the number conditions beyond comparisons: which `predicate_type` does each write? | Numbers for iOS 15.4.2 (T15.4.2 7377.1.21), the checker's own save on the phone of a one-table seed, returned as `olekristensen-v26.0-ios-filter-number-conditions.numbers` | **settled, all eight**: 11 above average, 12 below average, 15 is a duplicate, 16 is unique, 30 in the top and 31 in the bottom with qualifier1 10 for values and 9 for percent, the N in the formula's trailing constant; each formula is a whole-column SUM, so the engine evaluates these by code, not by formula. The same table in the Mac save had come back empty, so the phone round settled it. Every condition the filter menu offers is now measured. Beside it, the table model's inline hidden-states store carried the rules' formulas, and the `+2` of a top-values rule is an addition node, a lone varint 1 the model's reference extractor took for object 1; that field is walked by the schema now. | `src/tst/predicates.ts`, `src/tsa/extractors.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |

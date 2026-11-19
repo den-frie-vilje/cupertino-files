@@ -231,17 +231,17 @@ function seedDurationConditions(): Uint8Array {
 // ---------------------------------------------------------- build order
 
 function seedBuildOrder(): Uint8Array {
-  // Reading builds is whole and the library writes one build per object;
-  // the order two builds play in and an action build are the shapes no
-  // fixture carries.
+  // The returned first round measured the order (the slide's two lists)
+  // and an action, and the checker could not drag the library's dissolve
+  // first. That seed wrote the slide's build lists after a higher field;
+  // this one writes them in number order, and asks the one question left.
   const doc = KeynoteDocument.blank();
   const slide = doc.slides()[0]!;
-  slide.title = "Build order: a second build, moved first, and an action";
+  slide.title = "Build order, second try: can the dissolve be dragged first?";
   slide.body =
-    "1. This body gets a build in: select it, Animate > Build In > Add an Effect > Appear.\n" +
-    "2. Open Build Order (bottom of the Animate panel) and drag the body's build above the title's, so the body appears first.\n" +
-    "3. Give the title an action: select it, Animate > Action > Add an Effect > Move, and drag its ghost a little to the right.\n" +
-    "4. Save. Nothing here passes or fails; what you build is the measurement.";
+    "1. Give this body a build in: select it, Animate > Build In > Add an Effect > Appear (Animer > Byg ind > Tilføj en effekt > Vises).\n" +
+    "2. Open Build Order (Bygrækkefølge) at the bottom of the Animate panel and drag the title's Dissolve (Opløs) to the top.\n" +
+    "3. Save, and comment on the slide: moved, or still pinned.";
   const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
   if (title === undefined) throw new Error("build order seed: blank deck has no title placeholder");
   slide.addBuild({ drawableId: title, effect: "apple:dissolve", duration: 1 });
@@ -326,7 +326,7 @@ function seedAuthoredNumbers(): Uint8Array {
   table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
   instructionRow(
     table,
-    "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filter); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.",
+    "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filtrer); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.",
     { 1: "Note", 2: 0 },
   );
   return doc.save();
@@ -573,7 +573,7 @@ function seedFilterConditions(): Uint8Array {
   readme.setCell(
     1,
     1,
-    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
+    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filtrer), click Add a Filter (Tilføj et filter), choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
   );
   readme.setColumnWidth(0, 40);
   readme.setColumnWidth(1, 440);
@@ -820,7 +820,7 @@ const seeds: Seed[] = [
     check: (bytes) => {
       const slide = KeynoteDocument.load(bytes).slides()[0]!;
       if (slide.builds().length !== 1) throw new Error("build order seed: expected the title's one build");
-      if (!slide.body?.includes("Build Order")) throw new Error("build order seed: instructions missing");
+      if (!slide.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
     },
   },
   {

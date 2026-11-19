@@ -262,7 +262,7 @@ export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = 
 
 // Declared here rather than imported from builds.ts, which imports this file.
 const BuildOwner = protoFields("KN.BuildArchive", { DRAWABLE: "drawable" });
-const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
+export const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
 
 /**
  * The container rule, for the Keynote archives the shared map cannot

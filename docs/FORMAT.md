@@ -1303,7 +1303,9 @@ relative points, 33 in this unit; durations 38 equal to, 40 greater
 than, 44 between; checkboxes 55 is checked, 56 is not checked. A date
 condition over a unit carries it in `qualifier1` (2 day, 3 week, 4
 month, 5 year, 8 quarter) and a direction in `qualifier2` (6 ago, 7
-from now). The "is" and "is not" formulas wrap their IF branches in
+from now); durations 39 not equal to, 41 greater than or equal to, 42
+less than and 43 less than or equal to complete 38 to 44. The "is" and
+"is not" formulas wrap their IF branches in
 `BEGIN_THUNK_NODE` (34) and `END_THUNK_NODE` (35), brackets around a
 lazily evaluated argument that carry no operand; the checkbox formulas
 call function index 326, which the registry does not name, and compare
@@ -1573,7 +1575,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3463 of 3463 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3559 of 3559 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1735,7 +1737,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3463 storages carry the field and **zero** declare it. What
+fixtures here, 3559 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1772,7 +1774,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3463 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3559 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -2137,18 +2139,20 @@ writing and chart appearance all used to be here.
 
 - **Category summaries** (§14.9). A category—by value, nested, or
   bucketed by date with the app's own functor—is defined from nothing
-  (`addCategory`) and rows are regrouped byte-identically to Apple.
-  One fixture, `olekristensen-v26.0-mac-authored.numbers`, carries a
-  Count summary, and its aggregator entry written alone draws nothing:
-  the app reads its aggregator cache and the summary model's cells as
-  well, so a writer has to produce all three.
+  (`addCategory`) and rows are regrouped byte-identically to Apple. The
+  five aggregate types are measured (`AGGREGATE_TYPE_NAMES`), and every
+  aggregator node carries the same record whatever its type
+  (`AccumulatorFields`); an entry written alone draws nothing, since the
+  app reads its aggregator cache and the summary model's cells as well,
+  so a writer has to produce all three.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and
   all-at-once and by-paragraph builds are written from nothing
-  (`addBuild`), and Keynote plays one on a current deck; actions and
-  build order are not authored, and whether a written build plays after
-  the app converts a 14.x deck is unmeasured.
+  (`addBuild`), Keynote plays one on a current deck and on a converted
+  14.x deck, and `setBuildOrder` writes the order the Build Order drag
+  writes (the slide's build list and chunk list); actions are read, their
+  shape measured, and not authored.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

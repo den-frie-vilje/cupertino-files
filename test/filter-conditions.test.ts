@@ -75,7 +75,11 @@ const CONDITIONS: Record<string, Record<string, FilterCondition>> = {
   },
   Duration: {
     "equal to": { operator: "durationEquals", seconds: 3600 },
+    "not equal to": { operator: "durationNotEquals", seconds: 3600 },
     "greater than": { operator: "durationGreaterThan", seconds: 3600 },
+    "greater or equal": { operator: "durationGreaterOrEqual", seconds: 3600 },
+    "less than": { operator: "durationLessThan", seconds: 3600 },
+    "less or equal": { operator: "durationLessOrEqual", seconds: 3600 },
     "between": { operator: "durationBetween", from: 600, to: 5400 },
     "is blank": { operator: "isBlank" },
   },
@@ -88,7 +92,7 @@ const CONDITIONS: Record<string, Record<string, FilterCondition>> = {
 const hex = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
 
 describe("every filter condition is written byte for byte as the app wrote it", () => {
-  for (const name of ["olekristensen-v26.0-mac-filter-conditions.numbers", "olekristensen-v26.0-ios-filter-number-conditions.numbers"]) {
+  for (const name of ["olekristensen-v26.0-mac-filter-conditions.numbers", "olekristensen-v26.0-ios-filter-number-conditions.numbers", "olekristensen-v26.0-mac-duration-conditions.numbers"]) {
     it(name, () => {
       const doc = NumbersDocument.load(fixture(name));
       let compared = 0;

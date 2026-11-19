@@ -645,6 +645,22 @@ describe("slide placeholders", () => {
   });
 });
 
+describe("build order", () => {
+  it("puts the builds and their chunks in the order given, as the app's own drag wrote them", () => {
+    const doc = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-build-order-seed.key", import.meta.url))));
+    const slide = doc.slides()[0]!;
+    const ids = slide.builds().map((b) => b.id);
+    expect(slide.builds().map((b) => b.read().effect)).toEqual(["apple:action-motion-path", "apple:bc-appear", "apple:dissolve"]);
+    const chunksBefore = slide.object.message.getMessages(43).map((m) => m.getVarint(1));
+    slide.setBuildOrder([ids[2]!, ids[0]!, ids[1]!]);
+    expect(slide.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:action-motion-path", "apple:bc-appear"]);
+    expect(slide.object.message.getMessages(43).map((m) => m.getVarint(1))).toEqual([chunksBefore[2], chunksBefore[0], chunksBefore[1]]);
+    expect(() => { slide.setBuildOrder([ids[0]!]); }).toThrow();
+    const reloaded = KeynoteDocument.load(doc.save()).slides()[0]!;
+    expect(reloaded.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:action-motion-path", "apple:bc-appear"]);
+  });
+});
+
 describe("builds", () => {
   it("reads effect, timing and delivery from an app-authored deck", () => {
     const doc = KeynoteDocument.load(fixture("olekristensen-v26.3-mac-builds-effects.key"));

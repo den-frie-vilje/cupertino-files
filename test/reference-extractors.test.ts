@@ -160,10 +160,12 @@ describe("reference extractors agree with Apple", () => {
     // and this comparison is exactly what catches a violation of either.
     // The three authored-twin fixtures added 21 in the same two classes:
     // 17 Keynote slides and four stylesheets; the filter-conditions
-    // fixtures one stylesheet each, three of them.
+    // fixtures one stylesheet each, three of them; the build-order deck
+    // and the two summary and duration documents 20 more in the same two
+    // classes.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=257: ${disagree <= 257} (${disagree})`).toBe(
-      `disagree<=257: true (${disagree})`,
+    expect(`disagree<=277: ${disagree <= 277} (${disagree})`).toBe(
+      `disagree<=277: true (${disagree})`,
     );
   });
 
@@ -218,10 +220,10 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     }
     const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
     expect(summary).toEqual([
-      "TSCE.FormulaOwnerDependenciesArchive 0/97",
-      "TST.CategoryOrderArchive 0/91",
-      "TST.SummaryCellVendorArchive 0/91",
-      "TST.SummaryModelArchive 0/91",
+      "TSCE.FormulaOwnerDependenciesArchive 0/99",
+      "TST.CategoryOrderArchive 0/93",
+      "TST.SummaryCellVendorArchive 0/93",
+      "TST.SummaryModelArchive 0/93",
     ]);
   });
 

@@ -1,0 +1,446 @@
+{
+  "file": "olekristensen-v26.0-mac-summaries-seed.numbers",
+  "sha1": "b11176f7d704dec02340958d45d79fecef5af8cd",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 632,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 18
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 53
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000007.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000008.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000009.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000016.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/Tables/DataList-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000250.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 488
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Summaries",
+            "rows": 8,
+            "columns": 6,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Item"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Kind"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Sum"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "Average"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "Min"
+              },
+              {
+                "r": 0,
+                "c": 5,
+                "v": "Max"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "The rows are grouped by Kind. In any one group's row, tap the cell under Sum and choose Sum, under Average choose Average, under Min choose Min, under Max choose Max (the summary pop-up in a group row). Then save. Count is already measured, so leave it out."
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "Note"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "1"
+              },
+              {
+                "r": 1,
+                "c": 5,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Pear"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3"
+              },
+              {
+                "r": 2,
+                "c": 5,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Cat"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "12"
+              },
+              {
+                "r": 3,
+                "c": 5,
+                "v": "12"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Apple"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "Fruit"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 5,
+                "v": "7"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Bicycle"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "Transport"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "40"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "40"
+              },
+              {
+                "r": 5,
+                "c": 4,
+                "v": "40"
+              },
+              {
+                "r": 5,
+                "c": 5,
+                "v": "40"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Dog"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "Animal"
+              },
+              {
+                "r": 6,
+                "c": 2,
+                "v": "10"
+              },
+              {
+                "r": 6,
+                "c": 3,
+                "v": "10"
+              },
+              {
+                "r": 6,
+                "c": 4,
+                "v": "10"
+              },
+              {
+                "r": 6,
+                "c": 5,
+                "v": "10"
+              },
+              {
+                "r": 7,
+                "c": 0,
+                "v": "Train"
+              },
+              {
+                "r": 7,
+                "c": 1,
+                "v": "Transport"
+              },
+              {
+                "r": 7,
+                "c": 2,
+                "v": "25"
+              },
+              {
+                "r": 7,
+                "c": 3,
+                "v": "25"
+              },
+              {
+                "r": 7,
+                "c": 4,
+                "v": "25"
+              },
+              {
+                "r": 7,
+                "c": 5,
+                "v": "25"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

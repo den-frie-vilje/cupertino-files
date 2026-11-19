@@ -104,6 +104,34 @@ export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
   SHOW_AS_TYPE: "show_as_type",
 });
 
+/**
+ * `TST.ColumnAggregateArchive.agg_type` codes, as the summary pop-up in a
+ * group row writes them: Count, Sum, Average, Min and Max.
+ */
+export const AGGREGATE_TYPE_NAMES: ReadonlyMap<number, string> = new Map([
+  [1, "count"],
+  [2, "sum"],
+  [3, "average"],
+  [4, "min"],
+  [5, "max"],
+]);
+
+/**
+ * The accumulator record every aggregator node carries, whatever its
+ * aggregate type: per-kind counts, the minimum, maximum, sum and product
+ * as cell values, and the duration total in seconds. The app fills all
+ * of them and shows the one the aggregate type names.
+ */
+export const AccumulatorFields = protoFields("TST.AccumulatorArchive", {
+  NUMBER_COUNT: "number_count",
+  STRING_COUNT: "string_count",
+  MIN: "min_value",
+  MAX: "max_value",
+  SUM: "number_total_value",
+  SECONDS: "secs_to_add",
+  PRODUCT: "product_value",
+});
+
 /** TSCE.CellValueArchive. */
 const CellValueFields = {
   TYPE: 1,
@@ -206,12 +234,10 @@ export interface ColumnAggregate {
   columnUid: Uid | undefined;
   /** Category depth this summary is shown at. */
   level: number;
-  /**
-   * Raw `agg_type`. Numbers offers sum, average, count and so on; 1 is
-   * Count, measured (its per-group accumulator is a string count on a
-   * text column). The rest are passed through rather than named.
-   */
+  /** Raw `agg_type`; see {@link AGGREGATE_TYPE_NAMES}. */
   aggType: number;
+  /** The aggregate the type names, where measured: count, sum, average, min or max. */
+  aggregate: string | undefined;
   showAsType: number | undefined;
 }
 
@@ -265,6 +291,7 @@ export class TableCategories {
         columnUid,
         level: aggregate.getUint(ColumnAggregateFields.LEVEL) ?? 0,
         aggType: aggregate.getUint(ColumnAggregateFields.AGG_TYPE) ?? 0,
+        aggregate: AGGREGATE_TYPE_NAMES.get(aggregate.getUint(ColumnAggregateFields.AGG_TYPE) ?? 0),
         showAsType: aggregate.getUint(ColumnAggregateFields.SHOW_AS_TYPE),
       };
     });

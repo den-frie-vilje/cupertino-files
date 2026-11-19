@@ -2067,9 +2067,10 @@ export const CAPABILITIES: Capability[] = [
     status: "roadmap",
     note:
       "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
-      "the reader is exercised by one app-written summary (column_agg_type on the grouping column, " +
-      "level 1, agg_type 1 = Count); writing one needs the aggregator tree with an accumulator per group, " +
-      "the root node's agg_formula_coords and the summary model's cells, none of which is written yet",
+      "the reader names the five aggregate types (count, sum, average, min, max) from app-written " +
+      "summaries, and every aggregator node carries the same accumulator record (count, min, max, sum, " +
+      "product); writing one needs the aggregator tree with that record per group, the root node's " +
+      "agg_formula_coords and the summary model's cells, none of which is written yet",
   },
   {
     group: "Numbers & tables",
@@ -2081,13 +2082,6 @@ export const CAPABILITIES: Capability[] = [
       "resolves the UIDs categories, hidden states and the calc engine use back to positions; " +
       "row/column insert and delete keep the map in lockstep, minting and retiring identities — " +
       "read-only means no direct authoring API",
-  },
-  {
-    group: "Numbers & tables",
-    name: "Filters: function-shaped rules beyond text-contains and starts-with",
-    apps: "all",
-    status: "roadmap",
-    note: "comparison, text-contains and starts-with rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote

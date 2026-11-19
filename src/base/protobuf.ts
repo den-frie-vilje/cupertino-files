@@ -343,8 +343,7 @@ export class RawMessage {
       new DataView(b.buffer).setFloat32(0, v, true);
       return { no, wire: WireType.Fixed32, value: b };
     });
-    if (idx >= 0) this.fields.splice(idx, 0, ...inserted);
-    else this.fields.push(...inserted);
+    this.fields.splice(idx >= 0 ? idx : this.insertionIndex(no), 0, ...inserted);
     this.markDirty();
   }
 
@@ -375,6 +374,16 @@ export class RawMessage {
 
   // ---------------------------------------------------------------- setters
 
+  /**
+   * Where a field the message does not carry yet goes: before the first
+   * field with a higher number, as the apps' serialisers write fields in
+   * number order. An existing field keeps its place.
+   */
+  private insertionIndex(no: number): number {
+    const index = this.fields.findIndex((f) => f.no > no);
+    return index < 0 ? this.fields.length : index;
+  }
+
   /** Remove every occurrence of a field. */
   remove(no: number): void {
     const before = this.fields.length;
@@ -389,8 +398,7 @@ export class RawMessage {
     const idx = this.fields.findIndex((f) => f.no === no);
     this.fields = this.fields.filter((f) => f.no !== no);
     const field: RawField = { no, wire, value };
-    if (idx >= 0) this.fields.splice(idx, 0, field);
-    else this.fields.push(field);
+    this.fields.splice(idx >= 0 ? idx : this.insertionIndex(no), 0, field);
     if (value instanceof RawMessage) this.adopt(value);
     this.markDirty();
   }
@@ -416,8 +424,9 @@ export class RawMessage {
   }
 
   addMessage(no: number, m: RawMessage): void {
-    // Insert after the last existing occurrence to keep repeated fields together.
-    let insertAt = this.fields.length;
+    // Insert after the last existing occurrence to keep repeated fields
+    // together, or in number order when the field is new.
+    let insertAt = this.insertionIndex(no);
     for (let i = this.fields.length - 1; i >= 0; i--) {
       if (this.fields[i]!.no === no) {
         insertAt = i + 1;
@@ -462,8 +471,7 @@ export class RawMessage {
       wire: WireType.Varint,
       value: BigInt(v),
     }));
-    if (idx >= 0) this.fields.splice(idx, 0, ...inserted);
-    else this.fields.push(...inserted);
+    this.fields.splice(idx >= 0 ? idx : this.insertionIndex(no), 0, ...inserted);
     this.markDirty();
   }
 
@@ -482,8 +490,7 @@ export class RawMessage {
       this.adopt(m);
       return { no, wire: WireType.Bytes, value: m };
     });
-    if (idx >= 0) this.fields.splice(idx, 0, ...inserted);
-    else this.fields.push(...inserted);
+    this.fields.splice(idx >= 0 ? idx : this.insertionIndex(no), 0, ...inserted);
     this.markDirty();
   }
 

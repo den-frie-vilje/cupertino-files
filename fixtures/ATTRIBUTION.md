@@ -1274,3 +1274,30 @@ node scripts/scan-fixture-privacy.ts
   naming the eight number conditions beyond comparisons, one per column;
   the checker added each rule with the filter panel on the phone. The
   table's first row is the request itself.
+
+### olekristensen-v26.0-mac-summaries-seed.numbers
+- 144,795 bytes, md5 `84ba5ab0e4f79b78b6640113784fa577`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-summaries.numbers,
+  a table the library grouped by Kind with four number columns headed
+  Sum, Average, Min and Max; the checker set each summary in a group row
+  and commented on C3: "The rows only show the summary numbers for
+  animals and note, nothing is shown in the summary cells for fruit and
+  transport". The instruction row is the request itself.
+
+### olekristensen-v26.0-mac-duration-conditions.numbers
+- 139,218 bytes, md5 `122267a9ea21803546ba4ddc9e646723`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over
+  seed-duration-conditions.numbers; the checker added the four duration
+  comparisons the file names, one per column, with the filter panel.
+  The instruction row is the request itself.
+
+### olekristensen-v26.0-mac-build-order-seed.key
+- 558,211 bytes, md5 `a02075c92fb952154d18ec4872e39f7d`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key,
+  a blank deck whose title the library gave a dissolve build; the
+  checker added an Appear build to the body, moved it first, gave the
+  title a Move action, and commented on the slide: "The preexisting
+  dissolve build on the title had some kind of defect, I cannot move it
+  first in the Build Order, it remains third no matter what I do. The
+  other animations I can move freely, though not after the dissolve in
+  of the title." The body text is the request itself.

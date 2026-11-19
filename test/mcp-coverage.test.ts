@@ -21,6 +21,10 @@ const PLUMBING = "plumbing the server performs itself (loading, saving, auto-det
 /** Public API that is deliberately not an MCP tool, and why. */
 const NOT_EXPOSED: ReadonlyMap<string, string> = new Map([
   [
+    "KeynoteSlide.setBuildOrder",
+    "takes build ids, which no tool returns yet; it joins the build tool once that tool lists a slide's builds by id",
+  ],
+  [
     "PagesDocument.listInThemeStyles",
     "reached through create_paragraph_style, which lists what it creates; listing an existing style by id is a library-level step",
   ],
