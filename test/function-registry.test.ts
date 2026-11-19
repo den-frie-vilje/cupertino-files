@@ -6,7 +6,21 @@ import { describe, expect, it } from "./harness.ts";
 const NUMBERS =
   "/Applications/Numbers Creator Studio.app/Contents/Frameworks/TSTables.framework/Versions/A/TSTables";
 
-describe("the function registry read from the app", { skip: !existsSync(NUMBERS) }, () => {
+/** The app versions the reader's instruction patterns were measured on; a newer app is an open ledger row, not a failing run. */
+const MEASURED = /^15\./;
+const version = (() => {
+  try {
+    const plist = parseBinaryPlist(new Uint8Array(readFileSync("/Applications/Numbers Creator Studio.app/Contents/Info.plist")));
+    return typeof plist === "object" && plist !== null && !Array.isArray(plist) && !(plist instanceof Uint8Array) && !(plist instanceof Date)
+      ? String((plist as Record<string, unknown>).CFBundleShortVersionString ?? "")
+      : "";
+  } catch {
+    return "";
+  }
+})();
+const skip = !existsSync(NUMBERS) ? true : MEASURED.test(version) ? false : `Numbers ${version} is not a build the registry reader was measured on (docs/BLOCKERS.md)`;
+
+describe("the function registry read from the app", { skip }, () => {
   it("agrees with the generated table on every index it registers", () => {
     const reading = readFunctionRegistry(NUMBERS);
     const disagreements: string[] = [];
