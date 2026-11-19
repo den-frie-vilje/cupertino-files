@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from "node:fs";
-import { parseBinaryPlist } from "../src/base/plist.ts";
 import { readFunctionRegistry } from "../scripts/function-registry.ts";
 import { HARVESTED_FUNCTIONS } from "../src/tst/function-names.ts";
 import { describe, expect, it } from "./harness.ts";
@@ -11,10 +10,9 @@ const NUMBERS =
 const MEASURED = /^15\./;
 const version = (() => {
   try {
-    const plist = parseBinaryPlist(new Uint8Array(readFileSync("/Applications/Numbers Creator Studio.app/Contents/Info.plist")));
-    return typeof plist === "object" && plist !== null && !Array.isArray(plist) && !(plist instanceof Uint8Array) && !(plist instanceof Date)
-      ? String((plist as Record<string, unknown>).CFBundleShortVersionString ?? "")
-      : "";
+    // The bundle's Info.plist is XML; the version follows its key.
+    const text = readFileSync("/Applications/Numbers Creator Studio.app/Contents/Info.plist", "utf8");
+    return /<key>CFBundleShortVersionString<\/key>\s*<string>([^<]+)<\/string>/.exec(text)?.[1] ?? "";
   } catch {
     return "";
   }
