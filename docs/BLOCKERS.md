@@ -24,15 +24,17 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 `npm run seeds -- out` writes it beside the returned ones.
 
-- `seed-build-order.key` — **two slides, one question.** The library's
-  dissolve build stays pinned last in Build Order (Bygrækkefølge)
-  whether the slide's lists are in field order or not, and offline the
-  build, its chunk, their component and the slide's declarations match
-  the app's own field for field. Slide 1 carries ours on the title and
-  asks the checker to add the app's own Dissolve to the same title and
-  drag both; slide 2 carries ours on the body. The returned deck holds
-  an app-authored dissolve beside ours in one document, which is the
-  byte diff this needs, and says whether the title is the condition.
+- `seed-build-order.key` and the resaved first-round deck — **one
+  question, asked three ways.** The library's dissolve build stays
+  pinned last in Build Order (Bygrækkefølge) whether the slide's lists
+  are in field order or not, and offline the build, its chunk, their
+  component, the slide's declarations and the chunk's two uids match the
+  app's own field for field. Slide 1 carries ours on the title beside an
+  Appear the checker adds to the body; slide 2 has the app write a
+  dissolve on a title itself, so the returned deck holds the byte diff
+  in one document; and `olekristensen-v26.0-mac-build-seed.key`, our
+  dissolve as Keynote 15.1.1 resaved it, asks whether bytes the app
+  wrote pin too, which would put the cause outside the build.
 
 Every earlier seed program is returned and banked; the returned files
 are fixtures with pins (see ATTRIBUTION.md).
