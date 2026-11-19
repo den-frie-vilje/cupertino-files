@@ -232,6 +232,7 @@ export const AGENT_SURFACE: readonly { api: string; tool: string | null }[] = [
   { api: "TableModel.setRow", tool: null },
   { api: "TableModel.setRowHeight", tool: "modify_table" },
   { api: "TableModel.staleCategoryGroups", tool: null },
+  { api: "TableModel.summaryModel", tool: null },
   { api: "TableModel.tableStyle", tool: null },
   { api: "TableModel.textStyle", tool: null },
   { api: "TableModel.textStyleId", tool: null },

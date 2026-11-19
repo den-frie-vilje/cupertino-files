@@ -189,8 +189,7 @@ export {
   groupValueOf,
   normalizeCellInput,
   TST_TYPE,
-  TableModelFields,
-} from "./tst/tables.ts";
+  TableModelFields, SummaryModel } from "./tst/tables.ts";
 export type {
   AuditFinding,
   CellValue,

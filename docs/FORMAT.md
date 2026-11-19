@@ -2144,7 +2144,13 @@ writing and chart appearance all used to be here.
   aggregator node carries the same record whatever its type
   (`AccumulatorFields`); an entry written alone draws nothing, since the
   app reads its aggregator cache and the summary model's cells as well,
-  so a writer has to produce all three.
+  so a writer has to produce all three. The summary model is read
+  (`summaryModel()`): a data store shaped like the table's, one row per
+  group row in the order the app shows them, a summary of host column c
+  in column c + 1, each cell a formula whose single node is a category
+  reference (AST node type 66) naming the table, the aggregator and the
+  group; the app fills rows for some group rows and draws nothing for
+  the rest, which is what the writer has to do itself.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and

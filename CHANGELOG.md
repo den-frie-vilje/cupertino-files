@@ -17,6 +17,8 @@ in commit messages and pull requests.
 - A category's aggregates name their type (`aggregate`: count, sum,
   average, min or max), and `AGGREGATE_TYPE_NAMES` and
   `AccumulatorFields` name the codes and the record under them.
+- `TableModel.summaryModel()` reads the summaries a category's group
+  rows draw, with the table's own cell decoders.
 
 ### Fixed
 

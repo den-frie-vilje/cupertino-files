@@ -172,6 +172,22 @@ describe("the four other summaries the app wrote, and the record under them", ()
   });
 });
 
+describe("the summary model the app draws a category's group rows from", () => {
+  it("holds the drawn summaries one column right of the summarised column, for the group rows the app filled", () => {
+    const seed = NumbersDocument.load(fixture("olekristensen-v26.0-mac-summaries-seed.numbers")).tables()[0]!;
+    const summary = seed.summaryModel()!;
+    expect([summary.rowCount, summary.columnCount]).toEqual([3, seed.columnCount + 1]);
+    // Sum, Average, Min, Max of Note (one row of 1) and of Animal (10 and 12); Fruit and Transport have no cells, as the checker saw.
+    expect(summary.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([
+      [0, 3, 1], [0, 4, 1], [0, 5, 1], [0, 6, 1],
+      [2, 3, 22], [2, 4, 11], [2, 5, 10], [2, 6, 12],
+    ]);
+    const twin = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers")).tables()[0]!;
+    expect(twin.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 2, 2], [1, 2, 2], [2, 2, 2]]);
+    expect(NumbersDocument.blank().tables()[0]!.summaryModel()?.cells()).toEqual([]);
+  });
+});
+
 describe("a per-group summary the app wrote", () => {
   it("reads as one aggregate on the grouping column, level 1, agg_type 1 (Count)", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));

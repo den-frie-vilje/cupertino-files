@@ -644,6 +644,12 @@ function preBncCellValue(
   return undefined;
 }
 
+/** TST.TableInfoArchive field 4: the table's summary model, where a category draws its group rows. */
+const TABLE_INFO_SUMMARY_MODEL = 4;
+const SUMMARY_MODEL_TYPE = 6316;
+/** TST.SummaryModelArchive field 2: its data store, shaped like the table model's. */
+const SUMMARY_MODEL_DATA_STORE = 2;
+
 export class TableModel {
   readonly store: ObjectStore;
   readonly object: IwaObject;
@@ -700,8 +706,19 @@ export class TableModel {
     return this.object.message.getUint(TableModelFields.HEADER_COLUMNS) ?? 0;
   }
 
-  private dataStore(): RawMessage | undefined {
+  protected dataStore(): RawMessage | undefined {
     return this.object.message.getMessage(TableModelFields.BASE_DATA_STORE);
+  }
+
+  /**
+   * The table's summary model: the cells the app draws in a category's
+   * group rows, kept in a `TST.SummaryModelArchive` beside the table
+   * model with a data store of the same shape. Undefined on a table
+   * without one.
+   */
+  summaryModel(): SummaryModel | undefined {
+    const object = this.store.resolve(refId(this.infoObject?.message, TABLE_INFO_SUMMARY_MODEL));
+    return object && object.type === SUMMARY_MODEL_TYPE ? new SummaryModel(this.store, object, this) : undefined;
   }
 
   /** key → string map of a TableDataList referenced from the data store. */
@@ -5153,5 +5170,54 @@ export function decodeCellRecord(
       return { type: "richText", value: richText.get(richId ?? -1) ?? "", isFormula };
     default:
       throw new RangeError(`unrecognized cell type ${cellType} in v5 storage`);
+  }
+}
+
+/**
+ * A table's summary model, read with the table model's own decoders over
+ * the summary's data store: its rows are the category's group rows in
+ * the order the app shows them, and a summary of host column c sits in
+ * column c + 1. Read-only; the app fills it from the aggregator cache for
+ * the group rows it chooses to, and draws nothing for the rest.
+ */
+export class SummaryModel extends TableModel {
+  readonly host: TableModel;
+
+  constructor(store: ObjectStore, object: IwaObject, host: TableModel) {
+    super(store, object, host.infoObject);
+    this.host = host;
+  }
+
+  protected override dataStore(): RawMessage | undefined {
+    return this.object.message.getMessage(SUMMARY_MODEL_DATA_STORE);
+  }
+
+  /** One past the highest row any tile carries. */
+  override get rowCount(): number {
+    const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
+    if (!tiles) return 0;
+    const tileSize = tiles.getUint(TileStorageFields.TILE_SIZE) ?? 256;
+    let last = -1;
+    for (const t of tiles.getMessages(TileStorageFields.TILES)) {
+      const tileId = t.getUint(TileEntry.TILEID) ?? 0;
+      const tile = this.store.resolve(refId(t, TileEntry.TILE));
+      for (const ri of tile?.message.getMessages(TileFields.ROW_INFOS) ?? []) {
+        last = Math.max(last, tileId * tileSize + (ri.getUint(TileRowInfo.TILE_ROW_INDEX) ?? 0));
+      }
+    }
+    return last + 1;
+  }
+
+  /** The host's columns and one more: a summary cell sits one column right of the column it summarises. */
+  override get columnCount(): number {
+    return this.host.columnCount + 1;
+  }
+
+  override get headerRowCount(): number {
+    return 0;
+  }
+
+  override get headerColumnCount(): number {
+    return 0;
   }
 }
