@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { parseBinaryPlist } from "../src/base/plist.ts";
 import { readFunctionRegistry } from "../scripts/function-registry.ts";
 import { HARVESTED_FUNCTIONS } from "../src/tst/function-names.ts";
 import { describe, expect, it } from "./harness.ts";
