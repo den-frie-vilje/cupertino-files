@@ -81,9 +81,10 @@ that rebuild the structures from them.
   and its chunks field for field as the deck's app-authored builds
   carry them, Keynote 15.1.1 played one and 15.4 played one on a
   converted 14.x deck (VERIFICATION), and `setBuildOrder` writes the
-  order the Build Order drag writes. Not authored: actions, whose shape
-  the returned deck now carries. Whether the app lets the library's
-  build be dragged first is the staged question.
+  order the Build Order drag writes, and Keynote 15.4 let the checker
+  drag the library's build first once it was registered in the
+  component's object UUID map (VERIFICATION). Not authored: actions,
+  whose shape the returned deck carries.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
@@ -127,9 +128,12 @@ that rebuild the structures from them.
   and their storages arrive without a row. The apps mint a UUID for each
   on the next save, so the gap only bites where a UUID-keyed reference
   names the object, and the build chunk is the one such reference the
-  library writes. Whether another exists among the objects the library
-  creates is a corpus question (kind C): list every `TSP.UUID` field in
-  the vendored schema and check which the writers fill.
+  library writes: every other UUID the library mints is a text
+  attribute's string identity (smart fields, highlights, a chart's id
+  map entry) or a table's row, column and group uid, none of which the
+  apps resolve through the object UUID map. Registering every created
+  object would need the per-type rule the corpus shows (all or nothing
+  per type) and no return has asked for it yet.
 
 ## Standing caveats — deliberate, not pending
 
