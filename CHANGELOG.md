@@ -20,6 +20,13 @@ in commit messages and pull requests.
 - `TableModel.summaryModel()` reads the summaries a category's group
   rows draw, with the table's own cell decoders.
 
+### Changed
+
+- The vendored schema is the 16.0 release's for the shared, Pages and
+  Numbers families (Keynote stays at 15.4): a stylesheet's
+  `styles_for_16_0` snapshot is followed like the earlier ones, and the
+  new watermarking and UI-state fields are named. No field number moved.
+
 ### Fixed
 
 - A field a document did not carry before is now written in field-number
