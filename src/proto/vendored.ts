@@ -710,6 +710,20 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "title_hidden": 12,
     "caption_hidden": 13,
   },
+  "TSD.EditableBezierPathSourceArchive": {
+    "subpaths": 1,
+    "naturalSize": 2,
+  },
+  "TSD.EditableBezierPathSourceArchive.Node": {
+    "inControlPoint": 1,
+    "nodePoint": 2,
+    "outControlPoint": 3,
+    "type": 4,
+  },
+  "TSD.EditableBezierPathSourceArchive.Subpath": {
+    "nodes": 1,
+    "closed": 2,
+  },
   "TSD.ExteriorTextWrapArchive": {
     "type": 1,
     "direction": 2,
@@ -1758,6 +1772,11 @@ export const ENUMS: Readonly<Record<string, Readonly<Record<string, number>>>> =
     "VIEW_TRACT_REF_NODE": 68,
     "INTERSECTION_NODE": 69,
     "SPILL_RANGE_NODE": 70,
+  },
+  "TSD.EditableBezierPathSourceArchive.NodeType": {
+    "sharp": 1,
+    "bezier": 2,
+    "smooth": 3,
   },
   "TSD.GradientArchive.GradientType": {
     "Linear": 0,

@@ -933,6 +933,7 @@ slide.transition();  slide.setTransition({ effect: "apple:ca-push", duration: 1.
 slide.background();  slide.setBackground({ kind: "color", color: hexColor("#1a3a2a") }); // a style of the slide's own, under the layout's
 slide.addBuild({ drawableId, effect: "apple:dissolve", duration: 1 });  // an all-at-once build, played on click
 slide.addBuild({ drawableId, effect: "apple:dissolve", delivery: "byParagraph" }); // one stage per paragraph
+slide.addBuild({ drawableId, effect: "apple:action-motion-path", move: { dx: 200, dy: 0 } }); // a Move action, 200 points right
 slide.setBuildOrder(slide.builds().map((b) => b.id).reverse());  // the Build Order panel's drag
 // Effect ids are the app's own, measured from real decks: the
 // CoreAnimation family ("apple:ca-push", with `direction`) and the
@@ -1153,9 +1154,9 @@ throw, naming the object and field, rather than produce the file.
    legend, gridlines) all write, and so do filter rules (`addFilterRule`,
    every condition the filter menu offers), by-value categories
    (`addCategory`), all-at-once Keynote builds and their order
-   (`addBuild`, `setBuildOrder`) and text boxes copied from the
-   document's own (`addTextBox`). Genuinely absent today: category
-   summaries and build actions. For
+   (`addBuild`, `setBuildOrder`, a Move action with `move`) and text
+   boxes copied from the document's own (`addTextBox`). Genuinely absent
+   today: category summaries and the other actions. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md`—§14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

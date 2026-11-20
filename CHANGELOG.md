@@ -19,6 +19,10 @@ in commit messages and pull requests.
   `AccumulatorFields` name the codes and the record under them.
 - `TableModel.summaryModel()` reads the summaries a category's group
   rows draw, with the table's own cell decoders.
+- `addBuild` writes a Move action (`move: { dx, dy }`): an Action with the
+  app's motion path effect along a straight path, eased at both ends, in
+  the shape Keynote writes for its own. A build's `move` reads the
+  displacement back. The `add_build` tool takes the same option.
 
 ### Changed
 

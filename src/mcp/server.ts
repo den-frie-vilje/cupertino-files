@@ -112,6 +112,14 @@ export const COMPOSITE_TOOLS: readonly string[] = [
 
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
+/** A {dx, dy} displacement from a tool argument, or undefined when absent. */
+const moveOf = (v: unknown): { dx: number; dy: number } | undefined => {
+  if (typeof v !== "object" || v === null) return undefined;
+  const dx = num((v as Record<string, unknown>).dx);
+  const dy = num((v as Record<string, unknown>).dy);
+  if (dx === undefined || dy === undefined) throw new RangeError("move needs numeric dx and dy");
+  return { dx, dy };
+};
 
 // Schema fragments every table tool shares; hoisted so the wording that
 // teaches the model stays in one place.
@@ -898,6 +906,8 @@ export const TOOLS: readonly Tool[] = [
       "Animates one drawable on a Keynote slide with an all-at-once build played on click. " +
         "slide and drawable are 0-based (drawables in the slide's z-order; use " +
         "describe_document); effect is the identifier the app stores, e.g. \"apple:dissolve\". " +
+        "With move, the build is a Move action along a straight path of that many points " +
+        "(effect \"apple:action-motion-path\"). " +
         "Saves over the input unless output names another path.",
     ),
     inputSchema: {
@@ -909,6 +919,12 @@ export const TOOLS: readonly Tool[] = [
         effect: { type: "string", description: "Effect identifier as the app stores it" },
         duration: { type: "number", description: "Seconds, default 1" },
         delay: { type: "number", description: "Seconds before the build starts, default 0" },
+        move: {
+          type: "object",
+          description: "A Move action's displacement in points; omit for a build in",
+          properties: { dx: { type: "number" }, dy: { type: "number" } },
+          required: ["dx", "dy"],
+        },
         output: OUTPUT_PROP,
       },
       required: ["path", "slide", "drawable", "effect"],
@@ -936,6 +952,7 @@ export const TOOLS: readonly Tool[] = [
         effect,
         duration: num(args.duration),
         delay: num(args.delay),
+        move: moveOf(args.move),
       });
       const target = save(doc, path, str(args.output));
       return `added build ${build.id} (${effect}) to slide ${index} and saved ${target}`;

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { MASTER_ONLY_FIELDS, Slide, SlideNode } from "../src/keynote/schema.ts";
-import { BuildChunkFields, BuildChunkIdentifierFields } from "../src/keynote/builds.ts";
+import { BuildAcceleration, BuildAttributesFields, BuildChunkFields, BuildChunkIdentifierFields, BuildFields, type BuildModel } from "../src/keynote/builds.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
@@ -742,6 +742,27 @@ describe("build order", () => {
       "olekristensen-v26.0-mac-pinned-dissolve-placed.key 3000018 apple:dissolve character",
       "olekristensen-v26.0-mac-pinned-dissolve.key 3000001 apple:dissolve",
     ]);
+  });
+
+  it("writes a Move action in the shape of the app's own, and reads the displacement back", () => {
+    const corpus = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-build-order-seed.key", import.meta.url))));
+    const authored = corpus.slides()[0]!.builds().find((b) => b.read().effect === "apple:action-motion-path")!;
+    const moved = authored.read().move!;
+    expect(Math.round(moved.dx * 1000)).toBe(258423);
+    expect(Math.abs(moved.dy) < 1e-6).toBe(true);
+    const fieldsOf = (b: BuildModel) => [...new Set(b.object.message.getMessage(BuildFields.ATTRIBUTES)!.fields.map((f) => f.no))].sort((a, b) => a - b);
+
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:action-motion-path", move: { dx: 200, dy: -50 } });
+    const reloaded = KeynoteDocument.load(doc.save()).slides()[0]!.builds().find((b) => b.id === build.id)!;
+    expect(fieldsOf(reloaded)).toEqual(fieldsOf(authored));
+    const info = reloaded.read();
+    expect(info.animationType).toBe("Action");
+    expect(info.textDelivery).toBe(undefined);
+    expect(info.move).toEqual({ dx: 200, dy: -50 });
+    expect(reloaded.object.message.getMessage(BuildFields.ATTRIBUTES)!.getUint(BuildAttributesFields.ACTION_ACCELERATION)).toBe(BuildAcceleration.EASE_BOTH);
+    expect(slide.builds().find((b) => b.read().effect === "apple:dissolve character")).toBe(undefined);
   });
 
   it("reads the app's own dissolve on a title as apple:dissolve character, beside the library's", () => {

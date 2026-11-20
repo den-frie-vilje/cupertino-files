@@ -1880,7 +1880,8 @@ export const CAPABILITIES: Capability[] = [
       "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
       "app-authored builds carry them, in the slide's component, and a by-paragraph build with one " +
       "chunk per paragraph of the target's text, registered in the component's object UUID map " +
-      "under the UUID its chunks name; setBuildOrder writes the Build Order drag; actions are not authored",
+      "under the UUID its chunks name; setBuildOrder writes the Build Order drag; a Move action " +
+      "(move: {dx, dy}) is written in the app's shape, the other actions are not authored",
     manualProof: {
       claim: "Keynote plays a build this library wrote from nothing.",
       why:
@@ -1901,6 +1902,28 @@ export const CAPABILITIES: Capability[] = [
         "library's dissolve last in the panel until the build was registered in the component's object " +
         "UUID map under the UUID its chunks name; the checker then dragged it first and wrote \"moved\" " +
         "on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Builds: a Move action",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addBuild({ move: { dx, dy } }) writes an Action with the app's motion path effect, eased at " +
+      "both ends, whose path is one open subpath of two sharp nodes from the origin to the " +
+      "displacement, field for field as the Move the app wrote in the build-order deck",
+    manualProof: {
+      claim: "Keynote plays a Move action this library wrote from nothing.",
+      why:
+        "The suite proves the archive matches the app's Move field for field, and the shape audit " +
+        "accepts it; an action the app discards looks exactly like a still slide.",
+      how:
+        "npm run keynote:docs -- out writes K17-action.key; open it in Keynote and play the slide. A " +
+        "pass shows the title sliding 200 points to the right on the first click; a failure shows " +
+        "it standing still, which means the action needs state only the app writes.",
+      risk: "medium",
     },
   },
   {

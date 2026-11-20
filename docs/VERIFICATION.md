@@ -16,13 +16,26 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 1 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
+| 1 | 🟠 medium | Keynote → Builds: a Move action | Keynote plays a Move action this library wrote from nothing. | manual |
+
+### 1. Builds: a Move action
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote plays a Move action this library wrote from nothing.
+
+**Why the suite cannot settle it.** The suite proves the archive matches the app's Move field for field, and the shape audit accepts it; an action the app discards looks exactly like a still slide.
+
+**How to settle it.** npm run keynote:docs -- out writes K17-action.key; open it in Keynote and play the slide. A pass shows the title sliding 200 points to the right on the first click; a failure shows it standing still, which means the action needs state only the app writes.
 
 ## Settled
 
