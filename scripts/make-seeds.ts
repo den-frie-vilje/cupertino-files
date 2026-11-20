@@ -231,10 +231,10 @@ function seedDurationConditions(): Uint8Array {
 // ---------------------------------------------------------- build order
 
 function seedBuildOrder(): Uint8Array {
-  // Four rounds pinned the library's dissolve last in Build Order. The
-  // slide node's has_explicit_builds, set on every app-written slide
-  // with a build and unset on the library's, is the remaining
-  // difference; addBuild sets it now, and the deck asks the drag again.
+  // Five rounds pinned the library's dissolve last in Build Order. A
+  // chunk names its build by UUID through the component's object UUID
+  // map, and the library registered none; addBuild registers the build
+  // under the UUID its chunks carry now, and the deck asks the drag again.
   const doc = KeynoteDocument.blank();
   const slide = doc.slides()[0]!;
   slide.title = "The library's dissolve is on this title";

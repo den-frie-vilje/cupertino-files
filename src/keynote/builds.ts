@@ -411,7 +411,10 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   message.setVarint(BuildFields.CHUNK_ID_SEED, stages);
   build.setMessageBytes(message.toBytes());
 
+  // The chunks name their build by UUID, resolved through the component's
+  // object UUID map, so the build is registered there under the same one.
   const buildUid = randomUid();
+  store.registerObjectUuid(build, buildUid);
   const uuid = (): RawMessage => {
     const m = RawMessage.create();
     m.setVarint(1, buildUid.lower);

@@ -28,6 +28,9 @@ in commit messages and pull requests.
   after the slide archive with the chunks behind the builds, instead of
   at the end of the slide's component, and the slide's node says it
   carries explicit builds, as every app-written slide with a build does.
+- A build added to a slide is registered in its component's object UUID
+  map under the UUID its chunks name, so Keynote's Build Order panel
+  moves it like one of its own instead of pinning it last.
 
 ### Fixed
 

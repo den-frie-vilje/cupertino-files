@@ -1320,3 +1320,13 @@ node scripts/scan-fixture-privacy.ts
   and `apple:dissolve character` on slide 2. The checker gave each body
   an Appear and commented "Pinned, still" and "Also pinned". The bodies
   are the request itself.
+
+### olekristensen-v26.0-mac-dissolve-explicit.key
+- 542,031 bytes, md5 `f767269f2b8606eaca8d608f4b8ccf3d`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  fifth form: one slide, the library's `apple:dissolve character` on the
+  title with the slide node's `has_explicit_builds` set. The checker gave
+  the body an Appear and commented on the slide "Still pinned". The body
+  is the request itself. The app's save registered the library's build
+  in the component's object UUID map under a fresh UUID while its chunk
+  kept the library's, which is the measurement.

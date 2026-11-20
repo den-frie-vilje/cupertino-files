@@ -41,6 +41,10 @@ const COMPONENT_IDENTIFIER = 1;
 const COMPONENT_PREFERRED_LOCATOR = 2;
 const COMPONENT_LOCATOR = 3;
 const COMPONENT_EXTERNAL_REFERENCES = 6;
+const COMPONENT_OBJECT_UUID_MAP_ENTRIES = 11;
+// TSP.ObjectUUIDMapEntry field numbers.
+const UUID_ENTRY_IDENTIFIER = 1;
+const UUID_ENTRY_UUID = 2;
 // TSP.ComponentExternalReference field numbers.
 const EXTREF_COMPONENT_IDENTIFIER = 1;
 const EXTREF_OBJECT_IDENTIFIER = 2;
@@ -491,6 +495,40 @@ export class ObjectStore {
       ) {
         return ci;
       }
+    }
+    return undefined;
+  }
+
+  /**
+   * Record `object`'s UUID in its component's object UUID map. The apps
+   * give every model object in a slide component an entry and resolve
+   * UUID-keyed references through it; an object with none is minted a
+   * fresh UUID on the next save, so a reference that names the UUID the
+   * writer chose (a build chunk's `build_id`) then points at nothing.
+   */
+  registerObjectUuid(object: IwaObject, uuid: { lower: bigint; upper: bigint }): void {
+    const component = this.componentOf(object.identifier);
+    const info = component && this.componentInfo(component);
+    if (!info) return; // metadata-less packages: nothing to maintain
+    const value = RawMessage.create();
+    value.setVarint(1, uuid.lower);
+    value.setVarint(2, uuid.upper);
+    const entry = RawMessage.create();
+    entry.setVarint(UUID_ENTRY_IDENTIFIER, object.identifier);
+    entry.setMessage(UUID_ENTRY_UUID, value);
+    info.addMessage(COMPONENT_OBJECT_UUID_MAP_ENTRIES, entry);
+  }
+
+  /** The UUID the component's object UUID map records for `id`, if any. */
+  objectUuid(id: bigint): { lower: bigint; upper: bigint } | undefined {
+    const component = this.componentOf(id);
+    const info = component && this.componentInfo(component);
+    for (const entry of info?.getMessages(COMPONENT_OBJECT_UUID_MAP_ENTRIES) ?? []) {
+      if (entry.getVarint(UUID_ENTRY_IDENTIFIER) !== id) continue;
+      const value = entry.getMessage(UUID_ENTRY_UUID);
+      const lower = value?.getVarint(1);
+      const upper = value?.getVarint(2);
+      return lower !== undefined && upper !== undefined ? { lower, upper } : undefined;
     }
     return undefined;
   }

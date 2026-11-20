@@ -345,6 +345,18 @@ component as a whole; `is_weak` for non-owning links). Apple maintains these
 for incremental loading; writers adding cross-component references must
 append the corresponding entries.
 
+`ComponentInfo.object_uuid_map_entries` is the other per-component
+registry: `ObjectUUIDMapEntry { identifier, uuid }` for every model
+object the app gives a UUID (in a Keynote slide component that is the
+slide, its placeholders, storages, captions, note, guides, comments and
+builds; not build chunks). References that carry a `TSP.UUID` rather
+than an object identifier resolve through it: a build chunk's `build_id`
+names its build this way. An object with no entry is minted a fresh UUID
+on the app's next save, so a writer that invents a UUID for such a
+reference must register the referenced object under it, or the reference
+points at nothing (Keynote then shows the build and refuses to reorder
+it).
+
 ### 5.4 Data files
 
 `PackageMetadata.datas` carries one `DataInfo` per `Data/` file:
@@ -1575,7 +1587,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3737 of 3737 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3821 of 3821 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1737,7 +1749,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3737 storages carry the field and **zero** declare it. What
+fixtures here, 3821 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1774,7 +1786,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3737 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3821 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |

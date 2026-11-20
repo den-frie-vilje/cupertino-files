@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { MASTER_ONLY_FIELDS, Slide, SlideNode } from "../src/keynote/schema.ts";
+import { BuildChunkFields, BuildChunkIdentifierFields } from "../src/keynote/builds.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
@@ -699,6 +700,48 @@ describe("build order", () => {
         expect(`${name} ${s.id}: ${s.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) !== false}`).toBe(`${name} ${s.id}: true`);
       }
     }
+  });
+
+  it("registers a new build's UUID in its component's object UUID map, the one its chunks name", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:dissolve character" });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const registered = reloaded.store.objectUuid(build.id);
+    expect(registered !== undefined).toBe(true);
+    const chunk = reloaded.store.object(build.read().chunks[0]!.id)!.message;
+    expect(chunk.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(1)).toBe(registered!.lower);
+    expect(chunk.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(2)).toBe(registered!.upper);
+    expect(chunk.getMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER)?.getMessage(BuildChunkIdentifierFields.BUILD_ID)?.getVarint(1)).toBe(registered!.lower);
+    // The corpus: every app-written build has an entry, and every chunk of
+    // a build the app itself authored names that entry's UUID. The chunks
+    // that do not are the library's own earlier builds, which the app
+    // re-registered under a fresh UUID on save and pinned last in Build Order.
+    let builds = 0;
+    const strays: string[] = [];
+    for (const name of readdirSync(FIXTURES).filter((n) => n.endsWith(".key"))) {
+      const deck = KeynoteDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      for (const s of deck.slides()) {
+        for (const b of s.builds()) {
+          builds++;
+          const uuid = deck.store.objectUuid(b.id);
+          expect(`${name} ${b.id}: ${uuid !== undefined}`).toBe(`${name} ${b.id}: true`);
+          for (const c of b.read().chunks) {
+            const named = deck.store.object(c.id)!.message.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(1);
+            if (named !== uuid!.lower) strays.push(`${name} ${b.id} ${b.read().effect}`);
+          }
+        }
+      }
+    }
+    expect(builds).toBe(18);
+    expect(strays).toEqual([
+      "olekristensen-v26.0-mac-build-order-seed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-build-seed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-dissolve-explicit.key 3000001 apple:dissolve character",
+      "olekristensen-v26.0-mac-pinned-dissolve-placed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-pinned-dissolve-placed.key 3000018 apple:dissolve character",
+      "olekristensen-v26.0-mac-pinned-dissolve.key 3000001 apple:dissolve",
+    ]);
   });
 
   it("reads the app's own dissolve on a title as apple:dissolve character, beside the library's", () => {

@@ -13,10 +13,10 @@ zero fixtures” at the same time — which is exactly the thing worth knowing.
 |---|---:|---:|---:|---:|---:|---:|---|---|
 | **Pages** | 1 | 4 | 5 | 7 | 13 | 30 | 26.4.0 | `M15.4-7051.0.79-2` |
 | **Numbers** | · | 1 | · | 3 | 26 | 30 | 26.4.0 | `M15.4-7051.0.79-2` |
-| **Keynote** | · | 2 | 1 | 2 | 11 | 16 | 26.4.0 | `M15.4-7051.0.79-2` |
+| **Keynote** | · | 2 | 1 | 2 | 12 | 17 | 26.4.0 | `M15.4-7051.0.79-2` |
 
 Eras are classified from `fileFormatVersion`; see `docs/FORMAT.md` §11. 
-Corpus: **76 documents**. Every one round-trips byte-identically.
+Corpus: **77 documents**. Every one round-trips byte-identically.
 
 ## Feature coverage
 
@@ -26,16 +26,16 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Flat zip layout | all | ✅ read + write | 74 | all |
+| Flat zip layout | all | ✅ read + write | 75 | all |
 | Nested Index.zip layout | all | ✅ read + write | 2 | iwork19→iwork19 |
 | Wrapper-directory layout | all | ✅ read + write | **0** | — |
-| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 76 | all |
-| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 76 | all |
-| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 76 | all |
-| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 76 | all |
-| Export to Markdown, CSV and plain text<br><sub>toMarkdown arranges text, tables and charts in each kind's structure (body with headings and lists; a section per sheet; a section per slide with quoted notes); toCsv renders one table per RFC 4180. An offline rendering, so nothing here waits on an app</sub> | all | ✅ read + write | 76 | all |
-| Construction from Markdown and CSV<br><sub>fromMarkdown builds on blank(): Pages through appendParagraph with the template's Title, Heading and Body styles and Bullet/Numbered lists; Keynote through addSlide({ master: "Title &amp; Bullets" }), title, body and notes; Numbers through the blank table, addTable and setCell with rows and columns fitted. Every step is a writer with its own row; the Keynote path rides on the layout writer's open question</sub> | all | ✅ read + write | 76 | all |
-| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. Also drops the Data/ files no object names, in its data-reference list or in a schema-typed field, so a removed picture's bytes leave the package. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 76 | all |
+| Byte-identical round-trip of untouched content<br><sub>enforced for every fixture by the compatibility suite</sub> | all | ✅ read + write | 77 | all |
+| Edit cycle: open → edit → save → reopen<br><sub>every modern document in the corpus is edited and re-read by test/edit-cycle.test.ts, which also compares a census — objects, components, text, tables, cells, formulas, merges, charts, styles, unknown archive types — before and after, so an edit that lands while dropping something else fails</sub> | all | ✅ read + write | 77 | all |
+| New document from a template (blankFrom)<br><sub>empties a real document rather than synthesising one: every identity, style and master stays as an Apple app wrote it. There is no from-nothing constructor — that graph could be written but not checked, and unverifiable inventions are the one thing this project refuses to ship</sub> | all | ✅ read + write | 77 | all |
+| New document from nothing (blank)<br><sub>blank() instantiates a donor embedded in the package — a corpus fixture emptied by blankFrom at build time (scripts/make-blanks.ts records which and why), previews stripped, Pages re-papered to A4 with byte-measured values, Numbers already iso-a4, Keynote 1920×1080, all dressed in the house typography (Palatino body, Helvetica Neue display, terracotta accent) through the public style API. The apps do the same: a new document is a bundled template, instantiated. blanks:check pins the embedded bytes to data/blanks/ and asserts the house contract</sub> | all | ✅ read + write | 77 | all |
+| Export to Markdown, CSV and plain text<br><sub>toMarkdown arranges text, tables and charts in each kind's structure (body with headings and lists; a section per sheet; a section per slide with quoted notes); toCsv renders one table per RFC 4180. An offline rendering, so nothing here waits on an app</sub> | all | ✅ read + write | 77 | all |
+| Construction from Markdown and CSV<br><sub>fromMarkdown builds on blank(): Pages through appendParagraph with the template's Title, Heading and Body styles and Bullet/Numbered lists; Keynote through addSlide({ master: "Title &amp; Bullets" }), title, body and notes; Numbers through the blank table, addTable and setCell with rows and columns fitted. Every step is a writer with its own row; the Keynote path rides on the layout writer's open question</sub> | all | ✅ read + write | 77 | all |
+| Compaction (drop unreachable archives)<br><sub>correct but currently collects little: removing a sheet leaves calc-engine references to its tables, so they stay reachable. Also drops the Data/ files no object names, in its data-reference list or in a schema-typed field, so a removed picture's bytes leave the package. A no-op on every untouched fixture, which is the property that matters</sub> | all | ✅ read + write | 77 | all |
 | Mixed-codec packages (LZFSE component beside Snappy)<br><sub>decodeLzfseStream reads the container (raw and LZVN blocks; FSE blocks refused precisely) and the probe reports its reading of any opaque component; the document model keeps such components opaque and byte-preserved because no redistributable specimen exists to measure the payload against — see docs/BLOCKERS.md</sub> | all | 🔍 read only | **0** | — |
 | iWork '09 XML documents<br><sub>detected and rejected with a clear error</sub> | all | ✗ out of scope | n/a | — |
 | Password-protected documents<br><sub>detected via .iwph and rejected</sub> | all | ✗ out of scope | n/a | — |
@@ -45,28 +45,28 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
 | Unknown type IDs preserved across edits<br><sub>forward compatibility; registerTypes() can name them at runtime</sub> | all | ✅ read + write | 1 | iwork13→iwork13 |
-| Multi-payload archives | all | 🔍 read only | 66 | iwork19→current |
-| Older-reader compatibility diffs (type-0 patches)<br><sub>preserved verbatim; not recomputed when the base message changes</sub> | all | 🔍 read only | 32 | modern→current |
-| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 62 | modern→current |
+| Multi-payload archives | all | 🔍 read only | 67 | iwork19→current |
+| Older-reader compatibility diffs (type-0 patches)<br><sub>preserved verbatim; not recomputed when the base message changes</sub> | all | 🔍 read only | 33 | modern→current |
+| Versioned style snapshots (styles_for_*) | all | 🔍 read only | 63 | modern→current |
 
 ### Text & styles
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Text read/edit with full attribute-table fixup | all | ✅ read + write | 76 | all |
-| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 76 | all |
-| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 76 | all |
-| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 76 | all |
-| Tab stops (position, alignment, leader) | all | ✅ read + write | 72 | all |
-| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 38 | all |
-| Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; the null flag is never used. Rendering measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app preserves values beyond what its inspector displays (−12 stored, −2 shown)</sub> | all | ✅ read + write | 76 | all |
-| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 76 | all |
+| Text read/edit with full attribute-table fixup | all | ✅ read + write | 77 | all |
+| Paragraph & character styles (by name, plus creation and editing) | all | ✅ read + write | 77 | all |
+| Character properties (font, colour, highlight, underline, strike, caps, shadow…) | all | ✅ read + write | 77 | all |
+| Paragraph properties (indents, spacing, keeps, hyphenation, outline level) | all | ✅ read + write | 77 | all |
+| Tab stops (position, alignment, leader) | all | ✅ read + write | 73 | all |
+| Paragraph background & borders (rule stroke + positions)<br><sub>border_positions is a bitmask with logical side bits (1 top, 2 bottom, 4 leading, 8 trailing — app-settled 2026-08-03); the stroke is written with cap, join, miter 4 and the full pattern message, the shape of all 167 corpus paragraph border strokes</sub> | all | ✅ read + write | 39 | all |
+| Paragraph rule offset (text-to-border distance)<br><sub>historical_rule_offset, a TSP.Point whose slots agree in 8637 of 8638 corpus instances — a number writes both, a pair states them separately; the null flag is never used. Rendering measured: 0 is the default gap (the app back-fills (0, 0) on resave), negative pulls the rules toward and into the text (−12 overlaps; the templates' −3 tightens), and the app preserves values beyond what its inspector displays (−12 stored, −2 shown)</sub> | all | ✅ read + write | 77 | all |
+| Shared style values (colour incl. P3, gradients, strokes, shadows, padding)<br><sub>one vocabulary shared by text, table and drawable styling</sub> | all | ✅ read + write | 77 | all |
 | Dash presets (short-dashed, dashed, long-dashed, dotted strokes)<br><sub>the four dashed items of Pages' Borders &amp; Rules line-style menu, byte-identical to the app's own at 3 pt; the menu's five brush strokes (smart strokes by name) are not written; any other dash array draws but the Format sidebar shows None for it</sub> | all | ✅ read + write | n/a | — |
 | List styles | all | ✅ read + write | 30 | all |
 | Hyperlinks | all | ✅ read + write | 10 | iwork16→current |
 | Page numbers and page counts (insert, read, remove)<br><sub>an attachment at a U+FFFC placeholder, not text; the rendered value comes from pagination and is never invented</sub> | all | ✅ read + write | 45 | iwork16→current |
 | Smart fields (page number, date, merge, …) | all | 🔍 read only | 15 | iwork16→current |
-| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 76 | all |
+| Paragraph writing direction (read + write)<br><sub>the storage's bidi pair, written as the app's own direction control writes it — (1, 0) RTL, (0, 0) LTR, (65535, 65535) natural; the style bag's writing_direction is vestigial and untouched even by the app</sub> | all | ✅ read + write | 77 | all |
 | Placeholder text (list, fill, define)<br><sub>the template tap-to-replace mechanism. Filling sheds the marking the way typing does; defineAsPlaceholder writes the measured shape (smart-field super + varint 1, uniform across 73 app-written instances). A placeholder over an attachment's U+FFFC is a body document's image placeholder — same field, no drawable archive</sub> | Pages | ✅ read + write | 6 | iwork19→current |
 | Date fields and bookmarks (read + create)<br><sub>a date field spans real text the app rewrites, so the display text is supplied rather than formatted here</sub> | all | ✅ read + write | 5 | iwork16→modern |
 | Comment creation and removal<br><sub>reuses the document's existing annotation author rather than duplicating them</sub> | all | ✅ read + write | 7 | iwork16→current |
@@ -78,17 +78,17 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 56 | iwork16→current |
-| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all; writes copy a shared archive on first edit and repoint this drawable, the app's own one-object-styled behaviour</sub> | all | ✅ read + write | 76 | all |
-| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 76 | all |
-| Geometry (enumerate, move, resize) | all | ✅ read + write | 68 | iwork16→current |
+| Placement (copy onto a page/slide/sheet, remove, reorder in z)<br><sub>one abstraction over three containers; copies are deep so the two objects are independent. In Pages a page with no floating objects has no page_groups entry at all, so placing the first drawable on a page needs floatingDrawables(page, { create: true }) — the created group carries the two fields every group in the corpus carries, page index and drawable list, inserted in page order</sub> | all | ✅ read + write | 57 | iwork16→current |
+| Drawable style (fill, stroke, opacity, shadow, reflection)<br><sub>where shadows live — cell and table styles have no shadow field at all; writes copy a shared archive on first edit and repoint this drawable, the app's own one-object-styled behaviour</sub> | all | ✅ read + write | 77 | all |
+| Drawable shadows (enabled, angle, offset, blur, opacity) | all | ✅ read + write | 77 | all |
+| Geometry (enumerate, move, resize) | all | ✅ read + write | 69 | iwork16→current |
 | Image filters / adjustments | all | ✅ read + write | 2 | iwork16→modern |
-| Image cropping (set, move, remove a mask) | all | ✅ read + write | 24 | iwork16→current |
-| Media variant resolution (unmaterialized originals) | all | 🔍 read only | 18 | iwork16→current |
+| Image cropping (set, move, remove a mask) | all | ✅ read + write | 25 | iwork16→current |
+| Media variant resolution (unmaterialized originals) | all | 🔍 read only | 19 | iwork16→current |
 | Inline image insertion<br><sub>Data/ plumbing with SHA-1 dedupe; anchored at a U+FFFC in table_attachment, with the in-the-text-flow exterior_text_wrap so the picture sits in the text column and moves with its indent</sub> | Pages | ✅ read + write | n/a | — |
 | Inline image placement in an indented column<br><sub>exterior_text_wrap type 0 — the mode on 56 of the corpus's 102 inline attachments and on none of its 175 floating drawables; the other values place the drawable against the page and are unnamed in any published schema</sub> | Pages | ✅ read + write | n/a | — |
 | Floating (non-inline) drawable placement<br><sub>per-page groups, each entry wrapped in a TP.DrawableEntry; copies are deep, sharing styles and themes</sub> | Pages | ✅ read + write | 10 | iwork16→current |
-| Text boxes: adding one<br><sub>addTextBox deep-copies a text box the document already carries — its own storage, style chain and path — into the slide's or page's drawable list, sets the text, places it, and repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry none); a document without any text box has nothing to copy and is refused</sub> | Pages, Keynote | ✅ read + write | 46 | all |
+| Text boxes: adding one<br><sub>addTextBox deep-copies a text box the document already carries — its own storage, style chain and path — into the slide's or page's drawable list, sets the text, places it, and repoints the parent to the slide (Keynote) or clears it (Pages, where floating boxes carry none); a document without any text box has nothing to copy and is refused</sub> | Pages, Keynote | ✅ read + write | 47 | all |
 
 ### Pages
 
@@ -134,7 +134,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Filters: enable, disable, combining mode | all | ✅ read + write | 36 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 4 | current→current |
 | Categories: enable or disable grouping | all | ✅ read + write | 36 | modern→current |
-| Tables from nothing on a page or a slide<br><sub>appendTable/insertInlineTable (Pages) and slide.addTable (Keynote) graft the neutral donor — the blank Numbers document's own table — under the body storage or the slide, anchored the way the corpus's 18 inline Pages tables are (a five-field attachment at a U+FFFC, parent the body) and listed the way its 3 slide tables are (parent the slide, in both drawable lists); rows size and fill it. The table takes the host theme's first preset — its model's styles the preset network's members, its cell-level styles re-parented onto them and listed nowhere, as every corpus table's are — and the shape audit finds nothing a Pages or Keynote table lacks</sub> | Pages, Keynote | ✅ read + write | 46 | all |
+| Tables from nothing on a page or a slide<br><sub>appendTable/insertInlineTable (Pages) and slide.addTable (Keynote) graft the neutral donor — the blank Numbers document's own table — under the body storage or the slide, anchored the way the corpus's 18 inline Pages tables are (a five-field attachment at a U+FFFC, parent the body) and listed the way its 3 slide tables are (parent the slide, in both drawable lists); rows size and fill it. The table takes the host theme's first preset — its model's styles the preset network's members, its cell-level styles re-parented onto them and listed nowhere, as every corpus table's are — and the shape audit finds nothing a Pages or Keynote table lacks</sub> | Pages, Keynote | ✅ read + write | 47 | all |
 | Filters: adding a rule<br><sub>addFilterRule writes any condition the filter menu offers byte for byte as the fixtures' app-authored rules — the predicate with its codes and operands and the formula over the table's own identity, counted from the app's host column — grows the boundary list, switches the set on and writes the hidden-state extent by evaluating the rules; every one of the 44 app-written rules in the three filter-conditions fixtures reproduces identically</sub> | Numbers | ✅ read + write | 30 | iwork16→current |
 | Categories: defining a category by a column<br><sub>addCategory fills the table's existing group-by archive — every table carries one — with the shape every categorised corpus table has: a group column per level (with the app's own bucketing functor for a date bucket), the row-uid lookup, one node per distinct value or bucket at each level with its format manager, a referenced root and its inline copy; the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them</sub> | Numbers | ✅ read + write | 30 | iwork16→current |
 | Categories: regrouping rows after an edit<br><sub>regroupCategories puts rows back in the groups their values now call for, and writes only the index sets that changed — regrouping unchanged data reproduces Apple's archive byte for byte across every by-value table in the fixture. Creating or removing a group is refused: which rows are "Animal" the data answers, but a new group's identity, its sort position and the per-column fields beside the tree are things only the app knows</sub> | all | ✅ read + write | 4 | current→current |
@@ -145,21 +145,21 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 | Capability | Apps | Status | Fixtures | Eras validated |
 |---|---|---|---:|---|
-| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component, and a by-paragraph build with one chunk per paragraph of the target's text; actions and build order are not authored</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
+| Builds: creating an animation<br><sub>addBuild writes an all-at-once build and its chunk field for field as the corpus deck's app-authored builds carry them, in the slide's component, and a by-paragraph build with one chunk per paragraph of the target's text; actions and build order are not authored</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
 | Slide management (add, duplicate, move, remove)<br><sub>new slides deep-copy their content and share their layout, styles and theme</sub> | Keynote | ✅ read + write | 12 | iwork16→current |
-| Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 16 | iwork16→current |
-| Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
+| Slide tree (both generations, presentation order) | Keynote | ✅ read + write | 17 | iwork16→current |
+| Pictures on slides (addImage)<br><sub>the measured slide-image shape: slide parent, locked aspect, the theme's image style, both drawable lists</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
 | Slide copies in a Keynote-saved deck (per-slide components)<br><sub>a copied slide gets a component of its own, modeled on its donor's</sub> | Keynote | ✅ read + write | 12 | iwork16→current |
 | Speaker notes | Keynote | ✅ read + write | 3 | iwork16→current |
 | Transitions<br><sub>named effects were blocked on evidence — every corpus slide says effect "none" — until the e2e suite began manufacturing it: Keynote applies a real dissolve and the library reads it back, and Keynote reads back a duration and effect the library wrote (both confirmed 2026-08-03, 17 of 17); written effects copy a string measured from the app that run, never a guess</sub> | Keynote | ✅ read + write | **0** | — |
-| Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
-| Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
+| Presentation settings (mode, loop, autoplay delays, slide size)<br><sub>defaults come from the schema, not from zero — every corpus deck omits several and relies on them</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
+| Slide placeholders (title, body, slide number) — read and fill<br><sub>fills a placeholder the slide already carries; creating one needs the theme's geometry for that role</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
 | Skipped slides<br><sub>NO FIXTURE: no corpus deck skips a slide; the flag is read off SlideNodeArchive.isSkipped and written as a bool on the node</sub> | Keynote | ✅ read + write | **0** | — |
-| Master / layout slides | Keynote | 🔍 read only | 16 | iwork16→current |
-| Slide background (read + set)<br><sub>background reads up the style chain; setBackground writes the corpus shape of a per-slide background — an unnamed KN.SlideStyleArchive variation under the master's style, in the stylesheet's component, override count 1, the fill in its slide properties, referenced by the slide alone — measured on the one deck that carries any (11 slides)</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
-| Slides: changing the layout (setLayout)<br><sub>setLayout re-instantiates the title, body and slide-number placeholders from the new master, carries the text, keeps every other drawable and drops the old placeholders — the shape the app's own Format ▸ Slide Layout left in olekristensen-v26.0-mac-authored.key</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
-| Slides from a layout (addSlide master)<br><sub>addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape the corpus states for all 49 content slides against their masters: template reference, note and slide-number attachment added; name, object placeholder, style lists and thumbnail texts dropped; placeholder presence equal to the master's</sub> | Keynote | ✅ read + write | 16 | iwork16→current |
-| Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 6 | current→current |
+| Master / layout slides | Keynote | 🔍 read only | 17 | iwork16→current |
+| Slide background (read + set)<br><sub>background reads up the style chain; setBackground writes the corpus shape of a per-slide background — an unnamed KN.SlideStyleArchive variation under the master's style, in the stylesheet's component, override count 1, the fill in its slide properties, referenced by the slide alone — measured on the one deck that carries any (11 slides)</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
+| Slides: changing the layout (setLayout)<br><sub>setLayout re-instantiates the title, body and slide-number placeholders from the new master, carries the text, keeps every other drawable and drops the old placeholders — the shape the app's own Format ▸ Slide Layout left in olekristensen-v26.0-mac-authored.key</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
+| Slides from a layout (addSlide master)<br><sub>addSlide({ master }) deep-copies a layout and makes the copy a content slide, in the shape the corpus states for all 49 content slides against their masters: template reference, note and slide-number attachment added; name, object placeholder, style lists and thumbnail texts dropped; placeholder presence equal to the master's</sub> | Keynote | ✅ read + write | 17 | iwork16→current |
+| Builds (animations): read and retime<br><sub>effect, timing, delivery, trigger and per-stage chunks all read, pinned against the three app-authored builds in olekristensen-v26.3-mac-builds-effects.key; effect and timing decode from KN.AnimationAttributesArchive with database_* fallback, and retiming writes the same fields. Will not create a build — see docs/BLOCKERS.md</sub> | Keynote | ✅ read + write | 7 | current→current |
 
 ### Concurrency
 
@@ -296,6 +296,7 @@ correctly. They are listed with their reasoning and repro steps in
 | `olekristensen-v26.0-mac-build-order-seed.key` | Keynote | current | 26.4.0 | `M15.4-7051.0.79-2` |
 | `olekristensen-v26.0-mac-build-seed.key` | Keynote | current | 26.0.0 | `M15.1.1-7044.0.273-2` |
 | `olekristensen-v26.0-mac-category-seed.numbers` | Numbers | current | 26.0.0 | `M15.1-7044.0.271-2` |
+| `olekristensen-v26.0-mac-dissolve-explicit.key` | Keynote | current | 26.4.0 | `M15.4-7051.0.79-2` |
 | `olekristensen-v26.0-mac-duration-conditions.numbers` | Numbers | current | 26.4.0 | `M15.4-7051.0.79-2` |
 | `olekristensen-v26.0-mac-filter-conditions-text.numbers` | Numbers | current | 26.4.0 | `M15.4-7051.0.79-2` |
 | `olekristensen-v26.0-mac-filter-conditions.numbers` | Numbers | current | 26.4.0 | `M15.4-7051.0.79-2` |
