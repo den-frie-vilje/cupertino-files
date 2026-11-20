@@ -6,8 +6,8 @@ import { describe, expect, it } from "./harness.ts";
 const NUMBERS =
   "/Applications/Numbers Creator Studio.app/Contents/Frameworks/TSTables.framework/Versions/A/TSTables";
 
-/** The app versions the reader's instruction patterns were measured on; a newer app is an open ledger row, not a failing run. */
-const MEASURED = /^15\./;
+/** The app versions the reader was measured on; a newer app is an open ledger row, not a failing run. */
+const MEASURED = /^1[56]\./;
 const version = (() => {
   try {
     // The bundle's Info.plist is XML; the version follows its key.

@@ -39,8 +39,8 @@ that rebuild the structures from them.
 
 ## Blocked on evaluation or the app — not on format knowledge
 
-- **Formula authoring: the function table is complete for 15.4, and
-  16.0 is on the Mac.** Authoring
+- **Formula authoring: the function table is complete, read from 16.0
+  as from 15.4.** Authoring
   is shipped and proven — every parseable corpus formula rebuilds
   byte-identical to Apple's AST, and the e2e recompute probe settled the
   dependency-ledger question (Numbers rebuilds it on open; see
@@ -51,11 +51,11 @@ that rebuild the structures from them.
   `--drive`) confirms it and supplies T, which the registry registers
   by another route. A new release means a new `--binary` run; the merge
   refuses any disagreement between the two sources. Numbers and Pages
-  16.0 (7052.0.68) are installed since mid-November, and the registry
-  reader mis-parses the 16.0 TSTables ("index 3 registered as both
-  ACCRINTM and INTERSECT.RANGES"), so `test/function-registry.test.ts`
-  fails on this Mac until the reader is re-measured on the new binary;
-  Keynote is still 15.4. The schema refresh for 16.0 goes with it.
+  16.0 (7052.0.68) register the same 363 as 15.4; the reader now finds
+  each helper's index slot by the one property an index has and a flag
+  has not, values distinct across the helper's registrations, so a
+  helper whose stack layout changes reads without re-measuring. Keynote
+  is still 15.4. Open: the schema refresh from the 16.0 bundles.
 - **Tables on pages and slides: the apps read them.** Pages and
   Keynote 15.4 each list the grafted table and answer its cells through
   their scripting dictionaries, and Keynote's own resave keeps it
@@ -178,6 +178,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-20 | does Numbers 16.0 register new functions, and why did the registry reader fail on it? | Numbers 16.0 (7052.0.68), TSTables registry read offline; no document round | **no new functions, a new stack layout**: the 16.0 registry is the recorded 363 apart from T, which the document harvest supplies. The reader failed because one registration helper (ten functions: INTERSECT.RANGES, SORTBY, CHOOSECOLS, CHOOSEROWS, HSTACK, VSTACK, LET, LAMBDA, MAP, LAMBDA.APPLY) now takes two halfwords on the stack, the index at `[sp, #16]` and a flag at `[sp]`, and the reader took the nearest store. Measured across the cluster, 16.0 calls eight helpers and each has exactly one slot, `w7` or a stack offset, whose values are distinct over all its registrations; the reader picks that slot per helper now, preferring the highest stack offset and then `w7` for a helper called once. The harvest is merged with the 16.0 provenance. Index 326, the checkbox control function, is still registered by no name load the reader sees. | `scripts/function-registry.ts`, `data/function-index.json`, test/function-registry.test.ts |
 | 2026-11-20 | the pinned dissolve, sixth round: does a build registered in the object UUID map move? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with the build registered, returned as `olekristensen-v26.0-mac-dissolve-registered.key`; the slide's canvas comment "moved" | **settled**: the checker gave the body an Appear and dragged the library's dissolve first. The app kept the library's UUID for the build, appended its own build and chunk behind the library's in both lists, and set the node's `build_event_count` to 2 with cache version 2. A build is movable in Build Order when its component's object UUID map registers it under the UUID its chunks name; nothing else about the five refuted candidates mattered. The build-order claim is settled in the coverage matrix. | `fixtures/olekristensen-v26.0-mac-dissolve-registered.key`, `scripts/coverage-matrix.ts` |
 | 2026-11-20 | the pinned dissolve, fifth round: the slide node's explicit flag? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with `has_explicit_builds` set, returned as `olekristensen-v26.0-mac-dissolve-explicit.key`; the slide's canvas comment "Still pinned", and in chat "it was still pinned" | **refuted, and the cause measured**: the app's save left every byte the library wrote alone and added its Appear ahead of ours in both lists again. It also wrote one thing more: in the slide component's `object_uuid_map_entries` it gave the library's build a UUID of its own, a fresh one, where the build's chunk still names the UUID the library minted in `build_id` and `build_chunk_identifier`. The apps resolve a chunk's build through that map; a chunk whose UUID names no object is shown and never reordered. Across the corpus every app-written build (18, over 16 build archives) has a map entry and every chunk of a build the app itself authored names it; the only chunks that do not are the library's own earlier builds after the app's resave. `createBuild` registers the build in its component's map under the UUID its chunks carry, the store exposes `registerObjectUuid` and `objectUuid`, the corpus rule is pinned, and the staged deck asks the drag once more. The wider finding is open below: the apps give every model object in a slide component a map entry and the library gives none of its other creations one. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |
 | 2026-11-19 | the pinned dissolve, fourth round: placement or effect id? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve-placed.key`: "Pinned, still" and "Also pinned" | **both refuted, and the node found**: with the build and chunk placed as the app places them and with the app's own effect id, the app still put its new Appear ahead of the library's in both lists. A whole-document diff of a fresh library deck against the app's resave of the same deck, by archive, left the slide's `KN.SlideNodeArchive`: the app's save sets `build_event_count` and its cache version where the library leaves the blank's none and −1, and across the app-written slides with a build `has_explicit_builds` is 1, or absent where the node's caches were never computed, where the library's slides carry their build with the blank's explicit 0. The library sets it with every build now and clears it with the last; the staged deck asks the drag once more. | `src/keynote/document.ts`, test/keynote.test.ts |

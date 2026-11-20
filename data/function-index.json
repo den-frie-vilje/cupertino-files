@@ -367,8 +367,8 @@
   "unrecognised": [],
   "conflicts": [],
   "provenance": {
-    "app": "Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
-    "harvestedAt": "2026-10-14",
+    "app": "Numbers 16.0 (7052.0.68), TSTables registry, merged with the harvest from Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
+    "harvestedAt": "2026-11-20",
     "source": "scripts/harvest-functions.ts --binary",
     "candidates": 298
   }
