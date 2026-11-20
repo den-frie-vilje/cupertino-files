@@ -20,23 +20,12 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — one seed staged
+## Needs a Mac — nothing staged
 
-`npm run seeds -- out` writes it beside the returned ones.
-
-- `seed-build-order.key` — **one slide, the build's UUID.** Five rounds
-  pinned the library's dissolve last in Build Order (Bygrækkefølge);
-  field order, the archives' place in the component, the effect id and
-  the slide node's explicit flag are refuted. The fifth return showed
-  the cause: a build's chunks name their build by UUID, resolved through
-  the component's object UUID map in the package metadata, and the
-  library registered none there, so the app minted the build a fresh
-  UUID on save and the chunks kept naming one no object has. `addBuild`
-  registers the build under the UUID its chunks carry now. The deck asks
-  the drag once more.
-
-Every earlier seed program is returned and banked; the returned files
-are fixtures with pins (see ATTRIBUTION.md).
+Every seed staged so far is returned and banked; the returned files are
+fixtures with pins (see ATTRIBUTION.md), and `npm run seeds -- out`
+still writes each one, since the builders are the recipes the fixtures
+were made from.
 
 **Before staging a seed**, remember the technique that closed most of
 this page: somebody has already made the document you need. Parser
@@ -185,6 +174,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-20 | the pinned dissolve, sixth round: does a build registered in the object UUID map move? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with the build registered, returned as `olekristensen-v26.0-mac-dissolve-registered.key`; the slide's canvas comment "moved" | **settled**: the checker gave the body an Appear and dragged the library's dissolve first. The app kept the library's UUID for the build, appended its own build and chunk behind the library's in both lists, and set the node's `build_event_count` to 2 with cache version 2. A build is movable in Build Order when its component's object UUID map registers it under the UUID its chunks name; nothing else about the five refuted candidates mattered. The build-order claim is settled in the coverage matrix. | `fixtures/olekristensen-v26.0-mac-dissolve-registered.key`, `scripts/coverage-matrix.ts` |
 | 2026-11-20 | the pinned dissolve, fifth round: the slide node's explicit flag? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with `has_explicit_builds` set, returned as `olekristensen-v26.0-mac-dissolve-explicit.key`; the slide's canvas comment "Still pinned", and in chat "it was still pinned" | **refuted, and the cause measured**: the app's save left every byte the library wrote alone and added its Appear ahead of ours in both lists again. It also wrote one thing more: in the slide component's `object_uuid_map_entries` it gave the library's build a UUID of its own, a fresh one, where the build's chunk still names the UUID the library minted in `build_id` and `build_chunk_identifier`. The apps resolve a chunk's build through that map; a chunk whose UUID names no object is shown and never reordered. Across the corpus every app-written build (18, over 16 build archives) has a map entry and every chunk of a build the app itself authored names it; the only chunks that do not are the library's own earlier builds after the app's resave. `createBuild` registers the build in its component's map under the UUID its chunks carry, the store exposes `registerObjectUuid` and `objectUuid`, the corpus rule is pinned, and the staged deck asks the drag once more. The wider finding is open below: the apps give every model object in a slide component a map entry and the library gives none of its other creations one. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |
 | 2026-11-19 | the pinned dissolve, fourth round: placement or effect id? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve-placed.key`: "Pinned, still" and "Also pinned" | **both refuted, and the node found**: with the build and chunk placed as the app places them and with the app's own effect id, the app still put its new Appear ahead of the library's in both lists. A whole-document diff of a fresh library deck against the app's resave of the same deck, by archive, left the slide's `KN.SlideNodeArchive`: the app's save sets `build_event_count` and its cache version where the library leaves the blank's none and −1, and across the app-written slides with a build `has_explicit_builds` is 1, or absent where the node's caches were never computed, where the library's slides carry their build with the blank's explicit 0. The library sets it with every build now and clears it with the last; the staged deck asks the drag once more. | `src/keynote/document.ts`, test/keynote.test.ts |
 | 2026-11-19 | the pinned dissolve, third round: is the cause in the build's bytes? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve.key`; on slide 1 "Nonsensical task, as the dissolve landed last by itself. So I did not attempt to drag it. The start popup says 'Ved klik'", on slide 2 "It moved… here it worked", and on the resaved first-round deck "It worked" | **two candidates left, both now addressed**: on slide 1 the app placed the body's new Appear chunk ahead of the library's without a drag, where on slide 2 its own dissolve took the drag; the resaved deck's save carries no new build, so its "worked" is the checker's word alone. Offline, the one layout difference between the library's deck and the app's resave of it is the place of the build and chunk archives in the slide's component: every app-written deck keeps them right after the slide, builds then chunks in list order, and the library appended them last; `createBuild` and `setBuildOrder` now lay them out the app's way. The effect-id census is the other: `apple:dissolve` occurs only on builds the library wrote, and the app's own dissolve on a text placeholder is `apple:dissolve character`. The staged deck isolates the two. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |

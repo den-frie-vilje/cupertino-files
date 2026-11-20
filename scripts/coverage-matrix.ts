@@ -1879,7 +1879,8 @@ export const CAPABILITIES: Capability[] = [
     note:
       "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
       "app-authored builds carry them, in the slide's component, and a by-paragraph build with one " +
-      "chunk per paragraph of the target's text; actions and build order are not authored",
+      "chunk per paragraph of the target's text, registered in the component's object UUID map " +
+      "under the UUID its chunks name; setBuildOrder writes the Build Order drag; actions are not authored",
     manualProof: {
       claim: "Keynote plays a build this library wrote from nothing.",
       why:
@@ -1895,7 +1896,11 @@ export const CAPABILITIES: Capability[] = [
         "\"It worked\" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app " +
         "kept the build and its chunk field for field, reseeded the random number and minted new " +
         "chunk uids, and dropped the two references the library had declared on them: a build's " +
-        "drawable and a chunk's build are carried and never declared, which the container rule now states.",
+        "drawable and a chunk's build are carried and never declared, which the container rule now states. " +
+        "**Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the " +
+        "library's dissolve last in the panel until the build was registered in the component's object " +
+        "UUID map under the UUID its chunks name; the checker then dragged it first and wrote \"moved\" " +
+        "on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).",
     },
   },
   {

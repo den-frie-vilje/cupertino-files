@@ -51,7 +51,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
 
-**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states.
+**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states. **Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the library's dissolve last in the panel until the build was registered in the component's object UUID map under the UUID its chunks name; the checker then dragged it first and wrote "moved" on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).
 
 ### ✅ Categories: defining a category by a column
 

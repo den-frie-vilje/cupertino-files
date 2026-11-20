@@ -163,10 +163,10 @@ describe("reference extractors agree with Apple", () => {
     // fixtures one stylesheet each, three of them; the build-order deck
     // and the two summary and duration documents 20 more in the same two
     // classes, the two pinned-dissolve decks 36 more, the
-    // dissolve-explicit deck 18.
+    // two dissolve-explicit and -registered decks 18 each.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=331: ${disagree <= 331} (${disagree})`).toBe(
-      `disagree<=331: true (${disagree})`,
+    expect(`disagree<=349: ${disagree <= 349} (${disagree})`).toBe(
+      `disagree<=349: true (${disagree})`,
     );
   });
 

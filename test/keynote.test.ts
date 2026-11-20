@@ -733,7 +733,7 @@ describe("build order", () => {
         }
       }
     }
-    expect(builds).toBe(18);
+    expect(builds).toBe(20);
     expect(strays).toEqual([
       "olekristensen-v26.0-mac-build-order-seed.key 3000001 apple:dissolve",
       "olekristensen-v26.0-mac-build-seed.key 3000001 apple:dissolve",

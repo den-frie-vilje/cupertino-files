@@ -1330,3 +1330,13 @@ node scripts/scan-fixture-privacy.ts
   is the request itself. The app's save registered the library's build
   in the component's object UUID map under a fresh UUID while its chunk
   kept the library's, which is the measurement.
+
+### olekristensen-v26.0-mac-dissolve-registered.key
+- 541,992 bytes, md5 `7a84a1f070f8ea008b50b5bba9eabe42`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  sixth form: one slide, the library's `apple:dissolve character` on the
+  title, the build registered in the component's object UUID map under
+  the UUID its chunk names. The checker gave the body an Appear, dragged
+  the dissolve first and commented on the slide "moved". The body is the
+  request itself. The app kept the library's UUID and appended its own
+  build behind the library's in both lists.
