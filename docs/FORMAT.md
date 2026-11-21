@@ -1542,7 +1542,7 @@ written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
 enums, same arity, silently wrong.
 
 **What cannot be looked up is listed rather than hidden.** The dumps are
-one release of the applications (16.0 for the shared, Pages and Numbers families, 15.4 for Keynote), so a field a newer release adds is
+one release of the applications (16.0), so a field a newer release adds is
 declared with `measuredFields`, which requires a sentence of evidence and
 refuses a number the schema already defines—when a refreshed dump
 contains it, the declaration throws until it moves. Archive
