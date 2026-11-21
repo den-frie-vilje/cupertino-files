@@ -7,27 +7,51 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+Numbers gains the whole filter menu and per-group summaries, Keynote the
+order its builds play in and a Move action, and formula reading renders
+the dates, durations, lists and branches it used to drop. The vendored
+schema is the 16.0 release's for every family. Each of the new writers
+has been opened in its app, and the versions that confirmed them are
+named below.
+
 ### Added
 
-- `addFilterRule` writes the four remaining duration comparisons (not
-  equal to, greater than or equal to, less than, less than or equal to),
-  so the duration family is complete.
-- `SlideModel.setBuildOrder` puts a slide's builds in the order they
-  play, as the Build Order panel's drag writes it.
-- A category's aggregates name their type (`aggregate`: count, sum,
-  average, min or max), and `AGGREGATE_TYPE_NAMES` and
-  `AccumulatorFields` name the codes and the record under them.
-- `TableModel.summaryModel()` reads the summaries a category's group
-  rows draw, with the table's own cell decoders.
-- `addBuild` writes a Move action (`move: { dx, dy }`): an Action with the
-  app's motion path effect along a straight path, eased at both ends, in
-  the shape Keynote writes for its own. A build's `move` reads the
-  displacement back. The `add_build` tool takes the same option.
+- `addFilterRule` writes every condition the Numbers filter menu offers,
+  not only comparisons and text-contains: text tests, blank tests,
+  between, averages, ranks, duplicates, every date condition relative to
+  today or to a date, every duration comparison and checkboxes
+  (`FilterCondition`), each predicate and formula byte for byte as the
+  app writes it, with the rows it hides evaluated and written beside it.
+  `PREDICATE_TYPE_CONDITIONS` names the condition behind every
+  `predicate_type` the menu writes, so a rule reads back as the
+  condition it was authored under. The `add_filter_rule` tool takes the
+  same conditions as an object. Numbers 15.4 exports a table under each
+  condition family with the rows the condition keeps and no other.
 - `addCategorySummary` shows a count, sum, average, min or max of a
   column in every group row of a categorised table, writing what Numbers
   writes for its own: the aggregate entry, the aggregator cache, the
   summary cells and their registration with the calc engine. The
-  `add_category_summary` tool takes the same arguments.
+  `add_category_summary` tool takes the same arguments. Numbers for iOS
+  draws every group row's value on open.
+- A category's aggregates name their type (`aggregate`: count, sum,
+  average, min or max), `AGGREGATE_TYPE_NAMES` and `AccumulatorFields`
+  name the codes and the record under them, and
+  `TableModel.summaryModel()` reads the summaries a category's group
+  rows draw, with the table's own cell decoders.
+- `SlideModel.setBuildOrder` puts a slide's builds in the order they
+  play, as the Build Order panel's drag writes it. Keynote 15.4 lists a
+  build written this way in the panel and lets it be dragged like its
+  own.
+- `addBuild` writes a Move action (`move: { dx, dy }`): an Action with
+  the app's motion path effect along a straight path, eased at both
+  ends, in the shape Keynote writes for its own. A build's `move` reads
+  the displacement back, and the `add_build` tool takes the same option.
+  Keynote 15.4 plays it.
+- `compact()` now also reclaims the Data/ files no object refers to, so
+  removing a picture and compacting takes its bytes out of the package.
+  A file is kept while any object names it, in its reference list or in
+  a schema-typed data field; a document with an undecodable component is
+  left whole.
 
 ### Changed
 
@@ -38,45 +62,21 @@ in commit messages and pull requests.
 
 ### Fixed
 
-- A field a document did not carry before is now written in field-number
-  order, as the apps write it, instead of after every existing field.
-- A build added to a slide is stored where Keynote keeps its own, right
-  after the slide archive with the chunks behind the builds, instead of
-  at the end of the slide's component, and the slide's node says it
-  carries explicit builds, as every app-written slide with a build does.
-- A build added to a slide is registered in its component's object UUID
-  map under the UUID its chunks name, so Keynote's Build Order panel
-  moves it like one of its own instead of pinning it last.
-
-### Fixed
-
 - Formula reading renders date and duration literals, which read as 0,
   lists inside a function call, which rendered empty, and the thunk
   nodes the apps write around an IF branch, which rendered as unknown
   nodes. Every rule the Numbers filter menu writes now renders whole.
+- A build added to a slide is stored where Keynote keeps its own, right
+  after the slide archive with the chunks behind the builds, its slide's
+  node says it carries explicit builds, and it is registered in its
+  component's object UUID map under the UUID its chunks name, so
+  Keynote's Build Order panel moves it like one of its own instead of
+  pinning it last.
+- A field a document did not carry before is now written in field-number
+  order, as the apps write it, instead of after every existing field.
 - A table added to a Numbers document takes the theme's table style
   preset, as Insert > Table does, instead of bringing its own copy of
   every preset style along.
-
-### Added
-
-- `addFilterRule` writes every condition the Numbers filter menu offers,
-  not only comparisons and text-contains: text tests, blank tests,
-  between, averages, ranks, duplicates, every date condition relative to
-  today or to a date, durations and checkboxes (`FilterCondition`), each
-  predicate and formula byte for byte as the app writes it, with the rows
-  it hides evaluated and written beside it. The `add_filter_rule` tool
-  takes the same conditions as an object.
-- `PREDICATE_TYPE_CONDITIONS` names the filter condition behind every
-  `predicate_type` the Numbers filter menu writes, text, number, date,
-  duration and checkbox conditions alike, so a rule reads back as the
-  condition it was authored under.
-
-- `compact()` now also reclaims the Data/ files no object refers to, so
-  removing a picture and compacting takes its bytes out of the package.
-  A file is kept while any object names it, in its reference list or in
-  a schema-typed data field; a document with an undecodable component is
-  left whole.
 
 ## 0.6.0 — 2026-11-02
 
