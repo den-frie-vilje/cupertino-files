@@ -1871,6 +1871,28 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Numbers & tables",
+    name: "Categories: a per-group summary",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.tables().some((t) => (t.activeCategories()?.aggregates().length ?? 0) > 0)),
+    note:
+      "addCategorySummary writes a count, sum, average, min or max the way the summary pop-up does: " +
+      "the aggregate entry, the aggregator cache (referenced and inline, as the app writes it), each " +
+      "group node's coordinate, and the summary model's identity map, cells, formulas, headers and " +
+      "vendor template, field for field as the two app-authored summaries carry them",
+    manualProof: {
+      claim: "Numbers draws a per-group summary the library wrote",
+      why:
+        "the aggregate entry alone drew nothing in Numbers 15.4; the aggregator cache and the summary " +
+        "cells are written beside it now, and only the app can say whether they are what it reads",
+      how:
+        "npm run bisect:docs -- out writes 27-category-summary.numbers; open it in Numbers: every group " +
+        "row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42",
+      risk: "medium",
+    },
+  },
+  {
     group: "Keynote",
     name: "Builds: creating an animation",
     apps: ["keynote"],
@@ -1879,7 +1901,9 @@ export const CAPABILITIES: Capability[] = [
     note:
       "addBuild writes an all-at-once build and its chunk field for field as the corpus deck's " +
       "app-authored builds carry them, in the slide's component, and a by-paragraph build with one " +
-      "chunk per paragraph of the target's text; actions and build order are not authored",
+      "chunk per paragraph of the target's text, registered in the component's object UUID map " +
+      "under the UUID its chunks name; setBuildOrder writes the Build Order drag; a Move action " +
+      "(move: {dx, dy}) is written in the app's shape, the other actions are not authored",
     manualProof: {
       claim: "Keynote plays a build this library wrote from nothing.",
       why:
@@ -1895,7 +1919,33 @@ export const CAPABILITIES: Capability[] = [
         "\"It worked\" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app " +
         "kept the build and its chunk field for field, reseeded the random number and minted new " +
         "chunk uids, and dropped the two references the library had declared on them: a build's " +
-        "drawable and a chunk's build are carried and never declared, which the container rule now states.",
+        "drawable and a chunk's build are carried and never declared, which the container rule now states. " +
+        "**Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the " +
+        "library's dissolve last in the panel until the build was registered in the component's object " +
+        "UUID map under the UUID its chunks name; the checker then dragged it first and wrote \"moved\" " +
+        "on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).",
+    },
+  },
+  {
+    group: "Keynote",
+    name: "Builds: a Move action",
+    apps: ["keynote"],
+    status: "read+write",
+    probe: () => true,
+    note:
+      "addBuild({ move: { dx, dy } }) writes an Action with the app's motion path effect, eased at " +
+      "both ends, whose path is one open subpath of two sharp nodes from the origin to the " +
+      "displacement, field for field as the Move the app wrote in the build-order deck",
+    manualProof: {
+      claim: "Keynote plays a Move action this library wrote from nothing.",
+      why:
+        "The suite proves the archive matches the app's Move field for field, and the shape audit " +
+        "accepts it; an action the app discards looks exactly like a still slide.",
+      how:
+        "npm run keynote:docs -- out writes K17-action.key; open it in Keynote and play the slide. A " +
+        "pass shows the title sliding 200 points to the right on the first click; a failure shows " +
+        "it standing still, which means the action needs state only the app writes.",
+      risk: "medium",
     },
   },
   {
@@ -2067,9 +2117,10 @@ export const CAPABILITIES: Capability[] = [
     status: "roadmap",
     note:
       "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
-      "the reader is exercised by one app-written summary (column_agg_type on the grouping column, " +
-      "level 1, agg_type 1 = Count); writing one needs the aggregator tree with an accumulator per group, " +
-      "the root node's agg_formula_coords and the summary model's cells, none of which is written yet",
+      "the reader names the five aggregate types (count, sum, average, min, max) from app-written " +
+      "summaries, and every aggregator node carries the same accumulator record (count, min, max, sum, " +
+      "product); writing one needs the aggregator tree with that record per group, the root node's " +
+      "agg_formula_coords and the summary model's cells, none of which is written yet",
   },
   {
     group: "Numbers & tables",
@@ -2081,13 +2132,6 @@ export const CAPABILITIES: Capability[] = [
       "resolves the UIDs categories, hidden states and the calc engine use back to positions; " +
       "row/column insert and delete keep the map in lockstep, minting and retiring identities — " +
       "read-only means no direct authoring API",
-  },
-  {
-    group: "Numbers & tables",
-    name: "Filters: function-shaped rules beyond text-contains and starts-with",
-    apps: "all",
-    status: "roadmap",
-    note: "comparison, text-contains and starts-with rules are authored and their hidden rows recomputed (see their own row); is-blank and the other function-shaped conditions are read but not written",
   },
 
   // ----------------------------------------------------------------- keynote

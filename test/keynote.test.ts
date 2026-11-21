@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
-import { MASTER_ONLY_FIELDS, Slide } from "../src/keynote/schema.ts";
+import { MASTER_ONLY_FIELDS, Slide, SlideNode } from "../src/keynote/schema.ts";
+import { BuildAcceleration, BuildAttributesFields, BuildChunkFields, BuildChunkIdentifierFields, BuildFields, type BuildModel } from "../src/keynote/builds.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { bytesEqual, KeynoteDocument, PlaceholderKind, ShowMode } from "../src/index.ts";
 import { RawMessage } from "../src/base/protobuf.ts";
@@ -642,6 +643,135 @@ describe("slide placeholders", () => {
     // Creating one means synthesizing the theme's geometry and style for
     // that role, which is in the master.
     expect(() => { slide.setPlaceholderText(30, "object", "x"); }).toThrow();
+  });
+});
+
+describe("build order", () => {
+  it("puts the builds and their chunks in the order given, as the app's own drag wrote them", () => {
+    const doc = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-build-order-seed.key", import.meta.url))));
+    const slide = doc.slides()[0]!;
+    const ids = slide.builds().map((b) => b.id);
+    expect(slide.builds().map((b) => b.read().effect)).toEqual(["apple:action-motion-path", "apple:bc-appear", "apple:dissolve"]);
+    const chunksBefore = slide.object.message.getMessages(43).map((m) => m.getVarint(1));
+    slide.setBuildOrder([ids[2]!, ids[0]!, ids[1]!]);
+    expect(slide.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:action-motion-path", "apple:bc-appear"]);
+    expect(slide.object.message.getMessages(43).map((m) => m.getVarint(1))).toEqual([chunksBefore[2], chunksBefore[0], chunksBefore[1]]);
+    expect(() => { slide.setBuildOrder([ids[0]!]); }).toThrow();
+    const reloaded = KeynoteDocument.load(doc.save()).slides()[0]!;
+    expect(reloaded.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:action-motion-path", "apple:bc-appear"]);
+  });
+
+  it("keeps a slide's builds and chunks right after the slide in its component, as every app-written deck does", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!;
+    const body = refId(slide.object.message, Slide.BODY_PLACEHOLDER)!;
+    slide.addBuild({ drawableId: title, effect: "apple:dissolve character" });
+    slide.addBuild({ drawableId: body, effect: "apple:bc-appear" });
+    const layout = (d: KeynoteDocument) => {
+      const s = d.slides()[0]!;
+      const component = d.store.componentOf(s.id)!;
+      return component.objects.slice(0, 5).map((o) => (o === s.object ? "slide" : d.store.typeNameOf(o)?.replace("KN.", "")));
+    };
+    expect(layout(doc)).toEqual(["slide", "BuildArchive", "BuildArchive", "BuildChunkArchive", "BuildChunkArchive"]);
+    const ids = slide.builds().map((b) => b.id);
+    slide.setBuildOrder([ids[1]!, ids[0]!]);
+    const reloaded = KeynoteDocument.load(doc.save());
+    expect(layout(reloaded)).toEqual(["slide", "BuildArchive", "BuildArchive", "BuildChunkArchive", "BuildChunkArchive"]);
+    const component = reloaded.store.componentOf(reloaded.slides()[0]!.id)!;
+    expect(component.objects.slice(1, 3).map((o) => o.identifier)).toEqual([ids[1], ids[0]]);
+  });
+
+  it("marks the slide's node as carrying explicit builds, as every app-written slide with a build is", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) ?? false).toBe(false);
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:dissolve character" });
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(true);
+    slide.removeBuild(build.id);
+    expect(slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(false);
+    // The corpus: no app-written slide that lists a build says false; the
+    // flag is set, or absent where the node's caches were never computed.
+    for (const name of readdirSync(FIXTURES).filter((n) => n.endsWith(".key"))) {
+      const deck = KeynoteDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      for (const s of deck.slides()) {
+        if (s.object.message.getMessages(Slide.BUILDS).length === 0) continue;
+        if (name.includes("build-seed")) continue; // the library's build as Keynote 15.1.1 resaved it, flag left false
+        expect(`${name} ${s.id}: ${s.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) !== false}`).toBe(`${name} ${s.id}: true`);
+      }
+    }
+  });
+
+  it("registers a new build's UUID in its component's object UUID map, the one its chunks name", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:dissolve character" });
+    const reloaded = KeynoteDocument.load(doc.save());
+    const registered = reloaded.store.objectUuid(build.id);
+    expect(registered !== undefined).toBe(true);
+    const chunk = reloaded.store.object(build.read().chunks[0]!.id)!.message;
+    expect(chunk.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(1)).toBe(registered!.lower);
+    expect(chunk.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(2)).toBe(registered!.upper);
+    expect(chunk.getMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER)?.getMessage(BuildChunkIdentifierFields.BUILD_ID)?.getVarint(1)).toBe(registered!.lower);
+    // The corpus: every app-written build has an entry, and every chunk of
+    // a build the app itself authored names that entry's UUID. The chunks
+    // that do not are the library's own earlier builds, which the app
+    // re-registered under a fresh UUID on save and pinned last in Build Order.
+    let builds = 0;
+    const strays: string[] = [];
+    for (const name of readdirSync(FIXTURES).filter((n) => n.endsWith(".key"))) {
+      const deck = KeynoteDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES))));
+      for (const s of deck.slides()) {
+        for (const b of s.builds()) {
+          builds++;
+          const uuid = deck.store.objectUuid(b.id);
+          expect(`${name} ${b.id}: ${uuid !== undefined}`).toBe(`${name} ${b.id}: true`);
+          for (const c of b.read().chunks) {
+            const named = deck.store.object(c.id)!.message.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(1);
+            if (named !== uuid!.lower) strays.push(`${name} ${b.id} ${b.read().effect}`);
+          }
+        }
+      }
+    }
+    expect(builds).toBe(20);
+    expect(strays).toEqual([
+      "olekristensen-v26.0-mac-build-order-seed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-build-seed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-dissolve-explicit.key 3000001 apple:dissolve character",
+      "olekristensen-v26.0-mac-pinned-dissolve-placed.key 3000001 apple:dissolve",
+      "olekristensen-v26.0-mac-pinned-dissolve-placed.key 3000018 apple:dissolve character",
+      "olekristensen-v26.0-mac-pinned-dissolve.key 3000001 apple:dissolve",
+    ]);
+  });
+
+  it("writes a Move action in the shape of the app's own, and reads the displacement back", () => {
+    const corpus = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-build-order-seed.key", import.meta.url))));
+    const authored = corpus.slides()[0]!.builds().find((b) => b.read().effect === "apple:action-motion-path")!;
+    const moved = authored.read().move!;
+    expect(Math.round(moved.dx * 1000)).toBe(258423);
+    expect(Math.abs(moved.dy) < 1e-6).toBe(true);
+    const fieldsOf = (b: BuildModel) => [...new Set(b.object.message.getMessage(BuildFields.ATTRIBUTES)!.fields.map((f) => f.no))].sort((a, b) => a - b);
+
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:action-motion-path", move: { dx: 200, dy: -50 } });
+    const reloaded = KeynoteDocument.load(doc.save()).slides()[0]!.builds().find((b) => b.id === build.id)!;
+    expect(fieldsOf(reloaded)).toEqual(fieldsOf(authored));
+    const info = reloaded.read();
+    expect(info.animationType).toBe("Action");
+    expect(info.textDelivery).toBe(undefined);
+    expect(info.move).toEqual({ dx: 200, dy: -50 });
+    expect(reloaded.object.message.getMessage(BuildFields.ATTRIBUTES)!.getUint(BuildAttributesFields.ACTION_ACCELERATION)).toBe(BuildAcceleration.EASE_BOTH);
+    expect(slide.builds().find((b) => b.read().effect === "apple:dissolve character")).toBe(undefined);
+  });
+
+  it("reads the app's own dissolve on a title as apple:dissolve character, beside the library's", () => {
+    const doc = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-pinned-dissolve.key", import.meta.url))));
+    const [first, second] = doc.slides();
+    expect(first!.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:bc-appear"]);
+    // The app put the Appear's chunk ahead of the library's without a drag.
+    expect(first!.object.message.getMessages(43).map((m) => doc.store.object(m.getVarint(1)!)!.message.getMessage(1)!.getVarint(1))).toEqual(first!.builds().map((b) => b.id).reverse());
+    expect(second!.builds().map((b) => b.read().effect)).toEqual(["apple:bc-appear", "apple:dissolve character"]);
   });
 });
 

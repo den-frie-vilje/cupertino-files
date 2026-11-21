@@ -345,6 +345,18 @@ component as a whole; `is_weak` for non-owning links). Apple maintains these
 for incremental loading; writers adding cross-component references must
 append the corresponding entries.
 
+`ComponentInfo.object_uuid_map_entries` is the other per-component
+registry: `ObjectUUIDMapEntry { identifier, uuid }` for every model
+object the app gives a UUID (in a Keynote slide component that is the
+slide, its placeholders, storages, captions, note, guides, comments and
+builds; not build chunks). References that carry a `TSP.UUID` rather
+than an object identifier resolve through it: a build chunk's `build_id`
+names its build this way. An object with no entry is minted a fresh UUID
+on the app's next save, so a writer that invents a UUID for such a
+reference must register the referenced object under it, or the reference
+points at nothing (Keynote then shows the build and refuses to reorder
+it).
+
 ### 5.4 Data files
 
 `PackageMetadata.datas` carries one `DataInfo` per `Data/` file:
@@ -1303,7 +1315,9 @@ relative points, 33 in this unit; durations 38 equal to, 40 greater
 than, 44 between; checkboxes 55 is checked, 56 is not checked. A date
 condition over a unit carries it in `qualifier1` (2 day, 3 week, 4
 month, 5 year, 8 quarter) and a direction in `qualifier2` (6 ago, 7
-from now). The "is" and "is not" formulas wrap their IF branches in
+from now); durations 39 not equal to, 41 greater than or equal to, 42
+less than and 43 less than or equal to complete 38 to 44. The "is" and
+"is not" formulas wrap their IF branches in
 `BEGIN_THUNK_NODE` (34) and `END_THUNK_NODE` (35), brackets around a
 lazily evaluated argument that carry no operand; the checkbox formulas
 call function index 326, which the registry does not name, and compare
@@ -1528,7 +1542,7 @@ written `LineJoin` as `LineCap` and `TextDelivery` as `Acceleration`: sibling
 enums, same arity, silently wrong.
 
 **What cannot be looked up is listed rather than hidden.** The dumps are
-one release of the applications (15.4), so a field a newer release adds is
+one release of the applications (16.0 for the shared, Pages and Numbers families, 15.4 for Keynote), so a field a newer release adds is
 declared with `measuredFields`, which requires a sentence of evidence and
 refuses a number the schema already defines—when a refreshed dump
 contains it, the declaration throws until it moves. Archive
@@ -1573,7 +1587,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3463 of 3463 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 3905 of 3905 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1735,7 +1749,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3463 storages carry the field and **zero** declare it. What
+fixtures here, 3905 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1772,7 +1786,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3463 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 3905 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -1969,9 +1983,43 @@ match gets a stale tree. And `row_lookup_uids`, despite the name, is a
 plain `TSCE.IndexSetArchive` of row indexes, not UUIDs; that reading is
 confirmed against cell contents across the corpus.
 
-Per-group summaries (`column_agg_type`) are read, but no fixture carries a
-non-empty aggregate list, so the `agg_type` codes are passed through
-unnamed.
+A per-group summary is what the summary pop-up in a group row writes, and
+the app reads every part of it rather than rebuilding any from the
+entry—an entry written alone draws nothing. `addCategorySummary` writes
+them all:
+
+- a `column_agg_type` entry: the column's uid, level 1, `agg_type` 1
+  to 5 for count, sum, average, min and max, `show_as_type` 0;
+- an `AggregatorArchive` per summarised column, referenced from
+  `aggregator_ref` (17) and copied inline into `aggregator` (4) the way
+  the tree is. Its root `AggNodeArchive` caches a `TST.AccumulatorArchive`
+  over every data row and one child per group over the group's rows.
+  The record is the same whatever the aggregate shown: over numbers the
+  count, min, max and sum as number cell values (each with its decimal and
+  the automatic number format), the sum again as `secs_to_add`, and the
+  product; over text the string count, the first and last string in
+  code-unit order, and a zero sum and product. Each node sits at a
+  `formula_coord` of row 0 in the grouping's own owner, columns 8 upward
+  after the eight internal formulas, groups first and root last, and the
+  owning group node repeats the coordinate in `agg_formula_coords`;
+- the summary model's cells. `TST.SummaryModelArchive` (table info field
+  4, present in every table) is a second data store shaped like the
+  table's. Its identity map (field 3) holds a fresh column before the
+  host's columns and a row per group under the group's own uid, so the
+  summary of host column c sits at column c + 1 of the row keyed by the
+  group. The cell is a number formula cell—decimal128, formula id,
+  suggest id 1 and the automatic number format interned in the summary's
+  own `format_table`—whose single AST node is a category reference (node
+  type 66, `AST_category_ref` 39) naming the grouping's uid, the column's
+  uid, the aggregate, group level 2, column-absolute preserve flags, the
+  group's uid and `agg_index_level` 65535. The header buckets count the
+  cells, and the summary cell vendor (field 5) carries, per aggregate,
+  the same formula over the wildcard group {1, 0} under the wildcard key
+  {1, 1}: the template the app draws a new group row from. The model's
+  `aggregate_formula_owner_uuid` is the grouping's uid plus one, in every
+  table, summarised or not.
+
+Only a one-level category's summary is measured.
 
 ### 14.10 Charts (TSCH): the data grid
 
@@ -2135,20 +2183,18 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Category summaries** (§14.9). A category—by value, nested, or
-  bucketed by date with the app's own functor—is defined from nothing
-  (`addCategory`) and rows are regrouped byte-identically to Apple.
-  One fixture, `olekristensen-v26.0-mac-authored.numbers`, carries a
-  Count summary, and its aggregator entry written alone draws nothing:
-  the app reads its aggregator cache and the summary model's cells as
-  well, so a writer has to produce all three.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and
   all-at-once and by-paragraph builds are written from nothing
-  (`addBuild`), and Keynote plays one on a current deck; actions and
-  build order are not authored, and whether a written build plays after
-  the app converts a 14.x deck is unmeasured.
+  (`addBuild`), Keynote plays one on a current deck and on a converted
+  14.x deck, and `setBuildOrder` writes the order the Build Order drag
+  writes (the slide's build list and chunk list, and the archives' place
+  in the slide's component: right after the slide, builds then chunks,
+  as every app-written deck keeps them); actions are read, their shape
+  measured, and not authored. The app writes a text placeholder's
+  dissolve as `apple:dissolve character`; whether Keynote orders a build
+  with another id behind its own is the open question.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

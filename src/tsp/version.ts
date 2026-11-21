@@ -199,9 +199,9 @@ export interface CompatibilityReport {
   warnings: string[];
 }
 
-/** TSS.StylesheetArchive styles_for_* snapshot range. */
+/** TSS.StylesheetArchive styles_for_* snapshot range: styles_for_10_0 (7) to styles_for_16_0 (28). */
 const STYLESHEET_VERSIONED_FIRST = 7;
-const STYLESHEET_VERSIONED_LAST = 22;
+const STYLESHEET_VERSIONED_LAST = 28;
 const TSS_STYLESHEET_TYPE = 401;
 /** TSCK collaboration archive types (session state, command history). */
 const COLLABORATION_TYPES = new Set([218, 226, 227, 228, 229, 230, 255, 256, 257]);

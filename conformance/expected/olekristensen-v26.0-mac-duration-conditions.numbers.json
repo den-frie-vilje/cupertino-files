@@ -1,0 +1,356 @@
+{
+  "file": "olekristensen-v26.0-mac-duration-conditions.numbers",
+  "sha1": "7196ad767bbd93eab81713625a4de93e88020157",
+  "app": "numbers",
+  "fileFormatVersion": "26.4.0",
+  "objects": 636,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 34
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 28
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 45
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000006.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000007.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000008.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000009.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000018.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000155.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 492
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Duration rules",
+            "rows": 6,
+            "columns": 5,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Duration"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "not equal to"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "greater or equal"
+              },
+              {
+                "r": 0,
+                "c": 3,
+                "v": "less than"
+              },
+              {
+                "r": 0,
+                "c": 4,
+                "v": "less or equal"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Add rule"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "not equal to 1h"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "greater than or equal to 1h"
+              },
+              {
+                "r": 1,
+                "c": 3,
+                "v": "less than 1h"
+              },
+              {
+                "r": 1,
+                "c": 4,
+                "v": "less than or equal to 1h"
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "1"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 2,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 3,
+                "v": "3600s"
+              },
+              {
+                "r": 2,
+                "c": 4,
+                "v": "3600s"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "2"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 2,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 3,
+                "v": "7200s"
+              },
+              {
+                "r": 3,
+                "c": 4,
+                "v": "7200s"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "3"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 2,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 3,
+                "v": "600s"
+              },
+              {
+                "r": 4,
+                "c": 4,
+                "v": "600s"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "4"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "90s"
+              },
+              {
+                "r": 5,
+                "c": 2,
+                "v": "90s"
+              },
+              {
+                "r": 5,
+                "c": 3,
+                "v": "90s"
+              },
+              {
+                "r": 5,
+                "c": 4,
+                "v": "90s"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

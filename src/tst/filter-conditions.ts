@@ -37,7 +37,7 @@ export type FilterCondition =
   | { operator: "dateInLast" | "dateInNext"; count: number; unit: DateUnit }
   | { operator: "dateExactly" | "dateBeforeRelative" | "dateAfterRelative"; count: number; unit: DateUnit; direction: RelativeDirection }
   | { operator: "dateBetweenRelative"; from: number; to: number; unit: DateUnit; direction: RelativeDirection }
-  | { operator: "durationEquals" | "durationGreaterThan"; seconds: number }
+  | { operator: "durationEquals" | "durationNotEquals" | "durationGreaterThan" | "durationGreaterOrEqual" | "durationLessThan" | "durationLessOrEqual"; seconds: number }
   | { operator: "durationBetween"; from: number; to: number }
   | { operator: "checked" | "unchecked" };
 
@@ -66,6 +66,15 @@ const DIRECTION_CODE: Record<RelativeDirection, number> = { ago: 6, fromNow: 7 }
 /** `qualifier1` codes for a rank condition's measure. */
 const RANK_VALUES = 10;
 const RANK_PERCENT = 9;
+/** The duration comparisons' codes, in the comparison menu's order from 38, with the operator each compiles to. */
+const DURATION_COMPARISONS = {
+  durationEquals: [38, "="],
+  durationNotEquals: [39, "<>"],
+  durationGreaterThan: [40, ">"],
+  durationGreaterOrEqual: [41, ">="],
+  durationLessThan: [42, "<"],
+  durationLessOrEqual: [43, "<="],
+} as const;
 /** The checkbox test's function, which the registry does not name, and the control's interaction type. */
 const CELL_CONTROL_TYPE_FUNCTION = 326;
 const CHECKBOX_INTERACTION_TYPE = 8;
@@ -238,13 +247,10 @@ export function compileCondition(condition: FilterCondition, cell: FormulaExpres
         DIRECTION_CODE[condition.direction],
       );
     }
-    case "durationEquals": {
+    case "durationEquals": case "durationNotEquals": case "durationGreaterThan": case "durationGreaterOrEqual": case "durationLessThan": case "durationLessOrEqual": {
       const lit = durationLiteral(condition.seconds);
-      return out(38, bin("=", c, lit.expression), [{ kind: "duration", seconds: condition.seconds, units: lit.units }]);
-    }
-    case "durationGreaterThan": {
-      const lit = durationLiteral(condition.seconds);
-      return out(40, bin(">", c, lit.expression), [{ kind: "duration", seconds: condition.seconds, units: lit.units }]);
+      const [type, op] = DURATION_COMPARISONS[condition.operator];
+      return out(type, bin(op, c, lit.expression), [{ kind: "duration", seconds: condition.seconds, units: lit.units }]);
     }
     case "durationBetween": {
       const a = durationLiteral(condition.from);
@@ -343,9 +349,10 @@ export function conditionOf(predicate: Predicate): FilterCondition | undefined {
       if (unit === undefined || direction === undefined || from === undefined || to === undefined) return undefined;
       return { operator: "dateBetweenRelative", from, to, unit, direction };
     }
-    case 38: case 40: {
+    case 38: case 39: case 40: case 41: case 42: case 43: {
       const seconds = duration();
-      return seconds === undefined ? undefined : { operator: type === 38 ? "durationEquals" : "durationGreaterThan", seconds };
+      const operator = (Object.entries(DURATION_COMPARISONS).find(([, [code]]) => code === type)?.[0] ?? "durationEquals") as keyof typeof DURATION_COMPARISONS;
+      return seconds === undefined ? undefined : { operator, seconds };
     }
     case 44: {
       const from = duration(first);
@@ -489,7 +496,11 @@ export function conditionHolds(condition: FilterCondition, value: PlainCellValue
       return day >= Math.min(a, b) && day < Math.max(a, b) + DAY_MS;
     }
     case "durationEquals": return seconds !== undefined && seconds === condition.seconds;
+    case "durationNotEquals": return seconds !== undefined && seconds !== condition.seconds;
     case "durationGreaterThan": return seconds !== undefined && seconds > condition.seconds;
+    case "durationGreaterOrEqual": return seconds !== undefined && seconds >= condition.seconds;
+    case "durationLessThan": return seconds !== undefined && seconds < condition.seconds;
+    case "durationLessOrEqual": return seconds !== undefined && seconds <= condition.seconds;
     case "durationBetween": return seconds !== undefined && seconds >= Math.min(condition.from, condition.to) && seconds <= Math.max(condition.from, condition.to);
     case "checked": return value === true;
     case "unchecked": return value === false;

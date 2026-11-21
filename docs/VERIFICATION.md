@@ -16,13 +16,39 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 2 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
+| 1 | 🟠 medium | Keynote → Builds: a Move action | Keynote plays a Move action this library wrote from nothing. | manual |
+| 2 | 🟠 medium | Numbers & tables → Categories: a per-group summary | Numbers draws a per-group summary the library wrote | manual |
+
+### 1. Builds: a Move action
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Keynote  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Keynote plays a Move action this library wrote from nothing.
+
+**Why the suite cannot settle it.** The suite proves the archive matches the app's Move field for field, and the shape audit accepts it; an action the app discards looks exactly like a still slide.
+
+**How to settle it.** npm run keynote:docs -- out writes K17-action.key; open it in Keynote and play the slide. A pass shows the title sliding 200 points to the right on the first click; a failure shows it standing still, which means the action needs state only the app writes.
+
+### 2. Categories: a per-group summary
+
+**Risk if wrong:** 🟠 medium  
+**Group:** Numbers & tables  
+**Status in the matrix:** ✅ read + write
+
+**Claim.** Numbers draws a per-group summary the library wrote
+
+**Why the suite cannot settle it.** the aggregate entry alone drew nothing in Numbers 15.4; the aggregator cache and the summary cells are written beside it now, and only the app can say whether they are what it reads
+
+**How to settle it.** npm run bisect:docs -- out writes 27-category-summary.numbers; open it in Numbers: every group row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42
 
 ## Settled
 
@@ -51,7 +77,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
 
-**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states.
+**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states. **Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the library's dissolve last in the panel until the build was registered in the component's object UUID map under the UUID its chunks name; the checker then dragged it first and wrote "moved" on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).
 
 ### ✅ Categories: defining a category by a column
 

@@ -41,6 +41,10 @@ const COMPONENT_IDENTIFIER = 1;
 const COMPONENT_PREFERRED_LOCATOR = 2;
 const COMPONENT_LOCATOR = 3;
 const COMPONENT_EXTERNAL_REFERENCES = 6;
+const COMPONENT_OBJECT_UUID_MAP_ENTRIES = 11;
+// TSP.ObjectUUIDMapEntry field numbers.
+const UUID_ENTRY_IDENTIFIER = 1;
+const UUID_ENTRY_UUID = 2;
 // TSP.ComponentExternalReference field numbers.
 const EXTREF_COMPONENT_IDENTIFIER = 1;
 const EXTREF_OBJECT_IDENTIFIER = 2;
@@ -246,13 +250,17 @@ export class ObjectStore {
    * exists (falling back to [1, 0, 5], which is what numbers-parser writes).
    * `cloneFrom` seeds the payload with a copy of another object's message.
    */
-  createObject(type: number, component: Component, options: { cloneFrom?: IwaObject } = {}): IwaObject {
+  createObject(type: number, component: Component, options: { cloneFrom?: IwaObject; at?: number } = {}): IwaObject {
     const id = this.allocateId();
     const obj = IwaObject.create(id, type, [1, 0, 5]);
     const sibling = options.cloneFrom ?? this.findByType(type);
     if (sibling) obj.copyVersionsFrom(sibling);
     if (options.cloneFrom) obj.setMessageBytes(options.cloneFrom.message.toBytes());
-    component.objects.push(obj);
+    // `at` places the object in the component's stream; the apps keep
+    // some families at a fixed place (a slide's builds right after the
+    // slide), and the end is where everything else goes.
+    if (options.at !== undefined && options.at >= 0 && options.at < component.objects.length) component.objects.splice(options.at, 0, obj);
+    else component.objects.push(obj);
     component.byId.set(id, obj);
     component.structurallyDirty = true;
     this.index.set(id, { obj, component });
@@ -487,6 +495,40 @@ export class ObjectStore {
       ) {
         return ci;
       }
+    }
+    return undefined;
+  }
+
+  /**
+   * Record `object`'s UUID in its component's object UUID map. The apps
+   * give every model object in a slide component an entry and resolve
+   * UUID-keyed references through it; an object with none is minted a
+   * fresh UUID on the next save, so a reference that names the UUID the
+   * writer chose (a build chunk's `build_id`) then points at nothing.
+   */
+  registerObjectUuid(object: IwaObject, uuid: { lower: bigint; upper: bigint }): void {
+    const component = this.componentOf(object.identifier);
+    const info = component && this.componentInfo(component);
+    if (!info) return; // metadata-less packages: nothing to maintain
+    const value = RawMessage.create();
+    value.setVarint(1, uuid.lower);
+    value.setVarint(2, uuid.upper);
+    const entry = RawMessage.create();
+    entry.setVarint(UUID_ENTRY_IDENTIFIER, object.identifier);
+    entry.setMessage(UUID_ENTRY_UUID, value);
+    info.addMessage(COMPONENT_OBJECT_UUID_MAP_ENTRIES, entry);
+  }
+
+  /** The UUID the component's object UUID map records for `id`, if any. */
+  objectUuid(id: bigint): { lower: bigint; upper: bigint } | undefined {
+    const component = this.componentOf(id);
+    const info = component && this.componentInfo(component);
+    for (const entry of info?.getMessages(COMPONENT_OBJECT_UUID_MAP_ENTRIES) ?? []) {
+      if (entry.getVarint(UUID_ENTRY_IDENTIFIER) !== id) continue;
+      const value = entry.getMessage(UUID_ENTRY_UUID);
+      const lower = value?.getVarint(1);
+      const upper = value?.getVarint(2);
+      return lower !== undefined && upper !== undefined ? { lower, upper } : undefined;
     }
     return undefined;
   }

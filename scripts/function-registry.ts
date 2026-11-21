@@ -12,11 +12,15 @@
  * How it reads. The registry is one function in TSTables' text segment.
  * For each spreadsheet function it loads the name's CFString constant
  * (`adrp`/`add` to a record in `__DATA_CONST`) and calls one of a few
- * registration helpers. The helpers differ in where the index travels:
- * either in `w7`, set just before the call, or as a halfword stored to the
- * stack (`mov wN, #index; strh wN, [sp, #…]`) just before the name load.
- * Every registration takes one of those two shapes; a name load with
- * neither is not a registration and is skipped.
+ * registration helpers. Each helper takes the index in a slot of its own:
+ * in `w7`, set before the call, or as a halfword stored to the stack
+ * (`mov wN, #index; strh wN, [sp, #offset]`) before the name load, at an
+ * offset that differs per helper, beside other halfwords that are flags.
+ * The reader does not know the helpers by address: for every helper it
+ * takes the one slot whose values are distinct across all the helper's
+ * registrations, which an index is and a flag is not, preferring the
+ * highest stack slot and then `w7` where a helper is called once. A name
+ * load with no slot at all is not a registration and is skipped.
  *
  * Nothing here is trusted on its own: the harvest script merges this
  * reading with the recorded document harvest and refuses on any
@@ -88,10 +92,10 @@ function movz(ins: number): { rd: number; imm: number } | undefined {
   return { rd: ins & 31, imm: ((ins >>> 5) & 0xffff) << (((ins >>> 21) & 3) * 16) };
 }
 
-/** `strh wT, [xN, #off]` → { rt, rn }. */
-function strh(ins: number): { rt: number; rn: number } | undefined {
+/** `strh wT, [xN, #offset]` → { rt, rn, offset } in bytes. */
+function strh(ins: number): { rt: number; rn: number; offset: number } | undefined {
   if (unsigned(ins & 0xffc00000) !== 0x79000000) return undefined;
-  return { rt: ins & 31, rn: (ins >>> 5) & 31 };
+  return { rt: ins & 31, rn: (ins >>> 5) & 31, offset: ((ins >>> 10) & 0xfff) * 2 };
 }
 
 /** `adrp xD, page` → { rd, page } for the instruction at `pc`. */
@@ -108,7 +112,9 @@ function addImmediate(ins: number): { rd: number; rn: number; imm: number } | un
   return { rd: ins & 31, rn: (ins >>> 5) & 31, imm: (ins >>> 10) & 0xfff };
 }
 
-const isBranchLink = (ins: number): boolean => unsigned(ins & 0xfc000000) === 0x94000000;
+/** `bl` → its byte displacement, or undefined for any other instruction. */
+const branchLink = (ins: number): number | undefined =>
+  unsigned(ins & 0xfc000000) === 0x94000000 ? ((ins << 6) >> 6) * 4 : undefined;
 
 const FUNCTION_NAME = /^[A-Z][A-Z0-9.]{1,24}$/;
 
@@ -159,33 +165,34 @@ export function readFunctionRegistry(path: string): RegistryReading {
   }
   sites.sort((x, y) => x.va - y.va);
 
-  // The index each site carries, if any.
+  // The slots each site carries: the helper it calls, the `w7` set
+  // before the call, and every halfword stored to the stack with the
+  // immediate that was moved into it (`strh wzr` stores 0).
   const word = (va: number): number => bytes.readUInt32LE(va - text.vmaddr + text.fileoff);
-  const indexAt = (va: number): number | undefined => {
-    // Stack-carried index: `mov wN, #i` immediately before `strh wN, [sp, #…]`,
-    // within the twenty instructions before the name load.
+  const W7 = -1;
+  const carried = sites.map((site) => {
+    const slots = new Map<number, number>();
     for (let j = 1; j <= 20; j++) {
-      const store = strh(word(va - j * 4));
-      if (store && store.rn === 31) {
-        const mov = movz(word(va - (j + 1) * 4));
-        if (mov && mov.rd === store.rt) return mov.imm;
-        // A store without its move belongs to an earlier call; the index
-        // then travels in a register.
+      const store = strh(word(site.va - j * 4));
+      if (!store || store.rn !== 31) continue;
+      const mov = movz(word(site.va - (j + 1) * 4));
+      if (mov && mov.rd === store.rt) slots.set(store.offset, mov.imm);
+      else if (store.rt === 31) slots.set(store.offset, 0);
+    }
+    let target: number | undefined;
+    for (let k = 2; k <= 24; k++) {
+      const ins = word(site.va + k * 4);
+      const mov = movz(ins);
+      if (mov && mov.rd === 7) slots.set(W7, mov.imm);
+      const branch = branchLink(ins);
+      if (branch !== undefined) {
+        target = site.va + k * 4 + branch;
         break;
       }
     }
-    // Register-carried index: the `w7` set between the name load and the
-    // registration call.
-    let w7: number | undefined;
-    for (let k = 2; k <= 24; k++) {
-      const ins = word(va + k * 4);
-      const mov = movz(ins);
-      if (mov && mov.rd === 7) w7 = mov.imm;
-      if (isBranchLink(ins)) break;
-    }
-    return w7;
-  };
-  const carried = sites.map((site) => ({ ...site, index: indexAt(site.va) }));
+    return { ...site, target, slots };
+  });
+
 
   // The registry is the run of sites, split on gaps wider than 8 KiB of
   // code, in which the most name loads carry an index. Other functions
@@ -202,14 +209,30 @@ export function readFunctionRegistry(path: string): RegistryReading {
     previous = site.va;
   }
   clusters.push(current);
-  const scored = clusters.map((c) => ({ c, n: c.filter((s) => s.index !== undefined && s.index !== 0).length }));
+  const scored = clusters.map((c) => ({ c, n: c.filter((s) => s.target !== undefined && s.slots.size > 0).length }));
   scored.sort((a, b) => b.n - a.n);
   const best = scored[0]?.c ?? [];
+
+  // Per helper, the index slot: values distinct across its registrations.
+  const byTarget = new Map<number, typeof best>();
+  for (const site of best) {
+    if (site.target === undefined || site.slots.size === 0) continue;
+    byTarget.set(site.target, [...(byTarget.get(site.target) ?? []), site]);
+  }
+  const indexSlot = new Map<number, number>();
+  for (const [target, group] of byTarget) {
+    const candidates = [...group[0]!.slots.keys()]
+      .filter((slot) => group.every((s) => s.slots.has(slot)))
+      .filter((slot) => new Set(group.map((s) => s.slots.get(slot))).size === group.length)
+      .sort((a, b) => b - a);
+    if (candidates.length > 0) indexSlot.set(target, candidates[0]!);
+  }
 
   const functions = new Map<number, string>();
   const skipped: string[] = [];
   for (const site of best) {
-    const index = site.index;
+    const slot = site.target === undefined ? undefined : indexSlot.get(site.target);
+    const index = slot === undefined ? undefined : site.slots.get(slot);
     if (index === undefined || index === 0) {
       skipped.push(site.name);
       continue;

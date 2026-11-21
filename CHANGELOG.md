@@ -7,6 +7,46 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+### Added
+
+- `addFilterRule` writes the four remaining duration comparisons (not
+  equal to, greater than or equal to, less than, less than or equal to),
+  so the duration family is complete.
+- `SlideModel.setBuildOrder` puts a slide's builds in the order they
+  play, as the Build Order panel's drag writes it.
+- A category's aggregates name their type (`aggregate`: count, sum,
+  average, min or max), and `AGGREGATE_TYPE_NAMES` and
+  `AccumulatorFields` name the codes and the record under them.
+- `TableModel.summaryModel()` reads the summaries a category's group
+  rows draw, with the table's own cell decoders.
+- `addBuild` writes a Move action (`move: { dx, dy }`): an Action with the
+  app's motion path effect along a straight path, eased at both ends, in
+  the shape Keynote writes for its own. A build's `move` reads the
+  displacement back. The `add_build` tool takes the same option.
+- `addCategorySummary` shows a count, sum, average, min or max of a
+  column in every group row of a categorised table, writing what Numbers
+  writes for its own: the aggregate entry, the aggregator cache and the
+  summary cells. The `add_category_summary` tool takes the same arguments.
+
+### Changed
+
+- The vendored schema is the 16.0 release's for the shared, Pages and
+  Numbers families (Keynote stays at 15.4): a stylesheet's
+  `styles_for_16_0` snapshot is followed like the earlier ones, and the
+  new watermarking and UI-state fields are named. No field number moved.
+
+### Fixed
+
+- A field a document did not carry before is now written in field-number
+  order, as the apps write it, instead of after every existing field.
+- A build added to a slide is stored where Keynote keeps its own, right
+  after the slide archive with the chunks behind the builds, instead of
+  at the end of the slide's component, and the slide's node says it
+  carries explicit builds, as every app-written slide with a build does.
+- A build added to a slide is registered in its component's object UUID
+  map under the UUID its chunks name, so Keynote's Build Order panel
+  moves it like one of its own instead of pinning it last.
+
 ### Fixed
 
 - Formula reading renders date and duration literals, which read as 0,

@@ -20,17 +20,19 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — nothing staged
+## Needs a Mac — two files staged
 
-Every seed and rung staged so far is returned and banked.
+- `22-move-action.key`: the library's first Move action; play the slide
+  and click once, the title should slide 200 points right. Comment
+  moved or still on the slide.
+- `23-category-summary.numbers`: the library's first per-group summary,
+  a Sum of Amount in every group row; the file says what each group row
+  should show. Comment on a group row's cell if it does not.
 
-- The collaboration seed is withdrawn: sharing needs iCloud Drive, and
-  the checker will not enable it on the work Mac (»skip the collaboration
-  features for now, i don't want to enable icloud drive on my work mac«).
-  The question it carried stays open below.
-
-Every earlier seed program is returned and banked; the returned files
-are fixtures with pins (see ATTRIBUTION.md).
+Every earlier seed is returned and banked; the returned files are
+fixtures with pins (see ATTRIBUTION.md), and `npm run seeds -- out`
+still writes each one, since the builders are the recipes the fixtures
+were made from.
 
 **Before staging a seed**, remember the technique that closed most of
 this page: somebody has already made the document you need. Parser
@@ -44,7 +46,8 @@ that rebuild the structures from them.
 
 ## Blocked on evaluation or the app — not on format knowledge
 
-- **Formula authoring: the function table is complete for 15.4.** Authoring
+- **Formula authoring: the function table is complete, read from 16.0
+  as from 15.4.** Authoring
   is shipped and proven — every parseable corpus formula rebuilds
   byte-identical to Apple's AST, and the e2e recompute probe settled the
   dependency-ledger question (Numbers rebuilds it on open; see
@@ -54,7 +57,13 @@ that rebuild the structures from them.
   registers; the document harvest (`--ingest`, `--emit-sheet`,
   `--drive`) confirms it and supplies T, which the registry registers
   by another route. A new release means a new `--binary` run; the merge
-  refuses any disagreement between the two sources.
+  refuses any disagreement between the two sources. Numbers and Pages
+  16.0 (7052.0.68) register the same 363 as 15.4; the reader now finds
+  each helper's index slot by the one property an index has and a flag
+  has not, values distinct across the helper's registrations, so a
+  helper whose stack layout changes reads without re-measuring. The
+  vendored schema is 16.0's for the shared, Pages and Numbers families;
+  Keynote is still 15.4, and its family waits for its own 16.0.
 - **Tables on pages and slides: the apps read them.** Pages and
   Keynote 15.4 each list the grafted table and answer its cells through
   their scripting dictionaries, and Keynote's own resave keeps it
@@ -73,23 +82,26 @@ that rebuild the structures from them.
   twins show and the library still does not author: function-shaped
   filter rules beyond text-contains and starts-with, and per-group
   category summaries — the two roadmap rows of the matrix.
-- **Keynote builds: creation shipped and played.** Reading is measured
-  whole — effect, timing and delivery decode from `animationAttributes`
-  against the fixture deck — retiming writes the same fields, and
-  `addBuild` writes an all-at-once or by-paragraph build and its chunks
-  field for field as the deck's app-authored builds carry them; Keynote
-  15.1.1 played one (VERIFICATION). Not authored: actions and build
-  order. The scripting dictionary has no builds to ask, so a played
-  build stays a person's observation.
+- **Keynote builds: creation, order and a played build.** Reading is
+  measured whole — effect, timing and delivery decode from
+  `animationAttributes` against the fixture deck — retiming writes the
+  same fields, `addBuild` writes an all-at-once or by-paragraph build
+  and its chunks field for field as the deck's app-authored builds
+  carry them, Keynote 15.1.1 played one and 15.4 played one on a
+  converted 14.x deck (VERIFICATION), and `setBuildOrder` writes the
+  order the Build Order drag writes, and Keynote 15.4 let the checker
+  drag the library's build first once it was registered in the
+  component's object UUID map (VERIFICATION). A Move action is
+  authored in the shape of the returned deck's and waits for the app to
+  play it (VERIFICATION); the other actions (rotate, scale, opacity)
+  have no measured instance.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
-  group are not authored, and the cheap route is closed: a
-  `column_agg_type` entry written alone, in the twin's exact shape,
-  draws nothing in Numbers 15.4's export where the twin's own summary
-  draws its count, so the app reads the aggregator cache and the
-  summary model's cells rather than rebuilding them. A writer has to
-  produce all three, and only one Count instance is measured.
+  group are authored too (`addCategorySummary`: the aggregate entry, the
+  aggregator cache and the summary model's cells, since the entry alone
+  drew nothing in Numbers 15.4) and wait for the app to draw one
+  (VERIFICATION).
   `addFilterRule` writes every condition the filter menu offers, byte
   for byte as the app-authored rules in the three filter-conditions
   fixtures, and recomputes the hidden rows offline into
@@ -117,6 +129,19 @@ that rebuild the structures from them.
   shared document needs iCloud Drive, which the checker has declined to
   enable. Deferred; the document model keeps LZFSE components opaque and
   byte-preserved.
+- **The object UUID map is written for builds only.** Every model object
+  in an app-written slide component has an `object_uuid_map_entries`
+  row (FORMAT.md §5.3); the library registers the builds it creates and
+  nothing else it creates: text boxes, images, comments, cloned slides
+  and their storages arrive without a row. The apps mint a UUID for each
+  on the next save, so the gap only bites where a UUID-keyed reference
+  names the object, and the build chunk is the one such reference the
+  library writes: every other UUID the library mints is a text
+  attribute's string identity (smart fields, highlights, a chart's id
+  map entry) or a table's row, column and group uid, none of which the
+  apps resolve through the object UUID map. Registering every created
+  object would need the per-type rule the corpus shows (all or nothing
+  per type) and no return has asked for it yet.
 
 ## Standing caveats — deliberate, not pending
 
@@ -161,6 +186,18 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-21 | a per-group summary from nothing | n/a — the app-authored Count in `olekristensen-v26.0-mac-authored.numbers` and the Sum, Average, Min and Max in `olekristensen-v26.0-mac-summaries-seed.numbers`, measured offline | **authored, unopened**: a summary is what the summary pop-up writes in five places: the `column_agg_type` entry; an aggregator archive, referenced from field 17 with an inline copy at field 4, caching an accumulator over every data row and over each group (numbers as count, min, max, sum, `secs_to_add` and product; text as count, first, last, and a zero sum and product); one calc-engine coordinate per aggregator node, columns 8 upward after the grouping's eight formulas, repeated on the group node that owns it; and in the summary model an identity map with a fresh first column and a row per group under the group's uid, a number formula cell at host column + 1 whose single node is a category reference (type 66) to the group with the aggregate as its cached value, suggest id 1 and the automatic number format interned beside it, header buckets counting the cells, and a vendor template of the same formula over the wildcard group. `addCategorySummary` writes all of it, field for field as the two fixtures carry theirs, and the shape audit accepts rung 27. Whether Numbers draws it is the staged document. | `src/tst/categories.ts`, `src/tst/tables.ts`, test/categories.test.ts, `scripts/make-bisect-docs.ts` |
+| 2026-11-20 | a Move action from nothing | n/a — the app-authored action in `olekristensen-v26.0-mac-build-order-seed.key`, measured offline | **authored, unplayed**: the app's Move is a build of type Action with effect `apple:action-motion-path`, acceleration 3 (both ends eased), no text delivery, and `action_motionPathSource` holding one open editable bezier subpath of two sharp nodes whose control points sit on the nodes, from the origin to the displacement, with the path's size beside it. `addBuild({ move })` writes that; the attribute fields match the app's set for set, and the shape audit accepts rung K17. Whether Keynote plays it is the staged rung. | `src/keynote/builds.ts`, test/keynote.test.ts, `scripts/make-keynote-docs.ts` |
+| 2026-11-20 | schema refresh from the 16.0 applications | Pages and Numbers 16.0 (7052.0.68), Keynote 15.4 (7051.0.79): descriptor dumps; no document round | **six files changed, no field number moved, one of them load-bearing**: `TSS.StylesheetArchive` 28 is `styles_for_16_0`, so the stylesheet extractor's versioned-style range now reaches 28 (the corpus carries snapshots only at 7, 8 and 14, so the range is a guard for the first 16.0-saved document); `TSD.WatermarkingDataAttributes` extends `TSP.DataAttributes` at 101 and `DataInfo.watermarking_attributes` is 19; `TSK.CommandArchive` 8 and `OutgoingCommandQueueItem` 8–10 are offline-command flags; `TN.UIStateArchive` 34–35 and `TP.UIStateArchive` 49 are `alpine_visible` (and width). The 29 shared files are byte-identical between Pages 16.0 and Numbers 16.0's frameworks, Keynote 15.4's dump reproduces the vendored 15.4 set byte for byte, and the dumper refuses Numbers' whole tree over `TNCommandArchives.proto` while its frameworks dump clean. | `proto/`, `src/tss/schema.ts`, `src/tsp/version.ts` |
+| 2026-11-20 | does Numbers 16.0 register new functions, and why did the registry reader fail on it? | Numbers 16.0 (7052.0.68), TSTables registry read offline; no document round | **no new functions, a new stack layout**: the 16.0 registry is the recorded 363 apart from T, which the document harvest supplies. The reader failed because one registration helper (ten functions: INTERSECT.RANGES, SORTBY, CHOOSECOLS, CHOOSEROWS, HSTACK, VSTACK, LET, LAMBDA, MAP, LAMBDA.APPLY) now takes two halfwords on the stack, the index at `[sp, #16]` and a flag at `[sp]`, and the reader took the nearest store. Measured across the cluster, 16.0 calls eight helpers and each has exactly one slot, `w7` or a stack offset, whose values are distinct over all its registrations; the reader picks that slot per helper now, preferring the highest stack offset and then `w7` for a helper called once. The harvest is merged with the 16.0 provenance. Index 326, the checkbox control function, is still registered by no name load the reader sees. | `scripts/function-registry.ts`, `data/function-index.json`, test/function-registry.test.ts |
+| 2026-11-20 | the pinned dissolve, sixth round: does a build registered in the object UUID map move? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with the build registered, returned as `olekristensen-v26.0-mac-dissolve-registered.key`; the slide's canvas comment "moved" | **settled**: the checker gave the body an Appear and dragged the library's dissolve first. The app kept the library's UUID for the build, appended its own build and chunk behind the library's in both lists, and set the node's `build_event_count` to 2 with cache version 2. A build is movable in Build Order when its component's object UUID map registers it under the UUID its chunks name; nothing else about the five refuted candidates mattered. The build-order claim is settled in the coverage matrix. | `fixtures/olekristensen-v26.0-mac-dissolve-registered.key`, `scripts/coverage-matrix.ts` |
+| 2026-11-20 | the pinned dissolve, fifth round: the slide node's explicit flag? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the one-slide seed with `has_explicit_builds` set, returned as `olekristensen-v26.0-mac-dissolve-explicit.key`; the slide's canvas comment "Still pinned", and in chat "it was still pinned" | **refuted, and the cause measured**: the app's save left every byte the library wrote alone and added its Appear ahead of ours in both lists again. It also wrote one thing more: in the slide component's `object_uuid_map_entries` it gave the library's build a UUID of its own, a fresh one, where the build's chunk still names the UUID the library minted in `build_id` and `build_chunk_identifier`. The apps resolve a chunk's build through that map; a chunk whose UUID names no object is shown and never reordered. Across the corpus every app-written build (18, over 16 build archives) has a map entry and every chunk of a build the app itself authored names it; the only chunks that do not are the library's own earlier builds after the app's resave. `createBuild` registers the build in its component's map under the UUID its chunks carry, the store exposes `registerObjectUuid` and `objectUuid`, the corpus rule is pinned, and the staged deck asks the drag once more. The wider finding is open below: the apps give every model object in a slide component a map entry and the library gives none of its other creations one. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |
+| 2026-11-19 | the pinned dissolve, fourth round: placement or effect id? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve-placed.key`: "Pinned, still" and "Also pinned" | **both refuted, and the node found**: with the build and chunk placed as the app places them and with the app's own effect id, the app still put its new Appear ahead of the library's in both lists. A whole-document diff of a fresh library deck against the app's resave of the same deck, by archive, left the slide's `KN.SlideNodeArchive`: the app's save sets `build_event_count` and its cache version where the library leaves the blank's none and −1, and across the app-written slides with a build `has_explicit_builds` is 1, or absent where the node's caches were never computed, where the library's slides carry their build with the blank's explicit 0. The library sets it with every build now and clears it with the last; the staged deck asks the drag once more. | `src/keynote/document.ts`, test/keynote.test.ts |
+| 2026-11-19 | the pinned dissolve, third round: is the cause in the build's bytes? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's save of the two-slide seed, returned as `olekristensen-v26.0-mac-pinned-dissolve.key`; on slide 1 "Nonsensical task, as the dissolve landed last by itself. So I did not attempt to drag it. The start popup says 'Ved klik'", on slide 2 "It moved… here it worked", and on the resaved first-round deck "It worked" | **two candidates left, both now addressed**: on slide 1 the app placed the body's new Appear chunk ahead of the library's without a drag, where on slide 2 its own dissolve took the drag; the resaved deck's save carries no new build, so its "worked" is the checker's word alone. Offline, the one layout difference between the library's deck and the app's resave of it is the place of the build and chunk archives in the slide's component: every app-written deck keeps them right after the slide, builds then chunks in list order, and the library appended them last; `createBuild` and `setBuildOrder` now lay them out the app's way. The effect-id census is the other: `apple:dissolve` occurs only on builds the library wrote, and the app's own dissolve on a text placeholder is `apple:dissolve character`. The staged deck isolates the two. | `src/keynote/builds.ts`, `src/tsp/store.ts`, test/keynote.test.ts |
+| 2026-11-19 | is the pinned dissolve the slide's field order? | Keynote 15.4 (macOS, Danish UI), the checker dragging in a regenerated deck whose slide lists are in field order: "still pinned" | **refuted**: the order of the slide's fields is not the cause. The build archive, its chunk, the component both sit in and the slide's declared references are the app's own shape field for field in the returned deck, so what pins it is not visible offline; the staged deck asks the app to write its own dissolve beside ours. | `scripts/make-seeds.ts` |
+| 2026-11-19 | the other summaries: which `agg_type` is each, and what does the aggregator cache hold? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-summaries.numbers`, returned as `olekristensen-v26.0-mac-summaries-seed.numbers`; the checker on C3: "The rows only show the summary numbers for animals and note, nothing is shown in the summary cells for fruit and transport" | **settled, the codes and the record**: `agg_type` 2 Sum, 3 Average, 4 Min, 5 Max (Danish Sum, Gennemsnit, Minimum, Maksimum), one `AggregatorArchive` per summarised column, referenced from the group-by and inlined again in its field 4; every aggregator carries the same `TST.AccumulatorArchive` whatever its type, which the apps' schema names field for field (per-kind counts, min, max, sum and product as cell values, a duration total in seconds), the root over all rows and one per group, all four groups correct. The two empty group rows the checker saw are in the summary model, not the cache: read with the table's decoders (`summaryModel()`), it holds the four summaries for Note and Animal, the rows the checker had set them in, and nothing for Fruit and Transport, each cell a formula whose one node is a category reference naming the table, the aggregator and the group. A summary writer therefore produces the entry, the record per node and the summary model's cells; which group rows the app materialises is the app's own choice. | `src/tst/categories.ts`, test/authored-returns.test.ts |
+| 2026-11-19 | the duration comparisons: which `predicate_type` does each write? | Numbers 15.4 (M15.4-7051.0.79-2, macOS), the checker's own save of `seed-duration-conditions.numbers`, returned as `olekristensen-v26.0-mac-duration-conditions.numbers` | **settled, the family is complete**: 39 not equal to, 41 greater than or equal to, 42 less than, 43 less than or equal to, beside 38, 40 and 44; each formula the comparison over a 1h literal, the operand a duration with units 4. `addFilterRule` writes all six comparisons byte for byte as the fixture's. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
+| 2026-11-19 | build order and an action build: how does the app write them, and why could the library's build not be moved first? | Keynote 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of `seed-build-order.key`, returned as `olekristensen-v26.0-mac-build-order-seed.key`; the checker on the slide: "The preexisting dissolve build on the title had some kind of defect, I cannot move it first in the Build Order, it remains third no matter what I do. The other animations I can move freely, though not after the dissolve in of the title." | **the order settled, the pin not**: build order is the order of the slide archive's build list and chunk list, chunks staying with their build; the app rewrote both as action, appear, dissolve. An Appear build is the library's shape with effect `apple:bc-appear`; a Move action is the same frame with type Action, effect `apple:action-motion-path`, an acceleration and a motion path of two bezier points, no delivery fields. The app also set the library's dissolve to 1.25 s from the 1 s asked and re-stamped its attribute seed. `setBuildOrder` writes the drag. The seed had written the slide's two lists after a higher field; every new field now goes in number order, and a regenerated deck is staged to ask whether the dissolve moves. | `src/keynote/builds.ts`, `src/base/protobuf.ts`, test/keynote.test.ts |
 | 2026-11-03 | can every measured filter condition be written as the app writes it? | the 44 app-written rules of the three filter-conditions fixtures, each re-authored on its own table and column and compared byte for byte; no app round | **settled, all 44 identical**: `compileCondition` rebuilds each condition's formula from the measured templates (one relative-point shape covers the date family in every unit and both directions), `writePredicate` the codes and operands, and the formula builder gained date, duration, thunk, group and index-call nodes and the whole-column cross reference to carry them; `conditionHolds` evaluates each offline for the hidden rows. The only mismatch on the first run was the parenthesis the app keeps as a one-item list node in the quarter formula. | `src/tst/filter-conditions.ts`, test/filter-conditions.test.ts |
 | 2026-11-03 | the number conditions beyond comparisons: which `predicate_type` does each write? | Numbers for iOS 15.4.2 (T15.4.2 7377.1.21), the checker's own save on the phone of a one-table seed, returned as `olekristensen-v26.0-ios-filter-number-conditions.numbers` | **settled, all eight**: 11 above average, 12 below average, 15 is a duplicate, 16 is unique, 30 in the top and 31 in the bottom with qualifier1 10 for values and 9 for percent, the N in the formula's trailing constant; each formula is a whole-column SUM, so the engine evaluates these by code, not by formula. The same table in the Mac save had come back empty, so the phone round settled it. Every condition the filter menu offers is now measured. Beside it, the table model's inline hidden-states store carried the rules' formulas, and the `+2` of a top-values rule is an addition node, a lone varint 1 the model's reference extractor took for object 1; that field is walked by the schema now. | `src/tst/predicates.ts`, `src/tsa/extractors.ts`, test/authored-returns.test.ts |
 | 2026-11-03 | the rest of the filter menu: which `predicate_type` and qualifiers does each condition write, and what formula? | Numbers 15.4 (M15.4-7051.0.79-2, macOS, Danish UI), the checker's own save of the seed dealt out at eight per table, returned as `olekristensen-v26.0-mac-filter-conditions.numbers` | **settled for 36 conditions, one table skipped**: the comparisons are 5 to 10 with 13 between and 32 not between; 34 is blank and 35 is not blank; the date family 17 today, 18 yesterday, 19 tomorrow, 20 is, 21 before, 22 after, 23 in the range, 24 in the next, 25 in the last, 26 exactly, 27 before and 28 after a relative point, 29 between two, 33 in this unit, the unit in qualifier1 (2 day, 3 week, 4 month, 5 year, 8 quarter) and the direction in qualifier2 (6 ago, 7 from now); durations 38 equal, 40 greater than, 44 between; checkboxes 55 and 56, compiled through function index 326, which the registry does not name, compared with interaction type 8. The file also exposed three reader faults, each fixed: a date literal's seconds sit in `AST_date_node_dateNum` and a duration's in `AST_duration_node_unitNum`, both of which rendered as 0; and a list node's count is `AST_list_node_numArgs`, not the function count, which left "this quarter" rendering as a dangling stack. "Number rules 2" (above and below average, top and bottom values and percent, duplicate, unique, is blank) came back without rules. | `src/tst/predicates.ts`, `src/tsce/ast.ts`, `src/tst/formulas.ts`, test/authored-returns.test.ts |

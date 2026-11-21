@@ -12,7 +12,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
 import { refId } from "../src/tsp/schema.ts";
-import { GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart } from "../src/tst/categories.ts";
+import { AccumulatorFields, GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart, type ColumnAggregate } from "../src/tst/categories.ts";
+import { readUid, uidKey } from "../src/tst/uidmap.ts";
+import { CellFlag, CellRecord } from "../src/tst/cellrecord.ts";
+import { TileFields, TileRowInfo } from "../src/tst/tables.ts";
 import {
   ColumnRowUidMap,
   expandIndexSet,
@@ -450,5 +453,154 @@ describe("bucketing a date column", () => {
       }
     }
     expect(checked > 100).toBe(true);
+  });
+});
+
+describe("a per-group summary written from nothing", () => {
+  const TWIN = "olekristensen-v26.0-mac-authored.numbers";
+  const SEED = "olekristensen-v26.0-mac-summaries-seed.numbers";
+  const fieldNumbers = (m: RawMessage | undefined): number[] => m?.fields.map((f) => f.no) ?? [];
+  const load = (name: string) => NumbersDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES)))).tables()[0]!;
+  /** The twin's table, as the library built it before the checker summarised Kind. */
+  const build = () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.insertColumns(2, 1);
+    ["Item", "Kind", "Amount"].forEach((label, c) => { table.setCell(0, c, label); });
+    const rows: [string, string, number][] = [
+      ["Pear", "Fruit", 12], ["Cat", "Animal", 3], ["Apple", "Fruit", 7],
+      ["Train", "Transport", 40], ["Dog", "Animal", 10], ["Bicycle", "Transport", 2],
+    ];
+    rows.forEach(([item, kind, amount], i) => {
+      table.setCell(i + 1, 0, item);
+      table.setCell(i + 1, 1, kind);
+      table.setCell(i + 1, 2, amount);
+    });
+    table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+    table.addCategory(1);
+    return { doc, table };
+  };
+  /** The inline aggregator; the referenced one at field 17 is checked to match it. */
+  const aggregatorOf = (table: TableModel, index = 0): RawMessage => {
+    const category = table.activeCategories()!;
+    const inline = category.object.message.getMessages(GroupByFields.AGGREGATOR)[index]!;
+    const referenced = category.store.resolve(category.object.message.getMessages(GroupByFields.AGGREGATOR_REF)[index]!.getVarint(1))!;
+    expect(Buffer.from(referenced.message.toBytes()).toString("hex")).toBe(Buffer.from(inline.toBytes()).toString("hex"));
+    return inline;
+  };
+  /** Field numbers of an aggregator's root node, its accumulator, and the distinct shapes of its children. */
+  const nodeShape = (aggregator: RawMessage): unknown => {
+    const root = aggregator.getMessage(2)!;
+    const children = root.getMessages(3).map((c) => JSON.stringify([fieldNumbers(c), fieldNumbers(c.getMessage(2))]));
+    return [fieldNumbers(aggregator), [...new Set(fieldNumbers(root))], fieldNumbers(root.getMessage(2)), [...new Set(children)]];
+  };
+  const coordinates = (aggregator: RawMessage): number[] => {
+    const root = aggregator.getMessage(2)!;
+    return [...root.getMessages(3), root].map((n) => Number(n.getMessage(1)!.getVarint(2)));
+  };
+  const summaryFormulas = (table: TableModel): RawMessage[] => {
+    const summary = table.summaryModel()!;
+    const list = summary.store.resolve(refId(summary.object.message.getMessage(2)!, 6))!;
+    return list.message.getMessages(3).map((e) => e.getMessage(5)!.getMessage(1)!.getMessages(1)[0]!);
+  };
+  const vendorEntries = (table: TableModel): RawMessage[] => {
+    const summary = table.summaryModel()!;
+    return summary.store.resolve(refId(summary.object.message, 5))!.message.getMessages(2);
+  };
+  const firstRecord = (table: TableModel, row: number): CellRecord => {
+    const summary = table.summaryModel()!;
+    const tiles = summary.object.message.getMessage(2)!.getMessage(3)!;
+    const tile = summary.store.resolve(refId(tiles.getMessages(1)[0]!, 2))!;
+    return CellRecord.decode(tile.message.getMessages(TileFields.ROW_INFOS)[row]!.getBytes(TileRowInfo.CELL_STORAGE_BUFFER)!);
+  };
+
+  it("writes the Count the twin's checker built: entry, aggregator cache, node coordinates, summary cells and vendor template, field for field", () => {
+    const { doc, table } = build();
+    table.addCategorySummary(1, "count");
+    const twin = load(TWIN);
+    const strip = (a: ColumnAggregate) => [a.column, a.level, a.aggType, a.aggregate, a.showAsType];
+    expect(table.activeCategories()!.aggregates().map(strip)).toEqual(twin.activeCategories()!.aggregates().map(strip));
+
+    const ours = aggregatorOf(table);
+    const theirs = aggregatorOf(twin);
+    expect(nodeShape(ours)).toEqual(nodeShape(theirs));
+    expect(coordinates(ours)).toEqual(coordinates(theirs));
+    expect(coordinates(ours)).toEqual([8, 9, 10, 11]);
+    const counts = (aggregator: RawMessage) => {
+      const root = aggregator.getMessage(2)!;
+      return [root, ...root.getMessages(3)].map((n) => [Number(n.getMessage(2)!.getVarint(AccumulatorFields.STRING_COUNT)), n.getMessage(2)!.getMessage(AccumulatorFields.MIN)!.getMessage(5)!.getString(1), n.getMessage(2)!.getMessage(AccumulatorFields.MAX)!.getMessage(5)!.getString(1)]);
+    };
+    expect(counts(ours)).toEqual(counts(theirs));
+    expect(counts(ours)).toEqual([[6, "Animal", "Transport"], [2, "Animal", "Animal"], [2, "Fruit", "Fruit"], [2, "Transport", "Transport"]]);
+    // Every group node, inline and referenced, names its aggregator node's coordinate.
+    const category = table.activeCategories()!;
+    const inlineRoot = category.object.message.getMessage(GroupByFields.GROUP_NODE_ROOT)!;
+    const referencedRoot = category.store.resolve(refId(category.object.message, GroupByFields.GROUP_NODE_ROOT_REF))!;
+    const coordsOf = (node: RawMessage) => node.getMessages(GroupNodeFields.AGG_FORMULA_COORDS).map((c) => Number(c.getVarint(2)));
+    expect([inlineRoot, ...inlineRoot.getMessages(GroupNodeFields.CHILD)].map(coordsOf)).toEqual([[11], [8], [9], [10]]);
+    expect([referencedRoot, ...referencedRoot.getObjectReferences().map((id) => category.store.resolve(id)!)].map((o) => coordsOf(o.message))).toEqual([[11], [8], [9], [10]]);
+
+    const cells = (t: TableModel) => t.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type, (c.value as { isFormula?: boolean }).isFormula]);
+    expect(cells(table)).toEqual(cells(twin));
+    expect(table.summaryModel()!.cellFormulaDetail(0, 2)?.unknownNodeTypes).toEqual([66]);
+    // The summary's identity map: a fresh column before the host's, and a row per group under the group's uid.
+    const summary = table.summaryModel()!;
+    const map = new ColumnRowUidMap(summary.store.resolve(refId(summary.object.message, 3))!.message);
+    expect(map.columnUidList().slice(1).map((u) => uidKey(u!))).toEqual(table.uidMap().columnUidList().map((u) => uidKey(u!)));
+    expect(map.rowUidList().map((u) => uidKey(u!))).toEqual(category.flatGroups().map((_, i) => uidKey(readUid(referencedRoot.getObjectReferences().map((id) => category.store.resolve(id)!)[i]!.message.getMessage(GroupNodeFields.GROUP_UID))!)));
+
+    const refShape = (node: RawMessage) => {
+      const ref = node.getMessage(39)!.getMessage(1)!;
+      return [fieldNumbers(node), fieldNumbers(ref), Number(ref.getVarint(3)), Number(ref.getVarint(4)), fieldNumbers(ref.getMessage(7)), Number(ref.getVarint(13))];
+    };
+    expect(summaryFormulas(table).map(refShape)).toEqual(summaryFormulas(twin).map(refShape));
+    expect(summaryFormulas(table).map((n) => uidKey(readUid(n.getMessage(39)!.getMessage(1)!.getMessage(10))!))).toEqual(map.rowUidList().map((u) => uidKey(u!)));
+    for (const row of [0, 1, 2]) {
+      const record = firstRecord(table, row);
+      const measured = firstRecord(twin, row);
+      expect([record.type, record.flags, record.extras, record.id(CellFlag.SUGGEST_ID), record.id(CellFlag.NUM_FORMAT_ID)]).toEqual([measured.type, measured.flags, measured.extras, measured.id(CellFlag.SUGGEST_ID), measured.id(CellFlag.NUM_FORMAT_ID)]);
+    }
+    const vendorShape = (entry: RawMessage) => {
+      const cell = entry.getMessage(3)!;
+      const spec = cell.getMessage(28)!;
+      return [fieldNumbers(entry), fieldNumbers(cell), fieldNumbers(spec), Number(spec.getVarint(1)), refShape(spec.getMessage(2)!.getMessage(1)!.getMessages(1)[0]!)];
+    };
+    expect(vendorEntries(table).map(vendorShape)).toEqual(vendorEntries(twin).map(vendorShape));
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.activeCategories()!.aggregates()[0]!.aggregate).toBe("count");
+    expect(cells(reloaded)).toEqual(cells(twin));
+  });
+
+  it("writes a Sum over numbers with the record the app caches for one, and the sums as the cached values", () => {
+    const { table } = build();
+    table.addCategorySummary(2, "sum");
+    const seed = load(SEED);
+    expect(nodeShape(aggregatorOf(table))).toEqual(nodeShape(aggregatorOf(seed)));
+    const root = aggregatorOf(table).getMessage(2)!.getMessage(2)!;
+    const number = (field: number) => root.getMessage(field)!.getMessage(4)!.getDouble(1);
+    expect([Number(root.getVarint(AccumulatorFields.NUMBER_COUNT)), number(AccumulatorFields.MIN), number(AccumulatorFields.MAX), number(AccumulatorFields.SUM), root.getDouble(AccumulatorFields.SECONDS), number(AccumulatorFields.PRODUCT)]).toEqual([6, 2, 40, 74, 74, 201600]);
+    expect(table.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 3, 13], [1, 3, 19], [2, 3, 42]]);
+    expect(table.activeCategories()!.aggregates().map((a) => [a.column, a.aggregate])).toEqual([[2, "sum"]]);
+  });
+
+  it("stacks a second summary after the first: the next coordinates, the next summary column, both vendor templates", () => {
+    const { table } = build();
+    table.addCategorySummary(1, "count");
+    table.addCategorySummary(2, "average");
+    expect(coordinates(aggregatorOf(table, 1))).toEqual([12, 13, 14, 15]);
+    expect(table.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 2, 2], [0, 3, 6.5], [1, 2, 2], [1, 3, 9.5], [2, 2, 2], [2, 3, 21]]);
+    expect(vendorEntries(table).length).toBe(2);
+  });
+
+  it("refuses what it cannot measure: an uncategorised table, a second summary on a column, a sum of text, a blank in the column", () => {
+    const blank = NumbersDocument.blank().tables()[0]!;
+    expect(() => blank.addCategorySummary(0, "count")).toThrow(/not categorised/);
+    const { table } = build();
+    table.addCategorySummary(1, "count");
+    expect(() => table.addCategorySummary(1, "sum")).toThrow(/already has a summary/);
+    expect(() => table.addCategorySummary(0, "sum")).toThrow(/needs a column of numbers/);
+    table.setCell(3, 2, { type: "empty" });
+    expect(() => table.addCategorySummary(2, "sum")).toThrow(/every data row needs one/);
   });
 });

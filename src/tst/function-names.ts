@@ -10,7 +10,7 @@
  * author formulas; the two must agree. See docs/BLOCKERS.md for the
  * ledger of who ran which against which version.
  *
- * Harvested: 2026-10-14 from Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)
+ * Harvested: 2026-11-20 from Numbers 16.0 (7052.0.68), TSTables registry, merged with the harvest from Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)
  * Coverage:  363 functions named; 298 probe candidates
  */
 export const HARVESTED_FUNCTIONS: ReadonlyMap<number, string> = new Map([
@@ -381,8 +381,8 @@ export const HARVESTED_FUNCTIONS: ReadonlyMap<number, string> = new Map([
 
 /** Provenance of the table above, surfaced for diagnostics. */
 export const HARVEST_PROVENANCE = {
-  app: "Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
-  harvestedAt: "2026-10-14",
+  app: "Numbers 16.0 (7052.0.68), TSTables registry, merged with the harvest from Pages 15.4 (7051.0.79), TSTables registry, merged with the harvest from Numbers 15.1 (7044.0.271), TSTables registry, merged with the harvest from Numbers 13.1–14.x, harvested from public function-demo spreadsheets (paired-column layout)",
+  harvestedAt: "2026-11-20",
   functions: 363,
   candidates: 298,
 } as const;
