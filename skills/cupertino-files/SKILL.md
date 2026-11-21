@@ -636,6 +636,7 @@ t.regroupCategories();                  // put them back; returns how many rows 
 t.addCategory(1);                       // group an uncategorised table by a column's values
 t.addCategory([1, 2]);                  // or nest: groups by column 1, then by column 2 within each
 t.addCategory([{ column: 3, bucket: "yearAndMonth" }]);  // a date column by period
+t.addCategorySummary(2, "sum");         // a Sum of column 2 in every group row: count, sum, average, min or max
 ```
 
 `groups()[n].rows` are absolute row indexes. Grouping can be by value or
@@ -652,6 +653,13 @@ moves nothing and writes nothing.
 
 So the pattern is: change the cell, then regroup, and be ready for the
 throw if you wrote a value the table has no group for.
+
+`addCategorySummary` shows a summary in every group row the way the
+summary pop-up does, over a column of numbers, or of text for a count:
+one summary per column, on a table already grouped by one column. It
+writes what the app writes for its own, the aggregate entry, the
+aggregator cache and the summary cells; Numbers has not yet drawn one
+written this way.
 
 ### Cell controls (checkbox, slider, stepper, star rating)
 
@@ -1152,11 +1160,11 @@ throw, naming the object and field, rather than produce the file.
    cross-table references included), merges (`mergeCells`, dependency
    ledger and all) and chart appearance (type, series colours, axes,
    legend, gridlines) all write, and so do filter rules (`addFilterRule`,
-   every condition the filter menu offers), by-value categories
-   (`addCategory`), all-at-once Keynote builds and their order
-   (`addBuild`, `setBuildOrder`, a Move action with `move`) and text
-   boxes copied from the document's own (`addTextBox`). Genuinely absent
-   today: category summaries and the other actions. For
+   every condition the filter menu offers), by-value categories and
+   their summaries (`addCategory`, `addCategorySummary`), all-at-once
+   Keynote builds and their order (`addBuild`, `setBuildOrder`, a Move
+   action with `move`) and text boxes copied from the document's own
+   (`addTextBox`). Genuinely absent today: the other Keynote actions. For
    those, drop to the low-level `RawMessage` layer and consult
    `docs/FORMAT.md`—§14 covers tables byte by byte.
 7. Some behaviour is inferred rather than proven: `docs/VERIFICATION.md`

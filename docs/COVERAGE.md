@@ -134,6 +134,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 | Filters: enable, disable, combining mode | all | ✅ read + write | 36 | modern→current |
 | Categories (row grouping, nesting, date bucketing)<br><sub>group membership cross-checked against cell contents; every group in every fixture agrees</sub> | all | 🔍 read only | 4 | current→current |
 | Categories: enable or disable grouping | all | ✅ read + write | 36 | modern→current |
+| Categories: a per-group summary<br><sub>addCategorySummary writes a count, sum, average, min or max the way the summary pop-up does: the aggregate entry, the aggregator cache (referenced and inline, as the app writes it), each group node's coordinate, and the summary model's identity map, cells, formulas, headers and vendor template, field for field as the two app-authored summaries carry them</sub> | Numbers | ✅ read + write | 2 | current→current |
 | Tables from nothing on a page or a slide<br><sub>appendTable/insertInlineTable (Pages) and slide.addTable (Keynote) graft the neutral donor — the blank Numbers document's own table — under the body storage or the slide, anchored the way the corpus's 18 inline Pages tables are (a five-field attachment at a U+FFFC, parent the body) and listed the way its 3 slide tables are (parent the slide, in both drawable lists); rows size and fill it. The table takes the host theme's first preset — its model's styles the preset network's members, its cell-level styles re-parented onto them and listed nowhere, as every corpus table's are — and the shape audit finds nothing a Pages or Keynote table lacks</sub> | Pages, Keynote | ✅ read + write | 48 | all |
 | Filters: adding a rule<br><sub>addFilterRule writes any condition the filter menu offers byte for byte as the fixtures' app-authored rules — the predicate with its codes and operands and the formula over the table's own identity, counted from the app's host column — grows the boundary list, switches the set on and writes the hidden-state extent by evaluating the rules; every one of the 44 app-written rules in the three filter-conditions fixtures reproduces identically</sub> | Numbers | ✅ read + write | 30 | iwork16→current |
 | Categories: defining a category by a column<br><sub>addCategory fills the table's existing group-by archive — every table carries one — with the shape every categorised corpus table has: a group column per level (with the app's own bucketing functor for a date bucket), the row-uid lookup, one node per distinct value or bucket at each level with its format manager, a referenced root and its inline copy; the eight sidecar fields are constant calc-engine coordinates and stay as the archive carries them</sub> | Numbers | ✅ read + write | 30 | iwork16→current |
@@ -171,7 +172,7 @@ Legend: ✅ read + write · 🔍 read only · ⚠️ experimental · ○ roadmap
 
 ## Claims that need a Mac
 
-68 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
+69 capabilities make a claim the offline suite structurally cannot settle — whether **Apple's own apps** accept what we wrote, as opposed to whether we read Apple's files
 correctly. They are listed with their reasoning and repro steps in
 [`docs/VERIFICATION.md`](VERIFICATION.md):
 
@@ -224,6 +225,7 @@ correctly. They are listed with their reasoning and repro steps in
 - 🔴 high — Numbers & tables → **Conditional formatting: authoring new rules**
 - 🟠 medium — Numbers & tables → **Filters: enable, disable, combining mode**
 - 🟡 low — Numbers & tables → **Categories: enable or disable grouping**
+- 🟠 medium — Numbers & tables → **Categories: a per-group summary**
 - 🟠 medium — Keynote → **Builds: creating an animation**
 - 🟠 medium — Keynote → **Builds: a Move action**
 - 🟠 medium — Numbers & tables → **Tables from nothing on a page or a slide**
@@ -266,6 +268,7 @@ correctly. They are listed with their reasoning and repro steps in
 - Numbers & tables → **Chart data editing (values, names, series, categories)** (2)
 - Numbers & tables → **Chart appearance: type and series colours** (1)
 - Numbers & tables → **Chart appearance: axes, legend, gridlines** (2)
+- Numbers & tables → **Categories: a per-group summary** (2)
 
 ## Fixture inventory
 

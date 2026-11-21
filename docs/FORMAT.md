@@ -1983,9 +1983,43 @@ match gets a stale tree. And `row_lookup_uids`, despite the name, is a
 plain `TSCE.IndexSetArchive` of row indexes, not UUIDs; that reading is
 confirmed against cell contents across the corpus.
 
-Per-group summaries (`column_agg_type`) are read, but no fixture carries a
-non-empty aggregate list, so the `agg_type` codes are passed through
-unnamed.
+A per-group summary is what the summary pop-up in a group row writes, and
+the app reads every part of it rather than rebuilding any from the
+entry—an entry written alone draws nothing. `addCategorySummary` writes
+them all:
+
+- a `column_agg_type` entry: the column's uid, level 1, `agg_type` 1
+  to 5 for count, sum, average, min and max, `show_as_type` 0;
+- an `AggregatorArchive` per summarised column, referenced from
+  `aggregator_ref` (17) and copied inline into `aggregator` (4) the way
+  the tree is. Its root `AggNodeArchive` caches a `TST.AccumulatorArchive`
+  over every data row and one child per group over the group's rows.
+  The record is the same whatever the aggregate shown: over numbers the
+  count, min, max and sum as number cell values (each with its decimal and
+  the automatic number format), the sum again as `secs_to_add`, and the
+  product; over text the string count, the first and last string in
+  code-unit order, and a zero sum and product. Each node sits at a
+  `formula_coord` of row 0 in the grouping's own owner, columns 8 upward
+  after the eight internal formulas, groups first and root last, and the
+  owning group node repeats the coordinate in `agg_formula_coords`;
+- the summary model's cells. `TST.SummaryModelArchive` (table info field
+  4, present in every table) is a second data store shaped like the
+  table's. Its identity map (field 3) holds a fresh column before the
+  host's columns and a row per group under the group's own uid, so the
+  summary of host column c sits at column c + 1 of the row keyed by the
+  group. The cell is a number formula cell—decimal128, formula id,
+  suggest id 1 and the automatic number format interned in the summary's
+  own `format_table`—whose single AST node is a category reference (node
+  type 66, `AST_category_ref` 39) naming the grouping's uid, the column's
+  uid, the aggregate, group level 2, column-absolute preserve flags, the
+  group's uid and `agg_index_level` 65535. The header buckets count the
+  cells, and the summary cell vendor (field 5) carries, per aggregate,
+  the same formula over the wildcard group {1, 0} under the wildcard key
+  {1, 1}: the template the app draws a new group row from. The model's
+  `aggregate_formula_owner_uuid` is the grouping's uid plus one, in every
+  table, summarised or not.
+
+Only a one-level category's summary is measured.
 
 ### 14.10 Charts (TSCH): the data grid
 
@@ -2149,20 +2183,6 @@ This list is kept honest by deletion: an entry leaves it when the thing
 ships, not when it looks close. Pre-BNC storage, formula authoring, merge
 writing and chart appearance all used to be here.
 
-- **Category summaries** (§14.9). A category—by value, nested, or
-  bucketed by date with the app's own functor—is defined from nothing
-  (`addCategory`) and rows are regrouped byte-identically to Apple. The
-  five aggregate types are measured (`AGGREGATE_TYPE_NAMES`), and every
-  aggregator node carries the same record whatever its type
-  (`AccumulatorFields`); an entry written alone draws nothing, since the
-  app reads its aggregator cache and the summary model's cells as well,
-  so a writer has to produce all three. The summary model is read
-  (`summaryModel()`): a data store shaped like the table's, one row per
-  group row in the order the app shows them, a summary of host column c
-  in column c + 1, each cell a formula whose single node is a category
-  reference (AST node type 66) naming the table, the aggregator and the
-  group; the app fills rows for some group rows and draws nothing for
-  the rest, which is what the writer has to do itself.
 - **Keynote actions and build order.** The model reads whole—effect,
   timing, delivery, and chunks, pinned against the three app-authored
   builds in `olekristensen-v26.3-mac-builds-effects.key`—and

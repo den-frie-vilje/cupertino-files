@@ -23,6 +23,10 @@ in commit messages and pull requests.
   app's motion path effect along a straight path, eased at both ends, in
   the shape Keynote writes for its own. A build's `move` reads the
   displacement back. The `add_build` tool takes the same option.
+- `addCategorySummary` shows a count, sum, average, min or max of a
+  column in every group row of a categorised table, writing what Numbers
+  writes for its own: the aggregate entry, the aggregator cache and the
+  summary cells. The `add_category_summary` tool takes the same arguments.
 
 ### Changed
 

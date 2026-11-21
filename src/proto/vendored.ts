@@ -484,6 +484,21 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "begin_tracking_names_legacy_nrm": 17,
     "end_tracking_names_legacy_nrm": 18,
   },
+  "TSCE.CategoryReferenceArchive": {
+    "group_by_uid": 1,
+    "column_uid": 2,
+    "aggregate_type": 3,
+    "group_level": 4,
+    "group_uids": 6,
+    "preserve_flags": 7,
+    "relative_column": 8,
+    "relative_group_uid": 9,
+    "absolute_group_uid": 10,
+    "option_refers_to_pivot_rows": 11,
+    "option_refers_to_pivot_columns": 12,
+    "agg_index_level": 13,
+    "option_show_aggregate_name": 14,
+  },
   "TSCE.CellDependenciesTiledArchive": {
     "cell_record_tiles": 1,
   },
@@ -1159,6 +1174,15 @@ export const MESSAGES: Readonly<Record<string, Readonly<Record<string, number>>>
     "hidden_states_changed_formula": 16,
     "aggregator_ref": 17,
     "group_node_root_ref": 18,
+  },
+  "TST.GroupByArchive.AggNodeArchive": {
+    "formula_coord": 1,
+    "accum": 2,
+    "child": 3,
+  },
+  "TST.GroupByArchive.AggregatorArchive": {
+    "column_uid": 1,
+    "agg_node": 2,
   },
   "TST.GroupByArchive.GroupNodeArchive": {
     "group_uid": 1,

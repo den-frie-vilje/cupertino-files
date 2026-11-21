@@ -194,6 +194,36 @@ function seedSummaries(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- summary
+
+function seedSummary(): Uint8Array {
+  // The library's first per-group summary: a Sum written in every group
+  // row from nothing, the aggregate entry, the aggregator cache and the
+  // summary model's cells together, since the entry alone drew nothing.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Summary";
+  table.insertColumns(2, 1);
+  ["Kind", "Amount", "Note"].forEach((label, c) => { table.setCell(0, c, label); });
+  const rows: [string, number][] = [["Fruit", 12], ["Animal", 3], ["Fruit", 7], ["Transport", 40], ["Animal", 10], ["Transport", 2]];
+  rows.forEach(([kind, amount], i) => {
+    table.setCell(i + 1, 0, kind);
+    table.setCell(i + 1, 1, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  const text = "The rows are grouped by Kind, and every group row carries a Sum of Amount written by the library, the way the summary pop-up in a group row writes one. Each group row should show the sum of its rows under Amount: Animal 13, Fruit 19, Transport 42. If a group row is empty under Amount, or shows another number, comment on that cell; no comment means as expected. Then save.";
+  table.setCell(1, 2, text);
+  table.setCellFormatting(1, 2, { textWrap: true });
+  table.setColumnWidth(0, 90);
+  table.setColumnWidth(1, 90);
+  table.setColumnWidth(2, 260);
+  // shortcut: the height is estimated from the width at the donor's text size, until the app's fit is measured
+  table.setRowHeight(1, Math.ceil(text.length / 48) * 13 + 8);
+  table.addCategory(0);
+  table.addCategorySummary(1, "sum");
+  return doc.save();
+}
+
 // -------------------------------------------------- duration conditions
 
 function seedDurationConditions(): Uint8Array {
@@ -803,6 +833,17 @@ const seeds: Seed[] = [
       const groups = table.activeCategories()?.groups() ?? [];
       if (groups.length !== 4) throw new Error(`summaries seed: expected four groups, got ${groups.length}`);
       if (table.cellText(0, 5) !== "Max" || !JSON.stringify(table.cellValue(1, 0)).includes("Sum")) throw new Error("summaries seed: columns or instruction missing");
+    },
+  },
+  {
+    name: "seed-summary.numbers",
+    bytes: seedSummary(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      const aggregates = table.activeCategories()?.aggregates().map((a) => [a.column, a.aggregate]) ?? [];
+      if (JSON.stringify(aggregates) !== "[[1,\"sum\"]]") throw new Error(`summary seed: expected a Sum on Amount, got ${JSON.stringify(aggregates)}`);
+      const sums = table.summaryModel()?.cells().map((c) => (c.value.type === "number" ? c.value.value : NaN)) ?? [];
+      if (JSON.stringify(sums) !== "[13,19,42]") throw new Error(`summary seed: expected the three sums, got ${JSON.stringify(sums)}`);
     },
   },
   {

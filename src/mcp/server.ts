@@ -1458,6 +1458,41 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_category_summary",
+    description: apiDoc(
+      "add_category_summary",
+      "The table must already be grouped by one column (add_category); the 0-based column holds " +
+        "numbers, or text for a count. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column to summarise" },
+        aggregate: { type: "string", description: "count, sum, average, min or max" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column", "aggregate"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      if (column === undefined) throw new RangeError("column is required");
+      const aggregate = str(args.aggregate);
+      const aggregates = ["count", "sum", "average", "min", "max"] as const;
+      if (!aggregates.includes(aggregate as (typeof aggregates)[number])) {
+        throw new RangeError(`aggregate must be one of ${aggregates.join(", ")}`);
+      }
+      table.addCategorySummary(column, aggregate as (typeof aggregates)[number]);
+      const groups = table.activeCategories()?.groups().length ?? 0;
+      const target = save(doc, path, str(args.output));
+      return `${aggregate} of column ${column} shown in ${groups} group rows and saved ${target}`;
+    },
+  },
+  {
     name: "add_filter_rule",
     description: apiDoc(
       "add_filter_rule",

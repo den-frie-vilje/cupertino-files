@@ -47,14 +47,21 @@ import {
 } from "./conditional.ts";
 import { FilterSet, type FilterRule, FILTER_HOST_COLUMN } from "./filters.ts";
 import {
+  accumulatorRecord,
   categoriesOf,
+  categoryReferenceFormula,
   defineByValueCategory,
+  defineColumnAggregate,
+  writeUidMessage,
+  AGGREGATE_TYPE_CODES,
+  GroupByFields,
+  WILDCARD_GROUP_UID,
   type CategoryLevel,
   type CategoryGroup,
   type GroupValue,
   type TableCategories,
 } from "./categories.ts";
-import { randomUid, uidMapOf, uidMapTarget, writeUidMap, type ColumnRowUidMap } from "./uidmap.ts";
+import { ColumnRowUidMap, randomUid, readUid, uidMapOf, uidMapTarget, writeUidMap, type Uid } from "./uidmap.ts";
 import {
   CELL_RECORD_TILE,
   CellRecordExpandedFields,
@@ -1024,7 +1031,7 @@ export class TableModel {
    * separator" should share one entry, exactly as they do in Apple's own
    * files, rather than growing the table by one per formatted cell.
    */
-  private internFormat(format: CellFormat): number {
+  protected internFormat(format: CellFormat): number {
     const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMAT_TABLE));
     if (!list) throw new RangeError("table has no format table; cannot store a cell format");
     const encoded = writeFormat(format);
@@ -2187,7 +2194,7 @@ export class TableModel {
    * comparing encoded messages to find the rare true duplicate would cost
    * more than the entry it saves.
    */
-  private internFormula(archive: RawMessage): number {
+  protected internFormula(archive: RawMessage): number {
     const list = this.store.resolve(refId(this.dataStore(), DataStoreFields.FORMULA_TABLE));
     if (!list) {
       throw new RangeError("table has no formula table; cannot store a formula");
@@ -3045,7 +3052,7 @@ export class TableModel {
   }
 
   /** The single bucket object behind a header storage field. */
-  private headerBucket(field: number): IwaObject | undefined {
+  protected headerBucket(field: number): IwaObject | undefined {
     const ds = this.dataStore();
     if (!ds) return undefined;
     const storage = ds.getMessage(field);
@@ -4313,6 +4320,72 @@ export class TableModel {
   }
 
   /**
+   * Show a summary of `column` in every group row of the table's category,
+   * as the summary pop-up in a group row does: count, sum, average, min or
+   * max. Writes what the app writes for its own, the aggregate entry, the
+   * aggregator cache over the data rows and over each group, and the
+   * summary cells the group rows draw, each a category-reference formula
+   * carrying the aggregate as its cached value, over a column of numbers,
+   * or of text for a count. The table must be grouped by one column
+   * already, every data row needs a value in the column, and a column
+   * takes one summary. Whether Numbers draws a summary written this way is
+   * not yet measured.
+   * @agentTool add_category_summary
+   */
+  addCategorySummary(column: number, aggregate: "count" | "sum" | "average" | "min" | "max"): void {
+    this.requireWritable();
+    if (column < 0 || column >= this.columnCount) {
+      throw new RangeError(`column ${column} is outside the table's ${this.columnCount} columns`);
+    }
+    const aggType = AGGREGATE_TYPE_CODES.get(aggregate);
+    if (aggType === undefined) throw new RangeError(`unknown aggregate ${aggregate}; use count, sum, average, min or max`);
+    const definition = this.activeCategories();
+    if (!definition) throw new RangeError("table is not categorised; call addCategory first");
+    if (definition.aggregates().some((a) => a.column === column)) {
+      throw new RangeError(`column ${column} already has a summary`);
+    }
+    const columnUid = this.uidMap().columnUid(column);
+    if (!columnUid) throw new RangeError(`column ${column} has no identity in the uid map`);
+    const groupByUid = readUid(definition.object.message.getMessage(GroupByFields.GROUP_BY_UID));
+    if (!groupByUid) throw new RangeError("the category has no identity");
+    const summary = this.summaryModel();
+    if (!summary) throw new RangeError("table carries no summary model to write the group rows into");
+    const values = new Map<number, number | string>();
+    for (const cell of this.cells()) {
+      if (cell.column !== column) continue;
+      if (cell.value.type === "number" || cell.value.type === "text") values.set(cell.row, cell.value.value);
+    }
+    const valueAt = (row: number): number | string => {
+      const value = values.get(row);
+      if (value === undefined) {
+        throw new RangeError(`row ${row} has no number or text in column ${column}; every data row needs one to be summarised`);
+      }
+      return value;
+    };
+    const aggregateOf = (rows: readonly number[]): number => {
+      const cells = rows.map(valueAt);
+      if (aggregate === "count") return cells.length;
+      if (!cells.every((v): v is number => typeof v === "number")) {
+        throw new RangeError(`${aggregate} needs a column of numbers`);
+      }
+      const sum = cells.reduce((a, b) => a + b, 0);
+      if (aggregate === "sum") return sum;
+      if (aggregate === "average") return sum / cells.length;
+      return aggregate === "min" ? Math.min(...cells) : Math.max(...cells);
+    };
+    const leaves = defineColumnAggregate(this.store, definition.object, columnUid, aggType, (rows) =>
+      accumulatorRecord(rows.map(valueAt)),
+    );
+    summary.writeSummary(
+      groupByUid,
+      columnUid,
+      column,
+      aggType,
+      leaves.map((leaf) => ({ uid: leaf.uid, value: aggregateOf(leaf.rows) })),
+    );
+  }
+
+  /**
    * Add a row-filter rule on `column` (absolute): show the rows whose
    * cell meets `condition`, any condition the filter menu offers, from a
    * comparison or a text test to a date relative to today, a rank in the
@@ -4747,7 +4820,7 @@ export class TableModel {
   }
 
   /** Find the tile row info holding a table row. */
-  private locateRow(row: number): { tile: IwaObject; rowInfo: RawMessage } | undefined {
+  protected locateRow(row: number): { tile: IwaObject; rowInfo: RawMessage } | undefined {
     const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
     if (!tiles) return undefined;
     const tileSize = tiles.getUint(TileStorageFields.TILE_SIZE) ?? 256;
@@ -4764,7 +4837,7 @@ export class TableModel {
   }
 
   /** Re-serialize a row's cell buffer, offsets and legacy stubs. */
-  private writeRowLayout(rowInfo: RawMessage, layout: RowLayout): void {
+  protected writeRowLayout(rowInfo: RawMessage, layout: RowLayout): void {
     const buffer = new ByteWriter(256);
     const offsets = new Int16Array(layout.offsetSlots).fill(-1);
     let cellCount = 0;
@@ -5220,4 +5293,118 @@ export class SummaryModel extends TableModel {
   override get headerColumnCount(): number {
     return 0;
   }
+
+  /**
+   * Write one aggregate's cells, as the app does: the summary's identity
+   * map gets a fresh first column before the host's columns and a row per
+   * group under the group's own uid; the row holding group g carries, at
+   * host column + 1, a number formula cell whose single node is the
+   * category reference to g and whose cached value is the aggregate, with
+   * the automatic number format interned beside it; the header buckets
+   * count the cells; and the summary cell vendor gets the template the
+   * app draws a new group row from, the same formula over a wildcard
+   * group.
+   */
+  writeSummary(
+    groupByUid: Uid,
+    columnUid: Uid,
+    column: number,
+    aggType: number,
+    groups: readonly { uid: Uid; value: number }[],
+  ): void {
+    const mapTarget = this.store.resolve(refId(this.object.message, SUMMARY_MODEL_COLUMN_ROW_UIDS));
+    if (!mapTarget) throw new RangeError("summary model has no identity map");
+    const map = new ColumnRowUidMap(mapTarget.message);
+    const columns =
+      map.columnUidList().length === this.columnCount
+        ? map.columnUidList()
+        : [randomUid(), ...this.host.uidMap().columnUidList()];
+    const sameUid = (a: Uid | undefined, b: Uid): boolean => a !== undefined && a.lower === b.lower && a.upper === b.upper;
+    let rows = map.rowUidList();
+    if (!groups.every((g) => rows.some((r) => sameUid(r, g.uid)))) rows = groups.map((g) => g.uid);
+    writeUidMap(mapTarget, columns, rows);
+
+    const records: (Uint8Array | undefined)[][] = rows.map((_, r) => {
+      const located = this.locateRow(r);
+      const row = located ? readRowLayout(located.rowInfo, this.columnCount).records.slice(0, this.columnCount) : [];
+      while (row.length < this.columnCount) row.push(undefined);
+      return row;
+    });
+    const formatKey = this.internFormat({ kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false });
+    for (const group of groups) {
+      const record = new CellRecord(CellType.NUMBER);
+      record.setDecimal128(group.value);
+      record.setId(CellFlag.FORMULA_ID, this.internFormula(categoryReferenceFormula(groupByUid, columnUid, aggType, group.uid)));
+      record.setId(CellFlag.SUGGEST_ID, SUMMARY_SUGGEST_ID);
+      record.setId(CellFlag.NUM_FORMAT_ID, formatKey);
+      // The app's summary cells leave the extras word clear.
+      record.extras = 0;
+      records[rows.findIndex((r) => sameUid(r, group.uid))]![column + 1] = record.encode();
+    }
+
+    const tiles = this.dataStore()?.getMessage(DataStoreFields.TILES);
+    const entry = tiles?.getMessages(TileStorageFields.TILES)[0];
+    const tile = entry && this.store.resolve(refId(entry, TileEntry.TILE));
+    if (!tile) throw new RangeError("summary model has no tile to write rows into");
+    const infos = records.map((row, r) => {
+      const info = RawMessage.create();
+      info.setVarint(TileRowInfo.TILE_ROW_INDEX, r);
+      this.writeRowLayout(info, { records: row, offsetSlots: Math.max(this.columnCount, DEFAULT_OFFSET_SLOTS) });
+      return info;
+    });
+    tile.message.setMessages(TileFields.ROW_INFOS, infos);
+    tile.message.setVarint(TileFields.NUM_ROWS, infos.length);
+
+    const header = (index: number, cells: number): RawMessage => {
+      const h = RawMessage.create();
+      h.setVarint(HeaderFields.INDEX, index);
+      h.setFloat(HeaderFields.SIZE, 0);
+      h.setVarint(HeaderFields.HIDING_STATE, 0);
+      h.setVarint(HeaderFields.NUMBER_OF_CELLS, cells);
+      return h;
+    };
+    this.headerBucket(DataStoreFields.ROW_HEADERS)?.message.setMessages(
+      HeaderBucket.HEADERS,
+      records.map((row, r) => header(r, row.filter((cell) => cell !== undefined).length)),
+    );
+    const columnHeaders: RawMessage[] = [];
+    for (let c = 0; c < this.columnCount; c++) {
+      const cells = records.filter((row) => row[c] !== undefined).length;
+      if (cells > 0) columnHeaders.push(header(c, cells));
+    }
+    this.headerBucket(DataStoreFields.COLUMN_HEADERS)?.message.setMessages(HeaderBucket.HEADERS, columnHeaders);
+
+    const vendor = this.store.resolve(refId(this.object.message, SUMMARY_MODEL_CELL_VENDOR));
+    if (vendor) {
+      const spec = RawMessage.create();
+      spec.setVarint(CellSpec.INTERACTION_TYPE, SUMMARY_INTERACTION_TYPE);
+      spec.setMessage(CellSpec.FORMULA, categoryReferenceFormula(groupByUid, columnUid, aggType, WILDCARD_GROUP_UID));
+      const cell = RawMessage.create();
+      cell.setVarint(VendorCell.VALUE_TYPE, 0);
+      cell.setVarint(VendorCell.EXPLICIT_FORMAT_FLAGS, 0);
+      cell.setMessage(VendorCell.CELL_SPEC, spec);
+      cell.setVarint(VendorCell.CELL_FORMAT_KIND, 0);
+      const template = RawMessage.create();
+      template.setMessage(SummaryCellEntry.WILDCARD_UID, writeUidMessage(VENDOR_WILDCARD_UID));
+      template.setMessage(SummaryCellEntry.COLUMN_UID, writeUidMessage(columnUid));
+      template.setMessage(SummaryCellEntry.CELL, cell);
+      vendor.message.addMessage(SummaryCellVendorFields.ENTRIES, template);
+    }
+  }
 }
+
+/** TST.SummaryModelArchive: its identity map and its summary cell vendor. */
+const SUMMARY_MODEL_COLUMN_ROW_UIDS = 3;
+const SUMMARY_MODEL_CELL_VENDOR = 5;
+/** TST.SummaryCellVendorArchive and its SummaryCellEntry. */
+const SummaryCellVendorFields = { ENTRIES: 2 } as const;
+const SummaryCellEntry = { WILDCARD_UID: 1, COLUMN_UID: 2, CELL: 3 } as const;
+/** The wildcard the vendor's template entry is keyed by. */
+const VENDOR_WILDCARD_UID: Uid = { lower: 1n, upper: 1n };
+/** The TST.Cell fields a vendor template carries, and the cell spec that holds its formula. */
+const VendorCell = { VALUE_TYPE: 2, EXPLICIT_FORMAT_FLAGS: 19, CELL_SPEC: 28, CELL_FORMAT_KIND: 29 } as const;
+const CellSpec = { INTERACTION_TYPE: 1, FORMULA: 2 } as const;
+/** `CellSpecArchive.interaction_type` of a category summary. */
+const SUMMARY_INTERACTION_TYPE = 3;
+/** The suggest id every number formula cell in the corpus carries. */
+const SUMMARY_SUGGEST_ID = 1;

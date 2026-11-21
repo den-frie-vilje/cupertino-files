@@ -333,6 +333,27 @@ export const RUNGS: {
       table.setConditionalRules(4, 2, [{ operator: "=", value: 4, cell: { fill: yellow } }]);
     },
   },
+  {
+    name: "27-category-summary",
+    note: "a Sum summary on a categorised table's number column, written from nothing: the aggregate entry, the aggregator cache and the summary cells",
+    build: (doc) => {
+      const table = doc.tables()[0]!;
+      const rows: [string, number][] = [["Fruit", 12], ["Animal", 3], ["Fruit", 7], ["Transport", 40], ["Animal", 10], ["Transport", 2]];
+      // The donor's own columns stay out of the rung: three are used.
+      if (table.columnCount < 3) table.insertColumns(table.columnCount, 3 - table.columnCount);
+      if (table.columnCount > 3) table.deleteColumns(3, table.columnCount - 3);
+      table.setCell(0, 0, "Kind");
+      table.setCell(0, 1, "Amount");
+      table.setCell(0, 2, "Note");
+      rows.forEach(([kind, amount], i) => { table.setCell(i + 1, 0, kind); table.setCell(i + 1, 1, amount); });
+      table.setCell(1, 2, "27: the rows are grouped by Kind, and the library wrote a Sum of Amount in every group row. PASS: each group row shows the sum of its rows under Amount, Animal 13, Fruit 19, Transport 42. FAIL: the group rows are empty under Amount, or a refusal to open.");
+      table.setCellFormatting(1, 2, { textWrap: true });
+      table.setColumnWidth(2, 260);
+      if (table.rowCount > rows.length + 1) table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+      table.addCategory(0);
+      table.addCategorySummary(1, "sum");
+    },
+  },
 ];
 
 function main(argv: string[]): number {

@@ -1871,6 +1871,28 @@ export const CAPABILITIES: Capability[] = [
     },
   },
   {
+    group: "Numbers & tables",
+    name: "Categories: a per-group summary",
+    apps: ["numbers"],
+    status: "read+write",
+    probe: (c) => safe(() => c.doc.tables().some((t) => (t.activeCategories()?.aggregates().length ?? 0) > 0)),
+    note:
+      "addCategorySummary writes a count, sum, average, min or max the way the summary pop-up does: " +
+      "the aggregate entry, the aggregator cache (referenced and inline, as the app writes it), each " +
+      "group node's coordinate, and the summary model's identity map, cells, formulas, headers and " +
+      "vendor template, field for field as the two app-authored summaries carry them",
+    manualProof: {
+      claim: "Numbers draws a per-group summary the library wrote",
+      why:
+        "the aggregate entry alone drew nothing in Numbers 15.4; the aggregator cache and the summary " +
+        "cells are written beside it now, and only the app can say whether they are what it reads",
+      how:
+        "npm run bisect:docs -- out writes 27-category-summary.numbers; open it in Numbers: every group " +
+        "row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42",
+      risk: "medium",
+    },
+  },
+  {
     group: "Keynote",
     name: "Builds: creating an animation",
     apps: ["keynote"],

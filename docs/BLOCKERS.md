@@ -20,9 +20,16 @@ back with `npm run probe -- <file>` (reports every unknown in one pass) or
 
 ---
 
-## Needs a Mac — nothing staged
+## Needs a Mac — two files staged
 
-Every seed staged so far is returned and banked; the returned files are
+- `22-move-action.key`: the library's first Move action; play the slide
+  and click once, the title should slide 200 points right. Comment
+  moved or still on the slide.
+- `23-category-summary.numbers`: the library's first per-group summary,
+  a Sum of Amount in every group row; the file says what each group row
+  should show. Comment on a group row's cell if it does not.
+
+Every earlier seed is returned and banked; the returned files are
 fixtures with pins (see ATTRIBUTION.md), and `npm run seeds -- out`
 still writes each one, since the builders are the recipes the fixtures
 were made from.
@@ -91,12 +98,10 @@ that rebuild the structures from them.
 - **Categories and filters: shipped and drawn.** `addCategory` defines a
   by-value, nested or date-bucketed category from nothing in the corpus
   shape, and Numbers 15.1 draws the groups (VERIFICATION); summaries per
-  group are not authored, and the cheap route is closed: a
-  `column_agg_type` entry written alone, in the twin's exact shape,
-  draws nothing in Numbers 15.4's export where the twin's own summary
-  draws its count, so the app reads the aggregator cache and the
-  summary model's cells rather than rebuilding them. A writer has to
-  produce all three, and only one Count instance is measured.
+  group are authored too (`addCategorySummary`: the aggregate entry, the
+  aggregator cache and the summary model's cells, since the entry alone
+  drew nothing in Numbers 15.4) and wait for the app to draw one
+  (VERIFICATION).
   `addFilterRule` writes every condition the filter menu offers, byte
   for byte as the app-authored rules in the three filter-conditions
   fixtures, and recomputes the hidden rows offline into
@@ -181,6 +186,7 @@ Every protocol run gets a row; failed and partial attempts stay.
 
 | Date | Question | App version | Result | Artifact |
 |---|---|---|---|---|
+| 2026-11-21 | a per-group summary from nothing | n/a — the app-authored Count in `olekristensen-v26.0-mac-authored.numbers` and the Sum, Average, Min and Max in `olekristensen-v26.0-mac-summaries-seed.numbers`, measured offline | **authored, unopened**: a summary is what the summary pop-up writes in five places: the `column_agg_type` entry; an aggregator archive, referenced from field 17 with an inline copy at field 4, caching an accumulator over every data row and over each group (numbers as count, min, max, sum, `secs_to_add` and product; text as count, first, last, and a zero sum and product); one calc-engine coordinate per aggregator node, columns 8 upward after the grouping's eight formulas, repeated on the group node that owns it; and in the summary model an identity map with a fresh first column and a row per group under the group's uid, a number formula cell at host column + 1 whose single node is a category reference (type 66) to the group with the aggregate as its cached value, suggest id 1 and the automatic number format interned beside it, header buckets counting the cells, and a vendor template of the same formula over the wildcard group. `addCategorySummary` writes all of it, field for field as the two fixtures carry theirs, and the shape audit accepts rung 27. Whether Numbers draws it is the staged document. | `src/tst/categories.ts`, `src/tst/tables.ts`, test/categories.test.ts, `scripts/make-bisect-docs.ts` |
 | 2026-11-20 | a Move action from nothing | n/a — the app-authored action in `olekristensen-v26.0-mac-build-order-seed.key`, measured offline | **authored, unplayed**: the app's Move is a build of type Action with effect `apple:action-motion-path`, acceleration 3 (both ends eased), no text delivery, and `action_motionPathSource` holding one open editable bezier subpath of two sharp nodes whose control points sit on the nodes, from the origin to the displacement, with the path's size beside it. `addBuild({ move })` writes that; the attribute fields match the app's set for set, and the shape audit accepts rung K17. Whether Keynote plays it is the staged rung. | `src/keynote/builds.ts`, test/keynote.test.ts, `scripts/make-keynote-docs.ts` |
 | 2026-11-20 | schema refresh from the 16.0 applications | Pages and Numbers 16.0 (7052.0.68), Keynote 15.4 (7051.0.79): descriptor dumps; no document round | **six files changed, no field number moved, one of them load-bearing**: `TSS.StylesheetArchive` 28 is `styles_for_16_0`, so the stylesheet extractor's versioned-style range now reaches 28 (the corpus carries snapshots only at 7, 8 and 14, so the range is a guard for the first 16.0-saved document); `TSD.WatermarkingDataAttributes` extends `TSP.DataAttributes` at 101 and `DataInfo.watermarking_attributes` is 19; `TSK.CommandArchive` 8 and `OutgoingCommandQueueItem` 8–10 are offline-command flags; `TN.UIStateArchive` 34–35 and `TP.UIStateArchive` 49 are `alpine_visible` (and width). The 29 shared files are byte-identical between Pages 16.0 and Numbers 16.0's frameworks, Keynote 15.4's dump reproduces the vendored 15.4 set byte for byte, and the dumper refuses Numbers' whole tree over `TNCommandArchives.proto` while its frameworks dump clean. | `proto/`, `src/tss/schema.ts`, `src/tsp/version.ts` |
 | 2026-11-20 | does Numbers 16.0 register new functions, and why did the registry reader fail on it? | Numbers 16.0 (7052.0.68), TSTables registry read offline; no document round | **no new functions, a new stack layout**: the 16.0 registry is the recorded 363 apart from T, which the document harvest supplies. The reader failed because one registration helper (ten functions: INTERSECT.RANGES, SORTBY, CHOOSECOLS, CHOOSEROWS, HSTACK, VSTACK, LET, LAMBDA, MAP, LAMBDA.APPLY) now takes two halfwords on the stack, the index at `[sp, #16]` and a flag at `[sp]`, and the reader took the nearest store. Measured across the cluster, 16.0 calls eight helpers and each has exactly one slot, `w7` or a stack offset, whose values are distinct over all its registrations; the reader picks that slot per helper now, preferring the highest stack offset and then `w7` for a helper called once. The harvest is merged with the 16.0 provenance. Index 326, the checkbox control function, is still registered by no name load the reader sees. | `scripts/function-registry.ts`, `data/function-index.json`, test/function-registry.test.ts |
