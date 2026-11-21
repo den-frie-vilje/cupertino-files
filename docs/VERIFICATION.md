@@ -16,43 +16,30 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 2 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 1 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟠 medium | Keynote → Builds: a Move action | Keynote plays a Move action this library wrote from nothing. | manual |
-| 2 | 🟠 medium | Numbers & tables → Categories: a per-group summary | Numbers draws a per-group summary the library wrote | manual |
+| 1 | 🟠 medium | Numbers & tables → Categories: a per-group summary | Numbers draws every group row of a per-group summary the library wrote | manual |
 
-### 1. Builds: a Move action
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Keynote  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Keynote plays a Move action this library wrote from nothing.
-
-**Why the suite cannot settle it.** The suite proves the archive matches the app's Move field for field, and the shape audit accepts it; an action the app discards looks exactly like a still slide.
-
-**How to settle it.** npm run keynote:docs -- out writes K17-action.key; open it in Keynote and play the slide. A pass shows the title sliding 200 points to the right on the first click; a failure shows it standing still, which means the action needs state only the app writes.
-
-### 2. Categories: a per-group summary
+### 1. Categories: a per-group summary
 
 **Risk if wrong:** 🟠 medium  
 **Group:** Numbers & tables  
 **Status in the matrix:** ✅ read + write
 
-**Claim.** Numbers draws a per-group summary the library wrote
+**Claim.** Numbers draws every group row of a per-group summary the library wrote
 
-**Why the suite cannot settle it.** the aggregate entry alone drew nothing in Numbers 15.4; the aggregator cache and the summary cells are written beside it now, and only the app can say whether they are what it reads
+**Why the suite cannot settle it.** the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had registered that one cell with its calc engine on open and left the other two, so the library now writes the registration the twin carries for every cell, and only the app can say whether that was all it was missing
 
-**How to settle it.** npm run bisect:docs -- out writes 27-category-summary.numbers; open it in Numbers: every group row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42
+**How to settle it.** npm run seeds -- out writes seed-summary.numbers; open it in Numbers: every group row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42; an empty group row means the app reads something beyond the registration
 
 ## Settled
 
-67 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+68 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -70,6 +57,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** not one of the eight decks in the corpus, spanning 2013 to 26.1, contains an animation
 
 **Outcome.** **Half confirmed, half refuted (2026-08-03, the first animated deck anywhere), then closed whole when the deck's bytes arrived.** Confirmed: three builds survive authoring and resave, the slide↔build graph reads correctly, and delivery stores English display strings ("All at Once", "By Paragraph") even under a Danish UI. Refuted: every database_* field read for effect and timing was absent from the app-authored builds — including one given 3 s duration and 1 s delay by hand — so modern Keynote packs effect and timing into animationAttributes. The returned deck settled that field as KN.AnimationAttributesArchive (in the vendored schema all along): effect strings in two schemes, duration/delay doubles, and per-chunk timing on staged delivery. The deck is now the fixture the readers are pinned against
+
+### ✅ Builds: a Move action
+
+**Was claimed.** Keynote plays a Move action this library wrote from nothing.
+
+**Why it needed an app.** The suite proves the archive matches the app's Move field for field, and the shape audit accepts it; an action the app discards looks exactly like a still slide.
+
+**Outcome.** **Confirmed in Keynote 15.4.** The checker played 22-move-action.key, saw the title slide and commented on the slide "Slided, great!" (`olekristensen-v26.0-mac-move-action.key`). The app's save kept the action and added the path source's two flip flags, stated false, which the writer now carries.
 
 ### ✅ Builds: creating an animation
 

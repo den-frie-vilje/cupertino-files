@@ -14,6 +14,7 @@ import { NumbersDocument } from "../src/index.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { AccumulatorFields, GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart, type ColumnAggregate } from "../src/tst/categories.ts";
 import { readUid, uidKey } from "../src/tst/uidmap.ts";
+import { FormulaOwnerFields, ownerArchiveByUid, readOwnerUid } from "../src/tsce/owners.ts";
 import { CellFlag, CellRecord } from "../src/tst/cellrecord.ts";
 import { TileFields, TileRowInfo } from "../src/tst/tables.ts";
 import {
@@ -591,6 +592,68 @@ describe("a per-group summary written from nothing", () => {
     expect(coordinates(aggregatorOf(table, 1))).toEqual([12, 13, 14, 15]);
     expect(table.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 2, 2], [0, 3, 6.5], [1, 2, 2], [1, 3, 9.5], [2, 2, 2], [2, 3, 21]]);
     expect(vendorEntries(table).length).toBe(2);
+  });
+
+  it("registers the summary with the calc engine as the twin's is: a record per aggregator coordinate and the root's reader on the table's formula owner, a record per summary cell and a uuid reference on the summary's owner", () => {
+    const { doc, table } = build();
+    table.addCategorySummary(1, "count");
+    const twin = load(TWIN);
+    const hex = (m: RawMessage) => Buffer.from(m.toBytes()).toString("hex");
+    const owners = (t: TableModel) => {
+      const summary = t.summaryModel()!;
+      const summaryOwner = ownerArchiveByUid(summary.store, readOwnerUid(summary.object.message.getMessage(4))!)!;
+      const groupBy = readUid(t.activeCategories()!.object.message.getMessage(GroupByFields.GROUP_BY_UID))!;
+      const formulaOwner = ownerArchiveByUid(summary.store, { lo: groupBy.lower, hi: groupBy.upper })!;
+      // The ledger and its tiled copy carry the same records, the tile under the owner's internal id.
+      const records = (owner: typeof summaryOwner) => {
+        const bag = owner.message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)!.getMessages(1);
+        const tile = summary.store.resolve(owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)[0]!)!;
+        expect(tile.message.getUint(1)).toBe(owner.message.getUint(2));
+        expect(tile.message.getMessages(4).map(hex)).toEqual(bag.map(hex));
+        return bag;
+      };
+      return { summaryOwner, formulaOwner, summaryRecords: records(summaryOwner), formulaRecords: records(formulaOwner) };
+    };
+    const ours = owners(table);
+    const theirs = owners(twin);
+    expect([ours.formulaOwner.message.getUint(3), ours.summaryOwner.message.getUint(3)]).toEqual([8, 9]);
+
+    const byColumn = (bag: RawMessage[]) => new Map(bag.map((r) => [r.getUint(1), hex(r)]));
+    const o = byColumn(ours.formulaRecords);
+    const t = byColumn(theirs.formulaRecords);
+    for (const column of [3, 7, 8, 9, 10, 11]) expect([column, o.get(column)]).toEqual([column, t.get(column)]);
+    expect([...o.keys()]).toEqual([0, 3, 7, 8, 9, 10, 11]);
+
+    // The twin's summary rows sit in another order, so each record is read through the group its row names.
+    const edges = (tbl: TableModel, bag: RawMessage[]) => {
+      const summary = tbl.summaryModel()!;
+      const rows = new ColumnRowUidMap(summary.store.resolve(refId(summary.object.message, 3))!.message).rowUidList();
+      const category = tbl.activeCategories()!;
+      const root = category.store.resolve(refId(category.object.message, GroupByFields.GROUP_NODE_ROOT_REF))!;
+      const coordinateOf = new Map(root.getObjectReferences().map((id) => {
+        const node = category.store.resolve(id)!.message;
+        return [uidKey(readUid(node.getMessage(GroupNodeFields.GROUP_UID))!), Number(node.getMessages(GroupNodeFields.AGG_FORMULA_COORDS)[0]!.getVarint(2))];
+      }));
+      return bag.map((r) => {
+        const e = r.getMessage(6)!;
+        return [fieldNumbers(r), fieldNumbers(e), r.getUint(1), e.getUint(3), e.getUint(5), e.getUint(4) === coordinateOf.get(uidKey(rows[r.getUint(2)!]!))];
+      });
+    };
+    const theirEdges = edges(twin, theirs.summaryRecords);
+    expect(theirEdges).toEqual([0, 1, 2].map(() => [[1, 2, 6], [3, 4, 5], 2, 0, 17, true]));
+    expect(edges(table, ours.summaryRecords)).toEqual(theirEdges);
+    expect(hex(ours.summaryOwner.message.getMessage(FormulaOwnerFields.UUID_REFERENCES)!)).toBe(hex(theirs.summaryOwner.message.getMessage(FormulaOwnerFields.UUID_REFERENCES)!));
+
+    const reloaded = owners(NumbersDocument.load(doc.save()).tables()[0]!);
+    expect(reloaded.formulaRecords.map(hex)).toEqual(ours.formulaRecords.map(hex));
+    expect(reloaded.summaryRecords.map(hex)).toEqual(ours.summaryRecords.map(hex));
+
+    // A second summary adds its coordinates to the reader and its cells to the ledger, in the app's order.
+    table.addCategorySummary(2, "sum");
+    const again = owners(table);
+    expect(again.formulaRecords.map((r) => r.getUint(1))).toEqual([0, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    expect(again.formulaRecords.find((r) => r.getUint(1) === 3)!.getMessage(6)!.fields.map((f) => [f.no, Number(f.value)])).toEqual([[1, 0], [1, 0], [2, 11], [2, 15]]);
+    expect(again.summaryRecords.map((r) => [r.getUint(2), r.getUint(1)])).toEqual([[0, 2], [0, 3], [1, 2], [1, 3], [2, 2], [2, 3]]);
   });
 
   it("refuses what it cannot measure: an uncategorised table, a second summary on a column, a sum of text, a blank in the column", () => {

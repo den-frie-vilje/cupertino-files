@@ -99,6 +99,8 @@ export const CellRecordExpandedFields = protoFields("TSCE.CellRecordExpandedArch
  * the cell it styles.
  */
 export const ExpandedEdgesFields = protoFields("TSCE.ExpandedEdgesArchive", {
+  EDGE_WITHOUT_OWNER_ROWS: "edge_without_owner_rows",
+  EDGE_WITHOUT_OWNER_COLUMNS: "edge_without_owner_columns",
   EDGE_WITH_OWNER_ROWS: "edge_with_owner_rows",
   EDGE_WITH_OWNER_COLUMNS: "edge_with_owner_columns",
   INTERNAL_OWNER_ID_FOR_EDGE: "internal_owner_id_for_edge",

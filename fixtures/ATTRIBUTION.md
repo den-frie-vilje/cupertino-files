@@ -1340,3 +1340,21 @@ node scripts/scan-fixture-privacy.ts
   the dissolve first and commented on the slide "moved". The body is the
   request itself. The app kept the library's UUID and appended its own
   build behind the library's in both lists.
+
+### olekristensen-v26.0-mac-move-action.key
+- 1,509,778 bytes, md5 `3eb4555b432bf3485ed556573731b35e`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over 22-move-action.key, the
+  library's Move action on a blank deck's title. The checker played the
+  slide and commented on it "Slided, great!". The app kept the build
+  and added the path source's two flip flags, stated false. The body text
+  is the request itself.
+
+### olekristensen-v26.0-mac-category-summary.numbers
+- 158,334 bytes, md5 `308d3e3daf2025d01da1f6fc6bce85bf`
+- Saved by Numbers 16.0 (macOS) over 23-category-summary.numbers, the
+  library's per-group Sum of Amount on a blank document grouped by Kind.
+  The checker commented on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening". Every
+  structure the library wrote came back byte for byte; the app registered
+  the one cell it drew with its calc engine, fitted the wrapped row's
+  height and rewrote the host's data store without changing a cell. The
+  Note column is the request itself.

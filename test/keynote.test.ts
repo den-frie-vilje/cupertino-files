@@ -733,7 +733,7 @@ describe("build order", () => {
         }
       }
     }
-    expect(builds).toBe(20);
+    expect(builds).toBe(21);
     expect(strays).toEqual([
       "olekristensen-v26.0-mac-build-order-seed.key 3000001 apple:dissolve",
       "olekristensen-v26.0-mac-build-seed.key 3000001 apple:dissolve",
@@ -762,6 +762,10 @@ describe("build order", () => {
     expect(info.textDelivery).toBe(undefined);
     expect(info.move).toEqual({ dx: 200, dy: -50 });
     expect(reloaded.object.message.getMessage(BuildFields.ATTRIBUTES)!.getUint(BuildAttributesFields.ACTION_ACCELERATION)).toBe(BuildAcceleration.EASE_BOTH);
+    // The path source carries both flips, stated false, as the app's does.
+    const pathOf = (b: BuildModel) => b.object.message.getMessage(BuildFields.ATTRIBUTES)!.getMessage(BuildAttributesFields.ACTION_MOTION_PATH_SOURCE)!;
+    expect(pathOf(reloaded).fields.map((f) => f.no)).toEqual(pathOf(authored).fields.map((f) => f.no));
+    expect([pathOf(reloaded).getUint(1), pathOf(reloaded).getUint(2)]).toEqual([0, 0]);
     expect(slide.builds().find((b) => b.read().effect === "apple:dissolve character")).toBe(undefined);
   });
 

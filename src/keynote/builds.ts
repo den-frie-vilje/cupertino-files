@@ -78,7 +78,11 @@ export const BuildFields = protoFields("KN.BuildArchive", {
 export const BuildAcceleration = protoEnum("KN.BuildAttributesArchive.BuildAttributesAcceleration", { EASE_BOTH: "kEaseBoth" });
 
 /** A Move action's path: a TSD.PathSourceArchive holding an editable bezier path. */
-const PathSourceFields = protoFields("TSD.PathSourceArchive", { EDITABLE_BEZIER: "editable_bezier_path_source" });
+const PathSourceFields = protoFields("TSD.PathSourceArchive", {
+  HORIZONTAL_FLIP: "horizontalFlip",
+  VERTICAL_FLIP: "verticalFlip",
+  EDITABLE_BEZIER: "editable_bezier_path_source",
+});
 const EditableBezierFields = protoFields("TSD.EditableBezierPathSourceArchive", { SUBPATHS: "subpaths", NATURAL_SIZE: "naturalSize" });
 const SubpathFields = protoFields("TSD.EditableBezierPathSourceArchive.Subpath", { NODES: "nodes", CLOSED: "closed" });
 const BezierNodeFields = protoFields("TSD.EditableBezierPathSourceArchive.Node", {
@@ -423,6 +427,8 @@ function straightMotionPath(dx: number, dy: number): RawMessage {
   bezier.setMessages(EditableBezierFields.SUBPATHS, [subpath]);
   bezier.setMessage(EditableBezierFields.NATURAL_SIZE, size);
   const source = RawMessage.create();
+  source.setBool(PathSourceFields.HORIZONTAL_FLIP, false);
+  source.setBool(PathSourceFields.VERTICAL_FLIP, false);
   source.setMessage(PathSourceFields.EDITABLE_BEZIER, bezier);
   return source;
 }

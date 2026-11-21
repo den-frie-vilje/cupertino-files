@@ -1587,7 +1587,7 @@ gives that type. Its first run named four omissions nothing else had seen.
 
 | what was written | what Apple writes | consequence |
 | --- | --- | --- |
-| a footnote storage with a kind, a stylesheet and a string | 3905 of 3905 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
+| a footnote storage with a kind, a stylesheet and a string | 4011 of 4011 storages carry `table_para_style`, `table_para_data`, `table_list_style`, `in_document`, `table_para_starts`, `table_para_bidi` | no paragraph style—the omission that rendered a body unstyled once already |
 | an image with no `style` and no `naturalSize` | 171 of 171 point at a media style; 171 of 171 set both sizes | the cell-control-with-no-format shape |
 | an attachment with only `drawable` | 102 of 102 carry `h_offset_type`, `h_offset`, `v_offset_type`, `v_offset` | placement unstated |
 | a section with its `name` removed | 53 of 53 carry one—the page master's, `"Blank"` in a stock template | unnamed in the section list |
@@ -1749,7 +1749,7 @@ objects its payload points at. It is bookkeeping the apps rely on, and it is
 
 A `TSWP.StorageArchive` points at its stylesheet through `style_sheet`
 (field 2). Apple never lists that target in `object_references`. Across the
-fixtures here, 3905 storages carry the field and **zero** declare it. What
+fixtures here, 4011 storages carry the field and **zero** declare it. What
 they declare is what the run tables *resolve to*—the paragraph, list, and
 column styles—plus same-component placeholders.
 
@@ -1786,7 +1786,7 @@ sweep of the corpus found more:
 
 | archive | field | present | Apple declares |
 | --- | --- | ---: | ---: |
-| `TSWP.StorageArchive` | `style_sheet` | 3905 | **0** |
+| `TSWP.StorageArchive` | `style_sheet` | 4011 | **0** |
 | `TSD.ImageArchive` | `drawable.parent` | 171 | **0** |
 | `TSD.ImageArchive` | `style` | most | equal—always declared |
 | `TSD.ImageArchive` | `mask` | 87 | 87 |
@@ -2017,7 +2017,21 @@ them all:
   the same formula over the wildcard group {1, 0} under the wildcard key
   {1, 1}: the template the app draws a new group row from. The model's
   `aggregate_formula_owner_uuid` is the grouping's uid plus one, in every
-  table, summarised or not.
+  table, summarised or not;
+- the calc engine's registration, without which the app draws only the
+  cells it registers itself on open, one at most. The table's formula
+  owner (kind 8, the owner the grouping's uid names) gets a cell record
+  per aggregator coordinate in its `cell_dependencies` and in its tiled
+  copy: a group's at (coordinate, 0) with one edge per group row to that
+  row of the summarised column on the table's cell owner (`edge_with_owner_*`
+  and the cell owner's internal id), the root's with an edge per group to
+  (coordinate, 0) on the owner itself (`edge_without_owner_*`), and the
+  grouping's own formula at column 3 gains an edge to every root. The
+  summary's owner (kind 9) gets a record per summary cell at (column + 1,
+  row) with one edge to the group's coordinate on the formula owner, the
+  same records in a tiled copy under its internal id, and a
+  `uuid_references` entry naming the formula owner over the cells'
+  column and rows.
 
 Only a one-level category's summary is measured.
 

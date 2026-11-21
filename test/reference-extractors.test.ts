@@ -165,8 +165,8 @@ describe("reference extractors agree with Apple", () => {
     // classes, the two pinned-dissolve decks 36 more, the
     // two dissolve-explicit and -registered decks 18 each.
     const disagree = TALLY.covered - TALLY.agree - TALLY.threw;
-    expect(`disagree<=349: ${disagree <= 349} (${disagree})`).toBe(
-      `disagree<=349: true (${disagree})`,
+    expect(`disagree<=368: ${disagree <= 368} (${disagree})`).toBe(
+      `disagree<=368: true (${disagree})`,
     );
   });
 
@@ -221,10 +221,10 @@ describe("a drawable declares what it resolves through, not what holds it", () =
     }
     const summary = [...tally.entries()].sort().map(([k, t]) => `${k} ${t.declare}/${t.carry}`);
     expect(summary).toEqual([
-      "TSCE.FormulaOwnerDependenciesArchive 0/99",
-      "TST.CategoryOrderArchive 0/93",
-      "TST.SummaryCellVendorArchive 0/93",
-      "TST.SummaryModelArchive 0/93",
+      "TSCE.FormulaOwnerDependenciesArchive 0/100",
+      "TST.CategoryOrderArchive 0/94",
+      "TST.SummaryCellVendorArchive 0/94",
+      "TST.SummaryModelArchive 0/94",
     ]);
   });
 

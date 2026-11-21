@@ -1033,6 +1033,8 @@ export function accumulatorRecord(values: readonly (number | string)[]): RawMess
 export interface CategoryLeaf {
   uid: Uid;
   rows: number[];
+  /** The calc-engine column of the group's aggregator node. */
+  coordinate: number;
 }
 
 /**
@@ -1054,7 +1056,7 @@ export function defineColumnAggregate(
   columnUid: Uid,
   aggType: number,
   accumulate: (rows: readonly number[]) => RawMessage,
-): CategoryLeaf[] {
+): { leaves: CategoryLeaf[]; rootCoordinate: number } {
   const m = groupBy.message;
   if (m.getMessages(GroupByFields.GROUP_COLUMN).length !== 1) {
     throw new RangeError("a summary needs a category grouped by exactly one column");
@@ -1100,7 +1102,7 @@ export function defineColumnAggregate(
     const coord = coordinate();
     stamp(leaf.message, inlineLeaves[i]!, coord);
     children.push(aggNode(coord, rows));
-    out.push({ uid, rows });
+    out.push({ uid, rows, coordinate: Number(coord.getVarint(CellCoordinate.COLUMN)) });
   });
   const rootCoord = coordinate();
   stamp(root.message, inlineRoot, rootCoord);
@@ -1126,7 +1128,7 @@ export function defineColumnAggregate(
   entry.setVarint(ColumnAggregateFields.AGG_TYPE, aggType);
   entry.setVarint(ColumnAggregateFields.SHOW_AS_TYPE, 0);
   m.addMessage(GroupByFields.COLUMN_AGG_TYPE, entry);
-  return out;
+  return { leaves: out, rootCoordinate: Number(rootCoord.getVarint(CellCoordinate.COLUMN)) };
 }
 
 /** TSCE.CategoryReferenceArchive, the one node of a summary cell's formula. */

@@ -15,7 +15,7 @@ import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
 import { makeRef, refId } from "../tsp/schema.ts";
 import { Storage } from "../tswp/schema.ts";
-import { RawMessage } from "../base/protobuf.ts";
+import { RawMessage, WireType } from "../base/protobuf.ts";
 import { APPLE_EPOCH_MS, ByteWriter, bytesEqual } from "../base/bytes.ts";
 import {
   CellFlag,
@@ -52,6 +52,8 @@ import {
   categoryReferenceFormula,
   defineByValueCategory,
   defineColumnAggregate,
+  expandIndexSet,
+  writeIndexSet,
   writeUidMessage,
   AGGREGATE_TYPE_CODES,
   GroupByFields,
@@ -4373,7 +4375,7 @@ export class TableModel {
       if (aggregate === "average") return sum / cells.length;
       return aggregate === "min" ? Math.min(...cells) : Math.max(...cells);
     };
-    const leaves = defineColumnAggregate(this.store, definition.object, columnUid, aggType, (rows) =>
+    const { leaves, rootCoordinate } = defineColumnAggregate(this.store, definition.object, columnUid, aggType, (rows) =>
       accumulatorRecord(rows.map(valueAt)),
     );
     summary.writeSummary(
@@ -4383,6 +4385,170 @@ export class TableModel {
       aggType,
       leaves.map((leaf) => ({ uid: leaf.uid, value: aggregateOf(leaf.rows) })),
     );
+    const summaryRows = new ColumnRowUidMap(
+      this.store.resolve(refId(summary.object.message, SUMMARY_MODEL_COLUMN_ROW_UIDS))!.message,
+    ).rowUidList();
+    const summaryOwnerUid = readOwnerUid(summary.object.message.getMessage(SUMMARY_MODEL_AGGREGATE_FORMULA_OWNER_UID));
+    if (!summaryOwnerUid) throw new RangeError("the summary model names no calc-engine owner");
+    this.registerSummaryDependencies(
+      summaryOwnerUid,
+      { lo: groupByUid.lower, hi: groupByUid.upper },
+      column,
+      leaves.map((leaf) => ({
+        coordinate: leaf.coordinate,
+        rows: leaf.rows,
+        summaryRow: summaryRows.findIndex((r) => r !== undefined && r.lower === leaf.uid.lower && r.upper === leaf.uid.upper),
+      })),
+      rootCoordinate,
+    );
+  }
+
+  /**
+   * Register a summary with the calc engine as the summary pop-up does.
+   * The summary's owner gets one cell record per summary cell, its edge
+   * the group's aggregator coordinate on the table's formula owner (the
+   * owner the grouping is named after), the same records in its tiled
+   * copy, and a uuid-references entry naming that owner over the cells;
+   * the formula owner gets a record per aggregator coordinate (a group's
+   * over its rows of the summarised column on the table's cell owner, the
+   * root's over the groups' coordinates), and its grouping formula at
+   * column 3 gains the root as a precedent. The app computes no summary
+   * cell it has not registered, and on open registers at most one itself.
+   */
+  private registerSummaryDependencies(
+    summaryOwnerUid: OwnerUid,
+    formulaOwnerUid: OwnerUid,
+    column: number,
+    groups: readonly { coordinate: number; rows: readonly number[]; summaryRow: number }[],
+    rootCoordinate: number,
+  ): void {
+    const summaryOwner = ownerArchiveByUid(this.store, summaryOwnerUid);
+    const formulaOwner = ownerArchiveByUid(this.store, formulaOwnerUid);
+    const cellOwner = this.tableOwnerArchive();
+    if (!summaryOwner || !formulaOwner || !cellOwner || groups.some((g) => g.summaryRow < 0)) {
+      throw new RangeError("the table's calc-engine owners are not all registered, so a summary cannot be");
+    }
+    const internalId = (owner: IwaObject): number =>
+      owner.message.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0;
+    const record = (col: number, row: number, edges: RawMessage): RawMessage => {
+      const r = RawMessage.create();
+      r.setVarint(CellRecordExpandedFields.COLUMN, col);
+      r.setVarint(CellRecordExpandedFields.ROW, row);
+      r.setMessage(CellRecordExpandedFields.EXPANDED_EDGES, edges);
+      return r;
+    };
+    const ownEdges = (rows: readonly number[], cols: readonly number[]): RawMessage => {
+      const e = RawMessage.create();
+      e.setVarints(ExpandedEdgesFields.EDGE_WITHOUT_OWNER_ROWS, rows);
+      e.setVarints(ExpandedEdgesFields.EDGE_WITHOUT_OWNER_COLUMNS, cols);
+      return e;
+    };
+    const crossEdges = (rows: readonly number[], cols: readonly number[], owner: number): RawMessage => {
+      const e = RawMessage.create();
+      e.setVarints(ExpandedEdgesFields.EDGE_WITH_OWNER_ROWS, rows);
+      e.setVarints(ExpandedEdgesFields.EDGE_WITH_OWNER_COLUMNS, cols);
+      e.setVarints(ExpandedEdgesFields.INTERNAL_OWNER_ID_FOR_EDGE, rows.map(() => owner));
+      return e;
+    };
+    const uints = (m: RawMessage | undefined, no: number): number[] =>
+      m?.fields.filter((f) => f.no === no && f.wire === WireType.Varint).map((f) => Number(f.value)) ?? [];
+    const col = (r: RawMessage): number => r.getUint(CellRecordExpandedFields.COLUMN) ?? 0;
+    const row = (r: RawMessage): number => r.getUint(CellRecordExpandedFields.ROW) ?? 0;
+
+    const cellOwnerId = internalId(cellOwner);
+    const reader = formulaOwner.message
+      .getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)
+      ?.getMessages(1)
+      .find((r) => col(r) === GROUPING_ROOT_READER_COLUMN && row(r) === 0)
+      ?.getMessage(CellRecordExpandedFields.EXPANDED_EDGES);
+    this.writeDependencyRecords(
+      formulaOwner,
+      [
+        ...groups.map((g) => record(g.coordinate, 0, crossEdges(g.rows, g.rows.map(() => column), cellOwnerId))),
+        record(rootCoordinate, 0, ownEdges(groups.map(() => 0), groups.map((g) => g.coordinate))),
+        record(
+          GROUPING_ROOT_READER_COLUMN,
+          0,
+          ownEdges(
+            [...uints(reader, ExpandedEdgesFields.EDGE_WITHOUT_OWNER_ROWS), 0],
+            [...uints(reader, ExpandedEdgesFields.EDGE_WITHOUT_OWNER_COLUMNS), rootCoordinate],
+          ),
+        ),
+      ],
+      (a, b) => col(a) - col(b) || row(a) - row(b),
+    );
+
+    const formulaOwnerId = internalId(formulaOwner);
+    this.writeDependencyRecords(
+      summaryOwner,
+      groups.map((g) => record(column + 1, g.summaryRow, crossEdges([0], [g.coordinate], formulaOwnerId))),
+      (a, b) => row(a) - row(b) || col(a) - col(b),
+    );
+    const m = summaryOwner.message;
+    const refs = m.getMessage(FormulaOwnerFields.UUID_REFERENCES) ?? RawMessage.create();
+    let entry = refs.getMessages(1).find((e) => {
+      const u = readOwnerUid(e.getMessage(1));
+      return u !== undefined && u.lo === formulaOwnerUid.lo && u.hi === formulaOwnerUid.hi;
+    });
+    if (!entry) {
+      entry = RawMessage.create();
+      const uid = RawMessage.create();
+      uid.setVarint(1, formulaOwnerUid.lo);
+      uid.setVarint(2, formulaOwnerUid.hi);
+      entry.setMessage(1, uid);
+      refs.addMessage(1, entry);
+    }
+    const coords = entry.getMessage(2) ?? RawMessage.create();
+    let columnEntry = coords.getMessages(1).find((c) => c.getUint(1) === column + 1);
+    if (!columnEntry) {
+      columnEntry = RawMessage.create();
+      columnEntry.setVarint(1, column + 1);
+      coords.addMessage(1, columnEntry);
+    }
+    columnEntry.setMessage(2, writeIndexSet([...expandIndexSet(columnEntry.getMessage(2)), ...groups.map((g) => g.summaryRow)]));
+    entry.setMessage(2, coords);
+    m.setMessage(FormulaOwnerFields.UUID_REFERENCES, refs);
+    m.markDirty();
+  }
+
+  /**
+   * Put `records` on an owner's cell-dependency ledger and its tiled copy,
+   * replacing any record at the same cell and keeping `order`; the tile is
+   * created when the owner has none.
+   */
+  private writeDependencyRecords(
+    owner: IwaObject,
+    records: readonly RawMessage[],
+    order: (a: RawMessage, b: RawMessage) => number,
+  ): void {
+    const m = owner.message;
+    const same = (a: RawMessage, b: RawMessage): boolean =>
+      a.getUint(CellRecordExpandedFields.COLUMN) === b.getUint(CellRecordExpandedFields.COLUMN) &&
+      a.getUint(CellRecordExpandedFields.ROW) === b.getUint(CellRecordExpandedFields.ROW);
+    const bag = m.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES) ?? RawMessage.create();
+    const merged = [...bag.getMessages(1).filter((r) => !records.some((n) => same(n, r))), ...records].sort(order);
+    bag.setMessages(1, merged.map((r) => r.clone()));
+    m.setMessage(FormulaOwnerFields.CELL_DEPENDENCIES, bag);
+    // shortcut: one tile at column 0, as both app-written summaries have; a tile per 32 columns when a wider one is measured
+    const tiled = m.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES) ?? RawMessage.create();
+    let tile = tiled
+      .getMessages(TiledDependenciesFields.TILES)
+      .map((ref) => this.store.resolve(ref))
+      .find((t): t is IwaObject => t !== undefined);
+    if (!tile) {
+      const component = this.store.componentOf(owner.identifier);
+      if (!component) throw new RangeError("formula owner has no component");
+      tile = this.store.createObject(CELL_RECORD_TILE, component);
+      tile.message.setVarint(CellRecordTileFields.INTERNAL_OWNER_ID, m.getUint(FormulaOwnerFields.INTERNAL_FORMULA_OWNER_ID) ?? 0);
+      tile.message.setVarint(CellRecordTileFields.TILE_COLUMN_BEGIN, 0);
+      tile.message.setVarint(CellRecordTileFields.TILE_ROW_BEGIN, 0);
+      tiled.addMessage(TiledDependenciesFields.TILES, makeRef(tile.identifier));
+      m.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, tiled);
+      this.store.declareReference(owner, tile.identifier);
+    }
+    tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, merged.map((r) => r.clone()));
+    tile.message.markDirty();
+    m.markDirty();
   }
 
   /**
@@ -5395,6 +5561,9 @@ export class SummaryModel extends TableModel {
 
 /** TST.SummaryModelArchive: its identity map and its summary cell vendor. */
 const SUMMARY_MODEL_COLUMN_ROW_UIDS = 3;
+const SUMMARY_MODEL_AGGREGATE_FORMULA_OWNER_UID = 4;
+/** The grouping's internal formula that reads every aggregator's root, in the table's formula owner. */
+const GROUPING_ROOT_READER_COLUMN = 3;
 const SUMMARY_MODEL_CELL_VENDOR = 5;
 /** TST.SummaryCellVendorArchive and its SummaryCellEntry. */
 const SummaryCellVendorFields = { ENTRIES: 2 } as const;

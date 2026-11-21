@@ -1879,16 +1879,22 @@ export const CAPABILITIES: Capability[] = [
     note:
       "addCategorySummary writes a count, sum, average, min or max the way the summary pop-up does: " +
       "the aggregate entry, the aggregator cache (referenced and inline, as the app writes it), each " +
-      "group node's coordinate, and the summary model's identity map, cells, formulas, headers and " +
-      "vendor template, field for field as the two app-authored summaries carry them",
+      "group node's coordinate, the summary model's identity map, cells, formulas, headers and " +
+      "vendor template, and the calc engine's registration of it all (a record per aggregator " +
+      "coordinate on the table's formula owner, a record per summary cell and a uuid reference on " +
+      "the summary's owner), field for field as the two app-authored summaries carry them",
     manualProof: {
-      claim: "Numbers draws a per-group summary the library wrote",
+      claim: "Numbers draws every group row of a per-group summary the library wrote",
       why:
-        "the aggregate entry alone drew nothing in Numbers 15.4; the aggregator cache and the summary " +
-        "cells are written beside it now, and only the app can say whether they are what it reads",
+        "the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the " +
+        "sheet \"Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening\" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had " +
+        "registered that one cell with its calc engine on open and left the other two, so the library now " +
+        "writes the registration the twin carries for every cell, and only the app can say whether that " +
+        "was all it was missing",
       how:
-        "npm run bisect:docs -- out writes 27-category-summary.numbers; open it in Numbers: every group " +
-        "row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42",
+        "npm run seeds -- out writes seed-summary.numbers; open it in Numbers: every group row should " +
+        "show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42; an empty group row means " +
+        "the app reads something beyond the registration",
       risk: "medium",
     },
   },
@@ -1946,6 +1952,11 @@ export const CAPABILITIES: Capability[] = [
         "pass shows the title sliding 200 points to the right on the first click; a failure shows " +
         "it standing still, which means the action needs state only the app writes.",
       risk: "medium",
+      settled:
+        "**Confirmed in Keynote 15.4.** The checker played 22-move-action.key, saw the title slide and " +
+        "commented on the slide \"Slided, great!\" (`olekristensen-v26.0-mac-move-action.key`). The app's " +
+        "save kept the action and added the path source's two flip flags, stated false, which the writer " +
+        "now carries.",
     },
   },
   {
