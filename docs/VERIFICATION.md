@@ -16,30 +16,17 @@ actually been run and against which app version.
 
 ## How much is already automated
 
-Of 1 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
+Of 0 claims, **0** are covered by `npm run test:e2e`, which drives the real apps through AppleScript on a Mac. The rest need a
 person to look at a rendered document, because the scripting dictionaries expose no way to ask.
 
 ## The list
 
 | # | Risk | Capability | Claim | Automated? |
 |---:|---|---|---|---|
-| 1 | 🟠 medium | Numbers & tables → Categories: a per-group summary | Numbers draws every group row of a per-group summary the library wrote | manual |
-
-### 1. Categories: a per-group summary
-
-**Risk if wrong:** 🟠 medium  
-**Group:** Numbers & tables  
-**Status in the matrix:** ✅ read + write
-
-**Claim.** Numbers draws every group row of a per-group summary the library wrote
-
-**Why the suite cannot settle it.** the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had registered that one cell with its calc engine on open and left the other two, so the library now writes the registration the twin carries for every cell, and only the app can say whether that was all it was missing
-
-**How to settle it.** npm run seeds -- out writes seed-summary.numbers; open it in Numbers: every group row should show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42; an empty group row means the app reads something beyond the registration
 
 ## Settled
 
-68 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+69 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -73,6 +60,14 @@ result mean something; what changed is that it is no longer a request.
 **Why it needed an app.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
 
 **Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states. **Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the library's dissolve last in the panel until the build was registered in the component's object UUID map under the UUID its chunks name; the checker then dragged it first and wrote "moved" on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).
+
+### ✅ Categories: a per-group summary
+
+**Was claimed.** Numbers draws every group row of a per-group summary the library wrote
+
+**Why it needed an app.** the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had registered that one cell with its calc engine on open and left the other two, so the library now writes the registration the twin carries for every cell, and only the app can say whether that was all it was missing
+
+**Outcome.** **Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: "24 worked on open" (`24-category-summary-registered.numbers`, returned unchanged, so the file is `npm run seeds -- out`'s seed-summary.numbers byte for byte).
 
 ### ✅ Categories: defining a category by a column
 

@@ -1895,6 +1895,10 @@ export const CAPABILITIES: Capability[] = [
         "npm run seeds -- out writes seed-summary.numbers; open it in Numbers: every group row should " +
         "show the sum of its Amount cells, Animal 13, Fruit 19, Transport 42; an empty group row means " +
         "the app reads something beyond the registration",
+      settled:
+        "**Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: " +
+        "\"24 worked on open\" (`24-category-summary-registered.numbers`, returned unchanged, so the file is " +
+        "`npm run seeds -- out`'s seed-summary.numbers byte for byte).",
       risk: "medium",
     },
   },
