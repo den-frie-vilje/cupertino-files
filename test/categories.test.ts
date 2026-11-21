@@ -501,7 +501,7 @@ describe("a per-group summary written from nothing", () => {
   };
   const summaryFormulas = (table: TableModel): RawMessage[] => {
     const summary = table.summaryModel()!;
-    const list = summary.store.resolve(refId(summary.object.message.getMessage(2)!, 6))!;
+    const list = summary.store.resolve(refId(summary.object.message.getMessage(2), 6))!;
     return list.message.getMessages(3).map((e) => e.getMessage(5)!.getMessage(1)!.getMessages(1)[0]!);
   };
   const vendorEntries = (table: TableModel): RawMessage[] => {
@@ -511,7 +511,7 @@ describe("a per-group summary written from nothing", () => {
   const firstRecord = (table: TableModel, row: number): CellRecord => {
     const summary = table.summaryModel()!;
     const tiles = summary.object.message.getMessage(2)!.getMessage(3)!;
-    const tile = summary.store.resolve(refId(tiles.getMessages(1)[0]!, 2))!;
+    const tile = summary.store.resolve(refId(tiles.getMessages(1)[0], 2))!;
     return CellRecord.decode(tile.message.getMessages(TileFields.ROW_INFOS)[row]!.getBytes(TileRowInfo.CELL_STORAGE_BUFFER)!);
   };
 
@@ -607,7 +607,7 @@ describe("a per-group summary written from nothing", () => {
       // The ledger and its tiled copy carry the same records, the tile under the owner's internal id.
       const records = (owner: typeof summaryOwner) => {
         const bag = owner.message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)!.getMessages(1);
-        const tile = summary.store.resolve(owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)[0]!)!;
+        const tile = summary.store.resolve(owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)[0])!;
         expect(tile.message.getUint(1)).toBe(owner.message.getUint(2));
         expect(tile.message.getMessages(4).map(hex)).toEqual(bag.map(hex));
         return bag;
@@ -658,12 +658,12 @@ describe("a per-group summary written from nothing", () => {
 
   it("refuses what it cannot measure: an uncategorised table, a second summary on a column, a sum of text, a blank in the column", () => {
     const blank = NumbersDocument.blank().tables()[0]!;
-    expect(() => blank.addCategorySummary(0, "count")).toThrow(/not categorised/);
+    expect(() => { blank.addCategorySummary(0, "count"); }).toThrow(/not categorised/);
     const { table } = build();
     table.addCategorySummary(1, "count");
-    expect(() => table.addCategorySummary(1, "sum")).toThrow(/already has a summary/);
-    expect(() => table.addCategorySummary(0, "sum")).toThrow(/needs a column of numbers/);
+    expect(() => { table.addCategorySummary(1, "sum"); }).toThrow(/already has a summary/);
+    expect(() => { table.addCategorySummary(0, "sum"); }).toThrow(/needs a column of numbers/);
     table.setCell(3, 2, { type: "empty" });
-    expect(() => table.addCategorySummary(2, "sum")).toThrow(/every data row needs one/);
+    expect(() => { table.addCategorySummary(2, "sum"); }).toThrow(/every data row needs one/);
   });
 });
