@@ -45,7 +45,7 @@ import { makeRef, refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { APPLE_EPOCH_SECONDS } from "../base/bytes.ts";
 import { ColumnRowUidMap, randomUid, readUid, type Uid } from "./uidmap.ts";
-import { encodeDecimal128 } from "./cellrecord.ts";
+import { encodeDecimal128, packDecimal128 } from "./cellrecord.ts";
 
 /** TST.TableModelArchive.category_owner. */
 export const CATEGORY_OWNER = 86;
@@ -965,7 +965,11 @@ function automaticNumberFormat(): RawMessage {
 }
 
 /** A number as an accumulator stores it: the double, its decimal, and the automatic format. */
-function accumulatorNumber(value: number, explicitFormat: boolean): RawMessage {
+function accumulatorNumber(
+  value: number,
+  explicitFormat: boolean,
+  exact?: { mantissa: bigint; exponent: number },
+): RawMessage {
   const out = RawMessage.create();
   out.setVarint(CellValueFields.TYPE, CellValueType.NUMBER);
   const inner = RawMessage.create();
@@ -973,7 +977,17 @@ function accumulatorNumber(value: number, explicitFormat: boolean): RawMessage {
   inner.setVarint(2, 0);
   inner.setMessage(3, automaticNumberFormat());
   inner.setBool(6, explicitFormat);
-  const decimal = encodeDecimal128(value);
+  // A product past a double's range still fits decimal128, which holds 34 digits.
+  let decimal = encodeDecimal128(value);
+  if (!Number.isFinite(value) && exact) {
+    let mantissa = exact.mantissa < 0n ? -exact.mantissa : exact.mantissa;
+    let exponent = exact.exponent;
+    while (mantissa >= 10n ** 34n) {
+      mantissa /= 10n;
+      exponent += 1;
+    }
+    decimal = packDecimal128(mantissa, exponent, exact.mantissa < 0n);
+  }
   const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
   inner.setVarint(7, view.getBigUint64(0, true));
   inner.setVarint(8, view.getBigUint64(8, true));
@@ -997,6 +1011,29 @@ function accumulatorString(value: string): RawMessage {
   return out;
 }
 
+/** A finite double as the decimal its shortest form names. */
+function decimalParts(value: number): { mantissa: bigint; exponent: number } {
+  const [mantissaText, exponentText] = Math.abs(value).toExponential().split("e");
+  const [int, frac = ""] = mantissaText!.split(".");
+  return { mantissa: BigInt(`${int!}${frac}`) * (value < 0 ? -1n : 1n), exponent: Number(exponentText) - frac.length };
+}
+
+/** The sum of doubles in decimal arithmetic, as the app adds cells: 0.1 + 0.2 is 0.3. */
+export function decimalSum(values: readonly number[]): number {
+  const parts = values.map(decimalParts);
+  const exponent = parts.reduce((least, p) => Math.min(least, p.exponent), 0);
+  const total = parts.reduce((sum, p) => sum + p.mantissa * 10n ** BigInt(p.exponent - exponent), 0n);
+  return Number(`${total}e${exponent}`);
+}
+
+/** The product of doubles in decimal arithmetic, kept as parts because it outgrows a double long before decimal128. */
+function decimalProduct(values: readonly number[]): { mantissa: bigint; exponent: number } {
+  return values.map(decimalParts).reduce(
+    (product, p) => ({ mantissa: product.mantissa * p.mantissa, exponent: product.exponent + p.exponent }),
+    { mantissa: 1n, exponent: 0 },
+  );
+}
+
 /**
  * The `TST.AccumulatorArchive` the app caches for a set of cells, whatever
  * the aggregate shown: over numbers, their count, minimum, maximum, sum
@@ -1008,13 +1045,17 @@ export function accumulatorRecord(values: readonly (number | string)[]): RawMess
   const record = RawMessage.create();
   if (values.every((v) => typeof v === "number")) {
     const numbers = values as number[];
-    const sum = numbers.reduce((a, b) => a + b, 0);
+    const sum = decimalSum(numbers);
+    const product = decimalProduct(numbers);
     record.setVarint(AccumulatorFields.NUMBER_COUNT, numbers.length);
-    record.setMessage(AccumulatorFields.MIN, accumulatorNumber(Math.min(...numbers), true));
-    record.setMessage(AccumulatorFields.MAX, accumulatorNumber(Math.max(...numbers), true));
+    record.setMessage(AccumulatorFields.MIN, accumulatorNumber(numbers.reduce((a, b) => Math.min(a, b), Infinity), true));
+    record.setMessage(AccumulatorFields.MAX, accumulatorNumber(numbers.reduce((a, b) => Math.max(a, b), -Infinity), true));
     record.setMessage(AccumulatorFields.SUM, accumulatorNumber(sum, true));
     record.setDouble(AccumulatorFields.SECONDS, sum);
-    record.setMessage(AccumulatorFields.PRODUCT, accumulatorNumber(numbers.reduce((a, b) => a * b, 1), true));
+    record.setMessage(
+      AccumulatorFields.PRODUCT,
+      accumulatorNumber(Number(`${product.mantissa}e${product.exponent}`), true, product),
+    );
     return record;
   }
   if (values.every((v) => typeof v === "string")) {
@@ -1028,6 +1069,10 @@ export function accumulatorRecord(values: readonly (number | string)[]): RawMess
   }
   throw new RangeError("a summary needs a column of numbers or a column of text; mixed or other values are not measured");
 }
+
+/** The width of a calc-engine dependency tile, in columns, and its height in rows. */
+export const DEPENDENCY_TILE_COLUMNS = 32;
+export const DEPENDENCY_TILE_ROWS = 128;
 
 /** One leaf of a one-level category: its identity and the rows it holds. */
 export interface CategoryLeaf {
@@ -1087,30 +1132,42 @@ export function defineColumnAggregate(
     inline.addMessage(GroupNodeFields.AGG_FORMULA_COORDS, RawMessage.parse(coord.toBytes()));
   };
 
-  const aggNode = (coord: RawMessage, rows: readonly number[]): RawMessage => {
+  const aggNode = (coord: RawMessage, accum: RawMessage): RawMessage => {
     const node = RawMessage.create();
     node.setMessage(AggNodeFields.FORMULA_COORD, RawMessage.parse(coord.toBytes()));
-    node.setMessage(AggNodeFields.ACCUM, accumulate(rows));
+    node.setMessage(AggNodeFields.ACCUM, accum);
     return node;
   };
+  // Everything that can refuse runs before the first write, so a refused call leaves the grouping as it was.
+  const component = store.componentOf(groupBy.identifier);
+  if (!component) throw new RangeError("group-by archive has no component");
+  // shortcut: one dependency tile, 32 columns wide; a tile per 32 columns when a wider summary is measured
+  if (column + leaves.length >= DEPENDENCY_TILE_COLUMNS) {
+    throw new RangeError(
+      `the summary's aggregators would pass calc-engine column ${DEPENDENCY_TILE_COLUMNS - 1}; that many groups and summaries are not measured`,
+    );
+  }
+  const planned = leaves.map((leaf) => {
+    const uid = readUid(leaf.message.getMessage(GroupNodeFields.GROUP_UID));
+    if (!uid) throw new RangeError("a group node has no identity");
+    const rows = expandIndexSet(leaf.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS));
+    return { uid, rows, accum: accumulate(rows) };
+  });
+  const rootAccum = accumulate(expandIndexSet(root.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS)));
+
   const out: CategoryLeaf[] = [];
   const children: RawMessage[] = [];
-  leaves.forEach((leaf, i) => {
-    const uid = readUid(leaf.message.getMessage(GroupNodeFields.GROUP_UID));
-    const rows = expandIndexSet(leaf.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS));
-    if (!uid) throw new RangeError("a group node has no identity");
+  planned.forEach(({ uid, rows, accum }, i) => {
     const coord = coordinate();
-    stamp(leaf.message, inlineLeaves[i]!, coord);
-    children.push(aggNode(coord, rows));
+    stamp(leaves[i]!.message, inlineLeaves[i]!, coord);
+    children.push(aggNode(coord, accum));
     out.push({ uid, rows, coordinate: Number(coord.getVarint(CellCoordinate.COLUMN)) });
   });
   const rootCoord = coordinate();
   stamp(root.message, inlineRoot, rootCoord);
-  const rootNode = aggNode(rootCoord, expandIndexSet(root.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS)));
+  const rootNode = aggNode(rootCoord, rootAccum);
   rootNode.setMessages(AggNodeFields.CHILD, children);
 
-  const component = store.componentOf(groupBy.identifier);
-  if (!component) throw new RangeError("group-by archive has no component");
   const aggregator = RawMessage.create();
   aggregator.setMessage(AggregatorFields.COLUMN_UID, writeUidMessage(columnUid));
   aggregator.setMessage(AggregatorFields.AGG_NODE, rootNode);

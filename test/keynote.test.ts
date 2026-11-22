@@ -702,6 +702,46 @@ describe("build order", () => {
     }
   });
 
+  it("gives a duplicated slide's builds identities of their own, and a slide without builds a node that says so", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const build = slide.addBuild({ drawableId: refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!, effect: "apple:dissolve character" });
+    const copy = doc.duplicateSlide(0);
+    const copied = copy.builds()[0]!;
+    const theirs = doc.store.objectUuid(build.id)!;
+    const ours = doc.store.objectUuid(copied.id)!;
+    expect(ours.lower !== theirs.lower).toBe(true);
+    const chunk = doc.store.object(copied.read().chunks[0]!.id)!.message;
+    expect(chunk.getMessage(BuildChunkFields.BUILD_ID)?.getVarint(1)).toBe(ours.lower);
+    expect(chunk.getMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER)?.getMessage(BuildChunkIdentifierFields.BUILD_ID)?.getVarint(1)).toBe(ours.lower);
+    expect(copy.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(true);
+    const empty = doc.addSlide();
+    expect(empty.builds().length).toBe(0);
+    expect(empty.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS)).toBe(false);
+  });
+
+  it("keeps a slide's builds and chunks right after it when one was removed before the next is added", () => {
+    const doc = KeynoteDocument.blank();
+    const slide = doc.slides()[0]!;
+    const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!;
+    const first = slide.addBuild({ drawableId: title, effect: "apple:dissolve character" });
+    slide.addBuild({ drawableId: title, effect: "apple:bc-appear" });
+    slide.removeBuild(first.id);
+    slide.addBuild({ drawableId: title, effect: "apple:dissolve" });
+    const component = doc.store.componentOf(slide.id)!;
+    const listed = [...slide.object.message.getMessages(Slide.BUILDS), ...slide.object.message.getMessages(Slide.BUILD_CHUNKS)].map((ref) => ref.getVarint(1));
+    const at = component.objects.indexOf(slide.object);
+    expect(component.objects.slice(at + 1, at + 1 + listed.length).map((o) => o.identifier)).toEqual(listed);
+  });
+
+  it("refuses a Move that is not the measured pair of effect and path", () => {
+    const slide = KeynoteDocument.blank().slides()[0]!;
+    const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER)!;
+    expect(() => slide.addBuild({ drawableId: title, effect: "apple:dissolve", move: { dx: 200, dy: 0 } })).toThrow(/takes both move and the effect/);
+    expect(() => slide.addBuild({ drawableId: title, effect: "apple:action-motion-path" })).toThrow(/takes both move and the effect/);
+    expect(() => slide.addBuild({ drawableId: title, effect: "apple:action-motion-path", move: { dx: 1, dy: 1 }, type: "In" })).toThrow(/an Action delivered all at once/);
+  });
+
   it("registers a new build's UUID in its component's object UUID map, the one its chunks name", () => {
     const doc = KeynoteDocument.blank();
     const slide = doc.slides()[0]!;
@@ -772,9 +812,9 @@ describe("build order", () => {
   it("reads the app's own dissolve on a title as apple:dissolve character, beside the library's", () => {
     const doc = KeynoteDocument.load(new Uint8Array(readFileSync(new URL("../fixtures/olekristensen-v26.0-mac-pinned-dissolve.key", import.meta.url))));
     const [first, second] = doc.slides();
-    expect(first!.builds().map((b) => b.read().effect)).toEqual(["apple:dissolve", "apple:bc-appear"]);
-    // The app put the Appear's chunk ahead of the library's without a drag.
-    expect(first!.object.message.getMessages(43).map((m) => doc.store.object(m.getVarint(1)!)!.message.getMessage(1)!.getVarint(1))).toEqual(first!.builds().map((b) => b.id).reverse());
+    expect(first!.builds().map((b) => b.read().effect)).toEqual(["apple:bc-appear", "apple:dissolve"]);
+    // The app put the Appear's chunk ahead of the library's without a drag, and builds() reads the play order.
+    expect(first!.object.message.getMessages(43).map((m) => doc.store.object(m.getVarint(1)!)!.message.getMessage(1)!.getVarint(1))).toEqual(first!.builds().map((b) => b.id));
     expect(second!.builds().map((b) => b.read().effect)).toEqual(["apple:bc-appear", "apple:dissolve character"]);
   });
 });

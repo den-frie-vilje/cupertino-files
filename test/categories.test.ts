@@ -14,9 +14,9 @@ import { NumbersDocument } from "../src/index.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { AccumulatorFields, GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart, type ColumnAggregate } from "../src/tst/categories.ts";
 import { readUid, uidKey } from "../src/tst/uidmap.ts";
-import { FormulaOwnerFields, ownerArchiveByUid, readOwnerUid } from "../src/tsce/owners.ts";
+import { CellRecordTileFields, FormulaOwnerFields, ownerArchiveByUid, readOwnerUid } from "../src/tsce/owners.ts";
 import { CellFlag, CellRecord } from "../src/tst/cellrecord.ts";
-import { TileFields, TileRowInfo } from "../src/tst/tables.ts";
+import { DataStoreFields, TileFields, TileRowInfo } from "../src/tst/tables.ts";
 import {
   ColumnRowUidMap,
   expandIndexSet,
@@ -665,5 +665,76 @@ describe("a per-group summary written from nothing", () => {
     expect(() => { table.addCategorySummary(0, "sum"); }).toThrow(/needs a column of numbers/);
     table.setCell(3, 2, { type: "empty" });
     expect(() => { table.addCategorySummary(2, "sum"); }).toThrow(/every data row needs one/);
+  });
+
+  it("leaves the table as it was when it refuses, so the next call starts clean", () => {
+    const { doc, table } = build();
+    const before = Buffer.from(doc.save()).toString("hex");
+    expect(() => { table.addCategorySummary(0, "sum"); }).toThrow(/needs a column of numbers/);
+    expect(table.activeCategories()!.aggregates()).toEqual([]);
+    expect(Buffer.from(doc.save()).toString("hex")).toBe(before);
+    table.addCategorySummary(0, "count");
+    expect(table.summaryModel()!.cells().map((c) => c.value)).toEqual([0, 1, 2].map(() => ({ type: "number", value: 2, isFormula: true })));
+  });
+
+  it("refuses groups that no longer hold the table's rows, and a column change under a summary", () => {
+    const { table } = build();
+    table.insertRows(table.rowCount, 1);
+    ["Plum", "Fruit", 100].forEach((value, c) => { table.setCell(table.rowCount - 1, c, value); });
+    expect(table.staleCategoryGroups()).toEqual([]);
+    expect(() => { table.addCategorySummary(2, "sum"); }).toThrow(/do not hold exactly the table's data rows/);
+    const fresh = build().table;
+    fresh.setCell(1, 1, "Animal");
+    expect(() => { fresh.addCategorySummary(2, "sum"); }).toThrow(/stale; call regroupCategories/);
+    fresh.regroupCategories();
+    fresh.addCategorySummary(2, "sum");
+    expect(() => { fresh.insertColumns(1, 1); }).toThrow(/filed by column position/);
+    expect(() => { fresh.deleteColumns(0, 1); }).toThrow(/filed by column position/);
+  });
+
+  it("adds in decimal, counts the format once per cell, and writes the app's extras word and first column", () => {
+    const { table } = build();
+    [0.1, 0.2, 19.99, 5.01, 0.3, 7].forEach((amount, i) => { table.setCell(i + 1, 2, amount); });
+    table.addCategorySummary(2, "sum");
+    const summary = table.summaryModel()!;
+    // Animal 0.2 + 0.3, Fruit 0.1 + 19.99, Transport 5.01 + 7: none carries float noise.
+    expect(summary.cells().map((c) => (c.value as { value: number }).value)).toEqual([0.5, 20.09, 12.01]);
+    expect(summary.uidMap().columnUidList()[0]).toEqual({ lower: 0x79726f6765746163n, upper: 0x006e6d756c6f6320n });
+    // The app's Sum cells carry the high extras bit alone, and its Count cells none.
+    const seed = open("olekristensen-v26.0-mac-summaries-seed.numbers").tables()[0]!;
+    expect(seed.summaryModel()!.uidMap().columnUidList()[0]).toEqual(summary.uidMap().columnUidList()[0]);
+    expect([0, 1, 2].map((row) => firstRecord(table, row).extras)).toEqual([0x8000, 0x8000, 0x8000]);
+    expect(firstRecord(seed, 0).extras).toBe(0x8000);
+    const counted = build().table;
+    counted.addCategorySummary(1, "count");
+    expect(firstRecord(counted, 0).extras).toBe(0);
+    // The format's count is the cells that name it, as in the app's own.
+    const formats = summary.store.resolve(refId(summary.object.message.getMessage(2), DataStoreFields.FORMAT_TABLE))!;
+    expect(formats.message.getMessages(3).map((entry) => entry.getUint(2))).toEqual([3]);
+    expect(() => { summary.setCell(0, 3, 99); }).toThrow(/read-only/);
+    expect(() => { summary.insertRows(0, 1); }).toThrow(/read-only/);
+  });
+
+  it("keeps an owner's other records when the document carries them in tiles alone", () => {
+    const doc = open("numbers-parser-v26.1-form-sheet.numbers");
+    const table = doc.tables()[0]!;
+    table.insertColumns(table.columnCount, 2);
+    const kind = table.columnCount - 2;
+    for (let row = table.headerRowCount; row < table.rowCount - table.footerRowCount; row++) {
+      table.setCell(row, kind, row % 2 === 0 ? "Even" : "Odd");
+      table.setCell(row, kind + 1, row);
+    }
+    table.addCategory(kind);
+    const groupByUid = readUid(table.activeCategories()!.object.message.getMessage(GroupByFields.GROUP_BY_UID))!;
+    const owner = () => ownerArchiveByUid(table.store, { lo: groupByUid.lower, hi: groupByUid.upper })!;
+    const columns = () =>
+      owner().message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)
+        .flatMap((ref) => table.store.resolve(ref)!.message.getMessages(CellRecordTileFields.CELL_RECORDS).map((r) => r.getUint(1)));
+    const before = columns();
+    expect(owner().message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)).toBe(undefined);
+    table.addCategorySummary(kind + 1, "sum");
+    expect(owner().message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)).toBe(undefined);
+    expect(before.every((column) => columns().includes(column))).toBe(true);
+    expect(columns().length).toBe(new Set([...before, 3, 8, 9, 10]).size);
   });
 });

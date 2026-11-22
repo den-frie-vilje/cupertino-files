@@ -285,7 +285,7 @@ export function decodeDecimal128(b: Uint8Array): number {
   let mantissa = BigInt(b[14]! & 1);
   for (let i = 13; i >= 0; i--) mantissa = mantissa * 256n + BigInt(b[i]!);
   const sign = (b[15]! & 0x80) !== 0 ? -1 : 1;
-  return sign * Number(mantissa) * Math.pow(10, exp);
+  return sign * Number(`${mantissa}e${exp}`);
 }
 
 /**

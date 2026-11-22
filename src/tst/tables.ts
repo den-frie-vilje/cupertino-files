@@ -56,6 +56,9 @@ import {
   writeIndexSet,
   writeUidMessage,
   AGGREGATE_TYPE_CODES,
+  DEPENDENCY_TILE_COLUMNS,
+  DEPENDENCY_TILE_ROWS,
+  decimalSum,
   GroupByFields,
   WILDCARD_GROUP_UID,
   type CategoryLevel,
@@ -2845,6 +2848,7 @@ export class TableModel {
    */
   insertColumns(at: number, count = 1): void {
     this.requireWritable();
+    this.refuseColumnChangeUnderSummaries();
     if (count <= 0) return;
     if (at < 0 || at > this.columnCount) {
       throw new RangeError(`cannot insert at column ${at}: table has ${this.columnCount} columns`);
@@ -2878,6 +2882,7 @@ export class TableModel {
    */
   deleteColumns(at: number, count = 1): void {
     this.requireWritable();
+    this.refuseColumnChangeUnderSummaries();
     if (count <= 0) return;
     if (at < 0 || at + count > this.columnCount) {
       throw new RangeError(
@@ -4329,9 +4334,13 @@ export class TableModel {
    * summary cells the group rows draw, each a category-reference formula
    * carrying the aggregate as its cached value, over a column of numbers,
    * or of text for a count. The table must be grouped by one column
-   * already, every data row needs a value in the column, and a column
-   * takes one summary. Whether Numbers draws a summary written this way is
-   * not yet measured.
+   * already, its groups current and holding every data row, every data
+   * row needs a value in the column, and a column takes one summary; a
+   * refused call changes nothing. Numbers draws every group row of a
+   * summary written this way. The values are those of the cells at the
+   * call: edit and regroup first, since nothing here refreshes a summary,
+   * a table that has one refuses column inserts and deletes, and a copy
+   * of the table carries the cells without their registration.
    * @agentTool add_category_summary
    */
   addCategorySummary(column: number, aggregate: "count" | "sum" | "average" | "min" | "max"): void {
@@ -4370,11 +4379,41 @@ export class TableModel {
       if (!cells.every((v): v is number => typeof v === "number")) {
         throw new RangeError(`${aggregate} needs a column of numbers`);
       }
-      const sum = cells.reduce((a, b) => a + b, 0);
+      const sum = decimalSum(cells);
       if (aggregate === "sum") return sum;
       if (aggregate === "average") return sum / cells.length;
-      return aggregate === "min" ? Math.min(...cells) : Math.max(...cells);
+      return cells.reduce((a, b) => (aggregate === "min" ? Math.min(a, b) : Math.max(a, b)));
     };
+    // Every refusal comes before the first write, so a refused call leaves the table as it was.
+    if (this.staleCategoryGroups().length > 0) {
+      throw new RangeError("the category's groups are stale; call regroupCategories first");
+    }
+    const groups = definition.groups();
+    const grouped = groups.flatMap((group) => group.rows).sort((a, b) => a - b);
+    const firstRow = this.headerRowCount;
+    if (
+      grouped.length !== this.rowCount - this.footerRowCount - firstRow ||
+      grouped.some((row, i) => row !== firstRow + i)
+    ) {
+      throw new RangeError("the category's groups do not hold exactly the table's data rows; a row added since the grouping is in no group");
+    }
+    // shortcut: one dependency tile per owner; more when a summary past its 32 columns or 128 rows is measured
+    if (column + 1 >= DEPENDENCY_TILE_COLUMNS || groups.length > DEPENDENCY_TILE_ROWS) {
+      throw new RangeError(
+        `a summary of column ${DEPENDENCY_TILE_COLUMNS - 1} or later, or over more than ${DEPENDENCY_TILE_ROWS} groups, is not measured`,
+      );
+    }
+    for (const group of groups) aggregateOf(group.rows);
+    const summaryOwnerUid = readOwnerUid(summary.object.message.getMessage(SUMMARY_MODEL_AGGREGATE_FORMULA_OWNER_UID));
+    if (
+      !summaryOwnerUid ||
+      !ownerArchiveByUid(this.store, summaryOwnerUid) ||
+      !ownerArchiveByUid(this.store, { lo: groupByUid.lower, hi: groupByUid.upper }) ||
+      !this.tableOwnerArchive() ||
+      !this.store.resolve(refId(summary.object.message, SUMMARY_MODEL_COLUMN_ROW_UIDS))
+    ) {
+      throw new RangeError("the table's calc-engine owners are not all registered, so a summary cannot be");
+    }
     const { leaves, rootCoordinate } = defineColumnAggregate(this.store, definition.object, columnUid, aggType, (rows) =>
       accumulatorRecord(rows.map(valueAt)),
     );
@@ -4388,8 +4427,6 @@ export class TableModel {
     const summaryRows = new ColumnRowUidMap(
       this.store.resolve(refId(summary.object.message, SUMMARY_MODEL_COLUMN_ROW_UIDS))!.message,
     ).rowUidList();
-    const summaryOwnerUid = readOwnerUid(summary.object.message.getMessage(SUMMARY_MODEL_AGGREGATE_FORMULA_OWNER_UID));
-    if (!summaryOwnerUid) throw new RangeError("the summary model names no calc-engine owner");
     this.registerSummaryDependencies(
       summaryOwnerUid,
       { lo: groupByUid.lower, hi: groupByUid.upper },
@@ -4456,9 +4493,7 @@ export class TableModel {
     const row = (r: RawMessage): number => r.getUint(CellRecordExpandedFields.ROW) ?? 0;
 
     const cellOwnerId = internalId(cellOwner);
-    const reader = formulaOwner.message
-      .getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)
-      ?.getMessages(1)
+    const reader = this.dependencyRecords(formulaOwner)
       .find((r) => col(r) === GROUPING_ROOT_READER_COLUMN && row(r) === 0)
       ?.getMessage(CellRecordExpandedFields.EXPANDED_EDGES);
     this.writeDependencyRecords(
@@ -4512,9 +4547,21 @@ export class TableModel {
   }
 
   /**
+   * An owner's cell records: its expanded ledger where it carries one, and
+   * its tiles' where a newer save has left the tiled copy alone.
+   */
+  private dependencyRecords(owner: IwaObject): RawMessage[] {
+    const bag = owner.message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES);
+    if (bag) return bag.getMessages(1);
+    return (owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)?.getMessages(TiledDependenciesFields.TILES) ?? [])
+      .flatMap((ref) => this.store.resolve(ref)?.message.getMessages(CellRecordTileFields.CELL_RECORDS) ?? []);
+  }
+
+  /**
    * Put `records` on an owner's cell-dependency ledger and its tiled copy,
-   * replacing any record at the same cell and keeping `order`; the tile is
-   * created when the owner has none.
+   * replacing any record at the same cell and keeping `order`. An owner
+   * whose records live in tiles alone keeps it that way, and its other
+   * records stay; the tile at the origin is created when there is none.
    */
   private writeDependencyRecords(
     owner: IwaObject,
@@ -4525,16 +4572,25 @@ export class TableModel {
     const same = (a: RawMessage, b: RawMessage): boolean =>
       a.getUint(CellRecordExpandedFields.COLUMN) === b.getUint(CellRecordExpandedFields.COLUMN) &&
       a.getUint(CellRecordExpandedFields.ROW) === b.getUint(CellRecordExpandedFields.ROW);
-    const bag = m.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES) ?? RawMessage.create();
-    const merged = [...bag.getMessages(1).filter((r) => !records.some((n) => same(n, r))), ...records].sort(order);
-    bag.setMessages(1, merged.map((r) => r.clone()));
-    m.setMessage(FormulaOwnerFields.CELL_DEPENDENCIES, bag);
-    // shortcut: one tile at column 0, as both app-written summaries have; a tile per 32 columns when a wider one is measured
+    const merge = (existing: readonly RawMessage[]): RawMessage[] =>
+      [...existing.filter((r) => !records.some((n) => same(n, r))), ...records].sort(order).map((r) => r.clone());
     const tiled = m.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES) ?? RawMessage.create();
-    let tile = tiled
+    const tiles = tiled
       .getMessages(TiledDependenciesFields.TILES)
       .map((ref) => this.store.resolve(ref))
-      .find((t): t is IwaObject => t !== undefined);
+      .filter((t): t is IwaObject => t !== undefined);
+    const bag = m.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES);
+    if (bag || tiles.length === 0) {
+      const ledger = bag ?? RawMessage.create();
+      ledger.setMessages(1, merge(ledger.getMessages(1)));
+      m.setMessage(FormulaOwnerFields.CELL_DEPENDENCIES, ledger);
+    }
+    // The caller keeps every record inside the tile at the origin.
+    let tile = tiles.find(
+      (t) =>
+        (t.message.getUint(CellRecordTileFields.TILE_COLUMN_BEGIN) ?? 0) === 0 &&
+        (t.message.getUint(CellRecordTileFields.TILE_ROW_BEGIN) ?? 0) === 0,
+    );
     if (!tile) {
       const component = this.store.componentOf(owner.identifier);
       if (!component) throw new RangeError("formula owner has no component");
@@ -4546,7 +4602,7 @@ export class TableModel {
       m.setMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES, tiled);
       this.store.declareReference(owner, tile.identifier);
     }
-    tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, merged.map((r) => r.clone()));
+    tile.message.setMessages(CellRecordTileFields.CELL_RECORDS, merge(tile.message.getMessages(CellRecordTileFields.CELL_RECORDS)));
     tile.message.markDirty();
     m.markDirty();
   }
@@ -4830,7 +4886,16 @@ export class TableModel {
     );
   }
 
-  private requireWritable(): void {
+  /** Summary cells are filed by column position, and nothing moves them with the host's columns. */
+  private refuseColumnChangeUnderSummaries(): void {
+    if (this.categories().some((definition) => definition.aggregates().length > 0)) {
+      throw new RangeError(
+        "the table has per-group summaries, which are filed by column position; inserting or deleting columns under them is not supported",
+      );
+    }
+  }
+
+  protected requireWritable(): void {
     const generation = this.storageGeneration;
     if (generation === "preBNC") {
       throw new RangeError(
@@ -5415,9 +5480,11 @@ export function decodeCellRecord(
 /**
  * A table's summary model, read with the table model's own decoders over
  * the summary's data store: its rows are the category's group rows in
- * the order the app shows them, and a summary of host column c sits in
- * column c + 1. Read-only; the app fills it from the aggregator cache for
- * the group rows it chooses to, and draws nothing for the rest.
+ * the order of the summary's own identity map (`uidMap()`, whose row
+ * uids are the groups'), which is not the tree's order in an app-written
+ * table, and a summary of host column c sits in column c + 1. Read-only:
+ * every inherited writer refuses, and `addCategorySummary` on the host
+ * is what writes one.
  */
 export class SummaryModel extends TableModel {
   readonly host: TableModel;
@@ -5429,6 +5496,15 @@ export class SummaryModel extends TableModel {
 
   protected override dataStore(): RawMessage | undefined {
     return this.object.message.getMessage(SUMMARY_MODEL_DATA_STORE);
+  }
+
+  protected override requireWritable(): void {
+    throw new RangeError("a summary model is read-only; addCategorySummary on its table writes it");
+  }
+
+  /** The summary's own identity map: a first column of its own, then the host's, and a row per group under the group's uid. */
+  override uidMap(): ColumnRowUidMap {
+    return new ColumnRowUidMap(this.store.resolve(refId(this.object.message, SUMMARY_MODEL_COLUMN_ROW_UIDS))?.message);
   }
 
   /** One past the highest row any tile carries. */
@@ -5470,6 +5546,7 @@ export class SummaryModel extends TableModel {
    * count the cells; and the summary cell vendor gets the template the
    * app draws a new group row from, the same formula over a wildcard
    * group.
+   * @internal
    */
   writeSummary(
     groupByUid: Uid,
@@ -5484,7 +5561,7 @@ export class SummaryModel extends TableModel {
     const columns =
       map.columnUidList().length === this.columnCount
         ? map.columnUidList()
-        : [randomUid(), ...this.host.uidMap().columnUidList()];
+        : [SUMMARY_CATEGORY_COLUMN_UID, ...this.host.uidMap().columnUidList()];
     const sameUid = (a: Uid | undefined, b: Uid): boolean => a !== undefined && a.lower === b.lower && a.upper === b.upper;
     let rows = map.rowUidList();
     if (!groups.every((g) => rows.some((r) => sameUid(r, g.uid)))) rows = groups.map((g) => g.uid);
@@ -5496,15 +5573,18 @@ export class SummaryModel extends TableModel {
       while (row.length < this.columnCount) row.push(undefined);
       return row;
     });
-    const formatKey = this.internFormat({ kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false });
     for (const group of groups) {
       const record = new CellRecord(CellType.NUMBER);
       record.setDecimal128(group.value);
       record.setId(CellFlag.FORMULA_ID, this.internFormula(categoryReferenceFormula(groupByUid, columnUid, aggType, group.uid)));
       record.setId(CellFlag.SUGGEST_ID, SUMMARY_SUGGEST_ID);
-      record.setId(CellFlag.NUM_FORMAT_ID, formatKey);
-      // The app's summary cells leave the extras word clear.
-      record.extras = 0;
+      // Interned per cell, so the format's count is the cells that name it.
+      record.setId(
+        CellFlag.NUM_FORMAT_ID,
+        this.internFormat({ kind: "number", decimals: "auto", negativeStyle: 0, thousandsSeparator: false }),
+      );
+      // The app's summary cells carry the high extras bit alone, and a count none.
+      record.extras = aggType === AGGREGATE_TYPE_CODES.get("count") ? 0 : 0x8000;
       records[rows.findIndex((r) => sameUid(r, group.uid))]![column + 1] = record.encode();
     }
 
@@ -5562,6 +5642,8 @@ export class SummaryModel extends TableModel {
 /** TST.SummaryModelArchive: its identity map and its summary cell vendor. */
 const SUMMARY_MODEL_COLUMN_ROW_UIDS = 3;
 const SUMMARY_MODEL_AGGREGATE_FORMULA_OWNER_UID = 4;
+/** The identity of a summary map's first column in every app-written table: "category column" and a NUL, as bytes. */
+const SUMMARY_CATEGORY_COLUMN_UID: Uid = { lower: 0x79726f6765746163n, upper: 0x006e6d756c6f6320n };
 /** The grouping's internal formula that reads every aggregator's root, in the table's formula owner. */
 const GROUPING_ROOT_READER_COLUMN = 3;
 const SUMMARY_MODEL_CELL_VENDOR = 5;

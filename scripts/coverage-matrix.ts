@@ -1897,8 +1897,9 @@ export const CAPABILITIES: Capability[] = [
         "the app reads something beyond the registration",
       settled:
         "**Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: " +
-        "\"24 worked on open\" (`24-category-summary-registered.numbers`, returned unchanged, so the file is " +
-        "`npm run seeds -- out`'s seed-summary.numbers byte for byte).",
+        "\"24 worked on open\" (`24-category-summary-registered.numbers`, returned unchanged). The writer has " +
+        "since moved three values to the app's own (the format's count, the extras word, the summary map's " +
+        "first column), so today's seed-summary.numbers differs from the file that was opened in those.",
       risk: "medium",
     },
   },
@@ -2134,8 +2135,10 @@ export const CAPABILITIES: Capability[] = [
       "defining a category — by value, nested, or bucketed by date — shipped (see its own row); " +
       "the reader names the five aggregate types (count, sum, average, min, max) from app-written " +
       "summaries, and every aggregator node carries the same accumulator record (count, min, max, sum, " +
-      "product); writing one needs the aggregator tree with that record per group, the root node's " +
-      "agg_formula_coords and the summary model's cells, none of which is written yet",
+      "product); a summary on a one-level category is written (see its own row). What remains: a " +
+      "summary on a nested category, one past a single calc-engine dependency tile (32 columns of " +
+      "aggregators, 128 groups), refreshing a summary after its cells change, moving it with the " +
+      "host's columns, and registering a copied table's summary",
   },
   {
     group: "Numbers & tables",

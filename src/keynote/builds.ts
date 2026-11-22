@@ -60,6 +60,9 @@ import { randomUid } from "../tst/uidmap.ts";
 import { Slide, BuildChunkOwner } from "./schema.ts";
 
 /** KN archive types in the build graph. */
+/** The effect of a Move action, the app's motion path. */
+export const MOTION_PATH_EFFECT = "apple:action-motion-path";
+
 export const BUILD_TYPE = {
   BUILD: 8,
   BUILD_CHUNK: 153,
@@ -342,18 +345,25 @@ export class BuildModel {
 }
 
 /**
- * The builds on one slide.
- *
- * Returns an empty list for a slide with no animations, which is every
- * slide in the corpus — see the module note.
+ * The builds on one slide, in the order they play: the order of the
+ * slide's chunk list, which is what Build Order shows and which a deck
+ * the app has added a build to can hold in another order than its build
+ * list. A build with no chunk comes last, in list order.
  */
 export function buildsOfSlide(store: ObjectStore, slide: IwaObject): BuildModel[] {
+  const firstChunk = new Map<bigint, number>();
+  slide.message.getMessages(Slide.BUILD_CHUNKS).forEach((ref, at) => {
+    const chunk = store.object(ref.getVarint(1)!);
+    const build = chunk ? refId(chunk.message, BuildChunkOwner.BUILD) : undefined;
+    if (build !== undefined && !firstChunk.has(build)) firstChunk.set(build, at);
+  });
   const out: BuildModel[] = [];
   for (const ref of slide.message.getMessages(Slide.BUILDS)) {
     const object = store.resolve(ref.getVarint(1));
     if (object?.type === BUILD_TYPE.BUILD) out.push(new BuildModel(store, object));
   }
-  return out;
+  const at = (build: BuildModel): number => firstChunk.get(build.id) ?? Infinity;
+  return out.sort((a, b) => (at(a) === at(b) ? 0 : at(a) - at(b)));
 }
 
 /** What a new build needs. */
@@ -451,6 +461,13 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   if (!component) throw new RangeError("slide has no component to hold a build");
   const duration = spec.duration ?? 1;
   const delay = spec.delay ?? 0;
+  // A Move is one measured shape: the motion path effect, an Action, no text delivery.
+  if ((spec.effect === MOTION_PATH_EFFECT) !== (spec.move !== undefined)) {
+    throw new RangeError(`a Move action takes both move and the effect ${MOTION_PATH_EFFECT}`);
+  }
+  if (spec.move && ((spec.type ?? "Action") !== "Action" || spec.delivery === "byParagraph")) {
+    throw new RangeError("a Move action is an Action delivered all at once");
+  }
 
   const animation = RawMessage.create();
   animation.setString(AnimationAttributesFields.ANIMATION_TYPE, spec.type ?? (spec.move ? "Action" : "In"));
@@ -479,13 +496,7 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
   }
 
-  // The apps keep a slide's builds right after the slide archive in its
-  // component, then its chunks, each block in list order, and Keynote
-  // orders a build appended elsewhere behind every other.
-  const slideAt = component.objects.indexOf(slide);
-  const buildCount = slide.message.getMessages(Slide.BUILDS).length;
-  const chunkCount = slide.message.getMessages(Slide.BUILD_CHUNKS).length;
-  const build = store.createObject(BUILD_TYPE.BUILD, component, { at: slideAt + 1 + buildCount });
+  const build = store.createObject(BUILD_TYPE.BUILD, component);
   const message = RawMessage.create();
   message.setMessage(BuildFields.DRAWABLE, makeRef(spec.drawableId));
   message.setString(BuildFields.DELIVERY, byParagraph ? "By Paragraph" : "All at Once");
@@ -509,7 +520,7 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     const identifier = RawMessage.create();
     identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid());
     identifier.setVarint(BuildChunkIdentifierFields.BUILD_CHUNK_ID, stage);
-    const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component, { at: slideAt + 1 + buildCount + 1 + chunkCount + chunks.length });
+    const chunk = store.createObject(BUILD_TYPE.BUILD_CHUNK, component);
     const chunkMessage = RawMessage.create();
     chunkMessage.setMessage(BuildChunkFields.BUILD, makeRef(build.identifier));
     chunkMessage.setDouble(BuildChunkFields.DELAY, delay);
@@ -535,7 +546,42 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     build.identifier,
     ...chunks.map((chunk) => chunk.identifier),
   ]);
+  // The apps keep a slide's builds right after the slide archive, then its chunks, each block in list order.
+  layoutBuildObjects(store, slide);
   return new BuildModel(store, build);
+}
+
+/**
+ * Give a copied slide's builds identities of their own: each build is
+ * registered in its component's object UUID map under a fresh UUID, and
+ * its chunks name that one. A copied chunk otherwise still names the
+ * source slide's build, and a build with no entry of its own is one
+ * Keynote shows and will not reorder.
+ */
+export function reidentifyBuilds(store: ObjectStore, slide: IwaObject): void {
+  const chunks = slide.message
+    .getMessages(Slide.BUILD_CHUNKS)
+    .map((ref) => store.object(ref.getVarint(1)!))
+    .filter((chunk): chunk is IwaObject => chunk !== undefined);
+  for (const ref of slide.message.getMessages(Slide.BUILDS)) {
+    const build = store.object(ref.getVarint(1)!);
+    if (!build) continue;
+    const uid = randomUid();
+    store.registerObjectUuid(build, uid);
+    const uuid = RawMessage.create();
+    uuid.setVarint(1, uid.lower);
+    uuid.setVarint(2, uid.upper);
+    for (const chunk of chunks) {
+      if (refId(chunk.message, BuildChunkFields.BUILD) !== build.identifier) continue;
+      const identifier = chunk.message.getMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER);
+      if (identifier) {
+        identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid.clone());
+        chunk.message.setMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER, identifier);
+      }
+      chunk.message.setMessage(BuildChunkFields.BUILD_ID, uuid.clone());
+      chunk.message.markDirty();
+    }
+  }
 }
 
 /**

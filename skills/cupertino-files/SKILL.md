@@ -658,8 +658,11 @@ throw if you wrote a value the table has no group for.
 summary pop-up does, over a column of numbers, or of text for a count:
 one summary per column, on a table already grouped by one column. It
 writes what the app writes for its own, the aggregate entry, the
-aggregator cache and the summary cells; Numbers has not yet drawn one
-written this way.
+aggregator cache, the summary cells and their registration with the calc
+engine, and Numbers draws every group row. The values are the cells' at
+the call, so edit and `regroupCategories()` first: a refused call
+changes nothing, nothing refreshes a written summary, and a table that
+has one refuses column inserts and deletes.
 
 ### Cell controls (checkbox, slider, stepper, star rating)
 

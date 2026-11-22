@@ -21,6 +21,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
 import { NumbersDocument } from "../numbers/document.ts";
 import { KeynoteDocument } from "../keynote/document.ts";
+import { MOTION_PATH_EFFECT } from "../keynote/builds.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
@@ -114,7 +115,8 @@ const str = (v: unknown): string | undefined => (typeof v === "string" ? v : und
 const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
 /** A {dx, dy} displacement from a tool argument, or undefined when absent. */
 const moveOf = (v: unknown): { dx: number; dy: number } | undefined => {
-  if (typeof v !== "object" || v === null) return undefined;
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== "object") throw new RangeError("move must be an object with numeric dx and dy");
   const dx = num((v as Record<string, unknown>).dx);
   const dy = num((v as Record<string, unknown>).dy);
   if (dx === undefined || dy === undefined) throw new RangeError("move needs numeric dx and dy");
@@ -906,8 +908,8 @@ export const TOOLS: readonly Tool[] = [
       "Animates one drawable on a Keynote slide with an all-at-once build played on click. " +
         "slide and drawable are 0-based (drawables in the slide's z-order; use " +
         "describe_document); effect is the identifier the app stores, e.g. \"apple:dissolve\". " +
-        "With move, the build is a Move action along a straight path of that many points " +
-        "(effect \"apple:action-motion-path\"). " +
+        "With move, the build is a Move action along a straight path of that many points, " +
+        "and effect is then \"apple:action-motion-path\" or left out. " +
         "Saves over the input unless output names another path.",
     ),
     inputSchema: {
@@ -927,7 +929,7 @@ export const TOOLS: readonly Tool[] = [
         },
         output: OUTPUT_PROP,
       },
-      required: ["path", "slide", "drawable", "effect"],
+      required: ["path", "slide", "drawable"],
     },
     handler: (args) => {
       const path = requirePath(args);
@@ -943,7 +945,8 @@ export const TOOLS: readonly Tool[] = [
       const slide = slides[index]!;
       const drawables = slide.drawables();
       const which = num(args.drawable);
-      const effect = str(args.effect);
+      const move = moveOf(args.move);
+      const effect = str(args.effect) ?? (move ? MOTION_PATH_EFFECT : undefined);
       if (which === undefined || which < 0 || which >= drawables.length || effect === undefined) {
         throw new RangeError(`drawable must be 0..${drawables.length - 1} and effect is required`);
       }
@@ -952,7 +955,7 @@ export const TOOLS: readonly Tool[] = [
         effect,
         duration: num(args.duration),
         delay: num(args.delay),
-        move: moveOf(args.move),
+        move,
       });
       const target = save(doc, path, str(args.output));
       return `added build ${build.id} (${effect}) to slide ${index} and saved ${target}`;
@@ -1508,7 +1511,8 @@ export const TOOLS: readonly Tool[] = [
         "dateInNext; {operator, count, unit, direction} for dateExactly, dateBeforeRelative, " +
         "dateAfterRelative and {from, to, unit, direction} for dateBetweenRelative (unit day, week, " +
         "month, quarter or year; direction ago or fromNow); {operator, seconds} for durationEquals, " +
-        "durationGreaterThan. The rows the rule hides are written too. Saves over the input " +
+        "durationNotEquals, durationGreaterThan, durationGreaterOrEqual, durationLessThan, " +
+        "durationLessOrEqual. The rows the rule hides are written too. Saves over the input " +
         "unless output names another path.",
     ),
     inputSchema: {

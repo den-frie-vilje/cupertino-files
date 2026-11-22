@@ -67,7 +67,7 @@ result mean something; what changed is that it is no longer a request.
 
 **Why it needed an app.** the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had registered that one cell with its calc engine on open and left the other two, so the library now writes the registration the twin carries for every cell, and only the app can say whether that was all it was missing
 
-**Outcome.** **Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: "24 worked on open" (`24-category-summary-registered.numbers`, returned unchanged, so the file is `npm run seeds -- out`'s seed-summary.numbers byte for byte).
+**Outcome.** **Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: "24 worked on open" (`24-category-summary-registered.numbers`, returned unchanged). The writer has since moved three values to the app's own (the format's count, the extras word, the summary map's first column), so today's seed-summary.numbers differs from the file that was opened in those.
 
 ### ✅ Categories: defining a category by a column
 

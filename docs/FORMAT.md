@@ -2205,10 +2205,9 @@ writing and chart appearance all used to be here.
   14.x deck, and `setBuildOrder` writes the order the Build Order drag
   writes (the slide's build list and chunk list, and the archives' place
   in the slide's component: right after the slide, builds then chunks,
-  as every app-written deck keeps them); actions are read, their shape
-  measured, and not authored. The app writes a text placeholder's
-  dissolve as `apple:dissolve character`; whether Keynote orders a build
-  with another id behind its own is the open question.
+  as every app-written deck keeps them); a Move action is authored and
+  Keynote plays it, and the other actions are read and not authored. The
+  app writes a text placeholder's dissolve as `apple:dissolve character`.
 - Creating documents **from nothing at all**. `blank()` instantiates an
   embedded, Apple-authored donor and `blankFrom()` empties any document
   you have—both the practical route the apps themselves take.

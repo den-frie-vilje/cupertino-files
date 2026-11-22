@@ -56,6 +56,7 @@ import {
   BuildFields,
   BuildModel,
   buildsOfSlide,
+  reidentifyBuilds,
   createBuild,
   type NewBuild,
   removeBuild,
@@ -1174,6 +1175,10 @@ export class KeynoteDocument extends IWorkDocument {
     // carries `hasNote`, and removing a field every writer sets is the
     // absent-field defect class, not a cleanup.
     if (!options.withContent) node.message.setBool(SlideNode.HAS_NOTE, false);
+    // The source's node may say it carries builds; the copy says so only when it does.
+    if (node.message.has(SlideNode.HAS_EXPLICIT_BUILDS) && slide.message.getMessages(Slide.BUILDS).length === 0) {
+      node.message.setBool(SlideNode.HAS_EXPLICIT_BUILDS, false);
+    }
 
     this.insertSlideNode(node.identifier, options.after ?? sourceIndex);
 
@@ -1199,6 +1204,9 @@ export class KeynoteDocument extends IWorkDocument {
         this.store.declareComponentDependency(nodeComponent, slide.identifier);
       }
     }
+
+    // After the move, so the builds register in the component they live in.
+    reidentifyBuilds(this.store, slide);
 
     const created = this.slides().find((s) => s.id === slide.identifier);
     if (!created) throw new RangeError("slide was created but is not reachable from the tree");
@@ -1275,6 +1283,7 @@ export class KeynoteDocument extends IWorkDocument {
     node.message.remove(SlideNode.CHILDREN);
     node.message.setMessage(SlideNode.SLIDE, makeRef(slide.identifier));
     node.message.setBool(SlideNode.HAS_NOTE, false);
+    if (node.message.has(SlideNode.HAS_EXPLICIT_BUILDS)) node.message.setBool(SlideNode.HAS_EXPLICIT_BUILDS, false);
     this.insertSlideNode(node.identifier, after);
 
     // Per-slide components, as addSlide keeps them: the clones were born
