@@ -40,7 +40,7 @@ import {
   NumbersDocument,
   PagesDocument,
 } from "../src/index.ts";
-import { Slide } from "../src/keynote/schema.ts";
+import { Slide, SlideNode } from "../src/keynote/schema.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Storage } from "../src/tswp/schema.ts";
 import type { TableModel } from "../src/tst/tables.ts";
@@ -159,6 +159,125 @@ function seedCategory(): Uint8Array {
   return doc.save();
 }
 
+// ---------------------------------------------------------- summaries
+
+function seedSummaries(): Uint8Array {
+  // The one app-written summary in the corpus is a Count on a text column.
+  // Sum, Average, Min and Max each carry an accumulator of their own in the
+  // aggregator cache, unmeasured until the app writes one.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Summaries";
+  table.insertColumns(table.columnCount, 6 - table.columnCount);
+  ["Item", "Kind", "Sum", "Average", "Min", "Max"].forEach((label, c) => { table.setCell(0, c, label); });
+  const rows: [string, string, number][] = [
+    ["Pear", "Fruit", 3],
+    ["Cat", "Animal", 12],
+    ["Apple", "Fruit", 7],
+    ["Bicycle", "Transport", 40],
+    ["Dog", "Animal", 10],
+    ["Train", "Transport", 25],
+  ];
+  rows.forEach(([item, kind, amount], i) => {
+    table.setCell(i + 1, 0, item);
+    table.setCell(i + 1, 1, kind);
+    for (const c of [2, 3, 4, 5]) table.setCell(i + 1, c, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  instructionRow(
+    table,
+    "The rows are grouped by Kind. In any one group's row, tap the cell under Sum and choose Sum, under Average choose Average, under Min choose Min, under Max choose Max (the summary pop-up in a group row). Then save. Count is already measured, so leave it out.",
+    { 1: "Note", 2: 1, 3: 1, 4: 1, 5: 1 },
+  );
+  for (const c of [2, 3, 4, 5]) table.setColumnWidth(c, 72);
+  table.addCategory(1);
+  return doc.save();
+}
+
+// ---------------------------------------------------------- summary
+
+function seedSummary(): Uint8Array {
+  // The library's first per-group summary: a Sum written in every group
+  // row from nothing, the aggregate entry, the aggregator cache and the
+  // summary model's cells together, since the entry alone drew nothing.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Summary";
+  table.insertColumns(2, 1);
+  ["Kind", "Amount", "Note"].forEach((label, c) => { table.setCell(0, c, label); });
+  const rows: [string, number][] = [["Fruit", 12], ["Animal", 3], ["Fruit", 7], ["Transport", 40], ["Animal", 10], ["Transport", 2]];
+  rows.forEach(([kind, amount], i) => {
+    table.setCell(i + 1, 0, kind);
+    table.setCell(i + 1, 1, amount);
+  });
+  table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+  const text = "The rows are grouped by Kind, and every group row carries a Sum of Amount written by the library, the way the summary pop-up in a group row writes one. Each group row should show the sum of its rows under Amount: Animal 13, Fruit 19, Transport 42. If a group row is empty under Amount, or shows another number, comment on that cell; no comment means as expected. Then save.";
+  table.setCell(1, 2, text);
+  table.setCellFormatting(1, 2, { textWrap: true });
+  table.setColumnWidth(0, 90);
+  table.setColumnWidth(1, 90);
+  table.setColumnWidth(2, 260);
+  // shortcut: the height is estimated from the width at the donor's text size, until the app's fit is measured
+  table.setRowHeight(1, Math.ceil(text.length / 48) * 13 + 8);
+  table.addCategory(0);
+  table.addCategorySummary(1, "sum");
+  return doc.save();
+}
+
+// -------------------------------------------------- duration conditions
+
+function seedDurationConditions(): Uint8Array {
+  // Equal to, greater than and between are measured on a duration
+  // column; the other four comparisons are the codes still unseen.
+  const doc = NumbersDocument.blank();
+  const table = doc.tables()[0]!;
+  table.name = "Duration rules";
+  table.insertColumns(table.columnCount, 5 - table.columnCount);
+  const conditions: [string, string][] = [
+    ["not equal to", "not equal to 1h"],
+    ["greater or equal", "greater than or equal to 1h"],
+    ["less than", "less than 1h"],
+    ["less or equal", "less than or equal to 1h"],
+  ];
+  table.setCell(0, 0, "Duration");
+  table.setCell(1, 0, "Add rule");
+  table.setCellFormatting(1, 0, { textWrap: true });
+  table.setColumnWidth(0, 60);
+  const values = [3600, 7200, 600, 90];
+  values.forEach((_, r) => { table.setCell(r + 2, 0, String(r + 1)); });
+  conditions.forEach(([label, rule], i) => {
+    const column = i + 1;
+    table.setCell(0, column, label);
+    table.setCell(1, column, rule);
+    table.setCellFormatting(1, column, { textWrap: true });
+    table.setColumnWidth(column, 84);
+    values.forEach((seconds, r) => { table.setCell(r + 2, column, { type: "duration", seconds }); });
+  });
+  table.deleteRows(values.length + 2, table.rowCount - values.length - 2);
+  table.setRowHeight(1, 56);
+  return doc.save();
+}
+
+// ---------------------------------------------------------- build order
+
+function seedBuildOrder(): Uint8Array {
+  // The recipe of the dissolve-registered fixture: one slide, the
+  // library's dissolve on the title, the body asking for an Appear and
+  // the Build Order drag. A build moves in that panel when its component's
+  // object UUID map registers it under the UUID its chunks name.
+  const doc = KeynoteDocument.blank();
+  const slide = doc.slides()[0]!;
+  slide.title = "The library's dissolve is on this title";
+  slide.body =
+    "Give this body a build in: Animate > Build In > Add an Effect > Appear (Animer > Byg ind > Tilføj en effekt > Vises). " +
+    "Open Build Order (Bygrækkefølge): if the title's Dissolve (Opløs) is not already first, drag it first. " +
+    "Comment on this slide: moved, or pinned. Save.";
+  const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+  if (title === undefined) throw new Error("build order seed: blank deck has no title placeholder");
+  slide.addBuild({ drawableId: title, effect: "apple:dissolve character", duration: 1 });
+  return doc.save();
+}
+
 // ---------------------------------------------------------- build
 
 function seedBuild(): Uint8Array {
@@ -237,7 +356,7 @@ function seedAuthoredNumbers(): Uint8Array {
   table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
   instructionRow(
     table,
-    "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filter); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.",
+    "Please build these with Numbers' own controls, then send the file back: 1) a filter rule on Item that is not a comparison, for example 'starts with' or 'is blank' (Organise > Filter / Organiser > Filtrer); 2) a category on Kind (Organise > Categories / Kategorier) and then a summary in one of its group rows, such as Count or Sum of Amount; 3) a second table with Insert > Table (Indsaet > Tabel); 4) a comment on any cell. Nothing here is expected to look any particular way; what you build is the measurement.",
     { 1: "Note", 2: 0 },
   );
   return doc.save();
@@ -484,7 +603,7 @@ function seedFilterConditions(): Uint8Array {
   readme.setCell(
     1,
     1,
-    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filter), click Add a Filter, choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
+    "Each table gets one filter with several rules, one rule for each column. Select the table, choose Organise > Filter (Organiser > Filtrer), click Add a Filter (Tilføj et filter), choose the column, and pick the condition that column's first row names, with the value it states; then add the next rule for the next column. Row 1 of each table says the exact rule. The rows will mostly disappear as rules pile up; that is expected and not the question. A condition the menu does not offer: skip it and comment “not in menu” on that column's first row. Then save. The rules the app wrote are the measurement; nothing here passes or fails.",
   );
   readme.setColumnWidth(0, 40);
   readme.setColumnWidth(1, 440);
@@ -704,6 +823,46 @@ const seeds: Seed[] = [
       }
       if (table.staleCategoryGroups().length !== 0)
         throw new Error("category seed: tree disagrees with cells");
+    },
+  },
+  {
+    name: "seed-summaries.numbers",
+    bytes: seedSummaries(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      const groups = table.activeCategories()?.groups() ?? [];
+      if (groups.length !== 4) throw new Error(`summaries seed: expected four groups, got ${groups.length}`);
+      if (table.cellText(0, 5) !== "Max" || !JSON.stringify(table.cellValue(1, 0)).includes("Sum")) throw new Error("summaries seed: columns or instruction missing");
+    },
+  },
+  {
+    name: "seed-summary.numbers",
+    bytes: seedSummary(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      const aggregates = table.activeCategories()?.aggregates().map((a) => [a.column, a.aggregate]) ?? [];
+      if (JSON.stringify(aggregates) !== "[[1,\"sum\"]]") throw new Error(`summary seed: expected a Sum on Amount, got ${JSON.stringify(aggregates)}`);
+      const sums = table.summaryModel()?.cells().map((c) => (c.value.type === "number" ? c.value.value : NaN)) ?? [];
+      if (JSON.stringify(sums) !== "[13,19,42]") throw new Error(`summary seed: expected the three sums, got ${JSON.stringify(sums)}`);
+    },
+  },
+  {
+    name: "seed-duration-conditions.numbers",
+    bytes: seedDurationConditions(),
+    check: (bytes) => {
+      const table = NumbersDocument.load(bytes).tables()[0]!;
+      if (table.columnCount !== 5 || table.cellText(1, 4) !== "less than or equal to 1h") throw new Error("duration seed: rules missing");
+      if (table.cellValue(2, 1)?.type !== "duration") throw new Error("duration seed: cells are not durations");
+    },
+  },
+  {
+    name: "seed-build-order.key",
+    bytes: seedBuildOrder(),
+    check: (bytes) => {
+      const slide = KeynoteDocument.load(bytes).slides()[0]!;
+      if (slide.builds().length !== 1) throw new Error("build order seed: expected the title's one build");
+      if (slide.node.message.getBool(SlideNode.HAS_EXPLICIT_BUILDS) !== true) throw new Error("build order seed: the slide node must say it carries explicit builds");
+      if (!slide.body?.includes("Bygrækkefølge")) throw new Error("build order seed: instructions missing");
     },
   },
   {

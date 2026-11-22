@@ -54,12 +54,15 @@
 import { protoEnum, protoFields } from "../proto/fields.ts";
 import type { IwaObject } from "../tsp/iwa.ts";
 import type { ObjectStore } from "../tsp/store.ts";
-import { makeRef, refId } from "../tsp/schema.ts";
+import { makeRef, Point, refId, SizeFields } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { randomUid } from "../tst/uidmap.ts";
-import { Slide } from "./schema.ts";
+import { Slide, BuildChunkOwner } from "./schema.ts";
 
 /** KN archive types in the build graph. */
+/** The effect of a Move action, the app's motion path. */
+export const MOTION_PATH_EFFECT = "apple:action-motion-path";
+
 export const BUILD_TYPE = {
   BUILD: 8,
   BUILD_CHUNK: 153,
@@ -73,6 +76,25 @@ export const BuildFields = protoFields("KN.BuildArchive", {
   ATTRIBUTES: "attributes",
   CHUNK_ID_SEED: "chunk_id_seed",
 });
+
+/** The easing of an action; the app's Move action is written with both ends eased. */
+export const BuildAcceleration = protoEnum("KN.BuildAttributesArchive.BuildAttributesAcceleration", { EASE_BOTH: "kEaseBoth" });
+
+/** A Move action's path: a TSD.PathSourceArchive holding an editable bezier path. */
+const PathSourceFields = protoFields("TSD.PathSourceArchive", {
+  HORIZONTAL_FLIP: "horizontalFlip",
+  VERTICAL_FLIP: "verticalFlip",
+  EDITABLE_BEZIER: "editable_bezier_path_source",
+});
+const EditableBezierFields = protoFields("TSD.EditableBezierPathSourceArchive", { SUBPATHS: "subpaths", NATURAL_SIZE: "naturalSize" });
+const SubpathFields = protoFields("TSD.EditableBezierPathSourceArchive.Subpath", { NODES: "nodes", CLOSED: "closed" });
+const BezierNodeFields = protoFields("TSD.EditableBezierPathSourceArchive.Node", {
+  IN_CONTROL_POINT: "inControlPoint",
+  NODE_POINT: "nodePoint",
+  OUT_CONTROL_POINT: "outControlPoint",
+  TYPE: "type",
+});
+const BezierNodeType = protoEnum("TSD.EditableBezierPathSourceArchive.NodeType", { SHARP: "sharp" });
 
 /** KN.BuildChunkArchive. */
 export const BuildChunkFields = protoFields("KN.BuildChunkArchive", {
@@ -104,6 +126,7 @@ export const BuildAttributesFields = protoFields("KN.BuildAttributesArchive", {
   ACTION_SCALE_SIZE: "action_scaleSize",
   ACTION_COLOR_ALPHA: "action_colorAlpha",
   ACTION_ACCELERATION: "action_acceleration",
+  ACTION_MOTION_PATH_SOURCE: "action_motionPathSource",
   CURVE_STYLE: "curveStyle",
   CHART_ROTATION_3D: "ChartRotation3D",
   ANIMATION_ATTRIBUTES: "animationAttributes",
@@ -191,6 +214,11 @@ export interface BuildInfo {
   textDelivery: number | undefined;
   /** One of {@link DeliveryOption}. */
   deliveryOption: number | undefined;
+  /**
+   * For a Move action, where its motion path ends relative to where it
+   * starts, in points: the first and last nodes of the path's first subpath.
+   */
+  move: { dx: number; dy: number } | undefined;
   /** Stages, for a build delivered in parts. */
   chunks: BuildChunk[];
 }
@@ -236,6 +264,7 @@ export class BuildModel {
         attributes?.getDouble(BuildAttributesFields.DATABASE_DELAY),
       textDelivery: attributes?.getUint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY),
       deliveryOption: attributes?.getUint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION),
+      move: motionPathDisplacement(attributes?.getMessage(BuildAttributesFields.ACTION_MOTION_PATH_SOURCE)),
       chunks: this.chunks(),
     };
   }
@@ -316,18 +345,25 @@ export class BuildModel {
 }
 
 /**
- * The builds on one slide.
- *
- * Returns an empty list for a slide with no animations, which is every
- * slide in the corpus — see the module note.
+ * The builds on one slide, in the order they play: the order of the
+ * slide's chunk list, which is what Build Order shows and which a deck
+ * the app has added a build to can hold in another order than its build
+ * list. A build with no chunk comes last, in list order.
  */
 export function buildsOfSlide(store: ObjectStore, slide: IwaObject): BuildModel[] {
+  const firstChunk = new Map<bigint, number>();
+  slide.message.getMessages(Slide.BUILD_CHUNKS).forEach((ref, at) => {
+    const chunk = store.object(ref.getVarint(1)!);
+    const build = chunk ? refId(chunk.message, BuildChunkOwner.BUILD) : undefined;
+    if (build !== undefined && !firstChunk.has(build)) firstChunk.set(build, at);
+  });
   const out: BuildModel[] = [];
   for (const ref of slide.message.getMessages(Slide.BUILDS)) {
     const object = store.resolve(ref.getVarint(1));
     if (object?.type === BUILD_TYPE.BUILD) out.push(new BuildModel(store, object));
   }
-  return out;
+  const at = (build: BuildModel): number => firstChunk.get(build.id) ?? Infinity;
+  return out.sort((a, b) => (at(a) === at(b) ? 0 : at(a) - at(b)));
 }
 
 /** What a new build needs. */
@@ -350,6 +386,61 @@ export interface NewBuild {
   delivery?: "allAtOnce" | "byParagraph";
   /** Paragraph count of the target's text, for a by-paragraph build. */
   paragraphs?: number;
+  /**
+   * A Move action: the object travels this far, in points, along a
+   * straight path. The build is then an Action with the app's own motion
+   * path effect (`apple:action-motion-path`), eased at both ends, and
+   * carries no text delivery.
+   */
+  move?: { dx: number; dy: number };
+}
+
+/** Where a motion path ends relative to its start, or undefined without a path. */
+function motionPathDisplacement(source: RawMessage | undefined): { dx: number; dy: number } | undefined {
+  const nodes = source?.getMessage(PathSourceFields.EDITABLE_BEZIER)?.getMessages(EditableBezierFields.SUBPATHS)[0]?.getMessages(SubpathFields.NODES) ?? [];
+  const first = nodes[0]?.getMessage(BezierNodeFields.NODE_POINT);
+  const last = nodes.at(-1)?.getMessage(BezierNodeFields.NODE_POINT);
+  if (!first || !last) return undefined;
+  return {
+    dx: (last.getFloat(Point.X) ?? 0) - (first.getFloat(Point.X) ?? 0),
+    dy: (last.getFloat(Point.Y) ?? 0) - (first.getFloat(Point.Y) ?? 0),
+  };
+}
+
+/**
+ * The straight motion path of a Move action, as the app writes it: one
+ * open subpath of two sharp nodes whose control points sit on the nodes,
+ * from the origin to the displacement, with the path's size beside it.
+ */
+function straightMotionPath(dx: number, dy: number): RawMessage {
+  const point = (x: number, y: number): RawMessage => {
+    const m = RawMessage.create();
+    m.setFloat(Point.X, x);
+    m.setFloat(Point.Y, y);
+    return m;
+  };
+  const node = (x: number, y: number): RawMessage => {
+    const m = RawMessage.create();
+    m.setMessage(BezierNodeFields.IN_CONTROL_POINT, point(x, y));
+    m.setMessage(BezierNodeFields.NODE_POINT, point(x, y));
+    m.setMessage(BezierNodeFields.OUT_CONTROL_POINT, point(x, y));
+    m.setVarint(BezierNodeFields.TYPE, BezierNodeType.SHARP);
+    return m;
+  };
+  const subpath = RawMessage.create();
+  subpath.setMessages(SubpathFields.NODES, [node(0, 0), node(dx, dy)]);
+  subpath.setBool(SubpathFields.CLOSED, false);
+  const size = RawMessage.create();
+  size.setFloat(SizeFields.WIDTH, Math.abs(dx));
+  size.setFloat(SizeFields.HEIGHT, Math.abs(dy));
+  const bezier = RawMessage.create();
+  bezier.setMessages(EditableBezierFields.SUBPATHS, [subpath]);
+  bezier.setMessage(EditableBezierFields.NATURAL_SIZE, size);
+  const source = RawMessage.create();
+  source.setBool(PathSourceFields.HORIZONTAL_FLIP, false);
+  source.setBool(PathSourceFields.VERTICAL_FLIP, false);
+  source.setMessage(PathSourceFields.EDITABLE_BEZIER, bezier);
+  return source;
 }
 
 /**
@@ -370,9 +461,16 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   if (!component) throw new RangeError("slide has no component to hold a build");
   const duration = spec.duration ?? 1;
   const delay = spec.delay ?? 0;
+  // A Move is one measured shape: the motion path effect, an Action, no text delivery.
+  if ((spec.effect === MOTION_PATH_EFFECT) !== (spec.move !== undefined)) {
+    throw new RangeError(`a Move action takes both move and the effect ${MOTION_PATH_EFFECT}`);
+  }
+  if (spec.move && ((spec.type ?? "Action") !== "Action" || spec.delivery === "byParagraph")) {
+    throw new RangeError("a Move action is an Action delivered all at once");
+  }
 
   const animation = RawMessage.create();
-  animation.setString(AnimationAttributesFields.ANIMATION_TYPE, spec.type ?? "In");
+  animation.setString(AnimationAttributesFields.ANIMATION_TYPE, spec.type ?? (spec.move ? "Action" : "In"));
   animation.setString(AnimationAttributesFields.EFFECT, spec.effect);
   animation.setDouble(AnimationAttributesFields.DURATION, duration);
   animation.setDouble(AnimationAttributesFields.DELAY, delay);
@@ -389,9 +487,11 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   }
   const attributes = RawMessage.create();
   attributes.setVarint(BuildAttributesFields.EVENT_TRIGGER, 1);
+  if (spec.move) attributes.setVarint(BuildAttributesFields.ACTION_ACCELERATION, BuildAcceleration.EASE_BOTH);
   attributes.setDouble(BuildAttributesFields.CHART_ROTATION_3D, 60);
   attributes.setMessage(BuildAttributesFields.ANIMATION_ATTRIBUTES, animation);
-  if (!byParagraph) {
+  if (spec.move) attributes.setMessage(BuildAttributesFields.ACTION_MOTION_PATH_SOURCE, straightMotionPath(spec.move.dx, spec.move.dy));
+  if (!byParagraph && !spec.move) {
     attributes.setVarint(BuildAttributesFields.CUSTOM_TEXT_DELIVERY, TextDelivery.BY_OBJECT);
     attributes.setVarint(BuildAttributesFields.CUSTOM_DELIVERY_OPTION, DeliveryOption.FORWARD);
   }
@@ -405,7 +505,10 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
   message.setVarint(BuildFields.CHUNK_ID_SEED, stages);
   build.setMessageBytes(message.toBytes());
 
+  // The chunks name their build by UUID, resolved through the component's
+  // object UUID map, so the build is registered there under the same one.
   const buildUid = randomUid();
+  store.registerObjectUuid(build, buildUid);
   const uuid = (): RawMessage => {
     const m = RawMessage.create();
     m.setVarint(1, buildUid.lower);
@@ -443,7 +546,87 @@ export function createBuild(store: ObjectStore, slide: IwaObject, spec: NewBuild
     build.identifier,
     ...chunks.map((chunk) => chunk.identifier),
   ]);
+  // The apps keep a slide's builds right after the slide archive, then its chunks, each block in list order.
+  layoutBuildObjects(store, slide);
   return new BuildModel(store, build);
+}
+
+/**
+ * Give a copied slide's builds identities of their own: each build is
+ * registered in its component's object UUID map under a fresh UUID, and
+ * its chunks name that one. A copied chunk otherwise still names the
+ * source slide's build, and a build with no entry of its own is one
+ * Keynote shows and will not reorder.
+ */
+export function reidentifyBuilds(store: ObjectStore, slide: IwaObject): void {
+  const chunks = slide.message
+    .getMessages(Slide.BUILD_CHUNKS)
+    .map((ref) => store.object(ref.getVarint(1)!))
+    .filter((chunk): chunk is IwaObject => chunk !== undefined);
+  for (const ref of slide.message.getMessages(Slide.BUILDS)) {
+    const build = store.object(ref.getVarint(1)!);
+    if (!build) continue;
+    const uid = randomUid();
+    store.registerObjectUuid(build, uid);
+    const uuid = RawMessage.create();
+    uuid.setVarint(1, uid.lower);
+    uuid.setVarint(2, uid.upper);
+    for (const chunk of chunks) {
+      if (refId(chunk.message, BuildChunkFields.BUILD) !== build.identifier) continue;
+      const identifier = chunk.message.getMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER);
+      if (identifier) {
+        identifier.setMessage(BuildChunkIdentifierFields.BUILD_ID, uuid.clone());
+        chunk.message.setMessage(BuildChunkFields.BUILD_CHUNK_IDENTIFIER, identifier);
+      }
+      chunk.message.setMessage(BuildChunkFields.BUILD_ID, uuid.clone());
+      chunk.message.markDirty();
+    }
+  }
+}
+
+/**
+ * Put a slide's builds in `order`, the order they play in: the slide's
+ * build list and its chunk list, each chunk staying with its build, as
+ * the app rewrites both lists when a build is dragged in Build Order.
+ * Every build on the slide must be named exactly once.
+ */
+export function setBuildOrder(store: ObjectStore, slide: IwaObject, order: readonly bigint[]): void {
+  const builds = slide.message.getMessages(Slide.BUILDS).map((ref) => ref.getVarint(1)!);
+  const wanted = [...order];
+  if (wanted.length !== builds.length || new Set(wanted).size !== wanted.length || wanted.some((id) => !builds.includes(id))) {
+    throw new RangeError(`the order must name each of the slide's ${builds.length} builds once`);
+  }
+  const chunks = slide.message.getMessages(Slide.BUILD_CHUNKS);
+  const chunkBuild = (ref: RawMessage): bigint | undefined => {
+    const chunk = store.object(ref.getVarint(1)!);
+    return chunk ? refId(chunk.message, BuildChunkOwner.BUILD) : undefined;
+  };
+  const orderedChunks = wanted.flatMap((id) => chunks.filter((ref) => chunkBuild(ref) === id));
+  const strays = chunks.filter((ref) => !wanted.includes(chunkBuild(ref) ?? -1n));
+  slide.message.setMessages(Slide.BUILDS, wanted.map((id) => makeRef(id)));
+  slide.message.setMessages(Slide.BUILD_CHUNKS, [...orderedChunks, ...strays]);
+  layoutBuildObjects(store, slide);
+}
+
+/**
+ * Put a slide's build and chunk archives where the apps keep them in the
+ * slide's component: right after the slide, builds then chunks, each
+ * block in the slide's list order.
+ */
+export function layoutBuildObjects(store: ObjectStore, slide: IwaObject): void {
+  const component = store.componentOf(slide.identifier);
+  if (!component) return;
+  const ordered = [...slide.message.getMessages(Slide.BUILDS), ...slide.message.getMessages(Slide.BUILD_CHUNKS)]
+    .map((ref) => component.byId.get(ref.getVarint(1)!))
+    .filter((object): object is IwaObject => object !== undefined);
+  const moving = new Set(ordered);
+  const rest = component.objects.filter((object) => !moving.has(object));
+  const slideAt = rest.indexOf(slide);
+  if (slideAt < 0) return;
+  const laid = [...rest.slice(0, slideAt + 1), ...ordered, ...rest.slice(slideAt + 1)];
+  if (laid.every((object, i) => object === component.objects[i])) return;
+  component.objects = laid;
+  component.structurallyDirty = true;
 }
 
 /** Take a build off a slide. The archive stays; the slide stops listing it. */

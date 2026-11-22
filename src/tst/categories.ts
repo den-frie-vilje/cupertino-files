@@ -45,6 +45,7 @@ import { makeRef, refId } from "../tsp/schema.ts";
 import { RawMessage } from "../base/protobuf.ts";
 import { APPLE_EPOCH_SECONDS } from "../base/bytes.ts";
 import { ColumnRowUidMap, randomUid, readUid, type Uid } from "./uidmap.ts";
+import { encodeDecimal128, packDecimal128 } from "./cellrecord.ts";
 
 /** TST.TableModelArchive.category_owner. */
 export const CATEGORY_OWNER = 86;
@@ -60,6 +61,7 @@ export const GroupByFields = protoFields("TST.GroupByArchive", {
   AGGREGATOR: "aggregator",
   COLUMN_AGG_TYPE: "column_agg_type",
   IS_ENABLED: "is_enabled",
+  AGGREGATOR_REF: "aggregator_ref",
   GROUP_NODE_ROOT_REF: "group_node_root_ref",
 });
 
@@ -81,6 +83,7 @@ export const GroupNodeFields = protoFields("TST.GroupByArchive.GroupNodeArchive"
   ROW_INDEXES: "row_indexes",
   ROW_LOOKUP_UIDS: "row_lookup_uids",
   CHILD_REF: "child_ref",
+  AGG_FORMULA_COORDS: "agg_formula_coords",
 });
 
 /** TST.GroupByArchive.GroupNodeArchive.FormatManagerArchive. */
@@ -102,6 +105,34 @@ export const ColumnAggregateFields = protoFields("TST.ColumnAggregateArchive", {
   LEVEL: "level",
   AGG_TYPE: "agg_type",
   SHOW_AS_TYPE: "show_as_type",
+});
+
+/**
+ * `TST.ColumnAggregateArchive.agg_type` codes, as the summary pop-up in a
+ * group row writes them: Count, Sum, Average, Min and Max.
+ */
+export const AGGREGATE_TYPE_NAMES: ReadonlyMap<number, string> = new Map([
+  [1, "count"],
+  [2, "sum"],
+  [3, "average"],
+  [4, "min"],
+  [5, "max"],
+]);
+
+/**
+ * The accumulator record every aggregator node carries, whatever its
+ * aggregate type: per-kind counts, the minimum, maximum, sum and product
+ * as cell values, and the duration total in seconds. The app fills all
+ * of them and shows the one the aggregate type names.
+ */
+export const AccumulatorFields = protoFields("TST.AccumulatorArchive", {
+  NUMBER_COUNT: "number_count",
+  STRING_COUNT: "string_count",
+  MIN: "min_value",
+  MAX: "max_value",
+  SUM: "number_total_value",
+  SECONDS: "secs_to_add",
+  PRODUCT: "product_value",
 });
 
 /** TSCE.CellValueArchive. */
@@ -206,12 +237,10 @@ export interface ColumnAggregate {
   columnUid: Uid | undefined;
   /** Category depth this summary is shown at. */
   level: number;
-  /**
-   * Raw `agg_type`. Numbers offers sum, average, count and so on; 1 is
-   * Count, measured (its per-group accumulator is a string count on a
-   * text column). The rest are passed through rather than named.
-   */
+  /** Raw `agg_type`; see {@link AGGREGATE_TYPE_NAMES}. */
   aggType: number;
+  /** The aggregate the type names, where measured: count, sum, average, min or max. */
+  aggregate: string | undefined;
   showAsType: number | undefined;
 }
 
@@ -265,6 +294,7 @@ export class TableCategories {
         columnUid,
         level: aggregate.getUint(ColumnAggregateFields.LEVEL) ?? 0,
         aggType: aggregate.getUint(ColumnAggregateFields.AGG_TYPE) ?? 0,
+        aggregate: AGGREGATE_TYPE_NAMES.get(aggregate.getUint(ColumnAggregateFields.AGG_TYPE) ?? 0),
         showAsType: aggregate.getUint(ColumnAggregateFields.SHOW_AS_TYPE),
       };
     });
@@ -605,7 +635,7 @@ export interface CategoryLevel {
 }
 
 /** A `TSP.UUID` message. */
-function writeUidMessage(uid: Uid): RawMessage {
+export function writeUidMessage(uid: Uid): RawMessage {
   const m = RawMessage.create();
   m.setVarint(1, uid.lower);
   m.setVarint(2, uid.upper);
@@ -894,3 +924,317 @@ export function categoriesOf(
   }
   return out;
 }
+
+// ------------------------------------------------------------------ summaries
+
+/** Archive type id of `TST.GroupByArchive.AggregatorArchive`. */
+export const AGGREGATOR_TYPE = 6382;
+
+/** TST.GroupByArchive.AggregatorArchive: one per summarised column. */
+const AggregatorFields = protoFields("TST.GroupByArchive.AggregatorArchive", {
+  COLUMN_UID: "column_uid",
+  AGG_NODE: "agg_node",
+});
+
+/** TST.GroupByArchive.AggNodeArchive: the root over every data row, a child per group. */
+const AggNodeFields = protoFields("TST.GroupByArchive.AggNodeArchive", {
+  FORMULA_COORD: "formula_coord",
+  ACCUM: "accum",
+  CHILD: "child",
+});
+
+/** TSCE.CellCoordinateArchive, as the grouping's calc-engine coordinates use it. */
+const CellCoordinate = { COLUMN: 2, ROW: 3 } as const;
+
+/** The column after the grouping's eight internal formulas, where its aggregator nodes start. */
+const FIRST_AGGREGATOR_COLUMN = 8;
+
+/** `agg_type` codes by name: the inverse of {@link AGGREGATE_TYPE_NAMES}. */
+export const AGGREGATE_TYPE_CODES: ReadonlyMap<string, number> = new Map(
+  [...AGGREGATE_TYPE_NAMES].map(([code, name]) => [name, code]),
+);
+
+/** The automatic number format an accumulator's numbers and a summary cell carry. */
+function automaticNumberFormat(): RawMessage {
+  const format = RawMessage.create();
+  format.setVarint(1, 256);
+  format.setVarint(2, 253);
+  format.setVarint(4, 0);
+  format.setBool(5, false);
+  return format;
+}
+
+/** A number as an accumulator stores it: the double, its decimal, and the automatic format. */
+function accumulatorNumber(
+  value: number,
+  explicitFormat: boolean,
+  exact?: { mantissa: bigint; exponent: number },
+): RawMessage {
+  const out = RawMessage.create();
+  out.setVarint(CellValueFields.TYPE, CellValueType.NUMBER);
+  const inner = RawMessage.create();
+  inner.setDouble(1, value);
+  inner.setVarint(2, 0);
+  inner.setMessage(3, automaticNumberFormat());
+  inner.setBool(6, explicitFormat);
+  // A product past a double's range still fits decimal128, which holds 34 digits.
+  let decimal = encodeDecimal128(value);
+  if (!Number.isFinite(value) && exact) {
+    let mantissa = exact.mantissa < 0n ? -exact.mantissa : exact.mantissa;
+    let exponent = exact.exponent;
+    while (mantissa >= 10n ** 34n) {
+      mantissa /= 10n;
+      exponent += 1;
+    }
+    decimal = packDecimal128(mantissa, exponent, exact.mantissa < 0n);
+  }
+  const view = new DataView(decimal.buffer, decimal.byteOffset, decimal.byteLength);
+  inner.setVarint(7, view.getBigUint64(0, true));
+  inner.setVarint(8, view.getBigUint64(8, true));
+  out.setMessage(CellValueFields.NUMBER, inner);
+  return out;
+}
+
+/** A string as an accumulator stores it: the text with an explicit text format. */
+function accumulatorString(value: string): RawMessage {
+  const out = RawMessage.create();
+  out.setVarint(CellValueFields.TYPE, CellValueType.STRING);
+  const inner = RawMessage.create();
+  const format = RawMessage.create();
+  format.setVarint(1, 260);
+  inner.setString(1, value);
+  inner.setMessage(2, format);
+  inner.setBool(4, true);
+  inner.setBool(5, false);
+  inner.setBool(6, false);
+  out.setMessage(CellValueFields.STRING, inner);
+  return out;
+}
+
+/** A finite double as the decimal its shortest form names. */
+function decimalParts(value: number): { mantissa: bigint; exponent: number } {
+  const [mantissaText, exponentText] = Math.abs(value).toExponential().split("e");
+  const [int, frac = ""] = mantissaText!.split(".");
+  return { mantissa: BigInt(`${int!}${frac}`) * (value < 0 ? -1n : 1n), exponent: Number(exponentText) - frac.length };
+}
+
+/** The sum of doubles in decimal arithmetic, as the app adds cells: 0.1 + 0.2 is 0.3. */
+export function decimalSum(values: readonly number[]): number {
+  const parts = values.map(decimalParts);
+  const exponent = parts.reduce((least, p) => Math.min(least, p.exponent), 0);
+  const total = parts.reduce((sum, p) => sum + p.mantissa * 10n ** BigInt(p.exponent - exponent), 0n);
+  return Number(`${total}e${exponent}`);
+}
+
+/** The product of doubles in decimal arithmetic, kept as parts because it outgrows a double long before decimal128. */
+function decimalProduct(values: readonly number[]): { mantissa: bigint; exponent: number } {
+  return values.map(decimalParts).reduce(
+    (product, p) => ({ mantissa: product.mantissa * p.mantissa, exponent: product.exponent + p.exponent }),
+    { mantissa: 1n, exponent: 0 },
+  );
+}
+
+/**
+ * The `TST.AccumulatorArchive` the app caches for a set of cells, whatever
+ * the aggregate shown: over numbers, their count, minimum, maximum, sum
+ * (twice: as a cell value and as `secs_to_add`) and product; over strings,
+ * their count, the first and last in code-unit order, and a zero sum and
+ * product. A column holding anything else, or a mix, is not measured.
+ */
+export function accumulatorRecord(values: readonly (number | string)[]): RawMessage {
+  const record = RawMessage.create();
+  if (values.every((v) => typeof v === "number")) {
+    const numbers = values as number[];
+    const sum = decimalSum(numbers);
+    const product = decimalProduct(numbers);
+    record.setVarint(AccumulatorFields.NUMBER_COUNT, numbers.length);
+    record.setMessage(AccumulatorFields.MIN, accumulatorNumber(numbers.reduce((a, b) => Math.min(a, b), Infinity), true));
+    record.setMessage(AccumulatorFields.MAX, accumulatorNumber(numbers.reduce((a, b) => Math.max(a, b), -Infinity), true));
+    record.setMessage(AccumulatorFields.SUM, accumulatorNumber(sum, true));
+    record.setDouble(AccumulatorFields.SECONDS, sum);
+    record.setMessage(
+      AccumulatorFields.PRODUCT,
+      accumulatorNumber(Number(`${product.mantissa}e${product.exponent}`), true, product),
+    );
+    return record;
+  }
+  if (values.every((v) => typeof v === "string")) {
+    const strings = [...(values as string[])].sort();
+    record.setVarint(AccumulatorFields.STRING_COUNT, strings.length);
+    record.setMessage(AccumulatorFields.MIN, accumulatorString(strings[0] ?? ""));
+    record.setMessage(AccumulatorFields.MAX, accumulatorString(strings[strings.length - 1] ?? ""));
+    record.setMessage(AccumulatorFields.SUM, accumulatorNumber(0, false));
+    record.setMessage(AccumulatorFields.PRODUCT, accumulatorNumber(0, false));
+    return record;
+  }
+  throw new RangeError("a summary needs a column of numbers or a column of text; mixed or other values are not measured");
+}
+
+/** The width of a calc-engine dependency tile, in columns, and its height in rows. */
+export const DEPENDENCY_TILE_COLUMNS = 32;
+export const DEPENDENCY_TILE_ROWS = 128;
+
+/** One leaf of a one-level category: its identity and the rows it holds. */
+export interface CategoryLeaf {
+  uid: Uid;
+  rows: number[];
+  /** The calc-engine column of the group's aggregator node. */
+  coordinate: number;
+}
+
+/**
+ * Register a per-group summary on the grouping, the way the summary pop-up
+ * in a group row does: a `column_agg_type` entry naming the column and the
+ * aggregate, an aggregator archive caching the accumulator over every data
+ * row and over each group (referenced from field 17 and copied inline into
+ * field 4, as the tree is), and a calc-engine coordinate for each of those
+ * nodes, stamped on the group nodes that own them. The nodes take the
+ * columns after the grouping's own eight formulas, the groups first and
+ * the root last, after whatever aggregators the grouping already has.
+ *
+ * Returns the groups in tree order, for the summary cells that draw them.
+ * Only a one-level category is measured.
+ */
+export function defineColumnAggregate(
+  store: ObjectStore,
+  groupBy: IwaObject,
+  columnUid: Uid,
+  aggType: number,
+  accumulate: (rows: readonly number[]) => RawMessage,
+): { leaves: CategoryLeaf[]; rootCoordinate: number } {
+  const m = groupBy.message;
+  if (m.getMessages(GroupByFields.GROUP_COLUMN).length !== 1) {
+    throw new RangeError("a summary needs a category grouped by exactly one column");
+  }
+  const root = store.resolve(refId(m, GroupByFields.GROUP_NODE_ROOT_REF));
+  const inlineRoot = m.getMessage(GroupByFields.GROUP_NODE_ROOT);
+  if (!root || !inlineRoot) throw new RangeError("the category has no group tree to summarise");
+  const leaves = root.getObjectReferences().map((id) => store.resolve(id)).filter((o): o is IwaObject => o !== undefined);
+  const inlineLeaves = inlineRoot.getMessages(GroupNodeFields.CHILD);
+  if (leaves.length !== inlineLeaves.length) throw new RangeError("the category's referenced and inline trees disagree");
+
+  // shortcut: one coordinate column per node after the highest in use, when nested summaries are measured
+  let column = FIRST_AGGREGATOR_COLUMN;
+  const walk = (node: RawMessage | undefined): void => {
+    if (!node) return;
+    column = Math.max(column, Number(node.getMessage(AggNodeFields.FORMULA_COORD)?.getVarint(CellCoordinate.COLUMN) ?? 0) + 1);
+    for (const child of node.getMessages(AggNodeFields.CHILD)) walk(child);
+  };
+  for (const existing of m.getMessages(GroupByFields.AGGREGATOR)) walk(existing.getMessage(AggregatorFields.AGG_NODE));
+  const coordinate = (): RawMessage => {
+    const coord = RawMessage.create();
+    coord.setVarint(CellCoordinate.COLUMN, column++);
+    coord.setVarint(CellCoordinate.ROW, 0);
+    return coord;
+  };
+  const stamp = (referenced: RawMessage, inline: RawMessage, coord: RawMessage): void => {
+    referenced.addMessage(GroupNodeFields.AGG_FORMULA_COORDS, coord);
+    inline.addMessage(GroupNodeFields.AGG_FORMULA_COORDS, RawMessage.parse(coord.toBytes()));
+  };
+
+  const aggNode = (coord: RawMessage, accum: RawMessage): RawMessage => {
+    const node = RawMessage.create();
+    node.setMessage(AggNodeFields.FORMULA_COORD, RawMessage.parse(coord.toBytes()));
+    node.setMessage(AggNodeFields.ACCUM, accum);
+    return node;
+  };
+  // Everything that can refuse runs before the first write, so a refused call leaves the grouping as it was.
+  const component = store.componentOf(groupBy.identifier);
+  if (!component) throw new RangeError("group-by archive has no component");
+  // shortcut: one dependency tile, 32 columns wide; a tile per 32 columns when a wider summary is measured
+  if (column + leaves.length >= DEPENDENCY_TILE_COLUMNS) {
+    throw new RangeError(
+      `the summary's aggregators would pass calc-engine column ${DEPENDENCY_TILE_COLUMNS - 1}; that many groups and summaries are not measured`,
+    );
+  }
+  const planned = leaves.map((leaf) => {
+    const uid = readUid(leaf.message.getMessage(GroupNodeFields.GROUP_UID));
+    if (!uid) throw new RangeError("a group node has no identity");
+    const rows = expandIndexSet(leaf.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS));
+    return { uid, rows, accum: accumulate(rows) };
+  });
+  const rootAccum = accumulate(expandIndexSet(root.message.getMessage(GroupNodeFields.ROW_LOOKUP_UIDS)));
+
+  const out: CategoryLeaf[] = [];
+  const children: RawMessage[] = [];
+  planned.forEach(({ uid, rows, accum }, i) => {
+    const coord = coordinate();
+    stamp(leaves[i]!.message, inlineLeaves[i]!, coord);
+    children.push(aggNode(coord, accum));
+    out.push({ uid, rows, coordinate: Number(coord.getVarint(CellCoordinate.COLUMN)) });
+  });
+  const rootCoord = coordinate();
+  stamp(root.message, inlineRoot, rootCoord);
+  const rootNode = aggNode(rootCoord, rootAccum);
+  rootNode.setMessages(AggNodeFields.CHILD, children);
+
+  const aggregator = RawMessage.create();
+  aggregator.setMessage(AggregatorFields.COLUMN_UID, writeUidMessage(columnUid));
+  aggregator.setMessage(AggregatorFields.AGG_NODE, rootNode);
+  // Written twice, like the group tree: the referenced archive is the live
+  // one and the inline copy the older encoding.
+  const object = store.createObject(AGGREGATOR_TYPE, component);
+  object.setMessageBytes(aggregator.toBytes());
+  m.addMessage(GroupByFields.AGGREGATOR, RawMessage.parse(aggregator.toBytes()));
+  m.addMessage(GroupByFields.AGGREGATOR_REF, makeRef(object.identifier));
+  groupBy.setObjectReferences([...groupBy.getObjectReferences(), object.identifier]);
+
+  const entry = RawMessage.create();
+  entry.setMessage(ColumnAggregateFields.COLUMN_UID, writeUidMessage(columnUid));
+  entry.setVarint(ColumnAggregateFields.LEVEL, 1);
+  entry.setVarint(ColumnAggregateFields.AGG_TYPE, aggType);
+  entry.setVarint(ColumnAggregateFields.SHOW_AS_TYPE, 0);
+  m.addMessage(GroupByFields.COLUMN_AGG_TYPE, entry);
+  return { leaves: out, rootCoordinate: Number(rootCoord.getVarint(CellCoordinate.COLUMN)) };
+}
+
+/** TSCE.CategoryReferenceArchive, the one node of a summary cell's formula. */
+const CategoryReferenceFields = protoFields("TSCE.CategoryReferenceArchive", {
+  GROUP_BY_UID: "group_by_uid",
+  COLUMN_UID: "column_uid",
+  AGGREGATE_TYPE: "aggregate_type",
+  GROUP_LEVEL: "group_level",
+  PRESERVE_FLAGS: "preserve_flags",
+  ABSOLUTE_GROUP_UID: "absolute_group_uid",
+  AGG_INDEX_LEVEL: "agg_index_level",
+});
+
+/** AST node type of a category reference. */
+const AST_CATEGORY_REF_NODE = 66;
+/** `ASTNodeArchive.AST_category_ref`. */
+const AST_CATEGORY_REF = 39;
+
+/**
+ * The formula a summary cell carries: a single category-reference node
+ * naming the grouping, the summarised column, the aggregate, the group
+ * level one past the category's, and the group itself (`{1, 0}` in the
+ * summary cell vendor's template, where the group is a wildcard).
+ */
+export function categoryReferenceFormula(groupByUid: Uid, columnUid: Uid, aggType: number, groupUid: Uid): RawMessage {
+  const ref = RawMessage.create();
+  ref.setMessage(CategoryReferenceFields.GROUP_BY_UID, writeUidMessage(groupByUid));
+  ref.setMessage(CategoryReferenceFields.COLUMN_UID, writeUidMessage(columnUid));
+  ref.setVarint(CategoryReferenceFields.AGGREGATE_TYPE, aggType);
+  ref.setVarint(CategoryReferenceFields.GROUP_LEVEL, 2);
+  const flags = RawMessage.create();
+  flags.setBool(1, false);
+  flags.setBool(2, true);
+  flags.setBool(3, false);
+  flags.setBool(4, false);
+  ref.setMessage(CategoryReferenceFields.PRESERVE_FLAGS, flags);
+  ref.setMessage(CategoryReferenceFields.ABSOLUTE_GROUP_UID, writeUidMessage(groupUid));
+  ref.setVarint(CategoryReferenceFields.AGG_INDEX_LEVEL, 65535);
+  const holder = RawMessage.create();
+  holder.setMessage(1, ref);
+  const node = RawMessage.create();
+  node.setVarint(1, AST_CATEGORY_REF_NODE);
+  node.setMessage(AST_CATEGORY_REF, holder);
+  const nodes = RawMessage.create();
+  nodes.addMessage(1, node);
+  const formula = RawMessage.create();
+  formula.setMessage(1, nodes);
+  return formula;
+}
+
+/** The group a summary cell vendor's template stands for: any group. */
+export const WILDCARD_GROUP_UID: Uid = { lower: 1n, upper: 0n };

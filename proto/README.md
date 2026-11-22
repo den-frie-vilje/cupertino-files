@@ -18,14 +18,14 @@ Nothing has been edited.
 
 - `current/` — the **shared** iWork families (TSP, TSK, TSS, TSD, TSWP,
   TSA, TSCH, TST, TSCK, TSCE), identical in every bundle.
-- `pages-15.4/` — the Pages-specific `TP*` files.
-- `keynote-15.4/` — the Keynote-specific `KN*` files.
-- `numbers-15.4/` — the Numbers-specific `TN*` files.
+- `pages-16.0/` — the Pages-specific `TP*` files.
+- `keynote-16.0/` — the Keynote-specific `KN*` files.
+- `numbers-16.0/` — the Numbers-specific `TN*` files.
 
 ## Provenance
 
-Every directory comes from the same release of the applications,
-extracted first-hand from the installed bundles on macOS. The dumper is
+Every directory is extracted first-hand from the installed bundles on
+macOS, all from the 16.0 release. The dumper is
 `protodump.py` from
 [masaccio/numbers-parser](https://github.com/masaccio/numbers-parser)
 at commit `2dd9dbe3f8f3440bbd19e23668d5ade72a2e1629` (`src/build/protodump.py`,
@@ -35,27 +35,40 @@ tree, main executable and frameworks alike.
 
 | Directory | Files | Extracted from | App version (build) | Main executable, SHA-256 |
 |---|---|---|---|---|
-| `current/` | 29 × `TS*.proto` | Pages.app (byte-identical in Numbers.app and Keynote.app) | Pages 15.4 (7051.0.79) | `66afd6fceae42033155d42f12e3bbb4fab9000d358926a48b7db6090e01e5ca1` |
-| `pages-15.4/` | 3 × `TP*.proto` | Pages.app | Pages 15.4 (7051.0.79) | as above |
-| `keynote-15.4/` | 4 × `KN*.proto` | Keynote.app | Keynote 15.4 (7051.0.79) | `e5c3e6eee9891e9d806028328139fd7500247e5bc25017797dffb5ba277ac065` |
-| `numbers-15.4/` | 4 × `TN*.proto` | Numbers.app | Numbers 15.4 (7051.0.79) | `372357ba69beb6561fbcd4b529d3f24bf50a0de4452ff95b8146df07c5d64182` |
+| `current/` | 29 × `TS*.proto` | Pages.app (byte-identical in Numbers.app's frameworks) | Pages 16.0 (7052.0.68) | `34e3e78570931b06fffe55c7d00fa7048e0e8fc74b37f2d1e615d06641161910` |
+| `pages-16.0/` | 3 × `TP*.proto` | Pages.app | Pages 16.0 (7052.0.68) | as above |
+| `keynote-16.0/` | 4 × `KN*.proto` | Keynote.app | Keynote 16.0 (7052.0.68) | `25f6dc58a3ad0423c04c03ef24d7a73fc90ee831b4a7adf3264b8e2c5e539c2e` |
+| `numbers-16.0/` | 4 × `TN*.proto` | Numbers.app, `Contents/Frameworks` only | Numbers 16.0 (7052.0.68) | `7bb51a0bcaf0e921d78317432fbb60a7e1fd948362323871484afa4819e81937` |
 
 The digests are of the universal (x86_64 + arm64) executables as
-installed. The 29 shared files dumped from the three bundles are
-byte-identical to one another, which is the cross-check that they are
-one schema and not three. Pages 15.4's own framework also embeds the
-`TN*` descriptors, byte-identical to Numbers 15.4's, which no earlier
-Pages did.
+installed. The 29 shared files dumped from Pages 16.0, from Numbers
+16.0's frameworks and from Keynote 16.0 are byte-identical to one
+another, which is the cross-check that they are one schema and not
+three. Pages 16.0's framework embeds
+`TNArchives.proto` as well, byte-identical to Numbers'. The dumper
+refuses the whole Numbers 16.0 `Contents/` tree over
+`TNCommandArchives.proto`, which loads cleanly from `Contents/Frameworks`
+alone; the Pages and Keynote trees dump whole.
 
-Earlier sets are in git history: the 15.1 release (Pages 15.1.1,
-Numbers 15.1, Keynote 15.1.1) under the directories `pages-15.1/`,
-`keynote-15.1/` and `numbers-15.1/` before this refresh, and
+Earlier sets are in git history: the 15.4 release (Pages, Numbers and
+Keynote 15.4, 7051.0.79) under `pages-15.4/`, `numbers-15.4/` and
+`keynote-15.4/` and in `current/` before the 16.0 refreshes, the 15.1 release (Pages 15.1.1,
+Numbers 15.1, Keynote 15.1.1) under `pages-15.1/`, `keynote-15.1/` and
+`numbers-15.1/` before that, and
 numbers-parser's and keynote-parser's 14.4 dumps and
 obriensp/iWorkFileFormat's Pages 5.0 dump from 2013 at the tag
 `proto-before-15.1`. From 15.1 to 15.4 the `TP*` files did not change;
 `TSS.StylesheetArchive` gained three versioned-style snapshots,
 `TN.SheetArchive` a hidden flag and a tab colour, and Keynote's build and
 transition attributes custom angle, blur and text-alignment options.
+From 15.4 to 16.0 the shared set gained `TSS.StylesheetArchive`
+`styles_for_16_0` (28), a `TSD.WatermarkingDataAttributes` message
+extending `TSP.DataAttributes` and a `DataInfo.watermarking_attributes`
+field, and four collaboration-command flags in `TSK`; `TN` and `TP`
+each gained an `alpine_visible` UI-state flag (Numbers also
+`alpine_width`), and `KN` the same pair (`DesktopUILayoutArchive`
+`alpine_visible` 13, `UIStateArchive` `desktop_alpine_width` 43). No
+field number changed.
 
 ## Refreshing a dump
 

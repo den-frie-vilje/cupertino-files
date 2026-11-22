@@ -67,6 +67,8 @@ export const SlideNode = protoFields("KN.SlideNodeArchive", {
   HAS_TRANSITION: "hasTransition",
   HAS_NOTE: "hasNote",
   DEPTH: "depth",
+  /** True or absent on every app-written slide that carries a build, never false, and true on none without one. */
+  HAS_EXPLICIT_BUILDS: "has_explicit_builds",
 });
 
 /** KN.SlideArchive. */
@@ -262,7 +264,7 @@ export const KN_REFERENCE_EXTRACTORS: ReadonlyMap<number, ReferenceExtractor> = 
 
 // Declared here rather than imported from builds.ts, which imports this file.
 const BuildOwner = protoFields("KN.BuildArchive", { DRAWABLE: "drawable" });
-const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
+export const BuildChunkOwner = protoFields("KN.BuildChunkArchive", { BUILD: "build" });
 
 /**
  * The container rule, for the Keynote archives the shared map cannot

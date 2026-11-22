@@ -345,6 +345,7 @@ message DesktopUILayoutArchive {
   optional bool element_list_visible = 10;
   optional bool activity_stream_visible = 11;
   optional bool activity_stream_was_visible = 12;
+  optional bool alpine_visible = 13;
 }
 
 message UIStateArchive {
@@ -390,6 +391,7 @@ message UIStateArchive {
   optional bool shows_mobile_outline = 40;
   optional bool editing_disabled = 41;
   optional float desktop_activity_stream_view_width = 42;
+  optional float desktop_alpine_width = 43;
 }
 
 message IOSRestorableViewStateRootArchive {

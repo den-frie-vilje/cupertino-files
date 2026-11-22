@@ -6,7 +6,8 @@ import { KeynoteDocument } from "../src/keynote/document.ts";
 import { findDrawableCore } from "../src/tsd/drawables.ts";
 import { refId } from "../src/tsp/schema.ts";
 import { Slide } from "../src/keynote/schema.ts";
-import { GROUP_NODE_TYPE } from "../src/tst/categories.ts";
+import { GROUP_NODE_TYPE, GroupByFields, AccumulatorFields } from "../src/tst/categories.ts";
+import type { RawMessage } from "../src/base/protobuf.ts";
 import { FilterSetFields } from "../src/tst/filters.ts";
 import { PredicateFields, PREDICATE_TYPE_CONDITIONS, PREDICATE_TYPE_OPERATORS } from "../src/tst/predicates.ts";
 
@@ -149,13 +150,52 @@ describe("the number conditions beyond comparisons, written on the phone", () =>
   });
 });
 
+describe("the four other summaries the app wrote, and the record under them", () => {
+  it("name Sum, Average, Min and Max on their columns, each over the same accumulator record", () => {
+    const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-summaries-seed.numbers"));
+    const category = doc.tables()[0]!.categories()[0]!;
+    expect(category.aggregates().map((a) => [a.column, a.aggType, a.aggregate])).toEqual([
+      [2, 2, "sum"],
+      [3, 3, "average"],
+      [4, 4, "min"],
+      [5, 5, "max"],
+    ]);
+    // Every aggregator's root node carries the whole record: count, min, max, sum and product over the 7 data rows.
+    const roots = category.object.message.getMessages(GroupByFields.AGGREGATOR).map((a) => a.getMessage(2)!.getMessage(2)!);
+    const cellNumber = (record: RawMessage, field: number) => record.getMessage(field)?.getMessage(4)?.getDouble(1);
+    expect(roots.map((r) => [Number(r.getVarint(AccumulatorFields.NUMBER_COUNT)), cellNumber(r, AccumulatorFields.MIN), cellNumber(r, AccumulatorFields.MAX), cellNumber(r, AccumulatorFields.SUM), cellNumber(r, AccumulatorFields.PRODUCT)])).toEqual([
+      [7, 1, 40, 98, 2520000],
+      [7, 1, 40, 98, 2520000],
+      [7, 1, 40, 98, 2520000],
+      [7, 1, 40, 98, 2520000],
+    ]);
+  });
+});
+
+describe("the summary model the app draws a category's group rows from", () => {
+  it("holds the drawn summaries one column right of the summarised column, for the group rows the app filled", () => {
+    const seed = NumbersDocument.load(fixture("olekristensen-v26.0-mac-summaries-seed.numbers")).tables()[0]!;
+    const summary = seed.summaryModel()!;
+    expect([summary.rowCount, summary.columnCount]).toEqual([3, seed.columnCount + 1]);
+    // Sum, Average, Min, Max of Note (one row of 1) and of Animal (10 and 12); Fruit and Transport have no cells, as the checker saw.
+    expect(summary.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([
+      [0, 3, 1], [0, 4, 1], [0, 5, 1], [0, 6, 1],
+      [2, 3, 22], [2, 4, 11], [2, 5, 10], [2, 6, 12],
+    ]);
+    const twin = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers")).tables()[0]!;
+    expect(twin.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 2, 2], [1, 2, 2], [2, 2, 2]]);
+    expect(NumbersDocument.blank().tables()[0]!.summaryModel()?.cells()).toEqual([]);
+  });
+});
+
 describe("a per-group summary the app wrote", () => {
   it("reads as one aggregate on the grouping column, level 1, agg_type 1 (Count)", () => {
     const doc = NumbersDocument.load(fixture("olekristensen-v26.0-mac-authored.numbers"));
     const category = doc.tables()[0]!.categories()[0]!;
     expect(category.groupColumns().map((c) => c.column)).toEqual([1]);
     expect(category.aggregates()).toEqual([
-      { column: 1, columnUid: category.groupColumns()[0]!.columnUid, level: 1, aggType: 1, showAsType: 0 },
+      { column: 1, columnUid: category.groupColumns()[0]!.columnUid, level: 1, aggType: 1,
+        aggregate: "count", showAsType: 0 },
     ]);
   });
 });

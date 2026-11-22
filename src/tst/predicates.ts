@@ -196,8 +196,8 @@ export const PREDICATE_TYPE_FUNCTIONS: ReadonlyMap<number, string> = new Map([
  * percent (9); the average, duplicate and unique conditions carry a
  * whole-column SUM as their formula, which the engine evaluates by the
  * code rather than the formula. Duration
- * comparisons have their own codes (38 equal, 40 greater than, 44
- * between measured; the rest of the duration family is unmeasured), and
+ * comparisons have their own codes, 38 to 43 in the comparison menu's
+ * order and 44 between, and
  * a checkbox test compiles to a function the registry does not name,
  * index 326, compared with the checkbox control's interaction type 8.
  * The formulas for "is" and "is not" wrap their IF branches in thunk
@@ -241,7 +241,11 @@ export const PREDICATE_TYPE_CONDITIONS: ReadonlyMap<number, string> = new Map([
   [36, "is"],
   [37, "is not"],
   [38, "duration equal to"],
+  [39, "duration not equal to"],
   [40, "duration greater than"],
+  [41, "duration greater than or equal to"],
+  [42, "duration less than"],
+  [43, "duration less than or equal to"],
   [44, "duration between"],
   [55, "is checked"],
   [56, "is not checked"],

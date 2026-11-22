@@ -26,7 +26,7 @@ person to look at a rendered document, because the scripting dictionaries expose
 
 ## Settled
 
-67 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
+69 claims have been checked in the app and moved off the list above. The reasoning is kept, because it is what makes the
 result mean something; what changed is that it is no longer a request.
 
 ### ✅ Add and remove tables on a sheet
@@ -45,13 +45,29 @@ result mean something; what changed is that it is no longer a request.
 
 **Outcome.** **Half confirmed, half refuted (2026-08-03, the first animated deck anywhere), then closed whole when the deck's bytes arrived.** Confirmed: three builds survive authoring and resave, the slide↔build graph reads correctly, and delivery stores English display strings ("All at Once", "By Paragraph") even under a Danish UI. Refuted: every database_* field read for effect and timing was absent from the app-authored builds — including one given 3 s duration and 1 s delay by hand — so modern Keynote packs effect and timing into animationAttributes. The returned deck settled that field as KN.AnimationAttributesArchive (in the vendored schema all along): effect strings in two schemes, duration/delay doubles, and per-chunk timing on staged delivery. The deck is now the fixture the readers are pinned against
 
+### ✅ Builds: a Move action
+
+**Was claimed.** Keynote plays a Move action this library wrote from nothing.
+
+**Why it needed an app.** The suite proves the archive matches the app's Move field for field, and the shape audit accepts it; an action the app discards looks exactly like a still slide.
+
+**Outcome.** **Confirmed in Keynote 15.4.** The checker played 22-move-action.key, saw the title slide and commented on the slide "Slided, great!" (`olekristensen-v26.0-mac-move-action.key`). The app's save kept the action and added the path source's two flip flags, stated false, which the writer now carries.
+
 ### ✅ Builds: creating an animation
 
 **Was claimed.** Keynote plays a build this library wrote from nothing.
 
 **Why it needed an app.** The suite proves the archive matches the deck's builds field for field; a build the app silently drops looks exactly like one never written, so only playing the deck can say.
 
-**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states.
+**Outcome.** **Confirmed in Keynote 15.1.1.** The checker opened seed-build.key, played it and wrote "It worked" as a comment on the slide (`olekristensen-v26.0-mac-build-seed.key`). The app kept the build and its chunk field for field, reseeded the random number and minted new chunk uids, and dropped the two references the library had declared on them: a build's drawable and a chunk's build are carried and never declared, which the container rule now states. **Build Order confirmed in Keynote 15.4.** Five rounds of seed-build-order.key pinned the library's dissolve last in the panel until the build was registered in the component's object UUID map under the UUID its chunks name; the checker then dragged it first and wrote "moved" on the slide (`olekristensen-v26.0-mac-dissolve-registered.key`).
+
+### ✅ Categories: a per-group summary
+
+**Was claimed.** Numbers draws every group row of a per-group summary the library wrote
+
+**Why it needed an app.** the first staged summary drew one group row of three in Numbers 16.0; the checker wrote on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening" (`olekristensen-v26.0-mac-category-summary.numbers`). The app had registered that one cell with its calc engine on open and left the other two, so the library now writes the registration the twin carries for every cell, and only the app can say whether that was all it was missing
+
+**Outcome.** **Confirmed in Numbers for iOS.** Opened on the phone, every group row showed its sum; the checker: "24 worked on open" (`24-category-summary-registered.numbers`, returned unchanged). The writer has since moved three values to the app's own (the format's count, the extras word, the summary map's first column), so today's seed-summary.numbers differs from the file that was opened in those.
 
 ### ✅ Categories: defining a category by a column
 

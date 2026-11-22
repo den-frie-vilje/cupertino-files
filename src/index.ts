@@ -189,8 +189,7 @@ export {
   groupValueOf,
   normalizeCellInput,
   TST_TYPE,
-  TableModelFields,
-} from "./tst/tables.ts";
+  TableModelFields, SummaryModel } from "./tst/tables.ts";
 export type {
   AuditFinding,
   CellValue,
@@ -281,6 +280,8 @@ export {
   GroupColumnFields,
   GroupNodeFields,
   ColumnAggregateFields,
+  AccumulatorFields,
+  AGGREGATE_TYPE_NAMES,
   sameGroupValue,
 } from "./tst/categories.ts";
 export type { CategoryGroup, GroupColumn, GroupValue, ColumnAggregate } from "./tst/categories.ts";

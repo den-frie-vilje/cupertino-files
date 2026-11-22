@@ -21,6 +21,7 @@ import { IWorkDocument } from "../tsa/document.ts";
 import { PagesDocument } from "../pages/document.ts";
 import { NumbersDocument } from "../numbers/document.ts";
 import { KeynoteDocument } from "../keynote/document.ts";
+import { MOTION_PATH_EFFECT } from "../keynote/builds.ts";
 import { tablesOf, type TableModel } from "../tst/tables.ts";
 import { allBorders, type CellFormatting } from "../tst/styles.ts";
 import { chartsOf } from "../tsch/charts.ts";
@@ -112,6 +113,15 @@ export const COMPOSITE_TOOLS: readonly string[] = [
 
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
+/** A {dx, dy} displacement from a tool argument, or undefined when absent. */
+const moveOf = (v: unknown): { dx: number; dy: number } | undefined => {
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== "object") throw new RangeError("move must be an object with numeric dx and dy");
+  const dx = num((v as Record<string, unknown>).dx);
+  const dy = num((v as Record<string, unknown>).dy);
+  if (dx === undefined || dy === undefined) throw new RangeError("move needs numeric dx and dy");
+  return { dx, dy };
+};
 
 // Schema fragments every table tool shares; hoisted so the wording that
 // teaches the model stays in one place.
@@ -898,6 +908,8 @@ export const TOOLS: readonly Tool[] = [
       "Animates one drawable on a Keynote slide with an all-at-once build played on click. " +
         "slide and drawable are 0-based (drawables in the slide's z-order; use " +
         "describe_document); effect is the identifier the app stores, e.g. \"apple:dissolve\". " +
+        "With move, the build is a Move action along a straight path of that many points, " +
+        "and effect is then \"apple:action-motion-path\" or left out. " +
         "Saves over the input unless output names another path.",
     ),
     inputSchema: {
@@ -909,9 +921,15 @@ export const TOOLS: readonly Tool[] = [
         effect: { type: "string", description: "Effect identifier as the app stores it" },
         duration: { type: "number", description: "Seconds, default 1" },
         delay: { type: "number", description: "Seconds before the build starts, default 0" },
+        move: {
+          type: "object",
+          description: "A Move action's displacement in points; omit for a build in",
+          properties: { dx: { type: "number" }, dy: { type: "number" } },
+          required: ["dx", "dy"],
+        },
         output: OUTPUT_PROP,
       },
-      required: ["path", "slide", "drawable", "effect"],
+      required: ["path", "slide", "drawable"],
     },
     handler: (args) => {
       const path = requirePath(args);
@@ -927,7 +945,8 @@ export const TOOLS: readonly Tool[] = [
       const slide = slides[index]!;
       const drawables = slide.drawables();
       const which = num(args.drawable);
-      const effect = str(args.effect);
+      const move = moveOf(args.move);
+      const effect = str(args.effect) ?? (move ? MOTION_PATH_EFFECT : undefined);
       if (which === undefined || which < 0 || which >= drawables.length || effect === undefined) {
         throw new RangeError(`drawable must be 0..${drawables.length - 1} and effect is required`);
       }
@@ -936,6 +955,7 @@ export const TOOLS: readonly Tool[] = [
         effect,
         duration: num(args.duration),
         delay: num(args.delay),
+        move,
       });
       const target = save(doc, path, str(args.output));
       return `added build ${build.id} (${effect}) to slide ${index} and saved ${target}`;
@@ -1441,6 +1461,41 @@ export const TOOLS: readonly Tool[] = [
     },
   },
   {
+    name: "add_category_summary",
+    description: apiDoc(
+      "add_category_summary",
+      "The table must already be grouped by one column (add_category); the 0-based column holds " +
+        "numbers, or text for a count. Saves over the input unless output names another path.",
+    ),
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: PATH_PROP,
+        table: TABLE_PROP,
+        column: { type: "number", description: "0-based column to summarise" },
+        aggregate: { type: "string", description: "count, sum, average, min or max" },
+        output: OUTPUT_PROP,
+      },
+      required: ["path", "column", "aggregate"],
+    },
+    handler: (args) => {
+      const path = requirePath(args);
+      const doc = open(path);
+      const table = tableIn(doc, str(args.table));
+      const column = num(args.column);
+      if (column === undefined) throw new RangeError("column is required");
+      const aggregate = str(args.aggregate);
+      const aggregates = ["count", "sum", "average", "min", "max"] as const;
+      if (!aggregates.includes(aggregate as (typeof aggregates)[number])) {
+        throw new RangeError(`aggregate must be one of ${aggregates.join(", ")}`);
+      }
+      table.addCategorySummary(column, aggregate as (typeof aggregates)[number]);
+      const groups = table.activeCategories()?.groups().length ?? 0;
+      const target = save(doc, path, str(args.output));
+      return `${aggregate} of column ${column} shown in ${groups} group rows and saved ${target}`;
+    },
+  },
+  {
     name: "add_filter_rule",
     description: apiDoc(
       "add_filter_rule",
@@ -1456,7 +1511,8 @@ export const TOOLS: readonly Tool[] = [
         "dateInNext; {operator, count, unit, direction} for dateExactly, dateBeforeRelative, " +
         "dateAfterRelative and {from, to, unit, direction} for dateBetweenRelative (unit day, week, " +
         "month, quarter or year; direction ago or fromNow); {operator, seconds} for durationEquals, " +
-        "durationGreaterThan. The rows the rule hides are written too. Saves over the input " +
+        "durationNotEquals, durationGreaterThan, durationGreaterOrEqual, durationLessThan, " +
+        "durationLessOrEqual. The rows the rule hides are written too. Saves over the input " +
         "unless output names another path.",
     ),
     inputSchema: {

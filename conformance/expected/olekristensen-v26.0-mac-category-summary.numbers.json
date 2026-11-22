@@ -1,0 +1,291 @@
+{
+  "file": "olekristensen-v26.0-mac-category-summary.numbers",
+  "sha1": "00973aa4f965f359de8c387cdbea33616a3c34f9",
+  "app": "numbers",
+  "fileFormatVersion": "27.0.1",
+  "objects": 637,
+  "components": [
+    {
+      "name": "Index/Document.iwa",
+      "objects": 39
+    },
+    {
+      "name": "Index/ViewState.iwa",
+      "objects": 23
+    },
+    {
+      "name": "Index/CalculationEngine.iwa",
+      "objects": 49
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904914-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904958-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/HeaderStorageBucket-904996-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-905022-2.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905023.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905024.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905025.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905026.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905027.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905028.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905029.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905030.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905031.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905032.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905033.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-905069.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/Tile-1000007.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000008.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000009.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000010.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000011.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000012.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000013.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000014.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000015.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000016.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000017.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000019.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Tables/DataList-1000243.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/AnnotationAuthorStorage.iwa",
+      "objects": 2
+    },
+    {
+      "name": "Index/DocumentStylesheet.iwa",
+      "objects": 488
+    },
+    {
+      "name": "Index/DocumentMetadata.iwa",
+      "objects": 1
+    },
+    {
+      "name": "Index/Metadata.iwa",
+      "objects": 5
+    }
+  ],
+  "storages": [
+    {
+      "kind": "TEXTBOX",
+      "characters": 128,
+      "text": "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    },
+    {
+      "kind": "HEADER",
+      "characters": 1,
+      "text": "￼"
+    },
+    {
+      "kind": "HEADER",
+      "characters": 0,
+      "text": ""
+    }
+  ],
+  "numbers": {
+    "sheets": [
+      {
+        "name": "Sheet 1",
+        "tables": [
+          {
+            "name": "Summary",
+            "rows": 7,
+            "columns": 3,
+            "truncated": false,
+            "cells": [
+              {
+                "r": 0,
+                "c": 0,
+                "v": "Kind"
+              },
+              {
+                "r": 0,
+                "c": 1,
+                "v": "Amount"
+              },
+              {
+                "r": 0,
+                "c": 2,
+                "v": "Note"
+              },
+              {
+                "r": 1,
+                "c": 0,
+                "v": "Fruit"
+              },
+              {
+                "r": 1,
+                "c": 1,
+                "v": "12"
+              },
+              {
+                "r": 1,
+                "c": 2,
+                "v": "The rows are grouped by Kind, and every group row carries a Sum of Amount written by the library, the way the summary pop-up in a group row writes one. Each group row should show the sum of its rows under Amount: Animal 13, Fruit 19, Transport 42. If a group row is empty under Amount, or shows another number, comment on that cell; no comment means as expected. Then save."
+              },
+              {
+                "r": 2,
+                "c": 0,
+                "v": "Animal"
+              },
+              {
+                "r": 2,
+                "c": 1,
+                "v": "3"
+              },
+              {
+                "r": 3,
+                "c": 0,
+                "v": "Fruit"
+              },
+              {
+                "r": 3,
+                "c": 1,
+                "v": "7"
+              },
+              {
+                "r": 4,
+                "c": 0,
+                "v": "Transport"
+              },
+              {
+                "r": 4,
+                "c": 1,
+                "v": "40"
+              },
+              {
+                "r": 5,
+                "c": 0,
+                "v": "Animal"
+              },
+              {
+                "r": 5,
+                "c": 1,
+                "v": "10"
+              },
+              {
+                "r": 6,
+                "c": 0,
+                "v": "Transport"
+              },
+              {
+                "r": 6,
+                "c": 1,
+                "v": "2"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

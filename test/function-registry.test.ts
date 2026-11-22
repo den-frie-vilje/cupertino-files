@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { readFunctionRegistry } from "../scripts/function-registry.ts";
 import { HARVESTED_FUNCTIONS } from "../src/tst/function-names.ts";
 import { describe, expect, it } from "./harness.ts";
@@ -6,7 +6,20 @@ import { describe, expect, it } from "./harness.ts";
 const NUMBERS =
   "/Applications/Numbers Creator Studio.app/Contents/Frameworks/TSTables.framework/Versions/A/TSTables";
 
-describe("the function registry read from the app", { skip: !existsSync(NUMBERS) }, () => {
+/** The app versions the reader was measured on; a newer app is an open ledger row, not a failing run. */
+const MEASURED = /^1[56]\./;
+const version = (() => {
+  try {
+    // The bundle's Info.plist is XML; the version follows its key.
+    const text = readFileSync("/Applications/Numbers Creator Studio.app/Contents/Info.plist", "utf8");
+    return /<key>CFBundleShortVersionString<\/key>\s*<string>([^<]+)<\/string>/.exec(text)?.[1] ?? "";
+  } catch {
+    return "";
+  }
+})();
+const skip = !existsSync(NUMBERS) ? true : MEASURED.test(version) ? false : `Numbers ${version} is not a build the registry reader was measured on (docs/BLOCKERS.md)`;
+
+describe("the function registry read from the app", { skip }, () => {
   it("agrees with the generated table on every index it registers", () => {
     const reading = readFunctionRegistry(NUMBERS);
     const disagreements: string[] = [];

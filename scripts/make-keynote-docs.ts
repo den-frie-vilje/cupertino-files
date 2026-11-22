@@ -183,6 +183,18 @@ export const RUNGS: {
     },
   },
   {
+    name: "K17-action",
+    note: "the title moved 200 points to the right by a Move action written from nothing, in the shape of the app's own",
+    build: (doc) => {
+      const slide = doc.slides()[0]!;
+      slide.title =
+        "K17: this title should slide 200 points to the right on the first click. Standing still is the finding.";
+      const title = refId(slide.object.message, Slide.TITLE_PLACEHOLDER);
+      if (title === undefined) throw new Error("K17: base slide has no title placeholder");
+      slide.addBuild({ drawableId: title, effect: "apple:action-motion-path", move: { dx: 200, dy: 0 } });
+    },
+  },
+  {
     name: "K13-slide-from-layout",
     note: "a slide instantiated from a named layout, appended last",
     build: (doc) => {

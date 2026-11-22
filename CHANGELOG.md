@@ -7,35 +7,93 @@ in commit messages and pull requests.
 
 ## Unreleased
 
-### Fixed
-
-- Formula reading renders date and duration literals, which read as 0,
-  lists inside a function call, which rendered empty, and the thunk
-  nodes the apps write around an IF branch, which rendered as unknown
-  nodes. Every rule the Numbers filter menu writes now renders whole.
-- A table added to a Numbers document takes the theme's table style
-  preset, as Insert > Table does, instead of bringing its own copy of
-  every preset style along.
+Numbers gains the whole filter menu and per-group summaries, Keynote the
+order its builds play in and a Move action, and formula reading renders
+the dates, durations, lists and branches it used to drop. The vendored
+schema is the 16.0 release's for every family. Each of the new writers
+except the build reorder has been opened in its app, and the versions
+that confirmed them are named below.
 
 ### Added
 
 - `addFilterRule` writes every condition the Numbers filter menu offers,
   not only comparisons and text-contains: text tests, blank tests,
   between, averages, ranks, duplicates, every date condition relative to
-  today or to a date, durations and checkboxes (`FilterCondition`), each
-  predicate and formula byte for byte as the app writes it, with the rows
-  it hides evaluated and written beside it. The `add_filter_rule` tool
-  takes the same conditions as an object.
-- `PREDICATE_TYPE_CONDITIONS` names the filter condition behind every
-  `predicate_type` the Numbers filter menu writes, text, number, date,
-  duration and checkbox conditions alike, so a rule reads back as the
-  condition it was authored under.
-
+  today or to a date, every duration comparison and checkboxes
+  (`FilterCondition`), each predicate and formula byte for byte as the
+  app writes it, with the rows it hides evaluated and written beside it.
+  `PREDICATE_TYPE_CONDITIONS` names the condition behind every
+  `predicate_type` the menu writes, so a rule reads back as the
+  condition it was authored under. The `add_filter_rule` tool takes the
+  same conditions as an object. Numbers 15.4 exports a table under each
+  condition family with the rows the condition keeps and no other.
+- `addCategorySummary` shows a count, sum, average, min or max of a
+  column in every group row of a categorised table, writing what Numbers
+  writes for its own: the aggregate entry, the aggregator cache, the
+  summary cells and their registration with the calc engine. The
+  `add_category_summary` tool takes the same arguments. Numbers for iOS
+  draws every group row's value on open. The values are the cells' at
+  the call, added in decimal as the app adds them; the groups must be
+  current and hold every data row, and a refused call changes nothing.
+- A category's aggregates name their type (`aggregate`: count, sum,
+  average, min or max), `AGGREGATE_TYPE_NAMES` and `AccumulatorFields`
+  name the codes and the record under them, and
+  `TableModel.summaryModel()` reads the summaries a category's group
+  rows draw, with the table's own cell decoders: a read-only
+  `SummaryModel` whose `uidMap()` names the group each row belongs to.
+- `KeynoteSlide.setBuildOrder` puts a slide's builds in the order they
+  play, as the Build Order panel's drag writes it. No reordered deck has
+  been opened in Keynote yet.
+- `addBuild` writes a Move action (`move: { dx, dy }`): an Action with
+  the app's motion path effect along a straight path, eased at both
+  ends, in the shape Keynote writes for its own. A build's `move` reads
+  the displacement back, and the `add_build` tool takes the same option,
+  with the effect left out. A Move takes the motion path effect and no
+  other, and is refused otherwise. Keynote 15.4 plays it.
 - `compact()` now also reclaims the Data/ files no object refers to, so
   removing a picture and compacting takes its bytes out of the package.
   A file is kept while any object names it, in its reference list or in
   a schema-typed data field; a document with an undecodable component is
   left whole.
+
+### Changed
+
+- `KeynoteSlide.builds()` lists a slide's builds in the order they play,
+  the order of the slide's chunk list, which is what Build Order shows.
+  On a deck where Keynote added a build beside one written by 0.6.0 the
+  two orders differ, and the list used to follow the other one.
+- `insertColumns` and `deleteColumns` refuse a table that carries
+  per-group summaries. Summary cells are filed by column position, and a
+  column change under them used to leave them under the wrong column.
+- The vendored schema is the 16.0 release's for every family: a
+  stylesheet's `styles_for_16_0` snapshot is followed like the earlier
+  ones, and the new watermarking and UI-state fields are named. No field
+  number moved.
+
+### Fixed
+
+- A number cell reads as the decimal it stores: 143.8 used to read as
+  143.79999999999998 where the stored digits and exponent did not
+  multiply exactly in binary.
+- A slide duplicated with its builds gives the copies identities of
+  their own. The copied chunks used to name the source slide's build, so
+  Keynote showed the copy's builds and would not reorder them.
+- Formula reading renders date and duration literals, which read as 0,
+  lists inside a function call, which rendered empty, and the thunk
+  nodes the apps write around an IF branch, which rendered as unknown
+  nodes. Every rule the Numbers filter menu writes now renders whole.
+- A build added to a slide is stored where Keynote keeps its own, right
+  after the slide archive with the chunks behind the builds, its slide's
+  node says it carries explicit builds, and it is registered in its
+  component's object UUID map under the UUID its chunks name, so
+  Keynote's Build Order panel moves it like one of its own instead of
+  pinning it last. Keynote 15.4 lists such a build in the panel and lets
+  it be dragged.
+- A field a document did not carry before is now written in field-number
+  order, as the apps write it, instead of after every existing field.
+- A table added to a Numbers document takes the theme's table style
+  preset, as Insert > Table does, instead of bringing its own copy of
+  every preset style along.
 
 ## 0.6.0 — 2026-11-02
 

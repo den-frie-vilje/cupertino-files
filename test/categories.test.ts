@@ -12,7 +12,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "./harness.ts";
 import { NumbersDocument } from "../src/index.ts";
 import { refId } from "../src/tsp/schema.ts";
-import { GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart } from "../src/tst/categories.ts";
+import { AccumulatorFields, GroupByFields, GroupNodeFields, BUCKET_FUNCTORS, bucketStart, type ColumnAggregate } from "../src/tst/categories.ts";
+import { readUid, uidKey } from "../src/tst/uidmap.ts";
+import { CellRecordTileFields, FormulaOwnerFields, ownerArchiveByUid, readOwnerUid } from "../src/tsce/owners.ts";
+import { CellFlag, CellRecord } from "../src/tst/cellrecord.ts";
+import { DataStoreFields, TileFields, TileRowInfo } from "../src/tst/tables.ts";
 import {
   ColumnRowUidMap,
   expandIndexSet,
@@ -450,5 +454,287 @@ describe("bucketing a date column", () => {
       }
     }
     expect(checked > 100).toBe(true);
+  });
+});
+
+describe("a per-group summary written from nothing", () => {
+  const TWIN = "olekristensen-v26.0-mac-authored.numbers";
+  const SEED = "olekristensen-v26.0-mac-summaries-seed.numbers";
+  const fieldNumbers = (m: RawMessage | undefined): number[] => m?.fields.map((f) => f.no) ?? [];
+  const load = (name: string) => NumbersDocument.load(new Uint8Array(readFileSync(new URL(name, FIXTURES)))).tables()[0]!;
+  /** The twin's table, as the library built it before the checker summarised Kind. */
+  const build = () => {
+    const doc = NumbersDocument.blank();
+    const table = doc.tables()[0]!;
+    table.insertColumns(2, 1);
+    ["Item", "Kind", "Amount"].forEach((label, c) => { table.setCell(0, c, label); });
+    const rows: [string, string, number][] = [
+      ["Pear", "Fruit", 12], ["Cat", "Animal", 3], ["Apple", "Fruit", 7],
+      ["Train", "Transport", 40], ["Dog", "Animal", 10], ["Bicycle", "Transport", 2],
+    ];
+    rows.forEach(([item, kind, amount], i) => {
+      table.setCell(i + 1, 0, item);
+      table.setCell(i + 1, 1, kind);
+      table.setCell(i + 1, 2, amount);
+    });
+    table.deleteRows(rows.length + 1, table.rowCount - rows.length - 1);
+    table.addCategory(1);
+    return { doc, table };
+  };
+  /** The inline aggregator; the referenced one at field 17 is checked to match it. */
+  const aggregatorOf = (table: TableModel, index = 0): RawMessage => {
+    const category = table.activeCategories()!;
+    const inline = category.object.message.getMessages(GroupByFields.AGGREGATOR)[index]!;
+    const referenced = category.store.resolve(category.object.message.getMessages(GroupByFields.AGGREGATOR_REF)[index]!.getVarint(1))!;
+    expect(Buffer.from(referenced.message.toBytes()).toString("hex")).toBe(Buffer.from(inline.toBytes()).toString("hex"));
+    return inline;
+  };
+  /** Field numbers of an aggregator's root node, its accumulator, and the distinct shapes of its children. */
+  const nodeShape = (aggregator: RawMessage): unknown => {
+    const root = aggregator.getMessage(2)!;
+    const children = root.getMessages(3).map((c) => JSON.stringify([fieldNumbers(c), fieldNumbers(c.getMessage(2))]));
+    return [fieldNumbers(aggregator), [...new Set(fieldNumbers(root))], fieldNumbers(root.getMessage(2)), [...new Set(children)]];
+  };
+  const coordinates = (aggregator: RawMessage): number[] => {
+    const root = aggregator.getMessage(2)!;
+    return [...root.getMessages(3), root].map((n) => Number(n.getMessage(1)!.getVarint(2)));
+  };
+  const summaryFormulas = (table: TableModel): RawMessage[] => {
+    const summary = table.summaryModel()!;
+    const list = summary.store.resolve(refId(summary.object.message.getMessage(2), 6))!;
+    return list.message.getMessages(3).map((e) => e.getMessage(5)!.getMessage(1)!.getMessages(1)[0]!);
+  };
+  const vendorEntries = (table: TableModel): RawMessage[] => {
+    const summary = table.summaryModel()!;
+    return summary.store.resolve(refId(summary.object.message, 5))!.message.getMessages(2);
+  };
+  const firstRecord = (table: TableModel, row: number): CellRecord => {
+    const summary = table.summaryModel()!;
+    const tiles = summary.object.message.getMessage(2)!.getMessage(3)!;
+    const tile = summary.store.resolve(refId(tiles.getMessages(1)[0], 2))!;
+    return CellRecord.decode(tile.message.getMessages(TileFields.ROW_INFOS)[row]!.getBytes(TileRowInfo.CELL_STORAGE_BUFFER)!);
+  };
+
+  it("writes the Count the twin's checker built: entry, aggregator cache, node coordinates, summary cells and vendor template, field for field", () => {
+    const { doc, table } = build();
+    table.addCategorySummary(1, "count");
+    const twin = load(TWIN);
+    const strip = (a: ColumnAggregate) => [a.column, a.level, a.aggType, a.aggregate, a.showAsType];
+    expect(table.activeCategories()!.aggregates().map(strip)).toEqual(twin.activeCategories()!.aggregates().map(strip));
+
+    const ours = aggregatorOf(table);
+    const theirs = aggregatorOf(twin);
+    expect(nodeShape(ours)).toEqual(nodeShape(theirs));
+    expect(coordinates(ours)).toEqual(coordinates(theirs));
+    expect(coordinates(ours)).toEqual([8, 9, 10, 11]);
+    const counts = (aggregator: RawMessage) => {
+      const root = aggregator.getMessage(2)!;
+      return [root, ...root.getMessages(3)].map((n) => [Number(n.getMessage(2)!.getVarint(AccumulatorFields.STRING_COUNT)), n.getMessage(2)!.getMessage(AccumulatorFields.MIN)!.getMessage(5)!.getString(1), n.getMessage(2)!.getMessage(AccumulatorFields.MAX)!.getMessage(5)!.getString(1)]);
+    };
+    expect(counts(ours)).toEqual(counts(theirs));
+    expect(counts(ours)).toEqual([[6, "Animal", "Transport"], [2, "Animal", "Animal"], [2, "Fruit", "Fruit"], [2, "Transport", "Transport"]]);
+    // Every group node, inline and referenced, names its aggregator node's coordinate.
+    const category = table.activeCategories()!;
+    const inlineRoot = category.object.message.getMessage(GroupByFields.GROUP_NODE_ROOT)!;
+    const referencedRoot = category.store.resolve(refId(category.object.message, GroupByFields.GROUP_NODE_ROOT_REF))!;
+    const coordsOf = (node: RawMessage) => node.getMessages(GroupNodeFields.AGG_FORMULA_COORDS).map((c) => Number(c.getVarint(2)));
+    expect([inlineRoot, ...inlineRoot.getMessages(GroupNodeFields.CHILD)].map(coordsOf)).toEqual([[11], [8], [9], [10]]);
+    expect([referencedRoot, ...referencedRoot.getObjectReferences().map((id) => category.store.resolve(id)!)].map((o) => coordsOf(o.message))).toEqual([[11], [8], [9], [10]]);
+
+    const cells = (t: TableModel) => t.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type, (c.value as { isFormula?: boolean }).isFormula]);
+    expect(cells(table)).toEqual(cells(twin));
+    expect(table.summaryModel()!.cellFormulaDetail(0, 2)?.unknownNodeTypes).toEqual([66]);
+    // The summary's identity map: a fresh column before the host's, and a row per group under the group's uid.
+    const summary = table.summaryModel()!;
+    const map = new ColumnRowUidMap(summary.store.resolve(refId(summary.object.message, 3))!.message);
+    expect(map.columnUidList().slice(1).map((u) => uidKey(u!))).toEqual(table.uidMap().columnUidList().map((u) => uidKey(u!)));
+    expect(map.rowUidList().map((u) => uidKey(u!))).toEqual(category.flatGroups().map((_, i) => uidKey(readUid(referencedRoot.getObjectReferences().map((id) => category.store.resolve(id)!)[i]!.message.getMessage(GroupNodeFields.GROUP_UID))!)));
+
+    const refShape = (node: RawMessage) => {
+      const ref = node.getMessage(39)!.getMessage(1)!;
+      return [fieldNumbers(node), fieldNumbers(ref), Number(ref.getVarint(3)), Number(ref.getVarint(4)), fieldNumbers(ref.getMessage(7)), Number(ref.getVarint(13))];
+    };
+    expect(summaryFormulas(table).map(refShape)).toEqual(summaryFormulas(twin).map(refShape));
+    expect(summaryFormulas(table).map((n) => uidKey(readUid(n.getMessage(39)!.getMessage(1)!.getMessage(10))!))).toEqual(map.rowUidList().map((u) => uidKey(u!)));
+    for (const row of [0, 1, 2]) {
+      const record = firstRecord(table, row);
+      const measured = firstRecord(twin, row);
+      expect([record.type, record.flags, record.extras, record.id(CellFlag.SUGGEST_ID), record.id(CellFlag.NUM_FORMAT_ID)]).toEqual([measured.type, measured.flags, measured.extras, measured.id(CellFlag.SUGGEST_ID), measured.id(CellFlag.NUM_FORMAT_ID)]);
+    }
+    const vendorShape = (entry: RawMessage) => {
+      const cell = entry.getMessage(3)!;
+      const spec = cell.getMessage(28)!;
+      return [fieldNumbers(entry), fieldNumbers(cell), fieldNumbers(spec), Number(spec.getVarint(1)), refShape(spec.getMessage(2)!.getMessage(1)!.getMessages(1)[0]!)];
+    };
+    expect(vendorEntries(table).map(vendorShape)).toEqual(vendorEntries(twin).map(vendorShape));
+
+    const reloaded = NumbersDocument.load(doc.save()).tables()[0]!;
+    expect(reloaded.activeCategories()!.aggregates()[0]!.aggregate).toBe("count");
+    expect(cells(reloaded)).toEqual(cells(twin));
+  });
+
+  it("writes a Sum over numbers with the record the app caches for one, and the sums as the cached values", () => {
+    const { table } = build();
+    table.addCategorySummary(2, "sum");
+    const seed = load(SEED);
+    expect(nodeShape(aggregatorOf(table))).toEqual(nodeShape(aggregatorOf(seed)));
+    const root = aggregatorOf(table).getMessage(2)!.getMessage(2)!;
+    const number = (field: number) => root.getMessage(field)!.getMessage(4)!.getDouble(1);
+    expect([Number(root.getVarint(AccumulatorFields.NUMBER_COUNT)), number(AccumulatorFields.MIN), number(AccumulatorFields.MAX), number(AccumulatorFields.SUM), root.getDouble(AccumulatorFields.SECONDS), number(AccumulatorFields.PRODUCT)]).toEqual([6, 2, 40, 74, 74, 201600]);
+    expect(table.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 3, 13], [1, 3, 19], [2, 3, 42]]);
+    expect(table.activeCategories()!.aggregates().map((a) => [a.column, a.aggregate])).toEqual([[2, "sum"]]);
+  });
+
+  it("stacks a second summary after the first: the next coordinates, the next summary column, both vendor templates", () => {
+    const { table } = build();
+    table.addCategorySummary(1, "count");
+    table.addCategorySummary(2, "average");
+    expect(coordinates(aggregatorOf(table, 1))).toEqual([12, 13, 14, 15]);
+    expect(table.summaryModel()!.cells().map((c) => [c.row, c.column, c.value.type === "number" ? c.value.value : c.value.type])).toEqual([[0, 2, 2], [0, 3, 6.5], [1, 2, 2], [1, 3, 9.5], [2, 2, 2], [2, 3, 21]]);
+    expect(vendorEntries(table).length).toBe(2);
+  });
+
+  it("registers the summary with the calc engine as the twin's is: a record per aggregator coordinate and the root's reader on the table's formula owner, a record per summary cell and a uuid reference on the summary's owner", () => {
+    const { doc, table } = build();
+    table.addCategorySummary(1, "count");
+    const twin = load(TWIN);
+    const hex = (m: RawMessage) => Buffer.from(m.toBytes()).toString("hex");
+    const owners = (t: TableModel) => {
+      const summary = t.summaryModel()!;
+      const summaryOwner = ownerArchiveByUid(summary.store, readOwnerUid(summary.object.message.getMessage(4))!)!;
+      const groupBy = readUid(t.activeCategories()!.object.message.getMessage(GroupByFields.GROUP_BY_UID))!;
+      const formulaOwner = ownerArchiveByUid(summary.store, { lo: groupBy.lower, hi: groupBy.upper })!;
+      // The ledger and its tiled copy carry the same records, the tile under the owner's internal id.
+      const records = (owner: typeof summaryOwner) => {
+        const bag = owner.message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)!.getMessages(1);
+        const tile = summary.store.resolve(owner.message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)[0])!;
+        expect(tile.message.getUint(1)).toBe(owner.message.getUint(2));
+        expect(tile.message.getMessages(4).map(hex)).toEqual(bag.map(hex));
+        return bag;
+      };
+      return { summaryOwner, formulaOwner, summaryRecords: records(summaryOwner), formulaRecords: records(formulaOwner) };
+    };
+    const ours = owners(table);
+    const theirs = owners(twin);
+    expect([ours.formulaOwner.message.getUint(3), ours.summaryOwner.message.getUint(3)]).toEqual([8, 9]);
+
+    const byColumn = (bag: RawMessage[]) => new Map(bag.map((r) => [r.getUint(1), hex(r)]));
+    const o = byColumn(ours.formulaRecords);
+    const t = byColumn(theirs.formulaRecords);
+    for (const column of [3, 7, 8, 9, 10, 11]) expect([column, o.get(column)]).toEqual([column, t.get(column)]);
+    expect([...o.keys()]).toEqual([0, 3, 7, 8, 9, 10, 11]);
+
+    // The twin's summary rows sit in another order, so each record is read through the group its row names.
+    const edges = (tbl: TableModel, bag: RawMessage[]) => {
+      const summary = tbl.summaryModel()!;
+      const rows = new ColumnRowUidMap(summary.store.resolve(refId(summary.object.message, 3))!.message).rowUidList();
+      const category = tbl.activeCategories()!;
+      const root = category.store.resolve(refId(category.object.message, GroupByFields.GROUP_NODE_ROOT_REF))!;
+      const coordinateOf = new Map(root.getObjectReferences().map((id) => {
+        const node = category.store.resolve(id)!.message;
+        return [uidKey(readUid(node.getMessage(GroupNodeFields.GROUP_UID))!), Number(node.getMessages(GroupNodeFields.AGG_FORMULA_COORDS)[0]!.getVarint(2))];
+      }));
+      return bag.map((r) => {
+        const e = r.getMessage(6)!;
+        return [fieldNumbers(r), fieldNumbers(e), r.getUint(1), e.getUint(3), e.getUint(5), e.getUint(4) === coordinateOf.get(uidKey(rows[r.getUint(2)!]!))];
+      });
+    };
+    const theirEdges = edges(twin, theirs.summaryRecords);
+    expect(theirEdges).toEqual([0, 1, 2].map(() => [[1, 2, 6], [3, 4, 5], 2, 0, 17, true]));
+    expect(edges(table, ours.summaryRecords)).toEqual(theirEdges);
+    expect(hex(ours.summaryOwner.message.getMessage(FormulaOwnerFields.UUID_REFERENCES)!)).toBe(hex(theirs.summaryOwner.message.getMessage(FormulaOwnerFields.UUID_REFERENCES)!));
+
+    const reloaded = owners(NumbersDocument.load(doc.save()).tables()[0]!);
+    expect(reloaded.formulaRecords.map(hex)).toEqual(ours.formulaRecords.map(hex));
+    expect(reloaded.summaryRecords.map(hex)).toEqual(ours.summaryRecords.map(hex));
+
+    // A second summary adds its coordinates to the reader and its cells to the ledger, in the app's order.
+    table.addCategorySummary(2, "sum");
+    const again = owners(table);
+    expect(again.formulaRecords.map((r) => r.getUint(1))).toEqual([0, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    expect(again.formulaRecords.find((r) => r.getUint(1) === 3)!.getMessage(6)!.fields.map((f) => [f.no, Number(f.value)])).toEqual([[1, 0], [1, 0], [2, 11], [2, 15]]);
+    expect(again.summaryRecords.map((r) => [r.getUint(2), r.getUint(1)])).toEqual([[0, 2], [0, 3], [1, 2], [1, 3], [2, 2], [2, 3]]);
+  });
+
+  it("refuses what it cannot measure: an uncategorised table, a second summary on a column, a sum of text, a blank in the column", () => {
+    const blank = NumbersDocument.blank().tables()[0]!;
+    expect(() => { blank.addCategorySummary(0, "count"); }).toThrow(/not categorised/);
+    const { table } = build();
+    table.addCategorySummary(1, "count");
+    expect(() => { table.addCategorySummary(1, "sum"); }).toThrow(/already has a summary/);
+    expect(() => { table.addCategorySummary(0, "sum"); }).toThrow(/needs a column of numbers/);
+    table.setCell(3, 2, { type: "empty" });
+    expect(() => { table.addCategorySummary(2, "sum"); }).toThrow(/every data row needs one/);
+  });
+
+  it("leaves the table as it was when it refuses, so the next call starts clean", () => {
+    const { doc, table } = build();
+    const before = Buffer.from(doc.save()).toString("hex");
+    expect(() => { table.addCategorySummary(0, "sum"); }).toThrow(/needs a column of numbers/);
+    expect(table.activeCategories()!.aggregates()).toEqual([]);
+    expect(Buffer.from(doc.save()).toString("hex")).toBe(before);
+    table.addCategorySummary(0, "count");
+    expect(table.summaryModel()!.cells().map((c) => c.value)).toEqual([0, 1, 2].map(() => ({ type: "number", value: 2, isFormula: true })));
+  });
+
+  it("refuses groups that no longer hold the table's rows, and a column change under a summary", () => {
+    const { table } = build();
+    table.insertRows(table.rowCount, 1);
+    ["Plum", "Fruit", 100].forEach((value, c) => { table.setCell(table.rowCount - 1, c, value); });
+    expect(table.staleCategoryGroups()).toEqual([]);
+    expect(() => { table.addCategorySummary(2, "sum"); }).toThrow(/do not hold exactly the table's data rows/);
+    const fresh = build().table;
+    fresh.setCell(1, 1, "Animal");
+    expect(() => { fresh.addCategorySummary(2, "sum"); }).toThrow(/stale; call regroupCategories/);
+    fresh.regroupCategories();
+    fresh.addCategorySummary(2, "sum");
+    expect(() => { fresh.insertColumns(1, 1); }).toThrow(/filed by column position/);
+    expect(() => { fresh.deleteColumns(0, 1); }).toThrow(/filed by column position/);
+  });
+
+  it("adds in decimal, counts the format once per cell, and writes the app's extras word and first column", () => {
+    const { table } = build();
+    [0.1, 0.2, 19.99, 5.01, 0.3, 7].forEach((amount, i) => { table.setCell(i + 1, 2, amount); });
+    table.addCategorySummary(2, "sum");
+    const summary = table.summaryModel()!;
+    // Animal 0.2 + 0.3, Fruit 0.1 + 19.99, Transport 5.01 + 7: none carries float noise.
+    expect(summary.cells().map((c) => (c.value as { value: number }).value)).toEqual([0.5, 20.09, 12.01]);
+    expect(summary.uidMap().columnUidList()[0]).toEqual({ lower: 0x79726f6765746163n, upper: 0x006e6d756c6f6320n });
+    // The app's Sum cells carry the high extras bit alone, and its Count cells none.
+    const seed = open("olekristensen-v26.0-mac-summaries-seed.numbers").tables()[0]!;
+    expect(seed.summaryModel()!.uidMap().columnUidList()[0]).toEqual(summary.uidMap().columnUidList()[0]);
+    expect([0, 1, 2].map((row) => firstRecord(table, row).extras)).toEqual([0x8000, 0x8000, 0x8000]);
+    expect(firstRecord(seed, 0).extras).toBe(0x8000);
+    const counted = build().table;
+    counted.addCategorySummary(1, "count");
+    expect(firstRecord(counted, 0).extras).toBe(0);
+    // The format's count is the cells that name it, as in the app's own.
+    const formats = summary.store.resolve(refId(summary.object.message.getMessage(2), DataStoreFields.FORMAT_TABLE))!;
+    expect(formats.message.getMessages(3).map((entry) => entry.getUint(2))).toEqual([3]);
+    expect(() => { summary.setCell(0, 3, 99); }).toThrow(/read-only/);
+    expect(() => { summary.insertRows(0, 1); }).toThrow(/read-only/);
+  });
+
+  it("keeps an owner's other records when the document carries them in tiles alone", () => {
+    const doc = open("numbers-parser-v26.1-form-sheet.numbers");
+    const table = doc.tables()[0]!;
+    table.insertColumns(table.columnCount, 2);
+    const kind = table.columnCount - 2;
+    for (let row = table.headerRowCount; row < table.rowCount - table.footerRowCount; row++) {
+      table.setCell(row, kind, row % 2 === 0 ? "Even" : "Odd");
+      table.setCell(row, kind + 1, row);
+    }
+    table.addCategory(kind);
+    const groupByUid = readUid(table.activeCategories()!.object.message.getMessage(GroupByFields.GROUP_BY_UID))!;
+    const owner = () => ownerArchiveByUid(table.store, { lo: groupByUid.lower, hi: groupByUid.upper })!;
+    const columns = () =>
+      owner().message.getMessage(FormulaOwnerFields.TILED_CELL_DEPENDENCIES)!.getMessages(1)
+        .flatMap((ref) => table.store.resolve(ref)!.message.getMessages(CellRecordTileFields.CELL_RECORDS).map((r) => r.getUint(1)));
+    const before = columns();
+    expect(owner().message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)).toBe(undefined);
+    table.addCategorySummary(kind + 1, "sum");
+    expect(owner().message.getMessage(FormulaOwnerFields.CELL_DEPENDENCIES)).toBe(undefined);
+    expect(before.every((column) => columns().includes(column))).toBe(true);
+    expect(columns().length).toBe(new Set([...before, 3, 8, 9, 10]).size);
   });
 });

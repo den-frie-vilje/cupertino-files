@@ -386,6 +386,7 @@ message UIStateArchive {
   optional float activity_or_annotation_width = 46;
   optional .TSK.SelectionPathArchive selection_path = 47;
   optional float flow_mode_font_scale = 48;
+  optional bool alpine_visible = 49 [default = false];
 }
 
 message ViewStateRootArchive {

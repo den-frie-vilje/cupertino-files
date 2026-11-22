@@ -1274,3 +1274,87 @@ node scripts/scan-fixture-privacy.ts
   naming the eight number conditions beyond comparisons, one per column;
   the checker added each rule with the filter panel on the phone. The
   table's first row is the request itself.
+
+### olekristensen-v26.0-mac-summaries-seed.numbers
+- 144,795 bytes, md5 `84ba5ab0e4f79b78b6640113784fa577`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over seed-summaries.numbers,
+  a table the library grouped by Kind with four number columns headed
+  Sum, Average, Min and Max; the checker set each summary in a group row
+  and commented on C3: "The rows only show the summary numbers for
+  animals and note, nothing is shown in the summary cells for fruit and
+  transport". The instruction row is the request itself.
+
+### olekristensen-v26.0-mac-duration-conditions.numbers
+- 139,218 bytes, md5 `122267a9ea21803546ba4ddc9e646723`
+- Saved by M15.4-7051.0.79-2 (macOS Numbers) over
+  seed-duration-conditions.numbers; the checker added the four duration
+  comparisons the file names, one per column, with the filter panel.
+  The instruction row is the request itself.
+
+### olekristensen-v26.0-mac-build-order-seed.key
+- 558,211 bytes, md5 `a02075c92fb952154d18ec4872e39f7d`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key,
+  a blank deck whose title the library gave a dissolve build; the
+  checker added an Appear build to the body, moved it first, gave the
+  title a Move action, and commented on the slide: "The preexisting
+  dissolve build on the title had some kind of defect, I cannot move it
+  first in the Build Order, it remains third no matter what I do. The
+  other animations I can move freely, though not after the dissolve in
+  of the title." The body text is the request itself.
+
+### olekristensen-v26.0-mac-pinned-dissolve.key
+- 575,084 bytes, md5 `84672597898e5f0dc5f82cd653542566`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  third form: slide 1 with the library's dissolve on the title, slide 2
+  empty. The checker gave each body an Appear and slide 2's title the
+  app's own Dissolve, and commented on slide 1 "Nonsensical task, as the
+  dissolve landed last by itself. So I did not attempt to drag it. The
+  start popup says 'Ved klik'" and on slide 2 "It moved… here it
+  worked". The bodies are the request itself.
+
+### olekristensen-v26.0-mac-pinned-dissolve-placed.key
+- 580,375 bytes, md5 `abc60503a9da03649c7b747059f6cc98`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  fourth form: the library's dissolve on each of two titles, its build
+  and chunk placed after the slide, effect `apple:dissolve` on slide 1
+  and `apple:dissolve character` on slide 2. The checker gave each body
+  an Appear and commented "Pinned, still" and "Also pinned". The bodies
+  are the request itself.
+
+### olekristensen-v26.0-mac-dissolve-explicit.key
+- 542,031 bytes, md5 `f767269f2b8606eaca8d608f4b8ccf3d`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  fifth form: one slide, the library's `apple:dissolve character` on the
+  title with the slide node's `has_explicit_builds` set. The checker gave
+  the body an Appear and commented on the slide "Still pinned". The body
+  is the request itself. The app's save registered the library's build
+  in the component's object UUID map under a fresh UUID while its chunk
+  kept the library's, which is the measurement.
+
+### olekristensen-v26.0-mac-dissolve-registered.key
+- 541,992 bytes, md5 `7a84a1f070f8ea008b50b5bba9eabe42`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over seed-build-order.key's
+  sixth form: one slide, the library's `apple:dissolve character` on the
+  title, the build registered in the component's object UUID map under
+  the UUID its chunk names. The checker gave the body an Appear, dragged
+  the dissolve first and commented on the slide "moved". The body is the
+  request itself. The app kept the library's UUID and appended its own
+  build behind the library's in both lists.
+
+### olekristensen-v26.0-mac-move-action.key
+- 1,509,778 bytes, md5 `3eb4555b432bf3485ed556573731b35e`
+- Saved by M15.4-7051.0.79-2 (macOS Keynote) over 22-move-action.key, the
+  library's Move action on a blank deck's title. The checker played the
+  slide and commented on it "Slided, great!". The app kept the build
+  and added the path source's two flip flags, stated false. The body text
+  is the request itself.
+
+### olekristensen-v26.0-mac-category-summary.numbers
+- 158,334 bytes, md5 `308d3e3daf2025d01da1f6fc6bce85bf`
+- Saved by Numbers 16.0 (macOS) over 23-category-summary.numbers, the
+  library's per-group Sum of Amount on a blank document grouped by Kind.
+  The checker commented on the sheet "Can’t comment on summary cells: The fruit kind showed summary alright, but animal and transport did not show anything on opening". Every
+  structure the library wrote came back byte for byte; the app registered
+  the one cell it drew with its calc engine, fitted the wrapped row's
+  height and rewrote the host's data store without changing a cell. The
+  Note column is the request itself.
