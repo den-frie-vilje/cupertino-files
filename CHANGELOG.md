@@ -7,6 +7,8 @@ in commit messages and pull requests.
 
 ## Unreleased
 
+## 0.7.0 — 2026-11-22
+
 Numbers gains the whole filter menu and per-group summaries, Keynote the
 order its builds play in and a Move action, and formula reading renders
 the dates, durations, lists and branches it used to drop. The vendored
